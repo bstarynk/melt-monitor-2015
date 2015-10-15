@@ -2,6 +2,7 @@
 
 struct mom_item_st;
 
+#warning should have small objects starting with a int8_t smalltype and uint8_t hisize + uint16_t losize + uint32_t hash
 // the common project of all objects
 struct mom_anyobject_st { /// field prefix: ob_
   int16_t obtype;
