@@ -626,6 +626,28 @@ const char *const mom_debug_names[momdbg__last] = {
 
 
 
+void
+mom_print_sizes (void)
+{
+#define PRINT_SIZEOF(T) printf("sizeof(" #T ") = %d by = %d wd\n",\
+			       (int)sizeof(T), (int)(sizeof(T)+sizeof(void*)-1)/sizeof(void*))
+  PRINT_SIZEOF (int);
+  PRINT_SIZEOF (long);
+  PRINT_SIZEOF (void *);
+  PRINT_SIZEOF (pthread_mutex_t);
+  PRINT_SIZEOF (pthread_cond_t);
+  PRINT_SIZEOF (struct mom_anyobject_st);
+  PRINT_SIZEOF (struct mom_boxint_st);
+  PRINT_SIZEOF (struct mom_boxdouble_st);
+  PRINT_SIZEOF (struct mom_sizedobject_st);
+  PRINT_SIZEOF (struct mom_countedobject_st);
+  PRINT_SIZEOF (struct mom_boxstring_st);
+  PRINT_SIZEOF (struct mom_boxseqitem_st);
+  PRINT_SIZEOF (struct mom_boxnode_st);
+  PRINT_SIZEOF (struct mom_mutassoc_st);
+  PRINT_SIZEOF (struct mom_mutvect_st);
+  PRINT_SIZEOF (struct mom_item_st);
+}
 
 int
 main (int argc_main, char **argv_main)
@@ -638,4 +660,5 @@ main (int argc_main, char **argv_main)
   if (!mom_prog_dlhandle)
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
+  mom_print_sizes ();
 }
