@@ -37,3 +37,6 @@ monimelt
 *%
 *~
 *.tmp*
+
+## ignore core dumps
+core*

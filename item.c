@@ -64,7 +64,7 @@ mom_valid_name_radix (const char *str, int len)
 const struct mom_itemname_tu *
 mom_find_name_radix (const char *str, int len)
 {
-  struct mom_itemname_tu *rad = NULL;
+  struct mom_itemname_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
   if (len < 0)
@@ -85,7 +85,7 @@ mom_find_name_radix (const char *str, int len)
       int c = strncmp (curad->itname_string.cstr, str, len);
       if (c == 0 && curad->itname_string.cstr[len] == (char) 0)
         {
-          rad = curad;
+          tun = curad;
           goto end;
         };
       if (c <= 0)
@@ -101,13 +101,13 @@ mom_find_name_radix (const char *str, int len)
       if (!strncmp (curad->itname_string.cstr, str, len)
           && curad->itname_string.cstr[len] == (char) 0)
         {
-          rad = curad;
+          tun = curad;
           goto end;
         };
     }
 end:
   pthread_mutex_unlock (&radix_mtx_mom);
-  return rad;
+  return tun;
 }                               /* end of mom_find_name_radix  */
 
 
@@ -115,13 +115,13 @@ end:
 const struct mom_itemname_tu *
 mom_make_name_radix (const char *str, int len)
 {
-  struct mom_itemname_tu *rad = NULL;
+  struct mom_itemname_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
   if (len < 0)
     len = strlen (str);
   if (len >= 256)
-    MOM_FATAPRINTF ("too big length %d for name radix %.*s", len, str, len);
+    MOM_FATAPRINTF ("too big length %d for name radix %.*s", len, len, str);
   if (!mom_valid_name_radix (str, len))
     return NULL;
   pthread_mutex_lock (&radix_mtx_mom);
@@ -159,6 +159,7 @@ mom_make_name_radix (const char *str, int len)
           radix_arr_mom[0].rad_siz_items = itmsiz;
           radix_arr_mom[0].rad_cnt_items = 0;
           radix_cnt_mom = 1;
+          tun = nam;
           goto end;
         }
     };
@@ -172,7 +173,7 @@ mom_make_name_radix (const char *str, int len)
       int c = strncmp (curad->itname_string.cstr, str, len);
       if (c == 0 && curad->itname_string.cstr[len] == (char) 0)
         {
-          rad = curad;
+          tun = curad;
           goto end;
         };
       if (c <= 0)
@@ -180,6 +181,7 @@ mom_make_name_radix (const char *str, int len)
       else
         hi = md;
     };
+#warning mom_make_name_radix: the insertion order is probably bad
   for (int ix = lo; ix < (int) radix_cnt_mom; ix++)
     {
       struct mom_itemname_tu *curad = radix_arr_mom[ix].rad_name;
@@ -189,7 +191,7 @@ mom_make_name_radix (const char *str, int len)
       int c = strncmp (curad->itname_string.cstr, str, len);
       if (c == 0 && curad->itname_string.cstr[len] == (char) 0)
         {
-          rad = curad;
+          tun = curad;
           goto end;
         }
       else if (c <= 0 && (ix + 1 >= (int) radix_cnt_mom
@@ -205,7 +207,7 @@ mom_make_name_radix (const char *str, int len)
           struct mom_itemname_tu *nam =
             mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
                                    2) | 3) + 1);
-          nam->itname_rank = 0;
+          nam->itname_rank = ix;
           nam->itname_string.va_itype = MOM_BOXSTRING_ITYPE;
           nam->itname_string.va_hsiz = len >> 8;
           nam->itname_string.va_lsiz = len & 0xffff;
@@ -219,11 +221,11 @@ mom_make_name_radix (const char *str, int len)
           radix_arr_mom[ix].rad_siz_items = itmsiz;
           radix_arr_mom[ix].rad_cnt_items = 0;
           radix_cnt_mom++;
-	  rad = radix_arr_mom + ix;
+          tun = nam;
           goto end;
         }
     }
 end:
   pthread_mutex_unlock (&radix_mtx_mom);
-  return rad;
+  return tun;
 }                               /* end of mom_make_name_radix */

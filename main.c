@@ -721,15 +721,13 @@ main (int argc_main, char **argv_main)
   const struct mom_itemname_tu *nt3 = mom_make_name_radix ("cde", -1);
   const struct mom_itemname_tu *nt4 = mom_make_name_radix ("bb", -1);
   const struct mom_itemname_tu *nt5 = mom_make_name_radix ("zx", -1);
-  printf ("nt1=%p nt2=%p nt3=%p nt4=%p nt5=%p\n",
-	  nt1, nt2, nt3, nt4, nt5);
+  printf ("nt1=%p nt2=%p nt3=%p nt4=%p nt5=%p\n", nt1, nt2, nt3, nt4, nt5);
   const struct mom_itemname_tu *nt6 = mom_make_name_radix ("Ze", -1);
   const struct mom_itemname_tu *nt7 = mom_make_name_radix ("XYZabcde", -1);
   const struct mom_itemname_tu *nt8 = mom_make_name_radix ("acdeB", -1);
   const struct mom_itemname_tu *nt9 = mom_make_name_radix ("bb", -1);
   const struct mom_itemname_tu *nt10 = mom_make_name_radix ("zax", -1);
-  printf ("nt6=%p nt7=%p nt8=%p nt9=%p nt10=%p\n",
-	  nt6, nt7, nt8, nt9, nt10);
+  printf ("nt6=%p nt7=%p nt8=%p nt9=%p nt10=%p\n", nt6, nt7, nt8, nt9, nt10);
   const struct mom_itemname_tu *ntf = mom_find_name_radix ("bb", -1);
   printf ("ntf=%p\n", ntf);
   assert (ntf == nt4);

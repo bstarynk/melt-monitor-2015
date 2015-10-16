@@ -49,7 +49,7 @@ all: monimelt
 
 clean:
 	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.orig
-	$(RM) *sqlite
+	$(RM) core*
 
 
 
