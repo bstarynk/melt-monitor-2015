@@ -68,7 +68,7 @@ struct mom_sizedvalue_st {
   
 enum { MOM_BOXSTRING_ITYPE=1 };
 struct mom_boxstring_st {
-  MOM_SIZEDVALUE_FIELDS;
+  MOM_HASHEDVALUE_FIELDS;
   // here
   char cstr[];			/* actual size sva_size+1 */
 };
