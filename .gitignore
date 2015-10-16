@@ -32,3 +32,8 @@ monimelt
 
 # Debug files
 *.dSYM/
+
+## Basile's backup
+*%
+*~
+*.tmp*

@@ -65,6 +65,7 @@ _timestamp.c:
 	(echo -n 'const char monimelt_checksum[]="'; cat monimelt.h $(GENERATED_HEADERS) $(SOURCES) | $(MD5SUM) | cut -d' ' -f1 | tr -d '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
 	mv _timestamp.tmp _timestamp.c
 
+$(OBJECTS): monimelt.h $(GENERATED_HEADERS)
 monimelt: $(OBJECTS) _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
 	$(LINK.c)  $(LINKFLAGS) -rdynamic $^ $(LIBES) -o $@
