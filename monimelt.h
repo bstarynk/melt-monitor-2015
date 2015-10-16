@@ -326,6 +326,9 @@ struct mom_string_and_size_st
 
 struct mom_string_and_size_st mom_input_quoted_utf8 (FILE *f);
 
+typedef uint32_t momhash_t;
+momhash_t mom_cstring_hash_len (const char *str, int len);
+
 /// the generated header about structures
 #include "_mom_datastruct.h"
 

@@ -22,7 +22,7 @@ struct mom_anyvalue_st { /// field prefix: va_;
 
 #define MOM_HASHEDVALUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
-  uint32_t hva_hash
+  momhash_t hva_hash
 
 enum { MOM_BOXINT_LTYPE=1 };
 struct mom_boxint_st {
