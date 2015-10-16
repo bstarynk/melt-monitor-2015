@@ -332,4 +332,8 @@ momhash_t mom_cstring_hash_len (const char *str, int len);
 /// the generated header about structures
 #include "_mom_datastruct.h"
 
+bool mom_valid_name_radix (const char *str, int len);
+
+const struct mom_itemname_tu *mom_find_name_radix (const char *str, int len);
+const struct mom_itemname_tu *mom_make_name_radix (const char *str, int len);
 #endif /*MONIMELT_INCLUDED_ */
