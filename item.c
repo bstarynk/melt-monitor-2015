@@ -30,7 +30,11 @@ struct radix_mom_st
   struct mom_item_st **rad_items_arr;   /* hashtable of items of same radix */
   unsigned rad_siz_items;       /* allocated size of rad_items_arr */
   unsigned rad_cnt_items;       /* used count of rad_items_arr */
+  pthread_mutex_t rad_mtx;
 };
+/// actually, it might be better to have each element of the array be
+/// individually allocated, with its own mutex...
+
 static struct radix_mom_st *radix_arr_mom;
 static unsigned radix_siz_mom;  /* allocated size of radix_arr_mom */
 static unsigned radix_cnt_mom;  /* used count of radix_arr_mom */
@@ -260,3 +264,73 @@ end:
                    tix);
   return tun;
 }                               /* end of mom_make_name_radix */
+
+
+static inline momhash_t
+hash_item_from_radix_id_mom (const struct mom_itemname_tu *radix,
+                             uint16_t hid, uint64_t loid)
+{
+  if (!radix)
+    return 0;
+  momhash_t hr = radix->itname_string.hva_hash;
+  momhash_t hi =
+    17 * hid +
+    ((443 * (uint32_t) (loid >> 32)) ^ (541 *
+                                        (uint32_t) (loid & 0xffffffff)));
+  momhash_t h = ((601 * hr) ^ (647 * hi)) + ((hr - hi) & 0xffff);
+  if (MOM_UNLIKELY (h == 0))
+    h =
+      11 * (hr & 0xffff) + 17 * (hi & 0xffff) + (hid % 1637) +
+      (loid & 0xfffff) + 5;
+  assert (h != 0);
+  return h;
+}
+
+struct mom_item_st *
+mom_find_item_from_radix_id (const struct mom_itemname_tu *radix,
+                             uint16_t hid, uint64_t loid)
+{
+  struct mom_item_st *itm = NULL;
+  if (!radix)
+    return NULL;
+  pthread_mutex_lock (&radix_mtx_mom);
+  assert (radix_cnt_mom <= radix_siz_mom);
+  uint32_t radrk = radix->itname_rank;
+  assert (radrk < radix_cnt_mom);
+  struct radix_mom_st *curad = radix_arr_mom + radrk;
+  momhash_t hi = hash_item_from_radix_id_mom (radix, hid, loid);
+  unsigned sz = curad->rad_siz_items;
+  assert (curad->rad_cnt_items < sz);
+  unsigned startix = hi % sz;
+  for (unsigned ix = startix; ix < sz; ix++)
+    {
+      struct mom_item_st *curitm = curad->rad_items_arr[ix];
+      if (curitm == MOM_EMPTY_SLOT)
+        continue;
+      if (!curitm)
+        goto end;
+      if (curitm->itm_radix == radix && curitm->itm_hid == hid
+          && curitm->itm_lid == loid)
+        {
+          itm = curitm;
+          goto end;
+        }
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      struct mom_item_st *curitm = curad->rad_items_arr[ix];
+      if (curitm == MOM_EMPTY_SLOT)
+        continue;
+      if (!curitm)
+        goto end;
+      if (curitm->itm_radix == radix && curitm->itm_hid == hid
+          && curitm->itm_lid == loid)
+        {
+          itm = curitm;
+          goto end;
+        }
+    }
+end:
+  pthread_mutex_unlock (&radix_mtx_mom);
+  return itm;
+}                               /* end of mom_find_item_from_radix_id */

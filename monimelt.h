@@ -114,6 +114,8 @@ int64_t mom_prime_below (int64_t n);
 #define MOM_UNUSED
 #endif
 
+#define MOM_EMPTY_SLOT ((void*)-1)
+
 static inline pid_t
 mom_gettid (void)
 {
@@ -337,4 +339,17 @@ bool mom_valid_name_radix (const char *str, int len);
 
 const struct mom_itemname_tu *mom_find_name_radix (const char *str, int len);
 const struct mom_itemname_tu *mom_make_name_radix (const char *str, int len);
+struct mom_item_st *mom_find_item_from_radix_id (const struct mom_itemname_tu
+                                                 *radix, uint16_t hid,
+                                                 uint64_t loid);
+
+static inline struct mom_item_st *
+mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
+                           uint64_t loid)
+{
+  const struct mom_itemname_tu *tu = mom_find_name_radix (str, len);
+  if (tu)
+    return mom_find_item_from_radix_id (tu, hid, loid);
+  return NULL;
+}
 #endif /*MONIMELT_INCLUDED_ */

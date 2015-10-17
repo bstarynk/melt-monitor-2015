@@ -180,7 +180,7 @@ struct mom_itemname_tu {
 
 #define MOM_ITEM_FIELDS						\
   MOM_HASHEDVALUE_FIELDS;					\
-  struct momitemname_tu* itm_radix;				\
+  struct mom_itemname_tu* itm_radix;				\
   pthread_mutex_t itm_mtx;					\
   atomic_uint_least16_t itm_spacix;				\
   uint16_t itm_xtra;						\
