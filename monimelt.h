@@ -352,4 +352,10 @@ mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
     return mom_find_item_from_radix_id (tu, hid, loid);
   return NULL;
 }
+
+struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
+                                                 *radix, uint16_t hid,
+                                                 uint64_t loid,
+                                                 unsigned isize);
+
 #endif /*MONIMELT_INCLUDED_ */

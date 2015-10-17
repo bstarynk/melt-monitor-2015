@@ -178,6 +178,7 @@ struct mom_itemname_tu {
   struct mom_boxstring_st itname_string;
 };
 
+enum { MOM_ITEM_ITYPE=5 };
 #define MOM_ITEM_FIELDS						\
   MOM_HASHEDVALUE_FIELDS;					\
   struct mom_itemname_tu* itm_radix;				\
@@ -190,6 +191,7 @@ struct mom_itemname_tu {
   struct mom_vectvaldata_st* itm_comps;				\
   struct mom_anyvalue_st* itm_rest[] /* size is sva_size */
 
+#define MOM_ITEM_MAXFIELDS 32768
 struct mom_item_st {
   MOM_ITEM_FIELDS;
 };

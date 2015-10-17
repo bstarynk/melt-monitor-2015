@@ -286,6 +286,7 @@ hash_item_from_radix_id_mom (const struct mom_itemname_tu *radix,
   return h;
 }
 
+
 struct mom_item_st *
 mom_find_item_from_radix_id (const struct mom_itemname_tu *radix,
                              uint16_t hid, uint64_t loid)
@@ -334,3 +335,170 @@ end:
   pthread_mutex_unlock (&radix_mtx_mom);
   return itm;
 }                               /* end of mom_find_item_from_radix_id */
+
+
+static int
+put_item_in_radix_rank_mom (struct radix_mom_st *curad,
+                            struct mom_item_st *itm)
+{
+  assert (curad);
+  assert (itm);
+  momhash_t hi = itm->hva_hash;
+  unsigned sz = curad->rad_siz_items;
+  assert (curad->rad_cnt_items < sz);
+  unsigned startix = hi % sz;
+  int pos = -1;
+  for (unsigned ix = startix; ix < sz; ix++)
+    {
+      struct mom_item_st *curitm = curad->rad_items_arr[ix];
+      if (curitm == itm)
+        return ix;
+      if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        };
+      if (!curitm)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          goto end;
+        }
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      struct mom_item_st *curitm = curad->rad_items_arr[ix];
+      if (curitm == itm)
+        return ix;
+      if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        };
+      if (!curitm)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          goto end;
+        }
+    }
+end:
+  assert (pos >= 0 && pos < (int) sz);
+  return pos;
+}                               /* end of put_item_in_radix_rank_mom */
+
+
+void
+mom_cleanup_item (void *itmad, void *clad)
+{
+  assert (itmad != NULL);
+  assert (clad == NULL);
+  struct mom_item_st *itm = itmad;
+  unsigned sz = (itm->va_hsiz << 16) + itm->va_lsiz;
+  pthread_mutex_lock (&radix_mtx_mom);
+  assert (radix_cnt_mom <= radix_siz_mom);
+  struct mom_itemname_tu *radix = itm->itm_radix;
+#if 0
+  assert (radix != NULL);
+  int pos = put_item_in_radix_rank_mom (radix, itm);
+  assert (curad->rad_items_arr[pos] == itm);
+  curad->rad_items_arr[pos] = MOM_EMPTY_SLOT;
+  curad->rad_cnt_items--;
+  pthread_mutex_destroy (&itm->itm_mtx);
+  memset (itmad, 0, sizeof (struct mom_item_st) + sz * sizeof (void *));
+#endif
+#warning mom_cleanup_item incomplete
+end:
+  pthread_mutex_unlock (&radix_mtx_mom);
+}                               /* end of mom_cleanup_item */
+
+struct mom_item_st *
+mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
+                             uint16_t hid, uint64_t loid, unsigned isize)
+{
+  struct mom_item_st *itm = NULL;
+  if (!radix)
+    return NULL;
+  if (MOM_UNLIKELY (isize > MOM_ITEM_MAXFIELDS))
+    MOM_FATAPRINTF ("too big item size %d", isize);
+  pthread_mutex_lock (&radix_mtx_mom);
+  assert (radix_cnt_mom <= radix_siz_mom);
+  uint32_t radrk = radix->itname_rank;
+  assert (radrk < radix_cnt_mom);
+  struct radix_mom_st *curad = radix_arr_mom + radrk;
+  momhash_t hi = hash_item_from_radix_id_mom (radix, hid, loid);
+  unsigned sz = curad->rad_siz_items;
+  unsigned cnt = curad->rad_cnt_items;
+  assert (cnt <= sz);
+  if (MOM_UNLIKELY (4 * cnt + 3 >= 5 * sz))
+    {
+      unsigned newsiz =
+        mom_prime_above (4 * cnt / 3 + 10 +
+                         (((cnt > 100) ? (cnt / 32) : 3) + 1));
+      if (newsiz > sz)
+        {
+          struct mom_item_st **oldarr = curad->rad_items_arr;
+          unsigned oldsiz = sz;
+          unsigned oldcnt = cnt;
+          struct mom_item_st **newarr =
+            mom_gc_alloc (newsiz * sizeof (struct mom_item_st *));
+          curad->rad_items_arr = newarr;
+          curad->rad_siz_items = newsiz;
+          curad->rad_cnt_items = 0;
+          for (unsigned ix = 0; ix < oldsiz; ix++)
+            {
+              struct mom_item_st *olditm = oldarr[ix];
+              if (!olditm || olditm == MOM_EMPTY_SLOT)
+                continue;
+              int pos = put_item_in_radix_rank_mom (curad, olditm);
+              assert (pos >= 0 && pos < (int) newsiz
+                      && curad->rad_items_arr[pos] == NULL);
+              curad->rad_items_arr[pos] = olditm;
+              curad->rad_cnt_items++;
+            }
+          assert (curad->rad_cnt_items == oldcnt);
+          sz = newsiz;
+        }
+    };
+  {
+    struct mom_item_st pseudoitemzon;
+    memset (&pseudoitemzon, 0, sizeof (pseudoitemzon));
+    pseudoitemzon.hva_hash = hi;
+    pseudoitemzon.itm_radix = (struct mom_itemname_tu *) radix;
+    pseudoitemzon.itm_hid = hid;
+    pseudoitemzon.itm_lid = loid;
+    int pos = put_item_in_radix_rank_mom (curad, &pseudoitemzon);
+    assert (pos >= 0 && pos < (int) sz);
+    if (curad->rad_items_arr[pos] != NULL
+        && curad->rad_items_arr[pos] != MOM_EMPTY_SLOT)
+      {
+        itm = curad->rad_items_arr[pos];
+        goto end;
+      }
+    struct mom_item_st *newitm =
+      mom_gc_alloc (sizeof (struct mom_item_st) * isize * sizeof (void *));
+    newitm->va_itype = MOM_ITEM_ITYPE;
+    newitm->va_hsiz = isize >> 16;
+    newitm->va_lsiz = isize & 0xffff;
+    newitm->hva_hash = hi;
+    newitm->itm_radix = (struct mom_itemname_tu *) radix;
+#warning should have a mutex attribute for item mutexes
+    pthread_mutex_init (&newitm->itm_mtx, NULL);
+    newitm->itm_spacix = 0;
+    newitm->itm_xtra = 0;
+    newitm->itm_hid = hid;
+    newitm->itm_lid = loid;
+    newitm->itm_attrs = NULL;
+    newitm->itm_comps = NULL;
+    for (unsigned i = 0; i < isize; i++)
+      newitm->itm_rest[i] = NULL;
+    GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
+                                       NULL);
+    itm = newitm;
+  }
+end:
+  pthread_mutex_unlock (&radix_mtx_mom);
+  return itm;
+}                               /* end of mom_make_item_from_radix_id */
