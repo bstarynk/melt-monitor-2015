@@ -816,6 +816,8 @@ main (int argc_main, char **argv_main)
   if (!mom_prog_dlhandle)
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
+  if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'D')
+    mom_set_debugging (argv[1] + 2);
   mom_print_sizes ();
   const struct mom_itemname_tu *nt1 = mom_make_name_radix ("abc", -1);
   const struct mom_itemname_tu *nt2 = mom_make_name_radix ("abcde", 4);

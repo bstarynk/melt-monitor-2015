@@ -54,16 +54,17 @@ clean:
 
 
 _timestamp.c:
-	date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
-	(echo -n 'const char monimelt_lastgitcommit[]="' ; \
-	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
-	     | head -1 | tr -d '\n\r\f\"' ; \
-	   echo '";') >> _timestamp.tmp
-	(echo 'const char monimelt_compilercommand[]="$(strip $(CXX))";') >> _timestamp.tmp
-	(echo -n 'const char monimelt_compilerversion[]="' ; $(CXX) -v < /dev/null 2>&1 | grep -i version | tr -d  '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
-	(echo -n 'const char monimelt_compilerflags[]="' ; echo -n "$(strip $(CXXFLAGS))" | sed 's:":\\":g' ; echo '";') >> _timestamp.tmp
-	(echo -n 'const char monimelt_checksum[]="'; cat monimelt.h $(GENERATED_HEADERS) $(SOURCES) | $(MD5SUM) | cut -d' ' -f1 | tr -d '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
-	mv _timestamp.tmp _timestamp.c
+	@date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
+	@(echo -n 'const char monimelt_lastgitcommit[]="' ; \
+	@   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
+	@     | head -1 | tr -d '\n\r\f\"' ; \
+	@   echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_lastag[]="'; git describe --abbrev=0 --tags | td -d '\n\r\f\"'; echo '";') >> _timestamp.tmp
+	@(echo 'const char monimelt_compilercommand[]="$(strip $(CC))";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_compilerversion[]="' ; $(CC) -v < /dev/null 2>&1 | grep -i version | tr -d  '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_compilerflags[]="' ; echo -n "$(strip $(CFLAGS))" | sed 's:":\\":g' ; echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_checksum[]="'; cat monimelt.h $(GENERATED_HEADERS) $(SOURCES) | $(MD5SUM) | cut -d' ' -f1 | tr -d '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
+	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): monimelt.h $(GENERATED_HEADERS)
 monimelt: $(OBJECTS) _timestamp.o
