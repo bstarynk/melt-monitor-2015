@@ -59,7 +59,7 @@ _timestamp.c:
 	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
 	     | head -1 | tr -d '\n\r\f\"' ; \
 	   echo '";') >> _timestamp.tmp
-	@(echo -n 'const char monimelt_lastag[]="'; git describe --abbrev=0 --tags | td -d '\n\r\f\"'; echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_lastgittag[]="'; git describe --abbrev=0 --tags | tr -d '\n\r\f\"'; echo '";') >> _timestamp.tmp
 	@(echo 'const char monimelt_compilercommand[]="$(strip $(CC))";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_compilerversion[]="' ; $(CC) -v < /dev/null 2>&1 | grep -i version | tr -d  '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_compilerflags[]="' ; echo -n "$(strip $(CFLAGS))" | sed 's:":\\":g' ; echo '";') >> _timestamp.tmp

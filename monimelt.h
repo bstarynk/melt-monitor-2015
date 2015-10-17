@@ -90,6 +90,7 @@
 // in generated _timestamp.c
 extern const char monimelt_timestamp[];
 extern const char monimelt_lastgitcommit[];
+extern const char monimelt_lastgittag[];
 extern const char monimelt_compilercommand[];
 extern const char monimelt_compilerflags[];
 extern const char monimelt_checksum[];
