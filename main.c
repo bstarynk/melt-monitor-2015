@@ -361,6 +361,56 @@ mom_debugprintf_at (const char *fil, int lin, enum mom_debug_en dbg,
 }
 
 
+/************************* inform *************************/
+
+void
+mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
+{
+  int len = 0;
+  char thrname[24];
+  char buf[160];
+  char timbuf[64];
+  char *bigbuf = NULL;
+  char *msg = NULL;
+  memset (buf, 0, sizeof (buf));
+  memset (thrname, 0, sizeof (thrname));
+  memset (timbuf, 0, sizeof (timbuf));
+  pthread_getname_np (pthread_self (), thrname, sizeof (thrname) - 1);
+  fflush (NULL);
+  mom_now_strftime_bufcenti (timbuf, "%Y-%b-%d %H:%M:%S.__ %Z");
+  va_list alist;
+  va_start (alist, fmt);
+  len = vsnprintf (buf, sizeof (buf), fmt, alist);
+  va_end (alist);
+  if (MOM_UNLIKELY (len >= (int) sizeof (buf) - 1))
+    {
+      bigbuf = malloc (len + 10);
+      if (bigbuf)
+        {
+          memset (bigbuf, 0, len + 10);
+          va_start (alist, fmt);
+          (void) vsnprintf (bigbuf, len + 1, fmt, alist);
+          va_end (alist);
+          msg = bigbuf;
+        }
+    }
+  else
+    msg = buf;
+  if (syslogging_mom)
+    {
+      syslog (LOG_INFO, "MONIMELT INFORM @%s:%d <%s:%d> %s %s",
+              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+    }
+  else
+    {
+      fprintf (stderr, "MONIMELT INFORM @%s:%d <%s:%d> %s %s\n",
+               fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+      fflush (NULL);
+    }
+  if (bigbuf)
+    free (bigbuf);
+}
+
 /************************* warning *************************/
 
 void
@@ -522,6 +572,8 @@ mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
   return buf;
 }
 
+
+////////////////
 void *
 mom_gc_calloc (size_t nmemb, size_t size)
 {
@@ -700,6 +752,55 @@ mom_print_sizes (void)
   PRINT_SIZEOF (struct mom_assovaldata_st);
   PRINT_SIZEOF (struct mom_vectvaldata_st);
   PRINT_SIZEOF (struct mom_item_st);
+}
+
+void
+mom_set_debugging (const char *dbgopt)
+{
+  char dbuf[256];
+  if (!dbgopt)
+    return;
+  memset (dbuf, 0, sizeof (dbuf));
+  if (strlen (dbgopt) >= sizeof (dbuf) - 1)
+    MOM_FATAPRINTF ("too long debug option %s", dbgopt);
+  strcpy (dbuf, dbgopt);
+  char *comma = NULL;
+  if (!strcmp (dbuf, ".") || !strcmp (dbuf, "_"))
+    {
+      mom_debugflags = ~0;
+      MOM_INFORMPRINTF ("set all debugging");
+    }
+  else
+    for (char *pc = dbuf; pc != NULL; pc = comma ? comma + 1 : NULL)
+      {
+        comma = strchr (pc, ',');
+        if (comma)
+          *comma = (char) 0;
+#define MOM_TEST_DEBUG_OPTION(Nam)			\
+	if (!strcmp(pc,#Nam))		{		\
+	  mom_debugflags |=  (1<<momdbg_##Nam); } else	\
+	  if (!strcmp(pc,"!"#Nam))			\
+	    mom_debugflags &=  ~(1<<momdbg_##Nam); else
+        if (!pc)
+          break;
+        MOM_DEBUG_LIST_OPTIONS (MOM_TEST_DEBUG_OPTION) if (pc && *pc)
+          MOM_WARNPRINTF ("unrecognized debug flag %s", pc);
+      }
+  char alldebugflags[2 * sizeof (dbuf) + 120];
+  memset (alldebugflags, 0, sizeof (alldebugflags));
+  int nbdbg = 0;
+#define MOM_SHOW_DEBUG_OPTION(Nam) do {		\
+    if (mom_debugflags & (1<<momdbg_##Nam)) {	\
+     strcat(alldebugflags, " " #Nam);		\
+     assert (strlen(alldebugflags)		\
+	     <sizeof(alldebugflags)-3);		\
+     nbdbg++;					\
+    } } while(0);
+  MOM_DEBUG_LIST_OPTIONS (MOM_SHOW_DEBUG_OPTION);
+  if (nbdbg > 0)
+    MOM_INFORMPRINTF ("%d debug flags active:%s.", nbdbg, alldebugflags);
+  else
+    MOM_INFORMPRINTF ("no debug flags active.");
 }
 
 int
