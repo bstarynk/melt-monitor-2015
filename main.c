@@ -844,5 +844,12 @@ main (int argc_main, char **argv_main)
     printf ("random32 r1=%u=%#x r2=%u=%#x r3=%u=%#x r4=%u=%#x\n",
             r1, r1, r2, r2, r3, r3, r4, r4);
   }
+  struct mom_item_st *it1 = mom_clone_item_from_radix (nt1, 2);
+  struct mom_item_st *it2 = mom_clone_item_from_radix (nt1, 3);
+  struct mom_item_st *it3 = mom_make_item_from_radix (nt3, 4);
+  struct mom_item_st *it4 = mom_make_item_from_radix_id (nt3, 1, 1, 5);
+  printf ("it1=%s it2=%s it3=%s it4=%s\n", mom_item_cstring (it1),
+          mom_item_cstring (it2), mom_item_cstring (it3),
+          mom_item_cstring (it4));
   return 0;
 }

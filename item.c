@@ -122,6 +122,15 @@ char14_to_num80_mom (const char *buf)
 }
 
 
+const char *
+mom_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN], uint16_t hi,
+                  uint64_t lo)
+{
+  mom_uint128_t i = (((mom_uint128_t) hi) << 64) | lo;
+  return num80_to_char14_mom (i, buf);
+}
+
+
 const struct mom_itemname_tu *
 mom_find_name_radix (const char *str, int len)
 {
@@ -711,6 +720,24 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix,
   return itm;
 }                               /* end of mom_clone_item_from_radix */
 
+
+const char *
+mom_item_cstring (const struct mom_item_st *itm)
+{
+  if (!itm)
+    return NULL;
+  if (itm->itm_hid == 0 && itm->itm_lid == 0)
+    return mom_item_radix_str (itm);
+  else
+    {
+      char buf[300];
+      char bufnum[MOM_HI_LO_SUFFIX_LEN];
+      memset (buf, 0, sizeof (buf));
+      snprintf (buf, sizeof (buf), "%s_%s", mom_item_radix_str (itm),
+                mom_item_hi_lo_suffix (bufnum, itm));
+      return GC_STRDUP (buf);
+    }
+}
 
 void
 mom_initialize_items (void)

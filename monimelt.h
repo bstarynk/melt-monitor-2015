@@ -365,6 +365,49 @@ struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
                                                  uint64_t loid,
                                                  unsigned isize);
 
+
+static inline struct mom_item_st *
+mom_make_item_from_str_id (const char *str, int len, uint16_t hid,
+                           uint64_t loid, unsigned isize)
+{
+  const struct mom_itemname_tu *tu = mom_find_name_radix (str, len);
+  if (tu)
+    return mom_make_item_from_radix_id (tu, hid, loid, isize);
+  return NULL;
+}
+
+static inline struct mom_item_st *
+mom_make_item_from_radix (const struct mom_itemname_tu *radix, unsigned isize)
+{
+  return mom_make_item_from_radix_id (radix, 0, 0, isize);
+}
+
 struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemname_tu
                                                *radix, unsigned isize);
+
+#define MOM_HI_LO_SUFFIX_LEN 16
+const char *mom_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN],
+                              uint16_t hi, uint64_t lo);
+
+static inline const char *
+mom_item_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN],
+                       const struct mom_item_st *itm)
+{
+  memset (buf, 0, MOM_HI_LO_SUFFIX_LEN);
+  if (itm && (itm->itm_hid || itm->itm_lid))
+    mom_hi_lo_suffix (buf, itm->itm_hid, itm->itm_lid);
+  return buf;
+}
+
+static inline const char *
+mom_item_radix_str (const struct mom_item_st *itm)
+{
+  if (itm)
+    return itm->itm_radix->itname_string.cstr;
+  else
+    return NULL;
+}
+
+const char *mom_item_cstring (const struct mom_item_st *itm);
+
 #endif /*MONIMELT_INCLUDED_ */
