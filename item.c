@@ -233,9 +233,12 @@ mom_make_name_radix (const char *str, int len)
                        && strncmp (nextrad->itname_string.cstr, str,
                                    len) > 0)))
         {                       // insert at ix
-          MOM_DEBUGPRINTF (item, "make radix loop inserting at ix=%d next %s",
+          MOM_DEBUGPRINTF (item, "make radix loop inserting %s ix=%d next %s",
+                           (c <= 0) ? "at" : "after",
                            ix,
                            nextrad ? nextrad->itname_string.cstr : "?none?");
+          if (c > 0 && ix + 1 == (int) radix_cnt_mom)
+            ix++;
           for (int j = radix_cnt_mom; j > ix; j--)
             {
               radix_arr_mom[j] = radix_arr_mom[j - 1];
@@ -268,6 +271,7 @@ mom_make_name_radix (const char *str, int len)
           radix_arr_mom[ix] = newrdx;
           tun = nam;
           tix = ix;
+          radix_cnt_mom++;
           goto end;
         }
     }
@@ -275,10 +279,16 @@ end:
   MOM_DEBUGPRINTF (item, "make name radix final radix_cnt=%d", radix_cnt_mom);
   if (MOM_IS_DEBUGGING (item))
     for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
-      MOM_DEBUGPRINTF (item, "make name radix [%d] @%p %s /%u", ix,
-                       radix_arr_mom[ix],
-                       radix_arr_mom[ix]->rad_name->itname_string.cstr,
-                       radix_arr_mom[ix]->rad_name->itname_string.hva_hash);
+      {
+        MOM_DEBUGPRINTF (item, "make name radix [%d] @%p %s /%u", ix,
+                         radix_arr_mom[ix],
+                         radix_arr_mom[ix]->rad_name->itname_string.cstr,
+                         radix_arr_mom[ix]->rad_name->itname_string.hva_hash);
+        if (ix > 0)
+          assert (strcmp
+                  (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                   radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+      }
   pthread_mutex_unlock (&radix_mtx_mom);
   MOM_DEBUGPRINTF (item, "mom_make_name_radix done %.*s tix %d", len, str,
                    tix);
