@@ -98,9 +98,9 @@ mom_find_name_radix (const char *str, int len)
           goto end;
         };
       if (c <= 0)
-        lo = md;
-      else
         hi = md;
+      else
+        lo = md;
     };
   for (int ix = lo; ix < hi; ix++)
     {
@@ -203,9 +203,9 @@ mom_make_name_radix (const char *str, int len)
           goto end;
         };
       if (c <= 0)
-        lo = md;
-      else
         hi = md;
+      else
+        lo = md;
     };
   MOM_DEBUGPRINTF (item, "make radix loop lo=%d radix_cnt=%d", lo,
                    radix_cnt_mom);
