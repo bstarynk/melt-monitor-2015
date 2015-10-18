@@ -330,6 +330,11 @@ struct mom_string_and_size_st
 struct mom_string_and_size_st mom_input_quoted_utf8 (FILE *f);
 
 typedef uint32_t momhash_t;
+
+typedef __int128 mom_int128_t;
+typedef unsigned __int128 mom_uint128_t;
+
+
 momhash_t mom_cstring_hash_len (const char *str, int len);
 
 /// the generated header about structures
@@ -353,9 +358,13 @@ mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
   return NULL;
 }
 
+void mom_initialize_items (void);
+
 struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
                                                  *radix, uint16_t hid,
                                                  uint64_t loid,
                                                  unsigned isize);
 
+struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemname_tu
+                                               *radix, unsigned isize);
 #endif /*MONIMELT_INCLUDED_ */

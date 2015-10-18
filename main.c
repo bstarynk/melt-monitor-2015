@@ -818,6 +818,7 @@ main (int argc_main, char **argv_main)
   mom_random_init_genrand ();
   if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'D')
     mom_set_debugging (argv[1] + 2);
+  mom_initialize_items ();
   mom_print_sizes ();
   const struct mom_itemname_tu *nt1 = mom_make_name_radix ("abc", -1);
   const struct mom_itemname_tu *nt2 = mom_make_name_radix ("abcde", 4);
@@ -835,5 +836,13 @@ main (int argc_main, char **argv_main)
   printf ("ntf=%p\n", ntf);
   assert (ntf == nt4);
   assert (nt9 == nt4);
+  {
+    uint32_t r1 = mom_random_uint32 ();
+    uint32_t r2 = mom_random_uint32 ();
+    uint32_t r3 = mom_random_uint32 ();
+    uint32_t r4 = mom_random_uint32 ();
+    printf ("random32 r1=%u=%#x r2=%u=%#x r3=%u=%#x r4=%u=%#x\n",
+            r1, r1, r2, r2, r3, r3, r4, r4);
+  }
   return 0;
 }
