@@ -362,28 +362,35 @@ void mom_initialize_items (void);
 
 struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
                                                  *radix, uint16_t hid,
-                                                 uint64_t loid,
-                                                 unsigned isize);
+                                                 uint64_t loid);
 
 
 static inline struct mom_item_st *
-mom_make_item_from_str_id (const char *str, int len, uint16_t hid,
-                           uint64_t loid, unsigned isize)
+mom_make_item_from_str_id (const char *str, int len,
+                           uint16_t hid, uint64_t loid)
 {
   const struct mom_itemname_tu *tu = mom_find_name_radix (str, len);
   if (tu)
-    return mom_make_item_from_radix_id (tu, hid, loid, isize);
+    return mom_make_item_from_radix_id (tu, hid, loid);
   return NULL;
 }
 
 static inline struct mom_item_st *
-mom_make_item_from_radix (const struct mom_itemname_tu *radix, unsigned isize)
+mom_make_item_from_radix (const struct mom_itemname_tu *radix)
 {
-  return mom_make_item_from_radix_id (radix, 0, 0, isize);
+  return mom_make_item_from_radix_id (radix, 0, 0);
 }
 
 struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemname_tu
-                                               *radix, unsigned isize);
+                                               *radix);
+
+static inline struct mom_item_st *
+mom_clone_item (const struct mom_item_st *itm)
+{
+  if (itm)
+    return mom_clone_item_from_radix (itm->itm_radix);
+  return NULL;
+}
 
 #define MOM_HI_LO_SUFFIX_LEN 16
 const char *mom_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN],

@@ -526,14 +526,12 @@ mom_cleanup_item (void *itmad, void *clad)
 
 struct mom_item_st *
 mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
-                             uint16_t hid, uint64_t loid, unsigned isize)
+                             uint16_t hid, uint64_t loid)
 {
   struct mom_item_st *itm = NULL;
   if (!radix)
     return NULL;
   struct radix_mom_st *curad = NULL;
-  if (MOM_UNLIKELY (isize > MOM_ITEM_MAXFIELDS))
-    MOM_FATAPRINTF ("too big item size %d", isize);
   {
     pthread_mutex_lock (&radix_mtx_mom);
     assert (radix_cnt_mom <= radix_siz_mom);
@@ -595,11 +593,8 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
         itm = curad->rad_items[pos];
         goto end;
       }
-    struct mom_item_st *newitm =
-      mom_gc_alloc (sizeof (struct mom_item_st) * isize * sizeof (void *));
-    newitm->va_itype = MOM_ITEM_ITYPE;
-    newitm->va_hsiz = isize >> 16;
-    newitm->va_lsiz = isize & 0xffff;
+    struct mom_item_st *newitm = mom_gc_alloc (sizeof (struct mom_item_st));
+    newitm->va_ltype = MOM_ITEM_LTYPE;
     newitm->hva_hash = hi;
     newitm->itm_radix = (struct mom_itemname_tu *) radix;
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
@@ -609,8 +604,6 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     newitm->itm_lid = loid;
     newitm->itm_attrs = NULL;
     newitm->itm_comps = NULL;
-    for (unsigned i = 0; i < isize; i++)
-      newitm->itm_rest[i] = NULL;
     GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = newitm;
@@ -621,15 +614,12 @@ end:
 }                               /* end of mom_make_item_from_radix_id */
 
 struct mom_item_st *
-mom_clone_item_from_radix (const struct mom_itemname_tu *radix,
-                           unsigned isize)
+mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
 {
   struct mom_item_st *itm = NULL;
   if (!radix)
     return NULL;
   struct radix_mom_st *curad = NULL;
-  if (MOM_UNLIKELY (isize > MOM_ITEM_MAXFIELDS))
-    MOM_FATAPRINTF ("too big item size %d", isize);
   {
     pthread_mutex_lock (&radix_mtx_mom);
     assert (radix_cnt_mom <= radix_siz_mom);
@@ -669,8 +659,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix,
         }
     }
   {
-    struct mom_item_st *quasitm =
-      mom_gc_alloc (sizeof (struct mom_item_st) + isize * sizeof (void *));
+    struct mom_item_st *quasitm = mom_gc_alloc (sizeof (struct mom_item_st));
     bool collided = false;
     int pos = -1;
     do
@@ -687,7 +676,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix,
               (mom_random_uint32 ());
           }
         while (MOM_UNLIKELY (hid == 0 || lid == 0));
-        quasitm->va_itype = MOM_ITEM_ITYPE;
+        quasitm->va_ltype = MOM_ITEM_LTYPE;
         quasitm->itm_radix = (struct mom_itemname_tu *) radix;
         quasitm->itm_hid = hid;
         quasitm->itm_lid = lid;
@@ -710,8 +699,6 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix,
     quasitm->itm_xtra = 0;
     quasitm->itm_attrs = NULL;
     quasitm->itm_comps = NULL;
-    for (unsigned i = 0; i < isize; i++)
-      quasitm->itm_rest[i] = NULL;
     GC_REGISTER_FINALIZER_IGNORE_SELF (quasitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = quasitm;

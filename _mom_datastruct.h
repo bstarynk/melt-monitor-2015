@@ -178,18 +178,19 @@ struct mom_itemname_tu {
   struct mom_boxstring_st itname_string;
 };
 
-enum { MOM_ITEM_ITYPE=5 };
-#define MOM_ITEM_FIELDS						\
-  MOM_HASHEDVALUE_FIELDS;					\
-  struct mom_itemname_tu* itm_radix;				\
-  pthread_mutex_t itm_mtx;					\
-  atomic_uint_least16_t itm_spacix;				\
-  uint16_t itm_xtra;						\
-  uint32_t itm_hid;						\
-  uint64_t itm_lid;						\
-  struct mom_assovaldata_st* itm_attrs;				\
-  struct mom_vectvaldata_st* itm_comps;				\
-  struct mom_anyvalue_st* itm_rest[] /* size is sva_size */
+enum { MOM_ITEM_LTYPE=3 };
+#define MOM_ITEM_FIELDS				\
+  MOM_HASHEDVALUE_FIELDS;			\
+  struct mom_itemname_tu* itm_radix;		\
+  pthread_mutex_t itm_mtx;			\
+  atomic_uint_least16_t itm_spacix;		\
+  uint16_t itm_xtra;				\
+  uint32_t itm_hid;				\
+  uint64_t itm_lid;				\
+  struct mom_assovaldata_st* itm_attrs;		\
+  struct mom_vectvaldata_st* itm_comps;		\
+  struct mom_item_st* itm_kinditm;		\
+  struct mom_anyvalue_st* itm_payload
 
 #define MOM_ITEM_MAXFIELDS 32768
 struct mom_item_st {
