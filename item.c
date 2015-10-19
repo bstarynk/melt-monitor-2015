@@ -1035,6 +1035,8 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
   unsigned siz = vec->cda_size;
   if (cnt + gap >= siz)
     {
+      if (cnt + gap >= MOM_SIZE_MAX)
+        MOM_FATAPRINTF ("too big gap %u for count %u", gap, cnt);
       unsigned newsiz = mom_prime_above (cnt + gap + cnt / 16 + 4);
       struct mom_vectvaldata_st *newvec
         = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
