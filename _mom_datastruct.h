@@ -158,8 +158,8 @@ struct mom_itementry_tu {
 enum { MOM_ASSOVALDATA_LTYPE=3 };
 #define MOM_ASSOVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
-  struct mom_itementry_tu* ada_entarr /* sorted array of entries */
-// allocated size of ada_entarr is cda_size; used count is cda_count.
+  struct mom_itementry_tu ada_ents[] /* sorted array of entries */
+// allocated size of ada_ents is cda_size; used count is cda_count.
 struct mom_assovaldata_st {
   MOM_ASSOVALDATA_FIELDS;
 };
@@ -188,8 +188,8 @@ enum { MOM_ITEM_LTYPE=3 };
   uint16_t itm_xtra;				\
   uint32_t itm_hid;				\
   uint64_t itm_lid;				\
-  struct mom_assovaldata_st* itm_attrs;		\
-  struct mom_vectvaldata_st* itm_comps;		\
+  struct mom_assovaldata_st* itm_pattr;		\
+  struct mom_vectvaldata_st* itm_pcomp;		\
   struct mom_item_st* itm_kinditm;		\
   struct mom_anyvalue_st* itm_payload
 

@@ -598,12 +598,8 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     newitm->hva_hash = hi;
     newitm->itm_radix = (struct mom_itemname_tu *) radix;
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
-    newitm->itm_spacix = 0;
-    newitm->itm_xtra = 0;
     newitm->itm_hid = hid;
     newitm->itm_lid = loid;
-    newitm->itm_attrs = NULL;
-    newitm->itm_comps = NULL;
     GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = newitm;
@@ -695,10 +691,6 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
       }
     while (MOM_UNLIKELY (collided));
     pthread_mutex_init (&quasitm->itm_mtx, &item_mtxattr_mom);
-    quasitm->itm_spacix = 0;
-    quasitm->itm_xtra = 0;
-    quasitm->itm_attrs = NULL;
-    quasitm->itm_comps = NULL;
     GC_REGISTER_FINALIZER_IGNORE_SELF (quasitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = quasitm;
@@ -778,7 +770,7 @@ struct mom_anyvalue_st *
 mom_assovaldata_get (const struct mom_assovaldata_st *asso,
                      const struct mom_item_st *itmat)
 {
-  if (!asso || !itmat)
+  if (!asso || asso == MOM_EMPTY_SLOT || !itmat || itmat == MOM_EMPTY_SLOT)
     return NULL;
   assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
   assert (itmat->va_ltype == MOM_ITEM_LTYPE);
@@ -786,24 +778,202 @@ mom_assovaldata_get (const struct mom_assovaldata_st *asso,
   assert (cnt <= asso->cda_size);
   if (!cnt)
     return NULL;
-  assert (asso->ada_entarr != NULL);
-  int lo = 0, hi = (int) cnt - 1, md = 0;
+  int lo = 0, hi = (int) cnt, md = 0;
   while (lo + 5 < hi)
     {
       md = (lo + hi) / 2;
-      int c = mom_item_cmp (itmat, asso->ada_entarr[md].ient_itm);
+      int c = mom_item_cmp (itmat, asso->ada_ents[md].ient_itm);
       if (c < 0)
         hi = md;
       else if (c > 0)
         lo = md;
       else
-        return asso->ada_entarr[md].ient_val;
+        return asso->ada_ents[md].ient_val;
     }
   for (md = lo; md < hi; md++)
-    if (itmat == asso->ada_entarr[md].ient_itm)
-      return asso->ada_entarr[md].ient_val;
+    if (itmat == asso->ada_ents[md].ient_itm)
+      return asso->ada_ents[md].ient_val;
   return NULL;
 }                               /* end of mom_assovaldata_get */
+
+
+
+struct mom_assovaldata_st *
+mom_assovaldata_remove (struct mom_assovaldata_st *asso,
+                        const struct mom_item_st *itmat)
+{
+  if (!asso || asso == MOM_EMPTY_SLOT || !itmat || itmat == MOM_EMPTY_SLOT)
+    return NULL;
+  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
+  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+
+  unsigned cnt = asso->cda_count;
+  unsigned siz = asso->cda_size;
+  assert (cnt <= siz);
+  if (!cnt)
+    return asso;
+  int lo = 0, hi = (int) cnt, md = 0;
+  while (lo + 5 < hi)
+    {
+      md = (lo + hi) / 2;
+      int c = mom_item_cmp (itmat, asso->ada_ents[md].ient_itm);
+      if (c < 0)
+        hi = md;
+      else if (c > 0)
+        lo = md;
+      else
+        goto remove_at_md;
+    }
+  for (md = lo; md < hi; md++)
+    if (itmat == asso->ada_ents[md].ient_itm)
+      goto remove_at_md;
+  return NULL;
+remove_at_md:
+  assert (itmat == asso->ada_ents[md].ient_itm);
+  assert (cnt > 0);
+  if (MOM_UNLIKELY (siz > 10 && cnt < siz / 3))
+    {
+      unsigned newsiz = mom_prime_above (4 * cnt / 3 + 3);
+      if (newsiz < siz)
+        {
+          struct mom_assovaldata_st *newasso
+            = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
+                            + newsiz * sizeof (struct mom_itementry_tu));
+          newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+          newasso->cda_size = newsiz;
+          for (int ix = 0; ix < md; ix++)
+            newasso->ada_ents[ix] = asso->ada_ents[ix];
+          for (int ix = md + 1; ix < hi; ix++)
+            newasso->ada_ents[ix - 1] = asso->ada_ents[ix];
+          newasso->cda_count = cnt - 1;
+          return newasso;
+        };
+    }
+  for (int ix = md + 1; ix < hi; ix++)
+    asso->ada_ents[ix - 1] = asso->ada_ents[ix];
+  asso->ada_ents[cnt - 1].ient_itm = NULL;
+  asso->ada_ents[cnt - 1].ient_val = NULL;
+  asso->cda_count = cnt - 1;
+  return asso;
+}
+
+struct mom_assovaldata_st *
+mom_assovaldata_put (struct mom_assovaldata_st *asso,
+                     const struct mom_item_st *itmat, const void *data)
+{
+  if (asso == MOM_EMPTY_SLOT)
+    asso = NULL;
+  if (!itmat || itmat == MOM_EMPTY_SLOT)
+    return asso;
+  if (!data || data == MOM_EMPTY_SLOT)
+    return mom_assovaldata_remove (asso, itmat);
+  if (!asso)
+    {
+      const unsigned newsiz = 5;
+      struct mom_assovaldata_st *newasso
+        = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
+                        + newsiz * sizeof (struct mom_itementry_tu));
+      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->cda_size = newsiz;
+      newasso->ada_ents[0].ient_itm = (struct mom_item_st *) itmat;
+      newasso->ada_ents[0].ient_val =
+        (struct mom_anyvalue_st *) (void *) data;
+      newasso->cda_count = 1;
+      return newasso;
+    };
+
+  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
+  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+  unsigned cnt = asso->cda_count;
+  unsigned siz = asso->cda_size;
+  assert (cnt <= siz);
+  int lo = 0, hi = (int) cnt, md = 0;
+  while (lo + 5 < hi)
+    {
+      md = (lo + hi) / 2;
+      int c = mom_item_cmp (itmat, asso->ada_ents[md].ient_itm);
+      if (c < 0)
+        hi = md;
+      else if (c > 0)
+        lo = md;
+      else
+        {
+          assert (itmat == asso->ada_ents[md].ient_itm);
+          asso->ada_ents[md].ient_val =
+            (struct mom_anyvalue_st *) (void *) data;
+          return asso;
+        }
+    };
+  if (MOM_UNLIKELY (cnt >= siz))
+    {
+      assert (cnt == siz);
+      unsigned newsiz =
+        mom_prime_above (5 * cnt / 4 + ((cnt > 32) ? (cnt / 32) : 1) + 2);
+      assert (newsiz > siz);
+      struct mom_assovaldata_st *newasso
+        = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
+                        + newsiz * sizeof (struct mom_itementry_tu));
+      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->cda_size = newsiz;
+      for (int ix = 0; ix < lo; ix++)
+        newasso->ada_ents[ix] = asso->ada_ents[ix];
+      int inspos = -1;
+      for (int ix = lo; ix < hi; ix++)
+        {
+          int c = mom_item_cmp (asso->ada_ents[ix].ient_itm, itmat);
+          if (c < 0)
+            newasso->ada_ents[ix] = asso->ada_ents[ix];
+          else if (c > 0)
+            {
+              inspos = ix;
+              break;
+            }
+          else
+            {
+              assert (asso->ada_ents[ix].ient_itm == itmat);
+              newasso->ada_ents[ix].ient_itm = (struct mom_item_st *) itmat;
+              newasso->ada_ents[ix].ient_val =
+                (struct mom_anyvalue_st *) data;
+              for (int j = ix + 1; j < (int) cnt; j++)
+                newasso->ada_ents[j] = asso->ada_ents[j];
+              newasso->cda_count = cnt;
+              return newasso;
+            }
+        };
+      if (inspos < 0)
+        inspos = hi;
+      newasso->ada_ents[inspos].ient_itm = (struct mom_item_st *) itmat;
+      newasso->ada_ents[inspos].ient_val = (struct mom_anyvalue_st *) data;
+      for (int ix = inspos; ix < (int) cnt; ix++)
+        newasso->ada_ents[ix + 1] = asso->ada_ents[ix];
+      newasso->cda_count = cnt + 1;
+      return newasso;
+    };
+  for (int ix = lo; ix < (int) cnt; ix++)
+    {
+      int c = mom_item_cmp (asso->ada_ents[ix].ient_itm, itmat);
+      if (c < 0)
+        continue;
+      else if (c > 0)
+        {
+          for (int j = cnt; j > ix; j++)
+            asso->ada_ents[j] = asso->ada_ents[j - 1];
+          asso->cda_count = cnt + 1;
+          return asso;
+        }
+      else
+        {
+          assert (asso->ada_ents[ix].ient_itm == itmat);
+          asso->ada_ents[ix].ient_itm = (struct mom_item_st *) itmat;
+          asso->ada_ents[ix].ient_val = (struct mom_anyvalue_st *) data;
+          return asso;
+        }
+    };
+  asso->ada_ents[cnt].ient_itm = (struct mom_item_st *) itmat;
+  asso->ada_ents[cnt].ient_val = (struct mom_anyvalue_st *) (void *) data;
+  asso->cda_count = cnt + 1;
+  return asso;
+}                               /* end of mom_assovaldata_put */
 
 void
 mom_initialize_items (void)

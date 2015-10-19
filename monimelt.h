@@ -417,4 +417,18 @@ mom_item_radix_str (const struct mom_item_st *itm)
 
 const char *mom_item_cstring (const struct mom_item_st *itm);
 
+struct mom_anyvalue_st *mom_assovaldata_get (const struct mom_assovaldata_st
+                                             *asso,
+                                             const struct mom_item_st *itmat);
+
+struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
+                                                   *asso,
+                                                   const struct mom_item_st
+                                                   *itmat);
+
+struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
+                                                *asso,
+                                                const struct mom_item_st
+                                                *itmat, const void *data);
+
 #endif /*MONIMELT_INCLUDED_ */
