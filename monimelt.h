@@ -439,4 +439,6 @@ struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
 struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
                                                     *asso, unsigned gap);
 
+struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
+                                                    *vec, unsigned gap);
 #endif /*MONIMELT_INCLUDED_ */

@@ -1014,6 +1014,40 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
   return asso;
 }                               /* end of mom_assovaldata_put */
 
+
+
+struct mom_vectvaldata_st *
+mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
+{
+  if (vec == MOM_EMPTY_SLOT)
+    vec = NULL;
+  if (gap > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big gap %u", gap);
+  if (!vec)
+    {
+      unsigned siz = mom_prime_above (gap + gap / 16 + 2);
+      vec = mom_gc_alloc (sizeof (*vec) + siz * sizeof (void *));
+      vec->va_ltype = MOM_VECTVALDATA_LTYPE;
+      vec->cda_size = siz;
+      return vec;
+    }
+  unsigned cnt = vec->cda_count;
+  unsigned siz = vec->cda_size;
+  if (cnt + gap >= siz)
+    {
+      unsigned newsiz = mom_prime_above (cnt + gap + cnt / 16 + 4);
+      struct mom_vectvaldata_st *newvec
+        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+      newvec->va_ltype = MOM_VECTVALDATA_LTYPE;
+      newvec->cda_size = newsiz;
+      mempcpy (newvec->vecd_valarr, vec->vecd_valarr, cnt * sizeof (void *));
+      newvec->cda_count = cnt;
+      return newvec;
+    }
+  return vec;
+}
+
+
 void
 mom_initialize_items (void)
 {

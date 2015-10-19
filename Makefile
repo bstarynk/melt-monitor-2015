@@ -24,7 +24,7 @@ CCFLAGS=  -std=gnu11 -Wall -Wextra -fdiagnostics-color=auto
 CFLAGS= $(CCFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent
 MD5SUM= md5sum
-INDENTFLAGS= -gnu --no-tabs
+INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
 PACKAGES= glib-2.0 sqlite3
 PKGCONFIG= pkg-config
 PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))

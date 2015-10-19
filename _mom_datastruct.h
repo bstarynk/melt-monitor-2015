@@ -168,7 +168,7 @@ struct mom_assovaldata_st {
 enum { MOM_VECTVALDATA_LTYPE=4 };
 #define MOM_VECTVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
-  struct mom_anyvalue_st**vecd_valarr
+  struct mom_anyvalue_st*vecd_valarr[];
 //// mutable vector
 struct mom_vectvaldata_st {
   MOM_VECTVALDATA_FIELDS;
