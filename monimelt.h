@@ -116,6 +116,8 @@ int64_t mom_prime_below (int64_t n);
 
 #define MOM_EMPTY_SLOT ((void*)-1)
 
+#define MOM_SIZE_MAX (1<<24)
+
 static inline pid_t
 mom_gettid (void)
 {
@@ -417,6 +419,9 @@ mom_item_radix_str (const struct mom_item_st *itm)
 
 const char *mom_item_cstring (const struct mom_item_st *itm);
 
+int mom_item_cmp (const struct mom_item_st *itm1,
+                  const struct mom_item_st *itm2);
+
 struct mom_anyvalue_st *mom_assovaldata_get (const struct mom_assovaldata_st
                                              *asso,
                                              const struct mom_item_st *itmat);
@@ -430,5 +435,8 @@ struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
                                                 *asso,
                                                 const struct mom_item_st
                                                 *itmat, const void *data);
+
+struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
+                                                    *asso, unsigned gap);
 
 #endif /*MONIMELT_INCLUDED_ */

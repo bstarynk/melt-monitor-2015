@@ -858,6 +858,44 @@ remove_at_md:
 }
 
 struct mom_assovaldata_st *
+mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
+{
+  if (gap > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too large gap %u", gap);
+  if (asso == MOM_EMPTY_SLOT)
+    asso = NULL;
+  if (!asso)
+    {
+      unsigned newsiz = mom_prime_above (gap + 3);
+      struct mom_assovaldata_st *newasso
+        = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
+                        + newsiz * sizeof (struct mom_itementry_tu));
+      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->cda_size = newsiz;
+      return newasso;
+    }
+  unsigned cnt = asso->cda_count;
+  unsigned siz = asso->cda_size;
+  if (cnt + gap > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too large gap %u for count %u", gap, cnt);
+
+  if (cnt + gap <= siz)
+    return asso;
+  unsigned newsiz = mom_prime_above (gap + cnt + cnt / 16 + 3);
+  struct mom_assovaldata_st *newasso
+    = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
+                    + newsiz * sizeof (struct mom_itementry_tu));
+  newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+  newasso->cda_size = newsiz;
+  for (unsigned ix = 0; ix < cnt; ix++)
+    newasso->ada_ents[ix] = asso->ada_ents[ix];
+  newasso->cda_count = cnt;
+  return newasso;
+
+}                               /* end mom_assovaldata_reserve */
+
+
+struct mom_assovaldata_st *
 mom_assovaldata_put (struct mom_assovaldata_st *asso,
                      const struct mom_item_st *itmat, const void *data)
 {
@@ -881,12 +919,13 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       newasso->cda_count = 1;
       return newasso;
     };
-
   assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
   assert (itmat->va_ltype == MOM_ITEM_LTYPE);
   unsigned cnt = asso->cda_count;
   unsigned siz = asso->cda_size;
   assert (cnt <= siz);
+  if (cnt >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big association %d", cnt);
   int lo = 0, hi = (int) cnt, md = 0;
   while (lo + 5 < hi)
     {

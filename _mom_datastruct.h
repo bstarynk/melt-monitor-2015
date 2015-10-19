@@ -193,7 +193,6 @@ enum { MOM_ITEM_LTYPE=3 };
   struct mom_item_st* itm_kinditm;		\
   struct mom_anyvalue_st* itm_payload
 
-int mom_item_cmp(const struct mom_item_st*, const struct mom_item_st*);
 
 #define MOM_ITEM_MAXFIELDS 32768
 struct mom_item_st {
