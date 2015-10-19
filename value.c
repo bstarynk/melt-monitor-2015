@@ -151,6 +151,35 @@ mom_boxtuple_make_va (unsigned siz, ...)
 }                               /* end mom_boxtuple_make_va */
 
 
+const struct mom_boxtuple_st *
+mom_boxtuple_make_sentinel_va (struct mom_item_st *itm1, ...)
+{
+  va_list args;
+  unsigned siz = 0;
+  struct mom_item_st *itm = NULL;
+  va_start (args, itm1);
+  for (va_start (args, itm1), itm = itm1;
+       itm != NULL; itm = va_arg (args, struct mom_item_st *))
+      siz++;
+  va_end (args);
+  struct mom_item_st *smallarr[16] = { NULL };
+  struct mom_item_st **arr =
+    (siz <
+     sizeof (smallarr) /
+     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc (sizeof (void *) * siz);
+  va_start (args, itm1);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *curitm = va_arg (args, struct mom_item_st *);
+      if (curitm && curitm != MOM_EMPTY_SLOT)
+        arr[ix] = curitm;
+      else
+        arr[ix] = NULL;
+    }
+  va_end (args);
+  return mom_boxtuple_make_arr (siz, (const struct mom_item_st **) arr);
+}                               /* end of mom_boxtuple_make_sentinel_va */
+
 
 static int
 compare_item_ptr_mom (const void *p1, const void *p2)
@@ -240,4 +269,28 @@ mom_boxset_make_va (unsigned siz, ...)
       arr[cnt++] = curitm;
     };
   return mom_boxset_make_arr (cnt, (const struct mom_item_st **) arr);
-} /* end mom_boxset_make_va */
+}                               /* end mom_boxset_make_va */
+
+const struct mom_boxset_st *
+mom_boxset_make_sentinel_va (struct mom_item_st *itm1, ...)
+{
+  va_list args;
+  unsigned siz = 0;
+  struct mom_item_st *itm = NULL;
+  va_start (args, itm1);
+  for (va_start (args, itm1), itm = itm1;
+       itm != NULL; itm = va_arg (args, struct mom_item_st *))
+      siz++;
+  va_end (args);
+  struct mom_item_st *smallarr[16] = { NULL };
+  struct mom_item_st **arr
+    =
+    (siz <
+     sizeof (smallarr) /
+     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc (sizeof (void *) * siz);
+  va_start (args, itm1);
+  for (unsigned ix = 0; ix < siz; ix++)
+    arr[ix] = va_arg (args, struct mom_item_st *);
+  va_end (args);
+  return mom_boxset_make_arr (siz, (const struct mom_item_st **) arr);
+}

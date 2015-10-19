@@ -187,6 +187,9 @@ mom_boxtuple_make_arr(unsigned siz, const struct mom_item_st**arr);
 const struct mom_boxtuple_st*
 mom_boxtuple_make_va(unsigned siz, ...);
 
+const struct mom_boxtuple_st*
+mom_boxtuple_make_sentinel_va(struct mom_item_st*, ...) __attribute__((sentinel));
+#define mom_boxtuple_make_sentinel(...) mom_boxtuple_make_sentinel_va(##__VA_ARGS__, NULL)
 
 const struct mom_boxset_st*
 mom_boxset_make_arr2(unsigned siz1, const struct mom_item_st**arr1,
@@ -200,6 +203,10 @@ mom_boxset_make_arr(unsigned siz, const struct mom_item_st**arr)
 
 const struct mom_boxset_st*
 mom_boxset_make_va(unsigned siz, ...);
+
+const struct mom_boxset_st*
+mom_boxset_make_sentinel_va(struct mom_item_st*, ...) __attribute__((sentinel));
+#define mom_boxset_make_sentinel(...) mom_boxset_make_sentinel_va(##__VA_ARGS__, NULL)
 
 
 enum { MOM_NODE_ITYPE=4 };
