@@ -35,11 +35,29 @@ struct mom_boxint_st {
 static inline const struct mom_boxint_st*
 mom_dyncast_boxint(const void*p)
 {
-  if (p && ((struct mom_anyvalue_st*)p)->va_itype==0
+  if (p && p != MOM_EMPTY_SLOT && ((struct mom_anyvalue_st*)p)->va_itype==0
       &&  ((struct mom_anyvalue_st*)p)->va_ltype == MOM_BOXINT_LTYPE)
     return (const struct mom_boxint_st*)p;
   return NULL;
 }
+
+static inline momhash_t mom_int_hash(intptr_t i)
+{
+  momhash_t h = (i*509) ^ (i % 76519);
+  if (!h) h = (i & 0xffffff) + ((i >> 25) & 0xffffff) + 11;
+  assert (h != 0);
+  return h;
+}
+
+static inline intptr_t
+mom_boxint_val_def(const void*p, intptr_t def)
+{const struct mom_boxint_st*bi = mom_dyncast_boxint(p);
+  if (bi) return bi->boxi_int;
+  return def;
+}
+
+ const struct mom_boxint_st*
+ mom_boxint_make (intptr_t i);
 
 enum { MOM_BOXDOUBLE_LTYPE=2 };
 struct mom_boxdouble_st {
@@ -51,11 +69,13 @@ struct mom_boxdouble_st {
 static inline const struct mom_boxdouble_st*
 mom_dyncast_boxdouble(const void*p)
 {
-  if (p && ((struct mom_anyvalue_st*)p)->va_itype == 0
+  if (p &&  p != MOM_EMPTY_SLOT && ((struct mom_anyvalue_st*)p)->va_itype == 0
       &&  ((struct mom_anyvalue_st*)p)->va_ltype == MOM_BOXDOUBLE_LTYPE)
     return (const struct mom_boxdouble_st*)p;
   return NULL;
 }
+
+
 
 /// sized values have sva_ prefix, with sva_size
 #define MOM_SIZEDVALUE_FIELDS			\
@@ -76,10 +96,21 @@ struct mom_boxstring_st {
 static inline const struct mom_boxstring_st*
 mom_dyncast_boxstring(const void*p)
 {
-  if (p && ((const struct mom_anyvalue_st*)p)->va_itype == MOM_BOXSTRING_ITYPE)
+  if (p  && p != MOM_EMPTY_SLOT && ((const struct mom_anyvalue_st*)p)->va_itype == MOM_BOXSTRING_ITYPE)
     return (const struct mom_boxstring_st*)p;
   return NULL;
 }
+
+static inline const char*
+mom_boxstring_cstr(const void*p)
+{
+  const struct mom_boxstring_st* str = mom_dyncast_boxstring(p);
+  if (str) return str->cstr;
+  return NULL;
+}
+
+const struct mom_boxstring_st*
+mom_boxstring_make (const char*s);
 
 #define MOM_SEQITEMS_FIELDS			\
   MOM_SIZEDVALUE_FIELDS;			\
@@ -103,7 +134,7 @@ struct mom_boxset_st {
 static inline const struct mom_seqitems_st*
 mom_dyncast_seqitems(const void*p)
 {
-  if (p) {
+  if (p && p != MOM_EMPTY_SLOT) {
     uint8_t ityp = ((const struct mom_anyvalue_st*)p)->va_itype;
     if (ityp==MOM_TUPLE_ITYPE || ityp==MOM_SET_ITYPE)
       return (const struct mom_seqitems_st*)p;
@@ -111,10 +142,29 @@ mom_dyncast_seqitems(const void*p)
   return NULL;
 }
 
+static inline const struct mom_item_st**mom_seqitems_arr (const void*p)
+{
+  const struct mom_seqitems_st* si = mom_dyncast_seqitems(p);
+  if (si) return (const struct mom_item_st**) si->seqitem;
+  return NULL;
+}
+
+static inline const struct mom_item_st* mom_seqitem_nth(const void*p, int rk)
+{
+  const struct mom_seqitems_st* si = mom_dyncast_seqitems(p);
+  if (!si) return NULL;
+  unsigned sz = (si->va_hsiz<<16)+si->va_lsiz;
+  if (rk<0)
+    rk += sz;
+  if (rk>=0 && rk<(int)sz)
+    return si->seqitem[rk];
+  return NULL;
+}
+
 static inline const struct mom_boxtuple_st*
 mom_dyncast_tuple(const void*p)
 {
-  if (p && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_TUPLE_ITYPE)
+  if (p  && p != MOM_EMPTY_SLOT && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_TUPLE_ITYPE)
     return (const struct mom_boxtuple_st*)p;
   return NULL;
 }
@@ -122,10 +172,35 @@ mom_dyncast_tuple(const void*p)
 static inline const struct mom_boxset_st*
 mom_dyncast_set(const void*p)
 {
-  if (p && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_TUPLE_ITYPE)
+  if (p  && p != MOM_EMPTY_SLOT && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_TUPLE_ITYPE)
     return (const struct mom_boxset_st*)p;
   return NULL;
 }
+
+const struct mom_boxtuple_st*
+mom_boxtuple_make_arr2(unsigned siz1, const struct mom_item_st**arr1,
+		       unsigned siz2, const struct mom_item_st**arr2);
+
+const struct mom_boxtuple_st*
+mom_boxtuple_make_arr(unsigned siz, const struct mom_item_st**arr);
+
+const struct mom_boxtuple_st*
+mom_boxtuple_make_va(unsigned siz, ...);
+
+
+const struct mom_boxset_st*
+mom_boxset_make_arr2(unsigned siz1, const struct mom_item_st**arr1,
+		     unsigned siz2, const struct mom_item_st**arr2);
+
+static inline const struct mom_boxset_st*
+mom_boxset_make_arr(unsigned siz, const struct mom_item_st**arr)
+{
+  return mom_boxset_make_arr2(siz,arr,0,NULL);
+}
+
+const struct mom_boxset_st*
+mom_boxset_make_va(unsigned siz, ...);
+
 
 enum { MOM_NODE_ITYPE=4 };
 struct mom_boxnode_st {
@@ -139,7 +214,7 @@ struct mom_boxnode_st {
 static inline const struct mom_boxnode_st*
 mom_dyncast_node(const void*p)
 {
-  if (p && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_NODE_ITYPE)
+  if (p  && p != MOM_EMPTY_SLOT && ((const struct mom_anyvalue_st*)p)->va_itype==MOM_NODE_ITYPE)
     return (const struct mom_boxnode_st*)p;
   return NULL;
 }

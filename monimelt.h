@@ -422,23 +422,25 @@ const char *mom_item_cstring (const struct mom_item_st *itm);
 int mom_item_cmp (const struct mom_item_st *itm1,
                   const struct mom_item_st *itm2);
 
-struct mom_anyvalue_st *mom_assovaldata_get (const struct mom_assovaldata_st
-                                             *asso,
-                                             const struct mom_item_st *itmat);
+struct mom_anyvalue_st *        //
 
-struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
-                                                   *asso,
-                                                   const struct mom_item_st
-                                                   *itmat);
 
-struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
-                                                *asso,
-                                                const struct mom_item_st
-                                                *itmat, const void *data);
+mom_assovaldata_get (const struct mom_assovaldata_st *asso,
+                     const struct mom_item_st *itmat);
 
-struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
-                                                    *asso, unsigned gap);
+struct mom_assovaldata_st *     //
 
-struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
-                                                    *vec, unsigned gap);
+
+mom_assovaldata_remove (struct mom_assovaldata_st *asso,
+                        const struct mom_item_st *itmat);
+
+struct mom_assovaldata_st *     //
+
+
+mom_assovaldata_put (struct mom_assovaldata_st *asso,
+                     const struct mom_item_st *itmat, const void *data);
+
+struct mom_assovaldata_st *     //
+  mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap);
+
 #endif /*MONIMELT_INCLUDED_ */

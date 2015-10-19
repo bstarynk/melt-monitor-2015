@@ -703,8 +703,8 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
 const char *
 mom_item_cstring (const struct mom_item_st *itm)
 {
-  if (!itm)
-    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT)
+    return "~";
   if (itm->itm_hid == 0 && itm->itm_lid == 0)
     return mom_item_radix_str (itm);
   else
@@ -878,7 +878,6 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
   unsigned siz = asso->cda_size;
   if (cnt + gap > MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too large gap %u for count %u", gap, cnt);
-
   if (cnt + gap <= siz)
     return asso;
   unsigned newsiz = mom_prime_above (gap + cnt + cnt / 16 + 3);
