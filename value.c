@@ -294,3 +294,126 @@ mom_boxset_make_sentinel_va (struct mom_item_st *itm1, ...)
   va_end (args);
   return mom_boxset_make_arr (siz, (const struct mom_item_st **) arr);
 }
+
+
+static void
+update_node_hash_mom (struct mom_boxnode_st *nod)
+{
+  assert (nod);
+  assert (nod->va_itype == MOM_NODE_ITYPE);
+  assert (nod->hva_hash == 0);
+  assert (nod->nod_connitm != NULL);
+  unsigned siz = (nod->va_hsiz << 16) | nod->va_lsiz;
+  momhash_t h = (23 * nod->nod_connitm->hva_hash) ^ (149 * siz);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curson = nod->nod_sons[ix];
+      if (!curson)
+        continue;
+      if (ix % 2)
+        h = (307 * h + 7 * ix) ^ (419 * curson->hva_hash);
+      else
+        h = (509 * h - 31 * ix) ^ (607 * curson->hva_hash);
+    }
+  if (!h)
+    h = ((nod->nod_connitm->hva_hash + 3 * siz) & 0xffff) + 20;
+  nod->hva_hash = h;
+}
+
+const struct mom_boxnode_st *
+mom_boxnode_make_meta (const struct mom_item_st *conn,
+                       unsigned size,
+                       const struct mom_hashedvalue_st **sons,
+                       const struct mom_item_st *metaitm, intptr_t metarank)
+{
+  if (!conn || conn == MOM_EMPTY_SLOT)
+    return NULL;
+  if (!sons || sons == MOM_EMPTY_SLOT)
+    size = 0;
+  if (size >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big %d node of connective %s",
+                    size, mom_item_cstring (conn));
+  struct mom_boxnode_st *nod =
+    mom_gc_alloc (sizeof (*nod) + size * sizeof (void *));
+  nod->va_itype = MOM_NODE_ITYPE;
+  nod->va_hsiz = size >> 16;
+  nod->va_lsiz = size & 0xffff;
+  nod->nod_connitm = (struct mom_item_st *) conn;
+  nod->nod_metaitem = (struct mom_item_st *) metaitm;
+  nod->nod_metarank = metarank;
+  for (unsigned ix = 0; ix < size; ix++)
+    {
+      const struct mom_hashedvalue_st *curson = sons[ix];
+      if (curson == MOM_EMPTY_SLOT)
+        curson = NULL;
+      nod->nod_sons[ix] = (struct mom_hashedvalue_st *) curson;
+    }
+  update_node_hash_mom (nod);
+  return nod;
+}
+
+const struct mom_boxnode_st *
+mom_boxnode_meta_make_va (const struct mom_item_st *metaitm,
+                          intptr_t metarank,
+                          const struct mom_item_st *conn, unsigned size, ...)
+{
+  va_list args;
+  if (!conn || conn == MOM_EMPTY_SLOT)
+    return NULL;
+  struct mom_hashedvalue_st *smallarr[16] = { NULL };
+  if (size >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big %d node of connective %s",
+                    size, mom_item_cstring (conn));
+  struct mom_hashedvalue_st **arr
+    = (size < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc (size * sizeof (void *));
+  va_start (args, size);
+  for (unsigned ix = 0; ix < size; ix++)
+    {
+      struct mom_hashedvalue_st *curval =
+        va_arg (args, struct mom_hashedvalue_st *);
+      if (curval == MOM_EMPTY_SLOT)
+        curval = NULL;
+      arr[ix] = curval;
+    }
+  va_end (args);
+  return mom_boxnode_make_meta (conn, size,
+                                (const struct mom_hashedvalue_st **) arr,
+                                metaitm, metarank);
+}
+
+
+const struct mom_boxnode_st *
+mom_boxnode_meta_make_sentinel_va (const struct mom_item_st *metaitm,
+                                   intptr_t metarank,
+                                   const struct mom_item_st *conn, ...)
+{
+  va_list args;
+  if (!conn || conn == MOM_EMPTY_SLOT)
+    return NULL;
+  unsigned siz = 0;
+  va_start (args, conn);
+  while (va_arg (args, struct mom_hashedvalue_st *) != NULL)
+      siz++;
+  va_end (args);
+  if (siz >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big %d node of connective %s",
+                    siz, mom_item_cstring (conn));
+  struct mom_hashedvalue_st *smallarr[16] = { NULL };
+  struct mom_hashedvalue_st **arr
+    = (siz < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc (siz * sizeof (void *));
+  va_start (args, conn);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_hashedvalue_st *curval =
+        va_arg (args, struct mom_hashedvalue_st *);
+      if (curval == MOM_EMPTY_SLOT)
+        curval = NULL;
+      arr[ix] = curval;
+    }
+  va_end (args);
+  return mom_boxnode_make_meta (conn, siz,
+                                (const struct mom_hashedvalue_st **) arr,
+                                metaitm, metarank);
+}

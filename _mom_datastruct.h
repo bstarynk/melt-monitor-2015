@@ -23,6 +23,9 @@ struct mom_anyvalue_st { /// field prefix: va_;
 #define MOM_HASHEDVALUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   momhash_t hva_hash
+struct mom_hashedvalue_st {
+  MOM_HASHEDVALUE_FIELDS;
+};
 
 enum { MOM_BOXINT_LTYPE=1 };
 struct mom_boxint_st {
@@ -211,12 +214,12 @@ mom_boxset_make_sentinel_va(struct mom_item_st*, ...) __attribute__((sentinel));
 
 enum { MOM_NODE_ITYPE=4 };
 struct mom_boxnode_st {
-  MOM_SIZEDVALUE_FIELDS;
+  MOM_HASHEDVALUE_FIELDS;
   // here prefix nod_
   intptr_t nod_metarank;
   struct mom_item_st* nod_metaitem;
   struct mom_item_st* nod_connitm;
-  struct mom_anyvalue_st* nod_sons[]; /* actual size sva_size */
+  struct mom_hashedvalue_st* nod_sons[]; /* actual size sva_size */
 };
 static inline const struct mom_boxnode_st*
 mom_dyncast_node(const void*p)
@@ -225,6 +228,47 @@ mom_dyncast_node(const void*p)
     return (const struct mom_boxnode_st*)p;
   return NULL;
 }
+
+const struct mom_boxnode_st*
+mom_boxnode_make_meta(const struct mom_item_st*conn,
+		      unsigned size,
+		      const struct mom_hashedvalue_st**sons,
+		      const struct mom_item_st*meta,
+		      intptr_t metarank);
+
+static inline
+const struct mom_boxnode_st*
+mom_boxnode_make(const struct mom_item_st*conn,
+		      unsigned size,
+		      const struct mom_hashedvalue_st**sons)
+{
+  return mom_boxnode_make_meta(conn,size,sons,NULL,0);
+}
+
+const struct mom_boxnode_st*
+mom_boxnode_meta_make_va(const struct mom_item_st*meta,
+		      intptr_t metarank,
+		      const struct mom_item_st*conn,
+		      unsigned size, ...);
+
+#define mom_boxnode_make_va(Conn,Siz,...) mom_boxnode_meta_make_va(NULL,0,Conn,Siz,__VA_ARGS__)
+
+
+const struct mom_boxnode_st*
+mom_boxnode_meta_make_sentinel_va(const struct mom_item_st*meta,
+		      intptr_t metarank,
+		      const struct mom_item_st*conn,
+				  ...) __attribute__((sentinel));
+
+#define mom_boxnode_meta_make_sentinel(MetaItm,MetaRank,Conn,...) \
+  mom_boxnode_meta_make_sentinel_va((MetaItm),(MetaRank),(Conn),\
+				    ##__VA_ARGS__,NULL)
+
+#define mom_boxnode_make_sentinel(Conn,...) \
+  mom_boxnode_meta_make_sentinel_va(NULL,0,(Conn),\
+				    ##__VA_ARGS__,NULL)
+
+
 
 #define MOM_COUNTEDATA_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
