@@ -152,13 +152,14 @@ mom_dyncast_node(const void*p)
 
 struct mom_itementry_tu {
   struct mom_item_st*ient_itm;
-  struct mom_anyvalue_st*ient_data;
+  struct mom_anyvalue_st*ient_val;
 };
 
 enum { MOM_ASSOVALDATA_LTYPE=3 };
 #define MOM_ASSOVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
   struct mom_itementry_tu* ada_entarr /* sorted array of entries */
+// allocated size of ada_entarr is cda_size; used count is cda_count.
 struct mom_assovaldata_st {
   MOM_ASSOVALDATA_FIELDS;
 };
@@ -191,6 +192,8 @@ enum { MOM_ITEM_LTYPE=3 };
   struct mom_vectvaldata_st* itm_comps;		\
   struct mom_item_st* itm_kinditm;		\
   struct mom_anyvalue_st* itm_payload
+
+int mom_item_cmp(const struct mom_item_st*, const struct mom_item_st*);
 
 #define MOM_ITEM_MAXFIELDS 32768
 struct mom_item_st {

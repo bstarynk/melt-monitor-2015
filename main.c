@@ -290,6 +290,8 @@ mom_input_quoted_utf8 (FILE *f)
   return ss;
 }                               /* end of mom_input_quoted_utf8 */
 
+
+
 static pthread_mutex_t dbgmtx_mom = PTHREAD_MUTEX_INITIALIZER;
 static const char *dbg_level_mom (enum mom_debug_en dbg);
 void
@@ -609,7 +611,7 @@ mom_random_init_genrand (void)
         MOM_FATAPRINTF ("failed to open /dev/random %m");
       atexit (closerandomfile_mom);
     }
-  unsigned long initarr[16];
+  unsigned long initarr[24];
   read (randomfd_mom, initarr, sizeof (initarr));
   momrand_init_by_array (initarr, sizeof (initarr) / sizeof (initarr[0]));
   // warmup the PRNG

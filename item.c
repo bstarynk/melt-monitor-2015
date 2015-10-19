@@ -717,14 +717,93 @@ mom_item_cstring (const struct mom_item_st *itm)
     return mom_item_radix_str (itm);
   else
     {
-      char buf[300];
+      char buf[256];
       char bufnum[MOM_HI_LO_SUFFIX_LEN];
       memset (buf, 0, sizeof (buf));
-      snprintf (buf, sizeof (buf), "%s_%s", mom_item_radix_str (itm),
-                mom_item_hi_lo_suffix (bufnum, itm));
+      if (MOM_UNLIKELY (snprintf (buf, sizeof (buf), "%s_%s",
+                                  mom_item_radix_str (itm),
+                                  mom_item_hi_lo_suffix (bufnum, itm))
+                        >= (int) sizeof (buf)))
+        MOM_FATAPRINTF ("too long item name %s", buf);
       return GC_STRDUP (buf);
     }
 }
+
+int
+mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)
+{
+  if (itm1 == itm2)
+    return 0;
+  if (!itm1)
+    return -1;
+  if (!itm2)
+    return 1;
+  assert (itm1->va_ltype == MOM_ITEM_LTYPE);
+  assert (itm2->va_ltype == MOM_ITEM_LTYPE);
+  const struct mom_itemname_tu *rad1 = itm1->itm_radix;
+  const struct mom_itemname_tu *rad2 = itm2->itm_radix;
+  if (rad1 == rad2)
+    {
+      if (itm1->itm_hid < itm2->itm_hid)
+        return -1;
+      else if (itm1->itm_hid > itm2->itm_hid)
+        return 1;
+      assert (itm1->itm_lid != itm2->itm_lid);
+      if (itm1->itm_lid < itm2->itm_lid)
+        return -1;
+      else if (itm1->itm_lid > itm2->itm_lid)
+        return 1;
+      else
+        MOM_FATAPRINTF ("itm1@%p & itm2@%p are same but non-identical", itm1,
+                        itm2);
+    }
+  else
+    {
+      int c = 0;
+      pthread_mutex_lock (&radix_mtx_mom);
+      if (rad1->itname_rank < rad2->itname_rank)
+        c = -1;
+      else if (rad1->itname_rank > rad2->itname_rank)
+        c = 1;
+      else
+        MOM_FATAPRINTF
+          ("itm1@%p & itm2@%p have different radixes %p&%p with same rank %u",
+           itm1, itm2, rad1, rad2, rad1->itname_rank);
+      pthread_mutex_unlock (&radix_mtx_mom);
+      return c;
+    }
+}                               /* end of mom_item_cmp */
+
+struct mom_anyvalue_st *
+mom_assovaldata_get (const struct mom_assovaldata_st *asso,
+                     const struct mom_item_st *itmat)
+{
+  if (!asso || !itmat)
+    return NULL;
+  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
+  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+  unsigned cnt = asso->cda_count;
+  assert (cnt <= asso->cda_size);
+  if (!cnt)
+    return NULL;
+  assert (asso->ada_entarr != NULL);
+  int lo = 0, hi = (int) cnt - 1, md = 0;
+  while (lo + 5 < hi)
+    {
+      md = (lo + hi) / 2;
+      int c = mom_item_cmp (itmat, asso->ada_entarr[md].ient_itm);
+      if (c < 0)
+        hi = md;
+      else if (c > 0)
+        lo = md;
+      else
+        return asso->ada_entarr[md].ient_val;
+    }
+  for (md = lo; md < hi; md++)
+    if (itmat == asso->ada_entarr[md].ient_itm)
+      return asso->ada_entarr[md].ient_val;
+  return NULL;
+}                               /* end of mom_assovaldata_get */
 
 void
 mom_initialize_items (void)
