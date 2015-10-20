@@ -692,6 +692,16 @@ struct mom_item_st
 };
 
 
+static inline const struct mom_item_st *
+mom_dyncast_item (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_ITEM)
+    return (const struct mom_item_st *) p;
+  return NULL;
+}
+
+
 momhash_t mom_cstring_hash_len (const char *str, int len);
 
 
@@ -853,4 +863,98 @@ struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
 
 struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
                                                    *vec, const void *data);
+
+enum mom_statetype_en
+{ MOMSTA_EMPTY, MOMSTA_MARK, MOMSTA_INT, MOMSTA_DBL, MOMSTA_STRING, MOMSTA_VAL
+};
+
+struct mom_statelem_st
+{
+  enum mom_statetype_en st_type;
+  union
+  {
+    void *st_nptr;              /* NULL for MOMSTA_EMPTY */
+    int st_mark;                /* when MOMSTA_MARK */
+    intptr_t st_int;            /* when MOMSTA_INT */
+    double st_dbl;              /* when MOMSTA_DBL */
+    const char *st_str;         /* GC-strduped string for when MOMSTA_STRING */
+    struct mom_anyvalue_st *st_val;     /* when MOMSTA_VAL */
+  }
+};
+
+static inline enum mom_statetype_en
+momstate_type (const struct mom_statelem_st se)
+{
+  return se.st_type;
+};
+
+static inline int
+momstate_mark (const struct mom_statelem_st se)
+{
+  return (se.st_type == MOMSTA_MARK) ? se.st_mark : (-1);
+};
+
+static inline intptr_t
+momstate_int_def (const struct mom_statelem_st se, intptr_t def)
+{
+  return (se.st_type == MOMSTA_INT) ? se.st_int : def;
+};
+
+static inline double
+momstate_dbl (const struct mom_statelem_st se)
+{
+  return (se.st_type == MOMSTA_DBL) ? se.st_int : NAN;
+};
+
+static inline const char *
+momstate_str (const struct mom_statelem_st se)
+{
+  return (se.st_type == MOMSTA_STRING) ? se.st_str : NULL;
+};
+
+static inline const struct mom_anyvalue_st *
+momstate_val (const struct mom_statelem_st se)
+{
+  return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
+};
+
+static inline struct mom_item_st *
+momstate_dynitem (const struct mom_statelem_st se)
+{
+  return mom_dyncast_item (momstate_val (se));
+};
+
+static inline const struct mom_boxint_st *
+momstate_dynboxint (const struct mom_statelem_st se)
+{
+  return mom_dyncast_boxint (momstate_val (se));
+};
+
+static inline const struct mom_boxstring_st *
+momstate_dynboxstring (const struct mom_statelem_st se)
+{
+  return mom_dyncast_boxstring (momstate_val (se));
+};
+
+
+static inline const struct mom_tuple_st *
+momstate_dyntuple (const struct mom_statelem_st se)
+{
+  return mom_dyncast_tuple (momstate_val (se));
+};
+
+static inline const struct mom_set_st *
+momstate_dynset (const struct mom_statelem_st se)
+{
+  return mom_dyncast_set (momstate_val (se));
+};
+
+static inline const struct mom_node_st *
+momstate_dynnode (const struct mom_statelem_st se)
+{
+  return mom_dyncast_node (momstate_val (se));
+};
+
+
+
 #endif /*MONIMELT_INCLUDED_ */
