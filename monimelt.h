@@ -368,7 +368,15 @@ mom_itype (const void *p)
 {
   if (p && p != MOM_EMPTY_SLOT)
     return ((const struct mom_anyvalue_st *) p)->va_itype;
-  return NULL;
+  return 0;
+}
+
+static inline unsigned
+mom_raw_size (const void *p)
+{
+  assert (p != NULL);
+  return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
+    (((const struct mom_anyvalue_st *) p)->va_lsiz);
 }
 
 static inline unsigned
@@ -376,8 +384,7 @@ mom_size (const void *p)
 {
   if (p && p != MOM_EMPTY_SLOT
       && ((const struct mom_anyvalue_st *) p)->va_itype > 0)
-    return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
-      (((const struct mom_anyvalue_st *) p)->va_lsiz);
+    return mom_raw_size (p);
   return 0;
 }
 
@@ -697,7 +704,6 @@ const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
 
 #define MOM_COUNTEDATA_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
-  uint32_t cda_size;				\
   uint32_t cda_count
 
 
@@ -874,7 +880,7 @@ mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
   if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
     return NULL;
   unsigned cnt = vec->cda_count;
-  assert (cnt <= vec->cda_size);
+  assert (cnt <= mom_raw_size (vec));
   if (rk < 0)
     rk += cnt;
   if (rk >= 0 && rk < (int) cnt)
@@ -891,7 +897,7 @@ mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
   if (data == MOM_EMPTY_SLOT)
     data = NULL;
   unsigned cnt = vec->cda_count;
-  assert (cnt <= vec->cda_size);
+  assert (cnt <= mom_raw_size (vec));
   if (rk < 0)
     rk += cnt;
   if (rk >= 0 && rk < (int) cnt)
@@ -904,7 +910,7 @@ mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
   if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
     return 0;
   unsigned cnt = vec->cda_count;
-  assert (cnt <= vec->cda_size);
+  assert (cnt <= mom_raw_size (vec));
   return cnt;
 }
 
@@ -913,7 +919,7 @@ mom_vectvaldata_valvect (const struct mom_vectvaldata_st *vec)
 {
   if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
     return NULL;
-  assert (vec->cda_count <= vec->cda_size);
+  assert (vec->cda_count <= mom_raw_size (vec));
   return (struct mom_anyvalue_st **) vec->vecd_valarr;
 }
 
@@ -1028,14 +1034,14 @@ momstate_make_val (const struct mom_anyvalue_st *v)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = v};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) v};
 }
 
 
 static inline struct mom_item_st *
 momstate_dynitem (const struct mom_statelem_st se)
 {
-  return mom_dyncast_item (momstate_val (se));
+  return (struct mom_item_st *) mom_dyncast_item (momstate_val (se));
 };
 
 static inline struct mom_statelem_st
@@ -1043,7 +1049,7 @@ momstate_make_item (const struct mom_item_st *itm)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) itm};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) itm};
 }
 
 
@@ -1058,7 +1064,7 @@ momstate_make_boxint (const struct mom_boxint_st *bi)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) bi};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) bi};
 }
 
 static inline const struct mom_boxstring_st *
@@ -1072,14 +1078,14 @@ momstate_make_boxstring (const struct mom_boxstring_st *bs)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) bs};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) bs};
 }
 
 
 static inline const struct mom_tuple_st *
 momstate_dyntuple (const struct mom_statelem_st se)
 {
-  return mom_dyncast_tuple (momstate_val (se));
+  return (const struct mom_tuple_st *) mom_dyncast_tuple (momstate_val (se));
 };
 
 static inline struct mom_statelem_st
@@ -1087,14 +1093,14 @@ momstate_make_tuple (const struct mom_tuple_st *tu)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) tu};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) tu};
 }
 
 
 static inline const struct mom_set_st *
 momstate_dynset (const struct mom_statelem_st se)
 {
-  return mom_dyncast_set (momstate_val (se));
+  return (const struct mom_set_st *) mom_dyncast_set (momstate_val (se));
 };
 
 static inline struct mom_statelem_st
@@ -1102,7 +1108,7 @@ momstate_make_set (const struct mom_set_st *se)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) se};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) se};
 }
 
 
@@ -1110,7 +1116,7 @@ momstate_make_set (const struct mom_set_st *se)
 static inline const struct mom_node_st *
 momstate_dynnode (const struct mom_statelem_st se)
 {
-  return mom_dyncast_node (momstate_val (se));
+  return (const struct mom_node_st *) mom_dyncast_node (momstate_val (se));
 };
 
 
