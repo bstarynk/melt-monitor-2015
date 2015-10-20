@@ -872,8 +872,12 @@ mom_clone_item (const struct mom_item_st *itm)
 }
 
 #define MOM_HI_LO_SUFFIX_LEN 16
+// convert a hi+lo pair to a suffix and return it
 const char *mom_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN],
                               uint16_t hi, uint64_t lo);
+
+// convert a suffix to a hi & lo pair, or return false
+bool mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo);
 
 static inline const char *
 mom_item_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN],
@@ -893,6 +897,12 @@ mom_item_radix_str (const struct mom_item_st *itm)
   else
     return NULL;
 }
+
+struct mom_item_st *mom_find_item_from_string (const char *str,
+                                               const char **pend);
+
+struct mom_item_st *mom_make_item_from_string (const char *str,
+                                               const char **pend);
 
 
 static inline bool

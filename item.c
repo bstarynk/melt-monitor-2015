@@ -130,6 +130,22 @@ mom_hi_lo_suffix (char buf[static MOM_HI_LO_SUFFIX_LEN], uint16_t hi,
   return num80_to_char14_mom (i, buf);
 }
 
+bool
+mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo)
+{
+  if (!buf || buf[0] != '_')
+    return false;
+  mom_uint128_t i = char14_to_num80_mom (buf);
+  if (i)
+    {
+      if (phi)
+        *phi = (uint16_t) (i >> 64);
+      if (plo)
+        *plo = (uint64_t) i;
+      return true;
+    }
+  return false;
+}
 
 const struct mom_itemname_tu *
 mom_find_name_radix (const char *str, int len)
@@ -355,6 +371,119 @@ end:
                    tix);
   return tun;
 }                               /* end of mom_make_name_radix */
+
+
+struct mom_item_st *
+mom_find_item_from_string (const char *str, const char **pend)
+{
+  struct mom_item_st *itm = NULL;
+  if (!str || str == MOM_EMPTY_SLOT || !isalpha (str[0]))
+    return NULL;
+  const char *endradix = str;
+  while (*endradix)
+    {
+      if (!isalnum (*endradix) && *endradix != '_')
+        break;
+      if (*endradix == '_' && endradix[1] == '_')
+        break;
+      endradix++;
+    };
+  const char *end = NULL;
+  uint16_t hid = 0;
+  uint64_t lid = 0;
+  const struct mom_itemname_tu *radix = NULL;
+  radix = mom_find_name_radix (str, endradix - str);
+  if (!radix)
+    goto not_found;
+  if (endradix && endradix[0] == '_' && endradix[1] == '_'
+      && isdigit (endradix[2])
+      && mom_suffix_to_hi_lo (endradix + 1, &hid, &lid) && hid > 0 && lid > 0)
+    {
+      end = endradix + 15;
+      itm = mom_find_item_from_radix_id (radix, hid, lid);
+      if (itm)
+        {
+          if (pend)
+            *pend = end;
+          MOM_DEBUGPRINTF (item,
+                           "mom_find_item_from_string str=%.*s itm=%s (hid=%d lid=%lld)",
+                           (int) (end - str), str, mom_item_cstring (itm),
+                           hid, (long long) lid);
+          return itm;
+        }
+      else
+        goto not_found;
+    }
+  itm = mom_find_item_from_radix_id (radix, 0, 0);
+  end = endradix;
+  if (itm)
+    {
+      if (pend)
+        *pend = end;
+      MOM_DEBUGPRINTF (item, "mom_find_item_from_string str=%.*s itm=%s",
+                       (int) (end - str), str, mom_item_cstring (itm));
+      return itm;
+    }
+not_found:
+  MOM_DEBUGPRINTF (item, "mom_find_item_from_string str=%.50s not found",
+                   str);
+  return NULL;
+}                               /* end mom_find_item_from_string */
+
+
+struct mom_item_st *
+mom_make_item_from_string (const char *str, const char **pend)
+{
+  struct mom_item_st *itm = NULL;
+  if (!str || str == MOM_EMPTY_SLOT || !isalpha (str[0]))
+    return NULL;
+  const char *endradix = str;
+  while (*endradix)
+    {
+      if (!isalnum (*endradix) && *endradix != '_')
+        break;
+      if (*endradix == '_' && endradix[1] == '_')
+        break;
+      endradix++;
+    };
+  const char *end = NULL;
+  uint16_t hid = 0;
+  uint64_t lid = 0;
+  const struct mom_itemname_tu *radix = NULL;
+  radix = mom_make_name_radix (str, endradix - str);
+  if (!radix)
+    goto not_found;
+  if (endradix && endradix[0] == '_' && endradix[1] == '_'
+      && isdigit (endradix[2])
+      && mom_suffix_to_hi_lo (endradix + 1, &hid, &lid) && hid > 0 && lid > 0)
+    {
+      end = endradix + 15;
+      itm = mom_make_item_from_radix_id (radix, hid, lid);
+      if (!itm)
+        goto not_found;
+      if (pend)
+        *pend = end;
+      MOM_DEBUGPRINTF (item,
+                       "mom_make_item_from_string str=%.*s itm=%s (hid=%d lid=%lld)",
+                       (int) (end - str), str, mom_item_cstring (itm),
+                       hid, (long long) lid);
+      return itm;
+    }
+  itm = mom_find_item_from_radix_id (radix, 0, 0);
+  end = endradix;
+  if (itm)
+    {
+      if (pend)
+        *pend = end;
+      MOM_DEBUGPRINTF (item, "mom_make_item_from_string str=%.*s itm=%s",
+                       (int) (end - str), str, mom_item_cstring (itm));
+      return itm;
+    }
+not_found:
+  MOM_DEBUGPRINTF (item, "mom_make_item_from_string str=%.50s not found",
+                   str);
+  return NULL;
+}                               /* end mom_make_item_from_string */
 
 
 static inline momhash_t

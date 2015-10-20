@@ -59,6 +59,42 @@ initialize_load_state_mom (const char *statepath)
   mom_loader.ld_magic = LOADER_MAGIC_MOM;
   mom_loader.ld_file = f;
   mom_loader.ld_path = GC_STRDUP (statepath);
+  MOM_DEBUGPRINTF (load, "ld_path=%s fisiz=%ld", mom_loader.ld_path, fisiz);
+}
+
+
+void
+first_pass_loader_mom (void)
+{
+  assert (mom_loader.ld_magic = LOADER_MAGIC_MOM);
+  size_t linsiz = 128;
+  ssize_t linlen = 0;
+  char *linbuf = malloc (linsiz);
+  if (!linbuf)
+    MOM_FATAPRINTF ("failed to malloc linbuf %zd", linsiz);
+  memset (linbuf, 0, linsiz);
+  rewind (mom_loader.ld_file);
+  int linecount = 0;
+  do
+    {
+      linlen = getline (&linbuf, &linsiz, mom_loader.ld_file);
+      if (linlen <= 0)
+        break;
+      linecount++;
+      if (linbuf[0] == '#' || linbuf[0] == '\n')
+        continue;
+      if (linbuf[0] == '*' && isalpha (linbuf[1]))
+        {
+          const char *end = NULL;
+          struct mom_item_st *itm =
+            mom_make_item_from_string (linbuf + 1, &end);
+          MOM_DEBUGPRINTF (load, "first pass line#%d %s made item %s",
+                           linecount, linbuf, mom_item_cstring (itm));
+          mom_loader.ld_hsetitems =
+            mom_hashset_insert (mom_loader.ld_hsetitems, itm);
+        }
+    }
+  while (!feof (mom_loader.ld_file));
 }
 
 void
@@ -70,4 +106,5 @@ mom_load_state (const char *statepath)
       return;
     }
   initialize_load_state_mom (statepath);
+  first_pass_loader_mom ();
 }
