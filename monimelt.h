@@ -851,4 +851,6 @@ struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
                                                    *vec, unsigned count);
 
 
+struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
+                                                   *vec, const void *data);
 #endif /*MONIMELT_INCLUDED_ */

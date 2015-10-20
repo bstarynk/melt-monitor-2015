@@ -1022,7 +1022,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
     vec = NULL;
   if (gap > MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big gap %u", gap);
-  if (!vec)
+  if (!vec || vec->va_itype != MOMITY_VECTVALDATA)
     {
       unsigned siz = mom_prime_above (gap + gap / 16 + 2);
       vec = mom_gc_alloc (sizeof (*vec) + siz * sizeof (void *));
@@ -1102,7 +1102,47 @@ mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
             (count - oldcount) * sizeof (void *));
   vec->cda_count = count;
   return vec;
-}
+}                               /* end of mom_vectvaldata_resize */
+
+
+
+struct mom_vectvaldata_st *
+mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
+{
+  if (vec == MOM_EMPTY_SLOT)
+    vec = NULL;
+  if (data == MOM_EMPTY_SLOT)
+    data = NULL;
+  if (!vec || vec->va_itype != MOMITY_VECTVALDATA)
+    {
+      const unsigned nsiz = 5;
+      vec = mom_gc_alloc (sizeof (*vec) + nsiz * sizeof (void *));
+      vec->va_itype = MOMITY_VECTVALDATA;
+      vec->cda_size = nsiz;
+      vec->cda_count = 1;
+      vec->vecd_valarr[0] = (struct mom_anyvalue_st *) data;
+      return vec;
+    }
+  unsigned siz = vec->cda_size;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= siz);
+  if (cnt >= siz)
+    {
+      assert (cnt == siz);
+      unsigned newsiz =
+        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 2);
+      struct mom_vectvaldata_st *newvec =
+        mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+      newvec->va_itype = MOMITY_VECTVALDATA;
+      newvec->cda_size = newsiz;
+      newvec->cda_count = cnt;
+      memcpy (newvec->vecd_valarr, vec->vecd_valarr, cnt * sizeof (void *));
+      vec = newvec;
+    }
+  vec->vecd_valarr[cnt++] = (struct mom_anyvalue_st *) data;
+  vec->cda_count = cnt;
+  return vec;
+}                               /* end of mom_vectvaldata_append */
 
 
 void
