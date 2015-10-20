@@ -19,3 +19,8 @@
 **/
 
 #include "monimelt.h"
+
+static struct
+{
+
+} mom_loader;

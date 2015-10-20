@@ -346,6 +346,7 @@ enum momitype_en
   MOMITY_SET,
   MOMITY_NODE,
   MOMITY_ITEM,
+  MOMITY__LASTHASHED,
   MOMITY_ASSOVALDATA,
   MOMITY_VECTVALDATA,
 };
@@ -362,6 +363,36 @@ struct mom_anyvalue_st
   MOM_ANYVALUE_FIELDS;
 };
 
+static inline unsigned
+mom_itype (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    return ((const struct mom_anyvalue_st *) p)->va_itype;
+  return NULL;
+}
+
+static inline unsigned
+mom_size (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((const struct mom_anyvalue_st *) p)->va_itype > 0)
+    return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
+      (((const struct mom_anyvalue_st *) p)->va_lsiz);
+  return 0;
+}
+
+static inline void
+mom_set_size (const void *p, unsigned sz)
+{
+  if (!p || p == MOM_EMPTY_SLOT
+      || ((const struct mom_anyvalue_st *) p)->va_itype == 0)
+    return;
+  if (sz >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big size %u", sz);
+  ((struct mom_anyvalue_st *) p)->va_hsiz = sz >> 16;
+  ((struct mom_anyvalue_st *) p)->va_lsiz = sz & 0xffff;
+}
+
 #define MOM_HASHEDVALUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   momhash_t hva_hash
@@ -369,6 +400,35 @@ struct mom_hashedvalue_st
 {
   MOM_HASHEDVALUE_FIELDS;
 };
+
+static inline momhash_t
+mom_hash (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((const struct mom_hashedvalue_st *) p)->va_itype > 0
+      && ((const struct mom_hashedvalue_st *) p)->va_itype <
+      MOMITY__LASTHASHED)
+    return ((const struct mom_hashedvalue_st *) p)->hva_hash;
+  return 0;
+}
+
+static inline void
+mom_put_hash (void *p, momhash_t h)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((const struct mom_hashedvalue_st *) p)->va_itype > 0
+      && ((const struct mom_hashedvalue_st *) p)->va_itype <
+      MOMITY__LASTHASHED)
+    {
+      if (((struct mom_hashedvalue_st *) p)->hva_hash == 0)
+        ((struct mom_hashedvalue_st *) p)->hva_hash = h;
+      else if (((const struct mom_hashedvalue_st *) p)->hva_hash != h)
+        MOM_FATAPRINTF ("cannot change hash @%p from %u to %u",
+                        p, ((const struct mom_hashedvalue_st *) p)->hva_hash,
+                        h);
+    }
+}
+
 
 struct mom_boxint_st
 {
@@ -879,7 +939,7 @@ struct mom_statelem_st
     double st_dbl;              /* when MOMSTA_DBL */
     const char *st_str;         /* GC-strduped string for when MOMSTA_STRING */
     struct mom_anyvalue_st *st_val;     /* when MOMSTA_VAL */
-  }
+  };
 };
 
 static inline enum mom_statetype_en
@@ -888,11 +948,28 @@ momstate_type (const struct mom_statelem_st se)
   return se.st_type;
 };
 
+static inline struct mom_statelem_st
+momstate_make_empty ()
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_EMPTY,.st_nptr = NULL};
+}
+
 static inline int
 momstate_mark (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_MARK) ? se.st_mark : (-1);
 };
+
+static inline struct mom_statelem_st
+momstate_make_mark (int m)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_MARK,.st_mark = m};
+}
+
 
 static inline intptr_t
 momstate_int_def (const struct mom_statelem_st se, intptr_t def)
@@ -900,11 +977,30 @@ momstate_int_def (const struct mom_statelem_st se, intptr_t def)
   return (se.st_type == MOMSTA_INT) ? se.st_int : def;
 };
 
+static inline struct mom_statelem_st
+momstate_make_int (intptr_t i)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_INT,.st_int = i};
+}
+
+
+
 static inline double
 momstate_dbl (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_DBL) ? se.st_int : NAN;
 };
+
+static inline struct mom_statelem_st
+momstate_make_dbl (double x)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_DBL,.st_dbl = x};
+}
+
 
 static inline const char *
 momstate_str (const struct mom_statelem_st se)
@@ -912,11 +1008,29 @@ momstate_str (const struct mom_statelem_st se)
   return (se.st_type == MOMSTA_STRING) ? se.st_str : NULL;
 };
 
+static inline struct mom_statelem_st
+momstate_make_str (const char *s)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_STRING,.st_str = s};
+}
+
+
 static inline const struct mom_anyvalue_st *
 momstate_val (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
 };
+
+static inline struct mom_statelem_st
+momstate_make_val (const struct mom_anyvalue_st *v)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = v};
+}
+
 
 static inline struct mom_item_st *
 momstate_dynitem (const struct mom_statelem_st se)
@@ -924,17 +1038,42 @@ momstate_dynitem (const struct mom_statelem_st se)
   return mom_dyncast_item (momstate_val (se));
 };
 
+static inline struct mom_statelem_st
+momstate_make_item (const struct mom_item_st *itm)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) itm};
+}
+
+
 static inline const struct mom_boxint_st *
 momstate_dynboxint (const struct mom_statelem_st se)
 {
   return mom_dyncast_boxint (momstate_val (se));
 };
 
+static inline struct mom_statelem_st
+momstate_make_boxint (const struct mom_boxint_st *bi)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) bi};
+}
+
 static inline const struct mom_boxstring_st *
 momstate_dynboxstring (const struct mom_statelem_st se)
 {
   return mom_dyncast_boxstring (momstate_val (se));
 };
+
+static inline struct mom_statelem_st
+momstate_make_boxstring (const struct mom_boxstring_st *bs)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) bs};
+}
 
 
 static inline const struct mom_tuple_st *
@@ -943,11 +1082,30 @@ momstate_dyntuple (const struct mom_statelem_st se)
   return mom_dyncast_tuple (momstate_val (se));
 };
 
+static inline struct mom_statelem_st
+momstate_make_tuple (const struct mom_tuple_st *tu)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) tu};
+}
+
+
 static inline const struct mom_set_st *
 momstate_dynset (const struct mom_statelem_st se)
 {
   return mom_dyncast_set (momstate_val (se));
 };
+
+static inline struct mom_statelem_st
+momstate_make_set (const struct mom_set_st *se)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (const struct mom_anyvalue_st *) se};
+}
+
+
 
 static inline const struct mom_node_st *
 momstate_dynnode (const struct mom_statelem_st se)
@@ -955,6 +1113,14 @@ momstate_dynnode (const struct mom_statelem_st se)
   return mom_dyncast_node (momstate_val (se));
 };
 
+
+static inline struct mom_statelem_st
+momstate_make_node (const struct mom_node_st *nd)
+{
+  return (struct mom_statelem_st)
+  {
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) nd};
+}
 
 
 #endif /*MONIMELT_INCLUDED_ */
