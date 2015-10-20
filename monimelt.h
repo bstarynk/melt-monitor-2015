@@ -812,6 +812,22 @@ mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
   return NULL;
 }
 
+static inline void
+mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
+                         const void *data)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return;
+  if (data == MOM_EMPTY_SLOT)
+    data = NULL;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= vec->cda_size);
+  if (rk < 0)
+    rk += cnt;
+  if (rk >= 0 && rk < (int) cnt)
+    vec->vecd_valarr[rk] = (struct mom_anyvalue_st *) data;
+}
+
 static inline unsigned
 mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
 {
@@ -833,5 +849,6 @@ mom_vectvaldata_valvect (const struct mom_vectvaldata_st *vec)
 
 struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
                                                    *vec, unsigned count);
+
 
 #endif /*MONIMELT_INCLUDED_ */
