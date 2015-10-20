@@ -352,6 +352,10 @@ enum momitype_en
 };
 struct mom_item_st;
 
+const char *mom_item_cstring (const struct mom_item_st *itm);
+
+int mom_item_cmp (const struct mom_item_st *itm1,
+                  const struct mom_item_st *itm2);
 
 // the common prefix of all values
 #define MOM_ANYVALUE_FIELDS			\
@@ -389,7 +393,7 @@ mom_size (const void *p)
 }
 
 static inline void
-mom_set_size (const void *p, unsigned sz)
+mom_put_size (const void *p, unsigned sz)
 {
   if (!p || p == MOM_EMPTY_SLOT
       || ((const struct mom_anyvalue_st *) p)->va_itype == 0)
@@ -399,6 +403,7 @@ mom_set_size (const void *p, unsigned sz)
   ((struct mom_anyvalue_st *) p)->va_hsiz = sz >> 16;
   ((struct mom_anyvalue_st *) p)->va_lsiz = sz & 0xffff;
 }
+
 
 #define MOM_HASHEDVALUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
@@ -716,7 +721,7 @@ struct mom_itementry_tu
 #define MOM_ASSOVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
   struct mom_itementry_tu ada_ents[]    /* sorted array of entries */
-// allocated size of ada_ents is cda_size; used count is cda_count.
+// allocated size of ada_ents is size; used count is cda_count.
 struct mom_assovaldata_st
 {
   MOM_ASSOVALDATA_FIELDS;
@@ -730,6 +735,38 @@ struct mom_assovaldata_st
 struct mom_vectvaldata_st
 {
   MOM_VECTVALDATA_FIELDS;
+};
+
+#define MOM_HASHEDSET_FIELDS			\
+  MOM_COUNTEDATA_FIELDS;			\
+  struct mom_item_st*hset_items[];
+//// mutable hashed set
+struct mom_hashedset_st
+{
+  MOM_HASHEDSET_FIELDS;
+};
+
+struct mom_hashedset_st *mom_hashedset_reserve (struct mom_hashedset_st *hset,
+                                                unsigned gap);
+
+
+struct mom_hashedset_st *mom_hashedset_insert (struct mom_hashedset_st *hset,
+                                               struct mom_item_st *itm);
+
+struct mom_hashedset_st *mom_hashedset_remove (struct mom_hashedset_st *hset,
+                                               struct mom_item_st *itm);
+
+bool
+mom_hashedset_contains (struct mom_hashedset_st *hset,
+                        struct mom_item_st *itm);
+
+#define MOM_HASHEDMAP_FIELDS			\
+  MOM_COUNTEDATA_FIELDS;			\
+  struct mom_itementry_tu ada_ents[]
+//// mutable hashed map 
+struct mom_hashedmap_st
+{
+  MOM_HASHEDMAP_FIELDS;
 };
 
 struct mom_itemname_tu
@@ -846,10 +883,40 @@ mom_item_radix_str (const struct mom_item_st *itm)
     return NULL;
 }
 
-const char *mom_item_cstring (const struct mom_item_st *itm);
 
-int mom_item_cmp (const struct mom_item_st *itm1,
-                  const struct mom_item_st *itm2);
+static inline bool
+mom_set_contains (const struct mom_boxset_st *bs,
+                  const struct mom_item_st *const itm)
+{
+  if (!bs || bs == MOM_EMPTY_SLOT || bs->va_itype != MOMITY_SET)
+    return false;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return false;
+  unsigned siz = mom_raw_size (bs);
+  int lo = 0, hi = (int) siz - 1, md = 0;
+  while (lo + 5 < hi)
+    {
+      md = (lo + hi) / 2;
+      struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
+      assert (curitm);
+      if ((struct mom_item_st *) itm == curitm)
+        return true;
+      int c = mom_item_cmp (itm, curitm);
+      if (c < 0)
+        hi = md;
+      else
+        lo = md;
+    }
+  for (md = lo; md < hi; md++)
+    {
+      md = (lo + hi) / 2;
+      struct item_st *curitm = (struct item_st *) bs->seqitem[md];
+      assert (curitm);
+      if ((struct item_st *) itm == curitm)
+        return true;
+    }
+  return false;
+}
 
 
 
