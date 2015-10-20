@@ -1049,6 +1049,62 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
 }
 
 
+struct mom_vectvaldata_st *
+mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    {
+      unsigned newsiz = mom_prime_above (count + count / 8 + 2);
+      struct mom_vectvaldata_st *newvec
+        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+      newvec->va_itype = MOMITY_VECTVALDATA;
+      newvec->cda_size = newsiz;
+      newvec->cda_count = count;
+      return newvec;
+    }
+  unsigned oldcount = vec->cda_count;
+  unsigned size = vec->cda_size;
+  assert (oldcount <= size);
+  if (count > size)
+    {
+      unsigned newsiz = mom_prime_above (count + count / 8 + 2);
+      struct mom_vectvaldata_st *newvec
+        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+      newvec->va_itype = MOMITY_VECTVALDATA;
+      newvec->cda_size = newsiz;
+      newvec->cda_count = count;
+      memcpy (newvec->vecd_valarr, vec->vecd_valarr,
+              oldcount * sizeof (void *));
+      return newvec;
+    }
+  else if (count < size / 2 && size > 10)
+    {
+      unsigned newsiz = mom_prime_above (count + count / 8 + 2);
+      if (newsiz != size)
+        {
+          struct mom_vectvaldata_st *newvec
+            = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+          newvec->va_itype = MOMITY_VECTVALDATA;
+          newvec->cda_size = newsiz;
+          newvec->cda_count = count;
+          memcpy (newvec->vecd_valarr, vec->vecd_valarr,
+                  ((oldcount < count) ? oldcount : count) * sizeof (void *));
+          return newvec;
+        }
+    }
+  if (count == oldcount)
+    return vec;
+  if (count < oldcount)
+    memset (vec->vecd_valarr + count, 0,
+            (oldcount - count) * sizeof (void *));
+  else
+    memset (vec->vecd_valarr + oldcount, 0,
+            (count - oldcount) * sizeof (void *));
+  vec->cda_count = count;
+  return vec;
+}
+
+
 void
 mom_initialize_items (void)
 {
