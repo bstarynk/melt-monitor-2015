@@ -20,7 +20,54 @@
 
 #include "monimelt.h"
 
-static struct
+#define LOADER_MAGIC_MOM 0x1f3fd30f     /*524276495 */
+struct
 {
-
+  unsigned ld_stacksize;
+  unsigned ld_stacktop;
+  struct mom_statelem_st *ld_stackarr;
+  struct mom_hashset_st *ld_hsetitems;
+  unsigned ld_magic;            /* always LOADER_MAGIC_MOM */
+  int ld_prevmark;
+  FILE *ld_file;
+  const char *ld_path;
 } mom_loader;
+
+
+static void
+initialize_load_state_mom (const char *statepath)
+{
+  struct stat st;
+  memset (&st, 0, sizeof (mom_loader));
+  memset (&mom_loader, 0, sizeof (mom_loader));
+  FILE *f = fopen (statepath, "r");
+  if (!f)
+    MOM_FATAPRINTF ("failed to open initial state file %s : %m", statepath);
+  if (fstat (fileno (f), &st))
+    MOM_FATAPRINTF ("failed to stat file %s : %m", statepath);
+  long fisiz = st.st_size;
+  {
+    unsigned sizstack = ((10 + (int) sqrt (0.2 * fisiz)) | 0x1f) + 1;
+    mom_loader.ld_stackarr =
+      mom_gc_alloc (sizeof (struct mom_statelem_st) * sizstack);
+    mom_loader.ld_stacksize = sizstack;
+  }
+  {
+    unsigned sizhset = ((30 + (int) sqrt (0.3 * fisiz)) | 0x1f) + 1;
+    mom_loader.ld_hsetitems = mom_hashset_reserve (NULL, sizhset);
+  }
+  mom_loader.ld_magic = LOADER_MAGIC_MOM;
+  mom_loader.ld_file = f;
+  mom_loader.ld_path = GC_STRDUP (statepath);
+}
+
+void
+mom_load_state (const char *statepath)
+{
+  if (!statepath || !statepath[0])
+    {
+      MOM_WARNPRINTF ("empty start path to load");
+      return;
+    }
+  initialize_load_state_mom (statepath);
+}

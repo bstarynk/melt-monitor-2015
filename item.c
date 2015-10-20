@@ -1145,6 +1145,200 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
 }                               /* end of mom_vectvaldata_append */
 
 
+
+
+
+static int
+hashset_index_mom (const struct mom_hashset_st *hset,
+                   const struct mom_item_st *itm)
+{
+  assert (hset && hset->va_itype == MOMITY_HASHSET);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  unsigned siz = mom_raw_size (hset);
+  assert (hset->cda_count < siz);
+  assert (siz > 2);
+  momhash_t hitm = itm->hva_hash;
+  unsigned startix = hitm % siz;
+  int pos = -1;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_item_st *curitm = hset->hset_items[ix];
+      if (curitm == itm)
+        return ix;
+      else if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = ix;
+          continue;
+        }
+      else if (curitm == NULL)
+        {
+          if (pos < 0)
+            pos = ix;
+          return pos;
+        }
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_item_st *curitm = hset->hset_items[ix];
+      if (curitm == itm)
+        return ix;
+      else if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = ix;
+          continue;
+        }
+      else if (curitm == NULL)
+        {
+          if (pos < 0)
+            pos = ix;
+          return pos;
+        }
+    }
+  return -1;
+}
+
+
+struct mom_hashset_st *
+mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    {
+      unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
+      hset = mom_gc_alloc (sizeof (*hset) + newsiz * sizeof (void *));
+      hset->va_itype = MOMITY_HASHSET;
+      mom_put_size (hset, newsiz);
+      hset->cda_count = 0;
+      return hset;
+    }
+  unsigned cnt = hset->cda_count;
+  unsigned siz = mom_raw_size (hset);
+  assert (cnt <= siz);
+  if (gap == 0)
+    {
+      // reorganize
+      unsigned newsiz =
+        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
+      unsigned oldsiz = siz;
+      unsigned oldcnt = cnt;
+      struct mom_hashset_st *oldhset = hset;
+      struct mom_hashset_st *newhset =
+        mom_gc_alloc (sizeof (*newhset) + newsiz * sizeof (void *));
+      newhset->va_itype = MOMITY_HASHSET;
+      mom_put_size (newhset, newsiz);
+      for (unsigned ix = 0; ix < oldsiz; ix++)
+        {
+          struct mom_item_st *olditm = oldhset->hset_items[ix];
+          if (!olditm || olditm == MOM_EMPTY_SLOT)
+            continue;
+          int pos = hashset_index_mom (newhset, olditm);
+          assert (pos >= 0 && pos < (int) newsiz
+                  && newhset->hset_items[pos] == NULL);
+          newhset->hset_items[pos] = olditm;
+          newhset->cda_count++;
+        }
+      assert (newhset->cda_count == oldcnt);
+      siz = newsiz;
+      hset = newhset;
+    }
+  else if (gap + cnt >= siz)
+    {
+      unsigned newsiz =
+        mom_prime_above (5 * (gap + cnt) / 4 +
+                         (((gap + cnt) > 100) ? ((gap + cnt) / 32) : 1) + 3);
+      unsigned oldsiz = siz;
+      unsigned oldcnt = cnt;
+      struct mom_hashset_st *oldhset = hset;
+      struct mom_hashset_st *newhset =
+        mom_gc_alloc (sizeof (*newhset) + newsiz * sizeof (void *));
+      newhset->va_itype = MOMITY_HASHSET;
+      mom_put_size (newhset, newsiz);
+      for (unsigned ix = 0; ix < oldsiz; ix++)
+        {
+          struct mom_item_st *olditm = oldhset->hset_items[ix];
+          if (!olditm || olditm == MOM_EMPTY_SLOT)
+            continue;
+          int pos = hashset_index_mom (newhset, olditm);
+          assert (pos >= 0 && pos < (int) newsiz
+                  && newhset->hset_items[pos] == NULL);
+          newhset->hset_items[pos] = olditm;
+          newhset->cda_count++;
+        }
+      assert (newhset->cda_count == oldcnt);
+      return newhset;
+    }
+  return hset;
+}
+
+
+
+struct mom_hashset_st *
+mom_hashset_insert (struct mom_hashset_st *hset, struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return hset;
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    {
+      hset = mom_hashset_reserve (NULL, 5);
+      int pos = hashset_index_mom (hset, itm);
+      assert (pos >= 0 && pos < (int) mom_raw_size (hset));
+      hset->hset_items[pos] = itm;
+      hset->cda_count = 1;
+      return hset;
+    }
+  unsigned cnt = hset->cda_count;
+  unsigned siz = mom_raw_size (hset);
+  assert (cnt <= siz);
+  if (5 * cnt >= 4 * siz)
+    {
+      hset = mom_hashset_reserve (hset, 3 + cnt / 256);
+      siz = mom_raw_size (hset);
+    }
+  int pos = hashset_index_mom (hset, itm);
+  assert (pos >= 0 && pos < (int) siz);
+  if (hset->hset_items[pos] != itm)
+    {
+      hset->hset_items[pos] = itm;
+      hset->cda_count++;
+    }
+  return hset;
+}
+
+
+struct mom_hashset_st *
+mom_hashset_remove (struct mom_hashset_st *hset, struct mom_item_st *itm)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return hset;
+  int pos = hashset_index_mom (hset, itm);
+  if (pos >= 0 && hset->hset_items[pos] == itm)
+    {
+      hset->hset_items[pos] = MOM_EMPTY_SLOT;
+      hset->cda_count--;
+      unsigned siz = mom_raw_size (hset);
+      if (siz > 12 && hset->cda_count * 2 + 3 < siz)
+        hset = mom_hashset_reserve (hset, 0);
+    }
+  return hset;
+}
+
+bool
+mom_hashset_contains (const struct mom_hashset_st * hset,
+                      struct mom_item_st * itm)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    return false;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return false;
+  int pos = hashset_index_mom (hset, itm);
+  if (pos >= 0 && hset->hset_items[pos] == itm)
+    return true;
+  return false;
+}
+
 void
 mom_initialize_items (void)
 {

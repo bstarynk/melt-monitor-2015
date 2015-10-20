@@ -349,6 +349,8 @@ enum momitype_en
   MOMITY__LASTHASHED,
   MOMITY_ASSOVALDATA,
   MOMITY_VECTVALDATA,
+  MOMITY_HASHSET,
+  MOMITY_HASHEDMAP
 };
 struct mom_item_st;
 
@@ -737,32 +739,41 @@ struct mom_vectvaldata_st
   MOM_VECTVALDATA_FIELDS;
 };
 
-#define MOM_HASHEDSET_FIELDS			\
+
+
+/// for MOMITY_HASHSET
+
+#define MOM_HASHSET_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
   struct mom_item_st*hset_items[];
 //// mutable hashed set
-struct mom_hashedset_st
+struct mom_hashset_st
 {
-  MOM_HASHEDSET_FIELDS;
+  MOM_HASHSET_FIELDS;
 };
 
-struct mom_hashedset_st *mom_hashedset_reserve (struct mom_hashedset_st *hset,
-                                                unsigned gap);
+/// with a 0 gap, will reorganize
+struct mom_hashset_st *mom_hashset_reserve (struct mom_hashset_st *hset,
+                                            unsigned gap);
 
 
-struct mom_hashedset_st *mom_hashedset_insert (struct mom_hashedset_st *hset,
-                                               struct mom_item_st *itm);
+struct mom_hashset_st *mom_hashset_insert (struct mom_hashset_st *hset,
+                                           struct mom_item_st *itm);
 
-struct mom_hashedset_st *mom_hashedset_remove (struct mom_hashedset_st *hset,
-                                               struct mom_item_st *itm);
+struct mom_hashset_st *mom_hashset_remove (struct mom_hashset_st *hset,
+                                           struct mom_item_st *itm);
 
 bool
-mom_hashedset_contains (struct mom_hashedset_st *hset,
-                        struct mom_item_st *itm);
+mom_hashset_contains (const struct mom_hashset_st *hset,
+                      struct mom_item_st *itm);
+
+
+
+/// for MOMITY_HASHEDMAP
 
 #define MOM_HASHEDMAP_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
-  struct mom_itementry_tu ada_ents[]
+  struct mom_itementry_tu hmap_ents[]
 //// mutable hashed map 
 struct mom_hashedmap_st
 {
