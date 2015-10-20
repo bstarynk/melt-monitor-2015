@@ -218,7 +218,7 @@ mom_make_name_radix (const char *str, int len)
             mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
                                    2) | 3) + 1);
           nam->itname_rank = 0;
-          nam->itname_string.va_itype = MOM_BOXSTRING_ITYPE;
+          nam->itname_string.va_itype = MOMITY_BOXSTRING;
           nam->itname_string.va_hsiz = len >> 8;
           nam->itname_string.va_lsiz = len & 0xffff;
           nam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
@@ -311,7 +311,7 @@ mom_make_name_radix (const char *str, int len)
             mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
                                    2) | 3) + 1);
           nam->itname_rank = ix;
-          nam->itname_string.va_itype = MOM_BOXSTRING_ITYPE;
+          nam->itname_string.va_itype = MOMITY_BOXSTRING;
           nam->itname_string.va_hsiz = len >> 8;
           nam->itname_string.va_lsiz = len & 0xffff;
           nam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
@@ -594,7 +594,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
         goto end;
       }
     struct mom_item_st *newitm = mom_gc_alloc (sizeof (struct mom_item_st));
-    newitm->va_ltype = MOM_ITEM_LTYPE;
+    newitm->va_itype = MOMITY_ITEM;
     newitm->hva_hash = hi;
     newitm->itm_radix = (struct mom_itemname_tu *) radix;
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
@@ -672,7 +672,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
               (mom_random_uint32 ());
           }
         while (MOM_UNLIKELY (hid == 0 || lid == 0));
-        quasitm->va_ltype = MOM_ITEM_LTYPE;
+        quasitm->va_itype = MOMITY_ITEM;
         quasitm->itm_radix = (struct mom_itemname_tu *) radix;
         quasitm->itm_hid = hid;
         quasitm->itm_lid = lid;
@@ -730,8 +730,8 @@ mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)
     return -1;
   if (!itm2)
     return 1;
-  assert (itm1->va_ltype == MOM_ITEM_LTYPE);
-  assert (itm2->va_ltype == MOM_ITEM_LTYPE);
+  assert (itm1->va_itype == MOMITY_ITEM);
+  assert (itm2->va_itype == MOMITY_ITEM);
   const struct mom_itemname_tu *rad1 = itm1->itm_radix;
   const struct mom_itemname_tu *rad2 = itm2->itm_radix;
   if (rad1 == rad2)
@@ -772,8 +772,8 @@ mom_assovaldata_get (const struct mom_assovaldata_st *asso,
 {
   if (!asso || asso == MOM_EMPTY_SLOT || !itmat || itmat == MOM_EMPTY_SLOT)
     return NULL;
-  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
-  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+  assert (asso->va_itype == MOMITY_ASSOVALDATA);
+  assert (itmat->va_itype == MOMITY_ITEM);
   unsigned cnt = asso->cda_count;
   assert (cnt <= asso->cda_size);
   if (!cnt)
@@ -804,8 +804,8 @@ mom_assovaldata_remove (struct mom_assovaldata_st *asso,
 {
   if (!asso || asso == MOM_EMPTY_SLOT || !itmat || itmat == MOM_EMPTY_SLOT)
     return NULL;
-  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
-  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+  assert (asso->va_itype == MOMITY_ASSOVALDATA);
+  assert (itmat->va_itype == MOMITY_ITEM);
 
   unsigned cnt = asso->cda_count;
   unsigned siz = asso->cda_size;
@@ -839,7 +839,7 @@ remove_at_md:
           struct mom_assovaldata_st *newasso
             = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                             + newsiz * sizeof (struct mom_itementry_tu));
-          newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+          newasso->va_itype = MOMITY_ASSOVALDATA;
           newasso->cda_size = newsiz;
           for (int ix = 0; ix < md; ix++)
             newasso->ada_ents[ix] = asso->ada_ents[ix];
@@ -870,7 +870,7 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                         + newsiz * sizeof (struct mom_itementry_tu));
-      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->va_itype = MOMITY_ASSOVALDATA;
       newasso->cda_size = newsiz;
       return newasso;
     }
@@ -884,7 +884,7 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
   struct mom_assovaldata_st *newasso
     = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                     + newsiz * sizeof (struct mom_itementry_tu));
-  newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+  newasso->va_itype = MOMITY_ASSOVALDATA;
   newasso->cda_size = newsiz;
   for (unsigned ix = 0; ix < cnt; ix++)
     newasso->ada_ents[ix] = asso->ada_ents[ix];
@@ -910,7 +910,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                         + newsiz * sizeof (struct mom_itementry_tu));
-      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->va_itype = MOMITY_ASSOVALDATA;
       newasso->cda_size = newsiz;
       newasso->ada_ents[0].ient_itm = (struct mom_item_st *) itmat;
       newasso->ada_ents[0].ient_val =
@@ -918,8 +918,8 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       newasso->cda_count = 1;
       return newasso;
     };
-  assert (asso->va_ltype == MOM_ASSOVALDATA_LTYPE);
-  assert (itmat->va_ltype == MOM_ITEM_LTYPE);
+  assert (asso->va_itype == MOMITY_ASSOVALDATA);
+  assert (itmat->va_itype == MOMITY_ITEM);
   unsigned cnt = asso->cda_count;
   unsigned siz = asso->cda_size;
   assert (cnt <= siz);
@@ -951,7 +951,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                         + newsiz * sizeof (struct mom_itementry_tu));
-      newasso->va_ltype = MOM_ASSOVALDATA_LTYPE;
+      newasso->va_itype = MOMITY_ASSOVALDATA;
       newasso->cda_size = newsiz;
       for (int ix = 0; ix < lo; ix++)
         newasso->ada_ents[ix] = asso->ada_ents[ix];
@@ -1026,7 +1026,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
     {
       unsigned siz = mom_prime_above (gap + gap / 16 + 2);
       vec = mom_gc_alloc (sizeof (*vec) + siz * sizeof (void *));
-      vec->va_ltype = MOM_VECTVALDATA_LTYPE;
+      vec->va_itype = MOMITY_VECTVALDATA;
       vec->cda_size = siz;
       return vec;
     }
@@ -1039,7 +1039,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
       unsigned newsiz = mom_prime_above (cnt + gap + cnt / 16 + 4);
       struct mom_vectvaldata_st *newvec
         = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
-      newvec->va_ltype = MOM_VECTVALDATA_LTYPE;
+      newvec->va_itype = MOMITY_VECTVALDATA;
       newvec->cda_size = newsiz;
       mempcpy (newvec->vecd_valarr, vec->vecd_valarr, cnt * sizeof (void *));
       newvec->cda_count = cnt;
