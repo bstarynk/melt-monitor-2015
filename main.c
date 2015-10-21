@@ -893,6 +893,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
         case 'd':              /* --dump */
           should_dump_mom = true;
           break;
+        case 'D':
+          mom_set_debugging (optarg);
+          break;
         case 's':              /* --syslog */
           openlog ("monimelt", LOG_PID | LOG_PERROR, LOG_LOCAL1);
           syslogging_mom = true;
@@ -931,7 +934,8 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           MOM_FATAPRINTF ("unimplemented --info");
           break;
         default:
-          MOM_FATAPRINTF ("bad option at %d", optind);
+          MOM_FATAPRINTF ("bad option (%c) at %d", isalpha (opt) ? opt : '?',
+                          optind);
           return;
         }
     }
@@ -954,9 +958,6 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
-  struct mom_item_st *itm_the_system =
-    mom_make_item_from_string ("the_system", NULL);
-  printf ("itm_the_system@%p = %s h%u\n", itm_the_system,
-          mom_item_cstring (itm_the_system), itm_the_system->hva_hash);
+  MOM_INFORMPRINTF ("end %s pid %d\n", argv[0], (int) getpid ());
   return 0;
 }

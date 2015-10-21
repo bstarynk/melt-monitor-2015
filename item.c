@@ -1468,6 +1468,99 @@ mom_hashset_contains (const struct mom_hashset_st * hset,
   return false;
 }
 
+
+#define MOM_HAS_PREDEFINED(Nam,Hash)		\
+  struct mom_item_st mompredef_##Nam = {	\
+  .va_itype = MOMITY_ITEM,			\
+  .hva_hash = Hash,				\
+  .itm_hid = 0,					\
+  .itm_lid = 0,					\
+  };
+#include "_mom_predef.h"
+
+
+static void
+initialize_predefined_mom (struct mom_item_st *itm, const char *name,
+                           momhash_t hash)
+{
+  assert (itm->va_itype == MOMITY_ITEM && itm->hva_hash == hash);
+  MOM_DEBUGPRINTF (item, "initialize_predefined %s", name);
+  const char *twou = strstr (name, "__");
+  uint16_t hid = 0;
+  uint64_t lid = 0;
+  if (twou)
+    {
+#warning initialize_predefined unimplemented for cloned
+      MOM_FATAPRINTF ("initialize_predefined unimplemented for cloned %s",
+                      name);
+    }
+  else
+    {
+      hid = 0;
+      lid = 0;
+    };
+  const struct mom_itemname_tu *radix = mom_make_name_radix (name, -1);
+  if (!radix)
+    MOM_FATAPRINTF ("initialize_predefined failed to make radix %s", name);
+  struct radix_mom_st *curad = NULL;
+  {
+    pthread_mutex_lock (&radix_mtx_mom);
+    assert (radix_cnt_mom <= radix_siz_mom);
+    uint32_t radrk = radix->itname_rank;
+    assert (radrk < radix_cnt_mom);
+    curad = radix_arr_mom[radrk];
+    assert (curad != NULL);
+    pthread_mutex_unlock (&radix_mtx_mom);
+  }
+  pthread_mutex_lock (&curad->rad_mtx);
+  momhash_t hi = hash_item_from_radix_id_mom (radix, hid, lid);
+  assert (hi == hash);
+  unsigned sz = curad->rad_size;
+  unsigned cnt = curad->rad_count;
+  assert (cnt <= sz);
+  if (MOM_UNLIKELY (4 * cnt + 3 >= 5 * sz))
+    {
+      unsigned newsiz =
+        mom_prime_above (4 * cnt / 3 + 10 +
+                         (((cnt > 100) ? (cnt / 32) : 3) + 1));
+      if (newsiz > sz)
+        {
+          struct mom_item_st **oldarr = curad->rad_items;
+          assert (oldarr != NULL);
+          unsigned oldsiz = sz;
+          unsigned oldcnt = cnt;
+          struct mom_item_st **newarr =
+            mom_gc_alloc (newsiz * sizeof (struct mom_item_st *));
+          curad->rad_items = newarr;
+          curad->rad_size = newsiz;
+          curad->rad_count = 0;
+          for (unsigned ix = 0; ix < oldsiz; ix++)
+            {
+              struct mom_item_st *olditm = oldarr[ix];
+              if (!olditm || olditm == MOM_EMPTY_SLOT)
+                continue;
+              int pos = put_item_in_radix_rank_mom (curad, olditm);
+              assert (pos >= 0 && pos < (int) newsiz
+                      && curad->rad_items[pos] == NULL);
+              curad->rad_items[pos] = olditm;
+              curad->rad_count++;
+            }
+          assert (curad->rad_count == oldcnt);
+          sz = newsiz;
+        }
+    };
+  assert (curad->rad_items);
+  itm->va_itype = MOMITY_ITEM;
+  itm->itm_radix = (struct mom_itemname_tu *) radix;
+  itm->itm_hid = hid;
+  itm->itm_lid = lid;
+  int pos = put_item_in_radix_rank_mom (curad, itm);
+  assert (pos >= 0 && pos < (int) sz);
+  assert (curad->rad_items[pos] == NULL);
+  curad->rad_items[pos] = itm;
+  pthread_mutex_unlock (&curad->rad_mtx);
+}
+
 void
 mom_initialize_items (void)
 {
@@ -1477,14 +1570,9 @@ mom_initialize_items (void)
   inited = true;
   pthread_mutexattr_init (&item_mtxattr_mom);
   pthread_mutexattr_settype (&item_mtxattr_mom, PTHREAD_MUTEX_RECURSIVE);
-}
 
-#define MOM_HAS_PREDEFINED(Nam,Hash)		\
-  struct mom_item_st mompredef_##Nam = {	\
-  .va_itype = MOMITY_ITEM,			\
-  .hva_hash = Hash,				\
-  .itm_spacix = 0,				\
-  .itm_hid = 0,					\
-  .itm_lid = 0,					\
-  };
+#define MOM_HAS_PREDEFINED(Nam,Hash) \
+  initialize_predefined_mom(&mompredef_##Nam, #Nam, Hash);
 #include "_mom_predef.h"
+  MOM_DEBUGPRINTF (item, "done predefined %d", MOM_NB_PREDEFINED);
+}

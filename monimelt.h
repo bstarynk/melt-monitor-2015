@@ -370,7 +370,10 @@ int mom_item_cmp (const struct mom_item_st *itm1,
 #define MOM_ANYVALUE_FIELDS			\
   uint8_t va_itype;				\
   uint8_t va_hsiz;				\
-  uint16_t va_lsiz
+  union {					\
+    uint16_t va_lsiz;				\
+    atomic_uint_least16_t va_ixv;		\
+  }
 struct mom_anyvalue_st
 {                               /// field prefix: va_;
   MOM_ANYVALUE_FIELDS;
@@ -817,8 +820,6 @@ struct mom_itemname_tu
   MOM_HASHEDVALUE_FIELDS;			\
   struct mom_itemname_tu* itm_radix;		\
   pthread_mutex_t itm_mtx;			\
-  atomic_uint_least16_t itm_spacix;		\
-  uint16_t itm_xtra;				\
   uint32_t itm_hid;				\
   uint64_t itm_lid;				\
   struct mom_assovaldata_st* itm_pattr;		\
