@@ -22,6 +22,9 @@
 
 void *mom_prog_dlhandle;
 static bool syslogging_mom;
+static bool should_dump_mom;
+static char *dir_after_load_mom;
+
 #define BASE_YEAR_MOM 2015
 
 void
@@ -805,6 +808,128 @@ mom_set_debugging (const char *dbgopt)
     MOM_INFORMPRINTF ("no debug flags active.");
 }
 
+
+/* Option specification for getopt_long.  */
+enum extraopt_en
+{
+  xtraopt__none = 0,
+  xtraopt_chdir_first = 1024,
+  xtraopt_chdir_after_load,
+  xtraopt_addpredef,
+  xtraopt_info,
+};
+
+static const struct option mom_long_options[] = {
+  {"help", no_argument, NULL, 'h'},
+  {"version", no_argument, NULL, 'V'},
+  {"debug", required_argument, NULL, 'D'},
+  {"load", required_argument, NULL, 'L'},
+  {"dump", no_argument, NULL, 'd'},
+  {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
+  {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
+  {"add-predefined", required_argument, NULL, xtraopt_addpredef},
+  {"info", no_argument, NULL, xtraopt_info},
+  /* Terminating NULL placeholder.  */
+  {NULL, no_argument, NULL, 0},
+};
+
+
+static void
+usage_mom (const char *argv0)
+{
+  printf ("Usage: %s\n", argv0);
+  printf ("\t -h | --help " " \t# Give this help.\n");
+  printf ("\t -V | --version " " \t# Give version information.\n");
+  printf ("\t -d | --dump " " \t# Dump the state.\n");
+  printf ("\t -D | --debug <debug-features>"
+          " \t# Debugging comma separated features\n\t\t##");
+  for (unsigned ix = 1; ix < momdbg__last; ix++)
+    printf (" %s", mom_debug_names[ix]);
+  putchar ('\n');
+  printf ("\t -L | --load statefile" " \t#Load a state \n");
+  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
+  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
+  printf ("\t --chdir-after-load dirpath"
+          " \t#Change directory after load\n");
+  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
+  printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
+  printf ("\t --info" " \t#Give various information\n");
+}
+
+
+
+static void
+print_version_mom (const char *argv0)
+{
+  printf ("%s built on %s gitcommit %s\n", argv0,
+          monimelt_timestamp, monimelt_lastgitcommit);
+}
+
+
+static void
+parse_program_arguments_mom (int *pargc, char ***pargv)
+{
+  int argc = *pargc;
+  char **argv = *pargv;
+  int opt = -1;
+  while ((opt = getopt_long (argc, argv, "hVdD:L:",
+                             mom_long_options, NULL)) >= 0)
+    {
+      switch (opt)
+        {
+        case 'h':              /* --help */
+          usage_mom (argv[0]);
+          putchar ('\n');
+          fputs ("\nVersion info:::::\n", stdout);
+          print_version_mom (argv[0]);
+          exit (EXIT_FAILURE);
+          return;
+        case 'V':              /* --version */
+          print_version_mom (argv[0]);
+          exit (EXIT_SUCCESS);
+          return;
+        case 'd':              /* --dump */
+          should_dump_mom = true;
+          break;
+        case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
+          {
+            if (!optarg)
+              MOM_FATAPRINTF ("missing --chdir-first argument");
+            if (chdir (optarg))
+              MOM_FATAPRINTF ("--chdir-first %s failed %m", optarg);
+            char cwdbuf[256];
+            memset (cwdbuf, 0, sizeof (cwdbuf));
+            if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+              strcpy (cwdbuf, ".");
+            MOM_INFORMPRINTF ("changed directory at first to %s", cwdbuf);
+          }
+          break;
+        case xtraopt_chdir_after_load: /* --chdir-after-load <dirpath> */
+          {
+            if (!optarg)
+              MOM_FATAPRINTF ("missing --chdir-after-load argument");
+            struct stat stdir = { };
+            if (stat (optarg, &stdir) || (stdir.st_mode & S_IFMT) != S_IFDIR)
+              MOM_WARNPRINTF ("%s is not a directory for --chdir-after-load",
+                              optarg);
+            dir_after_load_mom = GC_STRDUP (optarg);
+          }
+          break;
+        case xtraopt_addpredef:
+#warning unhandled xtraopt_addpredef
+          MOM_FATAPRINTF ("unimplemented --add-predefined %s", optarg);
+          break;
+        case xtraopt_info:
+#warning unhandled xtraopt_info
+          MOM_FATAPRINTF ("unimplemented --info");
+          break;
+        default:
+          MOM_FATAPRINTF ("bad option at %d", optind);
+          return;
+        }
+    }
+}                               /* end of parse_program_arguments_mom */
+
 int
 main (int argc_main, char **argv_main)
 {
@@ -821,49 +946,6 @@ main (int argc_main, char **argv_main)
   if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'D')
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
-  mom_print_sizes ();
-  const struct mom_itemname_tu *nt1 = mom_make_name_radix ("abc", -1);
-  const struct mom_itemname_tu *nt2 = mom_make_name_radix ("abcde", 4);
-  const struct mom_itemname_tu *nt3 = mom_make_name_radix ("cde", -1);
-  const struct mom_itemname_tu *nt4 = mom_make_name_radix ("bb", -1);
-  const struct mom_itemname_tu *nt5 = mom_make_name_radix ("zx", -1);
-  printf ("nt1=%p nt2=%p nt3=%p nt4=%p nt5=%p\n", nt1, nt2, nt3, nt4, nt5);
-  const struct mom_itemname_tu *nt6 = mom_make_name_radix ("Ze", -1);
-  const struct mom_itemname_tu *nt7 = mom_make_name_radix ("XYZabcde", -1);
-  const struct mom_itemname_tu *nt8 = mom_make_name_radix ("acdeB", -1);
-  const struct mom_itemname_tu *nt9 = mom_make_name_radix ("bb", -1);
-  const struct mom_itemname_tu *nt10 = mom_make_name_radix ("zax", -1);
-  printf ("nt6=%p nt7=%p nt8=%p nt9=%p nt10=%p\n", nt6, nt7, nt8, nt9, nt10);
-  const struct mom_itemname_tu *ntf = mom_find_name_radix ("bb", -1);
-  printf ("ntf=%p\n", ntf);
-  assert (ntf == nt4);
-  assert (nt9 == nt4);
-  {
-    uint32_t r1 = mom_random_uint32 ();
-    uint32_t r2 = mom_random_uint32 ();
-    uint32_t r3 = mom_random_uint32 ();
-    uint32_t r4 = mom_random_uint32 ();
-    printf ("random32 r1=%u=%#x r2=%u=%#x r3=%u=%#x r4=%u=%#x\n",
-            r1, r1, r2, r2, r3, r3, r4, r4);
-  }
-  struct mom_item_st *it1 = mom_clone_item_from_radix (nt1);
-  struct mom_item_st *it2 = mom_clone_item_from_radix (nt1);
-  struct mom_item_st *it3 = mom_make_item_from_radix (nt3);
-  struct mom_item_st *it4 = mom_make_item_from_radix_id (nt3, 1, 1);
-  printf ("it1=%s it2=%s it3=%s it4=%s\n", mom_item_cstring (it1),
-          mom_item_cstring (it2), mom_item_cstring (it3),
-          mom_item_cstring (it4));
-  struct mom_item_st *it5 = mom_make_item_from_string ("fooBar", NULL);
-  printf ("it5@%p %s\n", it5, mom_item_cstring (it5));
-  struct mom_item_st *it6 =
-    mom_make_item_from_string ("abc__6BLB1cshAAfZdo", NULL);
-  printf ("it6@%p %s\n", it6, mom_item_cstring (it6));
-  struct mom_item_st *it7 =
-    mom_make_item_from_string ("a_b_c1__54qkiw88mJf71H", NULL);
-  printf ("it7@%p %s\n", it7, mom_item_cstring (it7));
-  struct mom_item_st *it8 = mom_clone_item (it7);
-  printf ("it8@%p %s\n", it8, mom_item_cstring (it8));
-  struct mom_item_st *it9 = mom_clone_item (it5);
-  printf ("it9@%p %s\n", it9, mom_item_cstring (it9));
+  parse_program_arguments_mom (&argc, &argv);
   return 0;
 }
