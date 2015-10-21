@@ -872,7 +872,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   int argc = *pargc;
   char **argv = *pargv;
   int opt = -1;
-  while ((opt = getopt_long (argc, argv, "hVdD:L:",
+  while ((opt = getopt_long (argc, argv, "hVdsD:L:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -890,6 +890,11 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           return;
         case 'd':              /* --dump */
           should_dump_mom = true;
+          break;
+        case 's':              /* --syslog */
+          openlog ("monimelt", LOG_PID | LOG_PERROR, LOG_LOCAL1);
+          syslogging_mom = true;
+          MOM_INFORMPRINTF ("syslogging activated");
           break;
         case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
           {
