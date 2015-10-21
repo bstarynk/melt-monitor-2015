@@ -21,25 +21,16 @@
 #include "monimelt.h"
 
 #define LOADER_MAGIC_MOM 0x1f3fd30f     /*524276495 */
-struct
-{
-  unsigned ld_stacksize;
-  unsigned ld_stacktop;
-  struct mom_statelem_st *ld_stackarr;
-  struct mom_hashset_st *ld_hsetitems;
-  unsigned ld_magic;            /* always LOADER_MAGIC_MOM */
-  int ld_prevmark;
-  FILE *ld_file;
-  const char *ld_path;
-} mom_loader;
+struct mom_loader_st *mom_loader;
 
 
 static void
 initialize_load_state_mom (const char *statepath)
 {
   struct stat st;
-  memset (&st, 0, sizeof (mom_loader));
-  memset (&mom_loader, 0, sizeof (mom_loader));
+  memset (&st, 0, sizeof (st));
+  mom_loader = mom_gc_alloc (sizeof (struct mom_loader_st));
+  mom_loader->va_itype = MOMITY_LOADER;
   FILE *f = fopen (statepath, "r");
   if (!f)
     MOM_FATAPRINTF ("failed to open initial state file %s : %m", statepath);
@@ -48,36 +39,36 @@ initialize_load_state_mom (const char *statepath)
   long fisiz = st.st_size;
   {
     unsigned sizstack = ((10 + (int) sqrt (0.2 * fisiz)) | 0x1f) + 1;
-    mom_loader.ld_stackarr =
+    mom_loader->ld_stackarr =
       mom_gc_alloc (sizeof (struct mom_statelem_st) * sizstack);
-    mom_loader.ld_stacksize = sizstack;
+    mom_put_size (mom_loader, sizstack);
   }
   {
     unsigned sizhset = ((30 + (int) sqrt (0.3 * fisiz)) | 0x1f) + 1;
-    mom_loader.ld_hsetitems = mom_hashset_reserve (NULL, sizhset);
+    mom_loader->ld_hsetitems = mom_hashset_reserve (NULL, sizhset);
   }
-  mom_loader.ld_magic = LOADER_MAGIC_MOM;
-  mom_loader.ld_file = f;
-  mom_loader.ld_path = GC_STRDUP (statepath);
-  MOM_DEBUGPRINTF (load, "ld_path=%s fisiz=%ld", mom_loader.ld_path, fisiz);
+  mom_loader->ld_magic = LOADER_MAGIC_MOM;
+  mom_loader->ld_file = f;
+  mom_loader->ld_path = GC_STRDUP (statepath);
+  MOM_DEBUGPRINTF (load, "ld_path=%s fisiz=%ld", mom_loader->ld_path, fisiz);
 }
 
 
 void
 first_pass_loader_mom (void)
 {
-  assert (mom_loader.ld_magic = LOADER_MAGIC_MOM);
+  assert (mom_loader && mom_loader->ld_magic == LOADER_MAGIC_MOM);
   size_t linsiz = 128;
   ssize_t linlen = 0;
   char *linbuf = malloc (linsiz);
   if (!linbuf)
     MOM_FATAPRINTF ("failed to malloc linbuf %zd", linsiz);
   memset (linbuf, 0, linsiz);
-  rewind (mom_loader.ld_file);
+  rewind (mom_loader->ld_file);
   int linecount = 0;
   do
     {
-      linlen = getline (&linbuf, &linsiz, mom_loader.ld_file);
+      linlen = getline (&linbuf, &linsiz, mom_loader->ld_file);
       if (linlen <= 0)
         break;
       linecount++;
@@ -85,16 +76,17 @@ first_pass_loader_mom (void)
         continue;
       if (linbuf[0] == '*' && isalpha (linbuf[1]))
         {
+          MOM_DEBUGPRINTF (load, "first_pass line#%d %s", linecount, linbuf);
           const char *end = NULL;
           struct mom_item_st *itm =
             mom_make_item_from_string (linbuf + 1, &end);
-          MOM_DEBUGPRINTF (load, "first pass line#%d %s made item %s",
-                           linecount, linbuf, mom_item_cstring (itm));
-          mom_loader.ld_hsetitems =
-            mom_hashset_insert (mom_loader.ld_hsetitems, itm);
+          MOM_DEBUGPRINTF (load, "first pass line#%d made item %s",
+                           linecount, mom_item_cstring (itm));
+          mom_loader->ld_hsetitems =
+            mom_hashset_insert (mom_loader->ld_hsetitems, itm);
         }
     }
-  while (!feof (mom_loader.ld_file));
+  while (!feof (mom_loader->ld_file));
 }
 
 void

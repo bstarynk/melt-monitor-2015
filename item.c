@@ -469,7 +469,7 @@ mom_make_item_from_string (const char *str, const char **pend)
                        hid, (long long) lid);
       return itm;
     }
-  itm = mom_find_item_from_radix_id (radix, 0, 0);
+  itm = mom_make_item_from_radix_id (radix, 0, 0);
   end = endradix;
   if (itm)
     {

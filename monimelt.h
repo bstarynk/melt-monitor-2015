@@ -346,11 +346,14 @@ enum momitype_en
   MOMITY_SET,
   MOMITY_NODE,
   MOMITY_ITEM,
+  /// the types above are for genuine values
   MOMITY__LASTHASHED,
+  /// here are the payload types
   MOMITY_ASSOVALDATA,
   MOMITY_VECTVALDATA,
   MOMITY_HASHSET,
-  MOMITY_HASHEDMAP
+  MOMITY_HASHMAP,
+  MOMITY_LOADER,
 };
 struct mom_item_st;
 
@@ -780,6 +783,26 @@ struct mom_hashedmap_st
   MOM_HASHEDMAP_FIELDS;
 };
 
+
+
+/// for MOMITY_LOADER
+#define MOM_LOADER_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  unsigned ld_stacktop;				\
+  struct mom_statelem_st *ld_stackarr;		\
+  struct mom_hashset_st *ld_hsetitems;		\
+  /* ld_magic is always LOADER_MAGIC_MOM */	\
+  unsigned ld_magic;				\
+  int ld_prevmark;				\
+  FILE *ld_file;				\
+  const char *ld_path
+
+struct mom_loader_st
+{
+  MOM_LOADER_FIELDS;
+};
+
+////////////////
 struct mom_itemname_tu
 {
   uint32_t itname_rank;

@@ -853,5 +853,7 @@ main (int argc_main, char **argv_main)
   printf ("it1=%s it2=%s it3=%s it4=%s\n", mom_item_cstring (it1),
           mom_item_cstring (it2), mom_item_cstring (it3),
           mom_item_cstring (it4));
+  struct mom_item_st *it5 = mom_make_item_from_string ("fooBar", NULL);
+  printf ("it5=%s\n", mom_item_cstring (it5));
   return 0;
 }
