@@ -825,6 +825,7 @@ static const struct option mom_long_options[] = {
   {"debug", required_argument, NULL, 'D'},
   {"load", required_argument, NULL, 'L'},
   {"dump", no_argument, NULL, 'd'},
+  {"syslog", no_argument, NULL, 's'},
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
@@ -841,6 +842,7 @@ usage_mom (const char *argv0)
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
   printf ("\t -d | --dump " " \t# Dump the state.\n");
+  printf ("\t -s | --syslog " " \t# Use system log.\n");
   printf ("\t -D | --debug <debug-features>"
           " \t# Debugging comma separated features\n\t\t##");
   for (unsigned ix = 1; ix < momdbg__last; ix++)
@@ -952,5 +954,9 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
+  struct mom_item_st *itm_the_system =
+    mom_make_item_from_string ("the_system", NULL);
+  printf ("itm_the_system@%p = %s h%u\n", itm_the_system,
+          mom_item_cstring (itm_the_system), itm_the_system->hva_hash);
   return 0;
 }

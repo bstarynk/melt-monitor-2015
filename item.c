@@ -1478,3 +1478,13 @@ mom_initialize_items (void)
   pthread_mutexattr_init (&item_mtxattr_mom);
   pthread_mutexattr_settype (&item_mtxattr_mom, PTHREAD_MUTEX_RECURSIVE);
 }
+
+#define MOM_HAS_PREDEFINED(Nam,Hash)		\
+  struct mom_item_st mompredef_##Nam = {	\
+  .va_itype = MOMITY_ITEM,			\
+  .hva_hash = Hash,				\
+  .itm_spacix = 0,				\
+  .itm_hid = 0,					\
+  .itm_lid = 0,					\
+  };
+#include "_mom_predef.h"

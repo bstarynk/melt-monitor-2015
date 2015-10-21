@@ -357,6 +357,10 @@ enum momitype_en
 };
 struct mom_item_st;
 
+#define MOM_HAS_PREDEFINED(Nam,Hash) extern struct mom_item_st mompredef_##Nam;
+#include "_mom_predef.h"
+
+
 const char *mom_item_cstring (const struct mom_item_st *itm);
 
 int mom_item_cmp (const struct mom_item_st *itm1,
