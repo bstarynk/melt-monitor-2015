@@ -854,6 +854,16 @@ main (int argc_main, char **argv_main)
           mom_item_cstring (it2), mom_item_cstring (it3),
           mom_item_cstring (it4));
   struct mom_item_st *it5 = mom_make_item_from_string ("fooBar", NULL);
-  printf ("it5=%s\n", mom_item_cstring (it5));
+  printf ("it5@%p %s\n", it5, mom_item_cstring (it5));
+  struct mom_item_st *it6 =
+    mom_make_item_from_string ("abc__6BLB1cshAAfZdo", NULL);
+  printf ("it6@%p %s\n", it6, mom_item_cstring (it6));
+  struct mom_item_st *it7 =
+    mom_make_item_from_string ("a_b_c1__54qkiw88mJf71H", NULL);
+  printf ("it7@%p %s\n", it7, mom_item_cstring (it7));
+  struct mom_item_st *it8 = mom_clone_item (it7);
+  printf ("it8@%p %s\n", it8, mom_item_cstring (it8));
+  struct mom_item_st *it9 = mom_clone_item (it5);
+  printf ("it9@%p %s\n", it9, mom_item_cstring (it9));
   return 0;
 }
