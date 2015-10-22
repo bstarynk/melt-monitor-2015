@@ -827,6 +827,7 @@ enum mom_space_en
   struct mom_item_st* itm_kinditm;		\
   struct mom_anyvalue_st* itm_payload
 
+#warning should add itm_mtime
 
 struct mom_item_st
 {
@@ -962,9 +963,9 @@ mom_set_contains (const struct mom_boxset_st *bs,
   for (md = lo; md < hi; md++)
     {
       md = (lo + hi) / 2;
-      struct item_st *curitm = (struct item_st *) bs->seqitem[md];
+      struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
       assert (curitm);
-      if ((struct item_st *) itm == curitm)
+      if ((struct mom_item_st *) itm == curitm)
         return true;
     }
   return false;
