@@ -45,7 +45,19 @@ mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
       mom_put_size (ld, newsiz);
     }
   ld->ld_stackarr[top] = el;
+  if (el.st_type == MOMSTA_MARK)
+    ld->ld_prevmark = top;
   ld->ld_stacktop = top + 1;
+}
+
+int
+mom_loader_push_mark (struct mom_loader_st *ld)
+{
+  if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
+    return -1;
+  unsigned oldmark = ld->ld_prevmark;
+  mom_loader_push (ld, mom_ldstate_make_mark (oldmark));
+  return oldmark;
 }
 
 void
@@ -62,6 +74,10 @@ mom_loader_pop (struct mom_loader_st *ld, unsigned nb)
   assert (top <= siz);
   if (nb > top)
     nb = top;
+  while (ld->ld_prevmark > (int) (top - nb) && ld->ld_prevmark >= 0)
+    {
+      ld->ld_prevmark = mom_ldstate_mark (ld->ld_stackarr[ld->ld_prevmark]);
+    }
   memset (ld->ld_stackarr + top - nb - 1, 0,
           sizeof (struct mom_statelem_st) * nb);
   ld->ld_stacktop = top = (top - nb);
@@ -166,6 +182,10 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       if (linbuf[0] == '#' || linbuf[0] == '\n')
         continue;
       MOM_DEBUGPRINTF (load, "second_pass line#%d %s", linecount, linbuf);
+      /// 123 is pushing a raw integer
+      /// -234_ is pushing a boxed integer
+      /// 12.0 is pushing a raw double
+      /// -12.3e-5_ is pushing a boxed double
       if (isdigit (linbuf[0])
           || ((linbuf[0] == '+' || linbuf[0] == '-') && isdigit (linbuf[1])))
         {
@@ -199,6 +219,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 mom_loader_push (ld, mom_ldstate_make_int (ll));
             }
         }
+      /// then special cases like +NAN -INF_ ....
       else if ((linbuf[0] == '+' || linbuf[0] == '-')
                && (linbuf[1] == 'I' || linbuf[1] == 'N'))
         {
@@ -244,11 +265,67 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           else
             goto bad_line;
         }
+      /// FooBar is pushing an item
+      else if (isalpha (linbuf[0]))
+        {
+          const char *end = NULL;
+          struct mom_item_st *itm = mom_find_item_from_string (linbuf, &end);
+          if (!itm || (*end && !isspace (*end)))
+            goto bad_line;
+          MOM_DEBUGPRINTF (load, "second_pass item %s",
+                           mom_item_cstring (itm));
+          mom_loader_push (ld,
+                           mom_ldstate_make_val ((const struct mom_anyvalue_st
+                                                  *) itm));
+        }
+      /// "abc" is pushing a raw string & "a\n"_ is pushing a boxed string
+      else if (linbuf[0] == '"')
+        {
+          FILE *flin = fmemopen (linbuf + 1, linlen, "r");
+          if (!flin)
+            MOM_FATAPRINTF ("failed to fmemopen %s (%m)", linbuf);
+          struct mom_string_and_size_st ss = mom_input_quoted_utf8 (flin);
+          long endpos = ftell (flin);
+          assert (endpos >= 0 && endpos < linlen);
+          char *end = linbuf + 1 + endpos;
+          fclose (flin);
+          if (*end != '"')
+            goto bad_line;
+          if (end[1] == '_')
+            {
+              MOM_DEBUGPRINTF (load, "second_pass boxed string %s", linbuf);
+              mom_loader_push
+                (ld,
+                 mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                                       mom_boxstring_make (ss.ss_str)));
+            }
+          else if (!end[1] || isspace (end[1]))
+            {
+              MOM_DEBUGPRINTF (load, "second_pass raw string %s", linbuf);
+              mom_loader_push (ld, mom_ldstate_make_str (ss.ss_str));
+            }
+          else
+            goto bad_line;
+        }
+      /// ~ is pushing a nil value
       else if (linbuf[0] == '~' && (!linbuf[1] || isspace (linbuf[1])))
         {
           MOM_DEBUGPRINTF (load, "second_pass nil value");
           mom_loader_push (ld, mom_ldstate_make_val (NULL));
         }
+      //// ( is pushing a mark
+      else if (linbuf[0] == '(' && (!linbuf[1] || isspace (linbuf[1])))
+        {
+          MOM_DEBUGPRINTF (load, "second_pass mark level %d previous %d",
+                           ld->ld_stacktop, ld->ld_prevmark);
+          mom_loader_push_mark (ld);
+        }
+      //// ^bar runs the action momf_ldc_bar
+      else if (linbuf[0] == '^' && isalpha (linbuf[1]))
+        {
+#warning missing caret load action
+        }
+      /// *foo is for defining item foo
       else if (linbuf[0] == '*' && isalpha (linbuf[1]))
         {
           curitm = mom_find_item_from_string (linbuf + 1, NULL);

@@ -1253,11 +1253,11 @@ mom_ldstate_make_node (const struct mom_node_st *nd)
 #define MOM_LOADER_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   unsigned ld_stacktop;				\
+  int ld_prevmark;                              \
   struct mom_statelem_st *ld_stackarr;		\
   struct mom_hashset_st *ld_hsetitems;		\
   /* ld_magic is always MOM_LOADER_MAGIC */	\
   unsigned ld_magic;				\
-  int ld_prevmark;				\
   FILE *ld_file;				\
   const char *ld_path
 
@@ -1280,6 +1280,9 @@ mom_loader_top (struct mom_loader_st *ld, unsigned topoff)
 
 void mom_loader_push (struct mom_loader_st *ld,
                       const struct mom_statelem_st el);
+
+// return index of previous mark
+int mom_loader_push_mark (struct mom_loader_st *ld);
 
 void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
 
