@@ -1469,6 +1469,34 @@ mom_hashset_contains (const struct mom_hashset_st * hset,
 }
 
 
+
+const struct mom_boxset_st *
+mom_hashset_to_boxset (const struct mom_hashset_st *hset)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    return NULL;
+  unsigned cnt = hset->cda_count;
+  unsigned siz = mom_raw_size (hset);
+  assert (cnt <= siz);
+  struct mom_item_st *smallarr[16] = { };
+  const struct mom_item_st **arr =
+    (cnt <
+     sizeof (smallarr) /
+     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc ((cnt +
+                                                       1) * sizeof (void *));
+  unsigned card = 0;
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *curitm = hset->hset_items[ix];
+      if (!curitm || curitm == MOM_EMPTY_SLOT)
+        continue;
+      assert (card < cnt);
+      arr[card++] = curitm;
+    }
+  assert (card == cnt);
+  return mom_boxset_make_arr (card, arr);
+}
+
 #define MOM_HAS_PREDEFINED(Nam,Hash)		\
   struct mom_item_st mompredef_##Nam = {	\
   .va_itype = MOMITY_ITEM,			\
@@ -1478,6 +1506,9 @@ mom_hashset_contains (const struct mom_hashset_st * hset,
   };
 #include "_mom_predef.h"
 
+
+static struct mom_hashset_st *predef_hset_mom;
+static pthread_mutex_t predef_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 
 static void
 initialize_predefined_mom (struct mom_item_st *itm, const char *name,
@@ -1559,6 +1590,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   assert (curad->rad_items[pos] == NULL);
   curad->rad_items[pos] = itm;
   pthread_mutex_unlock (&curad->rad_mtx);
+  mom_item_put_space (itm, MOMSPA_PREDEF);
 }
 
 void
@@ -1570,9 +1602,49 @@ mom_initialize_items (void)
   inited = true;
   pthread_mutexattr_init (&item_mtxattr_mom);
   pthread_mutexattr_settype (&item_mtxattr_mom, PTHREAD_MUTEX_RECURSIVE);
-
+  predef_hset_mom =
+    mom_hashset_reserve (NULL,
+                         (4 * MOM_NB_PREDEFINED / 3 +
+                          MOM_NB_PREDEFINED / 32) + 20);
 #define MOM_HAS_PREDEFINED(Nam,Hash) \
   initialize_predefined_mom(&mompredef_##Nam, #Nam, Hash);
 #include "_mom_predef.h"
   MOM_DEBUGPRINTF (item, "done predefined %d", MOM_NB_PREDEFINED);
 }
+
+void
+mom_item_put_space (struct mom_item_st *itm, enum mom_space_en sp)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return;
+  pthread_mutex_lock (&itm->itm_mtx);
+  if (itm->va_ixv == (unsigned) sp)
+    goto end;
+  enum mom_space_en oldsp = itm->va_ixv;
+  itm->va_ixv = (uint16_t) sp;
+  if (sp != MOMSPA_PREDEF && oldsp != MOMSPA_PREDEF)
+    goto end;
+  pthread_mutex_lock (&predef_mtx_mom);
+  if (oldsp == MOMSPA_PREDEF)
+    {                           // remove a predefined
+      predef_hset_mom = mom_hashset_remove (predef_hset_mom, itm);
+    }
+  else
+    {                           // add a predefined
+      predef_hset_mom = mom_hashset_insert (predef_hset_mom, itm);
+    }
+  pthread_mutex_unlock (&predef_mtx_mom);
+end:
+  pthread_mutex_unlock (&itm->itm_mtx);
+}                               /* end of mom_item_put_space */
+
+
+const struct mom_boxset_st *
+mom_predefined_items_boxset (void)
+{
+  const struct mom_boxset_st *set = NULL;
+  pthread_mutex_lock (&predef_mtx_mom);
+  set = mom_hashset_to_boxset (predef_hset_mom);
+  pthread_mutex_unlock (&predef_mtx_mom);
+  return set;
+}                               /* end of mom_predefined_items_boxset */

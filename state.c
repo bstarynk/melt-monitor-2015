@@ -87,7 +87,14 @@ first_pass_loader_mom (void)
         }
     }
   while (!feof (mom_loader->ld_file));
-}
+  free (linbuf);
+}                               /* end first_pass_loader_mom */
+
+void
+second_pass_loader_mom (void)
+{
+}                               /* end second_pass_loader_mom */
+
 
 void
 mom_load_state (const char *statepath)

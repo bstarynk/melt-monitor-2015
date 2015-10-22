@@ -105,7 +105,7 @@ int64_t mom_prime_below (int64_t n);
 
 // mark unlikely conditions to help optimization
 #ifdef __GNUC__
-#define MOM_UNLIKELY(P) __builtin_expect((P),0)
+#define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)
 #define MOM_LIKELY(P) !__builtin_expect(!(P),0)
 #define MOM_UNUSED __attribute__((unused))
 #else
@@ -777,6 +777,8 @@ bool
 mom_hashset_contains (const struct mom_hashset_st *hset,
                       struct mom_item_st *itm);
 
+const struct mom_boxset_st *mom_hashset_to_boxset (const struct mom_hashset_st
+                                                   *hset);
 
 
 /// for MOMITY_HASHEDMAP
@@ -816,6 +818,14 @@ struct mom_itemname_tu
   struct mom_boxstring_st itname_string;
 };
 
+enum mom_space_en
+{
+  MOMSPA_NONE,
+  MOMSPA_PREDEF,
+  MOMSPA_GLOBAL,
+};
+
+/* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS				\
   MOM_HASHEDVALUE_FIELDS;			\
   struct mom_itemname_tu* itm_radix;		\
@@ -833,6 +843,9 @@ struct mom_item_st
   MOM_ITEM_FIELDS;
 };
 
+
+const struct mom_boxset_st *mom_predefined_items_boxset (void);
+void mom_item_put_space (struct mom_item_st *itm, enum mom_space_en spix);
 
 static inline const struct mom_item_st *
 mom_dyncast_item (const void *p)
