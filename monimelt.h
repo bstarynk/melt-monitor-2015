@@ -811,6 +811,8 @@ enum mom_space_en
   MOMSPA_GLOBAL,
 };
 
+#define MOM_FUNC_PREFIX "momf_"
+
 /* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS				\
   MOM_HASHEDVALUE_FIELDS;			\
@@ -818,6 +820,8 @@ enum mom_space_en
   pthread_mutex_t itm_mtx;			\
   uint32_t itm_hid;				\
   uint64_t itm_lid;				\
+  void* itm_funptr;				\
+  struct mom_item_st* itm_sigitm;		\
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
   struct mom_item_st* itm_kinditm;		\
@@ -1265,6 +1269,16 @@ struct mom_loader_st
 {
   MOM_LOADER_FIELDS;
 };
+
+typedef void mom_loader_caret_sig_t (struct mom_item_st *itm,
+                                     struct mom_loader_st *ld);
+#define MOM_LOADER_CARET_PREFIX MOM_FUNC_PREFIX "ldc_"
+
+typedef void mom_loader_paren_sig_t (struct mom_item_st *itm,
+                                     struct mom_loader_st *ld,
+                                     struct mom_statelem_st *elemarr,
+                                     unsigned elemsize);
+#define MOM_LOADER_PAREN_PREFIX MOM_FUNC_PREFIX "ldp_"
 
 static inline struct mom_statelem_st
 mom_loader_top (struct mom_loader_st *ld, unsigned topoff)

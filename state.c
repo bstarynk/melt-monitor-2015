@@ -323,7 +323,64 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       //// ^bar runs the action momf_ldc_bar
       else if (linbuf[0] == '^' && isalpha (linbuf[1]))
         {
-#warning missing caret load action
+          char nambuf[160];
+          memset (nambuf, 0, sizeof (nambuf));
+          if (linlen >= (int) sizeof (nambuf) - 20)
+            MOM_FATAPRINTF ("too long caret line %s", linbuf);
+          strcpy (nambuf, MOM_LOADER_CARET_PREFIX);
+          char *eb = nambuf + strlen (nambuf);
+          char *sb = linbuf + 1;
+          while (eb < nambuf + sizeof (nambuf) - 1 &&
+                 (isalnum (*sb) || *sb == '_'))
+            *(eb++) = *(sb++);
+          MOM_DEBUGPRINTF (load, "caret function %s", nambuf);
+          mom_loader_caret_sig_t *caretfun =
+            dlsym (mom_prog_dlhandle, nambuf);
+          if (!caretfun)
+            MOM_FATAPRINTF ("not found load caret function %s: %s",
+                            nambuf, dlerror ());
+          (*caretfun) (curitm, ld);
+          MOM_DEBUGPRINTF (load, "done caret function %s", nambuf);
+        }
+      //// ^bar runs the action momf_ldc_bar
+      else if (linbuf[0] == ')' && isalpha (linbuf[1]))
+        {
+          char nambuf[160];
+          memset (nambuf, 0, sizeof (nambuf));
+          if (linlen >= (int) sizeof (nambuf) - 20)
+            MOM_FATAPRINTF ("too long paren line %s", linbuf);
+          strcpy (nambuf, MOM_LOADER_PAREN_PREFIX);
+          char *eb = nambuf + strlen (nambuf);
+          char *sb = linbuf + 1;
+          while (eb < nambuf + sizeof (nambuf) - 1 &&
+                 (isalnum (*sb) || *sb == '_'))
+            *(eb++) = *(sb++);
+          MOM_DEBUGPRINTF (load, "parenthesis function %s", nambuf);
+          mom_loader_paren_sig_t *parenfun =
+            dlsym (mom_prog_dlhandle, nambuf);
+          if (!parenfun)
+            MOM_FATAPRINTF ("not found load paren function %s: %s",
+                            nambuf, dlerror ());
+          int pmark = ld->ld_prevmark;
+          if (pmark >= 0 && pmark < (int) ld->ld_stacktop)
+            {
+              unsigned sizp = ld->ld_stacktop - pmark;
+              struct mom_statelem_st *elemarr
+                = mom_gc_alloc ((sizp + 1) * sizeof (*elemarr));
+              memcpy (elemarr, ld->ld_stackarr + sizp,
+                      sizp * sizeof (*elemarr));
+              mom_loader_pop (ld, pmark + 1);
+              MOM_DEBUGPRINTF (load,
+                               "before parenfun %s on itm %s with #%d stackelems",
+                               nambuf, mom_item_cstring (curitm), pmark);
+              (*parenfun) (curitm, ld, elemarr, pmark);
+              MOM_DEBUGPRINTF (load, "after parenfun %s on itm %s",
+                               nambuf, mom_item_cstring (curitm));
+            }
+          else
+            MOM_FATAPRINTF
+              ("invalid previous mark#%d with stacktop #%d for parent function %s",
+               pmark, ld->ld_stacktop, nambuf);
         }
       /// *foo is for defining item foo
       else if (linbuf[0] == '*' && isalpha (linbuf[1]))
