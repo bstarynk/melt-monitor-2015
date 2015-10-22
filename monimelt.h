@@ -508,6 +508,9 @@ mom_dyncast_boxdouble (const void *p)
   return NULL;
 }
 
+momhash_t mom_double_hash (double x);
+const struct mom_boxdouble_st *mom_boxdouble_make (double x);
+
 
 
 /// sized values have sva_ prefix, with sva_size
@@ -794,23 +797,6 @@ struct mom_hashedmap_st
 
 
 
-/// for MOMITY_LOADER
-#define MOM_LOADER_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
-  unsigned ld_stacktop;				\
-  struct mom_statelem_st *ld_stackarr;		\
-  struct mom_hashset_st *ld_hsetitems;		\
-  /* ld_magic is always LOADER_MAGIC_MOM */	\
-  unsigned ld_magic;				\
-  int ld_prevmark;				\
-  FILE *ld_file;				\
-  const char *ld_path
-
-struct mom_loader_st
-{
-  MOM_LOADER_FIELDS;
-};
-
 ////////////////
 struct mom_itemname_tu
 {
@@ -1078,13 +1064,13 @@ struct mom_statelem_st
 };
 
 static inline enum mom_statetype_en
-momstate_type (const struct mom_statelem_st se)
+mom_ldstate_type (const struct mom_statelem_st se)
 {
   return se.st_type;
 };
 
 static inline struct mom_statelem_st
-momstate_make_empty ()
+mom_ldstate_empty ()
 {
   return (struct mom_statelem_st)
   {
@@ -1092,13 +1078,13 @@ momstate_make_empty ()
 }
 
 static inline int
-momstate_mark (const struct mom_statelem_st se)
+mom_ldstate_mark (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_MARK) ? se.st_mark : (-1);
 };
 
 static inline struct mom_statelem_st
-momstate_make_mark (int m)
+mom_ldstate_make_mark (int m)
 {
   return (struct mom_statelem_st)
   {
@@ -1107,13 +1093,13 @@ momstate_make_mark (int m)
 
 
 static inline intptr_t
-momstate_int_def (const struct mom_statelem_st se, intptr_t def)
+mom_ldstate_int_def (const struct mom_statelem_st se, intptr_t def)
 {
   return (se.st_type == MOMSTA_INT) ? se.st_int : def;
 };
 
 static inline struct mom_statelem_st
-momstate_make_int (intptr_t i)
+mom_ldstate_make_int (intptr_t i)
 {
   return (struct mom_statelem_st)
   {
@@ -1123,13 +1109,13 @@ momstate_make_int (intptr_t i)
 
 
 static inline double
-momstate_dbl (const struct mom_statelem_st se)
+mom_ldstate_dbl (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_DBL) ? se.st_int : NAN;
 };
 
 static inline struct mom_statelem_st
-momstate_make_dbl (double x)
+mom_ldstate_make_dbl (double x)
 {
   return (struct mom_statelem_st)
   {
@@ -1138,13 +1124,13 @@ momstate_make_dbl (double x)
 
 
 static inline const char *
-momstate_str (const struct mom_statelem_st se)
+mom_ldstate_str (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_STRING) ? se.st_str : NULL;
 };
 
 static inline struct mom_statelem_st
-momstate_make_str (const char *s)
+mom_ldstate_make_str (const char *s)
 {
   return (struct mom_statelem_st)
   {
@@ -1153,13 +1139,13 @@ momstate_make_str (const char *s)
 
 
 static inline const struct mom_anyvalue_st *
-momstate_val (const struct mom_statelem_st se)
+mom_ldstate_val (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
 };
 
 static inline struct mom_statelem_st
-momstate_make_val (const struct mom_anyvalue_st *v)
+mom_ldstate_make_val (const struct mom_anyvalue_st *v)
 {
   return (struct mom_statelem_st)
   {
@@ -1168,13 +1154,13 @@ momstate_make_val (const struct mom_anyvalue_st *v)
 
 
 static inline struct mom_item_st *
-momstate_dynitem (const struct mom_statelem_st se)
+mom_ldstate_dynitem (const struct mom_statelem_st se)
 {
-  return (struct mom_item_st *) mom_dyncast_item (momstate_val (se));
+  return (struct mom_item_st *) mom_dyncast_item (mom_ldstate_val (se));
 };
 
 static inline struct mom_statelem_st
-momstate_make_item (const struct mom_item_st *itm)
+mom_ldstate_make_item (const struct mom_item_st *itm)
 {
   return (struct mom_statelem_st)
   {
@@ -1183,13 +1169,13 @@ momstate_make_item (const struct mom_item_st *itm)
 
 
 static inline const struct mom_boxint_st *
-momstate_dynboxint (const struct mom_statelem_st se)
+mom_ldstate_dynboxint (const struct mom_statelem_st se)
 {
-  return mom_dyncast_boxint (momstate_val (se));
+  return mom_dyncast_boxint (mom_ldstate_val (se));
 };
 
 static inline struct mom_statelem_st
-momstate_make_boxint (const struct mom_boxint_st *bi)
+mom_ldstate_make_boxint (const struct mom_boxint_st *bi)
 {
   return (struct mom_statelem_st)
   {
@@ -1197,13 +1183,13 @@ momstate_make_boxint (const struct mom_boxint_st *bi)
 }
 
 static inline const struct mom_boxstring_st *
-momstate_dynboxstring (const struct mom_statelem_st se)
+mom_ldstate_dynboxstring (const struct mom_statelem_st se)
 {
-  return mom_dyncast_boxstring (momstate_val (se));
+  return mom_dyncast_boxstring (mom_ldstate_val (se));
 };
 
 static inline struct mom_statelem_st
-momstate_make_boxstring (const struct mom_boxstring_st *bs)
+mom_ldstate_make_boxstring (const struct mom_boxstring_st *bs)
 {
   return (struct mom_statelem_st)
   {
@@ -1212,13 +1198,14 @@ momstate_make_boxstring (const struct mom_boxstring_st *bs)
 
 
 static inline const struct mom_tuple_st *
-momstate_dyntuple (const struct mom_statelem_st se)
+mom_ldstate_dyntuple (const struct mom_statelem_st se)
 {
-  return (const struct mom_tuple_st *) mom_dyncast_tuple (momstate_val (se));
+  return (const struct mom_tuple_st *)
+    mom_dyncast_tuple (mom_ldstate_val (se));
 };
 
 static inline struct mom_statelem_st
-momstate_make_tuple (const struct mom_tuple_st *tu)
+mom_ldstate_make_tuple (const struct mom_tuple_st *tu)
 {
   return (struct mom_statelem_st)
   {
@@ -1227,13 +1214,13 @@ momstate_make_tuple (const struct mom_tuple_st *tu)
 
 
 static inline const struct mom_set_st *
-momstate_dynset (const struct mom_statelem_st se)
+mom_ldstate_dynset (const struct mom_statelem_st se)
 {
-  return (const struct mom_set_st *) mom_dyncast_set (momstate_val (se));
+  return (const struct mom_set_st *) mom_dyncast_set (mom_ldstate_val (se));
 };
 
 static inline struct mom_statelem_st
-momstate_make_set (const struct mom_set_st *se)
+mom_ldstate_make_set (const struct mom_set_st *se)
 {
   return (struct mom_statelem_st)
   {
@@ -1243,19 +1230,57 @@ momstate_make_set (const struct mom_set_st *se)
 
 
 static inline const struct mom_node_st *
-momstate_dynnode (const struct mom_statelem_st se)
+mom_ldstate_dynnode (const struct mom_statelem_st se)
 {
-  return (const struct mom_node_st *) mom_dyncast_node (momstate_val (se));
+  return (const struct mom_node_st *) mom_dyncast_node (mom_ldstate_val (se));
 };
 
 
 static inline struct mom_statelem_st
-momstate_make_node (const struct mom_node_st *nd)
+mom_ldstate_make_node (const struct mom_node_st *nd)
 {
   return (struct mom_statelem_st)
   {
   .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) nd};
 }
 
+
+#define MOM_LOADER_MAGIC 0x1f3fd30f     /*524276495 */
+
+
+// the mom_raw_size of a loader is the allocatd size of ld_stackarr
+/// for MOMITY_LOADER
+#define MOM_LOADER_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  unsigned ld_stacktop;				\
+  struct mom_statelem_st *ld_stackarr;		\
+  struct mom_hashset_st *ld_hsetitems;		\
+  /* ld_magic is always MOM_LOADER_MAGIC */	\
+  unsigned ld_magic;				\
+  int ld_prevmark;				\
+  FILE *ld_file;				\
+  const char *ld_path
+
+struct mom_loader_st
+{
+  MOM_LOADER_FIELDS;
+};
+
+static inline struct mom_statelem_st
+mom_loader_top (struct mom_loader_st *ld, unsigned topoff)
+{
+  if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
+    return mom_ldstate_empty ();
+  assert (ld->ld_magic == MOM_LOADER_MAGIC);
+  assert (ld->ld_stacktop <= mom_raw_size (ld));
+  if (topoff >= ld->ld_stacktop)
+    return mom_ldstate_empty ();
+  return ld->ld_stackarr[ld->ld_stacktop - topoff - 1];
+}
+
+void mom_loader_push (struct mom_loader_st *ld,
+                      const struct mom_statelem_st el);
+
+void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
 
 #endif /*MONIMELT_INCLUDED_ */

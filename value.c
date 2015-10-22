@@ -49,6 +49,36 @@ mom_boxstring_make (const char *s)
   return bs;
 }
 
+
+momhash_t
+mom_double_hash (double d)
+{
+  if (isnan (d))
+    return 3000229;
+  int e = 0;
+  double x = frexp (d, &e);
+  momhash_t h = ((momhash_t) (x / (M_PI * M_LN2 * DBL_EPSILON))) ^ e;
+  if (!h)
+    {
+      h = e;
+      if (!h)
+        h = (x > 0.0) ? 1689767 : (x < 0.0) ? 2000281 : 13;
+    }
+  return h;
+}
+
+
+const struct mom_boxdouble_st *
+mom_boxdouble_make (double x)
+{
+  struct mom_boxdouble_st *bd =
+    mom_gc_alloc_atomic (sizeof (struct mom_boxdouble_st));
+  bd->va_itype = MOMITY_BOXDOUBLE;
+  bd->hva_hash = mom_double_hash (x);
+  bd->boxd_dbl = x;
+  return bd;
+}
+
 static void
 seqitem_hash_compute_mom (struct mom_seqitems_st *si)
 {
