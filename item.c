@@ -726,6 +726,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     newitm->va_itype = MOMITY_ITEM;
     newitm->hva_hash = hi;
     newitm->itm_radix = (struct mom_itemname_tu *) radix;
+    time (&newitm->itm_mtime);
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
     newitm->itm_hid = hid;
     newitm->itm_lid = loid;
@@ -819,6 +820,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
           collided = true;
       }
     while (MOM_UNLIKELY (collided));
+    time (&quasitm->itm_mtime);
     pthread_mutex_init (&quasitm->itm_mtx, &item_mtxattr_mom);
     GC_REGISTER_FINALIZER_IGNORE_SELF (quasitm, mom_cleanup_item, NULL, NULL,
                                        NULL);

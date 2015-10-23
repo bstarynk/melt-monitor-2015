@@ -351,9 +351,11 @@ enum momitype_en
   /// here are the payload types
   MOMITY_ASSOVALDATA,
   MOMITY_VECTVALDATA,
+  MOMITY_QUEUE,
   MOMITY_HASHSET,
   MOMITY_HASHMAP,
   MOMITY_LOADER,
+  MOMITY_DUMPER,
 };
 struct mom_item_st;
 
@@ -820,14 +822,15 @@ enum mom_space_en
   pthread_mutex_t itm_mtx;			\
   uint32_t itm_hid;				\
   uint64_t itm_lid;				\
-  void* itm_funptr;				\
-  struct mom_item_st* itm_sigitm;		\
+  time_t itm_mtime;				\
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
   struct mom_item_st* itm_kinditm;		\
-  struct mom_anyvalue_st* itm_payload
+  union {					\
+    struct mom_anyvalue_st* itm_payload;	\
+    void* itm_dataptr;				\
+  }
 
-#warning should add itm_mtime
 
 struct mom_item_st
 {
@@ -1300,5 +1303,59 @@ void mom_loader_push (struct mom_loader_st *ld,
 int mom_loader_push_mark (struct mom_loader_st *ld);
 
 void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
+
+
+////////////////
+#define MOM_NB_QUELEM 7
+struct mom_quelem_st
+{
+  struct mom_quelem_st *qu_next;
+  struct mom_anyvalue_st *qu_elems[MOM_NB_QUELEM];
+};
+
+#define MOM_QUEUE_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  struct mom_quelem_st* qu_first;		\
+  struct mom_quelem_st* qu_last
+
+struct mom_queue_st
+{
+  MOM_QUEUE_FIELDS;
+};
+
+void mom_queue_prepend (struct mom_queue_st *qu, const void *data);
+void mom_queue_append (struct mom_queue_st *qu, const void *data);
+void mom_queue_pop_front (struct mom_queue_st *qu);
+
+static inline const void *
+mom_queue_front (const struct mom_queue_st *qu)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return NULL;
+  struct mom_quelem_st *qfirst = qu->qu_first;
+  if (!qfirst)
+    return NULL;
+  for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+    if (qfirst->qu_elems[ix])
+      return qfirst->qu_elems[ix];
+  MOM_FATAPRINTF ("corrupted queue @%p", qu);
+}
+
+static inline const void *
+mom_queue_back (const struct mom_queue_st *qu)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return NULL;
+  struct mom_quelem_st *qlast = qu->qu_last;
+  if (!qlast)
+    return NULL;
+  for (int ix = MOM_NB_QUELEM - 1; ix >= 0; ix--)
+    if (qlast->qu_elems[ix])
+      return qlast->qu_elems[ix];
+  MOM_FATAPRINTF ("corrupted queue @%p", qu);
+}
+
+struct mom_node_st *mom_queue_node (const struct mom_queue_st *qu,
+                                    const struct mom_item_st *connitm);
 
 #endif /*MONIMELT_INCLUDED_ */

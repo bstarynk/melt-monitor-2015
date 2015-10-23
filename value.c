@@ -447,3 +447,164 @@ mom_boxnode_meta_make_sentinel_va (const struct mom_item_st *metaitm,
                                 (const struct mom_hashedvalue_st **) arr,
                                 metaitm, metarank);
 }
+
+
+////////////////
+void
+mom_queue_prepend (struct mom_queue_st *qu, const void *data)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return;
+  if (!data || data == MOM_EMPTY_SLOT)
+    return;
+  struct mom_quelem_st *qfirst = qu->qu_first;
+  if (!qfirst)
+    {
+      assert (!qu->qu_last);
+      struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
+      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qu->qu_first = qu->qu_last = qe;
+      return;
+    }
+  assert (qfirst != NULL && qu->qu_last != NULL);
+  bool full = true;
+  for (unsigned ix = 0; ix < MOM_NB_QUELEM && full; ix++)
+    if (!qfirst->qu_elems[ix])
+      full = false;
+  if (full)
+    {
+      struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
+      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qe->qu_next = qu->qu_first;
+      qu->qu_first = qe;
+    }
+  else
+    {
+      struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+      memset (qdata, 0, sizeof (qdata));
+      qdata[0] = (struct mom_anyvalue_st *) data;
+      int cnt = 1;
+      for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+        {
+          assert (cnt < MOM_NB_QUELEM);
+          if (qfirst->qu_elems[ix])
+            qdata[cnt++] = qfirst->qu_elems[ix];
+        };
+      memcpy (qfirst->qu_elems, qdata, sizeof (qdata));
+    }
+}                               /* end of mom_queue_prepend */
+
+
+void
+mom_queue_append (struct mom_queue_st *qu, const void *data)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return;
+  if (!data || data == MOM_EMPTY_SLOT)
+    return;
+  struct mom_quelem_st *qlast = qu->qu_last;
+  if (!qlast)
+    {
+      assert (!qu->qu_first);
+      struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
+      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qu->qu_first = qu->qu_last = qe;
+      return;
+    }
+  assert (qlast != NULL && qu->qu_first != NULL);
+  assert (qlast->qu_next == NULL);
+  bool full = true;
+  for (unsigned ix = 0; ix < MOM_NB_QUELEM && full; ix++)
+    if (!qlast->qu_elems[ix])
+      full = false;
+  if (full)
+    {
+      struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
+      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qlast->qu_next = qe;
+      qu->qu_last = qe;
+    }
+  else
+    {
+      struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+      memset (qdata, 0, sizeof (qdata));
+      qdata[0] = (struct mom_anyvalue_st *) data;
+      int cnt = 0;
+      for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+        {
+          assert (cnt < MOM_NB_QUELEM);
+          if (qlast->qu_elems[ix])
+            qdata[cnt++] = qlast->qu_elems[ix];
+        };
+      assert (cnt < MOM_NB_QUELEM - 1);
+      qdata[cnt++] = (struct mom_anyvalue_st *) data;
+      memcpy (qlast->qu_elems, qdata, sizeof (qdata));
+    }
+}
+
+void
+mom_queue_pop_front (struct mom_queue_st *qu)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return;
+  struct mom_quelem_st *qfirst = qu->qu_first;
+  if (!qfirst)
+    return;
+  struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+  memset (qdata, 0, sizeof (qdata));
+  int cnt = 0;
+  for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+    if (qfirst->qu_elems[ix])
+      qdata[cnt++] = qfirst->qu_elems[ix];
+  if (cnt <= 1)
+    {
+      assert (cnt == 1);
+      if (qfirst == qu->qu_last)
+        {
+          qu->qu_first = qu->qu_last = NULL;
+          return;
+        }
+      else
+        qu->qu_first = qfirst->qu_next;
+    }
+  else
+    {
+      memcpy (qfirst->qu_elems, qdata + 1,
+              (MOM_NB_QUELEM - 1) * sizeof (void *));
+      qfirst->qu_elems[MOM_NB_QUELEM - 1] = NULL;
+    }
+}
+
+
+
+
+struct mom_node_st *
+mom_queue_node (const struct mom_queue_st *qu,
+                const struct mom_item_st *connitm)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return NULL;
+  if (!connitm || connitm == MOM_EMPTY_SLOT
+      || connitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  int nblink = 0;
+  for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL; ql = ql->qu_next)
+    nblink++;
+  if (nblink >= MOM_SIZE_MAX / MOM_NB_QUELEM - 1)
+    MOM_FATAPRINTF ("too many links %d in queue", nblink);
+  unsigned siz = nblink * MOM_NB_QUELEM;
+  struct mom_anyvalue_st *smallarr[3 * MOM_NB_QUELEM];
+  memset (smallarr, 0, sizeof (smallarr));
+  struct mom_anyvalue_st **arr =
+    (siz < (sizeof (smallarr) / sizeof (smallarr[0]))) ? smallarr
+    : mom_gc_alloc (siz * sizeof (void *));
+  unsigned cnt = 0;
+  for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL; ql = ql->qu_next)
+    {
+      for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+        if (ql->qu_elems[ix])
+          arr[cnt++] = ql->qu_elems[ix];
+      assert (cnt <= siz);
+    }
+  return mom_boxnode_make (connitm, cnt, arr);
+}                               /* end of mom_queue_node */
