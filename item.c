@@ -1680,7 +1680,125 @@ mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
   return hmap;
 }                               /* end of mom_hashmap_reserve */
 
+const struct mom_hashedvalue_st *
+mom_hashmap_get (const struct mom_hashmap_st *hmap,
+                 const struct mom_item_st *itm)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return NULL;
+  int pos = hashmap_index_mom (hmap, itm);
+  if (pos < 0)
+    return NULL;
+  assert (pos < (int) mom_raw_size (hmap));
+  if (hmap->hmap_ents[pos].ient_itm == itm)
+    return hmap->hmap_ents[pos].ient_val;
+  return NULL;
+}
 
+
+struct mom_hashmap_st *
+mom_hashmap_put (struct mom_hashmap_st *hmap, const struct mom_item_st *itm,
+                 const struct mom_hashedvalue_st *val)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return hmap;
+  if (!val || val == MOM_EMPTY_SLOT)
+    return mom_hashmap_remove (hmap, itm);
+  assert (val->va_itype > MOMITY_NONE && val->va_itype < MOMITY__LASTHASHED);
+  unsigned siz = mom_raw_size (hmap);
+  unsigned cnt = hmap->cda_count;
+  if (6 * cnt + 2 >= 5 * siz)
+    {
+      hmap = mom_hashmap_reserve (hmap, cnt / 8 + 2);
+      siz = mom_raw_size (hmap);
+    }
+  int pos = hashmap_index_mom (hmap, itm);
+  assert (pos >= 0 && pos < (int) siz);
+  if (hmap->hmap_ents[pos].ient_itm == itm)
+    {
+      hmap->hmap_ents[pos].ient_val = (struct mom_hashedvalue_st *) val;
+      return hmap;
+    }
+  hmap->hmap_ents[pos].ient_itm = (struct mom_item_st *) itm;
+  hmap->hmap_ents[pos].ient_val = (struct mom_hashedvalue_st *) val;
+  hmap->cda_count = cnt + 1;
+  return hmap;
+}
+
+struct mom_hashmap_st *
+mom_hashmap_remove (struct mom_hashmap_st *hmap,
+                    const struct mom_item_st *itm)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return hmap;
+  unsigned siz = mom_raw_size (hmap);
+  unsigned cnt = hmap->cda_count;
+  if (3 * cnt < siz && siz > 20)
+    {
+      hmap = mom_hashmap_reserve (hmap, 0);
+      siz = mom_raw_size (hmap);
+    }
+  int pos = hashmap_index_mom (hmap, itm);
+  if (pos < 0)
+    return hmap;
+  if (hmap->hmap_ents[pos].ient_itm == itm)
+    {
+      hmap->hmap_ents[pos].ient_itm = MOM_EMPTY_SLOT;
+      hmap->hmap_ents[pos].ient_val = NULL;
+      hmap->cda_count = cnt - 1;
+    }
+  return hmap;
+}
+
+const struct mom_boxset_st *
+mom_hashmap_keyset (const struct mom_hashmap_st *hmap)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return NULL;
+  unsigned siz = mom_raw_size (hmap);
+  unsigned cnt = hmap->cda_count;
+  struct mom_item_st *smallarr[20];
+  memset (smallarr, 0, sizeof (smallarr));
+  struct mom_item_st **arr
+    = (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc (sizeof (struct momitem_st *) * (cnt + 1));
+  unsigned itmcnt = 0;
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+      if (!curitm || curitm == MOM_EMPTY_SLOT)
+        continue;
+      assert (itmcnt < cnt);
+      arr[itmcnt++] = curitm;
+    }
+  assert (itmcnt == cnt);
+  return mom_boxset_make_arr (itmcnt, (const struct mom_item_st **) arr);
+}
+
+void
+mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return;
+  assert (du && du != MOM_EMPTY_SLOT && du->va_itype == MOMITY_DUMPER);
+  unsigned siz = mom_raw_size (hmap);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+      if (!curitm || curitm == MOM_EMPTY_SLOT)
+        continue;
+      if (!mom_dumpable_item (curitm))
+        continue;
+      mom_dumpscan_item (du, curitm);
+      mom_dumpscan_value (du, hmap->hmap_ents[ix].ient_val);
+    }
+}                               /* end of mom_dumpscan_hashmap */
 
 ////////////////////////////////////////////////////////////////
 #define MOM_HAS_PREDEFINED(Nam,Hash)		\

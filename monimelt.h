@@ -805,8 +805,23 @@ struct mom_hashmap_st
 
 
 /// with a 0 gap, will reorganize
-struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hset,
+struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hmap,
                                             unsigned gap);
+
+const struct mom_hashedvalue_st *mom_hashmap_get (const struct mom_hashmap_st
+                                                  *hmap,
+                                                  const struct mom_item_st
+                                                  *itm);
+
+struct mom_hashmap_st *mom_hashmap_put (struct mom_hashmap_st *hmap,
+                                        const struct mom_item_st *itm,
+                                        const struct mom_hashedvalue_st *val);
+
+struct mom_hashmap_st *mom_hashmap_remove (struct mom_hashmap_st *hmap,
+                                           const struct mom_item_st *itm);
+
+const struct mom_boxset_st *mom_hashmap_keyset (const struct mom_hashmap_st
+                                                *hmap);
 
 ////////////////
 struct mom_itemname_tu
@@ -1421,4 +1436,7 @@ mom_dumpscan_vectvaldata (struct mom_dumper_st *du,
 
 void
 mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
+
+void
+mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
 #endif /*MONIMELT_INCLUDED_ */
