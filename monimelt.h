@@ -358,6 +358,8 @@ enum momitype_en
   MOMITY_DUMPER,
 };
 struct mom_item_st;
+struct mom_loader_st;
+struct mom_dumper_st;
 
 #define MOM_HAS_PREDEFINED(Nam,Hash) extern struct mom_item_st mompredef_##Nam;
 #include "_mom_predef.h"
@@ -593,7 +595,7 @@ mom_seqitems_arr (const void *p)
 }
 
 static inline const struct mom_item_st *
-mom_seqitem_nth (const void *p, int rk)
+mom_seqitems_nth (const void *p, int rk)
 {
   const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
   if (!si)
@@ -1327,6 +1329,14 @@ void mom_queue_prepend (struct mom_queue_st *qu, const void *data);
 void mom_queue_append (struct mom_queue_st *qu, const void *data);
 void mom_queue_pop_front (struct mom_queue_st *qu);
 
+static inline bool
+mom_queue_nonempty (const struct mom_queue_st *qu)
+{
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return FALSE;
+  return qu->qu_first != NULL;
+}
+
 static inline const void *
 mom_queue_front (const struct mom_queue_st *qu)
 {
@@ -1358,4 +1368,23 @@ mom_queue_back (const struct mom_queue_st *qu)
 struct mom_node_st *mom_queue_node (const struct mom_queue_st *qu,
                                     const struct mom_item_st *connitm);
 
+
+////////////////
+enum mom_dumpstate_en
+{ MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
+
+#define MOM_DUMPER_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  enum mom_dumpstate_en du_state;		\
+  struct mom_hashset_st*du_itemset;		\
+  struct mom_queue_st*du_itemque
+
+struct mom_dumper_st
+{
+  MOM_DUMPER_FIELDS;
+};
+
+void mom_dumpscan_item (struct mom_dumper_st *du,
+                        const struct mom_item_st *itm);
+void mom_dumpscan_value (struct mom_dumper_st *du, const void *val);
 #endif /*MONIMELT_INCLUDED_ */

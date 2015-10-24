@@ -412,4 +412,56 @@ mom_load_state (const char *statepath)
   initialize_load_state_mom (statepath);
   first_pass_loader_mom (mom_loader);
   second_pass_loader_mom (mom_loader);
+  MOM_INFORMPRINTF ("completed load of state from %s", statepath);
+  mom_loader = NULL;
+}                               /* end mom_load_state */
+
+
+static void
+dump_scan_pass_mom (struct mom_dumper_st *du)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_NONE);
+  du->du_state = MOMDUMP_SCAN;
+  struct mom_boxset_st *predset = mom_predefined_items_boxset ();
+  assert (predset && predset->va_itype == MOMITY_SET);
+  unsigned nbpred = mom_size (predset);
+  for (int ix = 0; ix < (int) nbpred; ix++)
+    mom_dumpscan_item (du, mom_seqitems_nth (predset, ix));
+#warning incomplete dump_scan_pass_mom
+  MOM_FATAPRINTF ("incomplete dump_scan_pass_mom");
 }
+
+static void
+dump_emit_pass_mom (struct mom_dumper_st *du)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_SCAN);
+#warning incomplete dump_emit_pass_mom
+  MOM_FATAPRINTF ("incomplete dump_emit_pass_mom");
+}
+
+void
+mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  if (!mom_hashset_contains (du->du_itemset, itm))
+    {
+      du->du_itemset = mom_hashset_insert (du->du_itemset, itm);
+      mom_queue_append (du->du_itemque, itm);
+    }
+}
+
+void
+mom_dump_state (void)
+{
+  struct mom_dumper_st *du = mom_gc_alloc (sizeof (struct mom_dumper_st));
+  du->va_itype = MOMITY_DUMPER;
+  du->du_state = MOMDUMP_NONE;
+  du->du_itemset = mom_hashset_reserve (NULL, 100);
+  du->du_itemque = mom_gc_alloc (sizeof (struct mom_queue_st));
+  du->du_itemque->va_itype = MOMITY_QUEUE;
+  dump_scan_pass_mom (du);
+  dump_emit_pass_mom (du);
+}                               /* end mom_dump_state */
