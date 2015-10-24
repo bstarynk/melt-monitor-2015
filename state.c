@@ -417,20 +417,47 @@ mom_load_state (const char *statepath)
 }                               /* end mom_load_state */
 
 
+void
+mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
+{
+  MOM_DEBUGPRINTF (dump, "dumpscan_content_item start %s",
+                   mom_item_cstring (itm));
+  pthread_mutex_lock (&itm->itm_mtx);
+  mom_dumpscan_item (du, itm->itm_kinditm);
+#warning mom_dumpscan_content_item incomplete
+  MOM_FATAPRINTF ("mom_dumpscan_content_item incomplete itm %s",
+                  mom_item_cstring (itm));
+  pthread_mutex_unlock (&itm->itm_mtx);
+  MOM_DEBUGPRINTF (dump, "dumpscan_content_item done %s",
+                   mom_item_cstring (itm));
+}                               /* end of mom_dumpscan_content_item */
+
 static void
 dump_scan_pass_mom (struct mom_dumper_st *du)
 {
   assert (du && du->va_itype == MOMITY_DUMPER);
   assert (du->du_state == MOMDUMP_NONE);
   du->du_state = MOMDUMP_SCAN;
-  struct mom_boxset_st *predset = mom_predefined_items_boxset ();
+  const struct mom_boxset_st *predset = mom_predefined_items_boxset ();
   assert (predset && predset->va_itype == MOMITY_SET);
   unsigned nbpred = mom_size (predset);
+  MOM_DEBUGPRINTF (dump, "should scan %d predefined", nbpred);
   for (int ix = 0; ix < (int) nbpred; ix++)
     mom_dumpscan_item (du, mom_seqitems_nth (predset, ix));
-#warning incomplete dump_scan_pass_mom
-  MOM_FATAPRINTF ("incomplete dump_scan_pass_mom");
-}
+  long scancount = 0;
+  while (mom_queue_nonempty (du->du_itemque))
+    {
+      struct mom_item_st *curitm =
+        (struct mom_item_st *) mom_queue_front (du->du_itemque);
+      mom_queue_pop_front (du->du_itemque);
+      assert (curitm && curitm->va_itype == MOMITY_ITEM);
+      scancount++;
+      MOM_DEBUGPRINTF (dump, "scan#%ld inside curitm %s",
+                       scancount, mom_item_cstring (curitm));
+      mom_dumpscan_content_item (du, curitm);
+    }
+  MOM_INFORMPRINTF ("scanned %ld items", scancount);
+}                               /* end dump_scan_pass_mom */
 
 static void
 dump_emit_pass_mom (struct mom_dumper_st *du)
