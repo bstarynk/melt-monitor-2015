@@ -578,7 +578,7 @@ mom_queue_pop_front (struct mom_queue_st *qu)
 
 
 
-struct mom_node_st *
+struct mom_boxnode_st *
 mom_queue_node (const struct mom_queue_st *qu,
                 const struct mom_item_st *connitm)
 {
@@ -608,3 +608,49 @@ mom_queue_node (const struct mom_queue_st *qu,
     }
   return mom_boxnode_make (connitm, cnt, arr);
 }                               /* end of mom_queue_node */
+
+
+void
+mom_dumpscan_value (struct mom_dumper_st *du,
+                    const struct mom_anyvalue_st *val)
+{
+  if (!val || val == MOM_EMPTY_SLOT)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  switch (val->va_itype)
+    {
+    case MOMITY_BOXINT:
+    case MOMITY_BOXDOUBLE:
+    case MOMITY_BOXSTRING:
+      return;
+    case MOMITY_TUPLE:
+    case MOMITY_SET:
+      {
+        struct mom_item_st *const *itmarr
+          = ((const struct mom_seqitems_st *) val)->seqitem;
+        unsigned siz = mom_raw_size (val);
+        for (unsigned ix = 0; ix < siz; ix++)
+          if (itmarr[ix])
+            mom_dumpscan_item (du, itmarr[ix]);
+      }
+      break;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = (const struct mom_node_st *) val;
+        unsigned siz = mom_raw_size (val);
+        mom_dumpscan_item (du, nod->nod_connitm);
+        if (nod->nod_metaitem)
+          mom_dumpscan_item (du, nod->nod_metaitem);
+        for (unsigned ix = 0; ix < siz; ix++)
+          if (nod->nod_sons[ix])
+            mom_dumpscan_value (du, nod->nod_sons[ix]);
+      }
+      break;
+    case MOMITY_ITEM:
+      mom_dumpscan_item (du, (struct mom_item_st *) val);
+      break;
+    default:
+      MOM_FATAPRINTF ("invalid type#%d of value@%p", (int) (val->va_itype),
+                      val);
+    }
+}

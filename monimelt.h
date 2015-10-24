@@ -585,12 +585,12 @@ mom_dyncast_seqitems (const void *p)
   return NULL;
 }
 
-static inline const struct mom_item_st **
+static inline struct mom_item_st *const *
 mom_seqitems_arr (const void *p)
 {
   const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
   if (si)
-    return (const struct mom_item_st **) si->seqitem;
+    return (struct mom_item_st * const *) si->seqitem;
   return NULL;
 }
 
@@ -1365,8 +1365,8 @@ mom_queue_back (const struct mom_queue_st *qu)
   MOM_FATAPRINTF ("corrupted queue @%p", qu);
 }
 
-struct mom_node_st *mom_queue_node (const struct mom_queue_st *qu,
-                                    const struct mom_item_st *connitm);
+struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
+                                       const struct mom_item_st *connitm);
 
 
 ////////////////
@@ -1386,5 +1386,6 @@ struct mom_dumper_st
 
 void mom_dumpscan_item (struct mom_dumper_st *du,
                         const struct mom_item_st *itm);
-void mom_dumpscan_value (struct mom_dumper_st *du, const void *val);
+void mom_dumpscan_value (struct mom_dumper_st *du,
+                         const struct mom_anyvalue_st *val);
 #endif /*MONIMELT_INCLUDED_ */
