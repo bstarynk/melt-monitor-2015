@@ -1489,7 +1489,7 @@ mom_hashset_remove (struct mom_hashset_st *hset, struct mom_item_st *itm)
 
 bool
 mom_hashset_contains (const struct mom_hashset_st * hset,
-                      struct mom_item_st * itm)
+                      const struct mom_item_st * itm)
 {
   if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
     return false;
@@ -1529,6 +1529,24 @@ mom_hashset_to_boxset (const struct mom_hashset_st *hset)
   assert (card == cnt);
   return mom_boxset_make_arr (card, arr);
 }
+
+void
+mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    return;
+  unsigned cnt = hset->cda_count;
+  unsigned siz = mom_raw_size (hset);
+  assert (cnt <= siz);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *curitm = hset->hset_items[ix];
+      if (!curitm || curitm == MOM_EMPTY_SLOT)
+        continue;
+      mom_dumpscan_item (du, curitm);
+    }
+}                               /* end of mom_dumpscan_hashset */
+
 
 #define MOM_HAS_PREDEFINED(Nam,Hash)		\
   struct mom_item_st mompredef_##Nam = {	\

@@ -353,7 +353,6 @@ enum momitype_en
   MOMITY_VECTVALDATA,
   MOMITY_QUEUE,
   MOMITY_HASHSET,
-  MOMITY_HASHMAP,
   MOMITY_LOADER,
   MOMITY_DUMPER,
 };
@@ -782,7 +781,7 @@ struct mom_hashset_st *mom_hashset_remove (struct mom_hashset_st *hset,
 
 bool
 mom_hashset_contains (const struct mom_hashset_st *hset,
-                      struct mom_item_st *itm);
+                      const struct mom_item_st *itm);
 
 const struct mom_boxset_st *mom_hashset_to_boxset (const struct mom_hashset_st
                                                    *hset);
@@ -828,10 +827,8 @@ enum mom_space_en
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
   struct mom_item_st* itm_kinditm;		\
-  union {					\
-    struct mom_anyvalue_st* itm_payload;	\
-    void* itm_dataptr;				\
-  }
+  struct mom_anyvalue_st* itm_payload;		\
+  void* itm_funptr
 
 
 struct mom_item_st
@@ -1391,6 +1388,15 @@ mom_dumpable_item (const struct mom_item_st *itm)
     && itm->va_itype == MOMITY_ITEM && mom_raw_size (itm) > MOMSPA_NONE;
 }
 
+static inline bool
+mom_dumped_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return false;
+  return mom_hashset_contains (du->du_itemset, itm);
+}
+
 void mom_dumpscan_item (struct mom_dumper_st *du,
                         const struct mom_item_st *itm);
 void mom_dumpscan_value (struct mom_dumper_st *du,
@@ -1404,4 +1410,6 @@ void
 mom_dumpscan_vectvaldata (struct mom_dumper_st *du,
                           struct mom_vectvaldata_st *vec);
 
+void
+mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
 #endif /*MONIMELT_INCLUDED_ */
