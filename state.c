@@ -442,7 +442,7 @@ dump_scan_pass_mom (struct mom_dumper_st *du)
   assert (du && du->va_itype == MOMITY_DUMPER);
   assert (du->du_state == MOMDUMP_NONE);
   du->du_state = MOMDUMP_SCAN;
-  const struct mom_boxset_st *predset = mom_predefined_items_boxset ();
+  const struct mom_boxset_st *predset = du->du_predefset;
   assert (predset && predset->va_itype == MOMITY_SET);
   unsigned nbpred = mom_size (predset);
   MOM_DEBUGPRINTF (dump, "should scan %d predefined", nbpred);
@@ -463,13 +463,107 @@ dump_scan_pass_mom (struct mom_dumper_st *du)
   MOM_INFORMPRINTF ("scanned %ld items", scancount);
 }                               /* end dump_scan_pass_mom */
 
+void
+dump_emit_predefined_header_mom (struct mom_dumper_st *du)
+{
+  unsigned nbpredef = mom_size (du->du_predefset);
+  MOM_DEBUGPRINTF (dump, "start predefined header nbpredef=%d", nbpredef);
+  int nbtry = 0;
+  char predbuf[128];
+  do
+    {
+      memset (predbuf, 0, sizeof (predbuf));
+      nbtry++;
+      snprintf (predbuf, sizeof (predbuf), "_mom_predef.h-r%x-p%d-t%d.tmp",
+                mom_random_uint32 (), (int) getpid (), nbtry);
+    }
+  while (nbtry < 20 && access (predbuf, F_OK));
+  du->du_predefhtmpath = mom_boxstring_make (predbuf);
+  FILE *fpred = fopen (du->du_predefhtmpath->cstr, "w");
+  if (!fpred)
+    {
+      int e = errno;
+      char cwdbuf[200];
+      memset (cwdbuf, 0, sizeof (cwdbuf));
+      if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+        strcpy (cwdbuf, "./");
+      MOM_FATAPRINTF ("failed to open predefined header %s in %s: %s",
+                      du->du_predefhtmpath->cstr, cwdbuf, strerror (e));
+    }
+  mom_output_gplv3_notice (fpred, "///", "", "_mom_predef.h");
+  fputs ("\n", fpred);
+  fputs ("#ifndef" " MOM_HAS_PREDEFINED\n", fpred);
+  fputs ("#error missing MOM_HAS_PREDEFINED\n", fpred);
+  fputs ("#endif\n\n", fpred);
+  fputs ("#undef MOM_NB_PREDEFINED\n", fpred);
+  fprintf (fpred, "#define MOM_NB_PREDEFINED %d\n", nbpredef);
+  fputs ("\n\n", fpred);
+  for (unsigned ix = 0; ix < nbpredef; ix++)
+    {
+      const struct mom_item_st *predefitm
+        = mom_seqitems_nth (du->du_predefset, ix);
+      assert (predefitm && predefitm->va_itype == MOMITY_ITEM);
+      fprintf (fpred, "MOM_HAS_PREDEFINED(%s,%u)\n",
+               mom_item_cstring (predefitm), predefitm->hva_hash);
+    }
+  fputs ("\n\n#undef MOM_HAS_PREDEFINED\n", fpred);
+  fputs ("// eof generated _mom_predef.h\n", fpred);
+  fclose (fpred);
+}                               /* end dump_emit_predefined_header_mom  */
+
+static void
+dump_emit_global_mom (struct mom_dumper_st *du)
+{
+  const struct mom_boxset_st *setitems
+    = mom_hashset_to_boxset (du->du_itemset);
+  unsigned nbitems = mom_size (setitems);
+  MOM_DEBUGPRINTF (dump, "start globals nbitems=%d", nbitems);
+  int nbtry = 0;
+  char globuf[128];
+  do
+    {
+      memset (globuf, 0, sizeof (globuf));
+      nbtry++;
+      snprintf (globuf, sizeof (globuf), "global.mom-r%x-p%d-t%d.tmp",
+                mom_random_uint32 (), (int) getpid (), nbtry);
+    }
+  while (nbtry < 20 && access (globuf, F_OK));
+  du->du_globaltmpath = mom_boxstring_make (globuf);
+  FILE *fglob = fopen (du->du_globaltmpath->cstr, "w");
+  if (!fglob)
+    {
+      int e = errno;
+      char cwdbuf[200];
+      memset (cwdbuf, 0, sizeof (cwdbuf));
+      if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+        strcpy (cwdbuf, "./");
+      MOM_FATAPRINTF ("failed to open global %s in %s: %s",
+                      du->du_globaltmpath->cstr, cwdbuf, strerror (e));
+    }
+  mom_output_gplv3_notice (fglob, "##", "", "global.mom");
+  fputs ("\n\n", fglob);
+  for (unsigned ix = 0; ix < nbitems; ix++)
+    {
+      const struct mom_item_st *curitm = mom_seqitems_nth (setitems, ix);
+      assert (curitm && curitm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (dump, "should dump %s", mom_item_cstring (curitm));
+      fputs ("\n", fglob);
+      fprintf (fglob, "*%s\n", mom_item_cstring (curitm));
+#warning should dump item content of curitm
+      fputs ("\n", fglob);
+    }
+  fputs ("\n### eof global.mom\n", fglob);
+  fclose (fglob);
+}                               /* end of dump_emit_global_mom */
+
 static void
 dump_emit_pass_mom (struct mom_dumper_st *du)
 {
   assert (du && du->va_itype == MOMITY_DUMPER);
   assert (du->du_state == MOMDUMP_SCAN);
-#warning incomplete dump_emit_pass_mom
-  MOM_FATAPRINTF ("incomplete dump_emit_pass_mom");
+  du->du_state = MOMDUMP_EMIT;
+  dump_emit_predefined_header_mom (du);
+  dump_emit_global_mom (du);
 }
 
 void
@@ -486,6 +580,7 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
     }
 }
 
+
 void
 mom_dump_state (void)
 {
@@ -494,7 +589,11 @@ mom_dump_state (void)
   du->du_state = MOMDUMP_NONE;
   du->du_itemset = mom_hashset_reserve (NULL, 100);
   du->du_itemque = mom_gc_alloc (sizeof (struct mom_queue_st));
+  du->du_predefset = mom_predefined_items_boxset ();
   du->du_itemque->va_itype = MOMITY_QUEUE;
   dump_scan_pass_mom (du);
   dump_emit_pass_mom (du);
+  /// should rename the temporary files
+#warning incomplete mom_dump_state
+  MOM_FATAPRINTF ("incomplete mom_dump_state");
 }                               /* end mom_dump_state */

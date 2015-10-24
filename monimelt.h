@@ -1397,7 +1397,10 @@ enum mom_dumpstate_en
 #define MOM_DUMPER_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   enum mom_dumpstate_en du_state;		\
+  struct mom_boxset_st*du_predefset;		\
   struct mom_hashset_st*du_itemset;		\
+  struct mom_boxstring_st*du_predefhtmpath;	\
+  struct mom_boxstring_st*du_globaltmpath;	\
   struct mom_queue_st*du_itemque
 
 struct mom_dumper_st
