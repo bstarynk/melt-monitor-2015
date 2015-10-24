@@ -348,11 +348,15 @@ enum momitype_en
   MOMITY_ITEM,
   /// the types above are for genuine values
   MOMITY__LASTHASHED,
-  /// here are the payload types
+  /// here are the payload types, they can only appear as item
+  /// payloads if they are persistent (but they might be used as
+  /// transient local data in code)
   MOMITY_ASSOVALDATA,
   MOMITY_VECTVALDATA,
   MOMITY_QUEUE,
   MOMITY_HASHSET,
+  MOMITY_HASHMAP,
+  MOMITY_HASHDICT,
   MOMITY_LOADER,
   MOMITY_DUMPER,
 };
@@ -733,7 +737,7 @@ const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
 struct mom_itementry_tu
 {
   struct mom_item_st *ient_itm;
-  struct mom_anyvalue_st *ient_val;
+  struct mom_hashedvalue_st *ient_val;
 };
 
 #define MOM_ASSOVALDATA_FIELDS			\
@@ -748,7 +752,7 @@ struct mom_assovaldata_st
 
 #define MOM_VECTVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
-  struct mom_anyvalue_st*vecd_valarr[];
+  struct mom_hashedvalue_st*vecd_valarr[];
 //// mutable vector
 struct mom_vectvaldata_st
 {
@@ -787,18 +791,22 @@ const struct mom_boxset_st *mom_hashset_to_boxset (const struct mom_hashset_st
                                                    *hset);
 
 
-/// for MOMITY_HASHEDMAP
+/// for MOMITY_HASHMAP payload
 
-#define MOM_HASHEDMAP_FIELDS			\
+#define MOM_HASHMAP_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
   struct mom_itementry_tu hmap_ents[]
 //// mutable hashed map 
-struct mom_hashedmap_st
+struct mom_hashmap_st
 {
-  MOM_HASHEDMAP_FIELDS;
+  MOM_HASHMAP_FIELDS;
 };
 
 
+
+/// with a 0 gap, will reorganize
+struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hset,
+                                            unsigned gap);
 
 ////////////////
 struct mom_itemname_tu
@@ -975,9 +983,10 @@ mom_set_contains (const struct mom_boxset_st *bs,
 
 
 
-struct mom_anyvalue_st *mom_assovaldata_get (const struct mom_assovaldata_st
-                                             *asso,
-                                             const struct mom_item_st *itmat);
+struct mom_hashedvalue_st *mom_assovaldata_get (const struct
+                                                mom_assovaldata_st *asso,
+                                                const struct mom_item_st
+                                                *itmat);
 
 struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
                                                    *asso,
@@ -996,7 +1005,7 @@ struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
 struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
                                                     *vec, unsigned gap);
 
-static inline struct mom_anyvalue_st *
+static inline struct mom_hashedvalue_st *
 mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
 {
   if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
@@ -1023,7 +1032,7 @@ mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
   if (rk < 0)
     rk += cnt;
   if (rk >= 0 && rk < (int) cnt)
-    vec->vecd_valarr[rk] = (struct mom_anyvalue_st *) data;
+    vec->vecd_valarr[rk] = (struct mom_hashedvalue_st *) data;
 }
 
 static inline unsigned
@@ -1309,7 +1318,7 @@ void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
 struct mom_quelem_st
 {
   struct mom_quelem_st *qu_next;
-  struct mom_anyvalue_st *qu_elems[MOM_NB_QUELEM];
+  struct mom_hashedvalue_st *qu_elems[MOM_NB_QUELEM];
 };
 
 #define MOM_QUEUE_FIELDS			\
@@ -1400,7 +1409,7 @@ mom_dumped_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
 void mom_dumpscan_item (struct mom_dumper_st *du,
                         const struct mom_item_st *itm);
 void mom_dumpscan_value (struct mom_dumper_st *du,
-                         const struct mom_anyvalue_st *val);
+                         const struct mom_hashedvalue_st *val);
 
 void
 mom_dumpscan_assovaldata (struct mom_dumper_st *du,

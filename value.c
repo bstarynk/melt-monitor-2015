@@ -462,7 +462,7 @@ mom_queue_prepend (struct mom_queue_st *qu, const void *data)
     {
       assert (!qu->qu_last);
       struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
-      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qe->qu_elems[0] = (struct mom_hashedvalue_st *) data;
       qu->qu_first = qu->qu_last = qe;
       return;
     }
@@ -474,15 +474,15 @@ mom_queue_prepend (struct mom_queue_st *qu, const void *data)
   if (full)
     {
       struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
-      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qe->qu_elems[0] = (struct mom_hashedvalue_st *) data;
       qe->qu_next = qu->qu_first;
       qu->qu_first = qe;
     }
   else
     {
-      struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+      struct mom_hashedvalue_st *qdata[MOM_NB_QUELEM];
       memset (qdata, 0, sizeof (qdata));
-      qdata[0] = (struct mom_anyvalue_st *) data;
+      qdata[0] = (struct mom_hashedvalue_st *) data;
       int cnt = 1;
       for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
         {
@@ -507,7 +507,7 @@ mom_queue_append (struct mom_queue_st *qu, const void *data)
     {
       assert (!qu->qu_first);
       struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
-      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qe->qu_elems[0] = (struct mom_hashedvalue_st *) data;
       qu->qu_first = qu->qu_last = qe;
       return;
     }
@@ -520,15 +520,15 @@ mom_queue_append (struct mom_queue_st *qu, const void *data)
   if (full)
     {
       struct mom_quelem_st *qe = mom_gc_alloc (sizeof (*qe));
-      qe->qu_elems[0] = (struct mom_anyvalue_st *) data;
+      qe->qu_elems[0] = (struct mom_hashedvalue_st *) data;
       qlast->qu_next = qe;
       qu->qu_last = qe;
     }
   else
     {
-      struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+      struct mom_hashedvalue_st *qdata[MOM_NB_QUELEM];
       memset (qdata, 0, sizeof (qdata));
-      qdata[0] = (struct mom_anyvalue_st *) data;
+      qdata[0] = (struct mom_hashedvalue_st *) data;
       int cnt = 0;
       for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
         {
@@ -537,7 +537,7 @@ mom_queue_append (struct mom_queue_st *qu, const void *data)
             qdata[cnt++] = qlast->qu_elems[ix];
         };
       assert (cnt < MOM_NB_QUELEM - 1);
-      qdata[cnt++] = (struct mom_anyvalue_st *) data;
+      qdata[cnt++] = (struct mom_hashedvalue_st *) data;
       memcpy (qlast->qu_elems, qdata, sizeof (qdata));
     }
 }
@@ -593,9 +593,9 @@ mom_queue_node (const struct mom_queue_st *qu,
   if (nblink >= MOM_SIZE_MAX / MOM_NB_QUELEM - 1)
     MOM_FATAPRINTF ("too many links %d in queue", nblink);
   unsigned siz = nblink * MOM_NB_QUELEM;
-  struct mom_anyvalue_st *smallarr[3 * MOM_NB_QUELEM];
+  struct mom_hashedvalue_st *smallarr[3 * MOM_NB_QUELEM];
   memset (smallarr, 0, sizeof (smallarr));
-  struct mom_anyvalue_st **arr =
+  const struct mom_hashedvalue_st **arr =
     (siz < (sizeof (smallarr) / sizeof (smallarr[0]))) ? smallarr
     : mom_gc_alloc (siz * sizeof (void *));
   unsigned cnt = 0;
@@ -612,7 +612,7 @@ mom_queue_node (const struct mom_queue_st *qu,
 
 void
 mom_dumpscan_value (struct mom_dumper_st *du,
-                    const struct mom_anyvalue_st *val)
+                    const struct mom_hashedvalue_st *val)
 {
   if (!val || val == MOM_EMPTY_SLOT)
     return;

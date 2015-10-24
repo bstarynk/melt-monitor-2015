@@ -897,7 +897,7 @@ mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)
     }
 }                               /* end of mom_item_cmp */
 
-struct mom_anyvalue_st *
+struct mom_hashedvalue_st *
 mom_assovaldata_get (const struct mom_assovaldata_st *asso,
                      const struct mom_item_st *itmat)
 {
@@ -1045,7 +1045,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       mom_put_size (newasso, newsiz);
       newasso->ada_ents[0].ient_itm = (struct mom_item_st *) itmat;
       newasso->ada_ents[0].ient_val =
-        (struct mom_anyvalue_st *) (void *) data;
+        (struct mom_hashedvalue_st *) (void *) data;
       newasso->cda_count = 1;
       return newasso;
     };
@@ -1069,7 +1069,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
         {
           assert (itmat == asso->ada_ents[md].ient_itm);
           asso->ada_ents[md].ient_val =
-            (struct mom_anyvalue_st *) (void *) data;
+            (struct mom_hashedvalue_st *) (void *) data;
           return asso;
         }
     };
@@ -1102,7 +1102,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
               assert (asso->ada_ents[ix].ient_itm == itmat);
               newasso->ada_ents[ix].ient_itm = (struct mom_item_st *) itmat;
               newasso->ada_ents[ix].ient_val =
-                (struct mom_anyvalue_st *) data;
+                (struct mom_hashedvalue_st *) data;
               for (int j = ix + 1; j < (int) cnt; j++)
                 newasso->ada_ents[j] = asso->ada_ents[j];
               newasso->cda_count = cnt;
@@ -1112,7 +1112,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       if (inspos < 0)
         inspos = hi;
       newasso->ada_ents[inspos].ient_itm = (struct mom_item_st *) itmat;
-      newasso->ada_ents[inspos].ient_val = (struct mom_anyvalue_st *) data;
+      newasso->ada_ents[inspos].ient_val = (struct mom_hashedvalue_st *) data;
       for (int ix = inspos; ix < (int) cnt; ix++)
         newasso->ada_ents[ix + 1] = asso->ada_ents[ix];
       newasso->cda_count = cnt + 1;
@@ -1134,12 +1134,12 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
         {
           assert (asso->ada_ents[ix].ient_itm == itmat);
           asso->ada_ents[ix].ient_itm = (struct mom_item_st *) itmat;
-          asso->ada_ents[ix].ient_val = (struct mom_anyvalue_st *) data;
+          asso->ada_ents[ix].ient_val = (struct mom_hashedvalue_st *) data;
           return asso;
         }
     };
   asso->ada_ents[cnt].ient_itm = (struct mom_item_st *) itmat;
-  asso->ada_ents[cnt].ient_val = (struct mom_anyvalue_st *) (void *) data;
+  asso->ada_ents[cnt].ient_val = (struct mom_hashedvalue_st *) (void *) data;
   asso->cda_count = cnt + 1;
   return asso;
 }                               /* end of mom_assovaldata_put */
@@ -1282,7 +1282,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
       vec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (vec, nsiz);
       vec->cda_count = 1;
-      vec->vecd_valarr[0] = (struct mom_anyvalue_st *) data;
+      vec->vecd_valarr[0] = (struct mom_hashedvalue_st *) data;
       return vec;
     }
   unsigned siz = mom_raw_size (vec);
@@ -1301,7 +1301,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
       memcpy (newvec->vecd_valarr, vec->vecd_valarr, cnt * sizeof (void *));
       vec = newvec;
     }
-  vec->vecd_valarr[cnt++] = (struct mom_anyvalue_st *) data;
+  vec->vecd_valarr[cnt++] = (struct mom_hashedvalue_st *) data;
   vec->cda_count = cnt;
   return vec;
 }                               /* end of mom_vectvaldata_append */
@@ -1404,7 +1404,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
       siz = newsiz;
       hset = newhset;
     }
-  else if (gap + cnt >= siz)
+  else if (6 * (gap + cnt) >= 5 * siz)
     {
       unsigned newsiz =
         mom_prime_above (5 * (gap + cnt) / 4 +
@@ -1547,7 +1547,142 @@ mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset)
     }
 }                               /* end of mom_dumpscan_hashset */
 
+////////////////////////////////////////////////////////////////
 
+/////// hashmap payload
+
+static int
+hashmap_index_mom (const struct mom_hashmap_st *hmap,
+                   const struct mom_item_st *itm)
+{
+  assert (hmap && hmap->va_itype == MOMITY_HASHMAP);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  unsigned siz = mom_raw_size (hmap);
+  assert (hmap->cda_count < siz);
+  assert (siz > 2);
+  momhash_t hitm = itm->hva_hash;
+  unsigned startix = hitm % siz;
+  int pos = -1;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+      if (curitm == itm)
+        return ix;
+      else if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = ix;
+          continue;
+        }
+      else if (curitm == NULL)
+        {
+          if (pos < 0)
+            pos = ix;
+          return pos;
+        }
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+      if (curitm == itm)
+        return ix;
+      else if (curitm == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = ix;
+          continue;
+        }
+      else if (curitm == NULL)
+        {
+          if (pos < 0)
+            pos = ix;
+          return pos;
+        }
+    }
+  return -1;
+}                               /* end hashmap_index_mom */
+
+
+
+struct mom_hashmap_st *
+mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    {
+      unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
+      hmap =
+        mom_gc_alloc (sizeof (*hmap) +
+                      newsiz * sizeof (struct mom_itementry_tu));
+      hmap->va_itype = MOMITY_HASHMAP;
+      mom_put_size (hmap, newsiz);
+      hmap->cda_count = 0;
+      return hmap;
+    }
+  unsigned cnt = hmap->cda_count;
+  unsigned siz = mom_raw_size (hmap);
+  assert (cnt <= siz);
+  if (gap == 0)
+    {
+      // reorganize
+      unsigned newsiz =
+        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
+      unsigned oldsiz = siz;
+      unsigned oldcnt = cnt;
+      struct mom_hashmap_st *oldhmap = hmap;
+      struct mom_hashmap_st *newhmap =
+        mom_gc_alloc (sizeof (*newhmap) +
+                      newsiz * sizeof (struct mom_itementry_tu));
+      newhmap->va_itype = MOMITY_HASHMAP;
+      mom_put_size (newhmap, newsiz);
+      for (unsigned ix = 0; ix < oldsiz; ix++)
+        {
+          const struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+          if (!curitm || curitm == MOM_EMPTY_SLOT)
+            continue;
+          int pos = hashmap_index_mom (newhmap, curitm);
+          assert (pos >= 0 && pos < (int) newsiz
+                  && newhmap->hmap_ents[pos].ient_itm == NULL);
+          newhmap->hmap_ents[pos] = oldhmap->hmap_ents[ix];
+          newhmap->cda_count++;
+        }
+      assert (newhmap->cda_count == oldcnt);
+      siz = newsiz;
+      hmap = newhmap;
+    }
+  else if (6 * (gap + cnt) >= 5 * siz)
+    {
+      unsigned newsiz =
+        mom_prime_above (5 * (gap + cnt) / 4 +
+                         (((gap + cnt) > 100) ? ((gap + cnt) / 32) : 1) + 3);
+      unsigned oldsiz = siz;
+      unsigned oldcnt = cnt;
+      struct mom_hashmap_st *oldhmap = hmap;
+      struct mom_hashmap_st *newhmap =
+        mom_gc_alloc (sizeof (*newhmap) +
+                      newsiz * sizeof (struct mom_itementry_tu));
+      newhmap->va_itype = MOMITY_HASHMAP;
+      mom_put_size (newhmap, newsiz);
+      for (unsigned ix = 0; ix < oldsiz; ix++)
+        {
+          const struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
+          if (!curitm || curitm == MOM_EMPTY_SLOT)
+            continue;
+          int pos = hashmap_index_mom (newhmap, curitm);
+          assert (pos >= 0 && pos < (int) newsiz
+                  && newhmap->hmap_ents[pos].ient_itm == NULL);
+          newhmap->hmap_ents[pos] = oldhmap->hmap_ents[ix];
+          newhmap->cda_count++;
+        }
+      assert (newhmap->cda_count == oldcnt);
+      siz = newsiz;
+      hmap = newhmap;
+    }
+  return hmap;
+}                               /* end of mom_hashmap_reserve */
+
+
+
+////////////////////////////////////////////////////////////////
 #define MOM_HAS_PREDEFINED(Nam,Hash)		\
   struct mom_item_st mompredef_##Nam = {	\
   .va_itype = MOMITY_ITEM,			\
