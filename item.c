@@ -1144,7 +1144,24 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
   return asso;
 }                               /* end of mom_assovaldata_put */
 
-
+void
+mom_dumpscan_assovaldata (struct mom_dumper_st *du,
+                          struct mom_assovaldata_st *asso)
+{
+  if (!asso || asso == MOM_EMPTY_SLOT)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  unsigned cnt = asso->cda_count;
+  unsigned siz = mom_raw_size (asso);
+  assert (cnt <= siz);
+  for (int ix = 0; ix < (int) cnt; ix++)
+    {
+      if (!mom_dumpable_item (asso->ada_ents[ix].ient_itm))
+        continue;
+      mom_dumpscan_item (du, asso->ada_ents[ix].ient_itm);
+      mom_dumpscan_value (du, asso->ada_ents[ix].ient_val);
+    }
+}
 
 struct mom_vectvaldata_st *
 mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
@@ -1235,6 +1252,20 @@ mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
   return vec;
 }                               /* end of mom_vectvaldata_resize */
 
+
+void
+mom_dumpscan_vectvaldata (struct mom_dumper_st *du,
+                          struct mom_vectvaldata_st *vec)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= mom_raw_size (vec));
+  for (int ix = 0; ix < (int) cnt; ix++)
+    if (vec->vecd_valarr[ix])
+      mom_dumpscan_value (du, vec->vecd_valarr[ix]);
+}                               /* end of mom_dumpscan_vectvaldata */
 
 
 struct mom_vectvaldata_st *

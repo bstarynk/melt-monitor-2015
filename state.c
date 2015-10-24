@@ -424,6 +424,10 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
                    mom_item_cstring (itm));
   pthread_mutex_lock (&itm->itm_mtx);
   mom_dumpscan_item (du, itm->itm_kinditm);
+  if (itm->itm_pattr)
+    mom_dumpscan_assovaldata (du, itm->itm_pattr);
+  if (itm->itm_pcomp)
+    mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
 #warning mom_dumpscan_content_item incomplete
   MOM_FATAPRINTF ("mom_dumpscan_content_item incomplete itm %s",
                   mom_item_cstring (itm));
@@ -472,6 +476,8 @@ void
 mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
 {
   assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!mom_dumpable_item (itm))
+    return;
   assert (itm && itm->va_itype == MOMITY_ITEM);
   if (!mom_hashset_contains (du->du_itemset, itm))
     {

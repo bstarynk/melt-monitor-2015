@@ -1384,8 +1384,24 @@ struct mom_dumper_st
   MOM_DUMPER_FIELDS;
 };
 
+static inline bool
+mom_dumpable_item (const struct mom_item_st *itm)
+{
+  return itm && itm != MOM_EMPTY_SLOT
+    && itm->va_itype == MOMITY_ITEM && mom_raw_size (itm) > MOMSPA_NONE;
+}
+
 void mom_dumpscan_item (struct mom_dumper_st *du,
                         const struct mom_item_st *itm);
 void mom_dumpscan_value (struct mom_dumper_st *du,
                          const struct mom_anyvalue_st *val);
+
+void
+mom_dumpscan_assovaldata (struct mom_dumper_st *du,
+                          struct mom_assovaldata_st *asso);
+
+void
+mom_dumpscan_vectvaldata (struct mom_dumper_st *du,
+                          struct mom_vectvaldata_st *vec);
+
 #endif /*MONIMELT_INCLUDED_ */
