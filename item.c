@@ -2004,6 +2004,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   /// emit the attributes
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
+#warning should probably become a separate routine
       const struct mom_assovaldata_st *attrs = itm->itm_pattr;
       unsigned sizattr = mom_size (attrs);
       unsigned cntattr = attrs->cda_count;
@@ -2028,8 +2029,45 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           fputs (")attrs\n", femit);
         }
     }
-  //// should dump the vector & the payload
+  //// should dump the vector
+  if (itm->itm_pcomp && itm->itm_pcomp != MOM_EMPTY_SLOT)
+    {
+      struct mom_vectvaldata_st *comps = itm->itm_pcomp;
+      unsigned siz = mom_raw_size (comps);
+      unsigned cnt = comps->cda_count;
+      assert (cnt <= siz);
+      fputs ("(\n", femit);
+      for (unsigned ix = 0; ix < cnt; ix++)
+        mom_dumpemit_value (du, comps->vecd_valarr[ix]);
+      fputs (")comps\n", femit);
+    }
+  //// should dump the payload
+  if (itm->itm_payload && itm->itm_payload != MOM_EMPTY_SLOT)
+    {
+      struct mom_anyvalue_st *payl = itm->itm_payload;
+      switch (payl->va_itype)
+        {
+        case MOMITY_BOXINT:
+        case MOMITY_BOXDOUBLE:
+        case MOMITY_BOXSTRING:
+        case MOMITY_TUPLE:
+        case MOMITY_SET:
+        case MOMITY_NODE:
+        case MOMITY_ITEM:
+          mom_dumpemit_value (du, (struct mom_hashedvalue_st *) payl);
+          fputs ("^payloadval\n", femit);
+          break;
+#warning dump of payload is incomplete
+        case MOMITY_ASSOVALDATA:
+        case MOMITY_VECTVALDATA:
+        case MOMITY_QUEUE:
+        case MOMITY_HASHSET:
+        case MOMITY_HASHMAP:
+        default:
+          break;
+        }
+    }
 #warning mom_dumpemit_item_content incomplete
-  MOM_FATAPRINTF ("incomplete mom_dumpemit_item_content for %s",
+  MOM_WARNPRINTF ("incomplete mom_dumpemit_item_content for %s",
                   mom_item_cstring (itm));
 }                               /* end of mom_dumpemit_item_content */
