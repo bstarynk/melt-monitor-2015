@@ -1968,6 +1968,37 @@ mom_dumpemit_refitem (struct mom_dumper_st *du, const struct mom_item_st *itm)
   return;
 }                               /* end of mom_dumpemit_refitem */
 
+static void
+dumpemit_assovaldata_mom (struct mom_dumper_st *du,
+                          const struct mom_assovaldata_st *asso)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  assert (asso && asso != MOM_EMPTY_SLOT
+          && asso->va_itype == MOMITY_ASSOVALDATA);
+  unsigned sizattr = mom_size (asso);
+  unsigned cntattr = asso->cda_count;
+  if (sizattr > 0 && cntattr > 0)
+    {
+      assert (cntattr <= sizattr);
+      for (unsigned ix = 0; ix < cntattr; ix++)
+        {
+          const struct mom_item_st *itmat = asso->ada_ents[ix].ient_itm;
+          if (!itmat || itmat == MOM_EMPTY_SLOT
+              || !mom_dumped_item (du, itmat))
+            continue;
+          const struct mom_hashedvalue_st *valat =
+            asso->ada_ents[ix].ient_val;
+          if (!valat || valat == MOM_EMPTY_SLOT
+              || !mom_dumped_value (du, valat))
+            continue;
+          mom_dumpemit_refitem (du, itmat);
+          mom_dumpemit_value (du, asso->ada_ents[ix].ient_val);
+        };
+    }
+}
 
 void
 mom_dumpemit_item_content (struct mom_dumper_st *du,
@@ -2004,28 +2035,11 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   /// emit the attributes
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
-#warning should probably become a separate routine
-      const struct mom_assovaldata_st *attrs = itm->itm_pattr;
-      unsigned sizattr = mom_size (attrs);
-      unsigned cntattr = attrs->cda_count;
-      if (sizattr > 0 && cntattr > 0)
+      const struct mom_assovaldata_st *asso = itm->itm_pattr;
+      if (asso->cda_count > 0)
         {
-          assert (cntattr <= sizattr);
           fputs ("(\n", femit);
-          for (unsigned ix = 0; ix < cntattr; ix++)
-            {
-              const struct mom_item_st *itmat = attrs->ada_ents[ix].ient_itm;
-              if (!itmat || itmat == MOM_EMPTY_SLOT
-                  || !mom_dumped_item (du, itmat))
-                continue;
-              const struct mom_hashedvalue_st *valat =
-                attrs->ada_ents[ix].ient_val;
-              if (!valat || valat == MOM_EMPTY_SLOT
-                  || !mom_dumped_value (du, valat))
-                continue;
-              mom_dumpemit_refitem (du, itmat);
-              mom_dumpemit_value (du, attrs->ada_ents[ix].ient_val);
-            };
+          dumpemit_assovaldata_mom (du, asso);
           fputs (")attrs\n", femit);
         }
     }
@@ -2057,17 +2071,84 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           mom_dumpemit_value (du, (struct mom_hashedvalue_st *) payl);
           fputs ("^payloadval\n", femit);
           break;
-#warning dump of payload is incomplete
         case MOMITY_ASSOVALDATA:
+          fputs ("(\n", femit);
+          dumpemit_assovaldata_mom (du, (struct mom_assovaldata_st *) payl);
+          fputs (")payloadassoval\n", femit);
+          break;
         case MOMITY_VECTVALDATA:
+          {
+            struct mom_vectvaldata_st *comps =
+              (struct mom_vectvaldata_st *) payl;
+            unsigned siz = mom_raw_size (comps);
+            unsigned cnt = comps->cda_count;
+            assert (cnt <= siz);
+            fputs ("(\n", femit);
+            for (unsigned ix = 0; ix < cnt; ix++)
+              mom_dumpemit_value (du, comps->vecd_valarr[ix]);
+            fputs (")payloadvect\n", femit);
+          }
+          break;
         case MOMITY_QUEUE:
+          {
+            struct mom_queue_st *qu = (struct mom_queue_st *) payl;
+            fputs ("(\n", femit);
+            if (qu->qu_first && qu->qu_first != MOM_EMPTY_SLOT)
+              {
+                for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL;
+                     ql = ql->qu_next)
+                  {
+                    for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+                      {
+                        struct mom_hashedvalue_st *curval = ql->qu_elems[ix];
+                        if (!curval || curval == MOM_EMPTY_SLOT)
+                          continue;
+                        mom_dumpemit_value (du, curval);
+                      }
+                  }
+              }
+            fputs (")payloadqueue\n", femit);
+          }
+          break;
         case MOMITY_HASHSET:
+          {
+            struct mom_hashset_st *hset = (struct mom_hashset_st *) payl;
+            const struct mom_boxset_st *bxset = mom_hashset_to_boxset (hset);
+            unsigned siz = mom_size (bxset);
+            fputs ("(\n", femit);
+            for (unsigned ix = 0; ix < siz; ix++)
+              {
+                struct mom_item_st *elemitm = bxset->seqitem[ix];
+                if (!mom_dumped_item (du, elemitm))
+                  continue;
+                mom_dumpemit_refitem (du, elemitm);
+              }
+            fputs (")payloadhashset\n", femit);
+          }
+          break;
         case MOMITY_HASHMAP:
+          {
+            struct mom_hashmap_st *hmap = (struct mom_hashmap_st *) payl;
+            const struct mom_boxset_st *kset = mom_hashmap_keyset (hmap);
+            unsigned siz = mom_size (kset);
+            fputs ("(\n", femit);
+            for (unsigned ix = 0; ix < siz; ix++)
+              {
+                struct mom_item_st *keyitm = kset->seqitem[ix];
+                if (!mom_dumped_item (du, keyitm))
+                  continue;
+                const struct mom_hashedvalue_st *val
+                  = mom_hashmap_get (hmap, keyitm);
+                if (!val || mom_dumped_value (du, val))
+                  continue;
+                mom_dumpemit_refitem (du, keyitm);
+                mom_dumpemit_value (du, val);
+              }
+            fputs (")payloadhashmap\n", femit);
+          }
+          break;
         default:
           break;
         }
     }
-#warning mom_dumpemit_item_content incomplete
-  MOM_WARNPRINTF ("incomplete mom_dumpemit_item_content for %s",
-                  mom_item_cstring (itm));
 }                               /* end of mom_dumpemit_item_content */
