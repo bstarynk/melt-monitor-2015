@@ -404,6 +404,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
 void
 mom_load_state (const char *statepath)
 {
+  double startrealtime = mom_elapsed_real_time ();
+  double startcputime = mom_process_cpu_time ();
   if (!statepath || !statepath[0])
     {
       MOM_WARNPRINTF ("empty start path to load");
@@ -412,7 +414,16 @@ mom_load_state (const char *statepath)
   initialize_load_state_mom (statepath);
   first_pass_loader_mom (mom_loader);
   second_pass_loader_mom (mom_loader);
-  MOM_INFORMPRINTF ("completed load of state from %s", statepath);
+  double endrealtime = mom_elapsed_real_time ();
+  double endcputime = mom_process_cpu_time ();
+  unsigned nbitems = mom_loader->ld_hsetitems->cda_count;
+  MOM_INFORMPRINTF
+    ("completed load of state from %s with %u items; "
+     "in %.3f real, %.4f cpu seconds (%.3f real, %.3f cpu µs/item)",
+     statepath, nbitems, endrealtime - startrealtime,
+     endcputime - startcputime,
+     (endrealtime - startrealtime) * (1.0e6 / nbitems),
+     (endcputime - startcputime) * (1.0e6 / nbitems));
   mom_loader = NULL;
 }                               /* end mom_load_state */
 
@@ -502,7 +513,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
     {
       memset (predbuf, 0, sizeof (predbuf));
       nbtry++;
-      snprintf (predbuf, sizeof (predbuf), "_mom_predef.h-r%x-p%d-t%d.tmp",
+      snprintf (predbuf, sizeof (predbuf), MOM_HEADER "-r%x-p%d-t%d.tmp",
                 mom_random_uint32 (), (int) getpid (), nbtry);
     }
   while (nbtry < 20 && access (predbuf, F_OK));
@@ -518,7 +529,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
       MOM_FATAPRINTF ("failed to open predefined header %s in %s: %s",
                       du->du_predefhtmpath->cstr, cwdbuf, strerror (e));
     }
-  mom_output_gplv3_notice (fpred, "///", "", "_mom_predef.h");
+  mom_output_gplv3_notice (fpred, "///", "", MOM_HEADER);
   fputs ("\n", fpred);
   fputs ("#ifndef" " MOM_HAS_PREDEFINED\n", fpred);
   fputs ("#error missing MOM_HAS_PREDEFINED\n", fpred);
@@ -545,18 +556,21 @@ dump_emit_global_mom (struct mom_dumper_st *du)
   const struct mom_boxset_st *setitems
     = mom_hashset_to_boxset (du->du_itemset);
   unsigned nbitems = mom_size (setitems);
-  MOM_DEBUGPRINTF (dump, "start globals nbitems=%d", nbitems);
+  MOM_DEBUGPRINTF (dump, "start globals nbitems=%d setitems=%s", nbitems,
+                   mom_value_cstring ((struct mom_hashedvalue_st *)
+                                      setitems));
   int nbtry = 0;
   char globuf[128];
   do
     {
       memset (globuf, 0, sizeof (globuf));
       nbtry++;
-      snprintf (globuf, sizeof (globuf), "global.mom-r%x-p%d-t%d.tmp",
+      snprintf (globuf, sizeof (globuf), MOM_GLOBAL_STATE "-r%x-p%d-t%d.tmp",
                 mom_random_uint32 (), (int) getpid (), nbtry);
     }
   while (nbtry < 20 && access (globuf, F_OK));
   du->du_globaltmpath = mom_boxstring_make (globuf);
+  MOM_DEBUGPRINTF (dump, "globaltmpath %s", du->du_globaltmpath->cstr);
   FILE *fglob = fopen (du->du_globaltmpath->cstr, "w");
   if (!fglob)
     {
@@ -569,7 +583,7 @@ dump_emit_global_mom (struct mom_dumper_st *du)
                       du->du_globaltmpath->cstr, cwdbuf, strerror (e));
     }
   du->du_emitfile = fglob;
-  mom_output_gplv3_notice (fglob, "##", "", "global.mom");
+  mom_output_gplv3_notice (fglob, "##", "", MOM_GLOBAL_STATE);
   fputs ("\n\n", fglob);
   for (unsigned ix = 0; ix < nbitems; ix++)
     {
@@ -583,7 +597,7 @@ dump_emit_global_mom (struct mom_dumper_st *du)
       pthread_mutex_unlock (&curitm->itm_mtx);
       fputs ("\n", fglob);
     }
-  fputs ("\n### eof global.mom\n", fglob);
+  fputs ("\n### eof " MOM_GLOBAL_STATE "\n", fglob);
   du->du_emitfile = NULL;
   fclose (fglob);
 }                               /* end of dump_emit_global_mom */
@@ -640,18 +654,21 @@ mom_dump_state (void)
   if (rename (du->du_globaltmpath->cstr, "global.mom"))
     MOM_FATAPRINTF ("failed to rename %s to global.mom : %m",
                     du->du_globaltmpath->cstr);
-  (void) rename ("_mom_predef.h", "_mom_predef.h%");
+  (void) rename (MOM_HEADER, MOM_HEADER "%");
   if (rename (du->du_predefhtmpath->cstr, "_mom_predef.h"))
-    MOM_FATAPRINTF ("failed to rename %s to _mom_predef.h : %m",
+    MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER " : %m",
                     du->du_predefhtmpath->cstr);
+  MOM_DEBUGPRINTF (dump, "itemset=%s",
+                   mom_value_cstring (mom_hashset_to_boxset
+                                      (du->du_itemset)));
   {
-    unsigned nbitems = mom_size (du->du_itemset);
+    unsigned nbitems = du->du_itemset->cda_count;
     double endrealtime = mom_elapsed_real_time ();
     double endcputime = mom_process_cpu_time ();
     MOM_INFORMPRINTF
-      ("end of dump of %u items in %.3f real, %.3f cpu time (%.2f real %.2f cpu µs/item)",
+      ("end of dump of %u items in %.3f real, %.4f cpu time (%.2f real %.2f cpu µs/item)",
        nbitems, (endrealtime - startrealtime), (endcputime - startcputime),
-       (endrealtime - startrealtime) * (1.0e-6 / nbitems),
-       (endcputime - startcputime) * (1.0e-6 / nbitems));
+       (endrealtime - startrealtime) * (1.0e6 / nbitems),
+       (endcputime - startcputime) * (1.0e6 / nbitems));
   };
 }                               /* end mom_dump_state */

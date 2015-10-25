@@ -941,6 +941,7 @@ mom_value_cstring (const struct mom_hashedvalue_st *val)
   FILE *fout = open_memstream (&outbuf, &outsiz);
   long lastnl = 0;
   mom_output_value (fout, &lastnl, 0, val);
+  fflush (fout);
   long siz = ftell (fout);
   outbuf[siz] = (char) 0;
   char *res = GC_STRDUP (outbuf);

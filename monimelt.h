@@ -369,6 +369,8 @@ struct mom_dumper_st;
 #define MOM_HAS_PREDEFINED(Nam,Hash) extern struct mom_item_st mompredef_##Nam;
 #include "_mom_predef.h"
 
+#define MOM_HEADER "_mom_predef.h"
+#define MOM_GLOBAL_STATE "global.mom"
 
 const char *mom_item_cstring (const struct mom_item_st *itm);
 

@@ -973,6 +973,12 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
+  if (!load_state_mom && !access (MOM_GLOBAL_STATE, R_OK))
+    {
+      load_state_mom = MOM_GLOBAL_STATE;
+      MOM_INFORMPRINTF ("will load state from default global state %s",
+                        MOM_GLOBAL_STATE);
+    }
   if (load_state_mom)
     {
       mom_load_state (load_state_mom);
