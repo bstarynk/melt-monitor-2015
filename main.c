@@ -918,6 +918,15 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           {
             if (!optarg)
               MOM_FATAPRINTF ("missing --chdir-after-load argument");
+            if (access (optarg, F_OK))
+              {
+                if (mkdir (optarg, 0640))
+                  MOM_FATAPRINTF ("failed to mkdir %s (for after load) : %m",
+                                  optarg);
+                else
+                  MOM_INFORMPRINTF ("made directory %s (for after load)",
+                                    optarg);
+              }
             struct stat stdir = { };
             if (stat (optarg, &stdir) || (stdir.st_mode & S_IFMT) != S_IFDIR)
               MOM_WARNPRINTF ("%s is not a directory for --chdir-after-load",
@@ -958,6 +967,30 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
+  if (dir_after_load_mom)
+    {
+      if (chdir (dir_after_load_mom))
+        MOM_FATAPRINTF ("failed to chdir to %s after load : %m",
+                        dir_after_load_mom);
+      else
+        {
+          char cwdbuf[128];
+          memset (cwdbuf, 0, sizeof (cwdbuf));
+          if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+            strcpy (cwdbuf, "./");
+          MOM_INFORMPRINTF ("changed directory to %s after load, now in %s",
+                            dir_after_load_mom, cwdbuf);
+        }
+    }
+  if (should_dump_mom)
+    {
+      char cwdbuf[128];
+      memset (cwdbuf, 0, sizeof (cwdbuf));
+      if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+        strcpy (cwdbuf, "./");
+      MOM_INFORMPRINTF ("dumping state in %s", cwdbuf);
+      mom_dump_state ();
+    }
   MOM_INFORMPRINTF ("end %s pid %d\n", argv[0], (int) getpid ());
   return 0;
-}
+}                               /* end of main */

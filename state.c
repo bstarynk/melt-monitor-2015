@@ -619,9 +619,19 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
 void
 mom_dump_state (void)
 {
+  double startrealtime = mom_elapsed_real_time ();
+  double startcputime = mom_process_cpu_time ();
   struct mom_dumper_st *du = mom_gc_alloc (sizeof (struct mom_dumper_st));
   du->va_itype = MOMITY_DUMPER;
   du->du_state = MOMDUMP_NONE;
+  {
+    char cwdbuf[128];
+    memset (cwdbuf, 0, sizeof (cwdbuf));
+    if (getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+      MOM_INFORMPRINTF ("start of dump in %s", cwdbuf);
+    else
+      MOM_INFORMPRINTF ("start of dump");
+  }
   du->du_itemset = mom_hashset_reserve (NULL, 100);
   du->du_itemque = mom_gc_alloc (sizeof (struct mom_queue_st));
   du->du_predefset = mom_predefined_items_boxset ();
@@ -629,6 +639,22 @@ mom_dump_state (void)
   dump_scan_pass_mom (du);
   dump_emit_pass_mom (du);
   /// should rename the temporary files
-#warning incomplete mom_dump_state
-  MOM_FATAPRINTF ("incomplete mom_dump_state");
+  (void) rename ("global.mom", "global.mom%");
+  if (rename (du->du_globaltmpath->cstr, "global.mom"))
+    MOM_FATAPRINTF ("failed to rename %s to global.mom : %m",
+                    du->du_globaltmpath->cstr);
+  (void) rename ("_mom_predef.h", "_mom_predef.h%");
+  if (rename (du->du_predefhtmpath->cstr, "_mom_predef.h"))
+    MOM_FATAPRINTF ("failed to rename %s to _mom_predef.h : %m",
+                    du->du_predefhtmpath->cstr);
+  {
+    unsigned nbitems = mom_size (du->du_itemset);
+    double endrealtime = mom_elapsed_real_time ();
+    double endcputime = mom_process_cpu_time ();
+    MOM_INFORMPRINTF
+      ("end of dump of %u items in %.3f real, %.3f cpu time (%.2f real %.2f cpu µs/item)",
+       nbitems, (endrealtime - startrealtime), (endcputime - startcputime),
+       (endrealtime - startrealtime) * (1.0e-6 / nbitems),
+       (endcputime - startcputime) * (1.0e-6 / nbitems));
+  };
 }                               /* end mom_dump_state */
