@@ -571,19 +571,23 @@ dump_emit_global_mom (struct mom_dumper_st *du)
       MOM_FATAPRINTF ("failed to open global %s in %s: %s",
                       du->du_globaltmpath->cstr, cwdbuf, strerror (e));
     }
+  du->du_emitfile = fglob;
   mom_output_gplv3_notice (fglob, "##", "", "global.mom");
   fputs ("\n\n", fglob);
   for (unsigned ix = 0; ix < nbitems; ix++)
     {
-      const struct mom_item_st *curitm = mom_seqitems_nth (setitems, ix);
+      struct mom_item_st *curitm = mom_seqitems_nth (setitems, ix);
       assert (curitm && curitm->va_itype == MOMITY_ITEM);
       MOM_DEBUGPRINTF (dump, "should dump %s", mom_item_cstring (curitm));
       fputs ("\n", fglob);
       fprintf (fglob, "*%s\n", mom_item_cstring (curitm));
-#warning should dump item content of curitm
+      pthread_mutex_lock (&curitm->itm_mtx);
+      mom_dumpemit_item_content (du, curitm);
+      pthread_mutex_unlock (&curitm->itm_mtx);
       fputs ("\n", fglob);
     }
   fputs ("\n### eof global.mom\n", fglob);
+  du->du_emitfile = NULL;
   fclose (fglob);
 }                               /* end of dump_emit_global_mom */
 

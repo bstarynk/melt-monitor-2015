@@ -320,6 +320,9 @@ char *mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
 // its strlen; without enclosing quotes
 void mom_output_utf8_encoded (FILE *f, const char *str, int len);
 
+
+const char *mom_float_to_cstr (double x, char *buf, size_t buflen);
+
 // input and parse and GC-allocate such an UTF-8 quoted string; stop
 // en EOL, etc..
 
@@ -846,10 +849,10 @@ enum mom_space_en
   uint32_t itm_hid;				\
   uint64_t itm_lid;				\
   time_t itm_mtime;				\
+  void* itm_funptr;				\
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
-  struct mom_anyvalue_st* itm_payload;		\
-  void* itm_funptr
+  struct mom_anyvalue_st* itm_payload
 
 
 struct mom_item_st
@@ -1399,7 +1402,8 @@ enum mom_dumpstate_en
   struct mom_hashset_st*du_itemset;		\
   struct mom_boxstring_st*du_predefhtmpath;	\
   struct mom_boxstring_st*du_globaltmpath;	\
-  struct mom_queue_st*du_itemque
+  struct mom_queue_st*du_itemque;		\
+  FILE*du_emitfile
 
 struct mom_dumper_st
 {
@@ -1420,6 +1424,19 @@ mom_dumped_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
   if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     return false;
   return mom_hashset_contains (du->du_itemset, itm);
+}
+
+
+static inline bool
+mom_dumped_value (struct mom_dumper_st *du,
+                  const struct mom_hashedvalue_st *val)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!val || val == MOM_EMPTY_SLOT)
+    return true;
+  if (val->va_itype == MOMITY_ITEM)
+    return mom_dumped_item (du, ((const struct mom_item_st *) val));
+  return true;
 }
 
 void mom_dumpscan_item (struct mom_dumper_st *du,
@@ -1443,4 +1460,33 @@ mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
 
 void
 mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
+
+/////
+
+void mom_dumpemit_refitem (struct mom_dumper_st *du,
+                           const struct mom_item_st *itm);
+
+void
+mom_dumpemit_item_content (struct mom_dumper_st *du,
+                           const struct mom_item_st *itm);
+
+void mom_dumpemit_value (struct mom_dumper_st *du,
+                         const struct mom_hashedvalue_st *val);
+
+void
+mom_dumpemit_queue (struct mom_dumper_st *du, const struct mom_queue_st *qu);
+
+void
+mom_dumpemit_assovaldata (struct mom_dumper_st *du,
+                          struct mom_assovaldata_st *asso);
+
+void
+mom_dumpemit_vectvaldata (struct mom_dumper_st *du,
+                          struct mom_vectvaldata_st *vec);
+
+void
+mom_dumpemit_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
+
+void
+mom_dumpemit_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
 #endif /*MONIMELT_INCLUDED_ */

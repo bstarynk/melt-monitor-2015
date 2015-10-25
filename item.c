@@ -1952,3 +1952,84 @@ mom_predefined_items_boxset (void)
   pthread_mutex_unlock (&predef_mtx_mom);
   return set;
 }                               /* end of mom_predefined_items_boxset */
+
+
+void
+mom_dumpemit_refitem (struct mom_dumper_st *du, const struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  if (itm == NULL || itm == MOM_EMPTY_SLOT || !mom_dumped_item (du, itm))
+    fputs ("~\n", femit);
+  else
+    fprintf (femit, "%s\n", mom_item_cstring (itm));
+  return;
+}                               /* end of mom_dumpemit_refitem */
+
+
+void
+mom_dumpemit_item_content (struct mom_dumper_st *du,
+                           const struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  /// emit the mtime
+  if (itm->itm_mtime)
+    {
+      fprintf (femit, "%ld\n" "^mtime\n", (long) itm->itm_mtime);
+    }
+  /// emit the funptr
+  if (itm->itm_funptr && itm->itm_funptr != MOM_EMPTY_SLOT)
+    {
+      Dl_info dinf;
+      memset (&dinf, 0, sizeof (dinf));
+      if (dladdr (itm->itm_funptr, &dinf)
+          && dinf.dli_saddr == itm->itm_funptr
+          && !strncmp (dinf.dli_sname, MOM_FUNC_PREFIX,
+                       strlen (MOM_FUNC_PREFIX)))
+        {
+          if (strcmp
+              (dinf.dli_sname + strlen (MOM_FUNC_PREFIX),
+               mom_item_cstring (itm)))
+            fprintf (femit, "%s\n" "^altfunc",
+                     dinf.dli_sname + strlen (MOM_FUNC_PREFIX));
+          else
+            fputs ("^func\n", femit);
+        }
+    }
+  /// emit the attributes
+  if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
+    {
+      const struct mom_assovaldata_st *attrs = itm->itm_pattr;
+      unsigned sizattr = mom_size (attrs);
+      unsigned cntattr = attrs->cda_count;
+      if (sizattr > 0 && cntattr > 0)
+        {
+          assert (cntattr <= sizattr);
+          fputs ("(\n", femit);
+          for (unsigned ix = 0; ix < cntattr; ix++)
+            {
+              const struct mom_item_st *itmat = attrs->ada_ents[ix].ient_itm;
+              if (!itmat || itmat == MOM_EMPTY_SLOT
+                  || !mom_dumped_item (du, itmat))
+                continue;
+              const struct mom_hashedvalue_st *valat =
+                attrs->ada_ents[ix].ient_val;
+              if (!valat || valat == MOM_EMPTY_SLOT
+                  || !mom_dumped_value (du, valat))
+                continue;
+              mom_dumpemit_refitem (du, itmat);
+              mom_dumpemit_value (du, attrs->ada_ents[ix].ient_val);
+            };
+          fputs (")attrs\n", femit);
+        }
+    }
+  //// should dump the vector & the payload
+#warning mom_dumpemit_item_content incomplete
+  MOM_FATAPRINTF ("incomplete mom_dumpemit_item_content for %s",
+                  mom_item_cstring (itm));
+}                               /* end of mom_dumpemit_item_content */

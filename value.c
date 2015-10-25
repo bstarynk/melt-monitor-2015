@@ -550,7 +550,7 @@ mom_queue_pop_front (struct mom_queue_st *qu)
   struct mom_quelem_st *qfirst = qu->qu_first;
   if (!qfirst)
     return;
-  struct mom_anyvalue_st *qdata[MOM_NB_QUELEM];
+  struct mom_hashedvalue_st *qdata[MOM_NB_QUELEM];
   memset (qdata, 0, sizeof (qdata));
   int cnt = 0;
   for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
@@ -657,7 +657,8 @@ mom_dumpscan_value (struct mom_dumper_st *du,
       break;
     case MOMITY_NODE:
       {
-        const struct mom_boxnode_st *nod = (const struct mom_node_st *) val;
+        const struct mom_boxnode_st *nod =
+          (const struct mom_boxnode_st *) val;
         unsigned siz = mom_raw_size (val);
         mom_dumpscan_item (du, nod->nod_connitm);
         if (nod->nod_metaitem)
@@ -669,6 +670,146 @@ mom_dumpscan_value (struct mom_dumper_st *du,
       break;
     case MOMITY_ITEM:
       mom_dumpscan_item (du, (struct mom_item_st *) val);
+      break;
+    default:
+      MOM_FATAPRINTF ("invalid type#%d of value@%p", (int) (val->va_itype),
+                      val);
+    }
+}
+
+
+
+const char *
+mom_float_to_cstr (double x, char *buf, size_t buflen)
+{
+  assert (buf != NULL && buflen > 10);
+  if (isnan (x))
+    {
+      strncpy (buf, "+NAN", buflen);
+      return buf;
+    }
+  else if isinf
+    (x)
+    {
+      if (x > 0.0)
+        strncpy (buf, "+INF", buflen);
+      else
+        strncpy (buf, "-INF", buflen);
+      return buf;
+    }
+  snprintf (buf, buflen, "%.2f", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%.5f", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%.7e", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%.9f", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%.15e", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%#g", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%#.19g", x);
+  if (strchr (buf, '.') && atof (buf) == x)
+    return buf;
+  snprintf (buf, buflen, "%a", x);
+  return buf;
+}                               // end mom_float_to_cstr
+
+
+void
+mom_dumpemit_value (struct mom_dumper_st *du,
+                    const struct mom_hashedvalue_st *val)
+{
+  if (!val || val == MOM_EMPTY_SLOT)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  switch (val->va_itype)
+    {
+    case MOMITY_BOXINT:
+      fprintf (femit, "%lld_\n",
+               (long long) ((struct mom_boxint_st *) val)->boxi_int);
+      return;
+    case MOMITY_BOXDOUBLE:
+      {
+        char buf[48];
+        memset (buf, 0, sizeof (buf));
+        double x = ((struct mom_boxdouble_st *) val)->boxd_dbl;
+        fprintf (femit, "%s_\n", mom_float_to_cstr (x, buf, sizeof (buf)));
+      }
+      return;
+    case MOMITY_BOXSTRING:
+      {
+        const struct mom_boxstring_st *vstr
+          = (const struct mom_boxstring_st *) val;
+        fputc ('"', femit);
+        mom_output_utf8_encoded (femit, vstr->cstr, mom_raw_size (val));
+        fputs ("\"_\n", femit);
+      }
+      return;
+    case MOMITY_TUPLE:
+      {
+        const struct mom_boxtuple_st *tup =
+          (const struct mom_boxtuple_st *) val;
+        unsigned siz = mom_raw_size (val);
+        fputs ("(\n", femit);
+        for (unsigned ix = 0; ix < siz; ix++)
+          mom_dumpemit_refitem (du, tup->seqitem[ix]);
+        fputs (")tuple\n", femit);
+      }
+      return;
+    case MOMITY_SET:
+      {
+        const struct mom_boxset_st *set = (const struct mom_boxset_st *) val;
+        unsigned siz = mom_raw_size (val);
+        fputs ("(\n", femit);
+        for (unsigned ix = 0; ix < siz; ix++)
+          {
+            const struct mom_item_st *elemitm = set->seqitem[ix];
+            if (!mom_dumped_item (du, elemitm))
+              continue;
+            mom_dumpemit_refitem (du, elemitm);
+          }
+        fputs (")set\n", femit);
+      }
+      break;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = (const struct mom_node_st *) val;
+        if (!mom_dumped_item (du, nod->nod_connitm))
+          {
+            fputs ("~\n", femit);
+            break;
+          }
+        unsigned siz = mom_raw_size (val);
+        fputs ("(\n", femit);
+        for (unsigned ix = 0; ix < siz; ix++)
+          mom_dumpemit_value (du, nod->nod_sons[ix]);
+        if (mom_dumped_item (du, nod->nod_metaitem) || nod->nod_metarank)
+          {
+            fprintf (femit, "%lld\n", (long long) nod->nod_metarank);
+            mom_dumpemit_refitem (du, nod->nod_metaitem);
+            mom_dumpemit_refitem (du, nod->nod_connitm);
+            fputs (")nodemeta\n", femit);
+          }
+        else
+          {
+            mom_dumpemit_refitem (du, nod->nod_connitm);
+            fputs (")node\n", femit);
+          }
+      }
+      break;
+    case MOMITY_ITEM:
+      mom_dumpemit_refitem (du, (struct mom_item_st *) val);
       break;
     default:
       MOM_FATAPRINTF ("invalid type#%d of value@%p", (int) (val->va_itype),
