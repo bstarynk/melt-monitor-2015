@@ -321,7 +321,7 @@ char *mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
 void mom_output_utf8_encoded (FILE *f, const char *str, int len);
 
 
-const char *mom_float_to_cstr (double x, char *buf, size_t buflen);
+const char *mom_double_to_cstr (double x, char *buf, size_t buflen);
 
 // input and parse and GC-allocate such an UTF-8 quoted string; stop
 // en EOL, etc..
@@ -1489,4 +1489,14 @@ mom_dumpemit_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
 
 void
 mom_dumpemit_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
+
+
+void mom_load_state (const char *statepath);
+void mom_dump_state (void);
+const char *mom_value_cstring (const struct mom_hashedvalue_st *val);
+
+void
+mom_output_value (FILE *f, long *plastnl, int depth,
+                  const struct mom_hashedvalue_st *val);
+
 #endif /*MONIMELT_INCLUDED_ */

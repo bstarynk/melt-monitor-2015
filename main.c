@@ -24,6 +24,7 @@ void *mom_prog_dlhandle;
 static bool syslogging_mom;
 static bool should_dump_mom;
 static char *dir_after_load_mom;
+static char *load_state_mom;
 
 #define BASE_YEAR_MOM 2015
 
@@ -893,8 +894,13 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
         case 'd':              /* --dump */
           should_dump_mom = true;
           break;
-        case 'D':
+        case 'D':              /* --debug */
           mom_set_debugging (optarg);
+          break;
+        case 'L':              /* load */
+          if (!optarg || access (optarg, R_OK))
+            MOM_FATAPRINTF ("bad load state %s : %m", optarg);
+          load_state_mom = optarg;
           break;
         case 's':              /* --syslog */
           openlog ("monimelt", LOG_PID | LOG_PERROR, LOG_LOCAL1);
@@ -967,6 +973,10 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
+  if (load_state_mom)
+    {
+      mom_load_state (load_state_mom);
+    }
   if (dir_after_load_mom)
     {
       if (chdir (dir_after_load_mom))

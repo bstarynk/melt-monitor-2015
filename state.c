@@ -459,9 +459,6 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
     mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
   if (itm->itm_payload)
     mom_dumpscan_payload (du, itm->itm_payload);
-#warning mom_dumpscan_content_item incomplete
-  MOM_FATAPRINTF ("mom_dumpscan_content_item incomplete itm %s",
-                  mom_item_cstring (itm));
   pthread_mutex_unlock (&itm->itm_mtx);
   MOM_DEBUGPRINTF (dump, "dumpscan_content_item done %s",
                    mom_item_cstring (itm));

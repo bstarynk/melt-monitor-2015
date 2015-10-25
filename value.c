@@ -680,7 +680,7 @@ mom_dumpscan_value (struct mom_dumper_st *du,
 
 
 const char *
-mom_float_to_cstr (double x, char *buf, size_t buflen)
+mom_double_to_cstr (double x, char *buf, size_t buflen)
 {
   assert (buf != NULL && buflen > 10);
   if (isnan (x))
@@ -720,7 +720,7 @@ mom_float_to_cstr (double x, char *buf, size_t buflen)
     return buf;
   snprintf (buf, buflen, "%a", x);
   return buf;
-}                               // end mom_float_to_cstr
+}                               // end mom_double_to_cstr
 
 
 void
@@ -744,7 +744,7 @@ mom_dumpemit_value (struct mom_dumper_st *du,
         char buf[48];
         memset (buf, 0, sizeof (buf));
         double x = ((struct mom_boxdouble_st *) val)->boxd_dbl;
-        fprintf (femit, "%s_\n", mom_float_to_cstr (x, buf, sizeof (buf)));
+        fprintf (femit, "%s_\n", mom_double_to_cstr (x, buf, sizeof (buf)));
       }
       return;
     case MOMITY_BOXSTRING:
@@ -815,4 +815,135 @@ mom_dumpemit_value (struct mom_dumper_st *du,
       MOM_FATAPRINTF ("invalid type#%d of value@%p", (int) (val->va_itype),
                       val);
     }
+}
+
+#define MOM_MAXDEPTH_OUT 9
+void
+mom_output_value (FILE *fout, long *plastnl,
+                  int depth, const struct mom_hashedvalue_st *val)
+{
+  if (!fout || fout == MOM_EMPTY_SLOT)
+    return;
+  long lastnl = plastnl ? (*plastnl) : 0;
+  if (!val || val == MOM_EMPTY_SLOT)
+    {
+      fputs ("~", fout);
+      return;
+    }
+#define INDENTED_NEWLINE_MOM() do { fputc('\n', fout); lastnl = ftell(fout); for (int ix=depth % 16; ix>0; ix--) fputc(' ', fout); } while(0);
+  switch (val->va_itype)
+    {
+    case MOMITY_BOXINT:
+      fprintf (fout, "%lld",
+               (long long) ((struct mom_boxint_st *) val)->boxi_int);
+      break;
+    case MOMITY_BOXDOUBLE:
+      {
+        char dblbuf[48];
+        memset (dblbuf, 0, sizeof (dblbuf));
+        fputs (mom_double_to_cstr
+               (((struct mom_boxdouble_st *) val)->boxd_dbl, dblbuf,
+                sizeof (dblbuf)), fout);
+      }
+      break;
+    case MOMITY_BOXSTRING:
+      {
+        fputc ('"', fout);
+        mom_output_utf8_encoded (fout,
+                                 ((struct mom_boxstring_st *) val)->cstr,
+                                 mom_size (val));
+        fputc ('"', fout);
+      }
+      break;
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      if (val->va_itype == MOMITY_SET)
+        fputc ('{', fout);
+      else
+        fputc ('[', fout);
+      {
+        struct mom_seqitems_st *seq = (struct mom_seqitems_st *) val;
+        unsigned siz = mom_size (seq);
+        for (unsigned ix = 0; ix < siz; ix++)
+          {
+            if (ftell (fout) > lastnl + 64)
+              {
+                INDENTED_NEWLINE_MOM ();
+              }
+            if (ix > 0 && ix % 5 == 0)
+              fputc (' ', fout);
+            if (ix > 0)
+              fputc (' ', fout);
+            fputs (mom_item_cstring (seq->seqitem[ix]), fout);
+          }
+        if (val->va_itype == MOMITY_SET)
+          fputc ('}', fout);
+        else
+          fputc (']', fout);
+        break;
+    case MOMITY_NODE:
+        {
+          const struct mom_boxnode_st *nod
+            = (const struct mom_boxnode_st *) val;
+          fputs ("*", fout);
+          fputs (mom_item_cstring (nod->nod_connitm), fout);
+          if (nod->nod_metaitem || nod->nod_metarank)
+            {
+              fprintf (fout, "/%s#%ld", mom_item_cstring (nod->nod_metaitem),
+                       (long) nod->nod_metarank);
+            }
+          if (depth > MOM_MAXDEPTH_OUT)
+            fputs ("(...)", fout);
+          else
+            {
+              fputc ('(', fout);
+              unsigned siz = mom_size (nod);
+              for (unsigned ix = 0; ix < siz; ix++)
+                {
+                  if (ftell (fout) > lastnl + 64)
+                    {
+                      INDENTED_NEWLINE_MOM ();
+                    }
+                  if (ix > 0 && ix % 5 == 0)
+                    fputc (' ', fout);
+                  if (ix > 0)
+                    fputc (' ', fout);
+                  mom_output_value (fout, &lastnl, depth + 1,
+                                    nod->nod_sons[ix]);
+                }
+              fputc (')', fout);
+            }
+        }
+        break;
+    default:
+        fprintf (fout, "<strange value@%p of type %d>", val, val->va_itype);
+      }
+      fflush (fout);
+    }
+  if (plastnl)
+    *plastnl = lastnl;
+#undef INDENTED_NEWLINE_MOM
+}
+
+
+const char *
+mom_value_cstring (const struct mom_hashedvalue_st *val)
+{
+  if (!val || val == MOM_EMPTY_SLOT)
+    return "~";
+  if (val->va_itype == MOMITY_ITEM)
+    return mom_item_cstring ((const struct mom_item_st *) val);
+  size_t outsiz = 80;
+  char *outbuf = malloc (outsiz);
+  if (!outbuf)
+    MOM_FATAPRINTF ("failed to malloc outbuf of %zd bytes : %m", outsiz);
+  memset (outbuf, 0, outsiz);
+  FILE *fout = open_memstream (&outbuf, &outsiz);
+  long lastnl = 0;
+  mom_output_value (fout, &lastnl, 0, val);
+  long siz = ftell (fout);
+  outbuf[siz] = (char) 0;
+  char *res = GC_STRDUP (outbuf);
+  free (outbuf), outbuf = NULL;
+  return res;
 }
