@@ -356,7 +356,6 @@ enum momitype_en
   MOMITY_QUEUE,
   MOMITY_HASHSET,
   MOMITY_HASHMAP,
-  MOMITY_HASHDICT,
   MOMITY_LOADER,
   MOMITY_DUMPER,
 };
@@ -849,7 +848,6 @@ enum mom_space_en
   time_t itm_mtime;				\
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
-  struct mom_item_st* itm_kinditm;		\
   struct mom_anyvalue_st* itm_payload;		\
   void* itm_funptr
 
@@ -1428,6 +1426,9 @@ void mom_dumpscan_item (struct mom_dumper_st *du,
                         const struct mom_item_st *itm);
 void mom_dumpscan_value (struct mom_dumper_st *du,
                          const struct mom_hashedvalue_st *val);
+
+void
+mom_dumpscan_queue (struct mom_dumper_st *du, const struct mom_queue_st *qu);
 
 void
 mom_dumpscan_assovaldata (struct mom_dumper_st *du,

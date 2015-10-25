@@ -416,6 +416,36 @@ mom_load_state (const char *statepath)
   mom_loader = NULL;
 }                               /* end mom_load_state */
 
+void
+mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!payl || payl == MOM_EMPTY_SLOT)
+    return;
+  if (payl->va_itype < MOMITY__LASTHASHED)
+    mom_dumpscan_value (du, (struct mom_hashedvalue_st *) payl);
+  else
+    switch (payl->va_itype)
+      {
+      case MOMITY_ASSOVALDATA:
+        mom_dumpscan_assovaldata (du, (struct mom_assovaldata_st *) payl);
+        return;
+      case MOMITY_VECTVALDATA:
+        mom_dumpscan_vectvaldata (du, (struct mom_vectvaldata_st *) payl);
+        return;
+      case MOMITY_QUEUE:
+        mom_dumpscan_queue (du, (struct mom_queue_st *) payl);
+        return;
+      case MOMITY_HASHSET:
+        mom_dumpscan_hashset (du, (struct mom_hashset_st *) payl);
+        return;
+      case MOMITY_HASHMAP:
+        mom_dumpscan_hashmap (du, (struct mom_hashmap_st *) payl);
+        return;
+      default:
+        return;
+      }
+}
 
 void
 mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
@@ -423,11 +453,12 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
   MOM_DEBUGPRINTF (dump, "dumpscan_content_item start %s",
                    mom_item_cstring (itm));
   pthread_mutex_lock (&itm->itm_mtx);
-  mom_dumpscan_item (du, itm->itm_kinditm);
   if (itm->itm_pattr)
     mom_dumpscan_assovaldata (du, itm->itm_pattr);
   if (itm->itm_pcomp)
     mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
+  if (itm->itm_payload)
+    mom_dumpscan_payload (du, itm->itm_payload);
 #warning mom_dumpscan_content_item incomplete
   MOM_FATAPRINTF ("mom_dumpscan_content_item incomplete itm %s",
                   mom_item_cstring (itm));

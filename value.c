@@ -611,6 +611,27 @@ mom_queue_node (const struct mom_queue_st *qu,
 
 
 void
+mom_dumpscan_queue (struct mom_dumper_st *du, const struct mom_queue_st *qu)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  if (!qu || qu == MOM_EMPTY_SLOT || qu->va_itype != MOMITY_QUEUE)
+    return;
+  if (!qu->qu_first || qu->qu_first == MOM_EMPTY_SLOT)
+    return;
+  for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL; ql = ql->qu_next)
+    {
+      for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+        {
+          struct mom_hashedvalue_st *curval = ql->qu_elems[ix];
+          if (!curval || curval == MOM_EMPTY_SLOT)
+            continue;
+          mom_dumpscan_value (du, curval);
+        }
+    }
+}                               /* end of mom_dumpscan_queue */
+
+
+void
 mom_dumpscan_value (struct mom_dumper_st *du,
                     const struct mom_hashedvalue_st *val)
 {
