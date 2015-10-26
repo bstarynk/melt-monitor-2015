@@ -436,6 +436,12 @@ struct mom_hashedvalue_st
   MOM_HASHEDVALUE_FIELDS;
 };
 
+int mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
+                         const struct mom_hashedvalue_st *val2);
+
+bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
+                            const struct mom_hashedvalue_st *val2);
+
 static inline momhash_t
 mom_hash (const void *p)
 {
@@ -1239,7 +1245,7 @@ mom_ldstate_dyntuple (const struct mom_statelem_st se)
 };
 
 static inline struct mom_statelem_st
-mom_ldstate_make_tuple (const struct mom_tuple_st *tu)
+mom_ldstate_make_tuple (const struct mom_boxtuple_st *tu)
 {
   return (struct mom_statelem_st)
   {
@@ -1254,7 +1260,7 @@ mom_ldstate_dynset (const struct mom_statelem_st se)
 };
 
 static inline struct mom_statelem_st
-mom_ldstate_make_set (const struct mom_set_st *se)
+mom_ldstate_make_set (const struct mom_boxset_st *se)
 {
   return (struct mom_statelem_st)
   {
@@ -1271,7 +1277,7 @@ mom_ldstate_dynnode (const struct mom_statelem_st se)
 
 
 static inline struct mom_statelem_st
-mom_ldstate_make_node (const struct mom_node_st *nd)
+mom_ldstate_make_node (const struct mom_boxnode_st *nd)
 {
   return (struct mom_statelem_st)
   {

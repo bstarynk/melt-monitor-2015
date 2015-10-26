@@ -953,6 +953,222 @@ mom_value_cstring (const struct mom_hashedvalue_st *val)
 
 ////////////////////////////////////////////////////////////////
 
+bool
+mom_hashedvalue_equal (const struct mom_hashedvalue_st * val1,
+                       const struct mom_hashedvalue_st * val2)
+{
+  if (val1 == MOM_EMPTY_SLOT)
+    val1 = NULL;
+  if (val2 == MOM_EMPTY_SLOT)
+    val2 = NULL;
+  if (val1 == val2)
+    return true;
+  if (!val1 || !val2)
+    return false;
+  if (val1->va_itype == 0 || val1->va_itype >= MOMITY__LASTHASHED)
+    return false;
+  if (val2->va_itype == 0 || val2->va_itype >= MOMITY__LASTHASHED)
+    return false;
+  if (val1->hva_hash != val2->hva_hash)
+    return false;
+  if (val1->va_itype != val2->va_itype)
+    return false;
+  switch (val1->va_itype)
+    {
+    case MOMITY_BOXINT:
+      return ((const struct mom_boxint_st *) val1)->boxi_int ==
+        ((const struct mom_boxint_st *) val2)->boxi_int;
+    case MOMITY_BOXDOUBLE:
+      {
+        double d1 = ((const struct mom_boxdouble_st *) val1)->boxd_dbl;
+        double d2 = ((const struct mom_boxdouble_st *) val2)->boxd_dbl;
+        if (d1 == d2)
+          return true;
+        if (isnan (d1) && isnan (d2))
+          return true;
+        return false;
+      }
+    case MOMITY_BOXSTRING:
+      return !strcmp (((const struct mom_boxstring_st *) val1)->cstr,
+                      ((const struct mom_boxstring_st *) val2)->cstr);
+    case MOMITY_ITEM:
+      return val1 == val2;
+    case MOMITY_TUPLE:
+    case MOMITY_SET:
+      {
+        const struct mom_seqitems_st *sq1 =
+          (const struct mom_seqitems_st *) val1;
+        const struct mom_seqitems_st *sq2 =
+          (const struct mom_seqitems_st *) val2;
+        unsigned siz1 = mom_raw_size (sq1);
+        if (siz1 != mom_raw_size (sq2))
+          return false;
+        for (unsigned ix = 0; ix < siz1; ix++)
+          if (sq1->seqitem[ix] != sq2->seqitem[ix])
+            return false;
+        return true;
+      }
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod1 =
+          (const struct mom_boxnode_st *) val1;
+        const struct mom_boxnode_st *nod2 =
+          (const struct mom_boxnode_st *) val2;
+        if (nod1->nod_connitm != nod2->nod_connitm)
+          return false;
+        unsigned siz1 = mom_raw_size (nod1);
+        if (siz1 != mom_raw_size (nod2))
+          return false;
+        for (unsigned ix = 0; ix < siz1; ix++)
+          {
+            if (nod1->nod_sons[ix] == nod2->nod_sons[ix])
+              continue;
+            if (nod1->nod_sons[ix] && nod2->nod_sons[ix]
+                && nod1->nod_sons[ix]->hva_hash !=
+                nod2->nod_sons[ix]->hva_hash)
+              return false;
+          }
+        for (unsigned ix = 0; ix < siz1; ix++)
+          {
+            if (nod1->nod_sons[ix] == nod2->nod_sons[ix])
+              continue;
+            if (!mom_hashedvalue_equal
+                (nod1->nod_sons[ix], nod2->nod_sons[ix]))
+              return false;
+          }
+        return true;
+      }
+    }
+  return false;
+}                               /* end of mom_hashedvalue_equal */
+
+
+
+
+int
+mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
+                     const struct mom_hashedvalue_st *val2)
+{
+  if (val1 == MOM_EMPTY_SLOT)
+    val1 = NULL;
+  if (val2 == MOM_EMPTY_SLOT)
+    val2 = NULL;
+  if (val1 == val2)
+    return 0;
+  if (!val1 || val1->va_itype == 0 || val1->va_itype >= MOMITY__LASTHASHED)
+    return -1;
+  if (!val2 || val2->va_itype == 0 || val2->va_itype >= MOMITY__LASTHASHED)
+    return 1;
+  if (val1->va_itype < val2->va_itype)
+    return -1;
+  if (val1->va_itype > val2->va_itype)
+    return 1;
+  if (MOM_UNLIKELY
+      (val1->hva_hash == val2->hva_hash
+       && mom_hashedvalue_equal (val1, val2)))
+    return 0;
+  switch (val1->va_itype)
+    {
+    case MOMITY_BOXINT:
+      {
+        intptr_t i1 = ((const struct mom_boxint_st *) val1)->boxi_int;
+        intptr_t i2 = ((const struct mom_boxint_st *) val2)->boxi_int;
+        if (i1 < i2)
+          return -1;
+        else if (i1 > i2)
+          return 1;
+        return 0;
+      }
+    case MOMITY_BOXDOUBLE:
+      {
+        double d1 = ((const struct mom_boxdouble_st *) val1)->boxd_dbl;
+        double d2 = ((const struct mom_boxdouble_st *) val2)->boxd_dbl;
+        if (d1 == d2)
+          return 0;
+        if (isnan (d1) && isnan (d2))
+          return 0;
+        if (d1 < d2 || isnan (d1))
+          return -1;
+        if (d1 > d2 || isnan (d2))
+          return 1;
+        return 0;
+      }
+    case MOMITY_BOXSTRING:
+      {
+        int c = strcmp (((const struct mom_boxstring_st *) val1)->cstr,
+                        ((const struct mom_boxstring_st *) val2)->cstr);
+        if (c < 0)
+          return -1;
+        else if (c > 0)
+          return 1;
+        return 0;
+      }
+    case MOMITY_ITEM:
+      return mom_item_cmp ((const struct mom_item_st *) val1,
+                           (const struct mom_item_st *) val2);
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *sq1 =
+          (const struct mom_seqitems_st *) val1;
+        const struct mom_seqitems_st *sq2 =
+          (const struct mom_seqitems_st *) val2;
+        unsigned siz1 = mom_raw_size (sq1);
+        unsigned siz2 = mom_raw_size (sq2);
+        unsigned minsiz = (siz1 < siz2) ? siz1 : siz2;
+        for (unsigned ix = 0; ix < minsiz; ix++)
+          {
+            const struct mom_item_st *itm1 = sq1->seqitem[ix];
+            const struct mom_item_st *itm2 = sq2->seqitem[ix];
+            if (itm1 == itm2)
+              continue;
+            return mom_item_cmp (itm1, itm2);
+          }
+        if (siz1 > siz2)
+          return 1;
+        else if (siz1 < siz2)
+          return -1;
+        return 0;
+      }
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod1 =
+          (const struct mom_boxnode_st *) val1;
+        const struct mom_boxnode_st *nod2 =
+          (const struct mom_boxnode_st *) val2;
+        if (nod1->nod_connitm != nod2->nod_connitm)
+          return mom_item_cmp (nod1->nod_connitm, nod2->nod_connitm);
+        unsigned siz1 = mom_raw_size (nod1);
+        unsigned siz2 = mom_raw_size (nod2);
+        unsigned minsiz = (siz1 < siz2) ? siz1 : siz2;
+        for (unsigned ix = 0; ix < minsiz; ix++)
+          {
+            const struct mom_hashedvalue_st *son1 = nod1->nod_sons[ix];
+            const struct mom_hashedvalue_st *son2 = nod2->nod_sons[ix];
+            if (son1 == son2)
+              continue;
+            if (!son1)
+              return -1;
+            if (!son2)
+              return 1;
+            if (MOM_UNLIKELY
+                (son1->hva_hash == son2->hva_hash
+                 && mom_hashedvalue_equal (son1, son2)))
+              continue;
+            return mom_hashedvalue_cmp (son1, son2);
+          }
+        if (siz1 > siz2)
+          return 1;
+        else if (siz1 < siz2)
+          return -1;
+        return 0;
+      }
+    }
+  MOM_FATAPRINTF ("corrupted compare of val1@%p val2@%p", val1, val2);
+}                               /* end of mom_hashedvalue_cmp */
+
+////////////////////////////////////////////////////////////////
+
 extern mom_loader_paren_sig_t momf_ldp_tuple;
 extern mom_loader_paren_sig_t momf_ldp_set;
 extern mom_loader_paren_sig_t momf_ldp_node;
@@ -968,7 +1184,7 @@ momf_ldp_tuple (struct mom_item_st *itm,
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
   struct mom_item_st *smallarr[16] = { };
-  struct mom_item_st **arr =
+  const struct mom_item_st **arr =
     (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_item_st *));
   for (unsigned ix = 0; ix < elemsize; ix++)
@@ -977,7 +1193,7 @@ momf_ldp_tuple (struct mom_item_st *itm,
       MOM_DEBUGPRINTF (load, "momf_ldp_tuple arr[%d] = %s",
                        ix, mom_item_cstring (arr[ix]));
     }
-  const struct mom_tuple_st *tup = mom_boxtuple_make_arr (elemsize, arr);
+  const struct mom_boxtuple_st *tup = mom_boxtuple_make_arr (elemsize, arr);
   mom_loader_push (ld, mom_ldstate_make_tuple (tup));
   MOM_DEBUGPRINTF (load, "momf_ldp_tuple pushed #%d %s",
                    ld->ld_stacktop,
@@ -995,7 +1211,7 @@ momf_ldp_set (struct mom_item_st *itm,
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
   struct mom_item_st *smallarr[16] = { };
-  struct mom_item_st **arr =
+  const struct mom_item_st **arr =
     (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_item_st *));
   for (unsigned ix = 0; ix < elemsize; ix++)
@@ -1004,7 +1220,7 @@ momf_ldp_set (struct mom_item_st *itm,
       MOM_DEBUGPRINTF (load, "momf_ldp_set arr[%d] = %s",
                        ix, mom_item_cstring (arr[ix]));
     }
-  const struct mom_set_st *set = mom_boxset_make_arr (elemsize, arr);
+  const struct mom_boxset_st *set = mom_boxset_make_arr (elemsize, arr);
   mom_loader_push (ld, mom_ldstate_make_set (set));
   MOM_DEBUGPRINTF (load, "momf_ldp_set pushed #%d %s",
                    ld->ld_stacktop,
@@ -1025,7 +1241,7 @@ momf_ldp_node (struct mom_item_st *itm,
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
   struct mom_hashedvalue_st *smallarr[16] = { };
-  struct mom_hashedvalue_st **arr =
+  const struct mom_hashedvalue_st **arr =
     (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
   for (unsigned ix = 0; ix < elemsize - 1; ix++)
