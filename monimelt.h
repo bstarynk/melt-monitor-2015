@@ -869,6 +869,13 @@ struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st
                                                *hass,
                                                const struct
                                                mom_hashedvalue_st *key);
+const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct
+                                                            mom_hashassoc_st
+                                                            *hass,
+                                                            const struct
+                                                            mom_item_st
+                                                            *connitm);
+
 ////////////////
 struct mom_itemname_tu
 {

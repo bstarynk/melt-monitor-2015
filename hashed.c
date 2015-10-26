@@ -822,3 +822,46 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
     }
   fputs (")payload_hashassoc\n", femit);
 }                               /* end of mom_dumpemit_hashassoc_payload */
+
+
+static int
+hashedvalueptr_cmp_mom (const void *p1, const void *p2)
+{
+  const struct mom_hashedvalue_st *v1 =
+    *(const struct mom_hashedvalue_st **) p1;
+  const struct mom_hashedvalue_st *v2 =
+    *(const struct mom_hashedvalue_st **) p2;
+  return mom_hashedvalue_cmp (v1, v2);
+}
+
+const struct mom_boxnode_st *
+mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,
+                               const struct mom_item_st *connitm)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return NULL;
+  if (!connitm || connitm == MOM_EMPTY_SLOT
+      || connitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  unsigned cnt = hass->cda_count;
+  unsigned siz = mom_raw_size (hass);
+  const struct mom_hashedvalue_st *smallarr[16] = { NULL };
+  const struct mom_hashedvalue_st **arr =
+    (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc ((cnt + 1) * sizeof (void *));
+  unsigned icnt = 0;
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (!curkey || curkey == MOM_EMPTY_SLOT)
+        continue;
+      const struct mom_hashedvalue_st *curval = hass->hass_ents[ix].hass_val;
+      if (!curval || curval == MOM_EMPTY_SLOT)
+        continue;
+      assert (icnt < cnt);
+      arr[icnt++] = curkey;
+    };
+  if (icnt > 1)
+    qsort (arr, icnt, sizeof (void *), hashedvalueptr_cmp_mom);
+  return mom_boxnode_make (connitm, cnt, arr);
+}                               /* end of mom_hashassoc_sorted_key_node */
