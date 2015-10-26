@@ -345,10 +345,10 @@ enum momitype_en
   MOMITY_BOXINT,
   MOMITY_BOXDOUBLE,
   MOMITY_BOXSTRING,
+  MOMITY_ITEM,
   MOMITY_TUPLE,
   MOMITY_SET,
   MOMITY_NODE,
-  MOMITY_ITEM,
   /// the types above are for genuine values
   MOMITY__LASTHASHED,
   /// here are the payload types, they can only appear as item
@@ -359,6 +359,7 @@ enum momitype_en
   MOMITY_QUEUE,
   MOMITY_HASHSET,
   MOMITY_HASHMAP,
+  MOMITY_HASHASSOC,
   MOMITY_LOADER,
   MOMITY_DUMPER,
 };
@@ -833,6 +834,41 @@ struct mom_hashmap_st *mom_hashmap_remove (struct mom_hashmap_st *hmap,
 const struct mom_boxset_st *mom_hashmap_keyset (const struct mom_hashmap_st
                                                 *hmap);
 
+
+/// for MOMITY_HASHASSOC payload
+struct mom_hassocentry_tu
+{
+  const struct mom_hashedvalue_st *hass_key;
+  const struct mom_hashedvalue_st *hass_val;
+};
+
+#define MOM_HASHASSOC_FIELDS			\
+  MOM_COUNTEDATA_FIELDS;			\
+  struct mom_hassocentry_tu hass_ents[]
+//// mutable hashed association 
+struct mom_hashassoc_st
+{
+  MOM_HASHASSOC_FIELDS;
+};
+
+// with a 0 gap will reorganize
+struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st *hass,
+                                                unsigned gap);
+
+const struct mom_hashedvalue_st *mom_hashassoc_get (const struct
+                                                    mom_hashassoc_st *hass,
+                                                    const struct
+                                                    mom_hashedvalue_st *key);
+
+struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,
+                                            const struct mom_hashedvalue_st
+                                            *key,
+                                            const struct mom_hashedvalue_st
+                                            *val);
+struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st
+                                               *hass,
+                                               const struct
+                                               mom_hashedvalue_st *key);
 ////////////////
 struct mom_itemname_tu
 {
