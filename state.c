@@ -388,6 +388,12 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           curitm = mom_find_item_from_string (linbuf + 1, NULL);
           MOM_DEBUGPRINTF (load, "second_pass curitm %s",
                            mom_item_cstring (curitm));
+          unsigned siz = mom_size (ld);
+          if (siz > 0)
+            memset (ld->ld_stackarr, 0,
+                    siz * sizeof (struct mom_statelem_st));
+          ld->ld_stacktop = 0;
+          ld->ld_prevmark = 0;
         }
       else
       bad_line:
