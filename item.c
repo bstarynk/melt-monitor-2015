@@ -617,14 +617,32 @@ end:
 }                               /* end of put_item_in_radix_rank_mom */
 
 
+
+void
+cleanup_item_payload_mom (struct mom_item_st *itm,
+                          struct mom_anyvalue_st *payl)
+{
+  assert (itm != NULL && itm->va_itype == MOMITY_ITEM);
+  switch (payl->va_itype)
+    {
+    }
+}                               /* end of cleanup_item_payload_mom */
+
+
 void
 mom_cleanup_item (void *itmad, void *clad)
 {
   assert (itmad != NULL);
   assert (clad == NULL);
   struct mom_item_st *itm = itmad;
-  unsigned sz = (itm->va_hsiz << 16) + itm->va_lsiz;
   struct radix_mom_st *curad = NULL;
+  MOM_DEBUGPRINTF (item, "mom_cleanup_item itm=%s", mom_item_cstring (itm));
+  struct mom_anyvalue_st *payl = itm->itm_payload;
+  if (payl && payl != MOM_EMPTY_SLOT)
+    {
+      itm->itm_payload = NULL;
+      cleanup_item_payload_mom (itm, payl);
+    }
   {
     pthread_mutex_lock (&radix_mtx_mom);
     assert (radix_cnt_mom <= radix_siz_mom);
@@ -645,8 +663,9 @@ mom_cleanup_item (void *itmad, void *clad)
   curad->rad_items[pos] = MOM_EMPTY_SLOT;
   assert (curad->rad_count > 0 && curad->rad_count <= curad->rad_size);
   curad->rad_count--;
+
   pthread_mutex_destroy (&itm->itm_mtx);
-  memset (itmad, 0, sizeof (struct mom_item_st) + sz * sizeof (void *));
+  memset (itmad, 0, sizeof (struct mom_item_st));
   pthread_mutex_unlock (&curad->rad_mtx);
 }                               /* end of mom_cleanup_item */
 
