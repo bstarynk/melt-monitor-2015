@@ -593,7 +593,8 @@ dump_emit_global_mom (struct mom_dumper_st *du)
   fputs ("\n\n", fglob);
   for (unsigned ix = 0; ix < nbitems; ix++)
     {
-      struct mom_item_st *curitm = mom_seqitems_nth (setitems, ix);
+      struct mom_item_st *curitm =
+        (struct mom_item_st *) mom_seqitems_nth (setitems, ix);
       assert (curitm && curitm->va_itype == MOMITY_ITEM);
       MOM_DEBUGPRINTF (dump, "should dump %s", mom_item_cstring (curitm));
       fputs ("\n", fglob);
@@ -627,7 +628,8 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
   assert (itm && itm->va_itype == MOMITY_ITEM);
   if (!mom_hashset_contains (du->du_itemset, itm))
     {
-      du->du_itemset = mom_hashset_insert (du->du_itemset, itm);
+      du->du_itemset =
+        mom_hashset_insert (du->du_itemset, (struct mom_item_st *) itm);
       mom_queue_append (du->du_itemque, itm);
     }
 }
@@ -665,7 +667,8 @@ mom_dump_state (void)
     MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER " : %m",
                     du->du_predefhtmpath->cstr);
   MOM_DEBUGPRINTF (dump, "itemset=%s",
-                   mom_value_cstring (mom_hashset_to_boxset
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      mom_hashset_to_boxset
                                       (du->du_itemset)));
   {
     unsigned nbitems = du->du_itemset->cda_count;

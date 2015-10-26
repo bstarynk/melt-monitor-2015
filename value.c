@@ -578,7 +578,7 @@ mom_queue_pop_front (struct mom_queue_st *qu)
 
 
 
-struct mom_boxnode_st *
+const struct mom_boxnode_st *
 mom_queue_node (const struct mom_queue_st *qu,
                 const struct mom_item_st *connitm)
 {
@@ -784,7 +784,8 @@ mom_dumpemit_value (struct mom_dumper_st *du,
       break;
     case MOMITY_NODE:
       {
-        const struct mom_boxnode_st *nod = (const struct mom_node_st *) val;
+        const struct mom_boxnode_st *nod =
+          (const struct mom_boxnode_st *) val;
         if (!mom_dumped_item (du, nod->nod_connitm))
           {
             fputs ("~\n", femit);

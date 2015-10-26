@@ -20,4 +20,9 @@
 
 #include "monimelt.h"
 
-#warning web.c is empty
+
+void
+mom_start_web (const char *webservice)
+{
+  MOM_DEBUGPRINTF (web, "mom_start_web starting webservice=%s", webservice);
+}

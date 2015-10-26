@@ -21,6 +21,9 @@
 #include "monimelt.h"
 
 void *mom_prog_dlhandle;
+const char *mom_webdir[MOM_MAX_WEBDIR];
+volatile atomic_bool mom_should_run;
+
 static bool syslogging_mom;
 static bool should_dump_mom;
 static char *dir_after_load_mom;
@@ -818,6 +821,7 @@ enum extraopt_en
   xtraopt_chdir_first = 1024,
   xtraopt_chdir_after_load,
   xtraopt_addpredef,
+  xtraopt_webdir,
   xtraopt_info,
 };
 
@@ -832,6 +836,7 @@ static const struct option mom_long_options[] = {
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
+  {"webdir", required_argument, NULL, xtraopt_webdir},
   {"info", no_argument, NULL, xtraopt_info},
   /* Terminating NULL placeholder.  */
   {NULL, no_argument, NULL, 0},
@@ -957,6 +962,33 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
 #warning unhandled xtraopt_info
           MOM_FATAPRINTF ("unimplemented --info");
           break;
+        case xtraopt_webdir:
+          {
+            if (!optarg)
+              MOM_FATAPRINTF ("missing --webdir");
+            char *rwdirpath = realpath (optarg, NULL);
+            char *rwdirdup = GC_STRDUP (rwdirpath);
+            struct stat rwdirstat = { 0 };
+            free (rwdirpath), rwdirpath = NULL;
+            int olderrno = errno;
+            errno = ENOTDIR;
+            if (stat (rwdirdup, &rwdirstat)
+                || (rwdirstat.st_mode & S_IFMT) != S_IFDIR)
+              MOM_FATAPRINTF ("invalid webdir %s (%m)", rwdirdup);
+            errno = olderrno;
+            int wix = -1;
+            for (int ix = 0; ix < MOM_MAX_WEBDIR; ix++)
+              if (!mom_webdir[ix])
+                {
+                  wix = ix;
+                  break;
+                };
+            if (wix < 0)
+              MOM_FATAPRINTF ("too many (%d) webdir for %s", MOM_MAX_WEBDIR,
+                              optarg);
+            mom_webdir[wix] = rwdirdup;
+            MOM_DEBUGPRINTF (web, "webdir#%d %s", wix, rwdirdup);
+          }
         default:
           MOM_FATAPRINTF ("bad option (%c) at %d", isalpha (opt) ? opt : '?',
                           optind);
@@ -990,6 +1022,39 @@ main (int argc_main, char **argv_main)
     }
   if (load_state_mom)
     {
+      char webuf[256];
+      memset (webuf, 0, sizeof (webuf));
+      if (strlen (load_state_mom) >= sizeof (webuf) - 8)
+        MOM_WARNPRINTF ("too long load state %s", load_state_mom);
+      if (web_service_mom)
+        {
+          strncpy (webuf, load_state_mom,
+                   sizeof (webuf) - sizeof (MOM_LOAD_WEBDIR) - 2);
+          char *lastslash = strrchr (webuf, '/');
+          if (lastslash)
+            *lastslash = 0;
+          strcat (webuf, "/" MOM_LOAD_WEBDIR);
+          struct stat webstat = { 0 };
+          if (!stat (webuf, &webstat)
+              && (webstat.st_mode & S_IFMT) == S_IFDIR)
+            {
+              char *rwdirpath = realpath (webuf, NULL);
+              char *rwdirdup = GC_STRDUP (rwdirpath);
+              free (rwdirpath), rwdirpath = NULL;
+              int wix = -1;
+              for (int ix = 0; ix < MOM_MAX_WEBDIR; ix++)
+                if (!mom_webdir[ix])
+                  {
+                    wix = ix;
+                    break;
+                  };
+              if (wix < 0)
+                MOM_FATAPRINTF ("too many (%d) webdir for %s", MOM_MAX_WEBDIR,
+                                optarg);
+              mom_webdir[wix] = rwdirdup;
+              MOM_DEBUGPRINTF (web, "implicit webdir#%d %s", wix, rwdirdup);
+            }
+        }
       mom_load_state (load_state_mom);
     }
   if (dir_after_load_mom)
@@ -1007,7 +1072,15 @@ main (int argc_main, char **argv_main)
                             dir_after_load_mom, cwdbuf);
         }
     }
-#warning should deal with web_service_mom and should probably have a --webdir program option
+  if (web_service_mom)
+    {
+      mom_start_web (web_service_mom);
+    }
+  while (atomic_load (&mom_should_run))
+    {
+      usleep (50 * 1000);
+    }
+  MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
   if (should_dump_mom)
     {
       char cwdbuf[128];

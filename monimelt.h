@@ -1389,22 +1389,23 @@ mom_queue_back (const struct mom_queue_st *qu)
   MOM_FATAPRINTF ("corrupted queue @%p", qu);
 }
 
-struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
-                                       const struct mom_item_st *connitm);
+const struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
+                                             const struct mom_item_st
+                                             *connitm);
 
 
 ////////////////
 enum mom_dumpstate_en
 { MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 
-#define MOM_DUMPER_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
-  enum mom_dumpstate_en du_state;		\
-  struct mom_boxset_st*du_predefset;		\
-  struct mom_hashset_st*du_itemset;		\
-  struct mom_boxstring_st*du_predefhtmpath;	\
-  struct mom_boxstring_st*du_globaltmpath;	\
-  struct mom_queue_st*du_itemque;		\
+#define MOM_DUMPER_FIELDS				\
+  MOM_ANYVALUE_FIELDS;					\
+  enum mom_dumpstate_en du_state;			\
+  const struct mom_boxset_st*du_predefset;		\
+  struct mom_hashset_st*du_itemset;			\
+  const struct mom_boxstring_st*du_predefhtmpath;	\
+  const struct mom_boxstring_st*du_globaltmpath;	\
+  struct mom_queue_st*du_itemque;			\
   FILE*du_emitfile
 
 struct mom_dumper_st
@@ -1501,4 +1502,17 @@ void
 mom_output_value (FILE *f, long *plastnl, int depth,
                   const struct mom_hashedvalue_st *val);
 
+
+#define MOM_LOAD_WEBDIR "webdir"
+#define MOM_MAX_WEBDIR 8
+extern const char *mom_webdir[MOM_MAX_WEBDIR];
+void mom_start_web (const char *webservice);
+
+extern volatile atomic_bool mom_should_run;
+
+static inline void
+mom_stop (void)
+{
+  atomic_store (&mom_should_run, false);
+}
 #endif /*MONIMELT_INCLUDED_ */
