@@ -25,6 +25,7 @@ static bool syslogging_mom;
 static bool should_dump_mom;
 static char *dir_after_load_mom;
 static char *load_state_mom;
+static char *web_service_mom;
 
 #define BASE_YEAR_MOM 2015
 
@@ -825,6 +826,7 @@ static const struct option mom_long_options[] = {
   {"version", no_argument, NULL, 'V'},
   {"debug", required_argument, NULL, 'D'},
   {"load", required_argument, NULL, 'L'},
+  {"web", required_argument, NULL, 'W'},
   {"dump", no_argument, NULL, 'd'},
   {"syslog", no_argument, NULL, 's'},
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
@@ -842,6 +844,8 @@ usage_mom (const char *argv0)
   printf ("Usage: %s\n", argv0);
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
+  printf ("\t -W | --web <webservice>"
+          " \t# start a web service, e.g. localhost:8085\n");
   printf ("\t -d | --dump " " \t# Dump the state.\n");
   printf ("\t -s | --syslog " " \t# Use system log.\n");
   printf ("\t -D | --debug <debug-features>"
@@ -875,7 +879,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   int argc = *pargc;
   char **argv = *pargv;
   int opt = -1;
-  while ((opt = getopt_long (argc, argv, "hVdsD:L:",
+  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -891,6 +895,11 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           print_version_mom (argv[0]);
           exit (EXIT_SUCCESS);
           return;
+        case 'W':              /* --web */
+          if (!optarg)
+            MOM_FATAPRINTF ("missing web service");
+          web_service_mom = optarg;
+          break;
         case 'd':              /* --dump */
           should_dump_mom = true;
           break;
@@ -998,6 +1007,7 @@ main (int argc_main, char **argv_main)
                             dir_after_load_mom, cwdbuf);
         }
     }
+#warning should deal with web_service_mom and should probably have a --webdir program option
   if (should_dump_mom)
     {
       char cwdbuf[128];
