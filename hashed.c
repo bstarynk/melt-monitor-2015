@@ -735,3 +735,90 @@ mom_hashassoc_remove (struct mom_hashassoc_st *hass,
   hass->cda_count = cnt - 1;
   return hass;
 }                               /* end of mom_hashassoc_remove */
+
+
+void
+mom_dumpscan_hashassoc (struct mom_dumper_st *du,
+                        struct mom_hashassoc_st *hass)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return;
+  unsigned cnt = hass->cda_count;
+  unsigned siz = mom_raw_size (hass);
+  assert (cnt <= siz);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (!curkey || curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (curkey->va_itype == MOMITY_ITEM
+          && !mom_dumpable_item ((struct mom_item_st *) curkey))
+        continue;
+      const struct mom_hashedvalue_st *curval = hass->hass_ents[ix].hass_val;
+      if (!curval || curval == MOM_EMPTY_SLOT)
+        continue;
+      if (curval->va_itype == MOMITY_ITEM
+          && !mom_dumpable_item ((struct mom_item_st *) curval))
+        continue;
+      mom_dumpscan_value (du, curkey);
+      mom_dumpscan_value (du, curval);
+    }
+}                               /* end of mom_dumpscan_hashassoc */
+
+
+static int
+hassocentry_cmpkey_mom (const void *p1, const void *p2)
+{
+  const struct mom_hassocentry_tu *e1 =
+    (const struct mom_hassocentry_tu *) p1;
+  const struct mom_hassocentry_tu *e2 =
+    (const struct mom_hassocentry_tu *) p2;
+  return mom_hashedvalue_cmp (e1->hass_key, e2->hass_key);
+}
+
+void
+mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
+                                struct mom_hashassoc_st *hass)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  unsigned cnt = hass->cda_count;
+  unsigned siz = mom_raw_size (hass);
+  assert (cnt <= siz);
+  struct mom_hassocentry_tu smallarr[16] = { {NULL, NULL} };
+  struct mom_hassocentry_tu *arr =
+    (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc ((cnt + 1) * sizeof (struct mom_hassocentry_tu));
+  unsigned icnt = 0;
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (!curkey || curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (curkey->va_itype == MOMITY_ITEM
+          && !mom_dumped_item (du, (struct mom_item_st *) curkey))
+        continue;
+      const struct mom_hashedvalue_st *curval = hass->hass_ents[ix].hass_val;
+      if (!curval || curval == MOM_EMPTY_SLOT)
+        continue;
+      if (curval->va_itype == MOMITY_ITEM
+          && !mom_dumped_item (du, (struct mom_item_st *) curval))
+        continue;
+      assert (icnt < cnt);
+      arr[icnt++] = hass->hass_ents[ix];
+    }
+  if (icnt > 1)
+    qsort (arr, icnt, sizeof (struct mom_hassocentry_tu),
+           hassocentry_cmpkey_mom);
+  fputs ("(\n", femit);
+  for (unsigned ix = 0; ix < icnt; ix++)
+    {
+      mom_dumpemit_value (du, arr[ix].hass_key);
+      mom_dumpemit_value (du, arr[ix].hass_val);
+    }
+  fputs (")payload_hashassoc\n", femit);
+}                               /* end of mom_dumpemit_hashassoc_payload */

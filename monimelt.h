@@ -1506,6 +1506,10 @@ mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
 void
 mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
 
+void
+mom_dumpscan_hashassoc (struct mom_dumper_st *du,
+                        struct mom_hashassoc_st *hass);
+
 /////
 
 void mom_dumpemit_refitem (struct mom_dumper_st *du,
@@ -1530,10 +1534,8 @@ mom_dumpemit_vectvaldata (struct mom_dumper_st *du,
                           struct mom_vectvaldata_st *vec);
 
 void
-mom_dumpemit_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset);
-
-void
-mom_dumpemit_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap);
+mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
+                                struct mom_hashassoc_st *hass);
 
 
 void mom_load_state (const char *statepath);

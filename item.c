@@ -1675,6 +1675,10 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
             fputs (")payload_hashmap\n", femit);
           }
           break;
+        case MOMITY_HASHASSOC:
+          mom_dumpemit_hashassoc_payload (du,
+                                          (struct mom_hashassoc_st *) payl);
+          break;
         default:
           break;
         }
