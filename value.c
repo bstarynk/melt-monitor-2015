@@ -948,3 +948,113 @@ mom_value_cstring (const struct mom_hashedvalue_st *val)
   free (outbuf), outbuf = NULL;
   return res;
 }
+
+
+////////////////////////////////////////////////////////////////
+
+extern mom_loader_paren_sig_t momf_ldp_tuple;
+extern mom_loader_paren_sig_t momf_ldp_set;
+extern mom_loader_paren_sig_t momf_ldp_node;
+extern mom_loader_paren_sig_t momf_ldp_nodemeta;
+
+void
+momf_ldp_tuple (struct mom_item_st *itm,
+                struct mom_loader_st *ld,
+                struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load, "momf_ldp_tuple start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  struct mom_item_st *smallarr[16] = { };
+  struct mom_item_st **arr =
+    (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
+    mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_item_st *));
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      arr[ix] = mom_ldstate_dynitem (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_tuple arr[%d] = %s",
+                       ix, mom_item_cstring (arr[ix]));
+    }
+  const struct mom_tuple_st *tup = mom_boxtuple_make_arr (elemsize, arr);
+  mom_loader_push (ld, mom_ldstate_make_tuple (tup));
+  MOM_DEBUGPRINTF (load, "momf_ldp_tuple pushed #%d %s",
+                   ld->ld_stacktop,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      tup));
+}                               /* end of momf_ldp_tuple */
+
+void
+momf_ldp_set (struct mom_item_st *itm,
+              struct mom_loader_st *ld,
+              struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load, "momf_ldp_set start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  struct mom_item_st *smallarr[16] = { };
+  struct mom_item_st **arr =
+    (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
+    mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_item_st *));
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      arr[ix] = mom_ldstate_dynitem (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_set arr[%d] = %s",
+                       ix, mom_item_cstring (arr[ix]));
+    }
+  const struct mom_set_st *set = mom_boxset_make_arr (elemsize, arr);
+  mom_loader_push (ld, mom_ldstate_make_set (set));
+  MOM_DEBUGPRINTF (load, "momf_ldp_set pushed #%d %s",
+                   ld->ld_stacktop,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      set));
+}                               /* end of momf_ldp_set */
+
+void
+momf_ldp_node (struct mom_item_st *itm,
+               struct mom_loader_st *ld,
+               struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load, "momf_ldp_node start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  if (elemsize == 0)
+    MOM_FATAPRINTF ("momf_ldp_node itm=%s zero elemsize",
+                    mom_item_cstring (itm));
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  struct mom_hashedvalue_st *smallarr[16] = { };
+  struct mom_hashedvalue_st **arr =
+    (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
+    mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
+  for (unsigned ix = 0; ix < elemsize - 1; ix++)
+    {
+      arr[ix] = mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_node arr[%d] = %s",
+                       ix, mom_value_cstring (arr[ix]));
+    }
+  struct mom_item_st *connitm = mom_ldstate_dynitem (elemarr[elemsize - 1]);
+  MOM_DEBUGPRINTF (load, "momf_ldp_node connitm=%s",
+                   mom_item_cstring (connitm));
+  const struct mom_boxnode_st *nod =
+    mom_boxnode_make (connitm, elemsize - 1, arr);
+  mom_loader_push (ld, mom_ldstate_make_node (nod));
+  MOM_DEBUGPRINTF (load, "momf_ldp_node pushed #%d %s",
+                   ld->ld_stacktop,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      nod));
+}                               /* end of momf_ldp_node */
+
+void
+momf_ldp_nodemeta (struct mom_item_st *itm,
+                   struct mom_loader_st *ld,
+                   struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+#warning unimplemented momf_ldp_nodemeta
+  MOM_FATAPRINTF ("unimplemented momf_ldp_nodemeta itm=%s",
+                  mom_item_cstring (itm));
+}                               /* end of momf_ldp_nodemeta */

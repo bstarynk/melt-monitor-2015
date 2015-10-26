@@ -933,7 +933,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
                   MOM_INFORMPRINTF ("made directory %s (for after load)",
                                     optarg);
               }
-            struct stat stdir = { };
+            struct stat stdir = { 0 };
             if (stat (optarg, &stdir) || (stdir.st_mode & S_IFMT) != S_IFDIR)
               MOM_WARNPRINTF ("%s is not a directory for --chdir-after-load",
                               optarg);

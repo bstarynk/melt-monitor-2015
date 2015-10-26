@@ -2069,12 +2069,12 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
         case MOMITY_NODE:
         case MOMITY_ITEM:
           mom_dumpemit_value (du, (struct mom_hashedvalue_st *) payl);
-          fputs ("^payloadval\n", femit);
+          fputs ("^payload_val\n", femit);
           break;
         case MOMITY_ASSOVALDATA:
           fputs ("(\n", femit);
           dumpemit_assovaldata_mom (du, (struct mom_assovaldata_st *) payl);
-          fputs (")payloadassoval\n", femit);
+          fputs (")payload_assoval\n", femit);
           break;
         case MOMITY_VECTVALDATA:
           {
@@ -2086,7 +2086,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
             fputs ("(\n", femit);
             for (unsigned ix = 0; ix < cnt; ix++)
               mom_dumpemit_value (du, comps->vecd_valarr[ix]);
-            fputs (")payloadvect\n", femit);
+            fputs (")payload_vect\n", femit);
           }
           break;
         case MOMITY_QUEUE:
@@ -2107,7 +2107,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
                       }
                   }
               }
-            fputs (")payloadqueue\n", femit);
+            fputs (")payload_queue\n", femit);
           }
           break;
         case MOMITY_HASHSET:
@@ -2123,7 +2123,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
                   continue;
                 mom_dumpemit_refitem (du, elemitm);
               }
-            fputs (")payloadhashset\n", femit);
+            fputs (")payload_hashset\n", femit);
           }
           break;
         case MOMITY_HASHMAP:
@@ -2144,7 +2144,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
                 mom_dumpemit_refitem (du, keyitm);
                 mom_dumpemit_value (du, val);
               }
-            fputs (")payloadhashmap\n", femit);
+            fputs (")payload_hashmap\n", femit);
           }
           break;
         default:
@@ -2152,3 +2152,55 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
         }
     }
 }                               /* end of mom_dumpemit_item_content */
+
+////////////////
+
+extern mom_loader_caret_sig_t momf_ldc_mtime;
+extern mom_loader_caret_sig_t momf_ldc_func;
+extern mom_loader_caret_sig_t momf_ldc_altfunc;
+extern mom_loader_caret_sig_t momf_ldc_payload_val;
+extern mom_loader_caret_sig_t momf_ldc_payload_assoval;
+extern mom_loader_caret_sig_t momf_ldc_payload_vect;
+extern mom_loader_caret_sig_t momf_ldc_payload_queue;
+extern mom_loader_caret_sig_t momf_ldc_payload_hashset;
+extern mom_loader_caret_sig_t momf_ldc_payload_hashmap;
+
+
+void
+momf_ldc_mtime (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  time_t t = mom_ldstate_int_def (mom_loader_top (ld, 0), 0);
+  MOM_DEBUGPRINTF (load, "momf_ldc_mtime  itm=%s t=%ld",
+                   mom_item_cstring (itm), (long) t);
+  if (t)
+    itm->itm_mtime = t;
+  mom_loader_pop (ld, 1);
+}                               /* end of momf_ldc_mtime */
+
+void
+momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s", mom_item_cstring (itm));
+  char funambuf[256];
+  memset (funambuf, 0, sizeof (funambuf));
+  if (snprintf
+      (funambuf, sizeof (funambuf), MOM_FUNC_PREFIX "%s",
+       mom_item_cstring (itm)) < (int) sizeof (funambuf))
+    {
+      void *f = dlsym (mom_prog_dlhandle, funambuf);
+      if (f)
+        {
+          itm->itm_funptr = f;
+          MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s f@%p",
+                           mom_item_cstring (itm), f);
+        }
+      else
+        MOM_WARNPRINTF ("cannot find func %s : %s", funambuf, dlerror ());
+    }
+  else
+    MOM_FATAPRINTF ("too long function name %s", funambuf);
+}                               /* end of momf_ldc_func */
