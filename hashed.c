@@ -670,6 +670,163 @@ mom_hashassoc_get (const struct mom_hashassoc_st *hass,
 }                               /* end of mom_hashassoc_get */
 
 
+const struct mom_hashedvalue_st *
+mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass, //
+                           const char *cstr)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return NULL;
+  if (!cstr || cstr == MOM_EMPTY_SLOT)
+    return NULL;
+  unsigned h = mom_cstring_hash_len (cstr, -1);
+  unsigned siz = mom_raw_size (hass);
+  assert (hass->cda_count < siz);
+  assert (siz > 2);
+  unsigned startix = h % siz;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->hva_hash == h && curkey->va_itype == MOMITY_BOXSTRING
+          && !strcmp (((struct mom_boxstring_st *) curkey)->cstr, cstr))
+        return hass->hass_ents[ix].hass_val;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->hva_hash == h && curkey->va_itype == MOMITY_BOXSTRING
+          && !strcmp (((struct mom_boxstring_st *) curkey)->cstr, cstr))
+        return hass->hass_ents[ix].hass_val;
+    }
+  return NULL;
+}                               /*end mom_hashassoc_get_cstring */
+
+
+
+const struct mom_hashedvalue_st *
+mom_hashassoc_get_item (const struct mom_hashassoc_st *hass,    //
+                        const struct mom_item_st *itm)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return NULL;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return NULL;
+  unsigned h = itm->hva_hash;
+  unsigned siz = mom_raw_size (hass);
+  assert (hass->cda_count < siz);
+  assert (siz > 2);
+  unsigned startix = h % siz;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey == (const struct mom_hashedvalue_st *) itm)
+        return hass->hass_ents[ix].hass_val;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (curkey == (const struct mom_hashedvalue_st *) itm)
+        return hass->hass_ents[ix].hass_val;
+      if (!curkey)
+        return NULL;
+    }
+  return NULL;
+}                               /*end mom_hashassoc_get_item */
+
+
+
+const struct mom_hashedvalue_st *
+mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,     //
+                       intptr_t num)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return NULL;
+  unsigned h = mom_int_hash (num);
+  unsigned siz = mom_raw_size (hass);
+  assert (hass->cda_count < siz);
+  assert (siz > 2);
+  unsigned startix = h % siz;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->va_itype == MOMITY_BOXINT
+          && ((struct mom_boxint_st *) curkey)->boxi_int == num)
+        return hass->hass_ents[ix].hass_val;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->va_itype == MOMITY_BOXINT
+          && ((struct mom_boxint_st *) curkey)->boxi_int == num)
+        return hass->hass_ents[ix].hass_val;
+    }
+  return NULL;
+}                               /*end mom_hashassoc_get_int */
+
+
+const struct mom_hashedvalue_st *
+mom_hashassoc_get_double (const struct mom_hashassoc_st *hass,  //
+                          double x)
+{
+  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
+    return NULL;
+  bool gotnan = isnan (x);
+  unsigned h = mom_double_hash (x);
+  unsigned siz = mom_raw_size (hass);
+  assert (hass->cda_count < siz);
+  assert (siz > 2);
+  unsigned startix = h % siz;
+  for (unsigned ix = startix; ix < siz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->va_itype == MOMITY_BOXDOUBLE
+          && (((struct mom_boxdouble_st *) curkey)->boxd_dbl == x
+              || (gotnan
+                  && isnan (((struct mom_boxdouble_st *) curkey)->boxd_dbl))))
+        return hass->hass_ents[ix].hass_val;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
+      if (curkey == MOM_EMPTY_SLOT)
+        continue;
+      if (!curkey)
+        return NULL;
+      if (curkey->va_itype == MOMITY_BOXDOUBLE
+          && (((struct mom_boxdouble_st *) curkey)->boxd_dbl == x
+              || (gotnan
+                  && isnan (((struct mom_boxdouble_st *) curkey)->boxd_dbl))))
+        return hass->hass_ents[ix].hass_val;
+    }
+  return NULL;
+}                               /*end mom_hashassoc_get_double */
+
+
 
 struct mom_hashassoc_st *
 mom_hashassoc_put (struct mom_hashassoc_st *hass,

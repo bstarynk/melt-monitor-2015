@@ -1246,9 +1246,10 @@ momf_ldp_node (struct mom_item_st *itm,
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
   for (unsigned ix = 0; ix < elemsize - 1; ix++)
     {
-      arr[ix] = mom_ldstate_val (elemarr[ix]);
-      MOM_DEBUGPRINTF (load, "momf_ldp_node arr[%d] = %s",
-                       ix, mom_value_cstring (arr[ix]));
+      arr[ix] =
+        (const struct mom_hashedvalue_st *) mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_node arr[%d] = %s", ix,
+                       mom_value_cstring (arr[ix]));
     }
   struct mom_item_st *connitm = mom_ldstate_dynitem (elemarr[elemsize - 1]);
   MOM_DEBUGPRINTF (load, "momf_ldp_node connitm=%s",

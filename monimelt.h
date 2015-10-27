@@ -855,23 +855,33 @@ struct mom_hashassoc_st
 struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st *hass,
                                                 unsigned gap);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get (const struct
-                                                    mom_hashassoc_st *hass,
+const struct mom_hashedvalue_st *mom_hashassoc_get (const struct mom_hashassoc_st *hass,        //
                                                     const struct
                                                     mom_hashedvalue_st *key);
 
-struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,
-                                            const struct mom_hashedvalue_st
-                                            *key,
+// specialized gets are faster, because they compare specifically the key
+const struct mom_hashedvalue_st *mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass,        //
+                                                            const char *cstr);
+
+const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashassoc_st *hass,   //
+                                                         const struct
+                                                         mom_item_st *itm);
+
+const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,    //
+                                                        intptr_t num);
+
+const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass, //
+                                                           double d);
+
+struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,      //
+                                            const struct mom_hashedvalue_st *key,       //
                                             const struct mom_hashedvalue_st
                                             *val);
-struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st
-                                               *hass,
-                                               const struct
-                                               mom_hashedvalue_st *key);
-const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct
-                                                            mom_hashassoc_st
-                                                            *hass,
+
+struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st *hass,   //
+                                               const struct mom_hashedvalue_st
+                                               *key);
+const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,        //
                                                             const struct
                                                             mom_item_st
                                                             *connitm);
