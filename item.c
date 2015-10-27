@@ -580,7 +580,10 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
     {
       struct mom_item_st *curitm = curad->rad_items[ix];
       if (curitm == itm)
-        return ix;
+        {
+          pos = ix;
+          goto end;
+        };
       if (curitm == MOM_EMPTY_SLOT)
         {
           if (pos < 0)
@@ -598,7 +601,10 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
     {
       struct mom_item_st *curitm = curad->rad_items[ix];
       if (curitm == itm)
-        return ix;
+        {
+          pos = ix;
+          goto end;
+        }
       if (curitm == MOM_EMPTY_SLOT)
         {
           if (pos < 0)
@@ -614,6 +620,11 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
     }
 end:
   assert (pos >= 0 && pos < (int) sz);
+  MOM_DEBUGPRINTF (item,
+                   "index_item_in_radix curad@%p rk#%d str=%s itm=%s pos=%d",
+                   (void *) curad, curad->rad_name->itname_rank,
+                   curad->rad_name->itname_string.cstr,
+                   mom_item_cstring (itm), pos);
   return pos;
 }                               /* end of index_item_in_radix_mom */
 
@@ -738,6 +749,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
   {
     struct mom_item_st pseudoitemzon;
     memset (&pseudoitemzon, 0, sizeof (pseudoitemzon));
+    pseudoitemzon.va_itype = MOMITY_ITEM;
     pseudoitemzon.hva_hash = hi;
     pseudoitemzon.itm_radix = (struct mom_itemname_tu *) radix;
     pseudoitemzon.itm_hid = hid;
@@ -749,9 +761,9 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
       {
         itm = curad->rad_items[pos];
         MOM_DEBUGPRINTF (item,
-                         "make_item_from_radix %s hid %d loid %lld found existing itm@%p %s",
+                         "make_item_from_radix %s hid %d loid %lld pos %d found existing itm@%p %s",
                          radix->itname_string.cstr, hid, (long long) loid,
-                         (void *) itm, mom_item_cstring (itm));
+                         pos, (void *) itm, mom_item_cstring (itm));
         goto end;
       }
     struct mom_item_st *newitm = mom_gc_alloc (sizeof (struct mom_item_st));
