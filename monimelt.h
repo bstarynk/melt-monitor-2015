@@ -85,6 +85,11 @@
 #include <onion/internal_status.h>
 #include <onion/websocket.h>
 
+
+// jansson, a JSON library in C which is Boehm-GC friendly
+// see http://www.digip.org/jansson/
+#include <jansson.h>
+
 #include <glib.h>
 
 // in generated _timestamp.c
@@ -362,6 +367,9 @@ enum momitype_en
   MOMITY_HASHASSOC,
   MOMITY_LOADER,
   MOMITY_DUMPER,
+  MOMITY_JSON,
+  MOMITY_WEBEXCH,
+  MOMITY_WEBSESSION,
 };
 struct mom_item_st;
 struct mom_loader_st;
@@ -1452,6 +1460,68 @@ const struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
                                              const struct mom_item_st
                                              *connitm);
 
+/// for MOMITY_JSON payload
+#define MOM_JSON_FIELDS \
+  MOM_ANYVALUE_FIELDS;  \
+  json_t *json
+
+struct mom_json_st
+{
+  MOM_JSON_FIELDS;
+};
+
+/// for MOMITY_WEBEXCH payload
+
+enum mom_webmethod_en
+{
+  MOMWEBM_NONE,
+  MOMWEBM_HEAD,
+  MOMWEBM_GET,
+  MOMWEBM_POST
+};
+char *mom_webmethod_name (unsigned);
+
+#define MOM_WEBEXCH_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  enum mom_webmethod_en webx_meth;              \
+  double webx_time;				\
+  long webx_count;				\
+  const struct mom_boxstring_st*webx_path;	\
+  onion_request* webx_requ;			\
+  onion_response* webx_resp;			\
+  struct mom_item_st*webx_sessitm;		\
+  char webc_mimetype[48];			\
+  int webx_code;				\
+  char* webx_outbuf;				\
+  size_t webx_outsiz;				\
+  FILE* webx_outfil;				\
+  pthread_cond_t webx_donecond;			\
+  long webx__spare
+
+struct mom_webexch_st
+{
+  MOM_WEBEXCH_FIELDS;
+};
+
+void mom_webexch_payload_cleanup (struct mom_item_st *itm,
+                                  struct mom_webexch_st *payl);
+
+/// for MOMITY_WEBSESSION payload
+#define MOM_WEBSESSION_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+  onion_websocket* wbss_websock;		\
+  char* wbss_inbuf;				\
+  unsigned wbss_insiz;				\
+  unsigned wbss_inoff;				\
+  long wbss__spare
+
+struct mom_websession_st
+{
+  MOM_WEBSESSION_FIELDS;
+};
+
+void mom_websession_payload_cleanup (struct mom_item_st *itm,
+                                     struct mom_websession_st *payl);
 
 ////////////////
 enum mom_dumpstate_en

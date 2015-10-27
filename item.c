@@ -625,6 +625,12 @@ cleanup_item_payload_mom (struct mom_item_st *itm,
   assert (itm != NULL && itm->va_itype == MOMITY_ITEM);
   switch (payl->va_itype)
     {
+    case MOMITY_WEBEXCH:
+      mom_webexch_payload_cleanup (itm, (struct mom_webexch_st *) payl);
+      break;
+    case MOMITY_WEBSESSION:
+      mom_websession_payload_cleanup (itm, (struct mom_websession_st *) payl);
+      break;
     }
 }                               /* end of cleanup_item_payload_mom */
 
