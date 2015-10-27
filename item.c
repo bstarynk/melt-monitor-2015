@@ -161,7 +161,7 @@ mom_find_name_radix (const char *str, int len)
   assert (radix_cnt_mom <= radix_siz_mom);
   if (radix_cnt_mom == 0)
     goto end;
-  int lo = 0, hi = (int) radix_cnt_mom - 1;
+  int lo = 0, hi = (int) radix_cnt_mom;
   while (lo + 5 < hi)
     {
       int md = (lo + hi) / 2;
@@ -262,7 +262,7 @@ mom_make_name_radix (const char *str, int len)
           goto end;
         }
     };
-  int lo = 0, hi = (int) radix_cnt_mom - 1;
+  int lo = 0, hi = (int) radix_cnt_mom;
   while (lo + 5 < hi)
     {
       int md = (lo + hi) / 2;
