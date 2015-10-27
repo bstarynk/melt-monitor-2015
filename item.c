@@ -596,6 +596,16 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
             pos = (int) ix;
           goto end;
         }
+      // sometimes, itm is a pseudoitemzon from mom_make_item_from_radix_id
+      // so we need to test equality of hash, radix, hid, lid
+      else if (curitm->hva_hash == itm->hva_hash
+	      && curitm->itm_lid == itm->itm_lid
+	      && curitm->itm_radix == itm->itm_radix
+	      && curitm->itm_hid == itm->itm_hid)
+        {
+          pos = ix;
+          goto end;
+        };
     }
   for (unsigned ix = 0; ix < startix; ix++)
     {
@@ -617,6 +627,16 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
             pos = (int) ix;
           goto end;
         }
+      // sometimes, itm is a pseudoitemzon from mom_make_item_from_radix_id
+      // so we need to test equality of hash, radix, hid, lid
+      else if (curitm->hva_hash == itm->hva_hash
+	      && curitm->itm_lid == itm->itm_lid
+	      && curitm->itm_radix == itm->itm_radix
+	      && curitm->itm_hid == itm->itm_hid)
+        {
+          pos = ix;
+          goto end;
+        };
     }
 end:
   assert (pos >= 0 && pos < (int) sz);
@@ -1455,6 +1475,8 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   itm->itm_lid = lid;
   time (&itm->itm_mtime);
   int pos = index_item_in_radix_mom (curad, itm);
+  MOM_DEBUGPRINTF(item, "predefined itm@%p %s pos %d",
+		  (void*)itm, mom_item_cstring(itm), pos);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
   curad->rad_items[pos] = itm;
