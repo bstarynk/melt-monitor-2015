@@ -567,8 +567,7 @@ end:
 
 
 static int
-put_item_in_radix_rank_mom (struct radix_mom_st *curad,
-                            struct mom_item_st *itm)
+index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
 {
   assert (curad);
   assert (itm);
@@ -616,7 +615,7 @@ put_item_in_radix_rank_mom (struct radix_mom_st *curad,
 end:
   assert (pos >= 0 && pos < (int) sz);
   return pos;
-}                               /* end of put_item_in_radix_rank_mom */
+}                               /* end of index_item_in_radix_mom */
 
 
 
@@ -664,7 +663,7 @@ mom_cleanup_item (void *itmad, void *clad)
   }
   assert (curad != NULL);
   pthread_mutex_lock (&curad->rad_mtx);
-  int pos = put_item_in_radix_rank_mom (curad, itm);
+  int pos = index_item_in_radix_mom (curad, itm);
   assert (pos >= 0 && pos < (int) curad->rad_size);
   assert (curad->rad_items);
   assert (curad->rad_items[pos] == itm);
@@ -723,7 +722,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
               struct mom_item_st *olditm = oldarr[ix];
               if (!olditm || olditm == MOM_EMPTY_SLOT)
                 continue;
-              int pos = put_item_in_radix_rank_mom (curad, olditm);
+              int pos = index_item_in_radix_mom (curad, olditm);
               assert (pos >= 0 && pos < (int) newsiz
                       && curad->rad_items[pos] == NULL);
               curad->rad_items[pos] = olditm;
@@ -741,7 +740,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     pseudoitemzon.itm_radix = (struct mom_itemname_tu *) radix;
     pseudoitemzon.itm_hid = hid;
     pseudoitemzon.itm_lid = loid;
-    int pos = put_item_in_radix_rank_mom (curad, &pseudoitemzon);
+    int pos = index_item_in_radix_mom (curad, &pseudoitemzon);
     assert (pos >= 0 && pos < (int) sz);
     if (curad->rad_items[pos] != NULL
         && curad->rad_items[pos] != MOM_EMPTY_SLOT)
@@ -753,6 +752,8 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     newitm->va_itype = MOMITY_ITEM;
     newitm->hva_hash = hi;
     newitm->itm_radix = (struct mom_itemname_tu *) radix;
+    curad->rad_items[pos] = newitm;
+    curad->rad_count++;
     time (&newitm->itm_mtime);
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
     newitm->itm_hid = hid;
@@ -803,7 +804,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
               struct mom_item_st *olditm = oldarr[ix];
               if (!olditm || olditm == MOM_EMPTY_SLOT)
                 continue;
-              int pos = put_item_in_radix_rank_mom (curad, olditm);
+              int pos = index_item_in_radix_mom (curad, olditm);
               assert (pos >= 0 && pos < (int) newsiz);
               assert (newarr[pos] == NULL);
               newarr[pos] = olditm;
@@ -834,7 +835,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
         quasitm->itm_hid = hid;
         quasitm->itm_lid = lid;
         quasitm->hva_hash = hash_item_from_radix_id_mom (radix, hid, lid);
-        pos = put_item_in_radix_rank_mom (curad, quasitm);
+        pos = index_item_in_radix_mom (curad, quasitm);
         assert (pos >= 0 && pos < (int) curad->rad_size);
         if (curad->rad_items[pos] == NULL
             || curad->rad_items[pos] == MOM_EMPTY_SLOT)
@@ -1410,7 +1411,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
               struct mom_item_st *olditm = oldarr[ix];
               if (!olditm || olditm == MOM_EMPTY_SLOT)
                 continue;
-              int pos = put_item_in_radix_rank_mom (curad, olditm);
+              int pos = index_item_in_radix_mom (curad, olditm);
               assert (pos >= 0 && pos < (int) newsiz
                       && curad->rad_items[pos] == NULL);
               curad->rad_items[pos] = olditm;
@@ -1426,7 +1427,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   itm->itm_hid = hid;
   itm->itm_lid = lid;
   time (&itm->itm_mtime);
-  int pos = put_item_in_radix_rank_mom (curad, itm);
+  int pos = index_item_in_radix_mom (curad, itm);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
   curad->rad_items[pos] = itm;

@@ -149,6 +149,9 @@ first_pass_loader_mom (struct mom_loader_st *ld)
         {
           MOM_DEBUGPRINTF (load, "first_pass line#%d %s", linecount, linbuf);
           const char *end = NULL;
+          char *eol = strchr (linbuf, '\n');
+          if (eol)
+            *eol = (char) 0;
           struct mom_item_st *itm =
             mom_make_item_from_string (linbuf + 1, &end);
           MOM_DEBUGPRINTF (load, "first pass line#%d made item %s",

@@ -983,7 +983,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           added_predef_mom[count_added_predef_mom].predef_comment =
             commentstr;
           commentstr = NULL;
-	  should_dump_mom = true;
+          should_dump_mom = true;
           count_added_predef_mom++;
           break;
         case xtraopt_info:
@@ -1044,13 +1044,14 @@ do_add_predefined_mom (void)
       const char *comm = added_predef_mom[ix].predef_comment;
       if (comm && comm[0])
         {
-	  pthread_mutex_lock(&preditm->itm_mtx);
-	  time(&preditm->itm_mtime);
-	  preditm->itm_pattr = //
-	    mom_assovaldata_put (preditm->itm_pattr,
-				 MOM_PREDEFITM(comment),
-				 (struct mom_hashedvalue_st*)mom_boxstring_make(comm));
-	  pthread_mutex_unlock(&preditm->itm_mtx);
+          pthread_mutex_lock (&preditm->itm_mtx);
+          time (&preditm->itm_mtime);
+          preditm->itm_pattr =  //
+            mom_assovaldata_put (preditm->itm_pattr,
+                                 MOM_PREDEFITM (comment),
+                                 (struct mom_hashedvalue_st *)
+                                 mom_boxstring_make (comm));
+          pthread_mutex_unlock (&preditm->itm_mtx);
           MOM_INFORMPRINTF ("made predefined %s with comment %s",
                             mom_item_cstring (preditm), comm);
         }
@@ -1159,20 +1160,24 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("dumping state in %s", cwdbuf);
       mom_dump_state ();
     }
-  if (count_added_predef_mom >0 && !dir_after_load_mom)
+  if (count_added_predef_mom > 0 && !dir_after_load_mom)
     {
-      MOM_INFORMPRINTF("making again after adding %d predefined", count_added_predef_mom);
+      MOM_INFORMPRINTF ("making again after adding %d predefined",
+                        count_added_predef_mom);
       char cmdbuf[128];
-      memset(cmdbuf, 0, sizeof(cmdbuf));
-      if (snprintf(cmdbuf, sizeof(cmdbuf), "make -j 3 OPTIMFLAGS='%s'", monimelt_optimflags)
-	  >= (int) sizeof(cmdbuf)-1)
-	MOM_FATAPRINTF("too small command buffer %s", cmdbuf);
-      int bad = system(cmdbuf);
+      memset (cmdbuf, 0, sizeof (cmdbuf));
+      if (snprintf
+          (cmdbuf, sizeof (cmdbuf), "make -j 3 OPTIMFLAGS='%s'",
+           monimelt_optimflags) >= (int) sizeof (cmdbuf) - 1)
+        MOM_FATAPRINTF ("too small command buffer %s", cmdbuf);
+      int bad = system (cmdbuf);
       if (bad)
-	MOM_FATAPRINTF("%s failed (%d)", cmdbuf, bad);
-      MOM_INFORMPRINTF("made ok after adding %d predefined", count_added_predef_mom);
+        MOM_FATAPRINTF ("%s failed (%d)", cmdbuf, bad);
+      MOM_INFORMPRINTF ("made ok after adding %d predefined",
+                        count_added_predef_mom);
     }
-  MOM_INFORMPRINTF ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds)\n", argv[0], (int) getpid (),
-		    mom_elapsed_real_time (), mom_process_cpu_time());
+  MOM_INFORMPRINTF ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds)\n",
+                    argv[0], (int) getpid (), mom_elapsed_real_time (),
+                    mom_process_cpu_time ());
   return 0;
 }                               /* end of main */
