@@ -1634,9 +1634,13 @@ mom_output_value (FILE *f, long *plastnl, int depth,
                   const struct mom_hashedvalue_st *val);
 
 
-#define MOM_LOAD_WEBDIR "webdir"
+#define MOM_LOAD_WEBDIR "webroot"
 #define MOM_MAX_WEBDIR 8
 extern const char *mom_webdir[MOM_MAX_WEBDIR];
+
+// we dont accept very long paths, notably URLs
+#define MOM_PATH_MAX 384
+
 void mom_start_web (const char *webservice);
 
 extern volatile atomic_bool mom_should_run;

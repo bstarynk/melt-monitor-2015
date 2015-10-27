@@ -120,7 +120,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   const char *reqfupath = onion_request_get_fullpath (requ);
   const char *reqpath = onion_request_get_path (requ);
   unsigned reqflags = onion_request_get_flags (requ);
-  MOM_DEBUGPRINTF (web, "webrequest#%ld fullpath %s path %s flags %#x",
+  MOM_DEBUGPRINTF (web, "webrequest#%ld fullpath '%s' path '%s' flags %#x",
                    reqcnt, reqfupath, reqpath, reqflags);
   if ((reqflags & OR_METHODS) == OR_HEAD)
     wmeth = MOMWEBM_HEAD;
@@ -128,8 +128,56 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     wmeth = MOMWEBM_GET;
   else if ((reqflags & OR_METHODS) == OR_POST)
     wmeth = MOMWEBM_POST;
-  MOM_WARNPRINTF ("unhandled webrequest#%ld fullpath %s wmeth %s",
-                  reqcnt, reqfupath, mom_webmethod_name (wmeth));
+  else
+    {
+      MOM_WARNPRINTF
+        ("webrequest#%ld fullpath '%s' bad flags %#x with unknown method",
+         reqflags, reqflags, reqflags);
+      return OCS_INTERNAL_ERROR;
+    }
+  MOM_DEBUGPRINTF (web, "webrequest#%ld fullpath %s wmeth %s",
+                   reqcnt, reqfupath, mom_webmethod_name (wmeth));
+  /// reject .. in full path, so reject URL going outside the web doc root
+  if (strstr (reqfupath, ".."))
+    {
+      MOM_DEBUGPRINTF (web, "webrequest#%ld twodots in fullpath %s", reqcnt,
+                       reqfupath);
+      return OCS_NOT_PROCESSED;
+    }
+  // reject path starting with dot
+  if (reqfupath[0] == '.' || reqfupath[1] == '.')
+    {
+      MOM_DEBUGPRINTF (web, "webrequest#%ld dot starting fullpath %s", reqcnt,
+                       reqfupath);
+      return OCS_NOT_PROCESSED;
+    }
+  // reject too long paths
+  if (strlen (reqfupath) >= MOM_PATH_MAX - 16)
+    {
+      MOM_DEBUGPRINTF (web, "webrequest#%ld too long (%d) fullpath %s",
+                       reqcnt, strlen (reqfupath), reqfupath);
+      return OCS_NOT_PROCESSED;
+    }
+  /// scan the mom_webdir-s
+  if (wmeth != MOMWEBM_POST && reqfupath[0] == '/')
+    {
+      char fpath[MOM_PATH_MAX + 64];
+      memset (fpath, 0, sizeof (fpath));
+      for (unsigned wix = 0; wix < MOM_MAX_WEBDIR; wix++)
+        {
+          if (!mom_webdir[wix])
+            continue;
+          memset (fpath, 0, sizeof (fpath));
+          if (snprintf (fpath, sizeof (fpath), "%s%s",
+                        mom_webdir[wix], reqfupath)
+              < (int) sizeof (fpath) && !access (fpath, R_OK))
+            {
+              MOM_DEBUGPRINTF (web, "handle_web_mom request#%ld got fpath %s",
+                               reqcnt, fpath);
+              return onion_shortcut_response_file (fpath, requ, resp);
+            }
+        }
+    }
   return OCS_NOT_PROCESSED;
 }                               /* end of handle_web_mom */
 
