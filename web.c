@@ -132,7 +132,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     {
       MOM_WARNPRINTF
         ("webrequest#%ld fullpath '%s' bad flags %#x with unknown method",
-         reqflags, reqflags, reqflags);
+         reqcnt, reqfupath, reqflags);
       return OCS_INTERNAL_ERROR;
     }
   MOM_DEBUGPRINTF (web, "webrequest#%ld fullpath %s wmeth %s",
@@ -155,12 +155,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   if (strlen (reqfupath) >= MOM_PATH_MAX - 16)
     {
       MOM_DEBUGPRINTF (web, "webrequest#%ld too long (%d) fullpath %s",
-                       reqcnt, strlen (reqfupath), reqfupath);
+                       reqcnt, (int) strlen (reqfupath), reqfupath);
       return OCS_NOT_PROCESSED;
     }
   /// scan the mom_webdir-s
-  if (wmeth != MOMWEBM_POST && reqfupath[0] == '/')
+  if (wmeth != MOMWEBM_POST && reqfupath[0] == '/' && isalnum (reqfupath[1]))
     {
+      MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s could be file",
+                       reqcnt, reqfupath);
       char fpath[MOM_PATH_MAX + 64];
       memset (fpath, 0, sizeof (fpath));
       for (unsigned wix = 0; wix < MOM_MAX_WEBDIR; wix++)
