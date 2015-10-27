@@ -339,6 +339,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           if (!caretfun)
             MOM_FATAPRINTF ("not found load caret function %s: %s",
                             nambuf, dlerror ());
+          MOM_DEBUGPRINTF (load, "before caret function %s curitm=%s", nambuf,
+                           mom_item_cstring (curitm));
           (*caretfun) (curitm, ld);
           MOM_DEBUGPRINTF (load, "done caret function %s", nambuf);
         }
@@ -385,9 +387,16 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       /// *foo is for defining item foo
       else if (linbuf[0] == '*' && isalpha (linbuf[1]))
         {
-          curitm = mom_find_item_from_string (linbuf + 1, NULL);
-          MOM_DEBUGPRINTF (load, "second_pass curitm %s",
-                           mom_item_cstring (curitm));
+          const char *end = NULL;
+          char *eol = strchr (linbuf, '\n');
+          if (eol)
+            *eol = (char) 0;
+          curitm = mom_find_item_from_string (linbuf + 1, &end);
+          MOM_DEBUGPRINTF (load, "second_pass curitm %s linbuf '%s'",
+                           mom_item_cstring (curitm), linbuf);
+          if (!curitm)
+            MOM_FATAPRINTF ("failed to find defined item for line#%d: '%s'",
+                            linecount, linbuf);
           unsigned siz = mom_size (ld);
           if (siz > 0)
             memset (ld->ld_stackarr, 0,
@@ -474,6 +483,8 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
     mom_dumpscan_assovaldata (du, itm->itm_pattr);
   if (itm->itm_pcomp)
     mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
+  if (itm->itm_funsig)
+    mom_dumpscan_item (du, itm->itm_funsig);
   if (itm->itm_payload)
     mom_dumpscan_payload (du, itm->itm_payload);
   pthread_mutex_unlock (&itm->itm_mtx);

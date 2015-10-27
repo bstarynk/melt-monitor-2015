@@ -158,6 +158,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        reqcnt, (int) strlen (reqfupath), reqfupath);
       return OCS_NOT_PROCESSED;
     }
+  if (!reqpath[0] && !strcmp (reqfupath, "/"))
+    {
+    }
   /// scan the mom_webdir-s
   if (wmeth != MOMWEBM_POST && reqfupath[0] == '/' && isalnum (reqfupath[1]))
     {

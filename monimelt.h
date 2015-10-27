@@ -909,6 +909,7 @@ enum mom_space_en
 };
 
 #define MOM_FUNC_PREFIX "momf_"
+#define MOM_SIGNATURE_PREFIX "momsig_"
 
 /* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS				\
@@ -919,6 +920,7 @@ enum mom_space_en
   uint64_t itm_lid;				\
   time_t itm_mtime;				\
   void* itm_funptr;				\
+  struct mom_item_st* itm_funsig;               \
   struct mom_assovaldata_st* itm_pattr;		\
   struct mom_vectvaldata_st* itm_pcomp;		\
   struct mom_anyvalue_st* itm_payload

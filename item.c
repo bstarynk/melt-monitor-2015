@@ -388,6 +388,8 @@ mom_find_item_from_string (const char *str, const char **pend)
         break;
       endradix++;
     };
+  MOM_DEBUGPRINTF (item, "find_item_from_string str=%s endradix+%d",
+                   str, (int) (endradix - str));
   const char *end = NULL;
   uint16_t hid = 0;
   uint64_t lid = 0;
@@ -1423,6 +1425,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   itm->itm_radix = (struct mom_itemname_tu *) radix;
   itm->itm_hid = hid;
   itm->itm_lid = lid;
+  time (&itm->itm_mtime);
   int pos = put_item_in_radix_rank_mom (curad, itm);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
@@ -1566,6 +1569,13 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
             fputs ("^func\n", femit);
         }
     }
+  // emit the signature
+  if (itm->itm_funsig && itm->itm_funsig != MOM_EMPTY_SLOT
+      && mom_dumped_item (du, itm->itm_funsig))
+    {
+      mom_dumpemit_refitem (du, itm->itm_funsig);
+      fputs ("^funsignature\n", femit);
+    }
   /// emit the attributes
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
@@ -1695,6 +1705,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
 
 extern mom_loader_caret_sig_t momf_ldc_mtime;
 extern mom_loader_caret_sig_t momf_ldc_func;
+extern mom_loader_caret_sig_t momf_ldc_funsignature;
 extern mom_loader_caret_sig_t momf_ldc_altfunc;
 extern mom_loader_caret_sig_t momf_ldc_payload_val;
 extern mom_loader_caret_sig_t momf_ldc_payload_assoval;
@@ -1741,4 +1752,42 @@ momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
     }
   else
     MOM_FATAPRINTF ("too long function name %s", funambuf);
+  memset (funambuf, 0, sizeof (funambuf));
+  if (snprintf
+      (funambuf, sizeof (funambuf), MOM_SIGNATURE_PREFIX "%s",
+       mom_item_cstring (itm)) < (int) sizeof (funambuf))
+    {
+      const char *signame = dlsym (mom_prog_dlhandle, funambuf);
+      if (signame && isalpha (signame))
+        {
+          MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s signame@%p='%s'",
+                           mom_item_cstring (itm), (void *) signame, signame);
+          const char *endsig = NULL;
+          struct mom_item_st *sigitm =
+            mom_find_item_from_string (signame, &endsig);
+          if (sigitm && *endsig == (char) 0)
+            {
+              MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s sigitm=%s",
+                               mom_item_cstring (itm),
+                               mom_item_cstring (sigitm));
+              if (!itm->itm_funsig)
+                itm->itm_funsig = sigitm;
+            }
+        }
+    }
+  else
+    MOM_FATAPRINTF ("too long signature name %s", funambuf);
 }                               /* end of momf_ldc_func */
+
+void
+momf_ldc_funsignature (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  struct mom_item_st *sigitm = mom_ldstate_dynitem (mom_loader_top (ld, 0));
+  MOM_DEBUGPRINTF (load, "momf_ldc_funsignature itm=%s sigitm=%s",
+                   mom_item_cstring (itm), mom_item_cstring (sigitm));
+  if (sigitm)
+    itm->itm_funsig = sigitm;
+  mom_loader_pop (ld, 1);
+}
