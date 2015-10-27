@@ -686,6 +686,8 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
   struct mom_item_st *itm = NULL;
   if (!radix)
     return NULL;
+  MOM_DEBUGPRINTF (item, "make_item_from_radix %s start hid %d loid %lld",
+                   radix->itname_string.cstr, hid, (long long) loid);
   struct radix_mom_st *curad = NULL;
   {
     pthread_mutex_lock (&radix_mtx_mom);
@@ -746,6 +748,10 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
         && curad->rad_items[pos] != MOM_EMPTY_SLOT)
       {
         itm = curad->rad_items[pos];
+        MOM_DEBUGPRINTF (item,
+                         "make_item_from_radix %s hid %d loid %lld found existing itm@%p %s",
+                         radix->itname_string.cstr, hid, (long long) loid,
+                         (void *) itm, mom_item_cstring (itm));
         goto end;
       }
     struct mom_item_st *newitm = mom_gc_alloc (sizeof (struct mom_item_st));
@@ -761,11 +767,18 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = newitm;
+    MOM_DEBUGPRINTF (item,
+                     "make_item_from_radix %s hid %d loid %lld new itm@%p %s",
+                     radix->itname_string.cstr, hid, (long long) loid,
+                     (void *) itm, mom_item_cstring (itm));
+    goto end;
   }
 end:
   pthread_mutex_unlock (&curad->rad_mtx);
   return itm;
 }                               /* end of mom_make_item_from_radix_id */
+
+
 
 struct mom_item_st *
 mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
@@ -1356,7 +1369,8 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
                            momhash_t hash)
 {
   assert (itm->va_itype == MOMITY_ITEM && itm->hva_hash == hash);
-  MOM_DEBUGPRINTF (item, "initialize_predefined %s", name);
+  MOM_DEBUGPRINTF (item, "initialize_predefined start %s itm@%p", name,
+                   (void *) itm);
   const char *twou = strstr (name, "__");
   uint16_t hid = 0;
   uint64_t lid = 0;
@@ -1375,10 +1389,11 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   if (!radix)
     MOM_FATAPRINTF ("initialize_predefined failed to make radix %s", name);
   struct radix_mom_st *curad = NULL;
+  unsigned radrk = 0;
   {
     pthread_mutex_lock (&radix_mtx_mom);
     assert (radix_cnt_mom <= radix_siz_mom);
-    uint32_t radrk = radix->itname_rank;
+    radrk = radix->itname_rank;
     assert (radrk < radix_cnt_mom);
     curad = radix_arr_mom[radrk];
     assert (curad != NULL);
@@ -1431,9 +1446,10 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
   curad->rad_items[pos] = itm;
+  curad->rad_count++;
   pthread_mutex_unlock (&curad->rad_mtx);
   mom_item_put_space (itm, MOMSPA_PREDEF);
-}
+}                               /* end initialize_predefined_mom  */
 
 void
 mom_initialize_items (void)
