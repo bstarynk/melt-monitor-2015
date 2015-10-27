@@ -30,6 +30,15 @@ static char *dir_after_load_mom;
 static char *load_state_mom;
 static char *web_service_mom;
 
+#define MAX_ADDED_PREDEF_MOM 16
+struct predefadd_mom_st
+{
+  const char *predef_name;
+  const char *predef_comment;
+};
+static struct predefadd_mom_st added_predef_mom[MAX_ADDED_PREDEF_MOM];
+static unsigned count_added_predef_mom;
+
 #define BASE_YEAR_MOM 2015
 
 void
@@ -821,6 +830,7 @@ enum extraopt_en
   xtraopt_chdir_first = 1024,
   xtraopt_chdir_after_load,
   xtraopt_addpredef,
+  xtraopt_commentpredef,
   xtraopt_webdir,
   xtraopt_info,
 };
@@ -836,6 +846,7 @@ static const struct option mom_long_options[] = {
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
+  {"comment-predefined", required_argument, NULL, xtraopt_commentpredef},
   {"webdir", required_argument, NULL, xtraopt_webdir},
   {"info", no_argument, NULL, xtraopt_info},
   /* Terminating NULL placeholder.  */
@@ -865,6 +876,8 @@ usage_mom (const char *argv0)
           " \t#Change directory after load\n");
   printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
+  printf ("\t --comment-predefined comment"
+          " \t#Set comment of next predefined\n");
   printf ("\t --info" " \t#Give various information\n");
 }
 
@@ -884,6 +897,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   int argc = *pargc;
   char **argv = *pargv;
   int opt = -1;
+  char *commentstr = NULL;
   while ((opt = getopt_long (argc, argv, "hVdsD:L:W:",
                              mom_long_options, NULL)) >= 0)
     {
@@ -954,9 +968,23 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
             dir_after_load_mom = GC_STRDUP (optarg);
           }
           break;
+        case xtraopt_commentpredef:
+          commentstr = optarg;
+          break;
         case xtraopt_addpredef:
-#warning unhandled xtraopt_addpredef
-          MOM_FATAPRINTF ("unimplemented --add-predefined %s", optarg);
+          if (!optarg)
+            MOM_FATAPRINTF ("missing predefined name for --add-predefined");
+          if (!isalpha (optarg[0]) || !mom_valid_name_radix (optarg, -1))
+            MOM_FATAPRINTF ("invalid predefined name %s", optarg);
+          if (count_added_predef_mom >= MAX_ADDED_PREDEF_MOM)
+            MOM_FATAPRINTF ("too many %d added predefined",
+                            count_added_predef_mom);
+          added_predef_mom[count_added_predef_mom].predef_name = optarg;
+          added_predef_mom[count_added_predef_mom].predef_comment =
+            commentstr;
+          commentstr = NULL;
+	  should_dump_mom = true;
+          count_added_predef_mom++;
           break;
         case xtraopt_info:
 #warning unhandled xtraopt_info
@@ -996,6 +1024,45 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
         }
     }
 }                               /* end of parse_program_arguments_mom */
+
+
+
+
+static void
+do_add_predefined_mom (void)
+{
+  for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
+    {
+      const char *end = NULL;
+      struct mom_item_st *preditm =
+        mom_make_item_from_string (added_predef_mom[ix].predef_name, &end);
+      if (end && *end)
+        MOM_FATAPRINTF ("bad predefined name '%s'",
+                        added_predef_mom[ix].predef_name);
+      assert (preditm && preditm->va_itype == MOMITY_ITEM);
+      mom_item_put_space (preditm, MOMSPA_PREDEF);
+      const char *comm = added_predef_mom[ix].predef_comment;
+      if (comm && comm[0])
+        {
+	  pthread_mutex_lock(&preditm->itm_mtx);
+	  time(&preditm->itm_mtime);
+	  preditm->itm_pattr = //
+	    mom_assovaldata_put (preditm->itm_pattr,
+				 MOM_PREDEFITM(comment),
+				 (struct mom_hashedvalue_st*)mom_boxstring_make(comm));
+	  pthread_mutex_unlock(&preditm->itm_mtx);
+          MOM_INFORMPRINTF ("made predefined %s with comment %s",
+                            mom_item_cstring (preditm), comm);
+        }
+      else
+        {
+          MOM_INFORMPRINTF ("made predefined %s without comment",
+                            mom_item_cstring (preditm));
+        }
+    }
+}                               /* end of do_add_predefined_mom */
+
+
 
 int
 main (int argc_main, char **argv_main)
@@ -1057,6 +1124,8 @@ main (int argc_main, char **argv_main)
         }
       mom_load_state (load_state_mom);
     }
+  if (count_added_predef_mom > 0)
+    do_add_predefined_mom ();
   if (dir_after_load_mom)
     {
       if (chdir (dir_after_load_mom))
@@ -1090,6 +1159,20 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("dumping state in %s", cwdbuf);
       mom_dump_state ();
     }
-  MOM_INFORMPRINTF ("end %s pid %d\n", argv[0], (int) getpid ());
+  if (count_added_predef_mom >0 && !dir_after_load_mom)
+    {
+      MOM_INFORMPRINTF("making again after adding %d predefined", count_added_predef_mom);
+      char cmdbuf[128];
+      memset(cmdbuf, 0, sizeof(cmdbuf));
+      if (snprintf(cmdbuf, sizeof(cmdbuf), "make -j 3 OPTIMFLAGS='%s'", monimelt_optimflags)
+	  >= (int) sizeof(cmdbuf)-1)
+	MOM_FATAPRINTF("too small command buffer %s", cmdbuf);
+      int bad = system(cmdbuf);
+      if (bad)
+	MOM_FATAPRINTF("%s failed (%d)", cmdbuf, bad);
+      MOM_INFORMPRINTF("made ok after adding %d predefined", count_added_predef_mom);
+    }
+  MOM_INFORMPRINTF ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds)\n", argv[0], (int) getpid (),
+		    mom_elapsed_real_time (), mom_process_cpu_time());
   return 0;
 }                               /* end of main */

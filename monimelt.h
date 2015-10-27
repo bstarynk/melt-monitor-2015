@@ -98,6 +98,7 @@ extern const char monimelt_lastgitcommit[];
 extern const char monimelt_lastgittag[];
 extern const char monimelt_compilercommand[];
 extern const char monimelt_compilerflags[];
+extern const char monimelt_optimflags[];
 extern const char monimelt_checksum[];
 
 
@@ -374,6 +375,8 @@ enum momitype_en
 struct mom_item_st;
 struct mom_loader_st;
 struct mom_dumper_st;
+
+#define MOM_PREDEFITM(Nam) (&mompredef_##Nam)
 
 #define MOM_HAS_PREDEFINED(Nam,Hash) extern struct mom_item_st mompredef_##Nam;
 #include "_mom_predef.h"

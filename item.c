@@ -1714,7 +1714,7 @@ extern mom_loader_caret_sig_t momf_ldc_payload_queue;
 extern mom_loader_caret_sig_t momf_ldc_payload_hashset;
 extern mom_loader_caret_sig_t momf_ldc_payload_hashmap;
 
-
+const char momsig_ldc_mtime[] = "signature_loader_caret";
 void
 momf_ldc_mtime (struct mom_item_st *itm, struct mom_loader_st *ld)
 {
@@ -1728,6 +1728,8 @@ momf_ldc_mtime (struct mom_item_st *itm, struct mom_loader_st *ld)
   mom_loader_pop (ld, 1);
 }                               /* end of momf_ldc_mtime */
 
+
+const char momsig_ldc_func[] = "signature_loader_caret";
 void
 momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
 {
@@ -1779,6 +1781,8 @@ momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
     MOM_FATAPRINTF ("too long signature name %s", funambuf);
 }                               /* end of momf_ldc_func */
 
+
+const char momsig_ldc_funsignature[] = "signature_loader_caret";
 void
 momf_ldc_funsignature (struct mom_item_st *itm, struct mom_loader_st *ld)
 {

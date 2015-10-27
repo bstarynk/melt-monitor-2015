@@ -344,7 +344,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           (*caretfun) (curitm, ld);
           MOM_DEBUGPRINTF (load, "done caret function %s", nambuf);
         }
-      //// ^bar runs the action momf_ldc_bar
+      //// )bar runs the action momf_ldp_bar
       else if (linbuf[0] == ')' && isalpha (linbuf[1]))
         {
           char nambuf[160];
