@@ -164,8 +164,9 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
           fputs ("\n\n", fhack);
         }
       fprintf (fhack,
-               "  MOM_DEBUGPRINTF(web, \"momhack end %s\", mom_item_cstring(momhackitm));\n",
-               hackitmstr);
+               "\n#line 1 \"hack-%s-tail\"\n"
+               "  MOM_DEBUGPRINTF(web, \"momhack end %%s\", mom_item_cstring(momhackitm));\n",
+               hackitmstr, hackitmstr);
       fprintf (fhack, "  MOM_INFORMPRINTF(\"done momhack %s\");\n",
                hackitmstr);
       fprintf (fhack, "} // end momhack_%s\n\n", hackitmstr);

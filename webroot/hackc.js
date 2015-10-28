@@ -22,6 +22,7 @@ var prologuetxa;
 var initialtxa;
 var prologuecodmir;
 var initialcodmir;
+var hackcsubmit;
 
 function got_hackc_click(ev)
 {
@@ -47,6 +48,10 @@ function got_hackc_click(ev)
 $(document).ready(function(){
     prologuetxa = $("#prologuetxa_id");
     initialtxa = $("#initialtxa_id");
+    hacksubmit = $("#hackc_id");
+    console.debug ("documready prologuetxa=", prologuetxa,
+		   " initialtxa=", initialtxa,
+		   " hacksubmit=", hacksubmit);
     prologuecodmir = CodeMirror.fromTextArea(prologuetxa[0], {
 	lineNumbers: true,
 	theme: "default",
@@ -57,5 +62,5 @@ $(document).ready(function(){
 	theme: "neo",
 	mode: "text/x-csrc"
     });
-    $("#hackc_id").click(got_hackc_click);
+    hacksubmit.click(got_hackc_click);
 });				// end document ready function
