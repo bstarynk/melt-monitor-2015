@@ -1165,9 +1165,12 @@ struct mom_statelem_st
     intptr_t st_int;            /* when MOMSTA_INT */
     double st_dbl;              /* when MOMSTA_DBL */
     const char *st_str;         /* GC-strduped string for when MOMSTA_STRING */
-    struct mom_anyvalue_st *st_val;     /* when MOMSTA_VAL */
+    struct mom_hashedvalue_st *st_val;  /* when MOMSTA_VAL */
   };
 };
+
+void mom_fprint_ldstate (FILE *f, const struct mom_statelem_st se);
+const char *mom_ldstate_cstring (const struct mom_statelem_st se);
 
 static inline enum mom_statetype_en
 mom_ldstate_type (const struct mom_statelem_st se)
@@ -1244,18 +1247,18 @@ mom_ldstate_make_str (const char *s)
 }
 
 
-static inline const struct mom_anyvalue_st *
+static inline const struct mom_hashedvalue_st *
 mom_ldstate_val (const struct mom_statelem_st se)
 {
   return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
 };
 
 static inline struct mom_statelem_st
-mom_ldstate_make_val (const struct mom_anyvalue_st *v)
+mom_ldstate_make_val (const struct mom_hashedvalue_st *v)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) v};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) v};
 }
 
 
@@ -1270,7 +1273,7 @@ mom_ldstate_make_item (const struct mom_item_st *itm)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) itm};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) itm};
 }
 
 
@@ -1285,7 +1288,7 @@ mom_ldstate_make_boxint (const struct mom_boxint_st *bi)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) bi};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) bi};
 }
 
 static inline const struct mom_boxstring_st *
@@ -1299,7 +1302,7 @@ mom_ldstate_make_boxstring (const struct mom_boxstring_st *bs)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) bs};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) bs};
 }
 
 
@@ -1315,7 +1318,7 @@ mom_ldstate_make_tuple (const struct mom_boxtuple_st *tu)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) tu};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) tu};
 }
 
 
@@ -1330,7 +1333,7 @@ mom_ldstate_make_set (const struct mom_boxset_st *se)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) se};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) se};
 }
 
 
@@ -1347,7 +1350,7 @@ mom_ldstate_make_node (const struct mom_boxnode_st *nd)
 {
   return (struct mom_statelem_st)
   {
-  .st_type = MOMSTA_VAL,.st_val = (struct mom_anyvalue_st *) nd};
+  .st_type = MOMSTA_VAL,.st_val = (struct mom_hashedvalue_st *) nd};
 }
 
 

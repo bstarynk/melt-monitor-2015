@@ -24,6 +24,64 @@ struct mom_loader_st *mom_loader;
 
 
 void
+mom_fprint_ldstate (FILE *f, const struct mom_statelem_st se)
+{
+  if (!f)
+    return;
+  switch (se.st_type)
+    {
+    case MOMSTA_EMPTY:
+      fputs ("empty", f);
+      break;
+    case MOMSTA_MARK:
+      fprintf (f, "mark %d", se.st_mark);
+      break;
+    case MOMSTA_INT:
+      fprintf (f, "int %ld", (long) se.st_int);
+      break;
+    case MOMSTA_DBL:
+      fprintf (f, "double %g", se.st_dbl);
+      break;
+    case MOMSTA_STRING:
+      fputs ("string \"", f);
+      mom_output_utf8_encoded (f, se.st_str, -1);
+      fputc ('"', f);
+      break;
+    case MOMSTA_VAL:
+      {
+        long lastnl = ftell (f);
+        fputs ("val:", f);
+        mom_output_value (f, &lastnl, 0, se.st_val);
+        fputc (';', f);
+      }
+      break;
+    default:
+      fprintf (f, "?typ#%d?", (int) se.st_type);
+      break;
+    }
+}                               /* end mom_fprint_ldstate */
+
+
+
+const char *
+mom_ldstate_cstring (const struct mom_statelem_st se)
+{
+  char *res = NULL;
+  char *buf = NULL;
+  size_t bsiz = 0;
+  if (se.st_type == MOMSTA_EMPTY)
+    return "empty";
+  FILE *f = open_memstream (&buf, &bsiz);
+  mom_fprint_ldstate (f, se);
+  fflush (f);
+  if (buf)
+    res = GC_STRDUP (buf);
+  fclose (f);
+  free (buf);
+  return res;
+}
+
+void
 mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
 {
   if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
@@ -202,7 +260,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               if (boxed)
                 mom_loader_push
                   (ld,
-                   mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                   mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                          mom_boxdouble_make (x)));
               else
                 mom_loader_push (ld, mom_ldstate_make_dbl (x));
@@ -216,7 +274,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               if (boxed)
                 mom_loader_push
                   (ld,
-                   mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                   mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                          mom_boxint_make (ll)));
               else
                 mom_loader_push (ld, mom_ldstate_make_int (ll));
@@ -231,7 +289,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass boxed +Infinity double");
               mom_loader_push
                 (ld,
-                 mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                 mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (INFINITY)));
             }
           else if (!strncmp (linbuf, "-INF_", 5))
@@ -239,7 +297,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass boxed -Infinity double");
               mom_loader_push
                 (ld,
-                 mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                 mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (-INFINITY)));
             }
           else if (!strncmp (linbuf, "+NAN_", 5))
@@ -247,7 +305,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass boxed NAN double");
               mom_loader_push
                 (ld,
-                 mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                 mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (NAN)));
             }
           else if (!strncmp (linbuf, "+INF", 4))
@@ -278,8 +336,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           MOM_DEBUGPRINTF (load, "second_pass item %s",
                            mom_item_cstring (itm));
           mom_loader_push (ld,
-                           mom_ldstate_make_val ((const struct mom_anyvalue_st
-                                                  *) itm));
+                           mom_ldstate_make_val ((const struct
+                                                  mom_hashedvalue_st *) itm));
         }
       /// "abc" is pushing a raw string & "a\n"_ is pushing a boxed string
       else if (linbuf[0] == '"')
@@ -299,7 +357,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass boxed string %s", linbuf);
               mom_loader_push
                 (ld,
-                 mom_ldstate_make_val ((const struct mom_anyvalue_st *)
+                 mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxstring_make (ss.ss_str)));
             }
           else if (!end[1] || isspace (end[1]))
@@ -342,10 +400,20 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           if (!caretfun)
             MOM_FATAPRINTF ("not found load caret function %s: %s",
                             nambuf, dlerror ());
-          MOM_DEBUGPRINTF (load, "before caret function %s curitm=%s", nambuf,
-                           mom_item_cstring (curitm));
+          MOM_DEBUGPRINTF (load, "before caret function %s curitm=%s top#%d",
+                           nambuf, mom_item_cstring (curitm),
+                           ld->ld_stacktop);
+          if (MOM_IS_DEBUGGING (load))
+            for (int d = 1; d < 4 && d <= (int) ld->ld_stacktop; d++)
+              MOM_DEBUGPRINTF (load,
+                               "before caret function %s stack[%d] : %s",
+                               nambuf, (int) ld->ld_stacktop - d,
+                               mom_ldstate_cstring (ld->ld_stackarr
+                                                    [(int) ld->ld_stacktop -
+                                                     d]));
           (*caretfun) (curitm, ld);
-          MOM_DEBUGPRINTF (load, "done caret function %s", nambuf);
+          MOM_DEBUGPRINTF (load, "done caret function %s top#%d", nambuf,
+                           ld->ld_stacktop);
         }
       //// )bar runs the action momf_ldp_bar
       else if (linbuf[0] == ')' && isalpha (linbuf[1]))
@@ -374,11 +442,17 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 = mom_gc_alloc ((sizp + 1) * sizeof (*elemarr));
               memcpy (elemarr, ld->ld_stackarr + sizp,
                       sizp * sizeof (*elemarr));
-              mom_loader_pop (ld, pmark + 1);
+              mom_loader_pop (ld, sizp + 1);
               MOM_DEBUGPRINTF (load,
-                               "before parenfun %s on itm %s with #%d stackelems",
-                               nambuf, mom_item_cstring (curitm), pmark);
-              (*parenfun) (curitm, ld, elemarr, pmark);
+                               "before parenfun %s on itm %s with #%d stackelems, pmark=%d",
+                               nambuf, mom_item_cstring (curitm), sizp,
+                               pmark);
+              if (MOM_IS_DEBUGGING (load))
+                for (unsigned ix = 0; ix < sizp; ix++)
+                  MOM_DEBUGPRINTF (load, "before parenfun %s elemarr[%d]= %s",
+                                   nambuf, ix,
+                                   mom_ldstate_cstring (elemarr[ix]));
+              (*parenfun) (curitm, ld, elemarr, sizp);
               MOM_DEBUGPRINTF (load, "after parenfun %s on itm %s",
                                nambuf, mom_item_cstring (curitm));
             }

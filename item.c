@@ -599,9 +599,9 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
       // sometimes, itm is a pseudoitemzon from mom_make_item_from_radix_id
       // so we need to test equality of hash, radix, hid, lid
       else if (curitm->hva_hash == itm->hva_hash
-	      && curitm->itm_lid == itm->itm_lid
-	      && curitm->itm_radix == itm->itm_radix
-	      && curitm->itm_hid == itm->itm_hid)
+               && curitm->itm_lid == itm->itm_lid
+               && curitm->itm_radix == itm->itm_radix
+               && curitm->itm_hid == itm->itm_hid)
         {
           pos = ix;
           goto end;
@@ -630,9 +630,9 @@ index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
       // sometimes, itm is a pseudoitemzon from mom_make_item_from_radix_id
       // so we need to test equality of hash, radix, hid, lid
       else if (curitm->hva_hash == itm->hva_hash
-	      && curitm->itm_lid == itm->itm_lid
-	      && curitm->itm_radix == itm->itm_radix
-	      && curitm->itm_hid == itm->itm_hid)
+               && curitm->itm_lid == itm->itm_lid
+               && curitm->itm_radix == itm->itm_radix
+               && curitm->itm_hid == itm->itm_hid)
         {
           pos = ix;
           goto end;
@@ -1475,8 +1475,8 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   itm->itm_lid = lid;
   time (&itm->itm_mtime);
   int pos = index_item_in_radix_mom (curad, itm);
-  MOM_DEBUGPRINTF(item, "predefined itm@%p %s pos %d",
-		  (void*)itm, mom_item_cstring(itm), pos);
+  MOM_DEBUGPRINTF (item, "predefined itm@%p %s pos %d",
+                   (void *) itm, mom_item_cstring (itm), pos);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
   curad->rad_items[pos] = itm;
@@ -1845,4 +1845,16 @@ momf_ldc_funsignature (struct mom_item_st *itm, struct mom_loader_st *ld)
   if (sigitm)
     itm->itm_funsig = sigitm;
   mom_loader_pop (ld, 1);
+}
+
+
+extern mom_loader_paren_sig_t momf_ldp_attrs;
+void
+momf_ldp_attrs (struct mom_item_st *itm,
+                struct mom_loader_st *ld,
+                struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  MOM_FATAPRINTF ("momf_ldp_attrs unimplemented itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_attrs
 }
