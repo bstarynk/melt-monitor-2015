@@ -42,11 +42,11 @@ function got_hackc_click(ev)
 		console.debug ("hackc answer=", answer);
 		if (answer.compilation) {
 		    outcomp.html("<h3>compilation <tt>" + answer.hackitem + "</tt> success</h3>" 
-				 +"<fmt>" + answer.compileroutput + "</fmt>");
+				 +"<fmt class='compilemsg'>" + answer.compileroutput + "</fmt>");
 		}
 		else {
 		    outcomp.html("<h3>compilation <tt>" + answer.hackitem + "</tt> failure</h3>" 
-				 +"<fmt>" + answer.compileroutput + "</fmt>");
+				 +"<fmt class='compilemsg'>" + answer.compileroutput + "</fmt>");
 		}
 	    }
 	});
