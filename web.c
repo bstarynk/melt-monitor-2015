@@ -259,7 +259,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
                          funbuf);
       }
       json_t *jreply =
-        json_pack ("{s:s,s:b,s:s}", "compile-output", outbuf, "compilation",
+        json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf, "compilation",
                    true,
                    "hackitem", hackitmstr);
       // json_dumps will use GC_STRDUP...
@@ -279,7 +279,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
       MOM_WARNPRINTF ("hack_code #%ld compilation %s failed:\n%s\n",
                       reqcnt, hackitmstr, outbuf);
       json_t *jreply =
-        json_pack ("{s:s,s:b,s:s}", "compile-output", outbuf, "compilation",
+        json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf, "compilation",
                    false,
                    "hackitem", hackitmstr);
       // json_dumps will use GC_STRDUP...
