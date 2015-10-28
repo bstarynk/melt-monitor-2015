@@ -1867,15 +1867,16 @@ momf_ldp_attrs (struct mom_item_st *itm,
       struct mom_item_st *attitm = mom_ldstate_dynitem (elemarr[ix]);
       const struct mom_hashedvalue_st *attval =
         mom_ldstate_val (elemarr[ix + 1]);
-      MOM_DEBUGPRINTF (load, "momf_ldp_attrs attitm=%s attval=%s",
-                       mom_item_cstring (attitm), mom_value_cstring (attval));
+      MOM_DEBUGPRINTF (load, "momf_ldp_attrs ix=%d attitm=%s attval=%s",
+                       ix, mom_item_cstring (attitm),
+                       mom_value_cstring (attval));
       itm->itm_pattr = mom_assovaldata_put (itm->itm_pattr, attitm, attval);
     }
 }                               /* end of momf_ldp_attrs */
 
 
 extern mom_loader_paren_sig_t momf_ldp_comps;
-const char momsig_ldc_comps[] = "signature_loader_paren";
+const char momsig_ldp_comps[] = "signature_loader_paren";
 void
 momf_ldp_comps (struct mom_item_st *itm,
                 struct mom_loader_st *ld,

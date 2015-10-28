@@ -56,4 +56,13 @@ comment
 ^mtime
 
 
+*web_handlers
+1446061228
+^mtime
+(
+comment
+"hashassoc for web handlers"_
+)attrs
+
+
 ### eof global.mom

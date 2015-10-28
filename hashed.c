@@ -1022,3 +1022,38 @@ mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,
     qsort (arr, icnt, sizeof (void *), hashedvalueptr_cmp_mom);
   return mom_boxnode_make (connitm, cnt, arr);
 }                               /* end of mom_hashassoc_sorted_key_node */
+
+
+
+extern mom_loader_paren_sig_t momf_ldp_payload_hashassoc;
+
+const char momsig_ldp_payload_hashassoc[] = "signature_loader_paren";
+void
+momf_ldp_payload_hashassoc (struct mom_item_st *itm,
+                            struct mom_loader_st *ld,
+                            struct mom_statelem_st *elemarr,
+                            unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldp_payload_hashassoc start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  if (elemsize % 2 != 0)
+    MOM_FATAPRINTF ("momf_ldp_payload_hashassoc itm %s odd elemsize %d",
+                    mom_item_cstring (itm), elemsize);
+  struct mom_hashassoc_st *hass =
+    mom_hashassoc_reserve (NULL, (5 * elemsize) / 8 + 2);
+  for (unsigned ix = 0; ix < elemsize; ix += 2)
+    {
+      const struct mom_hashedvalue_st *keyatt = mom_ldstate_val (elemarr[ix]);
+      const struct mom_hashedvalue_st *valatt =
+        mom_ldstate_val (elemarr[ix + 1]);
+      MOM_DEBUGPRINTF (load,
+                       "momf_ldp_payload_hashassoc ix=%d keyatt=%s valatt=%s",
+                       ix, mom_value_cstring (keyatt),
+                       mom_value_cstring (valatt));
+      hass = mom_hashassoc_put (hass, keyatt, valatt);
+    };
+  itm->itm_payload = (struct mom_anyvalue_st *) hass;
+}                               /* end of momf_ldp_payload_hashassoc */
