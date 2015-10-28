@@ -33,6 +33,15 @@ comment
 ^mtime
 
 
+*signature_loader_paren
+1446020701
+^mtime
+(
+comment
+"signature of load paren functions"_
+)attrs
+
+
 *the_system
 1445947163
 ^mtime

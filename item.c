@@ -1849,6 +1849,7 @@ momf_ldc_funsignature (struct mom_item_st *itm, struct mom_loader_st *ld)
 
 
 extern mom_loader_paren_sig_t momf_ldp_attrs;
+const char momsig_ldc_attrs[] = "signature_loader_paren";
 void
 momf_ldp_attrs (struct mom_item_st *itm,
                 struct mom_loader_st *ld,
@@ -1874,6 +1875,7 @@ momf_ldp_attrs (struct mom_item_st *itm,
 
 
 extern mom_loader_paren_sig_t momf_ldp_comps;
+const char momsig_ldc_comps[] = "signature_loader_paren";
 void
 momf_ldp_comps (struct mom_item_st *itm,
                 struct mom_loader_st *ld,
