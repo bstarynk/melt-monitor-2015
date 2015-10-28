@@ -24,29 +24,43 @@ var prologuecodmir;
 var initialcodmir;
 var hackcsubmit;
 var outcomp;
+// from http://stackoverflow.com/a/1219983/841108
+function htmlEncode(value){
+  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
+  //then grab the encoded contents back out.  The div never exists on the page.
+  return $('<div/>').text(value).html();
+}
+
+function htmlDecode(value){
+  return $('<div/>').html(value).text();
+}
 
 function got_hackc_click(ev)
 {
-    console.debug ("got_hackc_click ev=", ev);
+    var srcprologue = prologuecodmir.getValue();
+    var srcinitial = initialcodmir.getValue();
+    console.debug ("got_hackc_click ev=", ev,
+		   " srcprologue=", srcprologue,
+		   " srcinitial=", srcinitial);
     $.ajax(
 	{
 	    url: "/mom_hackc_code",
 	    method: "POST",
 	    data: {
 		do_hackc: "ajaxhack",
-		prologuetxt: prologuetxa.text(),
-		initialtxt: initialtxa.text()
+		prologuetxt: srcprologue,
+		initialtxt: srcinitial
 	    },
 	    dataType: "JSON",
 	    success: function (answer) {
 		console.debug ("hackc answer=", answer);
 		if (answer.compilation) {
 		    outcomp.html("<h3>compilation <tt>" + answer.hackitem + "</tt> success</h3>" 
-				 +"<fmt class='compilemsg'>" + answer.compileroutput + "</fmt>");
+				 +"<pre class='compilemsg'>" + htmlEncode(answer.compileroutput) + "</pre>");
 		}
 		else {
 		    outcomp.html("<h3>compilation <tt>" + answer.hackitem + "</tt> failure</h3>" 
-				 +"<fmt class='compilemsg'>" + answer.compileroutput + "</fmt>");
+				 +"<pre class='compilemsg'>" + htmlEncode(answer.compileroutput) + "</pre>");
 		}
 	    }
 	});
@@ -72,5 +86,7 @@ $(document).ready(function(){
 	theme: "neo",
 	mode: "text/x-csrc"
     });
+    prologuecodmir.setSize({height:"25%"});
+    initialcodmir.setSize({height:"55%"});
     hacksubmit.click(got_hackc_click);
 });				// end document ready function
