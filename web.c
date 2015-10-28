@@ -77,7 +77,16 @@ mom_start_web (const char *webservice)
       MOM_FATAPRINTF ("failed to add generic webhandler (onionerr#%d)",
                       onerr);
   }
-  MOM_DEBUGPRINTF (web, "mom_start_web before listening @%p", onion_mom);
+  if (MOM_IS_DEBUGGING (web))
+    for (unsigned wix = 0; wix < MOM_MAX_WEBDIR; wix++)
+      {
+        if (mom_webdir[wix])
+          MOM_DEBUGPRINTF (web, "mom_start_web mom_webdir[%d]='%s'",
+                           wix, mom_webdir[wix]);
+      };
+  MOM_DEBUGPRINTF (web,
+                   "mom_start_web before listening @%p MOM_MAX_WEBDIR=%d",
+                   onion_mom, MOM_MAX_WEBDIR);
   onion_listen (onion_mom);
   atomic_store (&mom_should_run, true);
   MOM_INFORMPRINTF ("web service on %s started with libonion", webservice);
@@ -166,7 +175,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     {
       MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s could be file",
                        reqcnt, reqfupath);
-      char fpath[MOM_PATH_MAX + 64];
+      char fpath[2 * MOM_PATH_MAX];
       memset (fpath, 0, sizeof (fpath));
       for (unsigned wix = 0; wix < MOM_MAX_WEBDIR; wix++)
         {
@@ -175,12 +184,26 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           memset (fpath, 0, sizeof (fpath));
           if (snprintf (fpath, sizeof (fpath), "%s%s",
                         mom_webdir[wix], reqfupath)
-              < (int) sizeof (fpath) && !access (fpath, R_OK))
+              >= (int) sizeof (fpath) - 2)
             {
-              MOM_DEBUGPRINTF (web, "handle_web_mom request#%ld got fpath %s",
-                               reqcnt, fpath);
+              MOM_WARNPRINTF
+                ("for webrequest#%ld wix=%d reqfupath %s too long fpath %s",
+                 webcount_mom, wix, reqfupath, fpath);
+              continue;
+            }
+          MOM_DEBUGPRINTF (web, "webrequest#%ld trying wix=%d fpath=%s",
+                           reqcnt, wix, fpath);
+          if (!access (fpath, R_OK))
+            {
+              MOM_DEBUGPRINTF (web,
+                               "handle_web_mom request#%ld wix#%d got fpath %s",
+                               reqcnt, wix, fpath);
               return onion_shortcut_response_file (fpath, requ, resp);
             }
+          else
+            MOM_DEBUGPRINTF (web,
+                             "webrequest#%ld for wix=%d fpath=%s missing (%m)",
+                             reqcnt, wix, fpath);
         }
     }
   return OCS_NOT_PROCESSED;

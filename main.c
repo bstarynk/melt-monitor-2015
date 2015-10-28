@@ -1100,7 +1100,10 @@ main (int argc_main, char **argv_main)
           char *lastslash = strrchr (webuf, '/');
           if (lastslash)
             *lastslash = 0;
+          else
+            strcpy (webuf, ".");
           strcat (webuf, "/" MOM_LOAD_WEBDIR);
+          MOM_DEBUGPRINTF (web, "implicit webuf=%s", webuf);
           struct stat webstat = { 0 };
           if (!stat (webuf, &webstat)
               && (webstat.st_mode & S_IFMT) == S_IFDIR)

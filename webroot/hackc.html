@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <!--  Copyright (C)  2015  Basile Starynkevitch and later the FSF
+    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+    This file is part of GCC.
+  
+    GCC is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3, or (at your option)
+    any later version.
+  
+    GCC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with GCC; see the file COPYING3.   If not see
+    <http://www.gnu.org/licenses/>.
+   -->
+  <head>
+    <meta charset='utf-8'/>
+    <title>Hacking Monimelt</title>
+    <script src='jquery.js'/>
+    <script src='codemirror.js'/>
+    <script src='codemirror-clike.js'/>
+    <script src='codemirror-emacs-keymap.js'/>
+    <script>
+      var prologuetxa;
+      var initialtxa;
+      var prologuecodmir;
+      var initialcodmir;
+      $(document).ready(function(){
+      prologuetxa = $("#prologuetxa_id");
+      initialtxa = $("#initialtxa_id");
+      prologuecodmir = CodeMirror.fromTextArea(prologuetxa, {
+      lineNumbers: true,
+      mode: "text/x-csrc"
+      });
+      initialcodmir = CodeMirror.fromTextArea(initialtxa, {
+      lineNumbers: true,
+      mode: "text/x-csrc"
+      });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Hacking Monimelt</h1>
+    <form action='mom_hackc_code' method='post'>
+    <h2>Prologue code:</h2>
+    <textarea id='prologuetxa_id' rows='10' cols='72'>
+    /// prologue declaration and code
+    </textarea>
+    <hr/>
+    <h2>Initial code:</h2>
+    <textarea id='initialtxa_id' rows='25' cols='72'>
+      /// initial code
+    </textarea>
+    <hr/>
+    <input type='submit' name='do_hackc' value='Run'/>
+    </form>
+  </body>
+</html>
