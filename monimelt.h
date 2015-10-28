@@ -1658,4 +1658,6 @@ mom_stop (void)
 {
   atomic_store (&mom_should_run, false);
 }
+
+void mom_stop_and_dump (void);
 #endif /*MONIMELT_INCLUDED_ */

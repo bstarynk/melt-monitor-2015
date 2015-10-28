@@ -129,14 +129,17 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
   memset (hackpath, 0, sizeof (hackpath));
   MOM_DEBUGPRINTF (web, "hackc_code start webrequest#%ld", reqcnt);
   const char *do_hackc = onion_request_get_post (requ, "do_hackc");
-  const char *prologuetxt = onion_request_get_post (requ, "prologuetxt");
-  const char *initialtxt = onion_request_get_post (requ, "initialtxt");
-  MOM_DEBUGPRINTF (web, "hackc_code #%ld do_hackc=%s", reqcnt, do_hackc);
-  MOM_DEBUGPRINTF (web, "hackc_code #%ld prologuetxt=%s", reqcnt,
-                   prologuetxt);
-  MOM_DEBUGPRINTF (web, "hackc_code #%ld initialtxt=%s", reqcnt, initialtxt);
+  const char *do_stop = onion_request_get_post (requ, "do_stop");
+  MOM_DEBUGPRINTF (web, "hackc_code #%ld do_hackc=%s do_stop=%s",
+                   reqcnt, do_hackc, do_stop);
   if (do_hackc && do_hackc[0])
     {
+      const char *prologuetxt = onion_request_get_post (requ, "prologuetxt");
+      const char *initialtxt = onion_request_get_post (requ, "initialtxt");
+      MOM_DEBUGPRINTF (web, "hackc_code #%ld prologuetxt=%s", reqcnt,
+                       prologuetxt);
+      MOM_DEBUGPRINTF (web, "hackc_code #%ld initialtxt=%s", reqcnt,
+                       initialtxt);
       hackitm = mom_clone_item (MOM_PREDEFITM (hackc));
       hackitmstr = mom_item_cstring (hackitm);
       MOM_DEBUGPRINTF (web, "hackc_code #%ld hackitm=%s", reqcnt, hackitmstr);
@@ -147,15 +150,15 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
       mom_output_gplv3_notice (fhack, "///-", "", basename (hackpath));
       fputs ("\n\n", fhack);
       fputs ("#include \"monimelt.h\"\n\n", fhack);
-      fprintf (fhack, "const char momtimestamp_%s[]= __TIMESTAMP__;\n",
+      fprintf (fhack, "const char momtimestamp_%s[]= __TIMESTAMP__;\n\n",
                hackitmstr);
       if (prologuetxt && prologuetxt[0])
         {
-          fprintf (fhack, "#line 1 \"webhack-%s-prologue\"\n", hackitmstr);
+          fprintf (fhack, "#line 1 \"%s-prologue\"\n", hackitmstr);
           fputs (prologuetxt, fhack);
           fputs ("\n\n", fhack);
         }
-      fprintf (fhack, "\n#line 1 \"webhack-%s-fun\"\n", hackitmstr);
+      fprintf (fhack, "\n#line 1 \"%s-fun\"\n", hackitmstr);
       fprintf (fhack, "void momhack_%s(struct mom_item_st*momhackitm) {\n"
                "  MOM_DEBUGPRINTF(web, \"momhack_%s start\");\n",
                hackitmstr, hackitmstr);
@@ -163,107 +166,150 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
                "  assert(momhackitm && momhackitm->va_itype==MOMITY_ITEM);\n");
       if (initialtxt && initialtxt[0])
         {
-          fprintf (fhack, "#line 1 \"webhack-%s-initial\"\n", hackitmstr);
+          fprintf (fhack, "#line 1 \"%s-initial\"\n", hackitmstr);
           fputs (initialtxt, fhack);
           fputs ("\n\n", fhack);
         }
       fprintf (fhack,
-               "\n#line 1 \"webhack-%s-tail\"\n"
-               "  MOM_DEBUGPRINTF(web, \"momhack_%s end %%s\", mom_item_cstring(momhackitm));\n",
+               "\n#line 1 \"%s-tail\"\n"
+               "  MOM_DEBUGPRINTF(web, \"momhack_%s end %%s\",\n"
+               "                  mom_item_cstring(momhackitm));\n",
                hackitmstr, hackitmstr);
       fprintf (fhack, "  MOM_INFORMPRINTF(\"done momhack %s\");\n",
                hackitmstr);
       fprintf (fhack, "} // end momhack_%s\n\n", hackitmstr);
       fprintf (fhack, "\n" "// eof generated %s\n", basename (hackpath));
       fclose (fhack), fhack = NULL;
-    }
-  FILE *cmdf = NULL;
-  {
-    char compilcmd[256];
-    memset (compilcmd, 0, sizeof (compilcmd));
-    snprintf (compilcmd, sizeof (compilcmd), "make modules/momg_%s.so 2>&1",
-              hackitmstr);
-    MOM_DEBUGPRINTF (web, "hackc_code #%ld compilcmd:%s", reqcnt, compilcmd);
-    fflush (NULL);
-    cmdf = popen (compilcmd, "r");
-    if (!cmdf)
-      MOM_FATAPRINTF ("failed to popen %s - %m", compilcmd);
-    usleep (50000);
-  }
-  char *outbuf = NULL;
-  size_t outsiz = 0;
-  FILE *outf = open_memstream (&outbuf, &outsiz);
-  char *linbuf = NULL;
-  size_t linsiz = 0;
-  int lincnt = 0;
-  do
-    {
-      ssize_t linlen = getline (&linbuf, &linsiz, cmdf);
-      if (linlen <= 0)
-        break;
-      lincnt++;
-      MOM_DEBUGPRINTF (web, "hack_code #%ld compilin#%d: %s", reqcnt, lincnt,
-                       linbuf);
-      if (lincnt > 1000)
-        MOM_FATAPRINTF
-          ("hack_code #%ld too many (%d) lines from compilation of momg_%s.c",
-           reqcnt, lincnt, hackitmstr);
-      fputs (linbuf, outf);
-    }
-  while (!feof (cmdf));
-  int comperr = pclose (cmdf);
-  fflush (outf);
-  MOM_DEBUGPRINTF (web,
-                   "hack_code #%ld comperr %d lincnt %d outbuf==\n%s\n##end outbuf%ld",
-                   reqcnt, comperr, lincnt, outbuf, reqcnt);
-  if (!comperr)
-    {
-      // backup the generated C code
+      FILE *cmdf = NULL;
       {
-        char backupath[80];
-        memset (backupath, 0, sizeof (backupath));
-        snprintf (backupath, sizeof (backupath), "%s~", hackpath);
-        if (rename (hackpath, backupath))
-          MOM_FATAPRINTF ("failed to rename %s to %s - %m", hackpath,
-                          backupath);
-        else
-          MOM_INFORMPRINTF ("backed-up hackc %s -> %s", hackpath, backupath);
+        char compilcmd[256];
+        memset (compilcmd, 0, sizeof (compilcmd));
+        snprintf (compilcmd, sizeof (compilcmd),
+                  "make modules/momg_%s.so 2>&1", hackitmstr);
+        MOM_DEBUGPRINTF (web, "hackc_code #%ld compilcmd:%s", reqcnt,
+                         compilcmd);
+        fflush (NULL);
+        cmdf = popen (compilcmd, "r");
+        if (!cmdf)
+          MOM_FATAPRINTF ("failed to popen %s - %m", compilcmd);
+        usleep (50000);
       }
-      /// load the module and run its momhack_* function
-      {
-        char modulpath[80];
-        memset (modulpath, 0, sizeof (modulpath));
-        snprintf (modulpath, sizeof (modulpath), "modules/momg_%s.so",
-                  hackitmstr);
-        void *dlh = dlopen (modulpath, RTLD_NOW);
-        if (!dlh)
-          MOM_FATAPRINTF ("hack_code #%ld failed to dlopen %s : %s", reqcnt,
-                          modulpath, dlerror ());
-        MOM_DEBUGPRINTF (web, "hack_code #%ld dlopen %s succeeded @%p",
-                         reqcnt, modulpath, dlh);
-        char funbuf[80];
-        memset (funbuf, 0, sizeof (funbuf));
-        snprintf (funbuf, sizeof (funbuf), "momhack_%s", hackitmstr);
-        MOM_DEBUGPRINTF (web, "hack_code #%ld funbuf %s", reqcnt, funbuf);
-        momhackfun_t *pfun = dlsym (dlh, funbuf);
-        if (!pfun)
-          MOM_FATAPRINTF ("hack_code #%ld failed to dlsym %s : %s", reqcnt,
-                          funbuf, dlerror ());
-        MOM_DEBUGPRINTF (web,
-                         "hack_code #%ld funbuf %s before running pfun@%p",
-                         reqcnt, funbuf, (void *) pfun);
-        pthread_mutex_lock (&hackitm->itm_mtx);
-        (*pfun) (hackitm);
-        pthread_mutex_unlock (&hackitm->itm_mtx);
-        MOM_DEBUGPRINTF (web, "hack_code #%ld done funbuf %s", reqcnt,
-                         funbuf);
-      }
-      json_t *jreply =
-        json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf, "compilation",
-                   true,
-                   "hackitem", hackitmstr);
+      char *outbuf = NULL;
+      size_t outsiz = 0;
+      FILE *outf = open_memstream (&outbuf, &outsiz);
+      char *linbuf = NULL;
+      size_t linsiz = 0;
+      int lincnt = 0;
+      do
+        {
+          ssize_t linlen = getline (&linbuf, &linsiz, cmdf);
+          if (linlen <= 0)
+            break;
+          lincnt++;
+          MOM_DEBUGPRINTF (web, "hack_code #%ld compilin#%d: %s", reqcnt,
+                           lincnt, linbuf);
+          if (lincnt > 1000)
+            MOM_FATAPRINTF
+              ("hack_code #%ld too many (%d) lines from compilation of momg_%s.c",
+               reqcnt, lincnt, hackitmstr);
+          fputs (linbuf, outf);
+        }
+      while (!feof (cmdf));
+      int comperr = pclose (cmdf);
+      fflush (outf);
+      MOM_DEBUGPRINTF (web,
+                       "hack_code #%ld comperr %d lincnt %d outbuf==\n%s\n##end outbuf%ld",
+                       reqcnt, comperr, lincnt, outbuf, reqcnt);
+      if (!comperr)
+        {
+          // backup the generated C code
+          {
+            char backupath[80];
+            memset (backupath, 0, sizeof (backupath));
+            snprintf (backupath, sizeof (backupath), "%s~", hackpath);
+            if (rename (hackpath, backupath))
+              MOM_FATAPRINTF ("failed to rename %s to %s - %m", hackpath,
+                              backupath);
+            else
+              MOM_INFORMPRINTF ("backed-up hackc %s -> %s", hackpath,
+                                backupath);
+          }
+          /// load the module and run its momhack_* function
+          {
+            char modulpath[80];
+            memset (modulpath, 0, sizeof (modulpath));
+            snprintf (modulpath, sizeof (modulpath), "modules/momg_%s.so",
+                      hackitmstr);
+            void *dlh = dlopen (modulpath, RTLD_NOW);
+            if (!dlh)
+              MOM_FATAPRINTF ("hack_code #%ld failed to dlopen %s : %s",
+                              reqcnt, modulpath, dlerror ());
+            MOM_DEBUGPRINTF (web, "hack_code #%ld dlopen %s succeeded @%p",
+                             reqcnt, modulpath, dlh);
+            char funbuf[80];
+            memset (funbuf, 0, sizeof (funbuf));
+            snprintf (funbuf, sizeof (funbuf), "momhack_%s", hackitmstr);
+            MOM_DEBUGPRINTF (web, "hack_code #%ld funbuf %s", reqcnt, funbuf);
+            momhackfun_t *pfun = dlsym (dlh, funbuf);
+            if (!pfun)
+              MOM_FATAPRINTF ("hack_code #%ld failed to dlsym %s : %s",
+                              reqcnt, funbuf, dlerror ());
+            MOM_DEBUGPRINTF (web,
+                             "hack_code #%ld funbuf %s before running pfun@%p",
+                             reqcnt, funbuf, (void *) pfun);
+            pthread_mutex_lock (&hackitm->itm_mtx);
+            (*pfun) (hackitm);
+            pthread_mutex_unlock (&hackitm->itm_mtx);
+            MOM_DEBUGPRINTF (web, "hack_code #%ld done funbuf %s", reqcnt,
+                             funbuf);
+          }
+          json_t *jreply =
+            json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf,
+                       "compilation",
+                       true,
+                       "hackitem", hackitmstr);
+          // json_dumps will use GC_STRDUP...
+          MOM_DEBUGPRINTF (web, "hack success jreply=%s",
+                           json_dumps (jreply, JSON_INDENT (1)));
+          char *jrepl = json_dumps (jreply, 0);
+          int lenjrepl = strlen (jrepl);
+          onion_response_set_header (resp, "Content-Type", "text/json");
+          onion_response_set_length (resp, lenjrepl + 1);
+          onion_response_set_code (resp, HTTP_OK);
+          onion_response_write0 (resp, jrepl);
+          onion_response_write0 (resp, "\n");
+          return OCS_PROCESSED;
+        }
+      else
+        {
+          MOM_WARNPRINTF ("hack_code #%ld compilation %s failed:\n%s\n",
+                          reqcnt, hackitmstr, outbuf);
+          json_t *jreply =
+            json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf,
+                       "compilation",
+                       false,
+                       "hackitem", hackitmstr);
+          // json_dumps will use GC_STRDUP...
+          MOM_DEBUGPRINTF (web, "hack failure jreply=%s",
+                           json_dumps (jreply, JSON_INDENT (1)));
+          char *jrepl = json_dumps (jreply, 0);
+          int lenjrepl = strlen (jrepl);
+          onion_response_set_header (resp, "Content-Type", "text/json");
+          onion_response_set_length (resp, lenjrepl + 1);
+          onion_response_set_code (resp, HTTP_OK);
+          onion_response_write0 (resp, jrepl);
+          onion_response_write0 (resp, "\n");
+          return OCS_PROCESSED;
+        }
+    }                           /* end do_hackc */
+  else if (do_stop && do_stop[0])
+    {
+      MOM_DEBUGPRINTF (web, "hackc_code #%ld do_stop", reqcnt);
+      json_t *jreply = json_pack ("{s:f,s:f}",
+                                  "elapsedreal", mom_elapsed_real_time (),
+                                  "processcpu", mom_process_cpu_time ());;
       // json_dumps will use GC_STRDUP...
-      MOM_DEBUGPRINTF (web, "hack success jreply=%s",
+      MOM_DEBUGPRINTF (web, "hack stop jreply=%s",
                        json_dumps (jreply, JSON_INDENT (1)));
       char *jrepl = json_dumps (jreply, 0);
       int lenjrepl = strlen (jrepl);
@@ -272,26 +318,9 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
       onion_response_set_code (resp, HTTP_OK);
       onion_response_write0 (resp, jrepl);
       onion_response_write0 (resp, "\n");
-      return OCS_PROCESSED;
-    }
-  else
-    {
-      MOM_WARNPRINTF ("hack_code #%ld compilation %s failed:\n%s\n",
-                      reqcnt, hackitmstr, outbuf);
-      json_t *jreply =
-        json_pack ("{s:s,s:b,s:s}", "compileroutput", outbuf, "compilation",
-                   false,
-                   "hackitem", hackitmstr);
-      // json_dumps will use GC_STRDUP...
-      MOM_DEBUGPRINTF (web, "hack failure jreply=%s",
-                       json_dumps (jreply, JSON_INDENT (1)));
-      char *jrepl = json_dumps (jreply, 0);
-      int lenjrepl = strlen (jrepl);
-      onion_response_set_header (resp, "Content-Type", "text/json");
-      onion_response_set_length (resp, lenjrepl + 1);
-      onion_response_set_code (resp, HTTP_OK);
-      onion_response_write0 (resp, jrepl);
-      onion_response_write0 (resp, "\n");
+      mom_stop_and_dump ();
+      onion_listen_stop (onion_mom);
+      MOM_DEBUGPRINTF (web, "hackc_code #%ld do_stop stopping", reqcnt);
       return OCS_PROCESSED;
     }
   return OCS_INTERNAL_ERROR;

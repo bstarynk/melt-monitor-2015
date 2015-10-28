@@ -23,7 +23,10 @@ var initialtxa;
 var prologuecodmir;
 var initialcodmir;
 var hackcsubmit;
+var stopsubmit;
 var outcomp;
+
+
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
   //create a in-memory div, set it's inner text(which jQuery automatically encodes)
@@ -67,12 +70,36 @@ function got_hackc_click(ev)
     
 };				// end got_hackc_click
 
+function got_stop_click(ev)
+{
+    console.debug ("got_hackc_click ev=", ev);
+    $.ajax(
+	{
+	    url: "/mom_hackc_code",
+	    method: "POST",
+	    data: {
+		do_stop: "ajaxstop"
+	    },
+	    dataType: "JSON",
+	    success: function (answer) {
+		console.debug ("stop answer=", answer);
+		outcomp.html("<h3>execution stopped</h3>\n"
+			     + "<b>elapsed real time</b> <tt>"
+			     + answer.elapsedreal
+			     + "</tt>; <b>cpu time:</b> <tt>"
+			     + answer.processcpu
+			     + "</tt>");
+	    }
+	});
+}				// end got_stop_click
+		   
 
 $(document).ready(function(){
     prologuetxa = $("#prologuetxa_id");
     initialtxa = $("#initialtxa_id");
     hacksubmit = $("#hackc_id");
     outcomp = $("#outcomp_id");
+    stopsubmit = $("#stop_id");
     console.debug ("documready prologuetxa=", prologuetxa,
 		   " initialtxa=", initialtxa,
 		   " hacksubmit=", hacksubmit);
@@ -89,4 +116,5 @@ $(document).ready(function(){
     prologuecodmir.setSize({height:"25%"});
     initialcodmir.setSize({height:"55%"});
     hacksubmit.click(got_hackc_click);
+    stopsubmit.click(got_stop_click);
 });				// end document ready function

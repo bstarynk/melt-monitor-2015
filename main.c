@@ -1063,6 +1063,12 @@ do_add_predefined_mom (void)
 }                               /* end of do_add_predefined_mom */
 
 
+void
+mom_stop_and_dump (void)
+{
+  should_dump_mom = true;
+  mom_stop ();
+}
 
 int
 main (int argc_main, char **argv_main)
@@ -1152,6 +1158,7 @@ main (int argc_main, char **argv_main)
     {
       usleep (50 * 1000);
     }
+  usleep (10 * 1000);
   MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
   if (should_dump_mom)
     {
