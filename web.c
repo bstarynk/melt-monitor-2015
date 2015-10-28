@@ -326,6 +326,22 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
   return OCS_INTERNAL_ERROR;
 }                               // end mom_hackc_code
 
+struct mom_hashedvalue_st *
+mom_web_handler_full_path (const char *fullpath)
+{
+  if (!fullpath || fullpath[0] != '/' || strstr (fullpath, "..")
+      || strstr (fullpath, "//") || strlen (fullpath) > MOM_PATH_MAX)
+    {
+      MOM_DEBUGPRINTF (web, "web_handler_full_path bad fullpath %s",
+                       fullpath);
+      return NULL;
+    }
+  MOM_DEBUGPRINTF (web, "web_handler_full_path fullpath=%s", fullpath);
+#warning should look for existing item names between /
+  MOM_FATAPRINTF ("unimplemented mom_web_handler_full_path fullpath=%s",
+                  fullpath);
+}                               /* end of mom_web_handler_full_path */
+
 
 
 static onion_connection_status
@@ -427,6 +443,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     }
   if (wmeth == MOMWEBM_POST && !strcmp (reqfupath, "/mom_hackc_code"))
     return mom_hackc_code (reqcnt, requ, resp);
+#warning should call mom_web_handler_full_path
   return OCS_NOT_PROCESSED;
 }                               /* end of handle_web_mom */
 
