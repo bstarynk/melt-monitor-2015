@@ -331,6 +331,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
 static onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp)
 {
+#warning should use the web_handlers predefined
   enum mom_webmethod_en wmeth = MOMWEBM_NONE;
   assert (data == NULL);
   assert (requ != NULL);
