@@ -21,7 +21,7 @@
     <meta charset='utf-8'/>
     <title>Hacking Monimelt</title>
     <link rel="stylesheet" type="text/css" href="codemirror.css">
-    <link rel="stylesheet" type="text/css" href="codemirror-theme.css">
+    <link rel="stylesheet" type="text/css" href="codemirror-theme-neo.css">
     <script src='jquery.min.js'></script>
     <script src='codemirror.js'></script>
     <script src='codemirror-clike.js'></script>
@@ -32,14 +32,16 @@
       var prologuecodmir;
       var initialcodmir;
       $(document).ready(function(){
-      prologuetxa = $("#prologuetxa_id");
-      initialtxa = $("#initialtxa_id");
+      prologuetxa = $("#prologuetxa_id")[0];
+      initialtxa = $("#initialtxa_id")[0];
       prologuecodmir = CodeMirror.fromTextArea(prologuetxa, {
       lineNumbers: true,
+      theme: "default",
       mode: "text/x-csrc"
       });
       initialcodmir = CodeMirror.fromTextArea(initialtxa, {
       lineNumbers: true,
+      theme: "neo",
       mode: "text/x-csrc"
       });
       });
