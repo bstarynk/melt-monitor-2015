@@ -655,8 +655,7 @@ mom_process_cpu_time (void)
 {
   struct timespec curts = { 0, 0 };
   clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &curts);
-  return 1.0 * (curts.tv_sec - start_realtime_ts_mom.tv_sec)
-    + 1.0e-9 * (curts.tv_nsec - start_realtime_ts_mom.tv_nsec);
+  return 1.0 * (curts.tv_sec) + 1.0e-9 * (curts.tv_nsec);
 }
 
 double
@@ -1068,12 +1067,12 @@ do_add_predefined_mom (void)
 int
 main (int argc_main, char **argv_main)
 {
+  clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
   GC_INIT ();
   GC_set_handle_fork (1);
   GC_register_displacement (offsetof (struct mom_itemname_tu, itname_string));
   char **argv = argv_main;
   int argc = argc_main;
-  clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
   if (!mom_prog_dlhandle)
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());

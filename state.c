@@ -437,16 +437,16 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           int pmark = ld->ld_prevmark;
           if (pmark >= 0 && pmark < (int) ld->ld_stacktop)
             {
-              unsigned sizp = ld->ld_stacktop - pmark;
+              unsigned sizp = ld->ld_stacktop - pmark - 1;
               struct mom_statelem_st *elemarr
                 = mom_gc_alloc ((sizp + 1) * sizeof (*elemarr));
-              memcpy (elemarr, ld->ld_stackarr + sizp,
+              memcpy (elemarr, ld->ld_stackarr + pmark + 1,
                       sizp * sizeof (*elemarr));
               mom_loader_pop (ld, sizp + 1);
               MOM_DEBUGPRINTF (load,
-                               "before parenfun %s on itm %s with #%d stackelems, pmark=%d",
+                               "before parenfun %s on itm %s with #%d stackelems, pmark=%d top=%d",
                                nambuf, mom_item_cstring (curitm), sizp,
-                               pmark);
+                               pmark, ld->ld_stacktop);
               if (MOM_IS_DEBUGGING (load))
                 for (unsigned ix = 0; ix < sizp; ix++)
                   MOM_DEBUGPRINTF (load, "before parenfun %s elemarr[%d]= %s",

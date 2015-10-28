@@ -856,6 +856,9 @@ mom_output_value (FILE *fout, long *plastnl,
         fputc ('"', fout);
       }
       break;
+    case MOMITY_ITEM:
+      fputs (mom_item_cstring ((struct mom_item_st *) val), fout);
+      break;
     case MOMITY_SET:
     case MOMITY_TUPLE:
       if (val->va_itype == MOMITY_SET)

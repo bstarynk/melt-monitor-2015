@@ -1854,7 +1854,41 @@ momf_ldp_attrs (struct mom_item_st *itm,
                 struct mom_loader_st *ld,
                 struct mom_statelem_st *elemarr, unsigned elemsize)
 {
-  MOM_FATAPRINTF ("momf_ldp_attrs unimplemented itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_attrs
-}
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_attrs itm=%s", mom_item_cstring (itm));
+  if (elemsize % 2 != 0)
+    MOM_FATAPRINTF ("momf_ldp_attrs itm=%s odd elemsize %d",
+                    mom_item_cstring (itm), elemsize);
+  itm->itm_pattr =
+    mom_assovaldata_reserve (itm->itm_pattr, 4 * elemsize / 3 + 2);
+  for (unsigned ix = 0; ix < elemsize; ix += 2)
+    {
+      struct mom_item_st *attitm = mom_ldstate_dynitem (elemarr[ix]);
+      const struct mom_hashedvalue_st *attval =
+        mom_ldstate_val (elemarr[ix + 1]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_attrs attitm=%s attval=%s",
+                       mom_item_cstring (attitm), mom_value_cstring (attval));
+      itm->itm_pattr = mom_assovaldata_put (itm->itm_pattr, attitm, attval);
+    }
+}                               /* end of momf_ldp_attrs */
+
+
+extern mom_loader_paren_sig_t momf_ldp_comps;
+void
+momf_ldp_comps (struct mom_item_st *itm,
+                struct mom_loader_st *ld,
+                struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_comps itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  itm->itm_pcomp = mom_vectvaldata_reserve (itm->itm_pcomp, elemsize);
+  itm->itm_pcomp = mom_vectvaldata_resize (itm->itm_pcomp, elemsize);
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      const struct mom_hashedvalue_st *val = mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_comps ix#%d val=%s", ix,
+                       mom_value_cstring (val));
+      mom_vectvaldata_put_nth (itm->itm_pcomp, (int) ix, val);
+    }
+}                               /* end of momf_ldp_comps */
