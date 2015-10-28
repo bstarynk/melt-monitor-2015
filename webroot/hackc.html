@@ -26,41 +26,23 @@
     <script src='codemirror.js'></script>
     <script src='codemirror-clike.js'></script>
     <script src='codemirror-emacs-keymap.js'></script>
-    <script>
-      var prologuetxa;
-      var initialtxa;
-      var prologuecodmir;
-      var initialcodmir;
-      $(document).ready(function(){
-      prologuetxa = $("#prologuetxa_id")[0];
-      initialtxa = $("#initialtxa_id")[0];
-      prologuecodmir = CodeMirror.fromTextArea(prologuetxa, {
-      lineNumbers: true,
-      theme: "default",
-      mode: "text/x-csrc"
-      });
-      initialcodmir = CodeMirror.fromTextArea(initialtxa, {
-      lineNumbers: true,
-      theme: "neo",
-      mode: "text/x-csrc"
-      });
-      });
-    </script>
+    <script src='hackc.js'></script>
   </head>
   <body>
     <h1>Hacking Monimelt</h1>
-    <form action='mom_hackc_code' method='POST'>
+    <form id='hackform_id'>
     <h2>Prologue code:</h2>
     <textarea id='prologuetxa_id' name='prologuetxt' rows='10' cols='72'>
-    /// prologue declaration and code
+/// prologue declaration and code
     </textarea>
     <hr/>
     <h2>Initial code:</h2>
     <textarea id='initialtxa_id'  name='initialtxt' rows='25' cols='72'>
-      /// initial code
+/// initial code
     </textarea>
     <hr/>
-    <input type='submit' name='do_hackc' value='Run'/>
+    <input type='submit' name='do_hackc' id='hackc_id' value='Run'/>
+    <input type='reset' name='do_clear' value='Clear'/>
     </form>
   </body>
 </html>
