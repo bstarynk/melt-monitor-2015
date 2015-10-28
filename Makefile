@@ -49,6 +49,7 @@ all: monimelt
 
 clean:
 	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.orig
+	$(RM) modules/*.so modules/*~ modules/*%
 	$(RM) core*
 
 
@@ -78,3 +79,6 @@ indent: .indent.pro
 	  echo indenting $$f ; cp $$f $$f%; \
           $(INDENT) $(INDENTFLAGS) $$f ; $(INDENT)  $(INDENTFLAGS) $$f; \
         done
+
+modules/momg_%.so: modules/momg_%.c $(OBJECTS)
+	$(COMPILE.c) -fPIC -shared $< -o $@

@@ -117,6 +117,115 @@ mom_webmethod_name (unsigned wm)
 }                               /* end mom_webmethod_name */
 
 
+#define MOM_MAX_WEB_FILE_SIZE 1000000
+
+onion_connection_status
+mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
+{
+  struct mom_item_st *hackitm = NULL;
+  const char *hackitmstr = NULL;
+  char hackpath[80];
+  memset (hackpath, 0, sizeof (hackpath));
+  MOM_DEBUGPRINTF (web, "hackc_code start webrequest#%ld", reqcnt);
+  const char *do_hackc = onion_request_get_post (requ, "do_hackc");
+  const char *prologuetxt = onion_request_get_post (requ, "prologuetxt");
+  const char *initialtxt = onion_request_get_post (requ, "initialtxt");
+  MOM_DEBUGPRINTF (web, "hackc_code #%ld do_hackc=%s", reqcnt, do_hackc);
+  MOM_DEBUGPRINTF (web, "hackc_code #%ld prologuetxt=%s", reqcnt,
+                   prologuetxt);
+  MOM_DEBUGPRINTF (web, "hackc_code #%ld initialtxt=%s", reqcnt, initialtxt);
+  if (do_hackc && do_hackc[0])
+    {
+      hackitm = mom_clone_item (MOM_PREDEFITM (hackc));
+      hackitmstr = mom_item_cstring (hackitm);
+      MOM_DEBUGPRINTF (web, "hackc_code #%ld hackitm=%s", reqcnt, hackitmstr);
+      snprintf (hackpath, sizeof (hackpath), "modules/momg_%s.c", hackitmstr);
+      FILE *fhack = fopen (hackpath, "w");
+      if (!fhack)
+        MOM_FATAPRINTF ("failed to open hack module %s - %m", hackpath);
+      mom_output_gplv3_notice (fhack, "///-", "", basename (hackpath));
+      fputs ("\n\n", fhack);
+      fputs ("#include \"monimelt.h\"\n\n", fhack);
+      fprintf (fhack, "const char momtimestamp_%s[]= __TIMESTAMP__;\n",
+               hackitmstr);
+      if (prologuetxt && prologuetxt[0])
+        {
+          fprintf (fhack, "#line 1 \"hack-%s-prologue\"\n", hackitmstr);
+          fputs (prologuetxt, fhack);
+          fputs ("\n\n", fhack);
+        }
+      fprintf (fhack, "void momhack_%s(struct momitem_st*momhackitm) {\n"
+               "  MOM_DEBUGPRINTF(web, \"momhack start %s\", mom_item_cstring(momhackitm));\n",
+               hackitmstr, hackitmstr);
+      if (initialtxt && initialtxt[0])
+        {
+          fprintf (fhack, "#line 1 \"hack-%s-initial\"\n", hackitmstr);
+          fputs (initialtxt, fhack);
+          fputs ("\n\n", fhack);
+        }
+      fprintf (fhack,
+               "  MOM_DEBUGPRINTF(web, \"momhack end %s\", mom_item_cstring(momhackitm));\n",
+               hackitmstr);
+      fprintf (fhack, "  MOM_INFORMPRINTF(\"done momhack %s\");\n",
+               hackitmstr);
+      fprintf (fhack, "} // end momhack_%s\n\n", hackitmstr);
+      fprintf (fhack, "\n" "// eof generated %s\n", basename (hackpath));
+      fclose (fhack), fhack = NULL;
+    }
+  FILE *cmdf = NULL;
+  {
+    char compilcmd[256];
+    memset (compilcmd, 0, sizeof (compilcmd));
+    snprintf (compilcmd, sizeof (compilcmd), "make modules/momg_%s.so 2>&1",
+              hackitmstr);
+    MOM_DEBUGPRINTF (web, "hackc_code #%ld compilcmd:%s", reqcnt, compilcmd);
+    fflush (NULL);
+    cmdf = popen (compilcmd, "r");
+    if (!cmdf)
+      MOM_FATAPRINTF ("failed to popen %s - %m", compilcmd);
+    usleep (50000);
+  }
+  char *outbuf = NULL;
+  size_t outsiz = 0;
+  FILE *outf = open_memstream (&outbuf, &outsiz);
+  char *linbuf = NULL;
+  size_t linsiz = 0;
+  int lincnt = 0;
+  do
+    {
+      ssize_t linlen = getline (&linbuf, &linsiz, cmdf);
+      if (linlen <= 0)
+        break;
+      lincnt++;
+      MOM_DEBUGPRINTF (web, "hack_code #%ld compilin#%d: %s", reqcnt, lincnt,
+                       linbuf);
+      if (lincnt > 1000)
+        MOM_FATAPRINTF
+          ("hack_code #%ld too many (%d) lines from compilation of momg_%s.c",
+           reqcnt, lincnt, hackitmstr);
+      fputs (linbuf, outf);
+    }
+  while (!feof (cmdf));
+  int comperr = pclose (cmdf);
+  fflush (outf);
+  MOM_DEBUGPRINTF (web,
+                   "hack_code #%ld comperr %d lincnt %d outbuf==\n%s\n##end outbuf%ld",
+                   reqcnt, comperr, lincnt, outbuf, reqcnt);
+  if (!comperr)
+    {
+      char backupath[80];
+      memset (backupath, 0, sizeof (backupath));
+      snprintf (backupath, sizeof (backupath), "%s~", hackpath);
+      if (rename (hackpath, backupath))
+        MOM_FATAPRINTF ("failed to rename %s to %s - %m", hackpath,
+                        backupath);
+      else
+        MOM_INFORMPRINTF ("backed-up hackc %s -> %s", hackpath, backupath);
+    }
+  return OCS_INTERNAL_ERROR;
+}                               // end mom_hackc_code
+
+
 
 static onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp)
@@ -169,6 +278,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     }
   if (!reqpath[0] && !strcmp (reqfupath, "/"))
     {
+      reqfupath = "/index.html";
+      MOM_DEBUGPRINTF (web, "webrequest#%ld set reqfupath %s", reqcnt,
+                       reqfupath);
     }
   /// scan the mom_webdir-s
   if (wmeth != MOMWEBM_POST && reqfupath[0] == '/' && isalnum (reqfupath[1]))
@@ -193,19 +305,26 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
             }
           MOM_DEBUGPRINTF (web, "webrequest#%ld trying wix=%d fpath=%s",
                            reqcnt, wix, fpath);
-          if (!access (fpath, R_OK))
+          struct stat myfstat = { 0 };
+          if (!stat (fpath, &myfstat)
+              && ((myfstat.st_mode & S_IFMT) == S_IFREG
+                  || ((errno = EBADF), false))
+              && (myfstat.st_size < MOM_MAX_WEB_FILE_SIZE
+                  || ((errno = EFBIG), false)))
             {
               MOM_DEBUGPRINTF (web,
-                               "handle_web_mom request#%ld wix#%d got fpath %s",
-                               reqcnt, wix, fpath);
+                               "handle_web_mom request#%ld wix#%d got fpath %s of %ld bytes",
+                               reqcnt, wix, fpath, (long) myfstat.st_size);
               return onion_shortcut_response_file (fpath, requ, resp);
             }
           else
             MOM_DEBUGPRINTF (web,
-                             "webrequest#%ld for wix=%d fpath=%s missing (%m)",
+                             "webrequest#%ld for wix=%d fpath=%s missing or bad (%m)",
                              reqcnt, wix, fpath);
         }
     }
+  if (wmeth == MOMWEBM_POST && !strcmp (reqfupath, "/mom_hackc_code"))
+    return mom_hackc_code (reqcnt, requ, resp);
   return OCS_NOT_PROCESSED;
 }                               /* end of handle_web_mom */
 
