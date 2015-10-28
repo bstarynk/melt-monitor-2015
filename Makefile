@@ -81,4 +81,4 @@ indent: .indent.pro
         done
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
-	$(COMPILE.c) -fPIC -shared $< -o $@
+	$(LINK.c) -fPIC -shared $< -o $@
