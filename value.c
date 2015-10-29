@@ -18,7 +18,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 const struct mom_boxint_st *
 mom_boxint_make (intptr_t i)

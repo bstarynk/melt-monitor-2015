@@ -18,10 +18,13 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 #define SESSION_COOKIE_MOM "MOMSESSION"
 #define SESSION_TIMEOUT_MOM 4000        /* a bit more than one hour of inactivity */
+
+// maximal reply delay for a web request - in seconds
+#define REPLY_TIMEOUT_MOM 3.5   /* reply timeout in seconds */
 
 const char *web_hostname_mom;
 static struct mom_hashset_st *sessions_hset_mom;
@@ -159,7 +162,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
         MOM_FATAPRINTF ("failed to open hack module %s - %m", hackpath);
       mom_output_gplv3_notice (fhack, "///-", "", basename (hackpath));
       fputs ("\n\n", fhack);
-      fputs ("#include \"monimelt.h\"\n\n", fhack);
+      fputs ("#include \"meltmoni.h\"\n\n", fhack);
       fprintf (fhack, "const char momtimestamp_%s[]= __TIMESTAMP__;\n\n",
                hackitmstr);
       if (prologuetxt && prologuetxt[0])
@@ -738,6 +741,30 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     return mom_hackc_code (reqcnt, requ, resp);
   struct mom_item_st *wexitm =
     mom_web_handler_exchange (reqcnt, reqfupath, wmeth, requ, resp);
+  if (!wexitm)
+    {
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld reqfupath %s no handler", reqcnt,
+                       reqfupath);
+      return OCS_NOT_PROCESSED;
+    };
+  double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
+  struct timespec ts = mom_timespec (elapstim);
+  bool waitreply = false;
+  do
+    {
+      struct mom_webexch_st *wexch = NULL;
+      assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+      pthread_mutex_lock (&wexitm->itm_mtx);
+      if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
+          && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
+        wexch = (struct mom_webexch_st *) wexitm->itm_payload;
+      if (!wexch || wexch->webx_count != reqcnt)
+        MOM_FATAPRINTF ("webrequest#%ld bad wexitm %s for reqfupath %s",
+                        reqcnt, mom_item_cstring (wexitm), reqfupath);
+      pthread_mutex_unlock (&wexitm->itm_mtx);
+    }
+  while (waitreply);
 #warning should do something with wexitm
   return OCS_NOT_PROCESSED;
 }                               /* end of handle_web_mom */

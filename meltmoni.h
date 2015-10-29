@@ -1,4 +1,4 @@
-// file monimelt.h - common header file to be included everywhere.
+// file meltmoni.h - common header file to be included everywhere.
 
 /**   Copyright (C)  2015 Basile Starynkevitch, later FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -311,6 +311,27 @@ mom_clock_time (clockid_t cid)
   else
     return (double) ts.tv_sec + 1.0e-9 * ts.tv_nsec;
 }
+
+static inline struct timespec
+mom_timespec (double t)
+{
+  struct timespec ts = { 0, 0 };
+  if (isnan (t) || t < 0.0)
+    return ts;
+  double fl = floor (t);
+  ts.tv_sec = (time_t) fl;
+  ts.tv_nsec = (long) ((t - fl) * 1.0e9);
+  // this should not happen
+  if (MOM_UNLIKELY (ts.tv_nsec < 0))
+    ts.tv_nsec = 0;
+  while (MOM_UNLIKELY (ts.tv_nsec >= 1000 * 1000 * 1000))
+    {
+      ts.tv_sec++;
+      ts.tv_nsec -= 1000 * 1000 * 1000;
+    };
+  return ts;
+}
+
 
 double mom_elapsed_real_time (void);    /* relative to start of program */
 double mom_process_cpu_time (void);

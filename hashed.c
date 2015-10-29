@@ -18,7 +18,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 static int
 hashset_index_mom (const struct mom_hashset_st *hset,

@@ -18,7 +18,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 void *mom_prog_dlhandle;
 const char *mom_webdir[MOM_MAX_WEBDIR];

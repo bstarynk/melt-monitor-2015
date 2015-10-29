@@ -18,7 +18,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 struct mom_loader_st *mom_loader;
 

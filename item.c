@@ -18,7 +18,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-#include "monimelt.h"
+#include "meltmoni.h"
 
 /// we temporarily store the radix in a sorted dynamic array
 static pthread_mutex_t radix_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
