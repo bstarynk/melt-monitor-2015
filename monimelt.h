@@ -1519,6 +1519,7 @@ void mom_webexch_payload_cleanup (struct mom_item_st *itm,
 /// for MOMITY_WEBSESSION payload
 #define MOM_WEBSESSION_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
+  uint32_t wbss_rand1, wbss_rand2;              \
   onion_websocket* wbss_websock;		\
   char* wbss_inbuf;				\
   unsigned wbss_insiz;				\
