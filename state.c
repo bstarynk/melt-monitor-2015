@@ -209,11 +209,11 @@ first_pass_loader_mom (struct mom_loader_st *ld)
         continue;
       if (linbuf[0] == '*' && isalpha (linbuf[1]))
         {
-          MOM_DEBUGPRINTF (load, "first_pass line#%d %s", linecount, linbuf);
-          const char *end = NULL;
           char *eol = strchr (linbuf, '\n');
           if (eol)
             *eol = (char) 0;
+          MOM_DEBUGPRINTF (load, "first_pass line#%d %s", linecount, linbuf);
+          const char *end = NULL;
           struct mom_item_st *itm =
             mom_make_item_from_string (linbuf + 1, &end);
           MOM_DEBUGPRINTF (load, "first pass line#%d made item %s",
@@ -456,8 +456,10 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           while (eb < nambuf + sizeof (nambuf) - 1 &&
                  (isalnum (*sb) || *sb == '_'))
             *(eb++) = *(sb++);
-          MOM_DEBUGPRINTF (load, "parenthesis function %s line#%d top#%d",
-                           nambuf, linecount, ld->ld_stacktop);
+          MOM_DEBUGPRINTF (load,
+                           "parenthesis function %s line#%d top#%d prevmark%d",
+                           nambuf, linecount, ld->ld_stacktop,
+                           ld->ld_prevmark);
           if (MOM_IS_DEBUGGING (load))
             for (int i = ld->ld_stacktop - 7; i < (int) ld->ld_stacktop; i++)
               if (i >= 0)
@@ -476,11 +478,16 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 = mom_gc_alloc ((sizp + 1) * sizeof (*elemarr));
               memcpy (elemarr, ld->ld_stackarr + pmark + 1,
                       sizp * sizeof (*elemarr));
+              MOM_DEBUGPRINTF (load,
+                               "before parenfun %s on itm %s sizp=%d pmark=%d",
+                               nambuf, mom_item_cstring (curitm), sizp,
+                               pmark);
+              assert (ld->ld_stackarr[pmark].st_type == MOMSTA_MARK);
               mom_loader_pop (ld, sizp + 1);
               MOM_DEBUGPRINTF (load,
-                               "before parenfun %s on itm %s with #%d stackelems, pmark=%d top=%d",
+                               "before parenfun %s on itm %s with #%d stackelems&mark popped, top=%d",
                                nambuf, mom_item_cstring (curitm), sizp,
-                               pmark, ld->ld_stacktop);
+                               ld->ld_stacktop);
               if (MOM_IS_DEBUGGING (load))
                 {
                   for (unsigned ix = 0; ix < sizp; ix++)
@@ -492,7 +499,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                                    "before parenfun %s top%d siz%d prevmark%d",
                                    nambuf, ld->ld_stacktop, mom_raw_size (ld),
                                    ld->ld_prevmark);
-                  for (int i = (int)ld->ld_stacktop - 5;
+                  for (int i = (int)ld->ld_stacktop - 6;
                        i < (int) ld->ld_stacktop; i++)
                     if (i >= 0)
                       MOM_DEBUGPRINTF (load,
@@ -508,7 +515,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                                "after parenfun %s top%d siz%d prevmark%d",
                                nambuf, ld->ld_stacktop, mom_raw_size (ld),
                                ld->ld_prevmark);
-              for (int i = (int)ld->ld_stacktop - 5;
+              for (int i = (int)ld->ld_stacktop - 6;
                    i < (int) ld->ld_stacktop; i++)
                 if (i >= 0)
                   MOM_DEBUGPRINTF (load, "after parenfun %s stack[%d]=%s",
