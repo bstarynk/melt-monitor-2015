@@ -117,7 +117,7 @@ mom_webmethod_name (unsigned wm)
 }                               /* end mom_webmethod_name */
 
 
-#define MOM_MAX_WEB_FILE_SIZE 1000000
+#define MOM_MAX_WEB_FILE_SIZE (4096*1024)       /* 4 megabytes */
 
 onion_connection_status
 mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
@@ -326,21 +326,28 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
   return OCS_INTERNAL_ERROR;
 }                               // end mom_hackc_code
 
-struct mom_hashedvalue_st *
-mom_web_handler_full_path (const char *fullpath)
+
+
+struct mom_item_st *
+mom_web_handler_exchange (long reqcnt, const char *fullpath,
+                          enum mom_webmethod_en wmeth,
+                          onion_request *requ, onion_response *resp)
 {
+  assert (wmeth > MOMWEBM_NONE);
+  assert (requ != NULL);
+  assert (resp != NULL);
   if (!fullpath || fullpath[0] != '/' || strstr (fullpath, "..")
       || strstr (fullpath, "//") || strlen (fullpath) > MOM_PATH_MAX)
     {
-      MOM_DEBUGPRINTF (web, "web_handler_full_path bad fullpath %s",
-                       fullpath);
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld bad fullpath %s",
+                       reqcnt, fullpath);
       return NULL;
     }
-  MOM_DEBUGPRINTF (web, "web_handler_full_path fullpath=%s", fullpath);
-#warning should look for existing item names between /
-  MOM_FATAPRINTF ("unimplemented mom_web_handler_full_path fullpath=%s",
+  MOM_DEBUGPRINTF (web, "web_handler_exchange fullpath=%s", fullpath);
+#warning mom_web_handler_exchange should look for existing item names between /
+  MOM_FATAPRINTF ("unimplemented mom_web_handler_exchange fullpath=%s",
                   fullpath);
-}                               /* end of mom_web_handler_full_path */
+}                               /* end of mom_web_handler_exchange */
 
 
 
@@ -383,15 +390,15 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   // reject path starting with dot
   if (reqfupath[0] == '.' || reqfupath[1] == '.')
     {
-      MOM_DEBUGPRINTF (web, "webrequest#%ld dot starting fullpath %s", reqcnt,
-                       reqfupath);
+      MOM_WARNPRINTF ("webrequest#%ld dot starting fullpath %s", reqcnt,
+                      reqfupath);
       return OCS_NOT_PROCESSED;
     }
   // reject too long paths
   if (strlen (reqfupath) >= MOM_PATH_MAX - 16)
     {
-      MOM_DEBUGPRINTF (web, "webrequest#%ld too long (%d) fullpath %s",
-                       reqcnt, (int) strlen (reqfupath), reqfupath);
+      MOM_WARNPRINTF ("webrequest#%ld too long (%d) fullpath %s",
+                      reqcnt, (int) strlen (reqfupath), reqfupath);
       return OCS_NOT_PROCESSED;
     }
   if (!reqpath[0] && !strcmp (reqfupath, "/"))
@@ -439,11 +446,17 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
             MOM_DEBUGPRINTF (web,
                              "webrequest#%ld for wix=%d fpath=%s missing or bad (%m)",
                              reqcnt, wix, fpath);
+          if (errno == EFBIG && myfstat.st_size >= MOM_MAX_WEB_FILE_SIZE)
+            MOM_WARNPRINTF
+              ("file %s is too big (%lld) and won't be served for webrequest#%ld full path %s",
+               fpath, (long long) myfstat.st_size, reqcnt, reqfupath);
         }
     }
   if (wmeth == MOMWEBM_POST && !strcmp (reqfupath, "/mom_hackc_code"))
     return mom_hackc_code (reqcnt, requ, resp);
-#warning should call mom_web_handler_full_path
+  struct mom_item_st *wexitm =
+    mom_web_handler_exchange (reqcnt, reqfupath, wmeth, requ, resp);
+#warning should do something with wexitm
   return OCS_NOT_PROCESSED;
 }                               /* end of handle_web_mom */
 
