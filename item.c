@@ -1596,8 +1596,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   assert (du->du_state == MOMDUMP_EMIT);
   FILE *femit = du->du_emitfile;
   assert (femit != NULL);
-  MOM_DEBUGPRINTF (dump, "dumpemit_item_content start itm %s",
-                   mom_item_cstring (itm));
+  MOM_DEBUGPRINTF (dump, "dumpemit_item_content start itm %s @%p",
+                   mom_item_cstring (itm), (void *) itm);
   /// emit the mtime
   if (itm->itm_mtime)
     {
@@ -1789,6 +1789,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   else
     MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s without payload",
                      mom_item_cstring (itm));
+  MOM_DEBUGPRINTF (dump, "dumpemit_item_content done itm %s @%p",
+                   mom_item_cstring (itm), (void *) itm);
 }                               /* end of mom_dumpemit_item_content */
 
 ////////////////

@@ -553,8 +553,8 @@ mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
 void
 mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
 {
-  MOM_DEBUGPRINTF (dump, "dumpscan_content_item start %s",
-                   mom_item_cstring (itm));
+  MOM_DEBUGPRINTF (dump, "dumpscan_content_item start itm@%p %s",
+                   itm, mom_item_cstring (itm));
   pthread_mutex_lock (&itm->itm_mtx);
   if (itm->itm_pattr)
     mom_dumpscan_assovaldata (du, itm->itm_pattr);
@@ -565,7 +565,7 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
   if (itm->itm_payload)
     mom_dumpscan_payload (du, itm->itm_payload);
   pthread_mutex_unlock (&itm->itm_mtx);
-  MOM_DEBUGPRINTF (dump, "dumpscan_content_item done %s",
+  MOM_DEBUGPRINTF (dump, "dumpscan_content_item done itm %s",
                    mom_item_cstring (itm));
 }                               /* end of mom_dumpscan_content_item */
 

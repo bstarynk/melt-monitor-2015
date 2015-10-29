@@ -867,11 +867,17 @@ mom_hashassoc_put (struct mom_hashassoc_st *hass,
       hass->hass_ents[pos].hass_key = key;
       hass->hass_ents[pos].hass_val = val;
       hass->cda_count = cnt + 1;
+      MOM_DEBUGPRINTF (item, "add hass@%p pos%d key:%s val:%s cnt%d", hass,
+                       pos, mom_value_cstring (key), mom_value_cstring (val),
+                       hass->cda_count);
       return hass;
     }
   else
     {
       hass->hass_ents[pos].hass_val = val;
+      MOM_DEBUGPRINTF (item, "put hass@%p pos%d key:%s val:%s cnt%d", hass,
+                       pos, mom_value_cstring (key), mom_value_cstring (val),
+                       cnt);
       return hass;
     }
 }                               /* end of mom_hashassoc_put */
@@ -913,21 +919,36 @@ mom_dumpscan_hashassoc (struct mom_dumper_st *du,
     return;
   unsigned cnt = hass->cda_count;
   unsigned siz = mom_raw_size (hass);
+  MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc hass@%p cnt%d siz%d", hass, cnt,
+                   siz);
   assert (cnt <= siz);
   for (unsigned ix = 0; ix < siz; ix++)
     {
       const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
       if (!curkey || curkey == MOM_EMPTY_SLOT)
         continue;
+      MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc ix=%d curkey=%s", ix,
+                       mom_value_cstring (curkey));
       if (curkey->va_itype == MOMITY_ITEM
           && !mom_dumpable_item ((struct mom_item_st *) curkey))
-        continue;
+        {
+          MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc ix=%d skipped curkey=%s",
+                           ix, mom_value_cstring (curkey));
+          continue;
+        }
       const struct mom_hashedvalue_st *curval = hass->hass_ents[ix].hass_val;
       if (!curval || curval == MOM_EMPTY_SLOT)
         continue;
+      MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc ix=%d curval=%s", ix,
+                       mom_value_cstring (curval));
       if (curval->va_itype == MOMITY_ITEM
           && !mom_dumpable_item ((struct mom_item_st *) curval))
-        continue;
+        {
+          MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc ix=%d skipped curval=%s",
+                           ix, mom_value_cstring (curval));
+          continue;
+        }
+      MOM_DEBUGPRINTF (dump, "dumpscan_hashassoc ix=%d scanning", ix);
       mom_dumpscan_value (du, curkey);
       mom_dumpscan_value (du, curval);
     }
@@ -956,7 +977,8 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
   assert (femit != NULL);
   unsigned cnt = hass->cda_count;
   unsigned siz = mom_raw_size (hass);
-  MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc cnt=%d", cnt);
+  MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc hass@%p cnt=%d siz=%d", hass,
+                   cnt, siz);
   assert (cnt <= siz);
   struct mom_hassocentry_tu smallarr[16] = { {NULL, NULL} };
   struct mom_hassocentry_tu *arr =
@@ -968,15 +990,25 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
       const struct mom_hashedvalue_st *curkey = hass->hass_ents[ix].hass_key;
       if (!curkey || curkey == MOM_EMPTY_SLOT)
         continue;
+      MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc ix#%d curkey %s", ix,
+                       mom_value_cstring (curkey));
       if (curkey->va_itype == MOMITY_ITEM
           && !mom_dumped_item (du, (struct mom_item_st *) curkey))
-        continue;
+        {
+          MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc ix#%d skipped key", ix);
+          continue;
+        }
       const struct mom_hashedvalue_st *curval = hass->hass_ents[ix].hass_val;
       if (!curval || curval == MOM_EMPTY_SLOT)
         continue;
+      MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc ix#%d curval %s", ix,
+                       mom_value_cstring (curval));
       if (curval->va_itype == MOMITY_ITEM
           && !mom_dumped_item (du, (struct mom_item_st *) curval))
-        continue;
+        {
+          MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc ix#%d skipped val", ix);
+          continue;
+        }
       assert (icnt < cnt);
       arr[icnt++] = hass->hass_ents[ix];
       MOM_DEBUGPRINTF (dump,
@@ -984,6 +1016,7 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
                        ix, icnt, mom_value_cstring (curkey),
                        mom_value_cstring (curval));
     }
+  MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc icnt %d", icnt);
   if (icnt > 1)
     qsort (arr, icnt, sizeof (struct mom_hassocentry_tu),
            hassocentry_cmpkey_mom);
