@@ -749,6 +749,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       return OCS_NOT_PROCESSED;
     };
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
+  MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f", reqcnt, elapstim);
   struct timespec ts = mom_timespec (elapstim);
   bool waitreply = false;
   do
@@ -762,11 +763,79 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       if (!wexch || wexch->webx_count != reqcnt)
         MOM_FATAPRINTF ("webrequest#%ld bad wexitm %s for reqfupath %s",
                         reqcnt, mom_item_cstring (wexitm), reqfupath);
+      assert (wexch->webx_resp == resp);
+      pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
+      if (wexch->webx_code > 0 && isalpha (wexch->webx_mimetype[0]))
+        {
+          assert (wexch->webx_outfil);
+          fflush (wexch->webx_outfil);
+          MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s",
+                           reqcnt, wexch->webx_code, wexch->webx_mimetype);
+          onion_response_set_code (resp, wexch->webx_code);
+          if (!strncmp (wexch->webx_mimetype, "text/", 5)
+              && !strstr (wexch->webx_mimetype, "charset"))
+            {
+              char fullmime[sizeof (wexch->webx_mimetype) + 16];
+              snprintf (fullmime, sizeof (fullmime), "%s; charset=UTF-8",
+                        wexch->webx_mimetype);
+              onion_response_set_header (resp, "Content-Type", fullmime);
+            }
+          else
+            onion_response_set_header (resp, "Content-Type",
+                                       wexch->webx_mimetype);
+          long off = ftell (wexch->webx_outfil);
+          MOM_DEBUGPRINTF (web, "webrequest#%ld off %ld", reqcnt, off);
+          onion_response_set_length (resp, off);
+          onion_response_write (resp, wexch->webx_outbuf, off);
+          onion_response_flush (resp);
+          wexch->webx_resp = NULL;
+          wexch->webx_requ = NULL;
+          waitreply = false;
+        }
+      else if (mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
+        {
+          MOM_WARNPRINTF ("webrequest#%ld timeout %s fullpath %s", reqcnt,
+                          mom_webmethod_name (wmeth), reqfupath);
+          onion_response_set_code (resp, HTTP_INTERNAL_ERROR);
+          onion_response_set_header (resp, "Content-Type",
+                                     "text/html; charset=UTF-8");
+          char timbuf[80];
+          memset (timbuf, 0, sizeof (timbuf));
+          mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
+                                  "%Y %b %d, %H:%M:%S.__ %Z");
+          char *htmlbuf = NULL;
+          size_t htmlsiz = 0;
+          FILE *htmlout = open_memstream (&htmlbuf, &htmlsiz);
+          if (!htmlout)
+            MOM_FATAPRINTF
+              ("failed to open_memstream for webrequest#%ld timeout %s fullpath %s (%m)",
+               reqcnt, mom_webmethod_name (wmeth), reqfupath);
+          fprintf (htmlout,
+                   "<!doctype html>\n"
+                   "<html><head><title>MONIMELT timedout</title></head>\n"
+                   "<body><h1>MONIMELT request #%ld timedout</h1>\n"
+                   "%s request to <tt>%s</tt> timed out with wexitm %s on %s</body></html>\n\n",
+                   reqcnt, mom_webmethod_name (wmeth),
+                   onion_html_quote_dup (reqfupath),
+                   mom_item_cstring (wexitm), timbuf);
+          fflush (htmlout);
+          long htmloff = ftell (htmlout);
+          onion_response_set_length (resp, htmloff);
+          onion_response_write (resp, htmlbuf, htmloff);
+          fclose (htmlout), htmlout = NULL;
+          free (htmlbuf), htmlbuf = NULL;
+          onion_response_flush (resp);
+          wexch->webx_requ = NULL;
+          wexch->webx_resp = NULL;
+          waitreply = false;
+        }
+      else
+        waitreply = true;
       pthread_mutex_unlock (&wexitm->itm_mtx);
     }
   while (waitreply);
-#warning should do something with wexitm
-  return OCS_NOT_PROCESSED;
+  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end", reqcnt, reqfupath);
+  return OCS_PROCESSED;
 }                               /* end of handle_web_mom */
 
 
