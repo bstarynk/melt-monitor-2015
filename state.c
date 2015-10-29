@@ -105,6 +105,8 @@ mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
   ld->ld_stackarr[top] = el;
   if (el.st_type == MOMSTA_MARK)
     ld->ld_prevmark = top;
+  MOM_DEBUGPRINTF (load, "loader_push [%d] : %s",
+                   top, mom_ldstate_cstring (el));
   ld->ld_stacktop = top + 1;
 }
 
@@ -132,13 +134,15 @@ mom_loader_pop (struct mom_loader_st *ld, unsigned nb)
   assert (top <= siz);
   if (nb > top)
     nb = top;
-  while (ld->ld_prevmark > (int) (top - nb) && ld->ld_prevmark >= 0)
+  while (ld->ld_prevmark >= (int) (top - nb) && ld->ld_prevmark >= 0)
     {
       ld->ld_prevmark = mom_ldstate_mark (ld->ld_stackarr[ld->ld_prevmark]);
     }
   memset (ld->ld_stackarr + top - nb - 1, 0,
           sizeof (struct mom_statelem_st) * nb);
   ld->ld_stacktop = top = (top - nb);
+  MOM_DEBUGPRINTF (load, "loader_pop nb=%d now top=%d prevmark=%d", nb,
+                   ld->ld_stacktop, ld->ld_prevmark);
   if (siz > 20 && top < siz / 3)
     {
       unsigned newsiz = mom_prime_above (4 * top / 3 + 9);
@@ -234,6 +238,10 @@ second_pass_loader_mom (struct mom_loader_st *ld)
   rewind (ld->ld_file);
   int linecount = 0;
   struct mom_item_st *curitm = NULL;
+  ld->ld_prevmark = -1;
+  ld->ld_stacktop = 0;
+  memset (ld->ld_stackarr, 0,
+          mom_raw_size (ld) * sizeof (struct mom_statelem_st));
   do
     {
       linlen = getline (&linbuf, &linsiz, ld->ld_file);
@@ -242,12 +250,15 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       linecount++;
       if (linbuf[0] == '#' || linbuf[0] == '\n')
         continue;
+      char *eol = strchr (linbuf, '\n');
+      if (eol)
+        *eol = (char) 0;
       MOM_DEBUGPRINTF (load, "second_pass top%d siz%d prevmark%d line#%d %s",
                        ld->ld_stacktop, mom_raw_size (ld), ld->ld_prevmark,
                        linecount, linbuf);
       if (MOM_IS_DEBUGGING (load))
         {
-          for (int i = (int)ld->ld_stacktop - 4; i < (int) ld->ld_stacktop;
+          for (int i = (int)ld->ld_stacktop - 5; i < (int) ld->ld_stacktop;
                i++)
             if (i >= 0)
               MOM_DEBUGPRINTF (load, "second_pass stack[%d]=%s",
@@ -387,9 +398,16 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       //// ( is pushing a mark
       else if (linbuf[0] == '(' && (!linbuf[1] || isspace (linbuf[1])))
         {
-          MOM_DEBUGPRINTF (load, "second_pass mark level %d previous %d",
+          MOM_DEBUGPRINTF (load,
+                           "second_pass leftparen mark level %d previous %d",
                            ld->ld_stacktop, ld->ld_prevmark);
           mom_loader_push_mark (ld);
+          if (MOM_IS_DEBUGGING (load))
+            for (int d = ld->ld_stacktop - 6; d < (int) ld->ld_stacktop; d++)
+              if (d >= 0)
+                MOM_DEBUGPRINTF (load, "after leftparen line#%d [%d] %s",
+                                 linecount, d,
+                                 mom_ldstate_cstring (ld->ld_stackarr[d]));
         }
       //// ^bar runs the action momf_ldc_bar
       else if (linbuf[0] == '^' && isalpha (linbuf[1]))
@@ -438,7 +456,13 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           while (eb < nambuf + sizeof (nambuf) - 1 &&
                  (isalnum (*sb) || *sb == '_'))
             *(eb++) = *(sb++);
-          MOM_DEBUGPRINTF (load, "parenthesis function %s", nambuf);
+          MOM_DEBUGPRINTF (load, "parenthesis function %s line#%d top#%d",
+                           nambuf, linecount, ld->ld_stacktop);
+          if (MOM_IS_DEBUGGING (load))
+            for (int i = ld->ld_stacktop - 7; i < (int) ld->ld_stacktop; i++)
+              if (i >= 0)
+                MOM_DEBUGPRINTF (load, "before parenfun %s [%d] : %s", nambuf,
+                                 i, mom_ldstate_cstring (ld->ld_stackarr[i]));
           mom_loader_paren_sig_t *parenfun =
             dlsym (mom_prog_dlhandle, nambuf);
           if (!parenfun)
@@ -514,7 +538,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
             memset (ld->ld_stackarr, 0,
                     siz * sizeof (struct mom_statelem_st));
           ld->ld_stacktop = 0;
-          ld->ld_prevmark = 0;
+          ld->ld_prevmark = -1;
         }
       else
       bad_line:
