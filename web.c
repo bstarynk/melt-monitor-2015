@@ -328,6 +328,10 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
 
 
 
+
+
+////////////////////////////////////////////////////////////////
+
 struct mom_item_st *
 mom_web_handler_exchange (long reqcnt, const char *fullpath,
                           enum mom_webmethod_en wmeth,
@@ -336,6 +340,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
   assert (wmeth > MOMWEBM_NONE);
   assert (requ != NULL);
   assert (resp != NULL);
+  double wtime = mom_clock_time (CLOCK_REALTIME);
   if (!fullpath || fullpath[0] != '/' || strstr (fullpath, "..")
       || strstr (fullpath, "//") || strlen (fullpath) > MOM_PATH_MAX)
     {
@@ -343,13 +348,156 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                        reqcnt, fullpath);
       return NULL;
     }
-  MOM_DEBUGPRINTF (web, "web_handler_exchange fullpath=%s", fullpath);
-#warning mom_web_handler_exchange should look for existing item names between /
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath=%s", reqcnt,
+                   fullpath);
+#define MAX_ELEM_WEB_PATH_MOM 20
+  int nbelem = 0;
+  const struct mom_item_st *elemarr[MAX_ELEM_WEB_PATH_MOM] = { NULL };
+  char *nextslash = NULL;
+  const char *pc = NULL;
+  for (pc = fullpath + 1; pc && *pc; pc = nextslash ? (nextslash + 1) : NULL)
+    {
+      if (!isalpha (*pc))
+        break;
+      if (nbelem >= MAX_ELEM_WEB_PATH_MOM)
+        {
+          MOM_DEBUGPRINTF (web,
+                           "web_handler_exchange #%ld too many (%d) elements for %s",
+                           reqcnt, nbelem, fullpath);
+          return NULL;
+        }
+      nextslash = strchr (pc, '/');
+      if (nextslash)
+        {
+          char curnam[MOM_PATH_MAX / 2];
+          memset (curnam, 0, sizeof (curnam));
+          if (nextslash - pc >= (int) sizeof (curnam) - 2)
+            {
+              MOM_DEBUGPRINTF (web,
+                               "web_handler_exchange #%ld too long element %s for %s",
+                               reqcnt, pc, fullpath);
+              return NULL;
+            }
+          int nix = 0;
+          for (const char *np = pc; isalnum (*np) || *np == '_'; np++)
+            curnam[nix++] = *np;
+          const char *end = NULL;
+          struct mom_item_st *curitm =
+            mom_find_item_from_string (curnam, &end);
+          MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld curnam %s", reqcnt,
+                           curnam);
+          if (curitm)
+            {
+              MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld curitm#%d %s",
+                               reqcnt, nbelem, mom_item_cstring (curitm));
+              elemarr[nbelem++] = curitm;
+            }
+          else
+            break;
+
+        }
+      else
+        {
+          const char *end = NULL;
+          struct mom_item_st *lastitm = mom_find_item_from_string (pc, &end);
+          MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld lastitm=%s",
+                           reqcnt, mom_item_cstring (lastitm));
+          if (lastitm)
+            elemarr[nbelem++] = lastitm;
+          else
+            break;
+        }
+    }
+  MOM_DEBUGPRINTF (web,
+                   "web_handler_exchange #%ld nbelem=%d fullpath='%s' pc='%s'",
+                   reqcnt, nbelem, fullpath, pc);
+  if (MOM_IS_DEBUGGING (web))
+    for (int ix = 0; ix < nbelem; ix++)
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld elemarr[%d]= %s",
+                       reqcnt, ix, mom_item_cstring (elemarr[ix]));
+  const struct mom_hashedvalue_st *hdlrval = NULL;
+  const struct mom_hashedvalue_st *hdlrkey = NULL;
+  if (nbelem > 0)
+    {
+      pthread_mutex_lock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
+      if (nbelem == 1)
+        {
+          hdlrval =
+            mom_hashassoc_get ((struct mom_hashassoc_st *)
+                               MOM_PREDEFITM (web_handlers)->itm_payload,
+                               (const struct mom_hashedvalue_st *)
+                               elemarr[0]);
+          if (hdlrval)
+            {
+              hdlrkey = (struct mom_hashedvalue_st *) elemarr[0];
+              MOM_DEBUGPRINTF (web,
+                               "web_handler_exchange #%ld singleitem hdlrkey=%s hdlrval=%s",
+                               reqcnt, mom_value_cstring (hdlrkey),
+                               mom_value_cstring (hdlrval));
+            }
+        }
+      if (!hdlrval)
+        {
+          const struct mom_boxtuple_st *tup =
+            mom_boxtuple_make_arr (nbelem, elemarr);
+          hdlrval =
+            mom_hashassoc_get ((struct mom_hashassoc_st *)
+                               MOM_PREDEFITM (web_handlers)->itm_payload,
+                               (const struct mom_hashedvalue_st *) tup);
+          if (hdlrval)
+            {
+              hdlrkey = (struct mom_hashedvalue_st *) tup;
+              MOM_DEBUGPRINTF (web,
+                               "web_handler_exchange #%ld tup %s hdlrval %s",
+                               reqcnt, mom_value_cstring (hdlrkey),
+                               mom_value_cstring (hdlrval));
+            }
+        }
+      pthread_mutex_unlock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
+    }
+  if (!hdlrval)
+    {
+      MOM_DEBUGPRINTF (web,
+                       "web_handler_exchange #%ld not found handler fullpath=%s",
+                       reqcnt, fullpath);
+      return NULL;
+    };
+  const struct mom_boxnode_st *hdlrnod = mom_dyncast_node (hdlrval);
+  if (!hdlrnod)
+    {
+      MOM_WARNPRINTF
+        ("web_handler_exchange #%ld fullpath %s hdlrkey %s got non-node hdlrval %s",
+         reqcnt, fullpath, mom_value_cstring (hdlrkey),
+         mom_value_cstring (hdlrval));
+      return NULL;
+    }
+  struct mom_item_st *wexitm = mom_clone_item (hdlrnod->nod_connitm);
+  assert (wexitm != NULL);
+  {
+    struct mom_webexch_st *wexch = mom_gc_alloc (sizeof (*wexch));
+    wexch->va_itype = MOMITY_WEBEXCH;
+    wexch->webx_meth = wmeth;
+    wexch->webx_time = wtime;
+    wexch->webx_count = reqcnt;
+    wexch->webx_key = hdlrkey;
+    wexch->webx_clos = hdlrnod;
+    wexch->webx_restpath = mom_boxstring_make (pc);
+    wexch->webx_requ = requ;
+    wexch->webx_resp = resp;
+#warning missing wexch fill
+    wexitm->itm_payload = (struct mom_anyvalue_st *) wexch;
+  }
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath %s wexitm %s",
+                   reqcnt, fullpath, mom_item_cstring (wexitm));
+
   MOM_FATAPRINTF ("unimplemented mom_web_handler_exchange fullpath=%s",
                   fullpath);
 }                               /* end of mom_web_handler_exchange */
 
 
+
+
+////////////////////////////////////////////////////////////////
 
 static onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp)
@@ -495,7 +643,7 @@ mom_webexch_payload_cleanup (struct mom_item_st *itm,   //
       free (obuf);
     };
   payl->webx_outsiz = 0;
-  payl->webx_path = NULL;
+  payl->webx_restpath = NULL;
   payl->webx_sessitm = NULL;
   pthread_cond_destroy (&payl->webx_donecond);
 }                               /* end of mom_webexch_payload_cleanup */

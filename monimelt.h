@@ -1494,7 +1494,9 @@ char *mom_webmethod_name (unsigned);
   enum mom_webmethod_en webx_meth;              \
   double webx_time;				\
   long webx_count;				\
-  const struct mom_boxstring_st*webx_path;	\
+  const struct mom_hashedvalue_st*webx_key;	\
+  const struct mom_boxnode_st*webx_clos;	\
+  const struct mom_boxstring_st*webx_restpath;	\
   onion_request* webx_requ;			\
   onion_response* webx_resp;			\
   struct mom_item_st*webx_sessitm;		\
