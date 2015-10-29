@@ -945,6 +945,7 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
   assert (femit != NULL);
   unsigned cnt = hass->cda_count;
   unsigned siz = mom_raw_size (hass);
+  MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc cnt=%d", cnt);
   assert (cnt <= siz);
   struct mom_hassocentry_tu smallarr[16] = { {NULL, NULL} };
   struct mom_hassocentry_tu *arr =
@@ -967,6 +968,10 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
         continue;
       assert (icnt < cnt);
       arr[icnt++] = hass->hass_ents[ix];
+      MOM_DEBUGPRINTF (dump,
+                       "dumpemit_hashassoc ix%d icnt%d curkey:%s curval:%s",
+                       ix, icnt, mom_value_cstring (curkey),
+                       mom_value_cstring (curval));
     }
   if (icnt > 1)
     qsort (arr, icnt, sizeof (struct mom_hassocentry_tu),
@@ -974,6 +979,9 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
   fputs ("(\n", femit);
   for (unsigned ix = 0; ix < icnt; ix++)
     {
+      MOM_DEBUGPRINTF (dump, "dumpemit_hashassoc ix%d key:%s val:%s",
+                       ix, mom_value_cstring (arr[ix].hass_key),
+                       mom_value_cstring (arr[ix].hass_val));
       mom_dumpemit_value (du, arr[ix].hass_key);
       mom_dumpemit_value (du, arr[ix].hass_val);
     }

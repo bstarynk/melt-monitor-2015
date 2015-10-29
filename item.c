@@ -1596,6 +1596,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   assert (du->du_state == MOMDUMP_EMIT);
   FILE *femit = du->du_emitfile;
   assert (femit != NULL);
+  MOM_DEBUGPRINTF (dump, "dumpemit_item_content start itm %s",
+                   mom_item_cstring (itm));
   /// emit the mtime
   if (itm->itm_mtime)
     {
@@ -1618,12 +1620,16 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
                      dinf.dli_sname + strlen (MOM_FUNC_PREFIX));
           else
             fputs ("^func\n", femit);
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content dli_sname %s",
+                           dinf.dli_sname);
         }
     }
   // emit the signature
   if (itm->itm_funsig && itm->itm_funsig != MOM_EMPTY_SLOT
       && mom_dumped_item (du, itm->itm_funsig))
     {
+      MOM_DEBUGPRINTF (dump, "dumpemit_item_content funsig %s",
+                       mom_item_cstring (itm->itm_funsig));
       mom_dumpemit_refitem (du, itm->itm_funsig);
       fputs ("^funsignature\n", femit);
     }
@@ -1631,6 +1637,9 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
       const struct mom_assovaldata_st *asso = itm->itm_pattr;
+      assert (asso->va_itype == MOMITY_ASSOVALDATA);
+      MOM_DEBUGPRINTF (dump, "dumpemit_item_content asso count %d",
+                       asso->cda_count);
       if (asso->cda_count > 0)
         {
           fputs ("(\n", femit);
@@ -1642,8 +1651,10 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   if (itm->itm_pcomp && itm->itm_pcomp != MOM_EMPTY_SLOT)
     {
       struct mom_vectvaldata_st *comps = itm->itm_pcomp;
+      assert (comps->va_itype == MOMITY_VECTVALDATA);
       unsigned siz = mom_raw_size (comps);
       unsigned cnt = comps->cda_count;
+      MOM_DEBUGPRINTF (dump, "dumpemit_item_content comps count %d", cnt);
       assert (cnt <= siz);
       fputs ("(\n", femit);
       for (unsigned ix = 0; ix < cnt; ix++)
@@ -1654,6 +1665,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   if (itm->itm_payload && itm->itm_payload != MOM_EMPTY_SLOT)
     {
       struct mom_anyvalue_st *payl = itm->itm_payload;
+      MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s payloadtype %d",
+                       mom_item_cstring (itm), payl->va_itype);
       switch (payl->va_itype)
         {
         case MOMITY_BOXINT:
@@ -1663,16 +1676,23 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
         case MOMITY_SET:
         case MOMITY_NODE:
         case MOMITY_ITEM:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content value payload %s",
+                           mom_value_cstring ((struct mom_hashedvalue_st *)
+                                              payl));
           mom_dumpemit_value (du, (struct mom_hashedvalue_st *) payl);
           fputs ("^payload_val\n", femit);
           break;
         case MOMITY_ASSOVALDATA:
           fputs ("(\n", femit);
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s assovaldata",
+                           mom_item_cstring (itm));
           dumpemit_assovaldata_mom (du, (struct mom_assovaldata_st *) payl);
           fputs (")payload_assoval\n", femit);
           break;
         case MOMITY_VECTVALDATA:
           {
+            MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s vectvaldata",
+                             mom_item_cstring (itm));
             struct mom_vectvaldata_st *comps =
               (struct mom_vectvaldata_st *) payl;
             unsigned siz = mom_raw_size (comps);
@@ -1686,6 +1706,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           break;
         case MOMITY_QUEUE:
           {
+            MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s queue",
+                             mom_item_cstring (itm));
             struct mom_queue_st *qu = (struct mom_queue_st *) payl;
             fputs ("(\n", femit);
             if (qu->qu_first && qu->qu_first != MOM_EMPTY_SLOT)
@@ -1709,6 +1731,11 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           {
             struct mom_hashset_st *hset = (struct mom_hashset_st *) payl;
             const struct mom_boxset_st *bxset = mom_hashset_to_boxset (hset);
+            MOM_DEBUGPRINTF (dump,
+                             "dumpemit_item_content itm %s hashset bxset %s",
+                             mom_item_cstring (itm),
+                             mom_value_cstring ((struct mom_hashedvalue_st *)
+                                                bxset));
             unsigned siz = mom_size (bxset);
             fputs ("(\n", femit);
             for (unsigned ix = 0; ix < siz; ix++)
@@ -1725,6 +1752,11 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           {
             struct mom_hashmap_st *hmap = (struct mom_hashmap_st *) payl;
             const struct mom_boxset_st *kset = mom_hashmap_keyset (hmap);
+            MOM_DEBUGPRINTF (dump,
+                             "dumpemit_item_content itm %s hashmap kset %s",
+                             mom_item_cstring (itm),
+                             mom_value_cstring ((struct mom_hashedvalue_st *)
+                                                kset));
             unsigned siz = mom_size (kset);
             fputs ("(\n", femit);
             for (unsigned ix = 0; ix < siz; ix++)
@@ -1743,10 +1775,14 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           }
           break;
         case MOMITY_HASHASSOC:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashassoc",
+                           mom_item_cstring (itm));
           mom_dumpemit_hashassoc_payload (du,
                                           (struct mom_hashassoc_st *) payl);
           break;
         default:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s other",
+                           mom_item_cstring (itm));
           break;
         }
     }
