@@ -467,6 +467,10 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
   if (nbelem > 0)
     {
       pthread_mutex_lock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
+      MOM_DEBUGPRINTF (web,
+                       "web_handler_exchange #%ld webhandlerpayload@%p nbelem=%d",
+                       reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload,
+                       nbelem);
       if (nbelem == 1)
         {
           hdlrval =
@@ -482,6 +486,10 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                                reqcnt, mom_value_cstring (hdlrkey),
                                mom_value_cstring (hdlrval));
             }
+          else
+            MOM_DEBUGPRINTF (web,
+                             "web_handler_exchange #%ld singleitem %s nokey",
+                             reqcnt, mom_item_cstring (elemarr[0]));
         }
       if (!hdlrval)
         {
@@ -499,6 +507,11 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                                reqcnt, mom_value_cstring (hdlrkey),
                                mom_value_cstring (hdlrval));
             }
+          else
+            MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld tup %s nokey",
+                             reqcnt,
+                             mom_value_cstring ((struct mom_hashedvalue_st *)
+                                                tup));
         }
       pthread_mutex_unlock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
     }
