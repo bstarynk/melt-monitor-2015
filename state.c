@@ -458,13 +458,38 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                                nambuf, mom_item_cstring (curitm), sizp,
                                pmark, ld->ld_stacktop);
               if (MOM_IS_DEBUGGING (load))
-                for (unsigned ix = 0; ix < sizp; ix++)
-                  MOM_DEBUGPRINTF (load, "before parenfun %s elemarr[%d]= %s",
-                                   nambuf, ix,
-                                   mom_ldstate_cstring (elemarr[ix]));
+                {
+                  for (unsigned ix = 0; ix < sizp; ix++)
+                    MOM_DEBUGPRINTF (load,
+                                     "before parenfun %s elemarr[%d]= %s",
+                                     nambuf, ix,
+                                     mom_ldstate_cstring (elemarr[ix]));
+                  MOM_DEBUGPRINTF (load,
+                                   "before parenfun %s top%d siz%d prevmark%d",
+                                   nambuf, ld->ld_stacktop, mom_raw_size (ld),
+                                   ld->ld_prevmark);
+                  for (int i = (int)ld->ld_stacktop - 5;
+                       i < (int) ld->ld_stacktop; i++)
+                    if (i >= 0)
+                      MOM_DEBUGPRINTF (load,
+                                       "before parenfun %s stack[%d]=%s",
+                                       nambuf, i,
+                                       mom_ldstate_cstring (ld->ld_stackarr
+                                                            [i]));
+                }
               (*parenfun) (curitm, ld, elemarr, sizp);
               MOM_DEBUGPRINTF (load, "after parenfun %s on itm %s",
                                nambuf, mom_item_cstring (curitm));
+              MOM_DEBUGPRINTF (load,
+                               "after parenfun %s top%d siz%d prevmark%d",
+                               nambuf, ld->ld_stacktop, mom_raw_size (ld),
+                               ld->ld_prevmark);
+              for (int i = (int)ld->ld_stacktop - 5;
+                   i < (int) ld->ld_stacktop; i++)
+                if (i >= 0)
+                  MOM_DEBUGPRINTF (load, "after parenfun %s stack[%d]=%s",
+                                   nambuf, i,
+                                   mom_ldstate_cstring (ld->ld_stackarr[i]));
             }
           else
             MOM_FATAPRINTF

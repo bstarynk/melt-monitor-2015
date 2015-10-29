@@ -1115,6 +1115,7 @@ momf_ldp_payload_hashassoc (struct mom_item_st *itm,
       hass = mom_hashassoc_put (hass, keyatt, valatt);
     };
   itm->itm_payload = (struct mom_anyvalue_st *) hass;
-  MOM_FATAPRINTF ("momf_ldp_payload_hashassoc done itm %s hass@%p cnt%d",
-                  mom_item_cstring (itm), hass, hass->cda_count);
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldp_payload_hashassoc done itm %s hass@%p cnt%d",
+                   mom_item_cstring (itm), hass, hass->cda_count);
 }                               /* end of momf_ldp_payload_hashassoc */
