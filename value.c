@@ -536,7 +536,7 @@ mom_queue_append (struct mom_queue_st *qu, const void *data)
           if (qlast->qu_elems[ix])
             qdata[cnt++] = qlast->qu_elems[ix];
         };
-      assert (cnt < MOM_NB_QUELEM - 1);
+      assert (cnt <= MOM_NB_QUELEM - 1);
       qdata[cnt++] = (struct mom_hashedvalue_st *) data;
       memcpy (qlast->qu_elems, qdata, sizeof (qdata));
     }

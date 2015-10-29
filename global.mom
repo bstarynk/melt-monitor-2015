@@ -65,4 +65,13 @@ comment
 )attrs
 
 
+*web_session
+1446110845
+^mtime
+(
+comment
+"for web sessions"_
+)attrs
+
+
 ### eof global.mom
