@@ -242,7 +242,17 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       linecount++;
       if (linbuf[0] == '#' || linbuf[0] == '\n')
         continue;
-      MOM_DEBUGPRINTF (load, "second_pass line#%d %s", linecount, linbuf);
+      MOM_DEBUGPRINTF (load, "second_pass top%d siz%d prevmark%d line#%d %s",
+                       ld->ld_stacktop, mom_raw_size (ld), ld->ld_prevmark,
+                       linecount, linbuf);
+      if (MOM_IS_DEBUGGING (load))
+        {
+          for (int i = (int)ld->ld_stacktop - 4; i < (int) ld->ld_stacktop;
+               i++)
+            if (i >= 0)
+              MOM_DEBUGPRINTF (load, "second_pass stack[%d]=%s",
+                               i, mom_ldstate_cstring (ld->ld_stackarr[i]));
+        }
       /// 123 is pushing a raw integer
       /// -234_ is pushing a boxed integer
       /// 12.0 is pushing a raw double
@@ -549,8 +559,8 @@ mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
         mom_dumpscan_hashassoc (du, (struct mom_hashassoc_st *) payl);
         return;
       default:
-        MOM_DEBUGPRINTF (dump, "dumpscan_payload@%s type#%d not scanned",
-                         payl, payl->va_itype);
+        MOM_DEBUGPRINTF (dump, "dumpscan_payload@%p type=%s not scanned",
+                         payl, mom_itype_str (payl));
         return;
       }
 }
