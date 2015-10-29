@@ -1786,6 +1786,9 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           break;
         }
     }
+  else
+    MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s without payload",
+                     mom_item_cstring (itm));
 }                               /* end of mom_dumpemit_item_content */
 
 ////////////////

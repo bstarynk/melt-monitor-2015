@@ -833,10 +833,21 @@ mom_hashassoc_put (struct mom_hashassoc_st *hass,
                    const struct mom_hashedvalue_st *key,
                    const struct mom_hashedvalue_st *val)
 {
-  if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
-    return NULL;
+  if (hass == MOM_EMPTY_SLOT)
+    hass = NULL;
   if (!key || key == MOM_EMPTY_SLOT || key->va_itype >= MOMITY__LASTHASHED)
     return hass;
+  if (!hass || hass->va_itype != MOMITY_HASHASSOC)
+    {
+      if (!val || val == MOM_EMPTY_SLOT)
+        return NULL;
+      unsigned newsiz = 5;
+      hass =
+        mom_gc_alloc (sizeof (*hass) +
+                      newsiz * sizeof (struct mom_itementry_tu));
+      hass->va_itype = MOMITY_HASHASSOC;
+      mom_put_size (hass, newsiz);
+    };
   if (!val || val == MOM_EMPTY_SLOT)
     return mom_hashassoc_remove (hass, key);
   if (val->va_itype >= MOMITY__LASTHASHED)
