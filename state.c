@@ -545,7 +545,12 @@ mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
       case MOMITY_HASHMAP:
         mom_dumpscan_hashmap (du, (struct mom_hashmap_st *) payl);
         return;
+      case MOMITY_HASHASSOC:
+        mom_dumpscan_hashassoc (du, (struct mom_hashassoc_st *) payl);
+        return;
       default:
+        MOM_DEBUGPRINTF (dump, "dumpscan_payload@%s type#%d not scanned",
+                         payl, payl->va_itype);
         return;
       }
 }

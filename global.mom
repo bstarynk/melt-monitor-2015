@@ -28,6 +28,11 @@ comment
 )attrs
 
 
+*dotest
+1446125273
+^mtime
+
+
 *hackc
 1446033098
 ^mtime
@@ -63,6 +68,15 @@ comment
 comment
 "hashassoc for web handlers"_
 )attrs
+(
+wtest
+(
+123_
+wtest
+"testing string"_
+dotest
+)node
+)payload_hashassoc
 
 
 *web_session
@@ -72,6 +86,11 @@ comment
 comment
 "for web sessions"_
 )attrs
+
+
+*wtest
+1446125273
+^mtime
 
 
 ### eof global.mom
