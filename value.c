@@ -20,6 +20,65 @@
 
 #include "meltmoni.h"
 
+
+const char *
+mom_itype_str (const void *p)
+{
+  if (!p)
+    return "*nil*";
+  else if (p == MOM_EMPTY_SLOT)
+    return "*emptyslot*";
+  else
+    {
+      unsigned ty = ((const struct mom_anyvalue_st *) p)->va_itype;
+      switch (ty)
+        {
+        case MOMITY_NONE:
+          return "NONE";
+        case MOMITY_BOXINT:
+          return "BOXINT";
+        case MOMITY_BOXDOUBLE:
+          return "BOXDOUBLE";
+        case MOMITY_BOXSTRING:
+          return "BOXSTRING";
+        case MOMITY_ITEM:
+          return "ITEM";
+        case MOMITY_TUPLE:
+          return "TUPLE";
+        case MOMITY_SET:
+          return "SET";
+        case MOMITY_NODE:
+          return "NODE";
+        case MOMITY_ASSOVALDATA:
+          return "Assocvaldata";
+        case MOMITY_VECTVALDATA:
+          return "Vectvaldata";
+        case MOMITY_QUEUE:
+          return "Queue";
+        case MOMITY_HASHSET:
+          return "Hashset";
+        case MOMITY_HASHMAP:
+          return "Hashmap";
+        case MOMITY_HASHASSOC:
+          return "Hashassoc";
+        case MOMITY_LOADER:
+          return "Loader";
+        case MOMITY_DUMPER:
+          return "Dumper";
+        case MOMITY_JSON:
+          return "Json";
+        case MOMITY_WEBEXCH:
+          return "Webexch";
+        case MOMITY_WEBSESSION:
+          return "Websession";
+        }
+      char tybuf[32];
+      memset (tybuf, 0, sizeof (tybuf));
+      snprintf (tybuf, sizeof (tybuf), "?Ityp#%u?", ty);
+      return GC_STRDUP (tybuf);
+    }
+}                               /* end of mom_itype_str */
+
 const struct mom_boxint_st *
 mom_boxint_make (intptr_t i)
 {

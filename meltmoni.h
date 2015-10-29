@@ -431,6 +431,8 @@ mom_itype (const void *p)
   return 0;
 }
 
+const char *mom_itype_str (const void *p);
+
 static inline unsigned
 mom_raw_size (const void *p)
 {

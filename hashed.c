@@ -665,7 +665,14 @@ mom_hashassoc_get (const struct mom_hashassoc_st *hass,
   assert (pos < (int) mom_raw_size (hass));
   if (pos < 0 || hass->hass_ents[pos].hass_key == NULL
       || hass->hass_ents[pos].hass_key == MOM_EMPTY_SLOT)
-    return NULL;
+    {
+      MOM_DEBUGPRINTF (item, "hashassoc_get hass@%p key:%s pos%d notfound",
+                       hass, mom_value_cstring (key), pos);
+      return NULL;
+    }
+  MOM_DEBUGPRINTF (item, "hashassoc_get hass@%p key:%s pos%d got %s", hass,
+                   mom_value_cstring (key), pos,
+                   mom_value_cstring (hass->hass_ents[pos].hass_val));
   return hass->hass_ents[pos].hass_val;
 }                               /* end of mom_hashassoc_get */
 

@@ -24,7 +24,7 @@
 #define SESSION_TIMEOUT_MOM 4000        /* a bit more than one hour of inactivity */
 
 // maximal reply delay for a web request - in seconds
-#define REPLY_TIMEOUT_MOM 3.5   /* reply timeout in seconds */
+#define REPLY_TIMEOUT_MOM (MOM_IS_DEBUGGING(web)?10.2:3.5)   /* reply timeout in seconds */
 
 const char *web_hostname_mom;
 static struct mom_hashset_st *sessions_hset_mom;
@@ -468,9 +468,10 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     {
       pthread_mutex_lock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
       MOM_DEBUGPRINTF (web,
-                       "web_handler_exchange #%ld webhandlerpayload@%p nbelem=%d",
+                       "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d",
                        reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload,
-                       nbelem);
+                       mom_itype_str (MOM_PREDEFITM
+                                      (web_handlers)->itm_payload), nbelem);
       if (nbelem == 1)
         {
           hdlrval =
@@ -757,12 +758,13 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   if (!wexitm)
     {
       MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld reqfupath %s no handler", reqcnt,
-                       reqfupath);
+                       "webrequest#%ld reqfupath %s no handler so no wexitm",
+                       reqcnt, reqfupath);
       return OCS_NOT_PROCESSED;
     };
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
-  MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f", reqcnt, elapstim);
+  MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,
+                   elapstim, mom_item_cstring (wexitm));
   struct timespec ts = mom_timespec (elapstim);
   bool waitreply = false;
   do
