@@ -1500,7 +1500,7 @@ char *mom_webmethod_name (unsigned);
   onion_request* webx_requ;			\
   onion_response* webx_resp;			\
   struct mom_item_st*webx_sessitm;		\
-  char webc_mimetype[48];			\
+  char webx_mimetype[48];			\
   int webx_code;				\
   char* webx_outbuf;				\
   size_t webx_outsiz;				\
@@ -1520,6 +1520,7 @@ void mom_webexch_payload_cleanup (struct mom_item_st *itm,
 #define MOM_WEBSESSION_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   uint32_t wbss_rand1, wbss_rand2;              \
+  time_t wbss_obstime;				\
   onion_websocket* wbss_websock;		\
   char* wbss_inbuf;				\
   unsigned wbss_insiz;				\

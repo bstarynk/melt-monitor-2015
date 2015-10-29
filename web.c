@@ -20,6 +20,13 @@
 
 #include "monimelt.h"
 
+#define SESSION_COOKIE_MOM "MOMSESSION"
+#define SESSION_TIMEOUT_MOM 4000        /* a bit more than one hour of inactivity */
+
+const char *web_hostname_mom;
+static struct mom_hashset_st *sessions_hset_mom;
+static pthread_mutex_t sessions_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
+
 static onion *onion_mom;
 
 static volatile atomic_long webcount_mom;
@@ -59,7 +66,10 @@ mom_start_web (const char *webservice)
     onion_new (O_THREADED | O_DETACH_LISTEN | O_NO_SIGTERM | O_NO_SIGPIPE);
   onion_set_max_threads (onion_mom, MAX_ONIONTHREADS_MOM);
   if (webhostname[0])
-    onion_set_hostname (onion_mom, webhostname);
+    {
+      web_hostname_mom = GC_STRDUP (webhostname);
+      onion_set_hostname (onion_mom, webhostname);
+    }
   if (webport > 0)
     {
       char portbuf[16];
@@ -328,6 +338,39 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
 
 
 
+////////////////////////////////////////////////////////////////
+struct mom_item_st *
+make_session_item_mom (onion_response *resp)
+{
+  struct mom_item_st *sessitm = mom_clone_item (MOM_PREDEFITM (web_session));
+  struct mom_websession_st *wsess = mom_gc_alloc (sizeof (*wsess));
+  wsess->va_itype = MOMITY_WEBSESSION;
+  uint32_t r1 = mom_random_uint32 ();
+  uint32_t r2 = mom_random_uint32 ();
+  wsess->wbss_rand1 = r1;
+  wsess->wbss_rand2 = r2;
+  time_t now = 0;
+  time (&now);
+  wsess->wbss_obstime = now + SESSION_TIMEOUT_MOM;
+  sessitm->itm_payload = (struct mom_anyvalue_st *) wsess;
+  pthread_mutex_lock (&sessions_mtx_mom);
+  sessions_hset_mom = mom_hashset_insert (sessions_hset_mom, sessitm);
+  pthread_mutex_unlock (&sessions_mtx_mom);
+  char cookiestr[128];
+  memset (cookiestr, 0, sizeof (cookiestr));
+  if (snprintf (cookiestr, sizeof (cookiestr),
+                "%s/%u/%u", mom_item_cstring (sessitm), r1, r2)
+      >= (int) sizeof (cookiestr) - 2)
+    /// this should never happen
+    MOM_FATAPRINTF ("too long cookiestr %s", cookiestr);
+  MOM_DEBUGPRINTF (web, "make_session_item sessitm=%s r1=%u r2=%u cookie: %s",
+                   mom_item_cstring (sessitm), (unsigned) r1, (unsigned) r2,
+                   cookiestr);
+  onion_response_add_cookie (resp, SESSION_COOKIE_MOM, cookiestr,
+                             SESSION_TIMEOUT_MOM, "/", web_hostname_mom, 0);
+  return sessitm;
+}
+
 
 
 ////////////////////////////////////////////////////////////////
@@ -350,6 +393,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     }
   MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath=%s", reqcnt,
                    fullpath);
+  /// we should sometimes forget the old sessions, but we dont bother yet
 #define MAX_ELEM_WEB_PATH_MOM 20
   int nbelem = 0;
   const struct mom_item_st *elemarr[MAX_ELEM_WEB_PATH_MOM] = { NULL };
@@ -473,6 +517,89 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     }
   struct mom_item_st *wexitm = mom_clone_item (hdlrnod->nod_connitm);
   assert (wexitm != NULL);
+  struct mom_item_st *sessitm = NULL;
+  const char *sesscookie =
+    onion_request_get_cookie (requ, SESSION_COOKIE_MOM);
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld wexitm %s sesscookie %s",
+                   reqcnt, mom_item_cstring (wexitm), sesscookie);
+  if (sesscookie)
+    {
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld sesscookie=%s", reqcnt,
+                       sesscookie);
+      unsigned r1 = 0, r2 = 0;
+      char sessname[64];
+      memset (sessname, 0, sizeof (sessname));
+      int pos = -1;
+      if (sscanf (sesscookie, " %60[A-Za-z0-9_]/%u/%u %n",
+                  sessname, &r1, &r2, &pos) >= 3 && pos > 0)
+        {
+          struct mom_item_st *sitm =
+            mom_find_item_from_string (sessname, NULL);
+          MOM_DEBUGPRINTF (web,
+                           "web_handler_exchange #%ld sitm %s r1=%u r2=%u",
+                           reqcnt, mom_item_cstring (sitm), r1, r2);
+          if (sitm)
+            {
+              pthread_mutex_lock (&sitm->itm_mtx);
+              if (sitm->itm_payload
+                  && sitm->itm_payload->va_itype == MOMITY_WEBSESSION)
+                {
+                  struct mom_websession_st *wsess =
+                    (struct mom_websession_st *) sitm->itm_payload;
+                  if (wsess->wbss_rand1 == r1 && wsess->wbss_rand2 == r2)
+                    sessitm = sitm;
+                }
+              pthread_mutex_unlock (&sitm->itm_mtx);
+            }
+        }
+    };
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld sessitm %s",
+                   reqcnt, mom_item_cstring (sessitm));
+  if (!sessitm)
+    sessitm = make_session_item_mom (resp);
+  else
+    {
+      bool badsession = false;
+      pthread_mutex_lock (&sessitm->itm_mtx);
+      struct mom_websession_st *wsess =
+        (struct mom_websession_st *) sessitm->itm_payload;
+      if (wsess && wsess->va_itype == MOMITY_WEBSESSION)
+        {
+          time_t now = 0;
+          time (&now);
+          if (wsess->wbss_obstime >= now - SESSION_TIMEOUT_MOM / 4)
+            {
+              wsess->wbss_obstime = now + SESSION_TIMEOUT_MOM;
+              char cookiestr[128];
+              memset (cookiestr, 0, sizeof (cookiestr));
+              if (snprintf (cookiestr, sizeof (cookiestr),
+                            "%s/%u/%u",
+                            mom_item_cstring (sessitm), wsess->wbss_rand1,
+                            wsess->wbss_rand2) >=
+                  (int) sizeof (cookiestr) - 2)
+                /// this should never happen
+                MOM_FATAPRINTF ("too long cookiestr %s", cookiestr);
+              MOM_DEBUGPRINTF (web,
+                               "web_handler_exchange#%ld sessitm=%s r1=%u r2=%u update cookie: %s",
+                               reqcnt, mom_item_cstring (sessitm),
+                               (unsigned) wsess->wbss_rand1,
+                               (unsigned) wsess->wbss_rand2, cookiestr);
+              onion_response_add_cookie (resp, SESSION_COOKIE_MOM, cookiestr,
+                                         SESSION_TIMEOUT_MOM, "/",
+                                         web_hostname_mom, 0);
+            }
+        }
+      else
+        badsession = true;
+      pthread_mutex_unlock (&sessitm->itm_mtx);
+      if (badsession)
+        {
+          sessitm = make_session_item_mom (resp);
+          MOM_DEBUGPRINTF (web,
+                           "web_handler_exchange#%ld got bad session so made sessitm %s",
+                           reqcnt, mom_item_cstring (sessitm));
+        }
+    };
   {
     struct mom_webexch_st *wexch = mom_gc_alloc (sizeof (*wexch));
     wexch->va_itype = MOMITY_WEBEXCH;
@@ -484,14 +611,21 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     wexch->webx_restpath = mom_boxstring_make (pc);
     wexch->webx_requ = requ;
     wexch->webx_resp = resp;
-#warning missing wexch fill
+    wexch->webx_sessitm = sessitm;
+    wexch->webx_outbuf = NULL;
+    wexch->webx_outsiz = 0;
+    wexch->webx_outfil =
+      open_memstream (&wexch->webx_outbuf, &wexch->webx_outsiz);
+    if (!wexch->webx_outfil)
+      MOM_FATAPRINTF
+        ("web_handler_exchange #%ld fullpath %s failed to open outfile (%m)",
+         reqcnt, fullpath);
+    pthread_cond_init (&wexch->webx_donecond, NULL);
     wexitm->itm_payload = (struct mom_anyvalue_st *) wexch;
   }
   MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath %s wexitm %s",
                    reqcnt, fullpath, mom_item_cstring (wexitm));
-
-  MOM_FATAPRINTF ("unimplemented mom_web_handler_exchange fullpath=%s",
-                  fullpath);
+  return wexitm;
 }                               /* end of mom_web_handler_exchange */
 
 
