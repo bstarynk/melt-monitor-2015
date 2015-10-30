@@ -1770,4 +1770,7 @@ void mom_agenda_remove_set_tasklets (const struct mom_boxset_st *set);
 const struct mom_boxtuple_st *mom_agenda_tuple_tasklets (void);
 void mom_agenda_changing (void);
 
+// a tasklet item has a node payload, whose connective should have a function of signature_tasklet;
+// we run the tasket function with the tkitm locked
+typedef void mom_tasklet_sig_t (struct mom_item_st *tkitm);
 #endif /*MONIMELT_INCLUDED_ */
