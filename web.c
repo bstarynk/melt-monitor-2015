@@ -561,7 +561,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                            reqcnt, mom_item_cstring (sitm), r1, r2);
           if (sitm)
             {
-              pthread_mutex_lock (&sitm->itm_mtx);
+              mom_item_lock (sitm);
               if (sitm->itm_payload
                   && sitm->itm_payload->va_itype == MOMITY_WEBSESSION)
                 {
@@ -570,14 +570,19 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                   if (wsess->wbss_rand1 == r1 && wsess->wbss_rand2 == r2)
                     sessitm = sitm;
                 }
-              pthread_mutex_unlock (&sitm->itm_mtx);
+              mom_item_unlock (sitm);
             }
         }
     };
-  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld sessitm %s",
-                   reqcnt, mom_item_cstring (sessitm));
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath %s sessitm %s",
+                   reqcnt, fullpath, mom_item_cstring (sessitm));
   if (!sessitm)
-    sessitm = make_session_item_mom (resp);
+    {
+      sessitm = make_session_item_mom (resp);
+      MOM_DEBUGPRINTF (web,
+                       "web_handler_exchange #%ld fullpath %s fresh sessitm %s",
+                       reqcnt, fullpath, mom_item_cstring (sessitm));
+    }
   else
     {
       bool badsession = false;
