@@ -169,10 +169,11 @@ run_tasklet_mom (struct mom_item_st *tkitm)
 }                               /* end of run_tasklet_mom */
 
 static void *
-agenda_thread_worker_mom (void *data)
+agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
 {
   intptr_t ix = (intptr_t) data;
   assert (ix > 0 && ix <= MOM_JOB_MAX);
+  assert (sb);
   char thnbuf[16];
   memset (thnbuf, 0, sizeof (thnbuf));
   snprintf (thnbuf, sizeof (thnbuf), "momagw#%d", (int) ix);
@@ -205,8 +206,15 @@ agenda_thread_worker_mom (void *data)
       if (tkitm && tkitm != MOM_EMPTY_SLOT && tkitm->va_itype == MOMITY_ITEM)
         run_tasklet_mom (tkitm);
     };
+  return NULL;
 }                               /* end agenda_thread_worker_mom */
 
+static void *
+agenda_thread_wrapper_mom (void *data)
+{
+  GC_call_with_stack_base (agenda_thread_worker_mom, data);
+  return NULL;
+}
 
 static pthread_t workthread_mom[MOM_JOB_MAX + 1];
 void
@@ -217,7 +225,7 @@ mom_start_agenda (unsigned nbjobs)
   pthread_attr_t at = { };
   pthread_attr_init (&at);
   pthread_attr_setdetachstate (&at, PTHREAD_CREATE_DETACHED);
-  for (int ix = 1; ix <= nbjobs; ix++)
-    pthread_create (&workthread_mom[ix], &at, agenda_thread_worker_mom,
-                    (void *) ix);
+  for (int ix = 1; ix <= (int) nbjobs; ix++)
+    pthread_create (&workthread_mom[ix], &at, agenda_thread_wrapper_mom,
+                    (void *) (intptr_t) ix);
 }
