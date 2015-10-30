@@ -161,34 +161,37 @@ mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb, const char *fil,
   if (nb == 0)
     return;
   unsigned siz = mom_raw_size (ld);
-  unsigned top = ld->ld_stacktop;
+  unsigned oldtop = ld->ld_stacktop;
+  unsigned oldprevmark = ld->ld_prevmark;
   assert (siz == 0 || ld->ld_stackarr != NULL);
-  assert (top <= siz);
-  if (nb > top)
-    nb = top;
-  while (ld->ld_prevmark >= (int) (top - nb) && ld->ld_prevmark >= 0)
+  assert (oldtop <= siz);
+  if (nb > oldtop)
+    nb = oldtop;
+  unsigned newtop = oldtop - nb;
+  while (ld->ld_prevmark >= (int) (newtop) && ld->ld_prevmark >= 0)
     {
       ld->ld_prevmark = mom_ldstate_mark (ld->ld_stackarr[ld->ld_prevmark]);
     }
-  memset (ld->ld_stackarr + top - nb - 1, 0,
-          sizeof (struct mom_statelem_st) * nb);
-  ld->ld_stacktop = top = (top - nb);
+  unsigned newprevmark = ld->ld_prevmark;
+  memset (ld->ld_stackarr + newtop, 0, nb * sizeof (struct mom_statelem_st));
+  ld->ld_stacktop = newtop;
 #ifdef NDEBUG
-  MOM_DEBUGPRINTF (load, "loader_pop: nb=%d now top=%d prevmark=%d", nb,
-                   ld->ld_stacktop, ld->ld_prevmark);
+  MOM_DEBUGPRINTF (load,
+                   "loader_pop: nb=%d old{top=%d,prevmark=%d} new{top=%d,prevmark=%d}",
+                   nb, oldtop, oldprevmark, newtop, newprevmark);
 #else
   MOM_DEBUGPRINTF_AT (fil, line, load,
-                      "loader_pop:: nb=%d now top=%d prevmark=%d", nb,
-                      ld->ld_stacktop, ld->ld_prevmark);
+                      "loader_pop:: nb=%d old{top=%d,prevmark=%d} new{top=%d,prevmark=%d}",
+                      nb, oldtop, oldprevmark, newtop, newprevmark);
 #endif
-  if (siz > 20 && top < siz / 3)
+  if (siz > 20 && newtop < siz / 3)
     {
-      unsigned newsiz = mom_prime_above (4 * top / 3 + 9);
+      unsigned newsiz = mom_prime_above (4 * newtop / 3 + 9);
       if (newsiz < siz)
         {
           struct mom_statelem_st *newarr =
             mom_gc_alloc (newsiz * sizeof (newarr[0]));
-          memcpy (newarr, ld->ld_stackarr, top * sizeof (newarr[0]));
+          memcpy (newarr, ld->ld_stackarr, newtop * sizeof (newarr[0]));
           ld->ld_stackarr = newarr;
           mom_put_size (ld, newsiz);
         }
