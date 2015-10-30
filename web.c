@@ -464,9 +464,11 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                        reqcnt, ix, mom_item_cstring (elemarr[ix]));
   const struct mom_hashedvalue_st *hdlrval = NULL;
   const struct mom_hashedvalue_st *hdlrkey = NULL;
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld nbelem=%d", reqcnt,
+                   nbelem);
   if (nbelem > 0)
     {
-      pthread_mutex_lock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
+      mom_item_lock (MOM_PREDEFITM (web_handlers));
       MOM_DEBUGPRINTF (web,
                        "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d",
                        reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload,
@@ -514,7 +516,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                              mom_value_cstring ((struct mom_hashedvalue_st *)
                                                 tup));
         }
-      pthread_mutex_unlock (&MOM_PREDEFITM (web_handlers)->itm_mtx);
+      mom_item_unlock (MOM_PREDEFITM (web_handlers));
     }
   if (!hdlrval)
     {
@@ -523,6 +525,8 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                        reqcnt, fullpath);
       return NULL;
     };
+  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld hdlrval %s", reqcnt,
+                   mom_value_cstring (hdlrval));
   const struct mom_boxnode_st *hdlrnod = mom_dyncast_node (hdlrval);
   if (!hdlrnod)
     {
@@ -653,7 +657,6 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
 static onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp)
 {
-#warning should use the web_handlers predefined
   enum mom_webmethod_en wmeth = MOMWEBM_NONE;
   assert (data == NULL);
   assert (requ != NULL);
@@ -762,6 +765,22 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        reqcnt, reqfupath);
       return OCS_NOT_PROCESSED;
     };
+  errno = 0;
+  {
+    const struct mom_boxnode_st *wexclos = NULL;
+    mom_item_lock (wexitm);
+    if (mom_itype (wexitm->itm_payload) == MOMITY_WEBEXCH)
+      wexclos = ((struct mom_webexch_st *) wexitm->itm_payload)->webx_clos;
+    mom_item_unlock (wexitm);
+    MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wexclos %s",
+                     reqcnt, reqfupath,
+                     mom_value_cstring ((struct mom_hashedvalue_st *)
+                                        wexclos));
+#warning handle_web_mom should add the closure wexclos to the agenda
+    MOM_WARNPRINTF
+      ("webrequest#%ld fupath %s should add wexclos %s to the agenda", reqcnt,
+       reqfupath, mom_value_cstring ((struct mom_hashedvalue_st *) wexclos));
+  }
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
   MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,
                    elapstim, mom_item_cstring (wexitm));
@@ -771,7 +790,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     {
       struct mom_webexch_st *wexch = NULL;
       assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
-      pthread_mutex_lock (&wexitm->itm_mtx);
+      mom_item_lock (wexitm);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
           && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
         wexch = (struct mom_webexch_st *) wexitm->itm_payload;
@@ -829,10 +848,13 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                    "<!doctype html>\n"
                    "<html><head><title>MONIMELT timedout</title></head>\n"
                    "<body><h1>MONIMELT request #%ld timedout</h1>\n"
-                   "%s request to <tt>%s</tt> timed out with wexitm %s on %s</body></html>\n\n",
+                   "%s request to <tt>%s</tt> timed out with wexitm %s on %s"
+                   "<hr/><small>monimelt <i>%s</i> gitcommit <tt>%s<tt></small>"
+                   "</body></html>\n\n",
                    reqcnt, mom_webmethod_name (wmeth),
-                   onion_html_quote_dup (reqfupath),
-                   mom_item_cstring (wexitm), timbuf);
+                   reqfupath,
+                   mom_item_cstring (wexitm), timbuf,
+                   monimelt_timestamp, monimelt_lastgitcommit);
           fflush (htmlout);
           long htmloff = ftell (htmlout);
           onion_response_set_length (resp, htmloff);
@@ -846,7 +868,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         }
       else
         waitreply = true;
-      pthread_mutex_unlock (&wexitm->itm_mtx);
+      mom_item_unlock (wexitm);
     }
   while (waitreply);
   MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end", reqcnt, reqfupath);

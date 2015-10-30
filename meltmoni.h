@@ -994,6 +994,22 @@ mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
 
 void mom_initialize_items (void);
 
+static inline void
+mom_item_lock (struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    MOM_FATAPRINTF ("bad itm@%p to lock", itm);
+  pthread_mutex_lock (&itm->itm_mtx);
+}
+
+static inline void
+mom_item_unlock (struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    MOM_FATAPRINTF ("bad itm@%p to unlock", itm);
+  pthread_mutex_unlock (&itm->itm_mtx);
+}
+
 struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
                                                  *radix, uint16_t hid,
                                                  uint64_t loid);
