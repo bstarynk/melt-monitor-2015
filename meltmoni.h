@@ -1420,6 +1420,7 @@ mom_loader_top (struct mom_loader_st *ld, unsigned topoff)
   return ld->ld_stackarr[ld->ld_stacktop - topoff - 1];
 }
 
+#ifdef NDEBUG
 void mom_loader_push (struct mom_loader_st *ld,
                       const struct mom_statelem_st el);
 
@@ -1427,7 +1428,22 @@ void mom_loader_push (struct mom_loader_st *ld,
 int mom_loader_push_mark (struct mom_loader_st *ld);
 
 void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
+#else // no NDEBUG
+void mom_loader_push_at (struct mom_loader_st *ld,
+                         const struct mom_statelem_st el,
+                         const char *fil, int lineno);
+#define mom_loader_push(Ld,El) \
+  mom_loader_push_at((Ld),(El),__FILE__,__LINE__)
 
+// return index of previous mark
+int mom_loader_push_mark_at (struct mom_loader_st *ld, const char *fil,
+                             int lineno);
+#define mom_loader_push_mark(Ld) mom_loader_push_mark_at((Ld),__FILE__,__LINE__)
+
+void mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb,
+                        const char *fil, int lineno);
+#define mom_loader_pop(Ld,Nb) mom_loader_pop_at((Ld),(Nb),__FILE__,__LINE__)
+#endif
 
 ////////////////
 #define MOM_NB_QUELEM 7

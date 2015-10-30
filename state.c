@@ -79,10 +79,17 @@ mom_ldstate_cstring (const struct mom_statelem_st se)
   fclose (f);
   free (buf);
   return res;
-}
+}                               /* end mom_ldstate_cstring */
 
+
+#ifdef NDEBUG
 void
 mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
+#else
+void
+mom_loader_push_at (struct mom_loader_st *ld, const struct mom_statelem_st el,
+                    const char *fil, int line)
+#endif
 {
   if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
     return;
@@ -94,7 +101,12 @@ mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
     {
       unsigned newsiz = mom_prime_above (5 * siz / 4 + 10);
       if (newsiz >= MOM_SIZE_MAX)
+#ifdef NDEBUG
         MOM_FATAPRINTF ("too big new size %u for loader @%p", newsiz, ld);
+#else
+        MOM_FATAPRINTF ("@%s:%d too big new size %u for loader @%p", fil,
+                        line, newsiz, ld);
+#endif
       struct mom_statelem_st *newarr =
         mom_gc_alloc (newsiz * sizeof (newarr[0]));
       if (top > 0)
@@ -105,23 +117,43 @@ mom_loader_push (struct mom_loader_st *ld, const struct mom_statelem_st el)
   ld->ld_stackarr[top] = el;
   if (el.st_type == MOMSTA_MARK)
     ld->ld_prevmark = top;
+#ifdef NDEBUG
   MOM_DEBUGPRINTF (load, "loader_push [%d] : %s",
                    top, mom_ldstate_cstring (el));
+#else
+  MOM_DEBUGPRINTF (load, "loader_push@%s:%d [%d] : %s", fil, line,
+                   top, mom_ldstate_cstring (el));
+#endif
   ld->ld_stacktop = top + 1;
 }
 
+#ifdef NDEBUG
 int
 mom_loader_push_mark (struct mom_loader_st *ld)
+#else
+int
+mom_loader_push_mark_at (struct mom_loader_st *ld, const char *fil, int lin)
+#endif
 {
   if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
     return -1;
   unsigned oldmark = ld->ld_prevmark;
+#ifdef NDEBUG
   mom_loader_push (ld, mom_ldstate_make_mark (oldmark));
+#else
+  mom_loader_push_at (ld, mom_ldstate_make_mark (oldmark), fil, lin);
+#endif
   return oldmark;
 }
 
+#ifdef NDEBUG
 void
 mom_loader_pop (struct mom_loader_st *ld, unsigned nb)
+#else
+void
+mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb, const char *fil,
+                   int line)
+#endif
 {
   if (!ld || ld == MOM_EMPTY_SLOT || ld->va_itype != MOMITY_LOADER)
     return;
@@ -141,8 +173,13 @@ mom_loader_pop (struct mom_loader_st *ld, unsigned nb)
   memset (ld->ld_stackarr + top - nb - 1, 0,
           sizeof (struct mom_statelem_st) * nb);
   ld->ld_stacktop = top = (top - nb);
-  MOM_DEBUGPRINTF (load, "loader_pop nb=%d now top=%d prevmark=%d", nb,
+#ifdef NDEBUG
+  MOM_DEBUGPRINTF (load, "loader_pop: nb=%d now top=%d prevmark=%d", nb,
                    ld->ld_stacktop, ld->ld_prevmark);
+#else
+  MOM_DEBUGPRINTF (load, "loader_pop@%s:%d nb=%d now top=%d prevmark=%d",
+                   fil, line, nb, ld->ld_stacktop, ld->ld_prevmark);
+#endif
   if (siz > 20 && top < siz / 3)
     {
       unsigned newsiz = mom_prime_above (4 * top / 3 + 9);
@@ -155,7 +192,7 @@ mom_loader_pop (struct mom_loader_st *ld, unsigned nb)
           mom_put_size (ld, newsiz);
         }
     }
-}
+}                               /* end mom_loader_pop */
 
 static void
 initialize_load_state_mom (const char *statepath)
