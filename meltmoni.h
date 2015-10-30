@@ -122,6 +122,10 @@ int64_t mom_prime_below (int64_t n);
 
 #define MOM_EMPTY_SLOT ((void*)-1)
 
+// maximum number of threads
+#define MOM_JOB_MAX 16
+extern __thread int mom_worker_num;
+
 #define MOM_SIZE_MAX (1<<24)
 
 static inline pid_t
@@ -1568,6 +1572,43 @@ struct mom_webexch_st
   MOM_WEBEXCH_FIELDS;
 };
 
+static inline struct mom_webexch_st *
+mom_item_unsync_webexch (struct mom_item_st *itm)
+{
+  struct mom_webexch_st *wex = NULL;
+  if (itm && itm != MOM_EMPTY_SLOT
+      && (wex = (struct mom_webexch_st *) itm->itm_payload)
+      && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH)
+    return wex;
+  return NULL;
+}
+
+
+#define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {		\
+    struct mom_webexch_st*wex_#Lin = (Wex);		\
+    if (wex_#Lin && wex_#Lin != MOM_EMPTY_SLOT		\
+	&& wex_#Lin->va_itype == MOMITY_WEBEXCH		\
+	&& wex_#Lin->webx_outfil)			\
+      fprintf(wex_#Lin->webx_outfil, __VA_ARGS__);	\
+  }while(0)
+// MOM_WEXCH_PRINTF should be used with the owning webexchange item locked
+#define MOM_WEXCH_PRINTF(Wex,...) MOM_WEXCH_PRINTF_AT(__LINE__,(Wex),__VA_ARGS__)
+
+// mom_wexch_write should be used with the owning webexchange item locked
+static inline void
+mom_wexch_write (struct mom_webexch_st *wex, const char *buf, size_t size)
+{
+  if (wex && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH
+      && wex->webx_outfil)
+    fwrite (buf, size, 1, wex->webx_outfil);
+}
+
+// mom_wexch_reply should be used with the owning webexchange item locked
+void
+mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
+                 const char *mimetype);
+
+
 void mom_webexch_payload_cleanup (struct mom_item_st *itm,
                                   struct mom_webexch_st *payl);
 
@@ -1719,4 +1760,14 @@ mom_stop (void)
 }
 
 void mom_stop_and_dump (void);
+
+////////////////
+
+void mom_agenda_add_tasklet_front (const struct mom_item_st *tkletitm);
+void mom_agenda_add_tasklet_back (const struct mom_item_st *tkletitm);
+void mom_agenda_remove_tasklet (const struct mom_item_st *tkletitm);
+void mom_agenda_remove_set_tasklets (const struct mom_boxset_st *set);
+const struct mom_boxtuple_st *mom_agenda_tuple_tasklets (void);
+void mom_agenda_changing (void);
+
 #endif /*MONIMELT_INCLUDED_ */

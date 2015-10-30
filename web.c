@@ -941,3 +941,22 @@ mom_websession_payload_cleanup (struct mom_item_st *itm,        //
   payl->wbss_insiz = 0;
   payl->wbss_inoff = 0;
 }                               /* end of mom_websession_payload_cleanup */
+
+
+void
+mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
+                 const char *mimetype)
+{
+  if (!wex || wex == MOM_EMPTY_SLOT || wex->va_itype != MOMITY_WEBEXCH)
+    return;
+  if (!mimetype || !isalpha (mimetype[0]))
+    return;
+  if (!wex->webx_outfil)
+    return;
+  if (wex->webx_code)
+    return;
+  fflush (wex->webx_outfil);
+  wex->webx_code = httpcode;
+  strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
+  pthread_cond_broadcast (&wex->webx_donecond);
+}                               /* end mom_wexch_reply */

@@ -617,7 +617,6 @@ mom_queue_pop_front (struct mom_queue_st *qu)
       qdata[cnt++] = qfirst->qu_elems[ix];
   if (cnt <= 1)
     {
-      assert (cnt == 1);
       if (qfirst == qu->qu_last)
         {
           qu->qu_first = qu->qu_last = NULL;

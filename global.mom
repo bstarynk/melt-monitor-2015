@@ -28,11 +28,6 @@ comment
 )attrs
 
 
-*dotest
-1446125273
-^mtime
-
-
 *hackc
 1446033098
 ^mtime
@@ -56,6 +51,24 @@ comment
 )attrs
 
 
+*signature_tasklet
+1446190348
+^mtime
+(
+comment
+"signature of tasklet functions"_
+)attrs
+
+
+*the_agenda
+1446190155
+^mtime
+(
+comment
+"the agenda is a queue of tasklet items"_
+)attrs
+
+
 *the_system
 1445947163
 ^mtime
@@ -69,13 +82,6 @@ comment
 "hashassoc for web handlers"_
 )attrs
 (
-wtest
-(
-123_
-wtest
-"testing string"_
-dotest
-)node
 )payload_hashassoc
 
 
@@ -86,11 +92,6 @@ dotest
 comment
 "for web sessions"_
 )attrs
-
-
-*wtest
-1446125273
-^mtime
 
 
 ### eof global.mom
