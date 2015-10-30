@@ -104,8 +104,8 @@ mom_loader_push_at (struct mom_loader_st *ld, const struct mom_statelem_st el,
 #ifdef NDEBUG
         MOM_FATAPRINTF ("too big new size %u for loader @%p", newsiz, ld);
 #else
-        MOM_FATAPRINTF ("@%s:%d too big new size %u for loader @%p", fil,
-                        line, newsiz, ld);
+        MOM_FATAPRINTF_AT (fil, line, "too big new size %u for loader @%p",
+                           newsiz, ld);
 #endif
       struct mom_statelem_st *newarr =
         mom_gc_alloc (newsiz * sizeof (newarr[0]));
@@ -121,8 +121,8 @@ mom_loader_push_at (struct mom_loader_st *ld, const struct mom_statelem_st el,
   MOM_DEBUGPRINTF (load, "loader_push [%d] : %s",
                    top, mom_ldstate_cstring (el));
 #else
-  MOM_DEBUGPRINTF (load, "loader_push@%s:%d [%d] : %s", fil, line,
-                   top, mom_ldstate_cstring (el));
+  MOM_DEBUGPRINTF_AT (fil, line, load, "loader_push [%d] :: %s",
+                      top, mom_ldstate_cstring (el));
 #endif
   ld->ld_stacktop = top + 1;
 }
@@ -177,8 +177,9 @@ mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb, const char *fil,
   MOM_DEBUGPRINTF (load, "loader_pop: nb=%d now top=%d prevmark=%d", nb,
                    ld->ld_stacktop, ld->ld_prevmark);
 #else
-  MOM_DEBUGPRINTF (load, "loader_pop@%s:%d nb=%d now top=%d prevmark=%d",
-                   fil, line, nb, ld->ld_stacktop, ld->ld_prevmark);
+  MOM_DEBUGPRINTF_AT (fil, line, load,
+                      "loader_pop:: nb=%d now top=%d prevmark=%d", nb,
+                      ld->ld_stacktop, ld->ld_prevmark);
 #endif
   if (siz > 20 && top < siz / 3)
     {
