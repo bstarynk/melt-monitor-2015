@@ -272,8 +272,9 @@ agenda_thread_wrapper_mom (void *data)
 
 static pthread_t workthread_mom[MOM_JOB_MAX + 1];
 void
-mom_start_agenda (unsigned nbjobs)
+mom_start_agenda (void)
 {
+  unsigned nbjobs = mom_nbjobs;
   if (nbjobs < 2 || nbjobs > MOM_JOB_MAX)
     MOM_FATAPRINTF ("start_agenda bad nbjobs %d", nbjobs);
   pthread_attr_t at = { };
@@ -282,4 +283,5 @@ mom_start_agenda (unsigned nbjobs)
   for (int ix = 1; ix <= (int) nbjobs; ix++)
     pthread_create (&workthread_mom[ix], &at, agenda_thread_wrapper_mom,
                     (void *) (intptr_t) ix);
+  MOM_INFORMPRINTF ("started agenda with %d workers", nbjobs);
 }

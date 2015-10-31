@@ -781,10 +781,11 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                      reqcnt, reqfupath,
                      mom_value_cstring ((struct mom_hashedvalue_st *)
                                         wexclos));
-#warning handle_web_mom should add the closure wexclos to the agenda
-    MOM_WARNPRINTF
-      ("webrequest#%ld fupath %s should add wexclos %s to the agenda", reqcnt,
-       reqfupath, mom_value_cstring ((struct mom_hashedvalue_st *) wexclos));
+    struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
+    taskitm->itm_payload = (struct mom_anyvalue_st *) wexclos;
+    MOM_DEBUGPRINTF (web, "webrequest#%ld taskitm=%s",
+                     reqcnt, mom_item_cstring (taskitm));
+    mom_agenda_add_tasklet_front (taskitm);
   }
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
   MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,

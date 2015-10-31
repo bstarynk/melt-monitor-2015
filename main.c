@@ -23,7 +23,8 @@
 void *mom_prog_dlhandle;
 const char *mom_webdir[MOM_MAX_WEBDIR];
 volatile atomic_bool mom_should_run;
-
+#define MOM_DEFAULT_NB_JOBS 3
+unsigned mom_nbjobs = MOM_DEFAULT_NB_JOBS;
 static bool syslogging_mom;
 static bool should_dump_mom;
 static char *dir_after_load_mom;
@@ -840,6 +841,7 @@ static const struct option mom_long_options[] = {
   {"debug", required_argument, NULL, 'D'},
   {"load", required_argument, NULL, 'L'},
   {"web", required_argument, NULL, 'W'},
+  {"jobs", required_argument, NULL, 'J'},
   {"dump", no_argument, NULL, 'd'},
   {"syslog", no_argument, NULL, 's'},
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
@@ -861,6 +863,9 @@ usage_mom (const char *argv0)
   printf ("\t -V | --version " " \t# Give version information.\n");
   printf ("\t -W | --web <webservice>"
           " \t# start a web service, e.g. localhost:8085\n");
+  printf ("\t -J | --jobs <nbjobs>"
+          " \t#set number of jobs, default %d, max %d", mom_nbjobs,
+          MOM_JOB_MAX);
   printf ("\t -d | --dump " " \t# Dump the state.\n");
   printf ("\t -s | --syslog " " \t# Use system log.\n");
   printf ("\t -D | --debug <debug-features>"
@@ -897,7 +902,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
-  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:",
+  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -933,6 +938,18 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           openlog ("monimelt", LOG_PID | LOG_PERROR, LOG_LOCAL1);
           syslogging_mom = true;
           MOM_INFORMPRINTF ("syslogging activated");
+          break;
+        case 'J':              /* --jobs <nbjobs> */
+          {
+            if (!optarg)
+              MOM_FATAPRINTF ("--jobs require a <nb-jobs>");
+            int n = atoi (optarg);
+            if (n < 2 || n > MOM_JOB_MAX)
+              MOM_FATAPRINTF
+                ("bad number %d of jobs, should be at least 2 and less than %d",
+                 n, MOM_JOB_MAX);
+            mom_nbjobs = n;
+          }
           break;
         case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
           {
@@ -1153,6 +1170,7 @@ main (int argc_main, char **argv_main)
   if (web_service_mom)
     {
       mom_start_web (web_service_mom);
+      mom_start_agenda ();
     }
   while (atomic_load (&mom_should_run))
     {
