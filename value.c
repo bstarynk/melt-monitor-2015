@@ -71,6 +71,8 @@ mom_itype_str (const void *p)
           return "Webexch";
         case MOMITY_WEBSESSION:
           return "Websession";
+        case MOMITY_TASKLET:
+          return "Tasklet";
         }
       char tybuf[32];
       memset (tybuf, 0, sizeof (tybuf));

@@ -160,6 +160,42 @@ mom_agenda_tuple_tasklets (void)
   return tup;
 }                               /* end of mom_agenda_tuple_tasklets */
 
+static bool
+unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
+                             struct mom_boxnode_st *tknod)
+{
+  bool run = false;
+  struct mom_item_st *connitm = tknod->nod_connitm;
+  assert (connitm && connitm->va_itype == MOMITY_ITEM);
+  void *connfun = NULL;
+  struct mom_item_st *connsigitm = NULL;
+  mom_item_lock (connitm);
+  connfun = connitm->itm_funptr;
+  connsigitm = connitm->itm_funsig;
+  mom_item_unlock (connitm);
+  if (connsigitm == MOM_PREDEFITM (signature_tasklet) && connfun)
+    {
+      MOM_DEBUGPRINTF (run, "run_node_tasklet tkitm=%s connitm=%s connfun@%p",
+                       mom_item_cstring (tkitm),
+                       mom_item_cstring (connitm), connfun);
+      mom_tasklet_sig_t *connrout = (mom_tasklet_sig_t *) connfun;
+      (*connrout) (tkitm);
+      run = true;
+      MOM_DEBUGPRINTF (run, "run_node_tasklet done tkitm=%s connitm=%s",
+                       mom_item_cstring (tkitm), mom_item_cstring (connitm));
+    }
+  return run;
+}                               /* end unsync_run_node_tasklet_mom */
+
+static bool
+unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
+                              struct mom_tasklet_st *tkstack)
+{
+  MOM_FATAPRINTF
+    ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstack@%p",
+     mom_item_cstring (tkitm), tkstack);
+#warning unsync_run_stack_tasklet_mom unimplemented
+}
 
 static void
 run_tasklet_mom (struct mom_item_st *tkitm)
@@ -168,29 +204,17 @@ run_tasklet_mom (struct mom_item_st *tkitm)
     return;
   bool run = false;
   mom_item_lock (tkitm);
-  struct mom_boxnode_st *tknod = (struct mom_boxnode_st *) tkitm->itm_payload;
-  if (tknod && tknod != MOM_EMPTY_SLOT && tknod->va_itype == MOMITY_NODE)
+  struct mom_anyvalue_st *tkpayl = tkitm->itm_payload;
+  if (tkpayl && tkpayl != MOM_EMPTY_SLOT)
     {
-      struct mom_item_st *connitm = tknod->nod_connitm;
-      assert (connitm && connitm->va_itype == MOMITY_ITEM);
-      void *connfun = NULL;
-      struct mom_item_st *connsigitm = NULL;
-      mom_item_lock (connitm);
-      connfun = connitm->itm_funptr;
-      connsigitm = connitm->itm_funsig;
-      mom_item_unlock (connitm);
-      if (connsigitm == MOM_PREDEFITM (signature_tasklet) && connfun)
-        {
-          MOM_DEBUGPRINTF (run, "run_tasklet tkitm=%s connitm=%s connfun@%p",
-                           mom_item_cstring (tkitm),
-                           mom_item_cstring (connitm), connfun);
-          mom_tasklet_sig_t *connrout = (mom_tasklet_sig_t *) connfun;
-          (*connrout) (tkitm);
-          run = true;
-          MOM_DEBUGPRINTF (run, "run_tasklet done tkitm=%s connitm=%s",
-                           mom_item_cstring (tkitm),
-                           mom_item_cstring (connitm));
-        }
+      if (tkpayl->va_itype == MOMITY_NODE)
+        run =
+          unsync_run_node_tasklet_mom (tkitm,
+                                       (struct mom_boxnode_st *) tkpayl);
+      else if (tkpayl->va_itype == MOMITY_TASKLET)
+        run =
+          unsync_run_stack_tasklet_mom (tkitm,
+                                        (struct mom_tasklet_st *) tkpayl);
     }
   mom_item_unlock (tkitm);
   if (!run)

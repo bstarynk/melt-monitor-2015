@@ -396,10 +396,12 @@ enum momitype_en
   MOMITY_JSON,
   MOMITY_WEBEXCH,
   MOMITY_WEBSESSION,
+  MOMITY_TASKLET,
 };
 struct mom_item_st;
 struct mom_loader_st;
 struct mom_dumper_st;
+struct mom_tasklet_st;
 
 #define MOM_PREDEFITM(Nam) (&mompredef_##Nam)
 
