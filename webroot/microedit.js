@@ -65,6 +65,7 @@ function cutev(evt) {
 
 function ajaxload(data) {
     console.debug("ajaxload data=",data);
+    editdiv.html(data);
 }
 
 $(document).ready(function(){
@@ -86,7 +87,7 @@ $(document).ready(function(){
     ({url: "/microedit",
       method: "POST",
       data: {"do_loadpage": true},
-      dataType: "xml",
+      dataType: "html",
       success: ajaxload
      });
 });
