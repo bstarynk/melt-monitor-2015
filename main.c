@@ -864,7 +864,7 @@ usage_mom (const char *argv0)
   printf ("\t -W | --web <webservice>"
           " \t# start a web service, e.g. localhost:8085\n");
   printf ("\t -J | --jobs <nbjobs>"
-          " \t#set number of jobs, default %d, max %d", mom_nbjobs,
+          " \t#set number of jobs, default %d, max %d\n", mom_nbjobs,
           MOM_JOB_MAX);
   printf ("\t -d | --dump " " \t# Dump the state.\n");
   printf ("\t -s | --syslog " " \t# Use system log.\n");
@@ -970,7 +970,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
               MOM_FATAPRINTF ("missing --chdir-after-load argument");
             if (access (optarg, F_OK))
               {
-                if (mkdir (optarg, 0640))
+                if (mkdir (optarg, 0750))
                   MOM_FATAPRINTF ("failed to mkdir %s (for after load) : %m",
                                   optarg);
                 else

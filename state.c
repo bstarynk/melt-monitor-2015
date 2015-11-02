@@ -285,6 +285,10 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           mom_raw_size (ld) * sizeof (struct mom_statelem_st));
   do
     {
+      int errline = 0;
+#define LOAD_GOTO_BADLINE_MOM_AT(Lin) \
+      do { errline = Lin; goto bad_line; } while(0)
+#define LOAD_GOTO_BADLINE_MOM() LOAD_GOTO_BADLINE_MOM_AT(__LINE__)
       linlen = getline (&linbuf, &linsiz, ld->ld_file);
       if (linlen <= 0)
         break;
@@ -386,7 +390,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               mom_loader_push (ld, mom_ldstate_make_dbl (NAN));
             }
           else
-            goto bad_line;
+            LOAD_GOTO_BADLINE_MOM ();
         }
       /// FooBar is pushing an item
       else if (isalpha (linbuf[0]))
@@ -394,7 +398,12 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           const char *end = NULL;
           struct mom_item_st *itm = mom_find_item_from_string (linbuf, &end);
           if (!itm || (*end && !isspace (*end)))
-            goto bad_line;
+            {
+              MOM_DEBUGPRINTF (load,
+                               "second_pass bad item %s, end %s, linbuf '%s'",
+                               mom_item_cstring (itm), end, linbuf);
+              LOAD_GOTO_BADLINE_MOM ();
+            }
           MOM_DEBUGPRINTF (load, "second_pass item %s",
                            mom_item_cstring (itm));
           mom_loader_push (ld,
@@ -413,7 +422,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           char *end = linbuf + 1 + endpos;
           fclose (flin);
           if (*end != '"')
-            goto bad_line;
+            LOAD_GOTO_BADLINE_MOM ();
           if (end[1] == '_')
             {
               MOM_DEBUGPRINTF (load, "second_pass boxed string %s", linbuf);
@@ -428,7 +437,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               mom_loader_push (ld, mom_ldstate_make_str (ss.ss_str));
             }
           else
-            goto bad_line;
+            LOAD_GOTO_BADLINE_MOM ();
         }
       /// ~ is pushing a nil value
       else if (linbuf[0] == '~' && (!linbuf[1] || isspace (linbuf[1])))
@@ -576,11 +585,21 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           if (eol)
             *eol = (char) 0;
           curitm = mom_find_item_from_string (linbuf + 1, &end);
-          MOM_DEBUGPRINTF (load, "second_pass curitm %s linbuf '%s'",
-                           mom_item_cstring (curitm), linbuf);
           if (!curitm)
             MOM_FATAPRINTF ("failed to find defined item for line#%d: '%s'",
                             linecount, linbuf);
+          else if (mom_raw_size (curitm) == 0)
+            {
+              mom_put_size (curitm, MOMSPA_GLOBAL);
+              MOM_DEBUGPRINTF (load,
+                               "second_pass global curitm %s linbuf '%s'",
+                               mom_item_cstring (curitm), linbuf);
+            }
+          else
+            MOM_DEBUGPRINTF (load,
+                             "second_pass curitm %s in space #%d linbuf '%s'",
+                             mom_item_cstring (curitm), mom_raw_size (curitm),
+                             linbuf);
           unsigned siz = mom_size (ld);
           if (siz > 0)
             memset (ld->ld_stackarr, 0,
@@ -591,8 +610,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
       else
       bad_line:
         {
-          MOM_WARNPRINTF ("bad loader line %s:%d: %s",
-                          ld->ld_path, linecount, linbuf);
+          MOM_WARNPRINTF ("bad loader line %s:%d: (from #%d) %s",
+                          ld->ld_path, linecount, errline, linbuf);
         }
     }
   while (!feof (ld->ld_file));
@@ -871,12 +890,18 @@ mom_dump_state (void)
                                       mom_hashset_to_boxset
                                       (du->du_itemset)));
   {
+    char cwdbuf[MOM_PATH_MAX];
+    memset (cwdbuf, 0, sizeof (cwdbuf));
+    if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
+      strcpy (cwdbuf, "./");
     unsigned nbitems = du->du_itemset->cda_count;
     double endrealtime = mom_elapsed_real_time ();
     double endcputime = mom_process_cpu_time ();
     MOM_INFORMPRINTF
-      ("end of dump of %u items in %.3f real, %.4f cpu time (%.2f real %.2f cpu µs/item)",
-       nbitems, (endrealtime - startrealtime), (endcputime - startcputime),
+      ("end of dump of %u items into %s\n"
+       "... in %.3f real, %.4f cpu time (%.2f real %.2f cpu µs/item)",
+       nbitems, cwdbuf, (endrealtime - startrealtime),
+       (endcputime - startcputime),
        (endrealtime - startrealtime) * (1.0e6 / nbitems),
        (endcputime - startcputime) * (1.0e6 / nbitems));
   };

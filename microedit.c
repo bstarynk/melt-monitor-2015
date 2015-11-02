@@ -26,15 +26,19 @@ const char momsig_microedit[] = "signature_tasklet";
 void
 momf_microedit (struct mom_item_st *tkitm)
 {
-  mom_item_lock(tkitm);
-  const struct mom_boxnode_st* tknod = (struct mom_boxnode_st*)tkitm->itm_payload;
-  MOM_DEBUGPRINTF(web, "momf_microedit start tkitm=%s tknod=%s",
-		  mom_item_cstring(tkitm),
-		  mom_value_cstring((const struct mom_hashedvalue_st *)tknod));
-  if (mom_itype(tknod) != MOMITY_NODE) {
-    MOM_WARNPRINTF("momf_microedit bad tknod kind %s", mom_itype_str(tknod));
-    goto end;
-  }
- end:
-  mom_item_unlock(tkitm);
+  mom_item_lock (tkitm);
+  const struct mom_boxnode_st *tknod =
+    (struct mom_boxnode_st *) tkitm->itm_payload;
+  MOM_DEBUGPRINTF (web, "momf_microedit start tkitm=%s tknod=%s",
+                   mom_item_cstring (tkitm),
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      tknod));
+  if (mom_itype (tknod) != MOMITY_NODE)
+    {
+      MOM_WARNPRINTF ("momf_microedit bad tknod kind %s",
+                      mom_itype_str (tknod));
+      goto end;
+    }
+end:
+  mom_item_unlock (tkitm);
 }

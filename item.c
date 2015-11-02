@@ -388,8 +388,8 @@ mom_find_item_from_string (const char *str, const char **pend)
         break;
       endradix++;
     };
-  MOM_DEBUGPRINTF (item, "find_item_from_string str=%s endradix+%d",
-                   str, (int) (endradix - str));
+  MOM_DEBUGPRINTF (item, "find_item_from_string str=%s endradix+%d %s",
+                   str, (int) (endradix - str), endradix);
   const char *end = NULL;
   uint16_t hid = 0;
   uint64_t lid = 0;
@@ -401,7 +401,7 @@ mom_find_item_from_string (const char *str, const char **pend)
       && isdigit (endradix[2])
       && mom_suffix_to_hi_lo (endradix + 1, &hid, &lid) && hid > 0 && lid > 0)
     {
-      end = endradix + 15;
+      end = endradix + 16;
       itm = mom_find_item_from_radix_id (radix, hid, lid);
       if (itm)
         {
