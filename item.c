@@ -1978,9 +1978,15 @@ momf_ldp_payload_queue (struct mom_item_st *itm,
   assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
   MOM_DEBUGPRINTF (load, "momf_ldp_payload_queue itm=%s elemsize=%d",
                    mom_item_cstring (itm), elemsize);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_queue itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_queue
+  struct mom_queue_st *qu = mom_queue_make ();
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      const struct mom_hashedvalue_st *val = mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_payload_queue [%d] %s",
+                       ix, mom_value_cstring (val));
+      mom_queue_append (qu, val);
+    }
+  itm->itm_payload = (struct mom_anyvalue_st *) qu;
 }                               /* end of momf_ldp_payload_queue */
 
 

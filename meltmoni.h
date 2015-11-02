@@ -1529,6 +1529,16 @@ const struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
                                              const struct mom_item_st
                                              *connitm);
 
+static inline struct mom_queue_st *
+mom_queue_make (void)
+{
+
+  struct mom_queue_st *qu =
+    (struct mom_queue_st *) mom_gc_alloc (sizeof (struct mom_queue_st));
+  qu->va_itype = MOMITY_QUEUE;
+  return qu;
+}                               /* end mom_queue_make */
+
 /// for MOMITY_JSON payload
 #define MOM_JSON_FIELDS \
   MOM_ANYVALUE_FIELDS;  \
