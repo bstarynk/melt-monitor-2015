@@ -1800,11 +1800,6 @@ extern mom_loader_caret_sig_t momf_ldc_func;
 extern mom_loader_caret_sig_t momf_ldc_funsignature;
 extern mom_loader_caret_sig_t momf_ldc_altfunc;
 extern mom_loader_caret_sig_t momf_ldc_payload_val;
-extern mom_loader_caret_sig_t momf_ldc_payload_assoval;
-extern mom_loader_caret_sig_t momf_ldc_payload_vect;
-extern mom_loader_caret_sig_t momf_ldc_payload_queue;
-extern mom_loader_caret_sig_t momf_ldc_payload_hashset;
-extern mom_loader_caret_sig_t momf_ldc_payload_hashmap;
 
 const char momsig_ldc_mtime[] = "signature_loader_caret";
 void
@@ -1936,3 +1931,89 @@ momf_ldp_comps (struct mom_item_st *itm,
       mom_vectvaldata_put_nth (itm->itm_pcomp, (int) ix, val);
     }
 }                               /* end of momf_ldp_comps */
+
+
+////////////////
+extern mom_loader_paren_sig_t momf_ldp_payload_assoval;
+const char momsig_ldp_payload_assoval[] = "signature_loader_paren";
+void
+momf_ldp_payload_assoval (struct mom_item_st *itm,
+                          struct mom_loader_st *ld,
+                          struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_assoval itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_assoval itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_assoval
+}                               /* end of momf_ldp_payload_assoval */
+
+////////////////
+extern mom_loader_paren_sig_t momf_ldp_payload_vect;
+const char momsig_ldp_payload_vect[] = "signature_loader_paren";
+void
+momf_ldp_payload_vect (struct mom_item_st *itm,
+                       struct mom_loader_st *ld,
+                       struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_vect itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_vect itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_vect
+}                               /* end of momf_ldp_payload_vect */
+
+
+
+////////////////
+extern mom_loader_paren_sig_t momf_ldp_payload_queue;
+const char momsig_ldp_payload_queue[] = "signature_loader_paren";
+void
+momf_ldp_payload_queue (struct mom_item_st *itm,
+                        struct mom_loader_st *ld,
+                        struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_queue itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_queue itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_queue
+}                               /* end of momf_ldp_payload_queue */
+
+
+////////////////
+extern mom_loader_paren_sig_t momf_ldp_payload_hashset;
+const char momsig_ldp_payload_hashset[] = "signature_loader_paren";
+void
+momf_ldp_payload_hashset (struct mom_item_st *itm,
+                          struct mom_loader_st *ld,
+                          struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashset itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_hashset itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_hashset
+}                               /* end of momf_ldp_payload_hashset */
+
+
+
+////////////////
+extern mom_loader_paren_sig_t momf_ldp_payload_hashmap;
+const char momsig_ldp_payload_hashmap[] = "signature_loader_paren";
+void
+momf_ldp_payload_hashmap (struct mom_item_st *itm,
+                          struct mom_loader_st *ld,
+                          struct mom_statelem_st *elemarr, unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashmap itm=%s elemsize=%d",
+                   mom_item_cstring (itm), elemsize);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_hashmap itm=%s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_hashmap
+}                               /* end of momf_ldp_payload_hashmap */

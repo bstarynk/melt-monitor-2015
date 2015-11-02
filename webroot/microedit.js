@@ -63,6 +63,10 @@ function cutev(evt) {
     //editlog.append("<p>cutev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
+function ajaxload(data) {
+    console.debug("ajaxload data=",data);
+}
+
 $(document).ready(function(){
     console.debug("document ready");
     editdiv = $("#microedit_id");
@@ -78,4 +82,11 @@ $(document).ready(function(){
 	console.debug("clearedit evt=", evt);
 	editlog.html("");
     });
+    $.ajax
+    ({url: "/microedit",
+      method: "POST",
+      data: {"do_loadpage": true},
+      dataType: "xml",
+      success: ajaxload
+     });
 });
