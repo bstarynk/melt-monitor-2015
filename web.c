@@ -789,11 +789,27 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                      reqcnt, reqfupath,
                      mom_value_cstring ((struct mom_hashedvalue_st *)
                                         wexclos));
-    struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
-    taskitm->itm_payload = (struct mom_anyvalue_st *) wexclos;
-    MOM_DEBUGPRINTF (web, "webrequest#%ld taskitm=%s",
-                     reqcnt, mom_item_cstring (taskitm));
-    mom_agenda_add_tasklet_front (taskitm);
+    assert (wexclos->va_itype == MOMITY_NODE);
+    {
+      struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
+      unsigned wexarity = mom_raw_size (wexclos);
+      struct mom_hashedvalue_st *smallarr[16] = { 0 };
+      struct mom_hashedvalue_st **arr = //
+        ((wexarity + 1) < (sizeof (smallarr) / sizeof (smallarr[0])))   //
+        ? smallarr              //
+        : mom_gc_alloc ((wexarity + 2) * sizeof (void *));
+      arr[0] = (struct mom_hashedvalue_st *) wexitm;
+      for (unsigned ix = 0; ix < wexarity; ix++)
+        arr[ix + 1] = wexclos->nod_sons[ix];
+      struct mom_boxnode_st *taskclos =
+        mom_boxnode_make (wexclos->nod_connitm, wexarity + 1, arr);
+      taskitm->itm_payload = (struct mom_anyvalue_st *) taskclos;
+      MOM_DEBUGPRINTF (web, "webrequest#%ld taskitm=%s taskclos=%s",
+                       reqcnt, mom_item_cstring (taskitm),
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          taskclos));
+      mom_agenda_add_tasklet_front (taskitm);
+    }
   }
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
   MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,
@@ -831,6 +847,15 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           else
             onion_response_set_header (resp, "Content-Type",
                                        wexch->webx_mimetype);
+          {
+            char servbuf[80];
+            memset (servbuf, 0, sizeof (servbuf));
+            snprintf (servbuf, sizeof (servbuf), "Monimelt/%.12s %s",
+                      monimelt_lastgitcommit, monimelt_timestamp);
+            onion_response_set_header (resp, "Server", servbuf);
+            MOM_DEBUGPRINTF (web, "webrequest#%ld servbuf %s", reqcnt,
+                             servbuf);
+          }
           long off = ftell (wexch->webx_outfil);
           MOM_DEBUGPRINTF (web, "webrequest#%ld off %ld", reqcnt, off);
           onion_response_set_length (resp, off);
