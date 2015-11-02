@@ -19,6 +19,10 @@
 **/
 
 #include "meltmoni.h"
+
+
+
+
 __thread int mom_worker_num;
 static pthread_cond_t cond_agendachanged_mom = PTHREAD_COND_INITIALIZER;
 
@@ -184,6 +188,11 @@ unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
       MOM_DEBUGPRINTF (run, "run_node_tasklet done tkitm=%s connitm=%s",
                        mom_item_cstring (tkitm), mom_item_cstring (connitm));
     }
+  else
+    MOM_DEBUGPRINTF (run,
+                     "run_node_tasklet tkitm=%s did not run connitm=%s connsigitm=%s confun@%p",
+                     mom_item_cstring (tkitm), mom_item_cstring (connitm),
+                     mom_item_cstring (connsigitm), (void *) connfun);
   return run;
 }                               /* end unsync_run_node_tasklet_mom */
 
