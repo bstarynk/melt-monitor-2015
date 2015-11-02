@@ -260,7 +260,8 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
                 MOM_WARNPRINTF ("hack_code #%ld failed to dlopen %s : %s",
                                 reqcnt, modulpath, errmsg);
                 if (outf)
-                  fprintf (outf, "\n **dlopen failure %s** \n", errmsg);
+                  fprintf (outf, "\n **dlopen %s failure : %s ** \n",
+                           modulpath, errmsg);
                 goto buildfailure;
               }
             MOM_DEBUGPRINTF (web, "hack_code #%ld dlopen %s succeeded @%p",
