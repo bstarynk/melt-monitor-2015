@@ -38,10 +38,10 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
   MOM_WEXCH_PRINTF (wexch, "<small>(modified %s)</small>",
                     mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",
                                         thistatitm->itm_mtime));
-  #warning doloadpage_microedit should output according to thistatitm
+#warning doloadpage_microedit should output according to thistatitm
   mom_wexch_reply (wexch, HTTP_OK, "text/xml");
   MOM_DEBUGPRINTF (web,
-                   "doloadpage_microedit done webr#%ld tkitm=%s", 
+                   "doloadpage_microedit done webr#%ld tkitm=%s",
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end doloadpage_microedit_mom */
 
