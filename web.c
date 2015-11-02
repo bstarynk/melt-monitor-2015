@@ -794,14 +794,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
       unsigned wexarity = mom_raw_size (wexclos);
       struct mom_hashedvalue_st *smallarr[16] = { 0 };
-      struct mom_hashedvalue_st **arr = //
+      const struct mom_hashedvalue_st **arr =   //
         ((wexarity + 1) < (sizeof (smallarr) / sizeof (smallarr[0])))   //
         ? smallarr              //
         : mom_gc_alloc ((wexarity + 2) * sizeof (void *));
       arr[0] = (struct mom_hashedvalue_st *) wexitm;
       for (unsigned ix = 0; ix < wexarity; ix++)
         arr[ix + 1] = wexclos->nod_sons[ix];
-      struct mom_boxnode_st *taskclos =
+      const struct mom_boxnode_st *taskclos =
         mom_boxnode_make (wexclos->nod_connitm, wexarity + 1, arr);
       taskitm->itm_payload = (struct mom_anyvalue_st *) taskclos;
       MOM_DEBUGPRINTF (web, "webrequest#%ld taskitm=%s taskclos=%s",

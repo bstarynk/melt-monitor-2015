@@ -967,12 +967,12 @@ struct mom_item_st
 const struct mom_boxset_st *mom_predefined_items_boxset (void);
 void mom_item_put_space (struct mom_item_st *itm, enum mom_space_en spix);
 
-static inline const struct mom_item_st *
+static inline struct mom_item_st *
 mom_dyncast_item (const void *p)
 {
   if (p && p != MOM_EMPTY_SLOT
       && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_ITEM)
-    return (const struct mom_item_st *) p;
+    return (struct mom_item_st *) p;
   return NULL;
 }
 
