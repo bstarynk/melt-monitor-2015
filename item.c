@@ -1847,7 +1847,7 @@ momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
        mom_item_cstring (itm)) < (int) sizeof (funambuf))
     {
       const char *signame = dlsym (mom_prog_dlhandle, funambuf);
-      if (signame && isalpha (signame))
+      if (signame && isalpha (signame[0]))
         {
           MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s signame@%p='%s'",
                            mom_item_cstring (itm), (void *) signame, signame);
