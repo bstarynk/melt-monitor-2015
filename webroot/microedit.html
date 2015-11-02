@@ -22,21 +22,15 @@
     <title>µediting Monimelt</title>
     <script src='jquery.min.js'></script>
     <script src='microedit.js'></script>
-    <style>
-      .editlog {
-      color: darkblue;
-      font-family: helvetica;
-      font-size: 85%;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="microedit.css">
   </head>
   <body>
     <h1>Micro Editing Monimelt</h1>
     <div id='microedit_id' contenteditable='true'>*</div>
     <hr/>
+    <input type='button' id='cleareditbut_id' name='clearedit' value='Clear Edit Log'/>
     <div class='editlog' id='editlog_id'>
     </div>
-    <input type='button' id='cleareditbut_id' name='clearedit' value='Clear Edit Log'/>
     <hr/>
     <p>example with <b>bold</b> and <tt>fixed</tt></p>
   </body>

@@ -35,35 +35,36 @@ function htmlDecode(value){
 
 function inputev(evt) {
     console.debug("inputev evt=", evt);
-    editlog.append("<p>inputev " + htmlEncode(evt.toString()) + "</p>");    
+    //editlog.append("<p>inputev " + htmlEncode(evt.toString()) + "</p>");    
 }
 
 function keypressev(evt) {
     console.debug("keypressev evt=", evt);
-    editlog.append("<p>keypressev " + htmlEncode(evt.toString()) + "</p>");  
+    //editlog.append("<p>keypressev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function changev(evt) {
     console.debug("changev evt=", evt);
-    editlog.append("<p>chengev " + htmlEncode(evt.toString()) + "</p>");  
+    //editlog.append("<p>chengev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function focusev(evt) {
     console.debug("focusev evt=", evt);
-    editlog.append("<p>focusev " + htmlEncode(evt.toString()) + "</p>");  
+    //editlog.append("<p>focusev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function pastev(evt) {
     console.debug("pastev evt=", evt);
-    editlog.append("<p>pastev " + htmlEncode(evt.toString()) + "</p>");  
+    //editlog.append("<p>pastev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function cutev(evt) {
     console.debug("cutev evt=", evt);
-    editlog.append("<p>cutev " + htmlEncode(evt.toString()) + "</p>");  
+    //editlog.append("<p>cutev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 $(document).ready(function(){
+    console.debug("document ready");
     editdiv = $("#microedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");

@@ -255,8 +255,14 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
                       hackitmstr);
             void *dlh = dlopen (modulpath, RTLD_NOW);
             if (!dlh)
-              MOM_FATAPRINTF ("hack_code #%ld failed to dlopen %s : %s",
-                              reqcnt, modulpath, dlerror ());
+              {
+                const char *errmsg = GC_STRDUP (dlerror ());
+                MOM_WARNPRINTF ("hack_code #%ld failed to dlopen %s : %s",
+                                reqcnt, modulpath, errmsg);
+                if (outf)
+                  fprintf (outf, "\n **dlopen failure %s** \n", errmsg);
+                goto buildfailure;
+              }
             MOM_DEBUGPRINTF (web, "hack_code #%ld dlopen %s succeeded @%p",
                              reqcnt, modulpath, dlh);
             char funbuf[80];
@@ -295,6 +301,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
         }
       else
         {
+        buildfailure:
           MOM_WARNPRINTF ("hack_code #%ld compilation %s failed:\n%s\n",
                           reqcnt, hackitmstr, outbuf);
           json_t *jreply =
