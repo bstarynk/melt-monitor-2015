@@ -1,4 +1,4 @@
-// file web.c - web interface
+// file hweb.c - handling web interface
 
 /**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -829,6 +829,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                         reqcnt, mom_item_cstring (wexitm), reqfupath);
       assert (wexch->webx_resp == resp);
       pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
+      MOM_DEBUGPRINTF(web, "webrequest#%ld code %d", reqcnt, wexch->webx_code);
       if (wexch->webx_code > 0 && isalpha (wexch->webx_mimetype[0]))
         {
           assert (wexch->webx_outfil);

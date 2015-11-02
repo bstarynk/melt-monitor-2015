@@ -1597,11 +1597,11 @@ mom_item_unsync_webexch (struct mom_item_st *itm)
 
 
 #define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {		\
-    struct mom_webexch_st*wex_#Lin = (Wex);		\
-    if (wex_#Lin && wex_#Lin != MOM_EMPTY_SLOT		\
-	&& wex_#Lin->va_itype == MOMITY_WEBEXCH		\
-	&& wex_#Lin->webx_outfil)			\
-      fprintf(wex_#Lin->webx_outfil, __VA_ARGS__);	\
+    struct mom_webexch_st*wex_##Lin = (Wex);		\
+    if (wex_##Lin && wex_##Lin != MOM_EMPTY_SLOT		\
+	&& wex_##Lin->va_itype == MOMITY_WEBEXCH	\
+	&& wex_##Lin->webx_outfil)			\
+      fprintf(wex_##Lin->webx_outfil, __VA_ARGS__);	\
   }while(0)
 // MOM_WEXCH_PRINTF should be used with the owning webexchange item locked
 #define MOM_WEXCH_PRINTF(Wex,...) MOM_WEXCH_PRINTF_AT(__LINE__,(Wex),__VA_ARGS__)
