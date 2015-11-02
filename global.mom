@@ -40,6 +40,9 @@ comment
 *microedit
 1446463595
 ^mtime
+^func
+signature_tasklet
+^funsignature
 
 
 *signature_loader_caret
@@ -66,7 +69,7 @@ comment
 
 
 *the_agenda
-1446190155
+1446470676
 ^mtime
 (
 comment
