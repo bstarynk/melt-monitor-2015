@@ -211,6 +211,9 @@ mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr)
         case '>':
           fputs ("&gt;", f);
           break;
+        case '&':
+          fputs ("&amp;", f);
+          break;
         case '\n':
           if (nlisbr)
             fputs ("<br/>", f);
