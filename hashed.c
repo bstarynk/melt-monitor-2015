@@ -1049,6 +1049,38 @@ mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
 }                               /* end of mom_dumpemit_hashassoc_payload */
 
 
+void
+mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
+                              struct mom_hashmap_st *hmap)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  const struct mom_boxset_st *kset = mom_hashmap_keyset (hmap);
+  MOM_DEBUGPRINTF (dump,
+                   "dumpemit_hashmap_payload hashmap@%p kset %s",
+                   hmap,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) kset));
+  unsigned siz = mom_size (kset);
+  fputs ("(\n", femit);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      struct mom_item_st *keyitm = kset->seqitem[ix];
+      if (!mom_dumped_item (du, keyitm))
+        continue;
+      const struct mom_hashedvalue_st *val = mom_hashmap_get (hmap, keyitm);
+      if (!val || mom_dumped_value (du, val))
+        continue;
+      mom_dumpemit_refitem (du, keyitm);
+      mom_dumpemit_value (du, val);
+    }
+  fputs (")payload_hashmap\n", femit);
+}                               /* end mom_dumpemit_hashmap_payload */
+
+
 static int
 hashedvalueptr_cmp_mom (const void *p1, const void *p2)
 {

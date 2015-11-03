@@ -1779,30 +1779,9 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           }
           break;
         case MOMITY_HASHMAP:
-          {
-            struct mom_hashmap_st *hmap = (struct mom_hashmap_st *) payl;
-            const struct mom_boxset_st *kset = mom_hashmap_keyset (hmap);
-            MOM_DEBUGPRINTF (dump,
-                             "dumpemit_item_content itm %s hashmap kset %s",
-                             mom_item_cstring (itm),
-                             mom_value_cstring ((struct mom_hashedvalue_st *)
-                                                kset));
-            unsigned siz = mom_size (kset);
-            fputs ("(\n", femit);
-            for (unsigned ix = 0; ix < siz; ix++)
-              {
-                struct mom_item_st *keyitm = kset->seqitem[ix];
-                if (!mom_dumped_item (du, keyitm))
-                  continue;
-                const struct mom_hashedvalue_st *val
-                  = mom_hashmap_get (hmap, keyitm);
-                if (!val || mom_dumped_value (du, val))
-                  continue;
-                mom_dumpemit_refitem (du, keyitm);
-                mom_dumpemit_value (du, val);
-              }
-            fputs (")payload_hashmap\n", femit);
-          }
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashmap",
+                           mom_item_cstring (itm));
+          mom_dumpemit_hashmap_payload (du, (struct mom_hashmap_st *) payl);
           break;
         case MOMITY_HASHASSOC:
           MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashassoc",

@@ -1823,6 +1823,8 @@ void
 mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
                                 struct mom_hashassoc_st *hass);
 
+void mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
+                                   struct mom_hashmap_st *hmap);
 
 void mom_load_state (const char *statepath);
 void mom_dump_state (void);
