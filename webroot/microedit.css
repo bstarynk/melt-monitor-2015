@@ -17,41 +17,58 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-span.word {
+span.word_cl {
     font-family: Arial, Helvetiva;
     color: #1f0ceC;
 }
 
-span.name {
+span.name_cl {
     font-family: Courier;
     color: #480f53;
 }
 
-span.momset {
+span.momset_cl {
     font-family: serif;
     color: #604F62;
 }
 
-span.momtuple {
+span.momtuple_cl {
     font-family: serif;
     color: #494030;
 }
 
-span.momnumber {
+span.momnumber_cl {
     font-family: "Courier New", Courier, monospace;
     color: #54062F;
 }
 
-span.momstring {
+span.momstring_cl {
     font-family: "Courier New", Courier, monospace;
     color: #354001;
 }
 
-span.momnode {
+span.momnode_cl {
     color: #153027;
 }
 
-span.momconn {
+span.momconn_cl {
     font-family: Lucida Console, Monospace;
     color: #4E0C39;    
+}
+
+span.itemref_cl {
+    font-family: Lucida Console, Monospace;
+    color: #361753;
+}
+
+span.itemref_cl:hover {
+    font-family: Lucida Console, Monospace;
+    color: #AC1C90;
+    border: 1px dashed #560E24;
+    border-spacing: 3px;
+}
+
+dt.statattr_cl {
+    font-family: sans-serif;
+    font-weight: bold;
 }

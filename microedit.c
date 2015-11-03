@@ -42,6 +42,46 @@ showitemref_microedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of showitemref_microedit_mom */
 
 
+static void
+showvalue_microedit_mom (struct mom_webexch_st *wexch,
+                         struct mom_item_st *wexitm,
+                         struct mom_item_st *thistatitm, const void *pval)
+{
+  switch (mom_itype (pval))
+    {
+    case MOMITY_NONE:
+      MOM_WEXCH_PRINTF (wexch, "<span class='nil_cl'>~</span>");
+      return;
+    case MOMITY_BOXINT:
+      MOM_WEXCH_PRINTF (wexch, "<span class='momnumber_cl'>%lld</span>",
+                        (long long) ((const struct mom_boxint_st *)
+                                     pval)->boxi_int);
+      return;
+    case MOMITY_BOXDOUBLE:
+      {
+        char buf[48];
+        memset (buf, 0, sizeof (buf));
+        double x = ((const struct mom_boxdouble_st *) pval)->boxd_dbl;
+        MOM_WEXCH_PRINTF
+          (wexch, "<span class='momnumber_cl'>%s</span>",
+           mom_double_to_cstr (x, buf, sizeof (buf)));
+      }
+      return;
+    case MOMITY_ITEM:
+      showitemref_microedit_mom (wexch, wexitm, thistatitm,
+                                 (struct mom_item_st *) pval);
+      return;
+    case MOMITY_BOXSTRING:
+    case MOMITY_TUPLE:
+    case MOMITY_SET:
+    case MOMITY_NODE:
+    default:
+#warning showvalue_microedit_mom incomplete
+      MOM_FATAPRINTF ("showvalue_microedit_mom incomplete pval:%s",
+                      mom_value_cstring ((struct mom_hashedvalue_st *) pval));
+      break;
+    }
+}                               /* end showvalue_microedit_mom */
 
 static void
 doloadpage_microedit_mom (struct mom_webexch_st *wexch,
@@ -75,7 +115,7 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                        wexch->webx_count, ix, mom_item_cstring (curatitm));
       MOM_WEXCH_PRINTF (wexch, "<dt class='statattr_cl'>");
       showitemref_microedit_mom (wexch, wexitm, thistatitm, curatitm);
-      MOM_WEXCH_PRINTF (wexch, "</dt>\n");
+      MOM_WEXCH_PRINTF (wexch, " : </dt>\n");
 #warning doloadpage_microedit should output the <dd> tag for the value
     }
   MOM_WEXCH_PRINTF (wexch, "</dl>\n");
