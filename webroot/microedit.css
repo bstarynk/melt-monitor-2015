@@ -36,7 +36,7 @@ span.momset_cl {
 
 span.momset_cl:hover {
     font-family: serif;
-    font-style: italics;
+    font-style: italic;
     color: #766B78;
     border: 1px dashed #6e107b;
     border-spacing: 3px;
@@ -110,17 +110,18 @@ span.momconn_cl:hover {
     font-family: Lucida Console, Monospace;
     color: #8E1367;
     border: 1px dashed #354126;
-    border-spacing: 3px;    
+    border-spacing: 3px;
+}
 
 span.itemref_cl {
-    font-family: Lucida Console, Monospace;
+    font-family: Arial, Helvetica, sans-serif;
     color: #361753;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
 }
 
 span.itemref_cl:hover {
-    font-family: Lucida Console, Monospace;
+    font-family: Arial, Helvetica, sans-serif;
     color: #AC1C90;
     border: 1px dashed #560E24;
     border-spacing: 3px;
@@ -141,4 +142,10 @@ sup.momindex_cl {
     font-family: Courier;
     font-style: oblique;
     color: rgba(68,72,23,0.30);
+}
+
+p.notice_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 75%;
+    color: darkblue;
 }

@@ -53,6 +53,14 @@ showitemref_microedit_mom (struct mom_webexch_st *wexch,
         MOM_FATAPRINTF
           ("showitemref_microedit wexitm %s has sessitm %s without hashset",
            mom_item_cstring (wexitm), mom_item_cstring (sessitm));
+      assert (mom_itype (hsetitm->itm_payload) == MOMITY_HASHSET);
+      MOM_DEBUGPRINTF (web,
+                       "showitemref_microedit wexitm=%s sessitm=%s hsetitm=%s curitm=%s",
+                       mom_item_cstring (wexitm), mom_item_cstring (sessitm),
+                       mom_item_cstring (hsetitm), mom_item_cstring (curitm));
+      hsetitm->itm_payload = (struct mom_anyvalue_st *)
+        mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
+                            (struct mom_item_st *) curitm);
       MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl'>%s</span>",
                         mom_item_cstring (curitm));
     }
@@ -210,14 +218,21 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                        "doloadpage_microedit webr#%ld ix%d curatitm %s curval %s",
                        wexch->webx_count, ix, mom_item_cstring (curatitm),
                        mom_value_cstring (curval));
-      MOM_WEXCH_PRINTF (wexch, "<dt class='statattr_cl'>");
+      MOM_WEXCH_PRINTF (wexch, "<dt class='statattr_cl'> &#8227; ");    /* ‣ U+2023 TRIANGULAR BULLET */
       showitemref_microedit_mom (wexch, wexitm, thistatitm, curatitm);
       MOM_WEXCH_PRINTF (wexch, " : </dt>\n");
-      MOM_WEXCH_PRINTF (wexch, "<dd class='statval_cl'>");
+      MOM_WEXCH_PRINTF (wexch, "<dd class='statval_cl'> &#9653; ");     /* ▵ U+25B5 WHITE UP-POINTING SMALL TRIANGLE */
       showvalue_microedit_mom (wexch, wexitm, thistatitm, curval);
       MOM_WEXCH_PRINTF (wexch, " ;</dd>\n");
     }
   MOM_WEXCH_PRINTF (wexch, "</dl>\n");
+  {
+    char timbuf[64];
+    memset (timbuf, 0, sizeof (timbuf));
+    MOM_WEXCH_PRINTF (wexch, "<p class='notice_cl'>(generated %s)</p>\n",
+                      mom_now_strftime_centi (timbuf, sizeof (timbuf),
+                                              "%c %Z"));
+  }
   mom_wexch_reply (wexch, HTTP_OK, "text/html");
   MOM_DEBUGPRINTF (web,
                    "doloadpage_microedit done webr#%ld tkitm=%s",
@@ -228,6 +243,7 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
 
 extern mom_tasklet_sig_t momf_microedit;
 const char momsig_microedit[] = "signature_tasklet";
+
 void
 momf_microedit (struct mom_item_st *tkitm)
 {
@@ -290,6 +306,8 @@ momf_microedit (struct mom_item_st *tkitm)
       hsetitm = mom_clone_item (MOM_PREDEFITM (hashset));
       mom_vectvaldata_put_nth (sessitm->itm_pcomp, mes_itmhset,
                                (struct mom_hashedvalue_st *) hsetitm);
+      hsetitm->itm_payload =
+        (struct mom_anyvalue_st *) mom_hashset_reserve (NULL, 20);
       MOM_DEBUGPRINTF (web,
                        "momf_microedit tkitm=%s wexch #%ld new hsetitm %s",
                        mom_item_cstring (tkitm), wexch->webx_count,
