@@ -21,21 +21,38 @@
 #include "meltmoni.h"
 
 
+enum microedit_sessfields_en
+{
+  mes_itmhset,
+  mes__last
+};
+
 static void
 showitemref_microedit_mom (struct mom_webexch_st *wexch,
                            struct mom_item_st *wexitm,
                            struct mom_item_st *thistatitm,
                            const struct mom_item_st *curitm)
 {
+  struct mom_item_st *hsetitm = NULL;
+  struct mom_item_st *sessitm = NULL;
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
   assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
   assert (thistatitm && thistatitm->va_itype == MOMITY_ITEM);
+  sessitm = wexch->webx_sessitm;
+  assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
       MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl empty_cl'>~</span>");
     }
   else
     {
+      if (!
+          (hsetitm =
+           mom_dyncast_item (mom_vectvaldata_nth
+                             (sessitm->itm_pcomp, mes_itmhset))))
+        MOM_FATAPRINTF
+          ("showitemref_microedit wexitm %s has sessitm %s without hashset",
+           mom_item_cstring (wexitm), mom_item_cstring (sessitm));
       MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl'>%s</span>",
                         mom_item_cstring (curitm));
     }
@@ -156,16 +173,19 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
     }
 }                               /* end showvalue_microedit_mom */
 
+
 static void
 doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                           struct mom_item_st *tkitm,
                           struct mom_item_st *wexitm,
                           struct mom_item_st *thistatitm)
 {
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
-                   "doloadpage_microedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s",
+                   "doloadpage_microedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s",
                    wexch->webx_count, mom_item_cstring (tkitm),
-                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm));
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm));
   MOM_WEXCH_PRINTF (wexch, "<h2>editing state <tt>%s</tt></h2>\n",
                     mom_item_cstring (thistatitm));
   char modbuf[64];
@@ -205,6 +225,7 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
 }                               /* end doloadpage_microedit_mom */
 
 
+
 extern mom_tasklet_sig_t momf_microedit;
 const char momsig_microedit[] = "signature_tasklet";
 void
@@ -219,6 +240,8 @@ momf_microedit (struct mom_item_st *tkitm)
   };
   struct mom_item_st *wexitm = NULL;
   struct mom_item_st *thistatitm = NULL;
+  struct mom_item_st *sessitm = NULL;
+  struct mom_item_st *hsetitm = NULL;
   mom_item_lock (tkitm);
   const struct mom_boxnode_st *tknod =
     (struct mom_boxnode_st *) tkitm->itm_payload;
@@ -250,12 +273,35 @@ momf_microedit (struct mom_item_st *tkitm)
   struct mom_webexch_st *wexch =
     (struct mom_webexch_st *) wexitm->itm_payload;
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  sessitm = wexch->webx_sessitm;
+  mom_item_lock (sessitm);
   MOM_DEBUGPRINTF (web,
                    "momf_microedit tkitm=%s wexch #%ld meth %s fupath %s sessitm %s",
                    mom_item_cstring (tkitm), wexch->webx_count,
                    mom_webmethod_name (wexch->webx_meth),
                    onion_request_get_fullpath (wexch->webx_requ),
-                   mom_item_cstring (wexch->webx_sessitm));
+                   mom_item_cstring (sessitm));
+  sessitm->itm_pcomp = mom_vectvaldata_resize (sessitm->itm_pcomp, mes__last);
+  if (!
+      (hsetitm =
+       mom_dyncast_item (mom_vectvaldata_nth
+                         (sessitm->itm_pcomp, mes_itmhset))))
+    {
+      hsetitm = mom_clone_item (MOM_PREDEFITM (hashset));
+      mom_vectvaldata_put_nth (sessitm->itm_pcomp, mes_itmhset,
+                               (struct mom_hashedvalue_st *) hsetitm);
+      MOM_DEBUGPRINTF (web,
+                       "momf_microedit tkitm=%s wexch #%ld new hsetitm %s",
+                       mom_item_cstring (tkitm), wexch->webx_count,
+                       mom_item_cstring (hsetitm));
+    }
+  else
+    MOM_DEBUGPRINTF (web,
+                     "momf_microedit tkitm=%s wexch #%ld got hsetitm %s",
+                     mom_item_cstring (tkitm), wexch->webx_count,
+                     mom_item_cstring (hsetitm));
+
+  mom_item_lock (hsetitm);
   if (wexch->webx_meth == MOMWEBM_POST)
     {
       const char *doloadpage =
@@ -268,9 +314,13 @@ momf_microedit (struct mom_item_st *tkitm)
         doloadpage_microedit_mom (wexch, tkitm, wexitm, thistatitm);
     }
 end:
+  if (hsetitm)
+    mom_item_unlock (hsetitm);
   if (thistatitm)
     mom_item_unlock (thistatitm);
   if (wexitm)
     mom_item_unlock (wexitm);
+  if (sessitm)
+    mom_item_unlock (sessitm);
   mom_item_unlock (tkitm);
 }                               /* end of momf_microedit */
