@@ -79,8 +79,75 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
       MOM_WEXCH_PRINTF (wexch, "</span>&#8221;");       // ” U+201D RIGHT DOUBLE QUOTATION MARK
       return;
     case MOMITY_TUPLE:
+      {
+        const struct mom_boxtuple_st *tup = pval;
+        unsigned siz = mom_raw_size (tup);
+        MOM_WEXCH_PRINTF (wexch, "<span class='momtuple_cl'>[");
+        for (unsigned ix = 0; ix < siz; ix++)
+          {
+            if (ix > 0)
+              MOM_WEXCH_PRINTF (wexch, " ");
+            if (ix % 5 == 0)
+              {
+                if (ix > 0)
+                  MOM_WEXCH_PRINTF (wexch,
+                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
+                                    ix);
+              };
+            showitemref_microedit_mom (wexch, wexitm, thistatitm,
+                                       tup->seqitem[ix]);
+          }
+        MOM_WEXCH_PRINTF (wexch, "]</span>");
+      }
+      return;
     case MOMITY_SET:
+      {
+        const struct mom_boxset_st *set = pval;
+        unsigned siz = mom_raw_size (set);
+        MOM_WEXCH_PRINTF (wexch, "<span class='momset_cl'>{");
+        for (unsigned ix = 0; ix < siz; ix++)
+          {
+            if (ix > 0)
+              MOM_WEXCH_PRINTF (wexch, " ");
+            if (ix % 5 == 0)
+              {
+                if (ix > 0)
+                  MOM_WEXCH_PRINTF (wexch,
+                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
+                                    ix);
+              };
+            showitemref_microedit_mom (wexch, wexitm, thistatitm,
+                                       set->seqitem[ix]);
+          }
+        MOM_WEXCH_PRINTF (wexch, "}</span>");
+      }
+      return;
     case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = pval;
+        unsigned siz = mom_raw_size (nod);
+        MOM_WEXCH_PRINTF (wexch,
+                          "<span class='momnode_cl'>*<span class='momconn_cl'>");
+        showitemref_microedit_mom (wexch, wexitm, thistatitm,
+                                   nod->nod_connitm);
+        MOM_WEXCH_PRINTF (wexch, "</span> (");
+        for (unsigned ix = 0; ix < siz; ix++)
+          {
+            if (ix > 0)
+              MOM_WEXCH_PRINTF (wexch, " ");
+            if (ix % 5 == 0)
+              {
+                if (ix > 0)
+                  MOM_WEXCH_PRINTF (wexch,
+                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
+                                    ix);
+              };
+            showvalue_microedit_mom (wexch, wexitm, thistatitm,
+                                     nod->nod_sons[ix]);
+          }
+        MOM_WEXCH_PRINTF (wexch, ")");
+      }
+      return;
     default:
 #warning showvalue_microedit_mom incomplete
       MOM_FATAPRINTF ("showvalue_microedit_mom incomplete pval:%s",
@@ -117,16 +184,20 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
   for (unsigned ix = 0; ix < nbat; ix++)
     {
       const struct mom_item_st *curatitm = atset->seqitem[ix];
-      MOM_DEBUGPRINTF (web, "doloadpage_microedit webr#%ld ix%d curatitm %s",
-                       wexch->webx_count, ix, mom_item_cstring (curatitm));
+      const struct mom_hashedvalue_st *curval =
+        mom_hashmap_get (hmap, curatitm);
+      MOM_DEBUGPRINTF (web,
+                       "doloadpage_microedit webr#%ld ix%d curatitm %s curval %s",
+                       wexch->webx_count, ix, mom_item_cstring (curatitm),
+                       mom_value_cstring (curval));
       MOM_WEXCH_PRINTF (wexch, "<dt class='statattr_cl'>");
       showitemref_microedit_mom (wexch, wexitm, thistatitm, curatitm);
       MOM_WEXCH_PRINTF (wexch, " : </dt>\n");
-#warning doloadpage_microedit should output the <dd> tag for the value
+      MOM_WEXCH_PRINTF (wexch, "<dd class='statval_cl'>");
+      showvalue_microedit_mom (wexch, wexitm, thistatitm, curval);
+      MOM_WEXCH_PRINTF (wexch, " ;</dd>\n");
     }
   MOM_WEXCH_PRINTF (wexch, "</dl>\n");
-
-#warning doloadpage_microedit should output according to thistatitm
   mom_wexch_reply (wexch, HTTP_OK, "text/html");
   MOM_DEBUGPRINTF (web,
                    "doloadpage_microedit done webr#%ld tkitm=%s",
