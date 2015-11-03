@@ -374,9 +374,10 @@ make_session_item_mom (onion_response *resp)
       >= (int) sizeof (cookiestr) - 2)
     /// this should never happen
     MOM_FATAPRINTF ("too long cookiestr %s", cookiestr);
-  MOM_DEBUGPRINTF (web, "make_session_item sessitm=%s r1=%u r2=%u cookie: %s",
+  MOM_DEBUGPRINTF (web,
+                   "make_session_item sessitm=%s r1=%u r2=%u now %ld obstime %ld, cookiestr: %s",
                    mom_item_cstring (sessitm), (unsigned) r1, (unsigned) r2,
-                   cookiestr);
+                   (long) now, (long) wsess->wbss_obstime, cookiestr);
   onion_response_add_cookie (resp, SESSION_COOKIE_MOM, cookiestr,
                              SESSION_TIMEOUT_MOM, "/", web_hostname_mom, 0);
   return sessitm;
@@ -601,7 +602,11 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
         {
           time_t now = 0;
           time (&now);
-          if (wsess->wbss_obstime >= now - SESSION_TIMEOUT_MOM / 4)
+          MOM_DEBUGPRINTF (web,
+                           "web_handler_exchange#%ld sessitm %s obstime=%ld now=%ld",
+                           reqcnt, mom_item_cstring (sessitm),
+                           (long) wsess->wbss_obstime, (long) now);
+          if (wsess->wbss_obstime <= now + SESSION_TIMEOUT_MOM / 4)
             {
               wsess->wbss_obstime = now + SESSION_TIMEOUT_MOM;
               char cookiestr[128];
@@ -622,6 +627,10 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
                                          SESSION_TIMEOUT_MOM, "/",
                                          web_hostname_mom, 0);
             }
+          else
+            MOM_DEBUGPRINTF (web,
+                             "web_handler_exchange#%ld sessitm=%s valid sesscookie %s",
+                             reqcnt, mom_item_cstring (sessitm), sesscookie);
         }
       else
         badsession = true;
