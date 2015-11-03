@@ -72,6 +72,12 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
                                  (struct mom_item_st *) pval);
       return;
     case MOMITY_BOXSTRING:
+      MOM_WEXCH_PRINTF (wexch, "&#8220;<span class='momstring_cl'>");   // “ U+201C LEFT DOUBLE QUOTATION MARK
+      mom_output_utf8_html (wexch->webx_outfil,
+                            ((const struct mom_boxstring_st *) pval)->cstr,
+                            mom_size (pval), true);
+      MOM_WEXCH_PRINTF (wexch, "</span>&#8221;");       // ” U+201D RIGHT DOUBLE QUOTATION MARK
+      return;
     case MOMITY_TUPLE:
     case MOMITY_SET:
     case MOMITY_NODE:

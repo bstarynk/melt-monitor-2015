@@ -350,6 +350,9 @@ char *mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
 // output with backslashes an UTF8-encoded string str; if len<0 take
 // its strlen; without enclosing quotes
 void mom_output_utf8_encoded (FILE *f, const char *str, int len);
+// output with HTML encoding an UTF8-encoded string str; if len<0 take
+// its strlen; without enclosing quotes; if nlisbr is true, newlines are emitted as <br/>
+void mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr);
 
 
 const char *mom_double_to_cstr (double x, char *buf, size_t buflen);

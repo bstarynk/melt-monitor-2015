@@ -183,6 +183,71 @@ mom_output_utf8_encoded (FILE *f, const char *str, int len)
 }                               // end mom_output_utf8_encoded
 
 
+void
+mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr)
+{
+  if (!f)
+    return;
+  if (len < 0)
+    len = strlen (str);
+  const char *end = str + len;
+  gunichar uc = 0;
+  const char *s = str;
+  assert (s && g_utf8_validate (s, len, NULL));
+  for (const char *pc = s; pc < end; pc = g_utf8_next_char (pc), uc = 0)
+    {
+      uc = g_utf8_get_char (pc);
+      switch (uc)
+        {
+        case '\'':
+          fputs ("&apos;", f);
+          break;
+        case '\"':
+          fputs ("&quot;", f);
+          break;
+        case '<':
+          fputs ("&lt;", f);
+          break;
+        case '>':
+          fputs ("&gt;", f);
+          break;
+        case '\n':
+          if (nlisbr)
+            fputs ("<br/>", f);
+          else
+            fputc ('\n', f);
+          break;
+        case ' ':
+        case 'a' ... 'z':
+        case 'A' ... 'Z':
+        case '0' ... '9':
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case ',':
+        case ';':
+        case '.':
+        case ':':
+        case '^':
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+          fputc ((char) uc, f);
+          break;
+        default:
+          if (uc < 127 && isprint (uc))
+            fputc ((char) uc, f);
+          else
+            fprintf (f, "&#%d;", uc);
+          break;
+        }
+    }
+}                               /* end of mom_output_utf8_html */
+
 struct mom_string_and_size_st
 mom_input_quoted_utf8 (FILE *f)
 {
