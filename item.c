@@ -1098,6 +1098,33 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
 }                               /* end mom_assovaldata_reserve */
 
 
+const struct mom_boxset_st *
+mom_assovaldata_set_attrs (const struct mom_assovaldata_st *asso)
+{
+  if (!asso || asso == MOM_EMPTY_SLOT || asso->va_itype != MOMITY_ASSOVALDATA)
+    return NULL;
+  unsigned siz = mom_raw_size (asso);
+  unsigned cnt = asso->cda_count;
+  assert (cnt <= siz);
+  const struct mom_item_st *smallarr[16] = { NULL };
+  const struct mom_item_st **arr =
+    (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
+    : mom_gc_alloc ((cnt + 1) * sizeof (void *));
+  unsigned icnt = 0;
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      const struct mom_item_st *curitm = asso->ada_ents[ix].ient_itm;
+      if (!curitm || curitm == MOM_EMPTY_SLOT)
+        continue;
+      assert (icnt < cnt);
+      arr[icnt++] = curitm;
+    }
+  assert (icnt == cnt);
+  return mom_boxset_make_arr (icnt, arr);
+}                               /* end of mom_assovaldata_set_attrs */
+
+
+
 struct mom_assovaldata_st *
 mom_assovaldata_put (struct mom_assovaldata_st *asso,
                      const struct mom_item_st *itmat, const void *data)

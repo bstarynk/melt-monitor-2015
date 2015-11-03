@@ -1117,6 +1117,9 @@ mom_set_contains (const struct mom_boxset_st *bs,
 }
 
 
+const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
+                                                       mom_assovaldata_st
+                                                       *ass);
 
 struct mom_hashedvalue_st *mom_assovaldata_get (const struct
                                                 mom_assovaldata_st *asso,

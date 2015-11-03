@@ -22,6 +22,28 @@
 
 
 static void
+showitemref_microedit_mom (struct mom_webexch_st *wexch,
+                           struct mom_item_st *wexitm,
+                           struct mom_item_st *thistatitm,
+                           const struct mom_item_st *curitm)
+{
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm && thistatitm->va_itype == MOMITY_ITEM);
+  if (!curitm || curitm == MOM_EMPTY_SLOT)
+    {
+      MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl empty_cl'>~</span>");
+    }
+  else
+    {
+      MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl'>%s</span>",
+                        mom_item_cstring (curitm));
+    }
+}                               /* end of showitemref_microedit_mom */
+
+
+
+static void
 doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                           struct mom_item_st *tkitm,
                           struct mom_item_st *wexitm,
@@ -38,6 +60,25 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
   MOM_WEXCH_PRINTF (wexch, "<small>(modified %s)</small>",
                     mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",
                                         thistatitm->itm_mtime));
+  const struct mom_boxset_st *atset =
+    mom_assovaldata_set_attrs (thistatitm->itm_pattr);
+  MOM_DEBUGPRINTF (web, "doloadpage_microedit webr#%ld atset %s",
+                   wexch->webx_count,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) atset));
+  unsigned nbat = mom_size (atset);
+  MOM_WEXCH_PRINTF (wexch, "<dl class='attrlist_cl'>\n");
+  for (unsigned ix = 0; ix < nbat; ix++)
+    {
+      const struct mom_item_st *curatitm = atset->seqitem[ix];
+      MOM_DEBUGPRINTF (web, "doloadpage_microedit webr#%ld ix%d curatitm %s",
+                       wexch->webx_count, ix, mom_item_cstring (curatitm));
+      MOM_WEXCH_PRINTF (wexch, "<dt class='statattr_cl'>");
+      showitemref_microedit_mom (wexch, wexitm, thistatitm, curatitm);
+      MOM_WEXCH_PRINTF (wexch, "</dt>\n");
+#warning doloadpage_microedit should output the <dd> tag for the value
+    }
+  MOM_WEXCH_PRINTF (wexch, "</dl>\n");
+
 #warning doloadpage_microedit should output according to thistatitm
   mom_wexch_reply (wexch, HTTP_OK, "text/html");
   MOM_DEBUGPRINTF (web,
