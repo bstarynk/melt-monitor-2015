@@ -1072,7 +1072,7 @@ mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
       if (!mom_dumped_item (du, keyitm))
         continue;
       const struct mom_hashedvalue_st *val = mom_hashmap_get (hmap, keyitm);
-      if (!val || mom_dumped_value (du, val))
+      if (!val || !mom_dumped_value (du, val))
         continue;
       mom_dumpemit_refitem (du, keyitm);
       mom_dumpemit_value (du, val);

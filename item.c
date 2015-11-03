@@ -1695,8 +1695,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   if (itm->itm_payload && itm->itm_payload != MOM_EMPTY_SLOT)
     {
       struct mom_anyvalue_st *payl = itm->itm_payload;
-      MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s payloadtype %d",
-                       mom_item_cstring (itm), payl->va_itype);
+      MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s payloadtype %s",
+                       mom_item_cstring (itm), mom_itype_str (payl));
       switch (payl->va_itype)
         {
         case MOMITY_BOXINT:
@@ -1790,8 +1790,11 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
                                           (struct mom_hashassoc_st *) payl);
           break;
         default:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s other",
-                           mom_item_cstring (itm));
+          MOM_DEBUGPRINTF (dump,
+                           "dumpemit_item_content itm %s other payload %s @%p",
+                           mom_item_cstring (itm),
+                           mom_itype_str (itm->itm_payload),
+                           itm->itm_payload);
           break;
         }
     }
