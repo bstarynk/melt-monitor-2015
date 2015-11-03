@@ -413,11 +413,18 @@ mom_hashmap_put (struct mom_hashmap_st *hmap, const struct mom_item_st *itm,
                  const struct mom_hashedvalue_st *val)
 {
   if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
-    return NULL;
+    hmap = NULL;
   if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     return hmap;
   if (!val || val == MOM_EMPTY_SLOT)
-    return mom_hashmap_remove (hmap, itm);
+    {
+      if (hmap)
+        return mom_hashmap_remove (hmap, itm);
+      else
+        return NULL;
+    }
+  if (!hmap)
+    hmap = mom_hashmap_reserve (NULL, 3);
   assert (val->va_itype > MOMITY_NONE && val->va_itype < MOMITY__LASTHASHED);
   unsigned siz = mom_raw_size (hmap);
   unsigned cnt = hmap->cda_count;
@@ -498,6 +505,7 @@ mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap)
     return;
   assert (du && du != MOM_EMPTY_SLOT && du->va_itype == MOMITY_DUMPER);
   unsigned siz = mom_raw_size (hmap);
+  MOM_DEBUGPRINTF (dump, "dumpscan_hashmap hmap@%p siz%d", hmap, siz);
   for (unsigned ix = 0; ix < siz; ix++)
     {
       struct mom_item_st *curitm = hmap->hmap_ents[ix].ient_itm;
@@ -508,6 +516,7 @@ mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap)
       mom_dumpscan_item (du, curitm);
       mom_dumpscan_value (du, hmap->hmap_ents[ix].ient_val);
     }
+  MOM_DEBUGPRINTF (dump, "dumpscan_hashmap hmap@%p done", hmap);
 }                               /* end of mom_dumpscan_hashmap */
 
 

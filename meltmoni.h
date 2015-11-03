@@ -791,6 +791,9 @@ struct mom_itementry_tu
   struct mom_hashedvalue_st *ient_val;
 };
 
+
+////////////////
+
 #define MOM_ASSOVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
   struct mom_itementry_tu ada_ents[]    /* sorted array of entries */
@@ -800,6 +803,41 @@ struct mom_assovaldata_st
   MOM_ASSOVALDATA_FIELDS;
 };
 
+static inline const struct mom_assovaldata_st *
+mom_assovaldata_dyncast (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    {
+      const struct mom_assovaldata_st *ass = p;
+      if (ass->va_itype == MOMITY_ASSOVALDATA)
+        return ass;
+    }
+  return NULL;
+}                               /* end mom_assovaldata_dyncast */
+
+const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
+                                                       mom_assovaldata_st
+                                                       *ass);
+
+struct mom_hashedvalue_st *mom_assovaldata_get (const struct
+                                                mom_assovaldata_st *asso,
+                                                const struct mom_item_st
+                                                *itmat);
+
+struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
+                                                   *asso,
+                                                   const struct mom_item_st
+                                                   *itmat);
+
+struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
+                                                *asso,
+                                                const struct mom_item_st
+                                                *itmat, const void *data);
+
+struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
+                                                    *asso, unsigned gap);
+
+////////////////
 
 #define MOM_VECTVALDATA_FIELDS			\
   MOM_COUNTEDATA_FIELDS;			\
@@ -811,7 +849,78 @@ struct mom_vectvaldata_st
 };
 
 
+static inline struct mom_vectvaldata_st *
+mom_vectvaldata_dyncast (void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    {
+      struct mom_vectvaldata_st *v = p;
+      if (v->va_itype == MOMITY_VECTVALDATA)
+        return v;
+    }
+  return NULL;
+}
 
+struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
+                                                    *vec, unsigned gap);
+
+static inline struct mom_hashedvalue_st *
+mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return NULL;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= mom_raw_size (vec));
+  if (rk < 0)
+    rk += cnt;
+  if (rk >= 0 && rk < (int) cnt)
+    return vec->vecd_valarr[rk];
+  return NULL;
+}
+
+static inline void
+mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
+                         const void *data)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return;
+  if (data == MOM_EMPTY_SLOT)
+    data = NULL;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= mom_raw_size (vec));
+  if (rk < 0)
+    rk += cnt;
+  if (rk >= 0 && rk < (int) cnt)
+    vec->vecd_valarr[rk] = (struct mom_hashedvalue_st *) data;
+}
+
+static inline unsigned
+mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return 0;
+  unsigned cnt = vec->cda_count;
+  assert (cnt <= mom_raw_size (vec));
+  return cnt;
+}
+
+static inline struct mom_anyvalue_st **
+mom_vectvaldata_valvect (const struct mom_vectvaldata_st *vec)
+{
+  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
+    return NULL;
+  assert (vec->cda_count <= mom_raw_size (vec));
+  return (struct mom_anyvalue_st **) vec->vecd_valarr;
+}
+
+struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
+                                                   *vec, unsigned count);
+
+
+struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
+                                                   *vec, const void *data);
+
+////////////////
 /// for MOMITY_HASHSET
 
 #define MOM_HASHSET_FIELDS			\
@@ -822,6 +931,19 @@ struct mom_hashset_st
 {
   MOM_HASHSET_FIELDS;
 };
+
+static inline struct mom_hashset_st *
+mom_hashset_dyncast (void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    {
+      struct mom_hashset_st *hset = p;
+      if (hset->va_itype == MOMITY_HASHSET)
+        return hset;
+    }
+  return NULL;
+}                               /* end mom_hashset_dyncast */
+
 
 /// with a 0 gap, will reorganize
 struct mom_hashset_st *mom_hashset_reserve (struct mom_hashset_st *hset,
@@ -853,6 +975,18 @@ struct mom_hashmap_st
   MOM_HASHMAP_FIELDS;
 };
 
+
+static inline struct mom_hashmap_st *
+mom_hashmap_dyncast (void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    {
+      struct mom_hashmap_st *hmap = p;
+      if (hmap->va_itype == MOMITY_HASHMAP)
+        return hmap;
+    }
+  return NULL;
+}                               /* end mom_hashmap_dyncast */
 
 
 /// with a 0 gap, will reorganize
@@ -890,6 +1024,19 @@ struct mom_hashassoc_st
 {
   MOM_HASHASSOC_FIELDS;
 };
+static inline struct mom_hashassoc_st *
+mom_hashassoc_dyncast (void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT)
+    {
+      struct mom_hashassoc_st *hass = p;
+      if (hass->va_itype == MOMITY_HASHASSOC)
+        return hass;
+    }
+  return NULL;
+}                               /* end mom_hashassoc_dyncast */
+
+
 
 // with a 0 gap will reorganize
 struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st *hass,
@@ -1078,9 +1225,20 @@ mom_item_radix_str (const struct mom_item_st *itm)
 struct mom_item_st *mom_find_item_from_string (const char *str,
                                                const char **pend);
 
+static inline struct mom_item_st *
+mom_find_item_by_string (const char *str)
+{
+  return mom_find_item_from_string (str, NULL);
+}
+
 struct mom_item_st *mom_make_item_from_string (const char *str,
                                                const char **pend);
 
+static inline struct mom_item_st *
+mom_make_item_by_string (const char *str)
+{
+  return mom_make_item_from_string (str, NULL);
+}
 
 static inline bool
 mom_set_contains (const struct mom_boxset_st *bs,
@@ -1116,88 +1274,6 @@ mom_set_contains (const struct mom_boxset_st *bs,
   return false;
 }
 
-
-const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
-                                                       mom_assovaldata_st
-                                                       *ass);
-
-struct mom_hashedvalue_st *mom_assovaldata_get (const struct
-                                                mom_assovaldata_st *asso,
-                                                const struct mom_item_st
-                                                *itmat);
-
-struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
-                                                   *asso,
-                                                   const struct mom_item_st
-                                                   *itmat);
-
-struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
-                                                *asso,
-                                                const struct mom_item_st
-                                                *itmat, const void *data);
-
-struct mom_assovaldata_st *mom_assovaldata_reserve (struct mom_assovaldata_st
-                                                    *asso, unsigned gap);
-
-
-struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
-                                                    *vec, unsigned gap);
-
-static inline struct mom_hashedvalue_st *
-mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
-{
-  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
-    return NULL;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  if (rk < 0)
-    rk += cnt;
-  if (rk >= 0 && rk < (int) cnt)
-    return vec->vecd_valarr[rk];
-  return NULL;
-}
-
-static inline void
-mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
-                         const void *data)
-{
-  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
-    return;
-  if (data == MOM_EMPTY_SLOT)
-    data = NULL;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  if (rk < 0)
-    rk += cnt;
-  if (rk >= 0 && rk < (int) cnt)
-    vec->vecd_valarr[rk] = (struct mom_hashedvalue_st *) data;
-}
-
-static inline unsigned
-mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
-{
-  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
-    return 0;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  return cnt;
-}
-
-static inline struct mom_anyvalue_st **
-mom_vectvaldata_valvect (const struct mom_vectvaldata_st *vec)
-{
-  if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
-    return NULL;
-  assert (vec->cda_count <= mom_raw_size (vec));
-  return (struct mom_anyvalue_st **) vec->vecd_valarr;
-}
-
-struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
-                                                   *vec, unsigned count);
-
-
-struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
-                                                   *vec, const void *data);
 
 enum mom_statetype_en
 { MOMSTA_EMPTY, MOMSTA_MARK, MOMSTA_INT, MOMSTA_DBL, MOMSTA_STRING, MOMSTA_VAL

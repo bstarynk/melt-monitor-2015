@@ -1248,11 +1248,13 @@ void
 mom_dumpscan_assovaldata (struct mom_dumper_st *du,
                           struct mom_assovaldata_st *asso)
 {
-  if (!asso || asso == MOM_EMPTY_SLOT)
+  if (!asso || asso == MOM_EMPTY_SLOT || asso->va_itype != MOMITY_ASSOVALDATA)
     return;
   assert (du && du->va_itype == MOMITY_DUMPER);
   unsigned cnt = asso->cda_count;
   unsigned siz = mom_raw_size (asso);
+  MOM_DEBUGPRINTF (dump, "dumpscan_assovaldata asso@%p cnt%d siz%d", asso,
+                   cnt, siz);
   assert (cnt <= siz);
   for (int ix = 0; ix < (int) cnt; ix++)
     {
@@ -1261,6 +1263,7 @@ mom_dumpscan_assovaldata (struct mom_dumper_st *du,
       mom_dumpscan_item (du, asso->ada_ents[ix].ient_itm);
       mom_dumpscan_value (du, asso->ada_ents[ix].ient_val);
     }
+  MOM_DEBUGPRINTF (dump, "dumpscan_assovaldata asso@%p done", asso);
 }
 
 struct mom_vectvaldata_st *
@@ -1966,14 +1969,27 @@ const char momsig_ldp_payload_assoval[] = "signature_loader_paren";
 void
 momf_ldp_payload_assoval (struct mom_item_st *itm,
                           struct mom_loader_st *ld,
-                          struct mom_statelem_st *elemarr, unsigned elemsize)
+                          struct mom_statelem_st *elemarr, unsigned elemsiz)
 {
   assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
-  MOM_DEBUGPRINTF (load, "momf_ldp_payload_assoval itm=%s elemsize=%d",
-                   mom_item_cstring (itm), elemsize);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_assoval itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_assoval
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_assoval itm=%s elemsiz=%d",
+                   mom_item_cstring (itm), elemsiz);
+  if (elemsiz % 2)
+    MOM_FATAPRINTF ("momf_ldp_payload_assoval with odd size %d", elemsiz);
+  struct mom_assovaldata_st *asso =
+    mom_assovaldata_reserve (NULL, elemsiz / 2 + elemsiz / 16 + 1);
+  for (unsigned ix = 0; ix < elemsiz; ix += 2)
+    {
+      struct mom_item_st *attitm = mom_ldstate_dynitem (elemarr[ix]);
+      const struct mom_hashedvalue_st *attval =
+        mom_ldstate_val (elemarr[ix + 1]);
+      MOM_DEBUGPRINTF (load,
+                       "momf_ldp_payload_assoval itm=%s ix#%d attitm=%s attval=%s",
+                       mom_item_cstring (itm), ix, mom_item_cstring (attitm),
+                       mom_value_cstring (attval));
+      asso = mom_assovaldata_put (asso, attitm, attval);
+    }
+  itm->itm_payload = (struct mom_anyvalue_st *) asso;
 }                               /* end of momf_ldp_payload_assoval */
 
 ////////////////
@@ -2041,12 +2057,25 @@ const char momsig_ldp_payload_hashmap[] = "signature_loader_paren";
 void
 momf_ldp_payload_hashmap (struct mom_item_st *itm,
                           struct mom_loader_st *ld,
-                          struct mom_statelem_st *elemarr, unsigned elemsize)
+                          struct mom_statelem_st *elemarr, unsigned elemsiz)
 {
   assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
-  MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashmap itm=%s elemsize=%d",
-                   mom_item_cstring (itm), elemsize);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_hashmap itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_hashmap
+  MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashmap itm=%s elemsiz=%d",
+                   mom_item_cstring (itm), elemsiz);
+  if (elemsiz % 2)
+    MOM_FATAPRINTF ("momf_ldp_payload_hashmap with odd size %d", elemsiz);
+  struct mom_hashmap_st *hmap =
+    mom_hashmap_reserve (NULL, elemsiz / 2 + elemsiz / 8 + elemsiz / 64 + 1);
+  for (unsigned ix = 0; ix < elemsiz; ix += 2)
+    {
+      struct mom_item_st *attitm = mom_ldstate_dynitem (elemarr[ix]);
+      const struct mom_hashedvalue_st *attval =
+        mom_ldstate_val (elemarr[ix + 1]);
+      MOM_DEBUGPRINTF (load,
+                       "momf_ldp_payload_hashmap itm=%s ix#%d attitm=%s attval=%s",
+                       mom_item_cstring (itm), ix, mom_item_cstring (attitm),
+                       mom_value_cstring (attval));
+      hmap = mom_hashmap_put (hmap, attitm, attval);
+    }
+  itm->itm_payload = (struct mom_anyvalue_st *) hmap;
 }                               /* end of momf_ldp_payload_hashmap */

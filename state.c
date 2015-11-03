@@ -850,6 +850,8 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
       du->du_itemset =
         mom_hashset_insert (du->du_itemset, (struct mom_item_st *) itm);
       mom_queue_append (du->du_itemque, itm);
+      MOM_DEBUGPRINTF (dump, "dumpscan_item add itm %s",
+                       mom_item_cstring (itm));
     }
 }
 
