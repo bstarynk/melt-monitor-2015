@@ -109,6 +109,8 @@ extern const unsigned mom_primes_num;
 int64_t mom_prime_above (int64_t n);
 int64_t mom_prime_below (int64_t n);
 
+const char *mom_hostname (void);
+
 // mark unlikely conditions to help optimization
 #ifdef __GNUC__
 #define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)

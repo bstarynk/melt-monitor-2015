@@ -738,7 +738,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
     {
       memset (predbuf, 0, sizeof (predbuf));
       nbtry++;
-      snprintf (predbuf, sizeof (predbuf), MOM_HEADER "-r%x-p%d-t%d.tmp",
+      snprintf (predbuf, sizeof (predbuf), MOM_HEADER "-r%x-p%d-t%d.tmp~",
                 mom_random_uint32 (), (int) getpid (), nbtry);
     }
   while (nbtry < 20 && access (predbuf, F_OK));
@@ -790,7 +790,7 @@ dump_emit_global_mom (struct mom_dumper_st *du)
     {
       memset (globuf, 0, sizeof (globuf));
       nbtry++;
-      snprintf (globuf, sizeof (globuf), MOM_GLOBAL_STATE "-r%x-p%d-t%d.tmp",
+      snprintf (globuf, sizeof (globuf), MOM_GLOBAL_STATE "-r%x-p%d-t%d.tmp~",
                 mom_random_uint32 (), (int) getpid (), nbtry);
     }
   while (nbtry < 20 && access (globuf, F_OK));

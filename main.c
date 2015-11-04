@@ -20,6 +20,8 @@
 
 #include "meltmoni.h"
 
+static char hostname_mom[80];
+
 void *mom_prog_dlhandle;
 const char *mom_webdir[MOM_MAX_WEBDIR];
 volatile atomic_bool mom_should_run;
@@ -41,6 +43,12 @@ static struct predefadd_mom_st added_predef_mom[MAX_ADDED_PREDEF_MOM];
 static unsigned count_added_predef_mom;
 
 #define BASE_YEAR_MOM 2015
+
+const char *
+mom_hostname (void)
+{
+  return hostname_mom;
+};
 
 void
 mom_output_gplv3_notice (FILE *out, const char *prefix, const char *suffix,
@@ -1162,6 +1170,7 @@ main (int argc_main, char **argv_main)
   GC_INIT ();
   GC_set_handle_fork (1);
   GC_register_displacement (offsetof (struct mom_itemname_tu, itname_string));
+  gethostname (hostname_mom, sizeof (hostname_mom) - 1);
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);

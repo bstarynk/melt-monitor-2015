@@ -22,9 +22,18 @@ span.word_cl {
     color: #1f0ceC;
 }
 
-span.name_cl {
-    font-family: Courier;
-    color: #480f53;
+span.momname_cl {
+    font-family: Georgia, serif;
+    border-spacing: 2px;
+    padding: 1px;
+    color: #940f27;
+}
+
+span.momname_cl:hover {
+    font-family: Georgia, serif;
+    color: #B30F2C;
+    border: 1px dashed #6e107b;
+    border-spacing: 3px;
 }
 
 span.momset_cl {
@@ -123,6 +132,22 @@ span.momitemref_cl {
 span.momitemref_cl:hover {
     font-family: Arial, Helvetica, sans-serif;
     color: #AC1C90;
+    border: 1px dashed #560E24;
+    border-spacing: 3px;
+}
+
+span.momitemval_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: oblique;
+    color: #4e2a14;
+    border-spacing: 2px;
+    padding: 2px;
+}
+
+span.momitemval_cl:hover {
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: oblique;
+    color: #783c17;
     border: 1px dashed #560E24;
     border-spacing: 3px;
 }

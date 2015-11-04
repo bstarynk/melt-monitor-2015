@@ -39,8 +39,8 @@ function inputev(evt) {
 
 function ignore_keypressev(evt) {
     console.debug("ignore_keypressev evt=", evt);
-    evt.stopImmediatePropagation();
-    evt.preventDefault();
+    //evt.stopImmediatePropagation();
+    //evt.preventDefault();
     return false;
 }
 
@@ -52,12 +52,14 @@ function focusev(evt) {
     console.debug("focusev evt=", evt);
 }
 
-function pastev(evt) {
-    console.debug("pastev evt=", evt);
+function ignore_pastev(evt) {
+    console.debug("ignore_pastev evt=", evt);
+    return false;
 }
 
-function cutev(evt) {
-    console.debug("cutev evt=", evt);
+function ignore_cutev(evt) {
+    console.debug("ignore_cutev evt=", evt);
+    return false;
 }
 
 function ajaxload(data) {
@@ -74,8 +76,8 @@ $(document).ready(function(){
     editdiv.keypress(ignore_keypressev);
     editdiv.change(changev);
     editdiv.focus(focusev);
-    editdiv.on("cut",cutev);
-    editdiv.on("paste",pastev);
+    editdiv.on("cut",ignore_cutev);
+    editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){
 	console.debug("clearedit evt=", evt);
 	editlog.html("");
