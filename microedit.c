@@ -42,7 +42,8 @@ showitemref_microedit_mom (struct mom_webexch_st *wexch,
   assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
-      MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl empty_cl'>~</span>");
+      MOM_WEXCH_PRINTF (wexch,
+                        "<span class='momitemref_cl empty_cl'>~</span>");
     }
   else
     {
@@ -61,7 +62,7 @@ showitemref_microedit_mom (struct mom_webexch_st *wexch,
       hsetitm->itm_payload = (struct mom_anyvalue_st *)
         mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
                             (struct mom_item_st *) curitm);
-      MOM_WEXCH_PRINTF (wexch, "<span class='itemref_cl'>%s</span>",
+      MOM_WEXCH_PRINTF (wexch, "<span class='momitemref_cl'>%s</span>",
                         mom_item_cstring (curitm));
     }
 }                               /* end of showitemref_microedit_mom */

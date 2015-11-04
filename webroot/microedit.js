@@ -35,32 +35,29 @@ function htmlDecode(value){
 
 function inputev(evt) {
     console.debug("inputev evt=", evt);
-    //editlog.append("<p>inputev " + htmlEncode(evt.toString()) + "</p>");    
 }
 
-function keypressev(evt) {
-    console.debug("keypressev evt=", evt);
-    //editlog.append("<p>keypressev " + htmlEncode(evt.toString()) + "</p>");  
+function ignore_keypressev(evt) {
+    console.debug("ignore_keypressev evt=", evt);
+    evt.stopImmediatePropagation();
+    evt.preventDefault();
+    return false;
 }
 
 function changev(evt) {
     console.debug("changev evt=", evt);
-    //editlog.append("<p>chengev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function focusev(evt) {
     console.debug("focusev evt=", evt);
-    //editlog.append("<p>focusev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function pastev(evt) {
     console.debug("pastev evt=", evt);
-    //editlog.append("<p>pastev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function cutev(evt) {
     console.debug("cutev evt=", evt);
-    //editlog.append("<p>cutev " + htmlEncode(evt.toString()) + "</p>");  
 }
 
 function ajaxload(data) {
@@ -74,7 +71,7 @@ $(document).ready(function(){
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
     editdiv.on("input",inputev);
-    editdiv.keypress(keypressev);
+    editdiv.keypress(ignore_keypressev);
     editdiv.change(changev);
     editdiv.focus(focusev);
     editdiv.on("cut",cutev);

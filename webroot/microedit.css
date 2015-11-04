@@ -113,14 +113,14 @@ span.momconn_cl:hover {
     border-spacing: 3px;
 }
 
-span.itemref_cl {
+span.momitemref_cl {
     font-family: Arial, Helvetica, sans-serif;
     color: #361753;
     border-spacing: 2px;
     padding: 2px;
 }
 
-span.itemref_cl:hover {
+span.momitemref_cl:hover {
     font-family: Arial, Helvetica, sans-serif;
     color: #AC1C90;
     border: 1px dashed #560E24;
