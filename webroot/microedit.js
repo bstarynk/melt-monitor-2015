@@ -52,6 +52,10 @@ function focusev(evt) {
     console.debug("focusev evt=", evt);
 }
 
+function inputev(evt) {
+    console.debug("inputev evt=", evt);
+}
+
 function ignore_pastev(evt) {
     console.debug("ignore_pastev evt=", evt);
     return false;
@@ -62,10 +66,21 @@ function ignore_cutev(evt) {
     return false;
 }
 
+////////
+
 function ajaxload(data) {
     console.debug("ajaxload data=",data);
     editdiv.html(data);
+    $("#microedit_id .momitemref_cl").each(function() {
+	console.debug ("each itemref this=", $(this).html());
+    });
+    $("#microedit_id .momitemval_cl").each(function() {
+	console.debug ("each itemval this=", $(this).html());
+    });
 }
+
+////////
+
 
 $(document).ready(function(){
     console.debug("document ready");
@@ -76,6 +91,7 @@ $(document).ready(function(){
     editdiv.keypress(ignore_keypressev);
     editdiv.change(changev);
     editdiv.focus(focusev);
+    editdiv.on("input",inputev);
     editdiv.on("cut",ignore_cutev);
     editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){
