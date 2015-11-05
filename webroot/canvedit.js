@@ -59,7 +59,7 @@ $(document).ready(function(){
 	editlog.html("");
     });
     $.ajax
-    ({url: "/canvedit",
+    ({url: "/canvasedit",
       method: "POST",
       data: {"do_fillcanvas": true},
       dataType: "script",
