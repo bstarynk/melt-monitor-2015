@@ -33,12 +33,9 @@ function htmlDecode(value){
   return $('<div/>').html(value).text();
 }
 
-function inputev(evt) {
-    console.debug("inputev evt=", evt);
-}
 
 function ignore_keypressev(evt) {
-    console.debug("ignore_keypressev evt=", evt);
+    console.debug("ignore_keypressev evt=", evt, " evt.target=", evt.target);
     //evt.stopImmediatePropagation();
     //evt.preventDefault();
     return false;
@@ -52,10 +49,6 @@ function focusev(evt) {
     console.debug("focusev evt=", evt);
 }
 
-function inputev(evt) {
-    console.debug("inputev evt=", evt);
-}
-
 function ignore_pastev(evt) {
     console.debug("ignore_pastev evt=", evt);
     return false;
@@ -66,16 +59,30 @@ function ignore_cutev(evt) {
     return false;
 }
 
+function name_keypressev(evt) {
+    console.debug("name_keypressev evt=", evt);
+}
+
+function name_focusev(evt) {
+    console.debug("name_focusev evt=", evt);
+}
+
+
 ////////
 
 function ajaxload(data) {
     console.debug("ajaxload data=",data);
     editdiv.html(data);
+    console.debug("ajaxload editdiv=",editdiv);
     $("#microedit_id .momitemref_cl").each(function() {
-	console.debug ("each itemref this=", $(this).html());
+	console.debug ("each itemref this=", $(this).html(), ": $(this)=", $(this), " this=", this);
+	$(this).on("keypress",name_keypressev);
+	$(this).on("focus",name_focusev);
     });
     $("#microedit_id .momitemval_cl").each(function() {
-	console.debug ("each itemval this=", $(this).html());
+	console.debug ("each itemval this=", $(this).html(), ": $(this)=", $(this), " this=", this);
+	$(this).on("keypress",name_keypressev);
+	$(this).on("focus",name_focusev);
     });
 }
 
@@ -87,11 +94,9 @@ $(document).ready(function(){
     editdiv = $("#microedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    editdiv.on("input",inputev);
-    editdiv.keypress(ignore_keypressev);
-    editdiv.change(changev);
-    editdiv.focus(focusev);
-    editdiv.on("input",inputev);
+    //editdiv.on("keypress",ignore_keypressev);
+    editdiv.on("change",changev);
+    editdiv.on("focus",focusev);
     editdiv.on("cut",ignore_cutev);
     editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){

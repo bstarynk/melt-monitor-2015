@@ -116,7 +116,7 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
       {
         const struct mom_boxtuple_st *tup = pval;
         unsigned siz = mom_raw_size (tup);
-        MOM_WEXCH_PRINTF (wexch, "<span class='momtuple_cl'>[");
+        MOM_WEXCH_PRINTF (wexch, "<span class='momtuple_cl'>[\n");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
@@ -131,14 +131,14 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
             showitem_microedit_mom (wexch, wexitm, thistatitm,
                                     tup->seqitem[ix], false);
           }
-        MOM_WEXCH_PRINTF (wexch, "]</span>");
+        MOM_WEXCH_PRINTF (wexch, "]</span>\n");
       }
       return;
     case MOMITY_SET:
       {
         const struct mom_boxset_st *set = pval;
         unsigned siz = mom_raw_size (set);
-        MOM_WEXCH_PRINTF (wexch, "<span class='momset_cl'>{");
+        MOM_WEXCH_PRINTF (wexch, "<span class='momset_cl'>{\n");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
@@ -153,7 +153,7 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
             showitem_microedit_mom (wexch, wexitm, thistatitm,
                                     set->seqitem[ix], false);
           }
-        MOM_WEXCH_PRINTF (wexch, "}</span>");
+        MOM_WEXCH_PRINTF (wexch, "}</span>\n");
       }
       return;
     case MOMITY_NODE:
@@ -161,10 +161,11 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
         const struct mom_boxnode_st *nod = pval;
         unsigned siz = mom_raw_size (nod);
         MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momnode_cl'>*<span class='momconn_cl'>");
+                          "<span class='momnode_cl'>\n"
+                          "*<span class='momconn_cl'>");
         showitem_microedit_mom (wexch, wexitm, thistatitm,
                                 nod->nod_connitm, false);
-        MOM_WEXCH_PRINTF (wexch, "</span>(");
+        MOM_WEXCH_PRINTF (wexch, "</span>(\n");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
@@ -179,7 +180,7 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
             showvalue_microedit_mom (wexch, wexitm, thistatitm,
                                      nod->nod_sons[ix]);
           }
-        MOM_WEXCH_PRINTF (wexch, ")</span>");
+        MOM_WEXCH_PRINTF (wexch, ")</span>\n");
       }
       return;
     default:
@@ -207,7 +208,7 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                     mom_item_cstring (thistatitm));
   char modbuf[64];
   memset (modbuf, 0, sizeof (modbuf));
-  MOM_WEXCH_PRINTF (wexch, "<small>(modified %s)</small>",
+  MOM_WEXCH_PRINTF (wexch, "<small>(modified %s)</small>\n",
                     mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",
                                         thistatitm->itm_mtime));
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
