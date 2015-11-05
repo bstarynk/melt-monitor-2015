@@ -33,7 +33,7 @@ function htmlDecode(value){
   return $('<div/>').html(value).text();
 }
 
-
+/// see http://stackoverflow.com/q/33540051/841108
 function ignore_keypressev(evt) {
     console.debug("ignore_keypressev evt=", evt, " evt.target=", evt.target);
     //evt.stopImmediatePropagation();

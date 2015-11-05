@@ -1,0 +1,182 @@
+/* file microedit.css */
+/** Copyright (C)  2015  Basile Starynkevitch and later the FSF
+    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+    This file is part of GCC.
+  
+    GCC is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3, or (at your option)
+    any later version.
+  
+    GCC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with GCC; see the file COPYING3.   If not see
+    <http://www.gnu.org/licenses/>.
+**/
+
+span.word_cl {
+    font-family: Arial, Helvetiva;
+    color: #1f0ceC;
+}
+
+span.momname_cl {
+    font-family: Georgia, serif;
+    border-spacing: 2px;
+    padding: 1px;
+    color: #940f27;
+}
+
+span.momname_cl:hover {
+    font-family: Georgia, serif;
+    color: #B30F2C;
+    border: 1px dashed #6e107b;
+    border-spacing: 3px;
+}
+
+span.momset_cl {
+    font-family: serif;
+    color: #604F62;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momset_cl:hover {
+    font-family: serif;
+    font-style: italic;
+    color: #766B78;
+    border: 1px dashed #6e107b;
+    border-spacing: 3px;
+}
+
+
+span.momtuple_cl {
+    font-family: serif;
+    color: #494030;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momtuple_cl:hover {
+    font-family: serif;
+    color: #5E4315;
+    border: 1px dashed #8E5D0A;
+    border-spacing: 3px;
+}
+
+span.momnumber_cl {
+    font-family: "Courier New", Courier, monospace;
+    color: #54062F;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momnumber_cl:hover {
+    font-family: "Courier New", Courier, monospace;
+    color: #812454;
+    border: 1px dashed #855D2A;
+    border-spacing: 3px;
+}
+
+span.momstring_cl {
+    font-family: "Courier New", Courier, monospace;
+    color: #354001;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momstring_cl:hover {
+    font-family: "Courier New", Courier, monospace;
+    color: #505D0A;
+    border: 1px dashed #855D2A;
+    border-spacing: 3px;
+}
+
+span.momnode_cl {
+    font-family: serif;
+    color: #153027;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momnode_cl:hover {
+    font-family: serif;
+    color: #2d6351;
+    border: 1px dashed #954D2A;
+    border-spacing: 3px;
+}
+
+span.momconn_cl {
+    font-family: Lucida Console, Monospace;
+    color: #4E0C39;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
+span.momconn_cl:hover {
+    font-family: Lucida Console, Monospace;
+    color: #8E1367;
+    border: 1px dashed #354126;
+    border-spacing: 3px;
+}
+
+span.momitemref_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #361753;
+    border-spacing: 2px;
+    padding: 2px;
+}
+
+span.momitemref_cl:hover {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #AC1C90;
+    border: 1px dashed #560E24;
+    border-spacing: 3px;
+}
+
+span.momitemval_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: oblique;
+    color: #4e2a14;
+    border-spacing: 2px;
+    padding: 2px;
+}
+
+span.momitemval_cl:hover {
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: oblique;
+    color: #783c17;
+    border: 1px dashed #560E24;
+    border-spacing: 3px;
+}
+
+dt.statattr_cl {
+    font-family: sans-serif;
+    font-weight: bold;
+    padding: 2px;
+}
+
+dt.statval_cl {
+    font-family: sans-serif;
+    padding: 2px;
+}
+
+sup.momindex_cl {
+    font-family: Courier;
+    font-style: oblique;
+    color: rgba(68,72,23,0.30);
+}
+
+p.notice_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 75%;
+    color: darkblue;
+}
+
+span.momname_bcl {
+    background-color: #FBFADD;
+    gap: 1px;
+}
+

@@ -54,6 +54,14 @@ signature_tasklet
 ^funsignature
 
 
+*canvasedit
+1446753296
+^mtime
+^func
+signature_tasklet
+^funsignature
+
+
 *notice
 1446546422
 ^mtime
@@ -112,6 +120,12 @@ web_state
 web_state__0dmo5BBWK0mbtv
 microedit
 )node
+canvedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+canvasedit
+)node
 )payload_hashassoc
 
 
@@ -144,6 +158,7 @@ hashset
 (
 microedit
 the_agenda
+canvasedit
 )set
 (
 web_session
