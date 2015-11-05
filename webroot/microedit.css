@@ -174,3 +174,9 @@ p.notice_cl {
     font-size: 75%;
     color: darkblue;
 }
+
+span.momname_bcl {
+    background-color: #FBFADD;
+    gap: 1px;
+}
+

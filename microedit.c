@@ -44,10 +44,10 @@ showitem_microedit_mom (struct mom_webexch_st *wexch,
     {
       if (isval)
         MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemval_cl empty_cl'>~</span>");
+                          "<span class='momitemval_cl momname_bcl empty_cl'>~</span>");
       else
         MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemref_cl empty_cl'>~</span>");
+                          "<span class='momitemref_cl momname_bcl empty_cl'>~</span>");
     }
   else
     {
@@ -67,10 +67,12 @@ showitem_microedit_mom (struct mom_webexch_st *wexch,
         mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
                             (struct mom_item_st *) curitm);
       if (isval)
-        MOM_WEXCH_PRINTF (wexch, "<span class='momitemval_cl'>%s</span>",
+        MOM_WEXCH_PRINTF (wexch,
+                          "<span class='momitemval_cl momname_bcl'>%s</span>",
                           mom_item_cstring (curitm));
       else
-        MOM_WEXCH_PRINTF (wexch, "<span class='momitemref_cl'>%s</span>",
+        MOM_WEXCH_PRINTF (wexch,
+                          "<span class='momitemref_cl momname_bcl'>%s</span>",
                           mom_item_cstring (curitm));
     }
 }                               /* end of showitem_microedit_mom */

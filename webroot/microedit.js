@@ -41,6 +41,11 @@ function ignore_keypressev(evt) {
     return false;
 }
 
+function ignore_keydownev(evt) {
+    console.debug("ignore_keydownev evt=", evt);
+    return false;
+}
+
 function changev(evt) {
     console.debug("changev evt=", evt);
 }
@@ -76,14 +81,19 @@ function ajaxload(data) {
     console.debug("ajaxload editdiv=",editdiv);
     $("#microedit_id .momitemref_cl").each(function() {
 	console.debug ("each itemref this=", $(this).html(), ": $(this)=", $(this), " this=", this);
-	$(this).on("keypress",name_keypressev);
-	$(this).on("focus",name_focusev);
+	//$(this).on("keypress",name_keypressev);
+	//$(this).on("focus",name_focusev);
     });
     $("#microedit_id .momitemval_cl").each(function() {
 	console.debug ("each itemval this=", $(this).html(), ": $(this)=", $(this), " this=", this);
-	$(this).on("keypress",name_keypressev);
-	$(this).on("focus",name_focusev);
+	//$(this).on("keypress",name_keypressev);
+	//$(this).on("focus",name_focusev);
     });
+    editdiv.on("keypress",".momname_bcl",name_keypressev);
+    editdiv.on("focus",".momname_bcl",name_focusev);
+    editdiv.on("keypress",":not(.momname_bcl)",ignore_keypressev);
+    editdiv.on("keydown",":not(.momname_bcl)",ignore_keydownev);
+    console.debug("ajaxload done editdiv=", editdiv);
 }
 
 ////////
@@ -94,9 +104,8 @@ $(document).ready(function(){
     editdiv = $("#microedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    //editdiv.on("keypress",ignore_keypressev);
     editdiv.on("change",changev);
-    editdiv.on("focus",focusev);
+    //editdiv.on("focus",focusev);
     editdiv.on("cut",ignore_cutev);
     editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){
