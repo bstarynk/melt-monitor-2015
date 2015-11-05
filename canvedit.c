@@ -226,11 +226,11 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
 
 
 
-extern mom_tasklet_sig_t momf_canvedit;
-const char momsig_canvedit[] = "signature_tasklet";
+extern mom_tasklet_sig_t momf_canvasedit;
+const char momsig_canvasedit[] = "signature_tasklet";
 
 void
-momf_canvedit (struct mom_item_st *tkitm)
+momf_canvasedit (struct mom_item_st *tkitm)
 {
   enum canvedit_closoff_en
   {

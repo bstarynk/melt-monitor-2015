@@ -19,6 +19,14 @@
 
 
 
+*canvasedit
+1446753296
+^mtime
+^func
+signature_tasklet
+^funsignature
+
+
 *comment
 1445968873
 ^mtime
@@ -48,14 +56,6 @@ comment
 
 *microedit
 1446463595
-^mtime
-^func
-signature_tasklet
-^funsignature
-
-
-*canvasedit
-1446753296
 ^mtime
 ^func
 signature_tasklet
@@ -114,17 +114,17 @@ comment
 "hashassoc for web handlers"_
 )attrs
 (
-microedit
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-microedit
-)node
-canvedit
+canvasedit
 (
 web_state
 web_state__0dmo5BBWK0mbtv
 canvasedit
+)node
+microedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+microedit
 )node
 )payload_hashassoc
 
@@ -156,9 +156,9 @@ web_state
 )node
 hashset
 (
+canvasedit
 microedit
 the_agenda
-canvasedit
 )set
 (
 web_session
