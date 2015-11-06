@@ -50,6 +50,7 @@ var MomcScalar = function (text) {
     this.num = momc_count;
 }
 MomcScalar.prototype = {
+    name: "momcscalar",
     font_size: 13,
     font_family: "Verdana, sans-serif",
     font_style: 'plain',
@@ -71,9 +72,11 @@ var MomcNilRef = function () {
     MomcScalar("~");
 };
 MomcNilRef.prototype = {
+    name: "momcnilref",
     font_size: 13,
     font_family: "Verdana, sans-serif",
     font_style: 'italics',
+    prototype: MomcScalar
 };
 
 function momc_nil_ref() {
@@ -87,9 +90,11 @@ var MomcNilVal = function () {
     MomcScalar("~");
 };
 MomcNilVal.prototype = {
+    name: "momcnilval",
     font_size: 13,
     font_family: "Verdana, sans-serif",
     font_style: 'bold',
+    prototype: MomcScalar
 };
 
 function momc_nil_val() {
@@ -102,12 +107,12 @@ var MomcItemVal = function (nam)
 {
     MomcScalar(nam);
 };
-
 MomcItemVal.prototype = {
-    name: "momp_item_val",
+    name: "momcitemval",
     font_size: 13,
     font_family: "Arial, sans-serif",
-    font_style: 'oblique'
+    font_style: 'oblique',
+    prototype: MomcScalar
 };
 function momc_item_val(nam) {
     var res= new MomcItemVal(nam);
@@ -120,9 +125,11 @@ var MomcItemRef = function (nam)
     MomcItemVal(nam);
 }
 MomcItemRef.prototype = {
+    name: "momcitemref",
     font_size: 13,
     font_family: "Arial, sans-serif",
-    font_style: 'oblique'
+    font_style: 'oblique',
+    prototype: MomcScalar
 };
 function momc_item_ref(nam) {
     var res = new MomcItemRef(nam);
@@ -134,9 +141,11 @@ var MomcInt = function (num) {
     MomcScalar(num.toString());
 }
 MomcInt.prototype =  {
+    name: "momcint",
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain'
+    font_style: 'plain',
+    prototype: MomcScalar
 };
 function momc_int(num) {
     var res = new MomcInt(num);
@@ -149,9 +158,11 @@ var MomcDouble = function (str) {
     this.num = parseFloat(str);
 };
 MomcDouble.prototype = {
+    name: "momcdouble",
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain'
+    font_style: 'plain',
+    prototype: MomcScalar
 };
 function momc_double(str) {
     var res= new MomcDouble(str);
@@ -162,11 +173,13 @@ function momc_double(str) {
 
 var MomcString = function (str) {
     MomcScalar(str);
-}
+};
 MomcString.prototype = {
+    name: "momcstring",
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain'
+    font_style: 'plain',
+    prototype: MomcScalar
 };
 function momc_string(str) {
     var res = new MomcString(str);
@@ -175,115 +188,83 @@ function momc_string(str) {
 
 ////////////////
 
+var MomcSequence = function (arr) {
+    this.seq = arr;
+    momc_count = momc_count+1;
+    this.num = momc_count;
+};
+MomcSequence.prototype = {
+    name: "momcsequence",
+    do_layout: function() {
+	console.log("csequence-do_layout this=", this);
+    }
+};
 
-var momp_tuple = {
-    name: "momp_tuple",
+////////////////
+var MomcTuple = function (arr) {
+    MomcSequence(arr);
+};
+MomcTuple.prototype = {
+    name: "momctuple",
     font_size: 12,
     font_family: "Courier, Lucida",
     font_style: 'plain',
-    do_layout: function () {
-	console.log ("tuple-do_layout this=", this);
-	var dimleft = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: "["
-	 });
-	console.log ("tuple-do_layout dimleft=", dimleft);
-	var dimright = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: "]"
-	 });
-	console.log ("tuple-do_layout dimright=", dimright);
-    }
+    prototype: MomcSequence
 };
 function momc_tuple(arr) {
-    momc_count = momc_count + 1;
-    var res = Object.create(momp_tuple,
-			    {num: momc_count,
-			     kind: "tuple",
-			     arr: arr});
+    var res = new MomcTuple(arr);
     return res;
 };
 
 ////////////////
-var momp_set = {
-    name: "momp_set",
+var MomcSet = function (arr) {
+    MomcSequence(arr);
+}
+MomcSet.prototype = {
+    name: "momcset", 
     font_size: 12,
     font_family: "Courier, Lucida",
     font_style: 'plain',
-    do_layout: function () {
-	console.log ("set-do_layout this=", this);
-	var dimleft = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: "["
-	 });
-	console.log ("set-do_layout dimleft=", dimleft);
-	var dimright = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: "]"
-	 });
-	console.log ("set-do_layout dimright=", dimright);
-    }
+    prototype: MomcSequence
 };
 
 function momc_set(arr) {
-    momc_count = momc_count + 1;
-    var res= Object.create(momp_set,
-			   {num: momc_count,
-			    kind: "set",
-			    arr: arr});
+    var res= new MomcSet(arr);
     return res;
 };
 
 ////////////////
-var momp_node = {
-    name: "momp_node",
+var MomcNode = function (conn, arr) {
+    MomcSequence(arr);
+    this.conn = conn;
+};
+MomcNode.prototype = {
+    name: "momcnode",
     font_size: 12,
     font_family: "Courier, Lucida",
     font_style: 'plain',
-    do_layout: function () {
-	console.log ("node-do_layout this=", this);
-	var dimleft = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: "("
-	 });
-	console.log ("node-do_layout dimleft=", dimleft);
-	var dimright = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: ")"
-	 });
-	console.log ("node-do_layout dimright=", dimright);
-    }
+    prototype: MomcSequence
 };  
 function momc_node(conn,sons) {
-    momc_count = momc_count + 1;
-    var res= Object.create(momp_node,
-			   {num: momc_count,
-			    kind: "node",
-			    conn: conn,
-			    sons: sons});
+    var res= new MomcNode(conn,sons);
     return res;
 };
 
 ////////////////
-var momp_top_entry = {
-    name: "momp_top_entry",
+var MomcTopEntry = function (eattr, eval) {
+    this.entattr = eattr;
+    this.entval = eval;
+    momc_count = momc_count+1;
+    this.num = momc_count;
+};
+MomcTopEntry.prototype = {
+    name: "momctopentry",
     font_size: 12,
     font_family: "Arial, sans-serif",
     font_style: 'plain',
     do_layout: function () {
-	console.log ("top_entry-do_layout this=", this);
+	console.log ("top_entry-do_layout this=", this, " edicanvas=", edicanvas);
+	console.trace();
 	var dimleft = edicanvas.measureText
 	({fontSize: font_size,
 	  fontFamily: font_family,
@@ -305,11 +286,7 @@ var momp_top_entry = {
     }
 };  
 function momc_top_entry(attr,val) {
-    var res =  Object.create(momp_top_entry,
-			     {num: momc_count,
-			      kind: "top_entry",
-			      entattr: attr,
-			      entval: val});
+    var res =  new MomcTopEntry(attr, val);
     console.log("top_entry res=", res);
     return res;
 };
@@ -318,6 +295,13 @@ function momc_top_entry(attr,val) {
 function momc_display_canvas(arr) {
     console.log("display_canvas arr=", arr);
     canvarr = arr;
+    var l = arr.length;
+    for (var i=0; i<l; i++) {
+	ob = arr[i];
+	console.log ("display_canvas ob=", ob, " i#", i);
+	var dim = ob.do_layout();
+	console.log ("display_canvas dim=", dim);
+    }
 }
 ////////
 
