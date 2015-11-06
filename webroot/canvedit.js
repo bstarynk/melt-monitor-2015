@@ -37,7 +37,7 @@ function htmlDecode(value){
 
 
 function addupdatehtml(txt) {
-    console.debug("addupdatehtml txt=", txt);
+    console.log("addupdatehtml txt=", txt);
     editlog.append(txt);
 }
 
@@ -128,31 +128,31 @@ function momc_top_entry(attr,val) {
 		    kind: "top_entry",
 		    eattr: attr,
 		    eval: val};
-    console.debug("top_entry res=", res);
+    console.log("top_entry res=", res);
     return res;
 }
 
 function momc_display_canvas(arr) {
-    console.debug("display_canvas arr=", arr);
+    console.log("display_canvas arr=", arr);
     canvarr = arr;
 }
 ////////
 
 function ajaxcanvascript(data) {
-    console.debug("ajaxcanvascript data=", data);
+    console.log("ajaxcanvascript data=", data);
 }
 
 ////////
 
 
 $(document).ready(function(){
-    console.debug("canvedit document ready");
+    console.log("canvedit document ready");
     edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    console.debug("edicanvas=", edicanvas);
+    console.log("edicanvas=", edicanvas);
     cleareditbut.click(function(evt){
-	console.debug("clearedit evt=", evt);
+	console.log("clearedit evt=", evt);
 	editlog.html("");
     });
     $.ajax
@@ -164,4 +164,4 @@ $(document).ready(function(){
      });
 });
 
-console.debug("canvedit.js parsed");
+console.log("canvedit.js parsed");

@@ -35,57 +35,57 @@ function htmlDecode(value){
 
 /// see http://stackoverflow.com/q/33540051/841108
 function ignore_keypressev(evt) {
-    console.debug("ignore_keypressev evt=", evt, " evt.target=", evt.target);
+    console.log("ignore_keypressev evt=", evt, " evt.target=", evt.target);
     //evt.stopImmediatePropagation();
     //evt.preventDefault();
     return false;
 }
 
 function ignore_keydownev(evt) {
-    console.debug("ignore_keydownev evt=", evt);
+    console.log("ignore_keydownev evt=", evt);
     return false;
 }
 
 function changev(evt) {
-    console.debug("changev evt=", evt);
+    console.log("changev evt=", evt);
 }
 
 function focusev(evt) {
-    console.debug("focusev evt=", evt);
+    console.log("focusev evt=", evt);
 }
 
 function ignore_pastev(evt) {
-    console.debug("ignore_pastev evt=", evt);
+    console.log("ignore_pastev evt=", evt);
     return false;
 }
 
 function ignore_cutev(evt) {
-    console.debug("ignore_cutev evt=", evt);
+    console.log("ignore_cutev evt=", evt);
     return false;
 }
 
 function name_keypressev(evt) {
-    console.debug("name_keypressev evt=", evt);
+    console.log("name_keypressev evt=", evt);
 }
 
 function name_focusev(evt) {
-    console.debug("name_focusev evt=", evt);
+    console.log("name_focusev evt=", evt);
 }
 
 
 ////////
 
 function ajaxload(data) {
-    console.debug("ajaxload data=",data);
+    console.log("ajaxload data=",data);
     editdiv.html(data);
-    console.debug("ajaxload editdiv=",editdiv);
+    console.log("ajaxload editdiv=",editdiv);
     $("#microedit_id .momitemref_cl").each(function() {
-	console.debug ("each itemref this=", $(this).html(), ": $(this)=", $(this), " this=", this);
+	console.log ("each itemref this=", $(this).html(), ": $(this)=", $(this), " this=", this);
 	//$(this).on("keypress",name_keypressev);
 	//$(this).on("focus",name_focusev);
     });
     $("#microedit_id .momitemval_cl").each(function() {
-	console.debug ("each itemval this=", $(this).html(), ": $(this)=", $(this), " this=", this);
+	console.log ("each itemval this=", $(this).html(), ": $(this)=", $(this), " this=", this);
 	//$(this).on("keypress",name_keypressev);
 	//$(this).on("focus",name_focusev);
     });
@@ -93,14 +93,14 @@ function ajaxload(data) {
     editdiv.on("focus",".momname_bcl",name_focusev);
     editdiv.on("keypress",":not(.momname_bcl)",ignore_keypressev);
     editdiv.on("keydown",":not(.momname_bcl)",ignore_keydownev);
-    console.debug("ajaxload done editdiv=", editdiv);
+    console.log("ajaxload done editdiv=", editdiv);
 }
 
 ////////
 
 
 $(document).ready(function(){
-    console.debug("document ready");
+    console.log("document ready");
     editdiv = $("#microedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
@@ -109,7 +109,7 @@ $(document).ready(function(){
     editdiv.on("cut",ignore_cutev);
     editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){
-	console.debug("clearedit evt=", evt);
+	console.log("clearedit evt=", evt);
 	editlog.html("");
     });
     $.ajax

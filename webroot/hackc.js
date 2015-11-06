@@ -42,7 +42,7 @@ function got_hackc_click(ev)
 {
     var srcprologue = prologuecodmir.getValue();
     var srcinitial = initialcodmir.getValue();
-    console.debug ("got_hackc_click ev=", ev,
+    console.log ("got_hackc_click ev=", ev,
 		   " srcprologue=", srcprologue,
 		   " srcinitial=", srcinitial);
     $.ajax(
@@ -56,7 +56,7 @@ function got_hackc_click(ev)
 	    },
 	    dataType: "JSON",
 	    success: function (answer) {
-		console.debug ("hackc answer=", answer);
+		console.log ("hackc answer=", answer);
 		if (answer.compilation) {
 		    outcomp.html("<h3>compilation <tt>" + answer.hackitem + "</tt> success</h3>" 
 				 +"<pre class='compilemsg'>" + htmlEncode(answer.compileroutput) + "</pre>");
@@ -72,7 +72,7 @@ function got_hackc_click(ev)
 
 function got_stop_click(ev)
 {
-    console.debug ("got_hackc_click ev=", ev);
+    console.log ("got_hackc_click ev=", ev);
     $.ajax(
 	{
 	    url: "/mom_hackc_code",
@@ -82,7 +82,7 @@ function got_stop_click(ev)
 	    },
 	    dataType: "JSON",
 	    success: function (answer) {
-		console.debug ("stop answer=", answer);
+		console.log ("stop answer=", answer);
 		outcomp.html("<h3>execution stopped</h3>\n"
 			     + "<b>elapsed real time</b> <tt>"
 			     + answer.elapsedreal
@@ -100,7 +100,7 @@ $(document).ready(function(){
     hacksubmit = $("#hackc_id");
     outcomp = $("#outcomp_id");
     stopsubmit = $("#stop_id");
-    console.debug ("documready prologuetxa=", prologuetxa,
+    console.log ("documready prologuetxa=", prologuetxa,
 		   " initialtxa=", initialtxa,
 		   " hacksubmit=", hacksubmit);
     prologuecodmir = CodeMirror.fromTextArea(prologuetxa[0], {
