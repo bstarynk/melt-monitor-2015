@@ -43,194 +43,139 @@ function addupdatehtml(txt) {
 }
 
 
+console.warn("the constructors could be really wrong. FIXME");
+var MomcScalar = function (text) {
+    this.str = text;
+    momc_count = momc_count+1;
+    this.num = momc_count;
+}
+MomcScalar.prototype = {
+    font_size: 13,
+    font_family: "Verdana, sans-serif",
+    font_style: 'plain',
+    do_layout: function() {
+	console.log("cscalar-do_layout this=", this);
+	var dim = edicanvas.measureText
+	({fontSize: font_size,
+	  fontFamily: font_family,
+	  fontStyle: font_style,
+	  text: this.str
+	 });
+	console.log ("cscalar-do_layout dim=", dim);
+	return dim;
+    }
+};
+
 ////////////////
-var momp_nil_ref = {
-    name: "momp_nil_ref",
+var MomcNilRef = function () {
+    MomcScalar("~");
+};
+MomcNilRef.prototype = {
     font_size: 13,
     font_family: "Verdana, sans-serif",
     font_style: 'italics',
-    do_layout: function() {
-	console.log("nil_ref-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("nil_ref-do_layout dim=", dim);
-    }
 };
 
 function momc_nil_ref() {
-    momc_count = momc_count + 1;
-    var res = Object.create(momp_nil_ref,
-			    {num: momc_count,
-			     kind: "nil_ref",
-			     str: "~"});
+    var res = new MomcNilRef();
     return res;
 };
 
 
 ////////////////
-var momp_nil_val = {
-    name: "momp_nil_val",
+var MomcNilVal = function () {
+    MomcScalar("~");
+};
+MomcNilVal.prototype = {
     font_size: 13,
     font_family: "Verdana, sans-serif",
     font_style: 'bold',
-    do_layout: function () {
-	console.log ("nil_val-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("nil_val-do_layout dim=", dim);
-    }
 };
 
 function momc_nil_val() {
-    momc_count = momc_count + 1;
-    var res = Obj.create(momp_nil_val,
-			 {num: momc_count,
-			  kind: "nil_val",
-			  str: "~"});
+    var res = new MomcNilVal();
     return res;
 };
 
 ////////////////
-var momp_item_val = {
+var MomcItemVal = function (nam)
+{
+    MomcScalar(nam);
+};
+
+MomcItemVal.prototype = {
     name: "momp_item_val",
     font_size: 13,
     font_family: "Arial, sans-serif",
-    font_style: 'oblique',
-    do_layout: function () {
-	console.log ("item_val-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("item_val-do_layout dim=", dim);
-    }
+    font_style: 'oblique'
 };
 function momc_item_val(nam) {
-    momc_count = momc_count + 1;
-    var res= Obj.create(momp_item_val,
-			{num: momc_count,
-			 kind: "item_val",
-			 str: nam});
+    var res= new MomcItemVal(nam);
     return res;
 };
 
 ////////////////
-var momp_item_ref = {
-    name: "momp_item_ref",
+var MomcItemRef = function (nam)
+{
+    MomcItemVal(nam);
+}
+MomcItemRef.prototype = {
     font_size: 13,
     font_family: "Arial, sans-serif",
-    font_style: 'oblique',
-    do_layout: function () {
-	console.log ("item_ref-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("item_ref-do_layout dim=", dim);
-    }
+    font_style: 'oblique'
 };
 function momc_item_ref(nam) {
-    momc_count = momc_count + 1;
-    var res= Obj.create(momp_item_ref,
-			{num: momc_count,
-			 kind: "item_ref",
-			 str: nam});
+    var res = new MomcItemRef(nam);
     return res;
 };
 
 ////////////////
-var momp_int = {
-    name: "momp_int",
+var MomcInt = function (num) {
+    MomcScalar(num.toString());
+}
+MomcInt.prototype =  {
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain',
-    do_layout: function () {
-	console.log ("int-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.num.toString()
-	 });
-	console.log ("int-do_layout dim=", dim);
-    }
+    font_style: 'plain'
 };
 function momc_int(num) {
-    momc_count = momc_count + 1;
-    var res= Object.create(momp_int,
-			   {num: momc_count,
-			    kind: "int",
-			    str: num.toString(),
-			    num: num});
+    var res = new MomcInt(num);
     return res;
 };
 
 ////////////////
-var momp_double = {
-    name: "momp_double",
+var MomcDouble = function (str) {
+    MomcScalar(str);
+    this.num = parseFloat(str);
+};
+MomcDouble.prototype = {
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain',
-    do_layout: function () {
-	console.log ("double-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("double-do_layout dim=", dim);
-    }
+    font_style: 'plain'
 };
 function momc_double(str) {
-    momc_count = momc_count + 1;
-    var res= Object.create(momp_double,
-			   {num: momc_count,
-			    kind: "dbl",
-			    str: str,
-			    dbl: parseFloat(str)});
+    var res= new MomcDouble(str);
     return res;
 };
 
 ////////////////
-var momp_string = {
-    name: "momp_string",
+
+var MomcString = function (str) {
+    MomcScalar(str);
+}
+MomcString.prototype = {
     font_size: 12,
     font_family: "Courier, Lucida",
-    font_style: 'plain',
-    do_layout: function () {
-	console.log ("string-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
-	console.log ("string-do_layout dim=", dim);
-    }
+    font_style: 'plain'
 };
 function momc_string(str) {
-    momc_count = momc_count + 1;
-    var res = Object.create(momp_string,
-			    {num: momc_count,
-			     kind: "str",
-			     str: str});
+    var res = new MomcString(str);
     return res;
 };
 
 ////////////////
+
+
 var momp_tuple = {
     name: "momp_tuple",
     font_size: 12,
