@@ -233,16 +233,23 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
         showvalue_canvedit_mom (wexch, wexitm, thistatitm, curval);
         mom_wexch_puts (wexch, ")");
       }
-    mom_wexch_puts (wexch, "]);\n");
+    mom_wexch_puts (wexch, "]);\n\n");
   }
   {
     char modbuf[64];
     memset (modbuf, 0, sizeof (modbuf));
-    time_t now = 0;
-    time (&now);
+    double nowd = mom_clock_time(CLOCK_REALTIME);
     MOM_WEXCH_PRINTF (wexch, "addupdatehtml('displayed <tt>%s</tt>');\n",
                       mom_strftime_centi (modbuf, sizeof (modbuf) - 1,
-                                          "%c %Z", now));
+                                          "%c %Z", nowd));
+    MOM_WEXCH_PRINTF (wexch,
+                      " console.log('dofillcanvas %s:%d done %s this=', this);\n",
+                      __FILE__, __LINE__, 
+                      mom_strftime_centi (modbuf, sizeof (modbuf) - 1,
+                                          "%T.__",
+					  nowd));
+    MOM_DEBUGPRINTF(web, "dofillcanvas_canvedit webr#%ld nowd %.4f",
+		    wexch->webx_count, nowd);
   }
   mom_wexch_reply (wexch, HTTP_OK,
                    /* could be "text/javascript", see
