@@ -30,17 +30,17 @@ function htmlEncode(value){
   //create a in-memory div, set it's inner text(which jQuery automatically encodes)
   //then grab the encoded contents back out.  The div never exists on the page.
   return $('<div/>').text(value).html();
-}
+};
 
 function htmlDecode(value){
   return $('<div/>').html(value).text();
-}
+};
 
 
 function addupdatehtml(txt) {
     console.log("addupdatehtml txt=", txt);
     editlog.append(txt);
-}
+};
 
 
 console.warn("the constructors could be really wrong. FIXME");
@@ -48,7 +48,7 @@ var MomcScalar = function (text) {
     this.str = text;
     momc_count = momc_count+1;
     this.num = momc_count;
-}
+};
 MomcScalar.prototype = {
     name: "momcscalar",
     font_size: 13,
@@ -123,7 +123,7 @@ function momc_item_val(nam) {
 var MomcItemRef = function (nam)
 {
     MomcItemVal(nam);
-}
+};
 MomcItemRef.prototype = {
     name: "momcitemref",
     font_size: 13,
@@ -139,7 +139,7 @@ function momc_item_ref(nam) {
 ////////////////
 var MomcInt = function (num) {
     MomcScalar(num.toString());
-}
+};
 MomcInt.prototype =  {
     name: "momcint",
     font_size: 12,
@@ -219,7 +219,7 @@ function momc_tuple(arr) {
 ////////////////
 var MomcSet = function (arr) {
     MomcSequence(arr);
-}
+};
 MomcSet.prototype = {
     name: "momcset", 
     font_size: 12,
@@ -292,22 +292,30 @@ function momc_top_entry(attr,val) {
 };
 
 ////////////////
-function momc_display_canvas(arr) {
-    console.log("display_canvas arr=", arr);
+function momc_display_canvas(msg,arr) {
+    console.log("display_canvas msg=", msg, " arr=", arr, " canvedit=", canvedit);
+    canvedit.clearCanvas();
+    console.log("display_canvas cleared canvedit=", canvedit);
+    canvedit.drawText({
+	x: 333, y: 585, fontSize: 10, fontFamily: "Arial",
+	text: msg,
+	fillStyle: '#BBAAEB'
+    });
+    console.log("display_canvas drawn msg=", msg);
     canvarr = arr;
     var l = arr.length;
-    for (var i=0; i<l; i++) {
+    if (false) for (var i=0; i<l; i++) {
 	ob = arr[i];
 	console.log ("display_canvas ob=", ob, " i#", i);
 	var dim = ob.do_layout();
 	console.log ("display_canvas dim=", dim);
     }
-}
+};
 ////////
 
 function ajaxcanvascript(data) {
     console.log("ajaxcanvascript data=", data);
-}
+};
 
 ////////
 

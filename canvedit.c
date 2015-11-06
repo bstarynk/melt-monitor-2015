@@ -204,7 +204,16 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
                       " console.log('dofillcanvas %s:%d siz %d; this=', this,\n"
                       "   ' momc_display_canvas=',momc_display_canvas);\n",
                       __FILE__, __LINE__, siz);
-    mom_wexch_puts (wexch, "momc_display_canvas([\n");
+    {
+      time_t now = 0;
+      time (&now);
+      struct tm nowtm = { };
+      localtime_r (&now, &nowtm);
+      char timbuf[64];
+      memset (timbuf, 0, sizeof (timbuf));
+      strftime (timbuf, sizeof (timbuf) - 1, "%T", &nowtm);
+      MOM_WEXCH_PRINTF (wexch, "momc_display_canvas('%s',[\n", timbuf);
+    }
     for (unsigned ix = 0; ix < siz; ix++)
       {
         const struct mom_item_st *curatitm = atset->seqitem[ix];
