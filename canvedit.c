@@ -43,7 +43,7 @@ showitem_canvedit_mom (struct mom_webexch_st *wexch,
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
       if (isval)
-        MOM_WEXCH_PRINTF (wexch, "momc_empty_val()");
+        MOM_WEXCH_PRINTF (wexch, "momc_nil_val()");
       else
         MOM_WEXCH_PRINTF (wexch, "momc_nil_ref()");
     }
