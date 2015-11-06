@@ -201,7 +201,7 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
   {
     unsigned siz = mom_size (atset);
     MOM_WEXCH_PRINTF (wexch,
-                      " console.debug('dofillcanvas %s:%d siz %d; this=', this,\n"
+                      " console.log('dofillcanvas %s:%d siz %d; this=', this,\n"
                       "   ' momc_display_canvas=',momc_display_canvas);\n",
                       __FILE__, __LINE__, siz);
     mom_wexch_puts (wexch, "momc_display_canvas([\n");
