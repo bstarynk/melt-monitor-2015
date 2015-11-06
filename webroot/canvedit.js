@@ -41,97 +41,172 @@ function addupdatehtml(txt) {
     editlog.append(txt);
 }
 
+////////////////
+var momp_empty_val = {
+    name: "momp_empty_val"
+};
 
 function momc_empty_val() {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res = {num: momc_count,
 		kind: "empty_val",
 		str: "",
-		x: false};
+	       x: false};
+    res.__proto__ = momp_empty_val;
+    return res;
 }
+
+////////////////
+var momp_nil_ref = {
+    name: "momp_nil_ref"
+};
 
 function momc_nil_ref() {
     momc_count = momc_count + 1;
-    return {num: momc_count,
-		kind: "nil_ref",
-		str: "~"};
-}
+    var res = {num: momc_count,
+	       kind: "nil_ref",
+	       str: "~"};
+    res.__proto__ = momp_nil_ref;
+    return res;
+};
+
+
+////////////////
+var momp_nil_val = {
+    name: "momp_nil_val"
+};
 
 function momc_nil_val() {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res = {num: momc_count,
 		kind: "nil_val",
-		str: "~"};
-}
+	       str: "~"};
+    res.__proto__ = momp_nil_val;
+};
 
+////////////////
+var momp_item_val = {
+    name: "momp_item_val"
+};
 function momc_item_val(nam) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res= {num: momc_count,
 		kind: "item_val",
-		str: nam};
-}
+	      str: nam};
+    res.__proto__ = momp_item_val;
+    return res;
+};
 
+////////////////
+var momp_item_ref = {
+    name: "momp_item_ref"
+};
 function momc_item_ref(nam) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
-		kind: "item_ref",
-		str: nam};
-}
+    var res= {num: momc_count,
+	      kind: "item_ref",
+	      str: nam};
+    res.__proto__ = momp_item_ref;
+    return res;
+};
 
+////////////////
+var momp_int = {
+    name: "momp_int"
+};
 function momc_int(num) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res= {num: momc_count,
 		kind: "int",
 		str: num.toString(),
-		num: num};
-}
+	      num: num};
+    res.__proto__ = momp_int;
+    return res;
+};
 
+////////////////
+var momp_double = {
+    name: "momp_double"
+};
 function momc_double(str) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res= {num: momc_count,
 		kind: "dbl",
 		str: str,
 		dbl: parseFloat(str)};
-}
+    res.__proto__ = momp_int;
+    return res;
+};
 
+////////////////
+var momp_string = {
+    name: "momp_string"
+};
 function momc_string(str) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res = {num: momc_count,
 		kind: "str",
 		str: str};
-}
+    res.__proto__ = momp_int;
+    return res;
+};
 
+////////////////
+var momp_tuple = {
+    name: "momp_tuple"
+};
 function momc_tuple(arr) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res = {num: momc_count,
 		kind: "tuple",
 		arr: arr};
-}
+    res.__proto__ = momp_tuple;
+    return res;
+};
+
+////////////////
+var momp_set = {
+    name: "momp_set"
+};
 
 function momc_set(arr) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res= {num: momc_count,
 		kind: "set",
 		arr: arr};
-}
+    res.__proto__ = momp_set;
+    return res;
+};
 
+////////////////
+var momp_node = {
+    name: "momp_node"
+};  
 function momc_node(conn,sons) {
     momc_count = momc_count + 1;
-    return {num: momc_count,
+    var res= {num: momc_count,
 		kind: "node",
 		conn: conn,
 		sons: sons};
-}
+    res.__proto__ = momp_node;
+    return res;
+};
 
+////////////////
+var momp_top_entry = {
+    name: "momp_top_entry"
+};  
 function momc_top_entry(attr,val) {
     var res =  {num: momc_count,
 		    kind: "top_entry",
 		    eattr: attr,
-		    eval: val};
+		eval: val};
+    res.__proto__ = momp_top_entry;
     console.log("top_entry res=", res);
     return res;
 }
 
+////////////////
 function momc_display_canvas(arr) {
     console.log("display_canvas arr=", arr);
     canvarr = arr;
