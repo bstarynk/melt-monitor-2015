@@ -17,9 +17,25 @@
     <http://www.gnu.org/licenses/>.
 **/
 
+h1.canvh1_cl {
+    font-family: times, serif;
+    color: #101146;
+    text-align: center;
+    margin: 5px;
+}
 
+h2.canvlog_cl {
+    font-family: Verdana, sans-serif;
+    color: #3B0D37;
+    text-align: center;
+    margin: 5px;   
+}
 
 canvas.canvasedit_cl {
     border: 1px dashed #456D2A;
     border-spacing: 3px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    padding: 10px;
 }

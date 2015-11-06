@@ -870,7 +870,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           long off = ftell (wexch->webx_outfil);
           MOM_DEBUGPRINTF (web, "webrequest#%ld off %ld", reqcnt, off);
           if (MOM_IS_DEBUGGING (web)
-              && !strncmp (wexch->webx_mimetype, "text/", 5))
+              && (!strncmp (wexch->webx_mimetype, "text/", 5)
+                  || strstr (wexch->webx_mimetype, "javascript")))
             MOM_DEBUGPRINTF (web,
                              "webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\nx",
                              reqcnt, wexch->webx_outbuf, off, reqcnt);

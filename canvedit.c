@@ -43,11 +43,9 @@ showitem_canvedit_mom (struct mom_webexch_st *wexch,
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
       if (isval)
-        MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemval_cl momname_bcl empty_cl'>~</span>");
+        MOM_WEXCH_PRINTF (wexch, "momc_empty_val()");
       else
-        MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemref_cl momname_bcl empty_cl'>~</span>");
+        MOM_WEXCH_PRINTF (wexch, "momc_nil_ref()");
     }
   else
     {
@@ -68,12 +66,10 @@ showitem_canvedit_mom (struct mom_webexch_st *wexch,
                             (struct mom_item_st *) curitm);
       if (isval)
         MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemval_cl momname_bcl'>%s</span>",
-                          mom_item_cstring (curitm));
+                          "momc_item_val('%s')", mom_item_cstring (curitm));
       else
         MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemref_cl momname_bcl'>%s</span>",
-                          mom_item_cstring (curitm));
+                          "momc_item_ref('%s')", mom_item_cstring (curitm));
     }
 }                               /* end of showitem_canvedit_mom */
 
@@ -86,10 +82,10 @@ showvalue_canvedit_mom (struct mom_webexch_st *wexch,
   switch (mom_itype (pval))
     {
     case MOMITY_NONE:
-      MOM_WEXCH_PRINTF (wexch, "<span class='nil_cl'>~</span>");
+      MOM_WEXCH_PRINTF (wexch, "momc_nil_val()");
       return;
     case MOMITY_BOXINT:
-      MOM_WEXCH_PRINTF (wexch, "<span class='momnumber_cl'>%lld</span>",
+      MOM_WEXCH_PRINTF (wexch, "momc_int(%lld)",
                         (long long) ((const struct mom_boxint_st *)
                                      pval)->boxi_int);
       return;
@@ -99,7 +95,7 @@ showvalue_canvedit_mom (struct mom_webexch_st *wexch,
         memset (buf, 0, sizeof (buf));
         double x = ((const struct mom_boxdouble_st *) pval)->boxd_dbl;
         MOM_WEXCH_PRINTF
-          (wexch, "<span class='momnumber_cl'>%s</span>",
+          (wexch, "momc_double('%s')",
            mom_double_to_cstr (x, buf, sizeof (buf)));
       }
       return;
@@ -108,81 +104,71 @@ showvalue_canvedit_mom (struct mom_webexch_st *wexch,
                              (struct mom_item_st *) pval, true);
       return;
     case MOMITY_BOXSTRING:
-      MOM_WEXCH_PRINTF (wexch, "&#8220;<span class='momstring_cl'>");   // “ U+201C LEFT DOUBLE QUOTATION MARK
+      mom_wexch_puts (wexch, "momc_string(\"");
       mom_output_utf8_html (wexch->webx_outfil,
                             ((const struct mom_boxstring_st *) pval)->cstr,
                             mom_size (pval), true);
-      MOM_WEXCH_PRINTF (wexch, "</span>&#8221;");       // ” U+201D RIGHT DOUBLE QUOTATION MARK
+      mom_wexch_puts (wexch, "\")");
       return;
     case MOMITY_TUPLE:
       {
         const struct mom_boxtuple_st *tup = pval;
         unsigned siz = mom_raw_size (tup);
-        MOM_WEXCH_PRINTF (wexch, "<span class='momtuple_cl'>[\n");
+        mom_wexch_puts (wexch, "momc_tuple([");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              MOM_WEXCH_PRINTF (wexch, " ");
-            if (ix % 5 == 0)
-              {
-                if (ix > 0)
-                  MOM_WEXCH_PRINTF (wexch,
-                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
-                                    ix);
-              };
+              mom_wexch_puts (wexch, ",");
+            if (ix % 4 == 0)
+              mom_wexch_puts (wexch, "\n");
+            else
+              mom_wexch_puts (wexch, " ");
             showitem_canvedit_mom (wexch, wexitm, thistatitm,
                                    tup->seqitem[ix], false);
           }
-        MOM_WEXCH_PRINTF (wexch, "]</span>\n");
+        mom_wexch_puts (wexch, "])\n");
       }
       return;
     case MOMITY_SET:
       {
         const struct mom_boxset_st *set = pval;
         unsigned siz = mom_raw_size (set);
-        MOM_WEXCH_PRINTF (wexch, "<span class='momset_cl'>{\n");
+        mom_wexch_puts (wexch, "momc_set([");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              MOM_WEXCH_PRINTF (wexch, " ");
-            if (ix % 5 == 0)
-              {
-                if (ix > 0)
-                  MOM_WEXCH_PRINTF (wexch,
-                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
-                                    ix);
-              };
+              mom_wexch_puts (wexch, ",");
+            if (ix % 4 == 0)
+              mom_wexch_puts (wexch, "\n");
+            else
+              mom_wexch_puts (wexch, " ");
             showitem_canvedit_mom (wexch, wexitm, thistatitm,
                                    set->seqitem[ix], false);
           }
-        MOM_WEXCH_PRINTF (wexch, "}</span>\n");
+        mom_wexch_puts (wexch, "])\n");
       }
       return;
     case MOMITY_NODE:
       {
         const struct mom_boxnode_st *nod = pval;
         unsigned siz = mom_raw_size (nod);
-        MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momnode_cl'>\n"
-                          "*<span class='momconn_cl'>");
+        /// we may want to have vertical and horizontal appearing nodes
+        mom_wexch_puts (wexch, "momc_node(");
         showitem_canvedit_mom (wexch, wexitm, thistatitm,
                                nod->nod_connitm, false);
-        MOM_WEXCH_PRINTF (wexch, "</span>(\n");
+        mom_wexch_puts (wexch, ",\n[");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              MOM_WEXCH_PRINTF (wexch, " ");
-            if (ix % 5 == 0)
-              {
-                if (ix > 0)
-                  MOM_WEXCH_PRINTF (wexch,
-                                    " &nbsp;<sup class='momindex_cl'>%d:</sup>",
-                                    ix);
-              };
+              mom_wexch_puts (wexch, ",");
+            if (ix % 2 == 0)
+              mom_wexch_puts (wexch, "\n");
+            else
+              mom_wexch_puts (wexch, " ");
             showvalue_canvedit_mom (wexch, wexitm, thistatitm,
                                     nod->nod_sons[ix]);
-          }
-        MOM_WEXCH_PRINTF (wexch, ")</span>\n");
+          };
+        mom_wexch_puts (wexch, "])");
       }
       return;
     default:
@@ -206,6 +192,40 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm));
+  struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
+  const struct mom_boxset_st *atset = mom_hashmap_keyset (hmap);
+  MOM_DEBUGPRINTF (web, "dofillcanvas_canvedit webr#%ld atset %s",
+                   wexch->webx_count,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) atset));
+  assert (atset != NULL && atset->va_itype == MOMITY_SET);
+  {
+    unsigned siz = mom_size (atset);
+    MOM_WEXCH_PRINTF (wexch,
+                      " console.debug('dofillcanvas %s:%d siz %d; this=', this,\n"
+                      "   ' momc_display_canvas=',momc_display_canvas);\n",
+                      __FILE__, __LINE__, siz);
+    mom_wexch_puts (wexch, "momc_display_canvas([\n");
+    for (unsigned ix = 0; ix < siz; ix++)
+      {
+        const struct mom_item_st *curatitm = atset->seqitem[ix];
+        const struct mom_hashedvalue_st *curval =
+          mom_hashmap_get (hmap, curatitm);
+        MOM_DEBUGPRINTF (web,
+                         "dofillcanvas_canvedit webr#%ld ix%d curatitm %s curval %s",
+                         wexch->webx_count, ix, mom_item_cstring (curatitm),
+                         mom_value_cstring (curval));
+        assert (curatitm != NULL && curatitm->va_itype == MOMITY_ITEM);
+        assert (curval != NULL);
+        if (ix > 0)
+          mom_wexch_puts (wexch, ",");
+        mom_wexch_puts (wexch, "\n momc_top_entry(");
+        showitem_canvedit_mom (wexch, wexitm, thistatitm, curatitm, false);
+        mom_wexch_puts (wexch, ", ");
+        showvalue_canvedit_mom (wexch, wexitm, thistatitm, curval);
+        mom_wexch_puts (wexch, ")");
+      }
+    mom_wexch_puts (wexch, "]);\n");
+  }
   {
     char modbuf[64];
     memset (modbuf, 0, sizeof (modbuf));

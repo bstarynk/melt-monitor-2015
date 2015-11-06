@@ -215,7 +215,6 @@ doloadpage_microedit_mom (struct mom_webexch_st *wexch,
                                         thistatitm->itm_mtime));
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
   const struct mom_boxset_st *atset = mom_hashmap_keyset (hmap);
-  mom_assovaldata_dyncast (thistatitm->itm_payload);
   MOM_DEBUGPRINTF (web, "doloadpage_microedit webr#%ld atset %s",
                    wexch->webx_count,
                    mom_value_cstring ((struct mom_hashedvalue_st *) atset));

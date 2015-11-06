@@ -19,8 +19,10 @@
 **/
 
 var edicanvas;
+var canvarr;
 var editlog;
 var cleareditbut;
+var momc_count=0;
 
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
@@ -39,6 +41,101 @@ function addupdatehtml(txt) {
     editlog.append(txt);
 }
 
+
+function momc_empty_val() {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "empty_val",
+		str: "",
+		x: false};
+}
+
+function momc_nil_ref() {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "nil_ref",
+		str: "~"};
+}
+
+function momc_nil_val() {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "nil_val",
+		str: "~"};
+}
+
+function momc_item_val(nam) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "item_val",
+		str: nam};
+}
+
+function momc_item_ref(nam) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "item_ref",
+		str: nam};
+}
+
+function momc_int(num) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "int",
+		str: num.toString(),
+		num: num};
+}
+
+function momc_double(str) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "dbl",
+		str: str,
+		dbl: parseFloat(str)};
+}
+
+function momc_string(str) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "str",
+		str: str};
+}
+
+function momc_tuple(arr) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "tuple",
+		arr: arr};
+}
+
+function momc_set(arr) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "set",
+		arr: arr};
+}
+
+function momc_node(conn,sons) {
+    momc_count = momc_count + 1;
+    return {num: momc_count,
+		kind: "node",
+		conn: conn,
+		sons: sons};
+}
+
+function momc_top_entry(attr,val) {
+    var res =  {num: momc_count,
+		    kind: "top_entry",
+		    eattr: attr,
+		    eval: val};
+    console.debug("top_entry res=", res);
+    return res;
+}
+
+function momc_display_canvas(arr) {
+    console.debug("display_canvas arr=", arr);
+    canvarr = arr;
+}
 ////////
 
 function ajaxcanvascript(data) {
@@ -49,7 +146,7 @@ function ajaxcanvascript(data) {
 
 
 $(document).ready(function(){
-    console.debug("document ready");
+    console.debug("canvedit document ready");
     edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
@@ -66,3 +163,5 @@ $(document).ready(function(){
       success: ajaxcanvascript
      });
 });
+
+console.debug("canvedit.js parsed");

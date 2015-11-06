@@ -1699,6 +1699,15 @@ mom_wexch_write (struct mom_webexch_st *wex, const char *buf, size_t size)
     fwrite (buf, size, 1, wex->webx_outfil);
 }
 
+static inline void
+mom_wexch_puts (struct mom_webexch_st *wex, const char *buf)
+{
+  if (wex && buf && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH
+      && wex->webx_outfil)
+    fputs (buf, wex->webx_outfil);
+}
+
+
 // mom_wexch_reply should be used with the owning webexchange item locked
 void
 mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
