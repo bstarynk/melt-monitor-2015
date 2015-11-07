@@ -19,6 +19,7 @@
 **/
 
 var edicanvas;
+var rawcanvas;
 var canvarr;
 var canvctxt;
 var editlog;
@@ -348,10 +349,10 @@ function momc_top_entry(attr,val) {
 function momc_display_canvas(msg,arr) {
     console.group("display_canvas/%s", msg);
     console.trace("display_canvas msg=", msg, " arr=", arr);
-    console.log("display_canvas edicanvas=", edicanvas, " before clear");
-    $(edicanvas).clearCanvas();
+    console.log("display_canvas edicanvas=", edicanvas);
+    edicanvas.clearCanvas();
     console.log("display_canvas cleared edicanvas=", edicanvas, " before drawText");
-    $(edicanvas).drawText({
+    edicanvas.drawText({
 	x: 400, y: 285, fontSize: 10, fontFamily: "Arial",
 	text: msg,
 	fillStyle: '#BBAAEB',
@@ -384,7 +385,9 @@ $(document).ready(function(){
     edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    console.log("edicanvas=", edicanvas, " editlog=", editlog);
+    console.log("ready edicanvas=", edicanvas, " editlog=", editlog);
+    rawcanvas = $(edicanvas);
+    console.log("ready rawcanvas=", rawcanvas);
     cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
 	editlog.html("");
