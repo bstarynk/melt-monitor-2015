@@ -43,7 +43,7 @@ function addupdatehtml(txt) {
     editlog.append(txt);
 };
 
-
+//// see http://earwicker.com/carota/ for inspiration
 var momp_scalar ={ 
     name: "momcscalar",
     font_size: 13,
