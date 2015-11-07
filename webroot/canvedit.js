@@ -43,38 +43,49 @@ function addupdatehtml(txt) {
 };
 
 
-console.warn("the constructors are wrong. FIXME");
+var momp_scalar ={ 
+    name: "momcscalar",
+    font_size: 13,
+    font_family: "Verdana, sans-serif",
+    font_style: 'plain',
+    do_layout: function() {
+	console.log("cscalar-do_layout this=", this);
+	var dim = edicanvas.measureText
+	({fontSize: font_size,
+	  fontFamily: font_family,
+	  fontStyle: font_style,
+	  text: this.str
+	 });
+	console.log ("cscalar-do_layout dim=", dim);
+	return dim;
+    }
+};
+console.log("momp_scalar=", momp_scalar);
 var MomcScalar = function (text) {
     this.str = text;
     momc_count = momc_count+1;
-    this.num = momc_count;
+    this.inum = momc_count;
+    this.prototype = momp_scalar;
     console.log ("MomcScalar this=", this);
-};
-MomcScalar.prototype.name= "momcscalar";
-MomcScalar.prototype.font_size= 13;
-MomcScalar.prototype.font_family= "Verdana, sans-serif";
-MomcScalar.prototype.font_style= 'plain';
-MomcScalar.prototype.do_layout= function() {
-    console.log("cscalar-do_layout this=", this);
-    var dim = edicanvas.measureText
-    ({fontSize: font_size,
-      fontFamily: font_family,
-      fontStyle: font_style,
-      text: this.str
-     });
-    console.log ("cscalar-do_layout dim=", dim);
-    return dim;
 };
 
 
 ////////////////
-var MomcNilRef = function () {
-    MomcScalar("~");
+var momp_nil_ref = {
+    name: "momcnilref",
+    font_size: 13,
+    font_family: "Verdana, sans-serif",
+    font_style: "italics",
 };
-MomcNilRef.prototype.name= "momcnilref";
-MomcNilRef.prototype.font_size= 13;
-MomcNilRef.prototype.font_family= "Verdana, sans-serif";
-MomcNilRef.prototype.font_style= 'italics';
+momp_nil_ref.prototype= momp_scalar;
+console.log("momp_nil_ref=", momp_nil_ref);
+var MomcNilRef = function () {
+    this.str = "~";
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_nil_ref;
+    console.log ("MomcNilRef this=", this);
+};
 
 
 function momc_nil_ref() {
@@ -85,13 +96,21 @@ function momc_nil_ref() {
 
 
 ////////////////
-var MomcNilVal = function () {
-    MomcScalar("~");
+var momp_nil_val = {
+    name: "momcnilval",
+    font_size: 13,
+    font_family: "Verdana, sans-serif",
+    font_style: 'bold'
 };
-MomcNilVal.prototype.name= "momcnilval";
-MomcNilVal.prototype.font_size= 13;
-MomcNilVal.prototype.font_family= "Verdana, sans-serif";
-MomcNilVal.prototype.font_style= 'bold';
+momp_nil_val.prototype = momp_scalar;
+console.log ("momp_nil_val=", momp_nil_val);
+var MomcNilVal = function () {
+    this.str = "~";
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_nil_val;
+    console.log ("MomcNilVal this=", this);
+};
 
 
 function momc_nil_val() {
@@ -101,14 +120,22 @@ function momc_nil_val() {
 };
 
 ////////////////
+var momp_item_val = {
+    name: "momcitemval",
+    font_size: 13,
+    font_family: "Arial, sans-serif",
+    font_style: 'oblique'
+};
+momp_item_val.prototype = momp_scalar;
+console.log ("momp_item_val=", momp_item_val);
 var MomcItemVal = function (nam)
 {
-    MomcScalar(nam);
+    this.str = "~";
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_nil_val;
+    console.log ("MomcNilVal this=", this);
 };
-MomcItemVal.prototype.name= "momcitemval";
-MomcItemVal.prototype.font_size= 13;
-MomcItemVal.prototype.font_family= "Arial, sans-serif";
-MomcItemVal.prototype.font_style= 'oblique';
 
 function momc_item_val(nam) {
     var res= new MomcItemVal(nam);
@@ -117,14 +144,22 @@ function momc_item_val(nam) {
 };
 
 ////////////////
+var momp_item_ref = {
+    name: "momcitemref",
+    font_size: 13,
+    font_family: "Arial, sans-serif",
+    font_style: 'oblique'
+};
+momp_item_ref.prototype = momp_scalar;
+console.log ("momp_item_ref=", momp_item_ref);
 var MomcItemRef = function (nam)
 {
-    MomcItemVal(nam);
+    this.str = "nam";
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_item_ref;
+    console.log ("MomcNilVal this=", this);
 };
-MomcItemRef.prototype.name= "momcitemref";
-MomcItemRef.prototype.font_size= 13;
-MomcItemRef.prototype.font_family= "Arial, sans-serif";
-MomcItemRef.prototype.font_style= 'oblique';
 function momc_item_ref(nam) {
     var res = new MomcItemRef(nam);
     console.log ("momc_item_ref res=", res);
@@ -132,13 +167,22 @@ function momc_item_ref(nam) {
 };
 
 ////////////////
-var MomcInt = function (num) {
-    MomcScalar(num.toString());
+var momp_int = {
+    name: "momcint",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: 'plain'
 };
-MomcInt.prototype.name= "momcint";
-MomcInt.prototype.font_size= 12;
-MomcInt.prototype.font_family= "Courier, Lucida";
-MomcInt.prototype.font_style= 'plain';
+momp_int.prototype = momp_scalar;
+console.log ("momp_int=", momp_int);
+var MomcInt = function (num) {
+    this.str = num.toString();
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.number = num;
+    this.prototype = momp_int;
+    console.log ("MomcInt this=", this);
+};
 function momc_int(num) {
     var res = new MomcInt(num);
     console.log ("momc_int res=", res);
@@ -146,14 +190,22 @@ function momc_int(num) {
 };
 
 ////////////////
-var MomcDouble = function (str) {
-    MomcScalar(str);
-    this.num = parseFloat(str);
+var momp_double = {
+    name: "momcdouble",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: 'plain'
 };
-MomcDouble.prototype.name= "momcdouble";
-MomcDouble.prototype.font_size= 12;
-MomcDouble.prototype.font_family= "Courier, Lucida";
-MomcDouble.prototype.font_style= 'plain';
+momp_double.prototype = momp_scalar;
+console.log ("momp_double=", momp_double);
+var MomcDouble = function (str) {
+    this.str = str;
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.number = str.toDouble();
+    this.prototype = momp_double;
+    console.log ("MomcDouble this=", this);
+};
 function momc_double(str) {
     var res= new MomcDouble(str);
     console.log ("momc_double res=", res);
@@ -161,14 +213,21 @@ function momc_double(str) {
 };
 
 ////////////////
-
-var MomcString = function (str) {
-    MomcScalar(str);
+var momp_string = {
+    name: "momcstring",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: 'plain'
 };
-MomcString.prototype.name= "momcstring";
-MomcString.prototype.font_size= 12;
-MomcString.prototype.font_family= "Courier, Lucida";
-MomcString.prototype.font_style= 'plain';
+momp_string.prototype = momp_scalar;
+console.log ("momp_string=", momp_string);
+var MomcString = function (str) {
+    this.str = str;
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_string;
+    console.log ("MomcString this=", this);
+};
 
 function momc_string(str) {
     var res = new MomcString(str);
@@ -177,25 +236,30 @@ function momc_string(str) {
 };
 
 ////////////////
-
-var MomcSequence = function (arr) {
-    this.seq = arr;
-    momc_count = momc_count+1;
-    this.num = momc_count;
+var momp_sequence = {
+    name: "momcsequence",
+    do_layout: function () {
+	console.log("csequence-do_layout this=", this);
+    }
 };
-MomcSequence.prototype.name= "momcsequence";
-MomcSequence.prototype.do_layout= function() {
-    console.log("csequence-do_layout this=", this);
-};
+console.log ("momp_sequence=", momp_sequence);
 
 ////////////////
-var MomcTuple = function (arr) {
-    MomcSequence(arr);
+var momp_tuple = {
+    name: "momctuple",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: 'plain'
 };
-MomcTuple.prototype.name= "momctuple";
-MomcTuple.prototype.font_size= 12;
-MomcTuple.prototype.font_family= "Courier, Lucida";
-MomcTuple.prototype.font_style= 'plain';
+momp_tuple.prototype= momp_sequence;
+console.log ("momp_tuple=", momp_tuple);
+var MomcTuple = function (arr) {
+    this.arr = arr;
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_tuple;
+    console.log ("MomcTuple this=", this);
+};
 function momc_tuple(arr) {
     var res = new MomcTuple(arr);
     console.log ("momc_tuple res=", res);
@@ -203,13 +267,21 @@ function momc_tuple(arr) {
 };
 
 ////////////////
-var MomcSet = function (arr) {
-    MomcSequence(arr);
+var momp_set = {
+    name: "momcset",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: 'plain'
 };
-MomcSet.prototype.name= "momcset";
-MomcSet.prototype.font_size= 12;
-MomcSet.prototype.font_family= "Courier, Lucida";
-MomcSet.prototype.font_style= 'plain';
+momp_set.prototype= momp_sequence;
+console.log ("momp_set=", momp_set);
+var MomcSet = function (arr) {
+    this.arr = arr;
+    momc_count = momc_count+1;
+    this.inum = momc_count;
+    this.prototype = momp_set;
+    console.log ("MomcSet this=", this);
+};
 function momc_set(arr) {
     var res= new MomcSet(arr);
     console.log ("momc_set res=", res);
@@ -217,14 +289,23 @@ function momc_set(arr) {
 };
 
 ////////////////
-var MomcNode = function (conn, arr) {
-    MomcSequence(arr);
-    this.conn = conn;
+var momp_node = {
+    name: "momcnode",
+    font_size: 12,
+    font_family: "Courier, Lucida",
+    font_style: "plain",
+    do_layout: function() {
+	console.log("cnode-do_layout this=", this);
+    }
 };
-MomcNode.prototype.name= "momcset";
-MomcNode.prototype.font_size= 12;
-MomcNode.prototype.font_family= "Courier, Lucida";
-MomcNode.prototype.font_style= 'plain';
+console.log ("momp_node=", momp_node);
+var MomcNode = function (conn, arr) {
+    this.conn = conn;
+    this.arr = arr;
+    this.inum = momc_count;
+    this.prototype = momp_node;
+    console.log ("MomcNode this=", this);
+};
 function momc_node(conn,sons) {
     var res= new MomcNode(conn,sons);
     console.log ("momc_node res=", res);
@@ -232,39 +313,33 @@ function momc_node(conn,sons) {
 };
 
 ////////////////
+var momp_top_entry = {
+    name: "momctopentry",
+    font_size: 12,
+    font_family: "Arial, sans-serif",
+    font_style: 'plain',
+    do_layout: function () {
+	console.log ("top_entry-do_layout this=", this,
+		     " edicanvas=", edicanvas);
+	var dimdegree = edicanvas.measureText
+	({fontSize: font_size,
+	  fontFamily: font_family,
+	  fontStyle: font_style,
+	  text: "°"
+	 });
+	console.log ("top_entry-do_layout dimdegree=", dimdegree);
+    }
+};
+console.log ("momp_top_entry=", momp_top_entry);
 var MomcTopEntry = function (eattr, eval) {
     this.entattr = eattr;
     this.entval = eval;
     momc_count = momc_count+1;
-    this.num = momc_count;
+    this.inum = momc_count;
+    this.prototype = momp_top_entry;
+    console.log ("MomcTopEntry this=", this);
 };
 
-MomcTopEntry.prototype.name= "momctopentry";
-MomcTopEntry.prototype.font_size= 12;
-MomcTopEntry.prototype.font_family= "Arial, sans-serif";
-MomcTopEntry.prototype.font_style= 'plain';
-MomcTopEntry.prototype.do_layout= function () {
-    console.log ("top_entry-do_layout this=", this, " edicanvas=", edicanvas);
-    console.trace();
-    var dimleft = edicanvas.measureText
-    ({fontSize: font_size,
-      fontFamily: font_family,
-      fontStyle: font_style,
-      text: "°"
-     });
-    console.log ("top-entry-do_layout dimleft=", dimleft);
-    var dimmiddle = edicanvas.measureText
-    ({fontSize: font_size,
-      fontFamily: font_family,
-      fontStyle: font_style,
-      text: ":"
-     });
-    console.log ("node-do_layout dimmiddle=", dimmiddle);
-    this.entattr.do_layout();
-    console.log ("node-do_layout after entattr");
-    this.entval.do_layout();
-    console.log ("node-do_layout after entval");
-};  
 function momc_top_entry(attr,val) {
     var res =  new MomcTopEntry(attr, val);
     console.log("top_entry res=", res);
