@@ -346,10 +346,12 @@ function momc_top_entry(attr,val) {
 
 ////////////////
 function momc_display_canvas(msg,arr) {
-    console.log("display_canvas msg=", msg, " arr=", arr, " canvedit=", canvedit);
-    canvedit.clearCanvas();
-    console.log("display_canvas cleared canvedit=", canvedit);
-    canvedit.drawText({
+    console.group("display_canvas/%s", msg);
+    console.log("display_canvas msg=", msg, " arr=", arr);
+    console.log("display_canvas edicanvas=", edicanvas, " before clear");
+    edicanvas.clearCanvas();
+    console.log("display_canvas cleared edicanvas=", edicanvas, " before drawText");
+    edicanvas.drawText({
 	x: 333, y: 585, fontSize: 10, fontFamily: "Arial",
 	text: msg,
 	fillStyle: '#BBAAEB'
@@ -364,7 +366,8 @@ function momc_display_canvas(msg,arr) {
 	    var dim = ob.do_layout();
 	    console.log ("display_canvas dim=", dim);
 	};
-    console.log("display_canvas end msg=", msg);    
+    console.log("display_canvas end msg=", msg, " l=", l);
+    console.groupEnd();
 };
 ////////
 
@@ -380,7 +383,7 @@ $(document).ready(function(){
     edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    console.log("edicanvas=", edicanvas);
+    console.log("edicanvas=", edicanvas, " editlog=", editlog);
     cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
 	editlog.html("");

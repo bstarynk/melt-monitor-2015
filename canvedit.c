@@ -212,7 +212,8 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
       char timbuf[64];
       memset (timbuf, 0, sizeof (timbuf));
       strftime (timbuf, sizeof (timbuf) - 1, "%T", &nowtm);
-      MOM_WEXCH_PRINTF (wexch, "momc_display_canvas('%s',[\n", timbuf);
+      MOM_WEXCH_PRINTF (wexch, "momc_display_canvas('%s#%ld',[\n", timbuf,
+                        wexch->webx_count);
     }
     for (unsigned ix = 0; ix < siz; ix++)
       {
@@ -233,7 +234,7 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
         showvalue_canvedit_mom (wexch, wexitm, thistatitm, curval);
         mom_wexch_puts (wexch, ")");
       }
-    mom_wexch_puts (wexch, "]); ////////\n");
+    mom_wexch_puts (wexch, "]); ////////end-display-canvas\n");
     MOM_WEXCH_PRINTF (wexch,
                       "console.log('dofillcanvas %s:%d this=', this);\n",
                       __FILE__, __LINE__);
