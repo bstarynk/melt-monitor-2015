@@ -347,14 +347,15 @@ function momc_top_entry(attr,val) {
 ////////////////
 function momc_display_canvas(msg,arr) {
     console.group("display_canvas/%s", msg);
-    console.log("display_canvas msg=", msg, " arr=", arr);
+    console.trace("display_canvas msg=", msg, " arr=", arr);
     console.log("display_canvas edicanvas=", edicanvas, " before clear");
-    edicanvas.clearCanvas();
+    $(edicanvas).clearCanvas();
     console.log("display_canvas cleared edicanvas=", edicanvas, " before drawText");
-    edicanvas.drawText({
-	x: 333, y: 585, fontSize: 10, fontFamily: "Arial",
+    $(edicanvas).drawText({
+	x: 400, y: 285, fontSize: 10, fontFamily: "Arial",
 	text: msg,
-	fillStyle: '#BBAAEB'
+	fillStyle: '#BBAAEB',
+	strokeStyle: '#3A3F41'
     });
     console.log("display_canvas drawn msg=", msg);
     canvarr = arr;
