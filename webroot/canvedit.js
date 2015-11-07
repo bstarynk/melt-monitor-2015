@@ -65,10 +65,9 @@ var MomcScalar = function (text) {
     this.str = text;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_scalar;
     console.log ("MomcScalar this=", this);
 };
-
+MomcScalar.prototype = momp_scalar;
 
 ////////////////
 var momp_nil_ref = {
@@ -83,10 +82,9 @@ var MomcNilRef = function () {
     this.str = "~";
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_nil_ref;
     console.log ("MomcNilRef this=", this);
 };
-
+MomcNilRef.prototype = momp_nil_ref;
 
 function momc_nil_ref() {
     var res = new MomcNilRef();
@@ -102,16 +100,16 @@ var momp_nil_val = {
     font_family: "Verdana, sans-serif",
     font_style: 'bold'
 };
-momp_nil_val.prototype = momp_scalar;
+momp_nil_val.__proto__ = momp_scalar;
 console.log ("momp_nil_val=", momp_nil_val);
 var MomcNilVal = function () {
     this.str = "~";
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_nil_val;
+    //this.__proto__ = momp_nil_val;
     console.log ("MomcNilVal this=", this);
 };
-
+MomcNilVal.prototype = momp_nil_val;
 
 function momc_nil_val() {
     var res = new MomcNilVal();
@@ -133,10 +131,9 @@ var MomcItemVal = function (nam)
     this.str = "~";
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_nil_val;
     console.log ("MomcNilVal this=", this);
 };
-
+MomcItemVal.prototype = momp_item_val;
 function momc_item_val(nam) {
     var res= new MomcItemVal(nam);
     console.log ("momc_item_val res=", res);
@@ -150,16 +147,16 @@ var momp_item_ref = {
     font_family: "Arial, sans-serif",
     font_style: 'oblique'
 };
-momp_item_ref.prototype = momp_scalar;
+momp_item_ref.__proto__ = momp_scalar;
 console.log ("momp_item_ref=", momp_item_ref);
 var MomcItemRef = function (nam)
 {
-    this.str = "nam";
+    this.str = nam;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_item_ref;
-    console.log ("MomcNilVal this=", this);
+    console.log ("MomcItemRef this=", this);
 };
+MomcItemRef.prototype = momp_item_ref;
 function momc_item_ref(nam) {
     var res = new MomcItemRef(nam);
     console.log ("momc_item_ref res=", res);
@@ -173,16 +170,16 @@ var momp_int = {
     font_family: "Courier, Lucida",
     font_style: 'plain'
 };
-momp_int.prototype = momp_scalar;
+momp_int.__proto__ = momp_scalar;
 console.log ("momp_int=", momp_int);
 var MomcInt = function (num) {
     this.str = num.toString();
     momc_count = momc_count+1;
     this.inum = momc_count;
     this.number = num;
-    this.prototype = momp_int;
     console.log ("MomcInt this=", this);
 };
+MomcInt.prototype = momp_int;
 function momc_int(num) {
     var res = new MomcInt(num);
     console.log ("momc_int res=", res);
@@ -196,16 +193,16 @@ var momp_double = {
     font_family: "Courier, Lucida",
     font_style: 'plain'
 };
-momp_double.prototype = momp_scalar;
+momp_double.__proto__ = momp_scalar;
 console.log ("momp_double=", momp_double);
 var MomcDouble = function (str) {
     this.str = str;
     momc_count = momc_count+1;
     this.inum = momc_count;
     this.number = str.toDouble();
-    this.prototype = momp_double;
     console.log ("MomcDouble this=", this);
 };
+MomcDouble.prototype = momp_double;
 function momc_double(str) {
     var res= new MomcDouble(str);
     console.log ("momc_double res=", res);
@@ -219,15 +216,15 @@ var momp_string = {
     font_family: "Courier, Lucida",
     font_style: 'plain'
 };
-momp_string.prototype = momp_scalar;
+momp_string.__proto__ = momp_scalar;
 console.log ("momp_string=", momp_string);
 var MomcString = function (str) {
     this.str = str;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_string;
     console.log ("MomcString this=", this);
 };
+MomcString.prototype = momp_string;
 
 function momc_string(str) {
     var res = new MomcString(str);
@@ -251,15 +248,15 @@ var momp_tuple = {
     font_family: "Courier, Lucida",
     font_style: 'plain'
 };
-momp_tuple.prototype= momp_sequence;
+momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
 var MomcTuple = function (arr) {
     this.arr = arr;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_tuple;
     console.log ("MomcTuple this=", this);
 };
+MomcTuple.prototype = momp_tuple;
 function momc_tuple(arr) {
     var res = new MomcTuple(arr);
     console.log ("momc_tuple res=", res);
@@ -273,15 +270,15 @@ var momp_set = {
     font_family: "Courier, Lucida",
     font_style: 'plain'
 };
-momp_set.prototype= momp_sequence;
+momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
 var MomcSet = function (arr) {
     this.arr = arr;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_set;
     console.log ("MomcSet this=", this);
 };
+MomcSet.prototype = momp_set;
 function momc_set(arr) {
     var res= new MomcSet(arr);
     console.log ("momc_set res=", res);
@@ -303,9 +300,9 @@ var MomcNode = function (conn, arr) {
     this.conn = conn;
     this.arr = arr;
     this.inum = momc_count;
-    this.prototype = momp_node;
     console.log ("MomcNode this=", this);
 };
+MomcNode.prototype = momp_node;
 function momc_node(conn,sons) {
     var res= new MomcNode(conn,sons);
     console.log ("momc_node res=", res);
@@ -336,9 +333,10 @@ var MomcTopEntry = function (eattr, eval) {
     this.entval = eval;
     momc_count = momc_count+1;
     this.inum = momc_count;
-    this.prototype = momp_top_entry;
+//    this.__proto__ = momp_top_entry;
     console.log ("MomcTopEntry this=", this);
 };
+MomcTopEntry.prototype = momp_top_entry;
 
 function momc_top_entry(attr,val) {
     var res =  new MomcTopEntry(attr, val);
@@ -359,12 +357,14 @@ function momc_display_canvas(msg,arr) {
     console.log("display_canvas drawn msg=", msg);
     canvarr = arr;
     var l = arr.length;
-    if (false) for (var i=0; i<l; i++) {
-	ob = arr[i];
-	console.log ("display_canvas ob=", ob, " i#", i);
-	var dim = ob.do_layout();
-	console.log ("display_canvas dim=", dim);
-    }
+    if (false)
+	for (var i=0; i<l; i++) {
+	    ob = arr[i];
+	    console.log ("display_canvas ob=", ob, " i#", i);
+	    var dim = ob.do_layout();
+	    console.log ("display_canvas dim=", dim);
+	};
+    console.log("display_canvas end msg=", msg);    
 };
 ////////
 

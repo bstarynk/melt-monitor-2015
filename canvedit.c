@@ -233,23 +233,25 @@ dofillcanvas_canvedit_mom (struct mom_webexch_st *wexch,
         showvalue_canvedit_mom (wexch, wexitm, thistatitm, curval);
         mom_wexch_puts (wexch, ")");
       }
-    mom_wexch_puts (wexch, "]);\n\n");
+    mom_wexch_puts (wexch, "]); ////////\n");
+    MOM_WEXCH_PRINTF (wexch,
+                      "console.log('dofillcanvas %s:%d this=', this);\n",
+                      __FILE__, __LINE__);
   }
   {
     char modbuf[64];
     memset (modbuf, 0, sizeof (modbuf));
-    double nowd = mom_clock_time(CLOCK_REALTIME);
+    double nowd = mom_clock_time (CLOCK_REALTIME);
     MOM_WEXCH_PRINTF (wexch, "addupdatehtml('displayed <tt>%s</tt>');\n",
                       mom_strftime_centi (modbuf, sizeof (modbuf) - 1,
                                           "%c %Z", nowd));
     MOM_WEXCH_PRINTF (wexch,
                       " console.log('dofillcanvas %s:%d done %s this=', this);\n",
-                      __FILE__, __LINE__, 
+                      __FILE__, __LINE__,
                       mom_strftime_centi (modbuf, sizeof (modbuf) - 1,
-                                          "%T.__",
-					  nowd));
-    MOM_DEBUGPRINTF(web, "dofillcanvas_canvedit webr#%ld nowd %.4f",
-		    wexch->webx_count, nowd);
+                                          "%T.__", nowd));
+    MOM_DEBUGPRINTF (web, "dofillcanvas_canvedit webr#%ld nowd %.4f",
+                     wexch->webx_count, nowd);
   }
   mom_wexch_reply (wexch, HTTP_OK,
                    /* could be "text/javascript", see
