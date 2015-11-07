@@ -320,9 +320,9 @@ var momp_top_entry = {
 	console.log ("top_entry-do_layout this=", this,
 		     " edicanvas=", edicanvas);
 	var dimdegree = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
+	({fontSize: this.font_size,
+	  fontFamily: this.font_family,
+	  fontStyle: this.font_style,
 	  text: "°"
 	 });
 	console.log ("top_entry-do_layout dimdegree=", dimdegree);
@@ -353,21 +353,28 @@ function momc_display_canvas(msg,arr) {
     edicanvas.clearCanvas();
     console.log("display_canvas cleared edicanvas=", edicanvas, " before drawText");
     edicanvas.drawText({
-	x: 400, y: 285, fontSize: 10, fontFamily: "Arial",
+	x: 600, y: 185, fontSize: 14, fontFamily: "Arial",
 	text: msg,
 	fillStyle: '#BBAAEB',
 	strokeStyle: '#3A3F41'
     });
     console.log("display_canvas drawn msg=", msg);
+    var dimhello = edicanvas.measureText
+    ({fontSize: 15,
+      fontFamily: "Helvetica",
+      fontStyle: "bold",
+      text: ("hello pf..." + msg)
+     });
+    console.log("display_canvas dimhello=", dimhello);
+/// dim is a complex object, but contains numerical height: & width: fields.
     canvarr = arr;
     var l = arr.length;
-    if (false)
-	for (var i=0; i<l; i++) {
-	    ob = arr[i];
-	    console.log ("display_canvas ob=", ob, " i#", i);
-	    var dim = ob.do_layout();
-	    console.log ("display_canvas dim=", dim);
-	};
+    for (var i=0; i<l; i++) {
+	ob = arr[i];
+	console.log ("display_canvas ob=", ob, " i#", i);
+	var dim = ob.do_layout();
+	console.log ("display_canvas dim=", dim);
+    };
     console.log("display_canvas end msg=", msg, " l=", l);
     console.groupEnd();
 };
@@ -382,6 +389,10 @@ function ajaxcanvascript(data) {
 
 $(document).ready(function(){
     console.log("canvedit document ready");
+    // see http://stackoverflow.com/a/10556743/841108
+    window.onerror = function(msg,url,line,col,error) {
+	console.trace("window error ", url, ":", line, ": ", msg, " /", error);
+    }
     edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
