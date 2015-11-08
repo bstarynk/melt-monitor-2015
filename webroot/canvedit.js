@@ -42,8 +42,8 @@ function addupdatehtml(txt) {
     editlog.append(txt);
 };
 
-/// inspired by https://github.com/danielearwicker/carota/blob/master/src/text.js
-/// Carota,which has an MIT license, by Daniel Earwicker.
+/// nearly copied from https://github.com/danielearwicker/carota/blob/master/src/text.js
+/// in Carota, which has an MIT license, by Daniel Earwicker.
 var nbsp = String.fromCharCode(160);
 /*  Returns width, height, ascent, descent in pixels for the specified text and font.
     The ascent and descent are measured from the baseline. Note that we add/remove
@@ -107,12 +107,15 @@ var measureText = function(text, styleprops)
 
 var momp_scalar ={ 
     name: "momcscalar",
-    my_font_size: 13,
+    my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
     my_font_style: 'plain',
     do_layout: function() {
 	console.log("cscalar-do_layout this=", this);
-	var dim = null;
+	var dim = measureText(this.str,
+			      {fontFamily: this.my_font_family,
+			       fontSize: this.my_font_size,
+			       fontStyle: this.my_font_style});
 	console.log ("cscalar-do_layout dim=", dim);
 	return dim;
     }
@@ -129,7 +132,7 @@ MomcScalar.prototype = momp_scalar;
 ////////////////
 var momp_nil_ref = {
     name: "momcnilref",
-    my_font_size: 13,
+    my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
     my_font_style: "italics",
 };
@@ -153,7 +156,7 @@ function momc_nil_ref() {
 ////////////////
 var momp_nil_val = {
     name: "momcnilval",
-    my_font_size: 13,
+    my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
     my_font_style: 'bold'
 };
@@ -177,7 +180,7 @@ function momc_nil_val() {
 ////////////////
 var momp_item_val = {
     name: "momcitemval",
-    my_font_size: 13,
+    my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
     my_font_style: 'oblique'
 };
@@ -200,7 +203,7 @@ function momc_item_val(nam) {
 ////////////////
 var momp_item_ref = {
     name: "momcitemref",
-    my_font_size: 13,
+    my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
     my_font_style: 'oblique'
 };
@@ -223,7 +226,7 @@ function momc_item_ref(nam) {
 ////////////////
 var momp_int = {
     name: "momcint",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: 'plain'
 };
@@ -246,7 +249,7 @@ function momc_int(num) {
 ////////////////
 var momp_double = {
     name: "momcdouble",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: 'plain'
 };
@@ -269,7 +272,7 @@ function momc_double(str) {
 ////////////////
 var momp_string = {
     name: "momcstring",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: 'plain'
 };
@@ -301,7 +304,7 @@ console.log ("momp_sequence=", momp_sequence);
 ////////////////
 var momp_tuple = {
     name: "momctuple",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: 'plain'
 };
@@ -323,7 +326,7 @@ function momc_tuple(arr) {
 ////////////////
 var momp_set = {
     name: "momcset",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: 'plain'
 };
@@ -345,7 +348,7 @@ function momc_set(arr) {
 ////////////////
 var momp_node = {
     name: "momcnode",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: "plain",
     do_layout: function() {
@@ -369,12 +372,16 @@ function momc_node(conn,sons) {
 ////////////////
 var momp_top_entry = {
     name: "momctopentry",
-    my_font_size: 12,
+    my_font_size: '12pt',
     my_font_family: "Arial, sans-serif",
     my_font_style: 'plain',
     do_layout: function () {
 	console.log ("top_entry-do_layout this=", this,
 		     " rawcanvas=", rawcanvas);
+	var dimattr = this.entattr.do_layout();
+	console.log ("top_entry-do_layout dimattr=", dimattr);
+	var dimval = this.entattr.do_layout();
+	console.log ("top_entry-do_layout dimval=", dimval);
     }
 };
 console.log ("momp_top_entry=", momp_top_entry);
@@ -403,6 +410,8 @@ function momc_display_canvas(msg,arr) {
     console.log("display_canvas before dim");
     var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
     console.log("display_canvas got dim=", dim);
+    var otherdim = measureText(msg + "!pf..j", {fontFamily: "Courier", fontSize: "25pt"});
+    console.log("display_canvas got otherdim=", otherdim);
     canvarr = arr;
     var l = arr.length;
     for (var i=0; i<l; i++) {
