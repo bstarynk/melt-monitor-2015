@@ -18,7 +18,6 @@
       <http://www.gnu.org/licenses/>.
 **/
 
-var edicanvas;
 var rawcanvas;
 var canvarr;
 var canvctxt;
@@ -43,20 +42,77 @@ function addupdatehtml(txt) {
     editlog.append(txt);
 };
 
-//// see http://earwicker.com/carota/ for inspiration
+/// inspired by https://github.com/danielearwicker/carota/blob/master/src/text.js
+/// Carota,which has an MIT license, by Daniel Earwicker.
+var nbsp = String.fromCharCode(160);
+/*  Returns width, height, ascent, descent in pixels for the specified text and font.
+    The ascent and descent are measured from the baseline. Note that we add/remove
+    all the DOM elements used for a measurement each time - this is not a significant
+    part of the cost, and if we left the hidden measuring node in the DOM then it
+    would affect the dimensions of the whole page.
+ */
+var measureText = function(text, styleprops)
+{
+    console.log ("measureText text=", text, " styleprops=", styleprops);
+    var span, block, div;
+
+    span = document.createElement('span');
+    block = document.createElement('div');
+    div = document.createElement('div');
+
+    block.style.display = 'inline-block';
+    block.style.width = '1px';
+    block.style.height = '0';
+
+    div.style.visibility = 'hidden';
+    div.style.position = 'absolute';
+    div.style.top = '0';
+    div.style.left = '0';
+    div.style.width = '550px';
+    div.style.height = '300px';
+
+    div.appendChild(span);
+    div.appendChild(block);
+    document.body.appendChild(div);
+    try {
+	for (var p in styleprops) {
+	    if (styleprops.hasOwnProperty(p)) {
+		console.log("measureText p=", p, " : ", styleprops[p]);
+		span.style[p] = styleprops[p];
+	    }
+	}
+	console.log("measureText span=", span, " spanfont=", span.getAttribute("font"),
+		    " spanstyle=", span.style);
+        span.innerHTML = '';
+        span.appendChild(document.createTextNode(text.replace(/\s/g, nbsp)));
+
+        var result = {};
+        block.style.verticalAlign = 'baseline';
+        result.ascent = (block.offsetTop - span.offsetTop);
+        block.style.verticalAlign = 'bottom';
+        result.height = (block.offsetTop - span.offsetTop);
+        result.descent = result.height - result.ascent;
+        result.width = span.offsetWidth;
+    } catch (exc) {
+	console.warn ("measureText error text=", text, " styleprops=", styleprops, " exc=", exc);
+    } finally {
+        div.parentNode.removeChild(div);
+        div = null;
+    }
+    console.log ("measureText text=", text, " result=", result);
+    return result;
+};
+
+////////////////
+
 var momp_scalar ={ 
     name: "momcscalar",
-    font_size: 13,
-    font_family: "Verdana, sans-serif",
-    font_style: 'plain',
+    my_font_size: 13,
+    my_font_family: "Verdana, sans-serif",
+    my_font_style: 'plain',
     do_layout: function() {
 	console.log("cscalar-do_layout this=", this);
-	var dim = edicanvas.measureText
-	({fontSize: font_size,
-	  fontFamily: font_family,
-	  fontStyle: font_style,
-	  text: this.str
-	 });
+	var dim = null;
 	console.log ("cscalar-do_layout dim=", dim);
 	return dim;
     }
@@ -73,9 +129,9 @@ MomcScalar.prototype = momp_scalar;
 ////////////////
 var momp_nil_ref = {
     name: "momcnilref",
-    font_size: 13,
-    font_family: "Verdana, sans-serif",
-    font_style: "italics",
+    my_font_size: 13,
+    my_font_family: "Verdana, sans-serif",
+    my_font_style: "italics",
 };
 momp_nil_ref.prototype= momp_scalar;
 console.log("momp_nil_ref=", momp_nil_ref);
@@ -97,9 +153,9 @@ function momc_nil_ref() {
 ////////////////
 var momp_nil_val = {
     name: "momcnilval",
-    font_size: 13,
-    font_family: "Verdana, sans-serif",
-    font_style: 'bold'
+    my_font_size: 13,
+    my_font_family: "Verdana, sans-serif",
+    my_font_style: 'bold'
 };
 momp_nil_val.__proto__ = momp_scalar;
 console.log ("momp_nil_val=", momp_nil_val);
@@ -121,9 +177,9 @@ function momc_nil_val() {
 ////////////////
 var momp_item_val = {
     name: "momcitemval",
-    font_size: 13,
-    font_family: "Arial, sans-serif",
-    font_style: 'oblique'
+    my_font_size: 13,
+    my_font_family: "Arial, sans-serif",
+    my_font_style: 'oblique'
 };
 momp_item_val.prototype = momp_scalar;
 console.log ("momp_item_val=", momp_item_val);
@@ -144,9 +200,9 @@ function momc_item_val(nam) {
 ////////////////
 var momp_item_ref = {
     name: "momcitemref",
-    font_size: 13,
-    font_family: "Arial, sans-serif",
-    font_style: 'oblique'
+    my_font_size: 13,
+    my_font_family: "Arial, sans-serif",
+    my_font_style: 'oblique'
 };
 momp_item_ref.__proto__ = momp_scalar;
 console.log ("momp_item_ref=", momp_item_ref);
@@ -167,9 +223,9 @@ function momc_item_ref(nam) {
 ////////////////
 var momp_int = {
     name: "momcint",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: 'plain'
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: 'plain'
 };
 momp_int.__proto__ = momp_scalar;
 console.log ("momp_int=", momp_int);
@@ -190,9 +246,9 @@ function momc_int(num) {
 ////////////////
 var momp_double = {
     name: "momcdouble",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: 'plain'
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: 'plain'
 };
 momp_double.__proto__ = momp_scalar;
 console.log ("momp_double=", momp_double);
@@ -213,9 +269,9 @@ function momc_double(str) {
 ////////////////
 var momp_string = {
     name: "momcstring",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: 'plain'
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: 'plain'
 };
 momp_string.__proto__ = momp_scalar;
 console.log ("momp_string=", momp_string);
@@ -245,9 +301,9 @@ console.log ("momp_sequence=", momp_sequence);
 ////////////////
 var momp_tuple = {
     name: "momctuple",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: 'plain'
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: 'plain'
 };
 momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
@@ -267,9 +323,9 @@ function momc_tuple(arr) {
 ////////////////
 var momp_set = {
     name: "momcset",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: 'plain'
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: 'plain'
 };
 momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
@@ -289,9 +345,9 @@ function momc_set(arr) {
 ////////////////
 var momp_node = {
     name: "momcnode",
-    font_size: 12,
-    font_family: "Courier, Lucida",
-    font_style: "plain",
+    my_font_size: 12,
+    my_font_family: "Courier, Lucida",
+    my_font_style: "plain",
     do_layout: function() {
 	console.log("cnode-do_layout this=", this);
     }
@@ -313,19 +369,12 @@ function momc_node(conn,sons) {
 ////////////////
 var momp_top_entry = {
     name: "momctopentry",
-    font_size: 12,
-    font_family: "Arial, sans-serif",
-    font_style: 'plain',
+    my_font_size: 12,
+    my_font_family: "Arial, sans-serif",
+    my_font_style: 'plain',
     do_layout: function () {
 	console.log ("top_entry-do_layout this=", this,
-		     " edicanvas=", edicanvas);
-	var dimdegree = edicanvas.measureText
-	({fontSize: this.font_size,
-	  fontFamily: this.font_family,
-	  fontStyle: this.font_style,
-	  text: "°"
-	 });
-	console.log ("top_entry-do_layout dimdegree=", dimdegree);
+		     " rawcanvas=", rawcanvas);
     }
 };
 console.log ("momp_top_entry=", momp_top_entry);
@@ -348,25 +397,12 @@ function momc_top_entry(attr,val) {
 ////////////////
 function momc_display_canvas(msg,arr) {
     console.group("display_canvas/%s", msg);
-    console.trace("display_canvas msg=", msg, " arr=", arr);
-    console.log("display_canvas edicanvas=", edicanvas);
-    edicanvas.clearCanvas();
-    console.log("display_canvas cleared edicanvas=", edicanvas, " before drawText");
-    edicanvas.drawText({
-	x: 600, y: 185, fontSize: 14, fontFamily: "Arial",
-	text: msg,
-	fillStyle: '#BBAAEB',
-	strokeStyle: '#3A3F41'
-    });
-    console.log("display_canvas drawn msg=", msg);
-    var dimhello = edicanvas.measureText
-    ({fontSize: 15,
-      fontFamily: "Helvetica",
-      fontStyle: "bold",
-      text: ("hello pf..." + msg)
-     });
-    console.log("display_canvas dimhello=", dimhello);
-/// dim is a complex object, but contains numerical height: & width: fields.
+    console.log("display_canvas msg=", msg, " arr=", arr);
+    console.log("display_canvas rawcanvas=", rawcanvas);
+    console.trace();
+    console.log("display_canvas before dim");
+    var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
+    console.log("display_canvas got dim=", dim);
     canvarr = arr;
     var l = arr.length;
     for (var i=0; i<l; i++) {
@@ -393,11 +429,10 @@ $(document).ready(function(){
     window.onerror = function(msg,url,line,col,error) {
 	console.trace("window error ", url, ":", line, ": ", msg, " /", error);
     }
-    edicanvas = $("#canvedit_id");
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
-    console.log("ready edicanvas=", edicanvas, " editlog=", editlog);
-    rawcanvas = $(edicanvas);
+    console.log("ready editlog=", editlog);
+    rawcanvas = $("#canvedit_id");
     console.log("ready rawcanvas=", rawcanvas);
     cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
