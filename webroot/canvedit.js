@@ -33,8 +33,7 @@ function htmlEncode(value){
 };
 
 function htmlDecode(value){
-  return $('<div/>').html(value).text();
-};
+  return $('<div/>').html(value).text();};
 
 
 function addupdatehtml(txt) {
@@ -76,7 +75,7 @@ var measureText = function(text, styleprops)
     document.body.appendChild(div);
     try {
 	for (var p in styleprops) {
-	    if (styleprops.hasOwnProperty(p)) {
+	    if (styleprops.hasOwnProperty(p) && styleprops[p]) {
 		console.log("measureText p=", p, " : ", styleprops[p]);
 		span.style[p] = styleprops[p];
 	    }
@@ -93,6 +92,10 @@ var measureText = function(text, styleprops)
         result.height = (block.offsetTop - span.offsetTop);
         result.descent = result.height - result.ascent;
         result.width = span.offsetWidth;
+	result.__proto__ = {
+	    toString: function () { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
+				    + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
+	}
     } catch (exc) {
 	console.warn ("measureText error text=", text, " styleprops=", styleprops, " exc=", exc);
     } finally {
@@ -110,13 +113,31 @@ var momp_scalar ={
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
     my_font_style: 'plain',
+    my_color: '#0B372C',
     do_layout: function() {
+	var dim = false;
 	console.log("cscalar-do_layout this=", this);
-	var dim = measureText(this.str,
+	var dimstr = measureText(this.str,
 			      {fontFamily: this.my_font_family,
 			       fontSize: this.my_font_size,
 			       fontStyle: this.my_font_style});
-	console.log ("cscalar-do_layout dim=", dim);
+	console.log ("cscalar-do_layout dimstr=", dimstr);
+	var dimleft = {ascent:0, descent:0, height:0, width:0};
+	if (this.my_decoleft)
+	    dimleft = measureText(this.my_decoleft,
+				  {fontFamily: this.my_decofont_family || this.my_font_family,
+				   fontSize: this.my_decofont_size || this.my_font_size,
+				   fontStyle: this.my_decofont_style || this.my_font_style});
+	console.log ("cscalar-do_layout dimleft=", dimleft);
+	var dimright = {ascent:0, descent:0, height:0, width:0};
+	if (this.my_decoright)
+	    dimright = measureText(this.my_decoright,
+				  {fontFamily: this.my_decofont_family || this.my_font_family,
+				   fontSize: this.my_decofont_size || this.my_font_size,
+				   fontStyle: this.my_decofont_style || this.my_font_style});
+	console.log ("cscalar-do_layout dimright=", dimleft);
+	console.warn("cscalar-do_layout should compute dim from dimstr=", dimstr,
+		     " dimleft=", dimleft, " dimright=", dimright);
 	return dim;
     }
 };
@@ -131,10 +152,12 @@ MomcScalar.prototype = momp_scalar;
 
 ////////////////
 var momp_nil_ref = {
+    str: "~",
     name: "momcnilref",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
     my_font_style: "italics",
+    my_color: '#0B1E37'
 };
 momp_nil_ref.prototype= momp_scalar;
 console.log("momp_nil_ref=", momp_nil_ref);
@@ -155,15 +178,16 @@ function momc_nil_ref() {
 
 ////////////////
 var momp_nil_val = {
+    str: "~",
     name: "momcnilval",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
-    my_font_style: 'bold'
+    my_font_style: 'bold',
+    my_color: '#0D145B'
 };
 momp_nil_val.__proto__ = momp_scalar;
 console.log ("momp_nil_val=", momp_nil_val);
 var MomcNilVal = function () {
-    this.str = "~";
     momc_count = momc_count+1;
     this.inum = momc_count;
     //this.__proto__ = momp_nil_val;
@@ -182,7 +206,8 @@ var momp_item_val = {
     name: "momcitemval",
     my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
-    my_font_style: 'oblique'
+    my_font_style: 'oblique',
+    my_color: '#330A4F'
 };
 momp_item_val.prototype = momp_scalar;
 console.log ("momp_item_val=", momp_item_val);
@@ -205,7 +230,8 @@ var momp_item_ref = {
     name: "momcitemref",
     my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
-    my_font_style: 'oblique'
+    my_font_style: 'oblique',
+    my_color: '#862769'
 };
 momp_item_ref.__proto__ = momp_scalar;
 console.log ("momp_item_ref=", momp_item_ref);
@@ -228,7 +254,8 @@ var momp_int = {
     name: "momcint",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    my_font_style: 'plain',
+    my_color: '#5B1D01'
 };
 momp_int.__proto__ = momp_scalar;
 console.log ("momp_int=", momp_int);
@@ -251,7 +278,8 @@ var momp_double = {
     name: "momcdouble",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    my_font_style: 'plain',
+    my_color: '#7C480B'
 };
 momp_double.__proto__ = momp_scalar;
 console.log ("momp_double=", momp_double);
@@ -274,7 +302,12 @@ var momp_string = {
     name: "momcstring",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    my_font_style: 'plain',
+    my_color: '#074723',
+    my_decofont_family: 'Helvetica, sans-serif',
+    my_decoleft:'\u201c', // “ U+201C LEFT DOUBLE QUOTATION MARK 
+    my_decoright: '\u201d', // ” U+201D RIGHT DOUBLE QUOTATION MARK
+    my_decocolor: '#093588'
 };
 momp_string.__proto__ = momp_scalar;
 console.log ("momp_string=", momp_string);
@@ -410,15 +443,28 @@ function momc_display_canvas(msg,arr) {
     console.log("display_canvas before dim");
     var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
     console.log("display_canvas got dim=", dim);
-    var otherdim = measureText(msg + "!pf..j", {fontFamily: "Courier", fontSize: "25pt"});
-    console.log("display_canvas got otherdim=", otherdim);
+    var otherstr = msg + "!Mpf..jW";
+    var otherstyle = {fontFamily: "Helvetica", fontSize: "35pt"};
+    var otherdim = measureText(otherstr, otherstyle);
+    var otherx = 100;
+    var othery = 80;
+    console.log("display_canvas got otherdim=", otherdim, " otherdim2str=", otherdim.toString());
+    canvctxt.clearRect(0,0,rawcanvas.width,rawcanvas.height);
+    canvctxt.fillstyle = "rgba(255,165,0,0.6)";
+    canvctxt.strokestyle = "rgba(60,200,50,0.4)";
+    canvctxt.font = otherstyle.fontSize + " " + otherstyle.fontFamily;
+    canvctxt.strokeText(otherstr, otherx, othery);
+    canvctxt.fillstyle = "rgba(112,233,123,0.5)";
+    canvctxt.strokestyle = "rgba(12,73,53,0.5)";
+    canvctxt.strokeRect(otherx,othery-otherdim.height+otherdim.descent,otherdim.width,otherdim.height);
+    addupdatehtml("<p class='smallnote_cl'>otherdim="+otherdim.toString()+"</p>");
     canvarr = arr;
     var l = arr.length;
     for (var i=0; i<l; i++) {
 	ob = arr[i];
 	console.log ("display_canvas ob=", ob, " i#", i);
 	var dim = ob.do_layout();
-	console.log ("display_canvas dim=", dim);
+	console.log ("display_canvas dim=", dim, " i#", i);
     };
     console.log("display_canvas end msg=", msg, " l=", l);
     console.groupEnd();
@@ -442,7 +488,9 @@ $(document).ready(function(){
     cleareditbut = $("#cleareditbut_id");
     console.log("ready editlog=", editlog);
     rawcanvas = $("#canvedit_id");
-    console.log("ready rawcanvas=", rawcanvas);
+    console.log ("ready rawcanvas=", rawcanvas);
+    canvctxt = rawcanvas[0].getContext('2d');
+    console.log("ready canvctxt=", canvctxt);
     cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
 	editlog.html("");

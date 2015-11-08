@@ -39,3 +39,9 @@ canvas.canvasedit_cl {
     display: block;
     padding: 10px;
 }
+
+p.smallnote_cl {
+    font-family: Lucida;
+    color: #063C4E;
+    font-size: 10px;
+}
