@@ -27,13 +27,13 @@ var momc_count=0;
 
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
-  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
-  //then grab the encoded contents back out.  The div never exists on the page.
-  return $('<div/>').text(value).html();
+    //create a in-memory div, set it's inner text(which jQuery automatically encodes)
+    //then grab the encoded contents back out.  The div never exists on the page.
+    return $('<div/>').text(value).html();
 };
 
 function htmlDecode(value){
-  return $('<div/>').html(value).text();};
+    return $('<div/>').html(value).text();};
 
 
 function addupdatehtml(txt) {
@@ -115,7 +115,7 @@ var momp_scalar ={
     my_font_family: "Verdana, sans-serif",
     my_font_style: 'plain',
     my_color: '#0B372C',
-    get_dim: function() {
+    get_dim: function(hints) {
 	if (this.dim) {
 	    console.log("cscalar-get_dim already layout this=", this);
 	    return this.dim;
@@ -123,23 +123,20 @@ var momp_scalar ={
 	console.log("cscalar-get_dim this=", this);
 	var dim = false;
 	var dimstr = measureText(this.str,
-			      {fontFamily: this.my_font_family,
-			       fontSize: this.my_font_size,
-			       fontStyle: this.my_font_style});
+				 {fontFamily: this.my_font_family,
+				  fontSize: this.my_font_size,
+				  fontStyle: this.my_font_style});
 	console.log ("cscalar-get_dim dimstr=", dimstr);
+	var decostyleprop = {fontFamily: this.my_decofont_family || this.my_font_family,
+			     fontSize: this.my_decofont_size || this.my_font_size,
+			     fontStyle: this.my_decofont_style || this.my_font_style};
 	var dimleft = {ascent:0, descent:0, height:0, width:0};
 	if (this.my_decoleft)
-	    dimleft = measureText(this.my_decoleft,
-				  {fontFamily: this.my_decofont_family || this.my_font_family,
-				   fontSize: this.my_decofont_size || this.my_font_size,
-				   fontStyle: this.my_decofont_style || this.my_font_style});
+	    dimleft = measureText(this.my_decoleft, decostyleprop);
 	console.log ("cscalar-get_dim dimleft=", dimleft);
 	var dimright = {ascent:0, descent:0, height:0, width:0};
 	if (this.my_decoright)
-	    dimright = measureText(this.my_decoright,
-				  {fontFamily: this.my_decofont_family || this.my_font_family,
-				   fontSize: this.my_decofont_size || this.my_font_size,
-				   fontStyle: this.my_decofont_style || this.my_font_style});
+	    dimright = measureText(this.my_decoright, decostyleprop);
 	console.log ("cscalar-get_dim dimright=", dimleft);
 	dim = { ascent: Math.max(dimstr.ascent,dimleft.ascent,dimright.ascent),
 		descent: Math.max(dimstr.descent,dimleft.descent,dimright.descent),
@@ -340,7 +337,7 @@ function momc_string(str) {
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
-    get_dim: function () {
+    get_dim: function (hints) {
 	console.log("csequence-get_dim this=", this);
     }
 };
@@ -395,9 +392,24 @@ var momp_node = {
     name: "momcnode",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
+    my_decofont_family: "Verdana, sans-serif",
+    my_deco_beforeconn_str: "*",
+    my_deco_beforesons_str: "(",
+    my_deco_aftersons_str: ")",
     my_font_style: "plain",
-    get_dim: function() {
-	console.log("cnode-get_dim this=", this);
+    get_dim: function(hints) {
+	if (this.dim) {
+	    console.log ("cnode-get_dim with dim this=",this);
+	    return this.dim;
+	}
+	console.log ("cnode-get_dim this=", this, " hints=", hints);
+	var decostyleprop = {fontFamily: this.my_decofont_family || this.my_font_family,
+			     fontSize: this.my_decofont_size || this.my_font_size,
+			     fontStyle: this.my_decofont_style || this.my_font_style};
+	var dimbeforeconn = measureText(this.my_deco_beforeconn_str, decostyleprop);
+	console.log ("cnode-get_dim dimbeforeconn=", dimbeforeconn);
+	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
+	console.log ("cnode-get_dim dimbeforesons=", dimbeforesons);
     }
 };
 console.log ("momp_node=", momp_node);
@@ -431,38 +443,61 @@ var momp_top_entry = {
     my_decofont_family: "Verdana, sans-serif",
     my_deco_left_attr_str: "\u2023", //  ‣ U+2023 TRIANGULAR BULLET
     my_deco_right_attr_str: " :",
+    my_deco_left_val_str: " \u25b5", //  ▵ U+25B5 WHITE UP-POINTING SMALL TRIANGLE
+    my_deco_right_val_str: ";",
+    my_deco_val_horgap: 10,
+    my_deco_val_vertgap: 3,
     my_font_style: 'plain',
-    get_dim: function () {
+    get_dim: function (hints) {
 	if (this.dim) {
 	    console.log ("top_entry-get_dim with dim this=",this);
 	    return this.dim;
 	}
-	console.log ("top_entry-get_dim this=", this,
+	console.log ("top_entry-get_dim this=", this, " hints=", hints,
 		     " rawcanvas=", rawcanvas);
-	var dimattr = this.entattr.get_dim();
+	var dimattr = this.entattr.get_dim(hints);
 	console.log ("top_entry-get_dim dimattr=", dimattr);
 	var decostyleprop= 
-			{fontFamily: this.my_decofont_family || this.my_font_family,
-			 fontSize: this.my_decofont_size || this.my_font_size,
-			 fontStyle: this.my_decofont_style || this.my_font_style
-			};
+	    {fontFamily: this.my_decofont_family || this.my_font_family,
+	     fontSize: this.my_decofont_size || this.my_font_size,
+	     fontStyle: this.my_decofont_style || this.my_font_style
+	    };
 	var dimleftattrdeco =
 	    measureText(this.my_deco_left_attr_str, decostyleprop);
 	console.log ("top_entry-get_dim dimleftattrdeco=", dimleftattrdeco);
 	var dimrightattrdeco =
 	    measureText(this.my_deco_right_attr_str, decostyleprop);
-	console.log ("top_entry-get_dim dimrightattrdeco=", dimrightattrdeco);	    
-	var dimval = this.entval.get_dim();
+	console.log ("top_entry-get_dim dimrightattrdeco=", dimrightattrdeco);
+	var dimfullattr = {ascent: Math.max(dimattr.ascent,
+					    dimleftattrdeco.ascent,
+					    dimrightattrdeco.ascent),
+			   descent: Math.max(dimattr.descent,
+					     dimleftattrdeco.descent,
+					     dimrightattrdeco.descent),
+			   height:  Math.max(dimattr.height,
+					     dimleftattrdeco.height,
+					     dimrightattrdeco.height),
+			   width: dimattr.width + dimleftattrdeco.width + dimrightattrdeco.width,
+			   __proto__: dimproto};
+	console.log ("top_entry-get_dim dimfullattr=", dimfullattr, " hints=", hints,
+		     "\n.. this=", this);
+	var oldhints = hints;
+	var valhints = $.extend(oldhints,
+				{maxheight: oldhints.maxheight - dimfullattr.height - this.my_deco_val_vertgap,
+				 maxwidth: oldhints.maxwidth - this.my_deco_val_horgap});
+	console.log ("top_entry-get_dim valhints=", valhints, "\n.. this=", this);
+	var dimval = this.entval.get_dim(valhints);
 	console.log ("top_entry-get_dim dimval=", dimval);
     }
-};
+};				// end momp_top_entry
 console.log ("momp_top_entry=", momp_top_entry);
+
 var MomcTopEntry = function (eattr, eval) {
     this.entattr = eattr;
     this.entval = eval;
     momc_count = momc_count+1;
     this.inum = momc_count;
-//    this.__proto__ = momp_top_entry;
+    //    this.__proto__ = momp_top_entry;
     console.log ("MomcTopEntry this=", this);
 };
 MomcTopEntry.prototype = momp_top_entry;
@@ -473,21 +508,14 @@ function momc_top_entry(attr,val) {
     return res;
 };
 
-////////////////
-function momc_display_canvas(msg,arr) {
-    console.group("display_canvas/%s", msg);
-    console.log("display_canvas msg=", msg, " arr=", arr);
-    console.log("display_canvas rawcanvas=", rawcanvas);
-    console.trace();
-    console.log("display_canvas before dim");
-    var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
-    console.log("display_canvas got dim=", dim);
+
+function test_other_display(msg) {
     var otherstr = msg + "!Mpf..jW";
     var otherstyle = {fontFamily: "Helvetica", fontSize: "45px"};
     var otherdim = measureText(otherstr, otherstyle);
     var otherx = 240;
     var othery = 600;
-    console.log("display_canvas got otherdim=", otherdim, " otherdim2str=", otherdim.toString());
+    console.log("test_other_display got otherdim=", otherdim, " otherdim2str=", otherdim.toString());
     canvctxt.clearRect(0,0,rawcanvas.width,rawcanvas.height);
     canvctxt.fillStyle = "rgba(255,165,0,0.6)";
     canvctxt.strokeStyle = "rgba(60,200,50,0.4)";
@@ -501,15 +529,40 @@ function momc_display_canvas(msg,arr) {
     canvctxt.strokeStyle = "rgba(12,73,53,0.5)";
     canvctxt.strokeRect(otherx, othery-otherdim.ascent, otherdim.width, otherdim.height);
     addupdatehtml("<p class='smallnote_cl'>otherdim="+otherdim.toString()+"</p>");
+};				// end of test_other_display
+
+////////////////
+function momc_display_canvas(msg,arr) {
+    console.group("display_canvas/%s", msg);
+    console.log("display_canvas msg=", msg, " arr=", arr);
+    console.log("display_canvas rawcanvas=", rawcanvas);
+    console.trace();
+    console.log("display_canvas before dim");
+    var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
+    console.log("display_canvas got dim=", dim);
+    test_other_display(msg);
     canvarr = arr;
     var l = arr.length;
+    var hints = {maxwidth: rawcanvas.width()-2, maxheight: rawcanvas.height()-2};
+    console.log("display_canvas l=", l, " initial hints=", hints);
+    var dimarr = new Array(l);
     for (var i=0; i<l; i++) {
 	ob = arr[i];
-	console.log ("display_canvas ob=", ob, " i#", i);
-	var dim = ob.get_dim();
-	console.log ("display_canvas dim=", dim, " i#", i);
+	console.log ("display_canvas ob=", ob, " i#", i, " hints=", hints);
+	var curdim = ob.get_dim(hints);
+	console.log ("display_canvas curdim=", curdim, " i#", i);
+	dimarr[i] = curdim;
+	var prevmaxwidth = hints.maxwidth;
+	var prevmaxheight = hints.maxwidth;
+	if (curdim) {
+	    hints= {maxwidth: prevmaxwidth, maxheight: prevmaxheight - curdim.height};
+	    console.log ("display_canvas updated hints=", hints, " i#", i);
+	}
+	else
+	    console.log ("display_canvas same hints=", hints, " i#", i);
     };
-    console.log("display_canvas end msg=", msg, " l=", l);
+    console.log ("display_canvas dimarr=", dimarr);
+    console.log("display_canvas end msg=", msg, " l=", l, " final hints=", hints);
     console.groupEnd();
 };
 ////////
