@@ -49,7 +49,11 @@ var nbsp = String.fromCharCode(160);
     all the DOM elements used for a measurement each time - this is not a significant
     part of the cost, and if we left the hidden measuring node in the DOM then it
     would affect the dimensions of the whole page.
- */
+*/
+var dimproto = {
+    toString: function () { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
+			    + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
+};
 var measureText = function(text, styleprops)
 {
     console.log ("measureText text=", text, " styleprops=", styleprops);
@@ -92,10 +96,7 @@ var measureText = function(text, styleprops)
         result.height = (block.offsetTop - span.offsetTop);
         result.descent = result.height - result.ascent;
         result.width = span.offsetWidth;
-	result.__proto__ = {
-	    toString: function () { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
-				    + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
-	}
+	result.__proto__ = dimproto;
     } catch (exc) {
 	console.warn ("measureText error text=", text, " styleprops=", styleprops, " exc=", exc);
     } finally {
@@ -136,7 +137,13 @@ var momp_scalar ={
 				   fontSize: this.my_decofont_size || this.my_font_size,
 				   fontStyle: this.my_decofont_style || this.my_font_style});
 	console.log ("cscalar-do_layout dimright=", dimleft);
-	console.warn("cscalar-do_layout should compute dim from dimstr=", dimstr,
+	dim = { ascent: Math.max(dimstr.ascent,dimleft.ascent,dimright.ascent),
+		descent: Math.max(dimstr.descent,dimleft.descent,dimright.descent),
+		width: dimstr.width+dimleft.width+dimright.width,
+		height: Math.max(dimstr.height,dimleft.height,dimright.height)
+	      };
+	dim.__proto__ = dimproto;
+	console.log("cscalar-do_layout dim=", dim, " from dimstr=", dimstr,
 		     " dimleft=", dimleft, " dimright=", dimright);
 	return dim;
     }
@@ -444,19 +451,23 @@ function momc_display_canvas(msg,arr) {
     var dim = measureText(msg, {fontFamily: "Arial", fontSize: "15pt"});
     console.log("display_canvas got dim=", dim);
     var otherstr = msg + "!Mpf..jW";
-    var otherstyle = {fontFamily: "Helvetica", fontSize: "35pt"};
+    var otherstyle = {fontFamily: "Helvetica", fontSize: "45px"};
     var otherdim = measureText(otherstr, otherstyle);
-    var otherx = 100;
-    var othery = 80;
+    var otherx = 240;
+    var othery = 600;
     console.log("display_canvas got otherdim=", otherdim, " otherdim2str=", otherdim.toString());
     canvctxt.clearRect(0,0,rawcanvas.width,rawcanvas.height);
-    canvctxt.fillstyle = "rgba(255,165,0,0.6)";
-    canvctxt.strokestyle = "rgba(60,200,50,0.4)";
+    canvctxt.fillStyle = "rgba(255,165,0,0.6)";
+    canvctxt.strokeStyle = "rgba(60,200,50,0.4)";
     canvctxt.font = otherstyle.fontSize + " " + otherstyle.fontFamily;
-    canvctxt.strokeText(otherstr, otherx, othery);
-    canvctxt.fillstyle = "rgba(112,233,123,0.5)";
-    canvctxt.strokestyle = "rgba(12,73,53,0.5)";
-    canvctxt.strokeRect(otherx,othery-otherdim.height+otherdim.descent,otherdim.width,otherdim.height);
+    canvctxt.fillText(otherstr, otherx, othery);
+    canvctxt.beginPath();
+    canvctxt.arc(otherx, othery, 4.0 /*radius*/, 2*Math.PI, false);
+    canvctxt.fillStyle = 'rgba(125,17,81,0.25)';
+    canvctxt.fill();
+    canvctxt.fillStyle = "rgba(112,233,123,0.5)";
+    canvctxt.strokeStyle = "rgba(12,73,53,0.5)";
+    canvctxt.strokeRect(otherx, othery-otherdim.ascent, otherdim.width, otherdim.height);
     addupdatehtml("<p class='smallnote_cl'>otherdim="+otherdim.toString()+"</p>");
     canvarr = arr;
     var l = arr.length;
