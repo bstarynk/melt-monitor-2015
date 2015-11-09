@@ -428,6 +428,9 @@ var momp_top_entry = {
     name: "momctopentry",
     my_font_size: '12pt',
     my_font_family: "Arial, sans-serif",
+    my_decofont_family: "Verdana, sans-serif",
+    my_deco_left_attr_str: "\u2023", //  ‣ U+2023 TRIANGULAR BULLET
+    my_deco_right_attr_str: " :",
     my_font_style: 'plain',
     get_dim: function () {
 	if (this.dim) {
@@ -438,6 +441,17 @@ var momp_top_entry = {
 		     " rawcanvas=", rawcanvas);
 	var dimattr = this.entattr.get_dim();
 	console.log ("top_entry-get_dim dimattr=", dimattr);
+	var decostyleprop= 
+			{fontFamily: this.my_decofont_family || this.my_font_family,
+			 fontSize: this.my_decofont_size || this.my_font_size,
+			 fontStyle: this.my_decofont_style || this.my_font_style
+			};
+	var dimleftattrdeco =
+	    measureText(this.my_deco_left_attr_str, decostyleprop);
+	console.log ("top_entry-get_dim dimleftattrdeco=", dimleftattrdeco);
+	var dimrightattrdeco =
+	    measureText(this.my_deco_right_attr_str, decostyleprop);
+	console.log ("top_entry-get_dim dimrightattrdeco=", dimrightattrdeco);	    
 	var dimval = this.entval.get_dim();
 	console.log ("top_entry-get_dim dimval=", dimval);
     }
