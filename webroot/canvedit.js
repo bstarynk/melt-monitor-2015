@@ -468,17 +468,22 @@ var momp_top_entry = {
 	var dimrightattrdeco =
 	    measureText(this.my_deco_right_attr_str, decostyleprop);
 	console.log ("top_entry-get_dim dimrightattrdeco=", dimrightattrdeco);
-	var dimfullattr = {ascent: Math.max(dimattr.ascent,
+	var dimfullattr = {ascent: Math.max(dimattr.ascent+1,
 					    dimleftattrdeco.ascent,
 					    dimrightattrdeco.ascent),
-			   descent: Math.max(dimattr.descent,
+			   descent: Math.max(dimattr.descent+1,
 					     dimleftattrdeco.descent,
 					     dimrightattrdeco.descent),
-			   height:  Math.max(dimattr.height,
+			   height:  Math.max(dimattr.height+2,
 					     dimleftattrdeco.height,
 					     dimrightattrdeco.height),
-			   width: dimattr.width + dimleftattrdeco.width + dimrightattrdeco.width,
+			   width: dimleftattrdeco.width + dimattr.width + dimrightattrdeco.width + 2,
 			   __proto__: dimproto};
+	/// left attr deco drawn at offx= 1, offy= entattr.offy;
+	this.entattr.offx = dimleftattrdeco.width+1;
+	this.entattr.offy = dimfullattr.ascent+1;
+	/// right attr deco drawn at offx=dimleftattrdeco.width + dimattr.width + 1, offy= entattr.offy
+	this.rightdecoffx = dimleftattrdeco.width + dimattr.width + 1;
 	console.log ("top_entry-get_dim dimfullattr=", dimfullattr, " hints=", hints,
 		     "\n.. this=", this);
 	var oldhints = hints;
@@ -488,6 +493,14 @@ var momp_top_entry = {
 	console.log ("top_entry-get_dim valhints=", valhints, "\n.. this=", this);
 	var dimval = this.entval.get_dim(valhints);
 	console.log ("top_entry-get_dim dimval=", dimval);
+	var dimleftvaldeco =
+	    measureText(this.my_deco_left_val_str, decostyleprop);
+	console.log ("top_entry-get_dim dimleftvaldeco=", dimleftattrdeco);
+	var dimrightvaldeco =
+	    measureText(this.my_deco_right_val_str, decostyleprop);
+	console.log ("top_entry-get_dim dimrightvaldeco=", dimrightattrdeco);
+	console.warn("top_entry-get_dim @@@incomplete this=", this);
+	//@@@ this.entval.offx = ...;
     }
 };				// end momp_top_entry
 console.log ("momp_top_entry=", momp_top_entry);
