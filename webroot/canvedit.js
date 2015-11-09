@@ -56,7 +56,7 @@ var dimproto = {
 };
 var measureText = function(text, styleprops)
 {
-    console.log ("measureText text=", text, " styleprops=", styleprops);
+    //console.log ("measureText text=", text, " styleprops=", styleprops);
     var span, block, div;
 
     span = document.createElement('span');
@@ -80,12 +80,12 @@ var measureText = function(text, styleprops)
     try {
 	for (var p in styleprops) {
 	    if (styleprops.hasOwnProperty(p) && styleprops[p]) {
-		console.log("measureText p=", p, " : ", styleprops[p]);
+		//console.log("measureText p=", p, " : ", styleprops[p]);
 		span.style[p] = styleprops[p];
 	    }
 	}
-	console.log("measureText span=", span, " spanfont=", span.getAttribute("font"),
-		    " spanstyle=", span.style);
+	//console.log("measureText span=", span, " spanfont=", span.getAttribute("font"),
+	//	    " spanstyle=", span.style);
         span.innerHTML = '';
         span.appendChild(document.createTextNode(text.replace(/\s/g, nbsp)));
 
@@ -103,7 +103,7 @@ var measureText = function(text, styleprops)
         div.parentNode.removeChild(div);
         div = null;
     }
-    console.log ("measureText text=", text, " result=", result);
+    //console.log ("measureText text=", text, " result=", result);
     return result;
 };
 
@@ -115,36 +115,41 @@ var momp_scalar ={
     my_font_family: "Verdana, sans-serif",
     my_font_style: 'plain',
     my_color: '#0B372C',
-    do_layout: function() {
+    get_dim: function() {
+	if (this.dim) {
+	    console.log("cscalar-get_dim already layout this=", this);
+	    return this.dim;
+	}
+	console.log("cscalar-get_dim this=", this);
 	var dim = false;
-	console.log("cscalar-do_layout this=", this);
 	var dimstr = measureText(this.str,
 			      {fontFamily: this.my_font_family,
 			       fontSize: this.my_font_size,
 			       fontStyle: this.my_font_style});
-	console.log ("cscalar-do_layout dimstr=", dimstr);
+	console.log ("cscalar-get_dim dimstr=", dimstr);
 	var dimleft = {ascent:0, descent:0, height:0, width:0};
 	if (this.my_decoleft)
 	    dimleft = measureText(this.my_decoleft,
 				  {fontFamily: this.my_decofont_family || this.my_font_family,
 				   fontSize: this.my_decofont_size || this.my_font_size,
 				   fontStyle: this.my_decofont_style || this.my_font_style});
-	console.log ("cscalar-do_layout dimleft=", dimleft);
+	console.log ("cscalar-get_dim dimleft=", dimleft);
 	var dimright = {ascent:0, descent:0, height:0, width:0};
 	if (this.my_decoright)
 	    dimright = measureText(this.my_decoright,
 				  {fontFamily: this.my_decofont_family || this.my_font_family,
 				   fontSize: this.my_decofont_size || this.my_font_size,
 				   fontStyle: this.my_decofont_style || this.my_font_style});
-	console.log ("cscalar-do_layout dimright=", dimleft);
+	console.log ("cscalar-get_dim dimright=", dimleft);
 	dim = { ascent: Math.max(dimstr.ascent,dimleft.ascent,dimright.ascent),
 		descent: Math.max(dimstr.descent,dimleft.descent,dimright.descent),
 		width: dimstr.width+dimleft.width+dimright.width,
 		height: Math.max(dimstr.height,dimleft.height,dimright.height)
 	      };
 	dim.__proto__ = dimproto;
-	console.log("cscalar-do_layout dim=", dim, " from dimstr=", dimstr,
-		     " dimleft=", dimleft, " dimright=", dimright);
+	console.log("cscalar-get_dim dim=", dim, " from dimstr=", dimstr,
+		    " dimleft=", dimleft, " dimright=", dimright);
+	this.dim = dim;
 	return dim;
     }
 };
@@ -335,8 +340,8 @@ function momc_string(str) {
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
-    do_layout: function () {
-	console.log("csequence-do_layout this=", this);
+    get_dim: function () {
+	console.log("csequence-get_dim this=", this);
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -391,15 +396,24 @@ var momp_node = {
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
     my_font_style: "plain",
-    do_layout: function() {
-	console.log("cnode-do_layout this=", this);
+    get_dim: function() {
+	console.log("cnode-get_dim this=", this);
     }
 };
 console.log ("momp_node=", momp_node);
 var MomcNode = function (conn, arr) {
     this.conn = conn;
     this.arr = arr;
-    this.inum = momc_count;
+    momc_count = momc_count+1;
+    var myinum = momc_count;
+    this.inum = myinum;
+    var len = arr.length;
+    for (var ix=0; ix<len; ix++) {
+	var comp = arr[ix];
+	if (typeof comp === "object") {
+	    comp.insideinum = myinum;
+	}
+    }
     console.log ("MomcNode this=", this);
 };
 MomcNode.prototype = momp_node;
@@ -415,13 +429,17 @@ var momp_top_entry = {
     my_font_size: '12pt',
     my_font_family: "Arial, sans-serif",
     my_font_style: 'plain',
-    do_layout: function () {
-	console.log ("top_entry-do_layout this=", this,
+    get_dim: function () {
+	if (this.dim) {
+	    console.log ("top_entry-get_dim with dim this=",this);
+	    return this.dim;
+	}
+	console.log ("top_entry-get_dim this=", this,
 		     " rawcanvas=", rawcanvas);
-	var dimattr = this.entattr.do_layout();
-	console.log ("top_entry-do_layout dimattr=", dimattr);
-	var dimval = this.entattr.do_layout();
-	console.log ("top_entry-do_layout dimval=", dimval);
+	var dimattr = this.entattr.get_dim();
+	console.log ("top_entry-get_dim dimattr=", dimattr);
+	var dimval = this.entval.get_dim();
+	console.log ("top_entry-get_dim dimval=", dimval);
     }
 };
 console.log ("momp_top_entry=", momp_top_entry);
@@ -474,7 +492,7 @@ function momc_display_canvas(msg,arr) {
     for (var i=0; i<l; i++) {
 	ob = arr[i];
 	console.log ("display_canvas ob=", ob, " i#", i);
-	var dim = ob.do_layout();
+	var dim = ob.get_dim();
 	console.log ("display_canvas dim=", dim, " i#", i);
     };
     console.log("display_canvas end msg=", msg, " l=", l);
