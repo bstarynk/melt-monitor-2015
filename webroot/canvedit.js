@@ -408,8 +408,18 @@ var momp_node = {
 			     fontStyle: this.my_decofont_style || this.my_font_style};
 	var dimbeforeconn = measureText(this.my_deco_beforeconn_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforeconn=", dimbeforeconn);
+	var connhints = $.extend(oldhints,
+				 {maxheight: oldhints.maxheight,
+				  maxwidth: oldhints.maxwidth-dimbeforeconn.width});
+	console.log ("cnode-get_dim connhints=", connhints);
+	var dimconn = this.conn.get_dim(connhints);
+	console.log ("cnode-get_dim dimconn=", dimconn);
+	var oldhints = hints;
 	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforesons=", dimbeforesons);
+	var dimaftersons = measureText(this.my_deco_aftersons_str, decostyleprop);
+	console.log ("cnode-get_dim dimaftersons=", dimaftersons);
+	console.warn("cnode-get_dim @@@incomplete this=", this);
     }
 };
 console.log ("momp_node=", momp_node);
@@ -483,7 +493,7 @@ var momp_top_entry = {
 	this.entattr.offx = dimleftattrdeco.width+1;
 	this.entattr.offy = dimfullattr.ascent+1;
 	/// right attr deco drawn at offx=dimleftattrdeco.width + dimattr.width + 1, offy= entattr.offy
-	this.rightdecoffx = dimleftattrdeco.width + dimattr.width + 1;
+	this.rightattrdecoffx = dimleftattrdeco.width + dimattr.width + 1;
 	console.log ("top_entry-get_dim dimfullattr=", dimfullattr, " hints=", hints,
 		     "\n.. this=", this);
 	var oldhints = hints;
@@ -499,8 +509,34 @@ var momp_top_entry = {
 	var dimrightvaldeco =
 	    measureText(this.my_deco_right_val_str, decostyleprop);
 	console.log ("top_entry-get_dim dimrightvaldeco=", dimrightattrdeco);
-	console.warn("top_entry-get_dim @@@incomplete this=", this);
-	//@@@ this.entval.offx = ...;
+	/// left val deco drawn at offx= my_deco_val_horgap, ....
+	/// offy= this.entval.offy
+	this.entval.offx = my_deco_val_horgap+dimleftvaldeco.width+1;
+	this.entval.offy = entattr.offy + dimval.ascent + my_deco_val_vertgap;
+	/// right val deco drawn at offx= dimvalattrdeco.width + dimval.width + 1
+	this.rightvaldecoffx = dimvalattrdeco.width + dimval.width + 1;
+	var dimfullval = {ascent: Math.max(dimval.ascent+1,
+					   dimleftvaldeco.ascent,
+					   dimrighvaldeco.ascent),
+			  descent: Math.max(dimval.descent+1,
+					    dimleftvaldeco.descent,
+					    dimrightvaldeco.descent),
+			  height:  Math.max(dimval.height+2,
+					    dimleftvaldeco.height,
+					    dimrightvaldeco.height),
+			  width: dimvalattrdeco.width + dimval.width + dimvalattrdeco.width + my_deco_val_horgap+ 2,
+			  __proto__: dimproto};
+	console.log ("top_entry-get_dim dimfullval=", dimfullval, " valhints=", valhints,
+		     "\n.. this=", this);
+	var diment = {ascent: this.entval.offx,
+		      descent: dimfullval.descent+1,
+		      height: dimfullattr.height + dimfullval.height + my_deco_val_horgap + 2,
+		      width: Math.max (dimfullattr.width+2,
+				       dimfullval.width),
+		      __proto__: dimproto};
+	this.dim = diment;
+	console.debug("top_entry-get_dim result diment=", diment, " for this=", this);
+	return diment;
     }
 };				// end momp_top_entry
 console.log ("momp_top_entry=", momp_top_entry);
