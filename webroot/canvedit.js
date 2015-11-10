@@ -335,12 +335,32 @@ function momc_string(str) {
     return res;
 };
 
+
+////////////////
+console.warn ("should have some abstraction for rows");
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
     get_dim: function (hints) {
+	var len = this.arr.length;
+	var putdimarr = new Array(len);
+	var rowarr = new Array();
+	var curow = null;
+	if (len>0) {
+	    curow = {rowix: 0, rowcomp: new Array()};
+	    rowarr.push(curow);
+	}
+	
+	for (var ix=0; ix<len; ix++) {
+	    var curcomp = this.arr[ix];
+	    console.log ("csequence-get_dim curcomp=", curcomp, " ix#", ix);
+	    var curdim = curcomp.get_dim(hints);
+	    console.log ("csequence-get_dim curdim=", curdim,
+			 " for curcomp=", curcomp, " ix#", ix);
+	    putdimarr[ix] = curdim;
+	}
+	console.trace("csequence-get_dim putdimarr=", putdimarr);
 	console.warn("csequence-get_dim @@unimplemented this=", this, " hints=", hints);
-	console.trace("csequence-get_dim");
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -350,6 +370,12 @@ var momp_tuple = {
     name: "momctuple",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
+    my_deco_before_str: "[",
+    my_deco_after_str: "]", 
+    my_decofont_family: "Verdana, sans-serif",
+    my_decofont_size: '13pt',
+    my_hgap: 7,
+    my_vgap: 3
     //my_font_style: 'plain'
 };
 momp_tuple.__proto__= momp_sequence;
@@ -372,6 +398,12 @@ var momp_set = {
     name: "momcset",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
+    my_decofont_size: '13pt',
+    my_deco_before_str: "{",
+    my_deco_after_str: "}", 
+    my_decofont_family: "Verdana, sans-serif",
+    my_hgap: 5,
+    my_vgap: 3
     //my_font_style: 'plain'
 };
 momp_set.__proto__= momp_sequence;
