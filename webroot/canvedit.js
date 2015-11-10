@@ -337,7 +337,51 @@ function momc_string(str) {
 
 
 ////////////////
-console.warn ("should have some abstraction for rows");
+var momp_horizgroup = {
+    name: "momchorizgroup",
+    hgap: 1,
+    vgap: 0,
+    initialx: 0,
+    get_dim: function (hints) {
+	var len = this.arr.length;
+	var hgap = this.hgap;
+	var dimarr = new Array(len);
+	var w= 0, h=0; a=0, d=0;
+	var curx=hints.initialx?hints.initialx:this.initialx;
+	var vgap=hints.vgap?hints.vgap:this.vgap;
+	this.offx = curx;
+	for (var ix=0; ix<dimarr; ix++) {
+	    var comp = this.arr[ix];
+	    var curdim = comp.get_dim(hints);
+	    w = w+hgap+curdim.width;
+	    h = Math.max(h,curdim.height);
+	    a = Math.max(a,curdim.ascent);
+	    d = Math.max(d,curdim.descent);
+	    comp.offx = curx;
+	    curx += w+hgap;
+	    dimarr[ix] = curdim;
+	}
+	for (var ix=0; ix<dimarr; ix++) {
+	    var comp = this.arr[ix];
+	    comp.offy = vgap+a;
+	}
+	var dim= {width: w, height: h, ascent: a, descent: d, __proto__: dimproto};
+	this.dim = dim;
+	return dim;
+    }
+};
+var MomcHorizGroup = function (arr) {
+    this.arr = arr;
+    console.log ("MomcHorizGroup this=", this);
+};
+MomcHorizGroup.prototype = momp_horizgroup;
+
+function momc_horizgroup(arr) {
+    var res = new MomcHorizGroup(arr);
+    return res;
+};
+
+    
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
