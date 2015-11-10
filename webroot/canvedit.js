@@ -397,6 +397,8 @@ var momp_node = {
     my_deco_beforesons_str: "(",
     my_deco_aftersons_str: ")",
     my_font_style: "plain",
+    my_sons_hgap: 7,
+    my_sons_vgap: 3,
     get_dim: function(hints) {
 	if (this.dim) {
 	    console.log ("cnode-get_dim with dim this=",this);
@@ -408,13 +410,13 @@ var momp_node = {
 			     fontStyle: this.my_decofont_style || this.my_font_style};
 	var dimbeforeconn = measureText(this.my_deco_beforeconn_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforeconn=", dimbeforeconn);
+	var oldhints = hints;
 	var connhints = $.extend(oldhints,
 				 {maxheight: oldhints.maxheight,
 				  maxwidth: oldhints.maxwidth-dimbeforeconn.width});
 	console.log ("cnode-get_dim connhints=", connhints);
 	var dimconn = this.conn.get_dim(connhints);
 	console.log ("cnode-get_dim dimconn=", dimconn);
-	var oldhints = hints;
 	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforesons=", dimbeforesons);
 	var dimaftersons = measureText(this.my_deco_aftersons_str, decostyleprop);
@@ -431,6 +433,72 @@ var momp_node = {
 	this.conn.offy = dimfullconn.ascent+1;
 	// afterconn deco drawn at offx=1+dimfullconn.width, offy=conn.offy
 	this.afterconndecoffx=1+dimfullconn.width;
+	var len = arr.length;
+	var rowarr = new Array();
+	var curow = {rowcomp: new Array(); rowindex:0};
+	var close_row = function (row,offx,bottomy) {
+	    row.offx = offx;
+	    var rowlen = row.rowcomp.length;
+	    var curx = offx;
+	    var h = 6;
+	    var w = this.my_sons_hgap;
+	    var a = 2*h/3, d = h/3;
+	    for (var ix=0; ix<rowlen; ix++) {
+		var curcomp = row.rowcomp[ix];
+		var curdim = curcomp.dim;
+		h = Math.max(h, curdim.height);
+		a = Math.max(a, curdim.ascent);
+		d = Math.max(d, curdim.descent);
+		curcomp.offx = curx;
+		curx += curdim.width + this.my_sons_hgap;
+	    }
+	    row.width = curx - offx;
+	    row.height = h + this.my_sons_vgap;
+	    row.ascent = a;
+	    row.descent = d;
+	    var rowoffy =  bottomy + a + this.my_sons_vgap;
+	    for (var ix=0; ix<rowlen; ix++) {
+		var curcomp = row.rowcomp[ix];
+		curcomp.offy = rowoffy;
+	    }
+	    row.offy = rowoffy;
+	    return rowoffy + row.descent;
+	}
+	if (len>0)
+	    rowarr.push(curow);
+	var rightx = this.afterconndecoffx;
+	var basey = dimfullconn.ascent+1;
+	var bottomy = dimfullconn.height+1;
+	for (var ix=0; ix<len; ix++) {
+	    var curson = arr[ix];
+	    console.log("cnode-get_dim ix=", ix, " curson=", curson, " this=", this,
+			"\n.. rightx=", rightx, " basey=", basey, " bottomy=", bottomy,
+			" curow=", curow);
+	    var curwantdim = curson.get_dim(hints);
+	    delete curson.dim;
+	    delete curson.offx;
+	    delete curson.offy;
+	    console.log("cnode-get_dim curwantdim=", curwantdim, " curson=", curson);
+	    if (curow.length == 0
+		|| curwantdim.width + rightx + this.my_sons_hgap < hints.maxwidth) {
+		// the curson fits in the curow
+		curson.dim = curwantdim;
+		curson.offx = rightx;
+		rightx = rightx + curwantdim.width + this.my_sons_hgap;
+		curow.rowcomp.push(curson);
+		console.log("cnode-get_dim at right curson", curson);
+		continue;
+	    }
+	    //// FIXME, should also perhaps get_dim on the remaining size
+	    else {
+		// we need to create a new row
+		bottomy = close_row(curow, rightx, bottomy);
+		curow.rowindex = rowarr.length;
+		var newrow = {rowcomp: new Array(); rowindex:rowarr.length+1};
+		rowarr.push(newrow);
+		curow = newrow;
+	    }
+	}
 	console.warn("cnode-get_dim @@@incomplete this=", this);
     }
 };
