@@ -419,6 +419,18 @@ var momp_node = {
 	console.log ("cnode-get_dim dimbeforesons=", dimbeforesons);
 	var dimaftersons = measureText(this.my_deco_aftersons_str, decostyleprop);
 	console.log ("cnode-get_dim dimaftersons=", dimaftersons);
+	var dimfullconn
+	    = {ascent: Math.max(dimbeforeconn.ascent, dimconn.ascent+1, dimbeforesons.ascent),
+	       descent: Math.max(dimbeforeconn.descent, dimconn.descent+1, dimbeforesons.descent),
+	       height: Math.max(dimbeforeconn.height, dimconn.height+1, dimbeforesons.height),
+	       width: dimbeforeconn.width + dimconn.width + dimbeforesons.width,
+	       __proto__: dimproto};
+	console.log ("cnode-get_dim dimfullconn=", dimfullconn);
+	// beforeconn deco drawn at offx=1, offy=conn.offy
+	this.conn.offx = dimbeforeconn.width;
+	this.conn.offy = dimfullconn.ascent+1;
+	// afterconn deco drawn at offx=1+dimfullconn.width, offy=conn.offy
+	this.afterconndecoffx=1+dimfullconn.width;
 	console.warn("cnode-get_dim @@@incomplete this=", this);
     }
 };
