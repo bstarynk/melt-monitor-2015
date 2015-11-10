@@ -51,8 +51,9 @@ var nbsp = String.fromCharCode(160);
     would affect the dimensions of the whole page.
 */
 var dimproto = {
-    toString: function () { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
-			    + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
+    toString: function ()
+    { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
+      + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
 };
 var measureText = function(text, styleprops)
 {
@@ -113,7 +114,7 @@ var momp_scalar ={
     name: "momcscalar",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#0B372C',
     get_dim: function(hints) {
 	if (this.dim) {
@@ -263,7 +264,7 @@ var momp_int = {
     name: "momcint",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#5B1D01'
 };
 momp_int.__proto__ = momp_scalar;
@@ -287,7 +288,7 @@ var momp_double = {
     name: "momcdouble",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //    my_font_style: 'plain',
     my_color: '#7C480B'
 };
 momp_double.__proto__ = momp_scalar;
@@ -311,7 +312,7 @@ var momp_string = {
     name: "momcstring",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#074723',
     my_decofont_family: 'Helvetica, sans-serif',
     my_decoleft:'\u201c', // “ U+201C LEFT DOUBLE QUOTATION MARK 
@@ -338,7 +339,8 @@ function momc_string(str) {
 var momp_sequence = {
     name: "momcsequence",
     get_dim: function (hints) {
-	console.log("csequence-get_dim this=", this);
+	console.warn("csequence-get_dim @@unimplemented this=", this, " hints=", hints);
+	console.trace("csequence-get_dim");
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -348,7 +350,7 @@ var momp_tuple = {
     name: "momctuple",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    //my_font_style: 'plain'
 };
 momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
@@ -370,7 +372,7 @@ var momp_set = {
     name: "momcset",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    //my_font_style: 'plain'
 };
 momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
@@ -396,7 +398,7 @@ var momp_node = {
     my_deco_beforeconn_str: "*",
     my_deco_beforesons_str: "(",
     my_deco_aftersons_str: ")",
-    my_font_style: "plain",
+    //my_font_style: "plain",
     get_dim: function(hints) {
 	if (this.dim) {
 	    console.log ("cnode-get_dim with dim this=",this);
@@ -405,16 +407,16 @@ var momp_node = {
 	console.log ("cnode-get_dim this=", this, " hints=", hints);
 	var decostyleprop = {fontFamily: this.my_decofont_family || this.my_font_family,
 			     fontSize: this.my_decofont_size || this.my_font_size,
-			     fontStyle: this.my_decofont_style || this.my_font_style};
+			     fontStyle: this.my_decofont_style || this.my_font_style || null};
 	var dimbeforeconn = measureText(this.my_deco_beforeconn_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforeconn=", dimbeforeconn);
+	var oldhints = hints;
 	var connhints = $.extend(oldhints,
 				 {maxheight: oldhints.maxheight,
 				  maxwidth: oldhints.maxwidth-dimbeforeconn.width});
 	console.log ("cnode-get_dim connhints=", connhints);
 	var dimconn = this.conn.get_dim(connhints);
 	console.log ("cnode-get_dim dimconn=", dimconn);
-	var oldhints = hints;
 	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforesons=", dimbeforesons);
 	var dimaftersons = measureText(this.my_deco_aftersons_str, decostyleprop);
@@ -431,6 +433,20 @@ var momp_node = {
 	this.conn.offy = dimfullconn.ascent+1;
 	// afterconn deco drawn at offx=1+dimfullconn.width, offy=conn.offy
 	this.afterconndecoffx=1+dimfullconn.width;
+	var len = this.arr.length;
+	var putsondims= new Array(len); // putative dimensions
+	for (var ix=0; ix<len; ix++) {
+	    var curson = this.arr[ix];
+	    console.log ("cnode-get_dim ix=", ix, " curson=", curson);
+	    var curputdim = curson.get_dim(hints);
+	    delete curson.dim;
+	    delete curson.offx;
+	    delete curson.offy;
+	    putsondims[ix] = curputdim;
+	    console.log ("cnode-get_dim curputdim=", curputdim, " for curson=", curson,
+			 "\n.. ix=", ix, " this=", this);
+	}
+	console.log ("cnode-get_dim putsondims=", putsondims, "\n ... for this=", this);
 	console.warn("cnode-get_dim @@@incomplete this=", this);
     }
 };
@@ -446,6 +462,7 @@ var MomcNode = function (conn, arr) {
 	var comp = arr[ix];
 	if (typeof comp === "object") {
 	    comp.insideinum = myinum;
+	    comp.insideindex = ix;
 	}
     }
     console.log ("MomcNode this=", this);
@@ -469,7 +486,7 @@ var momp_top_entry = {
     my_deco_right_val_str: ";",
     my_deco_val_horgap: 10,
     my_deco_val_vertgap: 3,
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     get_dim: function (hints) {
 	if (this.dim) {
 	    console.log ("top_entry-get_dim with dim this=",this);
