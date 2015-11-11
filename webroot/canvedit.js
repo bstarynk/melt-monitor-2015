@@ -381,7 +381,34 @@ function momc_horizgroup(arr) {
     return res;
 };
 
-    
+
+////////////////
+var momp_horizlayout = {
+    name: "momchorizlayout",
+    get_dim: function (hints) {
+	console.log ("chorizlayout-get_dim this=", this, " hints=", hints);
+	var arr = this.arr;
+	var len = arr.length;
+	var before = this.before;
+	var after = this.after;
+	var beforedim = before.get_dim(hints);
+	console.log("chorizlayout-get_dim beforedim=", beforedim);
+	var afterdim = after.get_dim(hints);
+	console.log("chorizlayout-get_dim afterdim=", afterdim);
+	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
+    }
+};
+var MomcHorizLayout = function (before,arr,after) {
+    this.before = before;
+    this.arr = arr;
+    this.after = after;
+};
+MomcHorizLayout.prototype = momp_horizlayout;
+function momc_horizlayout(before,arr,after) {
+    var res = new MomcHorizLayout(before,arr,after);
+    return res;
+}
+
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
