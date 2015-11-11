@@ -339,16 +339,16 @@ function momc_string(str) {
 ////////////////
 var momp_horizgroup = {
     name: "momchorizgroup",
-    hgap: 1,
-    vgap: 0,
-    initialx: 0,
+    my_hgap: 1,
+    my_vgap: 0,
+    my_initialx: 0,
     get_dim: function (hints) {
 	var len = this.arr.length;
 	var hgap = this.hgap;
 	var dimarr = new Array(len);
 	var w= 0, h=0; a=0, d=0;
-	var curx=hints.initialx?hints.initialx:this.initialx;
-	var vgap=hints.vgap?hints.vgap:this.vgap;
+	var curx=hints.initialx?hints.initialx:this.my_initialx;
+	var vgap=hints.vgap?hints.vgap:this.my_vgap;
 	this.offx = curx;
 	for (var ix=0; ix<dimarr; ix++) {
 	    var comp = this.arr[ix];
@@ -358,7 +358,7 @@ var momp_horizgroup = {
 	    a = Math.max(a,curdim.ascent);
 	    d = Math.max(d,curdim.descent);
 	    comp.offx = curx;
-	    curx += w+hgap;
+	    curx += w+this.my_hgap;
 	    dimarr[ix] = curdim;
 	}
 	for (var ix=0; ix<dimarr; ix++) {
@@ -385,6 +385,11 @@ function momc_horizgroup(arr) {
 ////////////////
 var momp_horizlayout = {
     name: "momchorizlayout",
+    my_hindent: 3,		// horizontal indent of left
+    my_hgap: 3,			// horizontal gap between row elements
+    my_vgap: 4,			// vertical gap
+    my_leftgap: 5,		// gap before each row
+    my_rightgap: 2,		// gap after each row
     get_dim: function (hints) {
 	console.log ("chorizlayout-get_dim this=", this, " hints=", hints);
 	var arr = this.arr;
@@ -395,6 +400,38 @@ var momp_horizlayout = {
 	console.log("chorizlayout-get_dim beforedim=", beforedim);
 	var afterdim = after.get_dim(hints);
 	console.log("chorizlayout-get_dim afterdim=", afterdim);
+	var dimarr = new Array(len);
+	for (var ix=0; ix<len; ix++) {
+	    var comp = arr[ix];
+	    console.log ("chorizlayout-get_dim ix#", ix, " comp=", comp);
+	    var dimcomp = comp.get_dim(hints);
+	    console.log ("chorizlayout-get_dim ix#", ix, " dimcomp=", dimcomp);
+	    dimarr[ix] = dimcomp;
+	}
+	console.log("chorizlayout-get_dim dimarr=", dimarr);
+	var curow = null;
+	var curarr = new Array();
+	if (len>0) {
+	    curow = new MomcHorizGroup(curarr);
+	}
+	var rowarr = new Array();
+	var rightx = this.my_hindent + beforedim.width + this.my_hgap;
+	var lowy = 0;
+	for (var ix=0; ix<len; ix++) {
+	    var comp = arr[ix];
+	    var dimcomp = dimarr[ix];
+	    console.log ("chorizlayout-get_dim ix#", ix, " rightx=", rightx,
+			 " comp=", comp, " dimcomp=", dimcomp);
+	    if (rightx + dimcomp.width + this.my_rightgap > hints.maxwidth)   {
+		var rownum = rawarr.length;
+		rowarr.push(curow);
+		var oldrow = curow;
+		curarr = new Array();
+		curow = new MomcHorizGroup(curarr);
+	    }
+	    else {
+	    }
+	}
 	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
     }
 };
