@@ -445,8 +445,9 @@ var momp_horizlayout = {
 		rowarr.push(curow);
 	    }
 	}
-	if (curow.arr.length > 0) {
-	    var rownum = rawarr.length;
+	console.log ("chorizlayout-get_dim last curow=", curow);
+	if (curow && curow.arr.length > 0) {
+	    var rownum = rowarr.length;
 	    rowarr.push(curow);
 	    var lastrow = curow;
 	    var lastrowdim
@@ -457,8 +458,22 @@ var momp_horizlayout = {
 	    dimrowarr[rownum] = lastrowdim;
 	    console.log ("chorizlayout-get_dim lastrowdim=", lastrowdim);
 	}
-	console.log("chorizlayout-get_dim rowarr=", rowarr, " dimrowarr=", dimrowarr,
-		    " afterdim=", afterdim, " this=", this);
+	var nbrows = rowarr.length;
+	console.log("chorizlayout-get_dim nbrows=", nbrows, " rowarr=", rowarr, " dimrowarr=", dimrowarr,
+		    "\n.. beforedim=", beforedim, " afterdim=", afterdim,
+		    " this=", this);
+	switch (nbrows) {
+	case 0:
+	    // show before and after if possible on the same level
+	    break;
+	case 1:
+	    // show if possible, before, the sole row, and after on the same level
+	    break;
+	default:
+	    // show if possible before & the first row on the same level
+	    // and the last row and after on the same level
+	    break;
+	}
 	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
     }				// end get_dim
 };
@@ -582,6 +597,7 @@ var momp_node = {
 				 {maxheight: oldhints.maxheight,
 				  maxwidth: oldhints.maxwidth-dimbeforeconn.width});
 	console.log ("cnode-get_dim connhints=", connhints);
+	console.warn("cnode-get_dim should use MomcHorizLayout");
 	var dimconn = this.conn.get_dim(connhints);
 	console.log ("cnode-get_dim dimconn=", dimconn);
 	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
