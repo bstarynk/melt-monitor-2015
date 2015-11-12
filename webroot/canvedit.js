@@ -114,7 +114,7 @@ var momp_scalar ={
     name: "momcscalar",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
-    //my_font_style: 'plain',
+    my_font_style: 'normal',
     my_color: '#0B372C',
     get_dim: function(hints) {
 	if (this.dim) {
@@ -149,6 +149,14 @@ var momp_scalar ={
 		    " dimleft=", dimleft, " dimright=", dimright);
 	this.dim = dim;
 	return dim;
+    },
+    draw: function() {
+	console.log("cscalar-draw this=", this, " offx=", this.offx, " offy=", this.offy);
+	canvctxt.save();
+	canvctxt.font(this.my_font_style+" "+this.my_font_size+" "+this.my_font_family);
+	canvctxt.fillStyle = canvctxt.strokeStyle = this.my_color;
+	canvctxt.fillText(this.str, this.offx, this.offy);
+	canvctxt.restore();	
     }
 };
 console.log("momp_scalar=", momp_scalar);
@@ -166,7 +174,7 @@ var momp_nil_ref = {
     name: "momcnilref",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
-    my_font_style: "italics",
+    my_font_style: "italic",
     my_color: '#0B1E37'
 };
 momp_nil_ref.prototype= momp_scalar;
@@ -216,7 +224,7 @@ var momp_item_val = {
     name: "momcitemval",
     my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
-    my_font_style: 'oblique',
+    my_font_style: 'italic',
     my_color: '#330A4F'
 };
 momp_item_val.prototype = momp_scalar;
@@ -240,7 +248,7 @@ var momp_item_ref = {
     name: "momcitemref",
     my_font_size: '13pt',
     my_font_family: "Arial, sans-serif",
-    my_font_style: 'oblique',
+    my_font_style: 'italic',
     my_color: '#862769'
 };
 momp_item_ref.__proto__ = momp_scalar;
@@ -264,7 +272,7 @@ var momp_int = {
     name: "momcint",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    //my_font_style: 'plain',
+    my_font_style: 'normal',
     my_color: '#5B1D01'
 };
 momp_int.__proto__ = momp_scalar;
@@ -288,7 +296,7 @@ var momp_double = {
     name: "momcdouble",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    //    my_font_style: 'plain',
+    my_font_style: 'normal',
     my_color: '#7C480B'
 };
 momp_double.__proto__ = momp_scalar;
@@ -312,7 +320,7 @@ var momp_string = {
     name: "momcstring",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    //my_font_style: 'plain',
+    my_font_style: 'normal',
     my_color: '#074723',
     my_decofont_family: 'Helvetica, sans-serif',
     my_decoleft:'\u201c', // “ U+201C LEFT DOUBLE QUOTATION MARK 
@@ -475,7 +483,7 @@ var momp_horizlayout = {
 		this.before.offy = this.after.offy = a + this.my_vgap;
 		this.after.offx = 2*this.my_hgap + beforedim.width;
 		dim = {width: beforedim.width + afterdim.width + 3*this.my_hgap,
-		       height: Math.max(beforedim.height, afterdim.height),+ 2*this.my_vgap,
+		       height: Math.max(beforedim.height, afterdim.height) + 2*this.my_vgap,
 		       ascent: a,
 		       descent: d};
 		dim.__proto__ = dimproto;
@@ -531,17 +539,30 @@ var momp_horizlayout = {
 		    this.after.offy = this.before.offy +  Math.max(beforedim.height,therowdim.height) + 2*this.my_vgap;
 		    this.dim = dim;
 		    console.log("chorizlayout-get_dim singlerow before&row/2lev therow=", therow, " this=", this, " dim=", dim);
-		    return dim;		    
+		    return dim;
 		}
-		else if (therowdim.width + afterdim.width + 2*this.my_hgap < hints.maxwidth) {
+		else if ((w=therowdim.width + afterdim.width + 3*this.my_hgap) < hints.maxwidth) {
 		    // before on first level, therow + after on second level
+		    h = beforedim.height + Math.max(therowdim.height, afterdim.height) + 3*this.my_vgap;
+		    a = beforedim.height + 2*this.my_vgap;
+		    d = Math.max(therowdim.height, afterdim.height) + this.my_vgap;
+		    dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
+		    this.before.offx = this.my_hgap;
+		    this.before.offy = a - this.my_vgap;
+		    this.therow.offx = this.my_vgap;
+		    this.after.offy = this.therow.offy = a - this.my_vgap;
+		    this.after.offx = 2*this.my_vgap + therowdim.width;
+		    this.dim = dim;
+		    console.log("chorizlayout-get_dim singlerow row&after/2lev therow=", therow, " this=", this, " dim=", dim);
+		    return dim;
 		}
 		else {
 		    // before on first level, the row on second level, after on third level
+		    console.warn("chorizlayout-get_dim singlerow 3level unimplemented this=", this);
 		}
 	    }
 	    break;
-	default:
+	default: /// we have at least two rows, so the first and the last ones are different
 	    // show if possible before & the first row on the same level
 	    // and the last row and after on the same level
 	    {
@@ -635,8 +656,8 @@ var momp_tuple = {
     my_decofont_family: "Verdana, sans-serif",
     my_decofont_size: '13pt',
     my_hgap: 7,
-    my_vgap: 3
-    //my_font_style: 'plain'
+    my_vgap: 3,
+    my_font_style: 'normal'
 };
 momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
@@ -663,8 +684,8 @@ var momp_set = {
     my_deco_after_str: "}", 
     my_decofont_family: "Verdana, sans-serif",
     my_hgap: 5,
-    my_vgap: 3
-    //my_font_style: 'plain'
+    my_vgap: 3,
+    my_font_style: 'normal'
 };
 momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
@@ -690,7 +711,7 @@ var momp_node = {
     my_deco_beforeconn_str: "*",
     my_deco_beforesons_str: "(",
     my_deco_aftersons_str: ")",
-    //my_font_style: "plain",
+    my_font_style: "normal",
     get_dim: function(hints) {
 	if (this.dim) {
 	    console.log ("cnode-get_dim with dim this=",this);
@@ -766,7 +787,7 @@ var momp_top_entry = {
     my_deco_right_val_str: ";",
     my_deco_val_horgap: 10,
     my_deco_val_vertgap: 3,
-    //my_font_style: 'plain',
+    my_font_style: 'normal',
     get_dim: function (hints) {
 	if (this.dim) {
 	    console.log ("top_entry-get_dim with dim this=",this);
