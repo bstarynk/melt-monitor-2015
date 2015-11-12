@@ -51,8 +51,9 @@ var nbsp = String.fromCharCode(160);
     would affect the dimensions of the whole page.
 */
 var dimproto = {
-    toString: function () { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
-			    + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
+    toString: function ()
+    { return "txtdim{h=" + this.height.toString() + ",w=" + this.width.toString()
+      + ",asc=" + this.ascent.toString() + ",desc=" + this.descent.toString() + "}"; }
 };
 var measureText = function(text, styleprops)
 {
@@ -113,7 +114,7 @@ var momp_scalar ={
     name: "momcscalar",
     my_font_size: '13pt',
     my_font_family: "Verdana, sans-serif",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#0B372C',
     get_dim: function(hints) {
 	if (this.dim) {
@@ -263,7 +264,7 @@ var momp_int = {
     name: "momcint",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#5B1D01'
 };
 momp_int.__proto__ = momp_scalar;
@@ -287,7 +288,7 @@ var momp_double = {
     name: "momcdouble",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //    my_font_style: 'plain',
     my_color: '#7C480B'
 };
 momp_double.__proto__ = momp_scalar;
@@ -311,7 +312,7 @@ var momp_string = {
     name: "momcstring",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     my_color: '#074723',
     my_decofont_family: 'Helvetica, sans-serif',
     my_decoleft:'\u201c', // “ U+201C LEFT DOUBLE QUOTATION MARK 
@@ -334,11 +335,182 @@ function momc_string(str) {
     return res;
 };
 
+
+////////////////
+var momp_horizgroup = {
+    name: "momchorizgroup",
+    my_hgap: 1,
+    my_vgap: 0,
+    my_initialx: 0,
+    get_dim: function (hints) {
+	var len = this.arr.length;
+	var hgap = this.hgap;
+	var dimarr = new Array(len);
+	var w= 0, h=0; a=0, d=0;
+	var curx=hints.initialx?hints.initialx:this.my_initialx;
+	var vgap=hints.vgap?hints.vgap:this.my_vgap;
+	this.offx = curx;
+	for (var ix=0; ix<dimarr; ix++) {
+	    var comp = this.arr[ix];
+	    var curdim = comp.get_dim(hints);
+	    w = w+hgap+curdim.width;
+	    h = Math.max(h,curdim.height);
+	    a = Math.max(a,curdim.ascent);
+	    d = Math.max(d,curdim.descent);
+	    comp.offx = curx;
+	    curx += w+this.my_hgap;
+	    dimarr[ix] = curdim;
+	}
+	for (var ix=0; ix<dimarr; ix++) {
+	    var comp = this.arr[ix];
+	    comp.offy = vgap+a;
+	}
+	var dim= {width: w, height: h, ascent: a, descent: d, __proto__: dimproto};
+	this.dim = dim;
+	return dim;
+    }
+};
+var MomcHorizGroup = function (arr) {
+    this.arr = arr;
+    console.log ("MomcHorizGroup this=", this);
+};
+MomcHorizGroup.prototype = momp_horizgroup;
+
+function momc_horizgroup(arr) {
+    var res = new MomcHorizGroup(arr);
+    return res;
+};
+
+
+////////////////
+var momp_horizlayout = {
+    name: "momchorizlayout",
+    my_hindent: 3,		// horizontal indent of left
+    my_hgap: 3,			// horizontal gap between row elements
+    my_vgap: 4,			// vertical gap
+    my_leftgap: 5,		// gap before each row
+    my_rightgap: 2,		// gap after each row
+    get_dim: function (hints) {
+	console.log ("chorizlayout-get_dim this=", this, " hints=", hints);
+	var arr = this.arr;
+	var len = arr.length;
+	var before = this.before;
+	var after = this.after;
+	var beforedim = before.get_dim(hints);
+	console.log("chorizlayout-get_dim beforedim=", beforedim);
+	var afterdim = after.get_dim(hints);
+	console.log("chorizlayout-get_dim afterdim=", afterdim);
+	var dimarr = new Array(len);
+	for (var ix=0; ix<len; ix++) {
+	    var comp = arr[ix];
+	    console.log ("chorizlayout-get_dim ix#", ix, " comp=", comp);
+	    var dimcomp = comp.get_dim(hints);
+	    console.log ("chorizlayout-get_dim ix#", ix, " dimcomp=", dimcomp);
+	    dimarr[ix] = dimcomp;
+	}
+	console.log("chorizlayout-get_dim dimarr=", dimarr);
+	var curow = null;
+	var curarr = new Array();
+	if (len>0) {
+	    curow = new MomcHorizGroup(curarr);
+	}
+	var rowarr = new Array();
+	var dimrowarr = new Array();
+	var rightx = this.my_hindent + beforedim.width + this.my_hgap;
+	var firstinitialx = rightx;
+	var lowy = 0;
+	for (var ix=0; ix<len; ix++) {
+	    var comp = arr[ix];
+	    var dimcomp = dimarr[ix];
+	    console.log ("chorizlayout-get_dim ix#", ix, " rightx=", rightx,
+			 " comp=", comp, " dimcomp=", dimcomp);
+	    if (rightx + dimcomp.width + this.my_rightgap > hints.maxwidth)   {
+		var rownum = rawarr.length;
+		rowarr.push(curow);
+		var oldrow = curow;
+		curarr = new Array();
+		curow = new MomcHorizGroup(curarr);
+		console.log ("chorizlayout-get_dim oldrow=", oldrow);
+		var oldrowdim
+		    = oldrow.get_dim ({maxwidth:hints.maxwidth,
+				       maxheight:hints.maxheight,
+				       initialx:(rownum==0)?firstinitialx:this.my_leftgap,
+				       vgap:this.my_vgap});
+		dimrowarr[rownum] = oldrowdim;
+		console.log ("chorizlayout-get_dim oldrowdim=", oldrowdim,
+			     " afterdim=", afterdim,
+			     "\n.. this=", this);
+	    }
+	    else {
+		rowarr.push(curow);
+	    }
+	}
+	console.log ("chorizlayout-get_dim last curow=", curow);
+	if (curow && curow.arr.length > 0) {
+	    var rownum = rowarr.length;
+	    rowarr.push(curow);
+	    var lastrow = curow;
+	    var lastrowdim
+		= lastrow.get_dim({maxwidth:hints.maxwidth,
+				   maxheight:hints.maxheight,
+				   initialx:(rownum==0)?firstinitialx:this.my_leftgap,
+				   vgap:this.my_vgap});
+	    dimrowarr[rownum] = lastrowdim;
+	    console.log ("chorizlayout-get_dim lastrowdim=", lastrowdim);
+	}
+	var nbrows = rowarr.length;
+	console.log("chorizlayout-get_dim nbrows=", nbrows, " rowarr=", rowarr, " dimrowarr=", dimrowarr,
+		    "\n.. beforedim=", beforedim, " afterdim=", afterdim,
+		    " this=", this);
+	switch (nbrows) {
+	case 0:
+	    // show before and after if possible on the same level
+	    break;
+	case 1:
+	    // show if possible, before, the sole row, and after on the same level
+	    break;
+	default:
+	    // show if possible before & the first row on the same level
+	    // and the last row and after on the same level
+	    break;
+	}
+	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
+    }				// end get_dim
+};
+var MomcHorizLayout = function (before,arr,after) {
+    this.before = before;
+    this.arr = arr;
+    this.after = after;
+};
+MomcHorizLayout.prototype = momp_horizlayout;
+function momc_horizlayout(before,arr,after) {
+    var res = new MomcHorizLayout(before,arr,after);
+    return res;
+}
+
 ////////////////
 var momp_sequence = {
     name: "momcsequence",
     get_dim: function (hints) {
-	console.log("csequence-get_dim this=", this);
+	var len = this.arr.length;
+	var putdimarr = new Array(len);
+	var rowarr = new Array();
+	var curow = null;
+	if (len>0) {
+	    curow = {rowix: 0, rowcomp: new Array()};
+	    rowarr.push(curow);
+	}
+	
+	for (var ix=0; ix<len; ix++) {
+	    var curcomp = this.arr[ix];
+	    console.log ("csequence-get_dim curcomp=", curcomp, " ix#", ix);
+	    var curdim = curcomp.get_dim(hints);
+	    console.log ("csequence-get_dim curdim=", curdim,
+			 " for curcomp=", curcomp, " ix#", ix);
+	    putdimarr[ix] = curdim;
+	}
+	console.trace("csequence-get_dim putdimarr=", putdimarr);
+	console.warn("csequence-get_dim @@unimplemented this=", this, " hints=", hints);
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -348,7 +520,13 @@ var momp_tuple = {
     name: "momctuple",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    my_deco_before_str: "[",
+    my_deco_after_str: "]", 
+    my_decofont_family: "Verdana, sans-serif",
+    my_decofont_size: '13pt',
+    my_hgap: 7,
+    my_vgap: 3
+    //my_font_style: 'plain'
 };
 momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
@@ -370,7 +548,13 @@ var momp_set = {
     name: "momcset",
     my_font_size: '12pt',
     my_font_family: "Courier, Lucida",
-    my_font_style: 'plain'
+    my_decofont_size: '13pt',
+    my_deco_before_str: "{",
+    my_deco_after_str: "}", 
+    my_decofont_family: "Verdana, sans-serif",
+    my_hgap: 5,
+    my_vgap: 3
+    //my_font_style: 'plain'
 };
 momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
@@ -396,9 +580,7 @@ var momp_node = {
     my_deco_beforeconn_str: "*",
     my_deco_beforesons_str: "(",
     my_deco_aftersons_str: ")",
-    my_font_style: "plain",
-    my_sons_hgap: 7,
-    my_sons_vgap: 3,
+    //my_font_style: "plain",
     get_dim: function(hints) {
 	if (this.dim) {
 	    console.log ("cnode-get_dim with dim this=",this);
@@ -407,7 +589,7 @@ var momp_node = {
 	console.log ("cnode-get_dim this=", this, " hints=", hints);
 	var decostyleprop = {fontFamily: this.my_decofont_family || this.my_font_family,
 			     fontSize: this.my_decofont_size || this.my_font_size,
-			     fontStyle: this.my_decofont_style || this.my_font_style};
+			     fontStyle: this.my_decofont_style || this.my_font_style || null};
 	var dimbeforeconn = measureText(this.my_deco_beforeconn_str, decostyleprop);
 	console.log ("cnode-get_dim dimbeforeconn=", dimbeforeconn);
 	var oldhints = hints;
@@ -415,6 +597,7 @@ var momp_node = {
 				 {maxheight: oldhints.maxheight,
 				  maxwidth: oldhints.maxwidth-dimbeforeconn.width});
 	console.log ("cnode-get_dim connhints=", connhints);
+	console.warn("cnode-get_dim should use MomcHorizLayout");
 	var dimconn = this.conn.get_dim(connhints);
 	console.log ("cnode-get_dim dimconn=", dimconn);
 	var dimbeforesons = measureText(this.my_deco_beforesons_str, decostyleprop);
@@ -433,72 +616,20 @@ var momp_node = {
 	this.conn.offy = dimfullconn.ascent+1;
 	// afterconn deco drawn at offx=1+dimfullconn.width, offy=conn.offy
 	this.afterconndecoffx=1+dimfullconn.width;
-	var len = arr.length;
-	var rowarr = new Array();
-	var curow = {rowcomp: new Array(); rowindex:0};
-	var close_row = function (row,offx,bottomy) {
-	    row.offx = offx;
-	    var rowlen = row.rowcomp.length;
-	    var curx = offx;
-	    var h = 6;
-	    var w = this.my_sons_hgap;
-	    var a = 2*h/3, d = h/3;
-	    for (var ix=0; ix<rowlen; ix++) {
-		var curcomp = row.rowcomp[ix];
-		var curdim = curcomp.dim;
-		h = Math.max(h, curdim.height);
-		a = Math.max(a, curdim.ascent);
-		d = Math.max(d, curdim.descent);
-		curcomp.offx = curx;
-		curx += curdim.width + this.my_sons_hgap;
-	    }
-	    row.width = curx - offx;
-	    row.height = h + this.my_sons_vgap;
-	    row.ascent = a;
-	    row.descent = d;
-	    var rowoffy =  bottomy + a + this.my_sons_vgap;
-	    for (var ix=0; ix<rowlen; ix++) {
-		var curcomp = row.rowcomp[ix];
-		curcomp.offy = rowoffy;
-	    }
-	    row.offy = rowoffy;
-	    return rowoffy + row.descent;
-	}
-	if (len>0)
-	    rowarr.push(curow);
-	var rightx = this.afterconndecoffx;
-	var basey = dimfullconn.ascent+1;
-	var bottomy = dimfullconn.height+1;
+	var len = this.arr.length;
+	var putsondims= new Array(len); // putative dimensions
 	for (var ix=0; ix<len; ix++) {
-	    var curson = arr[ix];
-	    console.log("cnode-get_dim ix=", ix, " curson=", curson, " this=", this,
-			"\n.. rightx=", rightx, " basey=", basey, " bottomy=", bottomy,
-			" curow=", curow);
-	    var curwantdim = curson.get_dim(hints);
+	    var curson = this.arr[ix];
+	    console.log ("cnode-get_dim ix=", ix, " curson=", curson);
+	    var curputdim = curson.get_dim(hints);
 	    delete curson.dim;
 	    delete curson.offx;
 	    delete curson.offy;
-	    console.log("cnode-get_dim curwantdim=", curwantdim, " curson=", curson);
-	    if (curow.length == 0
-		|| curwantdim.width + rightx + this.my_sons_hgap < hints.maxwidth) {
-		// the curson fits in the curow
-		curson.dim = curwantdim;
-		curson.offx = rightx;
-		rightx = rightx + curwantdim.width + this.my_sons_hgap;
-		curow.rowcomp.push(curson);
-		console.log("cnode-get_dim at right curson", curson);
-		continue;
-	    }
-	    //// FIXME, should also perhaps get_dim on the remaining size
-	    else {
-		// we need to create a new row
-		bottomy = close_row(curow, rightx, bottomy);
-		curow.rowindex = rowarr.length;
-		var newrow = {rowcomp: new Array(); rowindex:rowarr.length+1};
-		rowarr.push(newrow);
-		curow = newrow;
-	    }
+	    putsondims[ix] = curputdim;
+	    console.log ("cnode-get_dim curputdim=", curputdim, " for curson=", curson,
+			 "\n.. ix=", ix, " this=", this);
 	}
+	console.log ("cnode-get_dim putsondims=", putsondims, "\n ... for this=", this);
 	console.warn("cnode-get_dim @@@incomplete this=", this);
     }
 };
@@ -514,6 +645,7 @@ var MomcNode = function (conn, arr) {
 	var comp = arr[ix];
 	if (typeof comp === "object") {
 	    comp.insideinum = myinum;
+	    comp.insideindex = ix;
 	}
     }
     console.log ("MomcNode this=", this);
@@ -537,7 +669,7 @@ var momp_top_entry = {
     my_deco_right_val_str: ";",
     my_deco_val_horgap: 10,
     my_deco_val_vertgap: 3,
-    my_font_style: 'plain',
+    //my_font_style: 'plain',
     get_dim: function (hints) {
 	if (this.dim) {
 	    console.log ("top_entry-get_dim with dim this=",this);
