@@ -535,28 +535,57 @@ function momc_horizlayout(before,arr,after) {
 }
 
 ////////////////
+var momp_deco = {
+    name: "momcdeco",
+    get_dim: function (hints) {
+	if (this.dim) return this.dim;
+	var prop =  {fontFamily: this.my_font_family,
+		     fontSize: this.my_font_size,
+		     fontStyle: this.my_font_style || null};
+	var dim =  measureText(this.str, prop);
+	this.dim = dim;
+	return dim;
+    }
+};
+console.log ("momp_deco=", momp_deco);
+var MomcDeco = function(str,fontfam,fontsiz,fontstyl,color) {
+    this.str = str;
+    this.my_font_family = fontfam;
+    this.my_font_size = fontsiz;
+    this.my_font_style = fontstyl;
+    this.my_color = color;
+};
+MomcDeco.prototype = momp_deco;
+
+////////////////
 var momp_sequence = {
     name: "momcsequence",
     get_dim: function (hints) {
-	var len = this.arr.length;
-	var putdimarr = new Array(len);
-	var rowarr = new Array();
-	var curow = null;
-	if (len>0) {
-	    curow = {rowix: 0, rowcomp: new Array()};
-	    rowarr.push(curow);
+	if (this.dim) {
+	    console.log ("csequence-get_dim has dim=", this.dim);
+	    return this.dim;
 	}
-	
-	for (var ix=0; ix<len; ix++) {
-	    var curcomp = this.arr[ix];
-	    console.log ("csequence-get_dim curcomp=", curcomp, " ix#", ix);
-	    var curdim = curcomp.get_dim(hints);
-	    console.log ("csequence-get_dim curdim=", curdim,
-			 " for curcomp=", curcomp, " ix#", ix);
-	    putdimarr[ix] = curdim;
+	if (!this.hasOwnProperty("hlayout")) {
+	    var beforedeco
+		= new MomcDeco(this.my_deco_before_str,
+			       this.my_decofont_family,
+			       this.my_decofont_size,
+			       this.my_decofont_style || this.my_font_style,
+			       this.my_decofont_color || this.my_font_color || 'black');
+	    var afterdeco
+		= new MomcDeco(this.my_deco_before_str,
+			       this.my_decofont_family,
+			       this.my_decofont_size,
+			       this.my_decofont_style || this.my_font_style,
+			       this.my_decofont_color || this.my_font_color || 'black');
+	    var hlayout = new MomcHorizLayout(beforedeco,this.arr,afterdeco);
+	    console.log ("csequence-get_dim hlayout=", hlayout);
+	    this.hlayout = hlayout;
 	}
-	console.trace("csequence-get_dim putdimarr=", putdimarr);
-	console.warn("csequence-get_dim @@unimplemented this=", this, " hints=", hints);
+	var dim = this.hlayout.get_dim(hints);
+	console.log("csequence-get_dim dim=", dim);
+	this.dim = dim;
+	return dim;
     }
 };
 console.log ("momp_sequence=", momp_sequence);
