@@ -392,6 +392,7 @@ var momp_horizlayout = {
     my_rightgap: 2,		// gap after each row
     get_dim: function (hints) {
 	console.log ("chorizlayout-get_dim this=", this, " hints=", hints);
+	var dim = null;
 	var arr = this.arr;
 	var len = arr.length;
 	var before = this.before;
@@ -465,13 +466,58 @@ var momp_horizlayout = {
 	switch (nbrows) {
 	case 0:
 	    // show before and after if possible on the same level
+	    if (beforedim.width + afterdim.width + 3*this.my_hgap < hints.maxwidth) {
+		/// before and after on the same level
+		var a = Math.max(beforedim.ascent, afterdim.ascent);
+		var d = Math.max(beforedim.descent, afterdim.descent);
+		this.before.offx = this.my_hgap;
+		this.before.offy = this.after.offy = a + this.my_vgap;
+		this.after.offx = 2*this.my_hgap + beforedim.width;
+		dim = {width: beforedim.width + afterdim.width + 3*this.my_hgap,
+		       height: Math.max(beforedim.height, afterdim.height),+ 2*this.my_vgap,
+		       ascent: a,
+		       descent: d};
+		dim.__proto__ = dimproto;
+		this.dim = dim;
+		console.log("chorizlayout-get_dim empty-horiz dim=", dim, " this=", this);
+		return dim;
+	    }
+	    else {
+		/// before and after vertically layed out.
+		var w = Math.max(beforedim.width, afterdim.width) + 2*this.my_hgap;
+		var a = beforedim.height + this.my_vgap;
+		var d = afterdim.height + this.my_vgap;
+		var h = beforedim.height + afterdim.height + 3*this.my_vgap;
+		dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
+		this.dim = dim;
+		this.before.offx = this.after.offx = this.my_hgap;
+		this.before.offy = a;
+		this.after.offy = h - afterdim.descent - this.my_hgap;
+		console.log("chorizlayout-get_dim empty-vert dim=", dim, " this=", this);
+		return dim;
+	    }	    
 	    break;
 	case 1:
 	    // show if possible, before, the sole row, and after on the same level
+	    {
+		var therow = rowarr[0];
+		var therowdim = dimrowarr[0];
+		console.warn("chorizlayout-get_dim singlerow therow=", therow,
+			    " therowdim=", therowdim);
+	    }
 	    break;
 	default:
 	    // show if possible before & the first row on the same level
 	    // and the last row and after on the same level
+	    {
+		var firstrow = rowarr[0];
+		var lastrow = rowarr[nbrows-1];
+		var firstrowdim = dimrowarr[0];
+		var lastrowdim = dimrowarr[nbrows-1];
+		console.warn("chorizlayout-get_dim manyrows firstrow=", firstrow,
+			     " firstrowdim=", firstrowdim,
+			     "\n.. lastrow=", lastrow, " lastrowdim=", lastrowdim);
+	    }
 	    break;
 	}
 	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
