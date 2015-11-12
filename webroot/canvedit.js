@@ -358,7 +358,7 @@ var momp_horizgroup = {
 	var curx=hints.initialx?hints.initialx:this.my_initialx;
 	var vgap=hints.vgap?hints.vgap:this.my_vgap;
 	this.offx = curx;
-	for (var ix=0; ix<dimarr; ix++) {
+	for (var ix=0; ix<len; ix++) {
 	    var comp = this.arr[ix];
 	    var curdim = comp.get_dim(hints);
 	    w = w+hgap+curdim.width;
@@ -375,7 +375,21 @@ var momp_horizgroup = {
 	}
 	var dim= {width: w, height: h, ascent: a, descent: d, __proto__: dimproto};
 	this.dim = dim;
+	console.log ("chorizgroup-get_dim this=", this, " dim=", dim);
 	return dim;
+    },
+    draw: function () {
+	console.log ("chorizgroup-draw this=", this);
+	var len = this.arr.length;
+	for (var ix=0; ix<len; ix++) {
+	    canvctxt.save();
+	    var comp = this.arr[ix];
+	    console.log ("chorizgroup-draw comp=", comp, " ix#", ix);
+	    canvctxt.translate(comp.offx, comp.offy);
+	    comp.draw();
+	    canvctxt.restore();	
+	}
+	console.log ("chorizgroup-draw done this=", this);	
     }
 };
 var MomcHorizGroup = function (arr) {
@@ -577,7 +591,10 @@ var momp_horizlayout = {
 	    break;
 	}
 	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
-    }				// end get_dim
+    },				// end get_dim
+    draw: function() {
+	console.warn("chorizlayout-draw @@unimplemented arr=", arr);
+    }
 };
 var MomcHorizLayout = function (before,arr,after) {
     this.before = before;
@@ -600,7 +617,16 @@ var momp_deco = {
 		     fontStyle: this.my_font_style || null};
 	var dim =  measureText(this.str, prop);
 	this.dim = dim;
+	console.log ("deco-get_dim this=", this, " dim=", dim);
 	return dim;
+    },
+    draw: function() {
+	console.log("deco-draw this=", this, " offx=", this.offx, " offy=", this.offy);
+	canvctxt.save();
+	canvctxt.font(this.my_font_style+" "+this.my_font_size+" "+this.my_font_family);
+	canvctxt.fillStyle = canvctxt.strokeStyle = this.my_color;
+	canvctxt.fillText(this.str, this.offx, this.offy);
+	canvctxt.restore();
     }
 };
 console.log ("momp_deco=", momp_deco);
@@ -642,6 +668,9 @@ var momp_sequence = {
 	console.log("csequence-get_dim dim=", dim);
 	this.dim = dim;
 	return dim;
+    },
+    draw: function() {
+	console.warn("csequence-draw @@unimplemented this=", this, " offx=", this.offx, " offy=", this.offy);
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -722,6 +751,11 @@ var momp_node = {
 	console.log ("cnode-get_dim this=", this, " dim=", dim);
 	this.dim = dim;
 	return dim;
+    },
+    draw: function() {
+	console.log ("cnode-draw this=", this);
+	this.hlayout.draw();
+	console.log ("cnode-draw done this=", this);
     }
 };
 console.log ("momp_node=", momp_node);
@@ -867,6 +901,9 @@ var momp_top_entry = {
 	this.dim = diment;
 	console.debug("top_entry-get_dim result diment=", diment, " for this=", this);
 	return diment;
+    },
+    draw: function() {
+	console.debug("top_entry-draw @@unimplemented this=", this);
     }
 };				// end momp_top_entry
 console.log ("momp_top_entry=", momp_top_entry);
