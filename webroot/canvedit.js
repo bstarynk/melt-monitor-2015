@@ -151,9 +151,9 @@ var momp_scalar ={
 		height: Math.max(dimstr.height,dimleft.height,dimright.height)
 	      };
 	dim.__proto__ = dimproto;
-	console.log("cscalar-get_dim dim=", dim, " from dimstr=", dimstr,
-		    " dimleft=", dimleft, " dimright=", dimright);
 	this.dim = dim;
+	console.log("cscalar-get_dim dim=", dim, " from dimstr=", dimstr,
+		    " dimleft=", dimleft, " dimright=", dimright, " for this=", this);
 	return dim;
     },
     draw: function() {
@@ -349,9 +349,9 @@ var momp_horizgroup = {
     my_initialx: 0,
     get_dim: function (hints) {
 	var len = this.arr.length;
-	var hgap = this.hgap;
+	var hgap = this.my_hgap;
 	var dimarr = new Array(len);
-	var w= 0, h=0; a=0, d=0;
+	var w= 0, h=0, a=0, d=0;
 	var curx=hints.initialx?hints.initialx:this.my_initialx;
 	var vgap=hints.vgap?hints.vgap:this.my_vgap;
 	this.offx = curx;
@@ -362,6 +362,10 @@ var momp_horizgroup = {
 	    h = Math.max(h,curdim.height);
 	    a = Math.max(a,curdim.ascent);
 	    d = Math.max(d,curdim.descent);
+	    if ((typeof w) !== "number" || (typeof h) !== "number"
+		|| (typeof a) !== "number" || (typeof d) !== "number")
+		console.err("chorizgroup-get_dim ix=", ix, " comp=", comp, " this=", this,
+			    " bad w=", w, " h=", h, " a=", a, " d=", d);
 	    comp.offx = curx;
 	    curx += w+this.my_hgap;
 	    dimarr[ix] = curdim;
@@ -426,10 +430,10 @@ var momp_horizlayout = {
 	    var comp = arr[ix];
 	    console.log ("chorizlayout-get_dim ix#", ix, " comp=", comp);
 	    var dimcomp = comp.get_dim(hints);
-	    console.log ("chorizlayout-get_dim ix#", ix, " dimcomp=", dimcomp);
+	    console.log ("chorizlayout-get_dim ix#", ix, " dimcomp=", dimcomp, " for comp=", comp);
 	    dimarr[ix] = dimcomp;
 	}
-	console.log("chorizlayout-get_dim dimarr=", dimarr);
+	console.log("chorizlayout-get_dim dimarr=", dimarr, " this=", this);
 	var curow = null;
 	var curarr = new Array();
 	if (len>0) {
@@ -465,6 +469,7 @@ var momp_horizlayout = {
 	    else {
 		rowarr.push(curow);
 	    }
+	    console.log ("chorizlayout-get_dim done ix#", ix, " this=", this);
 	}
 	console.log ("chorizlayout-get_dim last curow=", curow,
 		     " dimrowarr=", dimrowarr, " this=", this);
@@ -478,7 +483,7 @@ var momp_horizlayout = {
 				   initialx:(rownum==0)?firstinitialx:this.my_leftgap,
 				   vgap:this.my_vgap});
 	    dimrowarr[rownum] = lastrowdim;
-	    console.log ("chorizlayout-get_dim lastrowdim=", lastrowdim);
+	    console.log ("chorizlayout-get_dim lastrowdim=", lastrowdim, " lastrow=", lastrow, " this=", this);
 	}
 	var nbrows = rowarr.length;
 	console.log("chorizlayout-get_dim nbrows=", nbrows, " rowarr=", rowarr, " dimrowarr=", dimrowarr,
@@ -508,7 +513,11 @@ var momp_horizlayout = {
 		w = Math.max(beforedim.width, afterdim.width) + 2*this.my_hgap;
 		a = beforedim.height + this.my_vgap;
 		d = afterdim.height + this.my_vgap;
-		h = beforedim.height + afterdim.height + 3*this.my_vgap;
+		h = beforedim.height + afterdim.height + 3*this.my_vgap;		
+		if ((typeof w) !== "number" || (typeof h) !== "number"
+		    || (typeof a) !== "number" || (typeof d) !== "number")
+		    console.err("chorizlayout-get_dim ix=", ix, " this=", this,
+				" bad w=", w, " h=", h, " a=", a, " d=", d);
 		dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
 		this.dim = dim;
 		this.before.offx = this.after.offx = this.my_hgap;
@@ -529,7 +538,11 @@ var momp_horizlayout = {
 		    // all fits in a single level
 		    h = Math.max(beforedim.height, therowdim.height, afterdim.height)+ 2*this.my_vgap;
 		    a = Math.max(beforedim.ascent, therowdim.ascent, afterdim.ascent);
-		    d = Math.max(beforedim.descent, therowdim.descent, afterdim.descent);
+		    d = Math.max(beforedim.descent, therowdim.descent, afterdim.descent);		
+		    if ((typeof w) !== "number" || (typeof h) !== "number"
+			|| (typeof a) !== "number" || (typeof d) !== "number")
+			console.err("chorizlayout-get_dim ix=", ix, " this=", this,
+				    " bad w=", w, " h=", h, " a=", a, " d=", d);
 		    dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
 		    this.before.offx = this.my_hgap;
 		    this.before.offy = this.therow.offy = this.after.offy = this.my_vgap + a;
@@ -543,7 +556,11 @@ var momp_horizlayout = {
 		    // before + therow on first level, after on second level
 		    h = Math.max(beforedim.height,therowdim.height) + afterdim.height + 3*this.my_vgap;
 		    a = Math.max(beforedim.ascent,therowdim.ascent) + 2*this.my_vgap;
-		    d = afterdim.descent + this.my_vgap;
+		    d = afterdim.descent + this.my_vgap;		
+		    if ((typeof w) !== "number" || (typeof h) !== "number"
+			|| (typeof a) !== "number" || (typeof d) !== "number")
+			console.err("chorizlayout-get_dim ix=", ix, " this=", this,
+				    " bad w=", w, " h=", h, " a=", a, " d=", d);
 		    dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
 		    this.before.offx = this.my_hgap;
 		    this.before.offy = this.therow.offy = a - this.my_vgap;
@@ -557,7 +574,11 @@ var momp_horizlayout = {
 		    // before on first level, therow + after on second level
 		    h = beforedim.height + Math.max(therowdim.height, afterdim.height) + 3*this.my_vgap;
 		    a = beforedim.height + 2*this.my_vgap;
-		    d = Math.max(therowdim.height, afterdim.height) + this.my_vgap;
+		    d = Math.max(therowdim.height, afterdim.height) + this.my_vgap;		
+		    if ((typeof w) !== "number" || (typeof h) !== "number"
+			|| (typeof a) !== "number" || (typeof d) !== "number")
+			console.err("chorizlayout-get_dim ix=", ix, " this=", this,
+				    " bad w=", w, " h=", h, " a=", a, " d=", d);
 		    dim = {width:w, ascent: a, descent: d, height: h, __proto__: dimproto};
 		    this.before.offx = this.my_hgap;
 		    this.before.offy = a - this.my_vgap;
