@@ -180,3 +180,7 @@ span.momname_bcl {
     gap: 1px;
 }
 
+span.momname_cl:focus {
+    background-color: yellow;
+}
+

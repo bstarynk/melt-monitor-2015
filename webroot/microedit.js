@@ -54,6 +54,10 @@ function focusev(evt) {
     console.log("focusev evt=", evt);
 }
 
+function blurev(evt) {
+    console.log("blurev evt=", evt);
+}
+
 function ignore_pastev(evt) {
     console.log("ignore_pastev evt=", evt);
     return false;
@@ -70,6 +74,10 @@ function name_keypressev(evt) {
 
 function name_focusev(evt) {
     console.log("name_focusev evt=", evt);
+}
+
+function name_blurev(evt) {
+    console.log("name_blurev evt=", evt);
 }
 
 
@@ -91,6 +99,7 @@ function ajaxload(data) {
     });
     editdiv.on("keypress",".momname_bcl",name_keypressev);
     editdiv.on("focus",".momname_bcl",name_focusev);
+    editdiv.on("focus",".momname_bcl",name_blurev);
     editdiv.on("keypress",":not(.momname_bcl)",ignore_keypressev);
     editdiv.on("keydown",":not(.momname_bcl)",ignore_keydownev);
     console.log("ajaxload done editdiv=", editdiv);
@@ -105,7 +114,8 @@ $(document).ready(function(){
     editlog = $("#editlog_id");
     cleareditbut = $("#cleareditbut_id");
     editdiv.on("change",changev);
-    //editdiv.on("focus",focusev);
+    editdiv.on("focus",focusev);
+    editdiv.on("blur",blurev);
     editdiv.on("cut",ignore_cutev);
     editdiv.on("paste",ignore_pastev);
     cleareditbut.click(function(evt){
