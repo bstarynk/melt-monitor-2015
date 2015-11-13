@@ -446,7 +446,7 @@ var momp_horizlayout = {
 	    console.log ("chorizlayout-get_dim ix#", ix, " rightx=", rightx,
 			 " comp=", comp, " dimcomp=", dimcomp);
 	    if (rightx + dimcomp.width + this.my_rightgap > hints.maxwidth)   {
-		var rownum = rawarr.length;
+		var rownum = rowarr.length;
 		rowarr.push(curow);
 		var oldrow = curow;
 		curarr = new Array();
@@ -457,16 +457,17 @@ var momp_horizlayout = {
 				       maxheight:hints.maxheight,
 				       initialx:(rownum==0)?firstinitialx:this.my_leftgap,
 				       vgap:this.my_vgap});
-		dimrowarr[rownum] = oldrowdim;
+		dimrowarr.push(oldrowdim);
 		console.log ("chorizlayout-get_dim oldrowdim=", oldrowdim,
-			     " afterdim=", afterdim,
+			     " afterdim=", afterdim, " rownum=", rownum,
 			     "\n.. this=", this);
 	    }
 	    else {
 		rowarr.push(curow);
 	    }
 	}
-	console.log ("chorizlayout-get_dim last curow=", curow);
+	console.log ("chorizlayout-get_dim last curow=", curow,
+		     " dimrowarr=", dimrowarr, " this=", this);
 	if (curow && curow.arr.length > 0) {
 	    var rownum = rowarr.length;
 	    rowarr.push(curow);
@@ -572,6 +573,7 @@ var momp_horizlayout = {
 		    console.warn("chorizlayout-get_dim singlerow 3level unimplemented this=", this);
 		}
 	    }
+	    console.error("chorizlayout-get_dim unhandled singlerow this=", this);
 	    break;
 	default: /// we have at least two rows, so the first and the last ones are different
 	    // show if possible before & the first row on the same level
@@ -587,11 +589,39 @@ var momp_horizlayout = {
 	    }
 	    break;
 	}
-	console.warn("chorizlayout-get_dim @@unimplemented arr=", arr);
+	console.error("chorizlayout-get_dim @@unimplemented arr=", arr);
     },				// end get_dim
     draw: function() {
-	console.warn("chorizlayout-draw @@unimplemented arr=", arr);
-    }
+	console.log("chorizlayout-draw this=", this);
+	var arr = this.arr;
+	var len = arr.length;
+	var comp = null;
+	// draw before
+	{
+	    canvctxt.save();
+	    canvctxt.translate(this.before.offx, this.before.offy);
+	    this.before.draw();
+	    canvctxt.restore();
+	}
+	// draw every component inside the array
+	for (var ix=0; ix<len; ix++)
+	{
+	    comp = arr[ix];
+	    console.log ("chorizlayout-draw ix#", ix, " comp=", comp);
+	    canvctxt.save();
+	    canvctxt.translate(comp.offx, comp.offy);
+	    comp.draw();
+	    canvctxt.restore();		
+	}
+	// draw after
+	{
+	    canvctxt.save();
+	    canvctxt.translate(this.after.offx, this.after.offy);
+	    this.after.draw();
+	    canvctxt.restore();
+	}
+	console.log("chorizlayout-draw done this=", this);
+    }				// end draw()
 };
 var MomcHorizLayout = function (before,arr,after) {
     this.before = before;
@@ -667,7 +697,9 @@ var momp_sequence = {
 	return dim;
     },
     draw: function() {
-	console.warn("csequence-draw @@unimplemented this=", this, " offx=", this.offx, " offy=", this.offy);
+	console.log("csequence-draw this=", this);
+	this.hlayout(draw);
+	console.log("csequence-draw done this=", this);
     }
 };
 console.log ("momp_sequence=", momp_sequence);
@@ -868,7 +900,7 @@ var momp_top_entry = {
 	console.log ("top_entry-get_dim dimrightvaldeco=", dimrightattrdeco);
 	/// left val deco drawn at offx= my_deco_val_horgap, ....
 	/// offy= this.entval.offy
-	this.entval.offx = my_deco_val_horgap+dimleftvaldeco.width+1;
+	this.entval.offx = this.my_deco_val_horgap+dimleftvaldeco.width+1;
 	this.entval.offy = entattr.offy + dimval.ascent + my_deco_val_vertgap;
 	/// right val deco drawn at offx= dimvalattrdeco.width + dimval.width + 1
 	this.rightvaldecoffx = dimvalattrdeco.width + dimval.width + 1;
@@ -896,7 +928,13 @@ var momp_top_entry = {
 	return diment;
     },
     draw: function() {
-	console.debug("top_entry-draw @@unimplemented this=", this);
+	console.debug("top_entry-draw this=", this);
+	/// left attr deco drawn at offx= 1, offy= entattr.offy
+	{
+	    canvctxt.save();
+	    canvctxt.restore();
+	}
+	console.debug("top_entry-draw end this=", this);
     }
 };				// end momp_top_entry
 console.log ("momp_top_entry=", momp_top_entry);
@@ -970,6 +1008,11 @@ function momc_display_canvas(msg,arr) {
 	    console.log ("display_canvas same hints=", hints, " i#", i);
     };
     console.log ("display_canvas dimarr=", dimarr);
+    for (var i=0; i<l; i++) {
+	ob = arr[i];
+	console.log ("display_canvas drawing ob=", ob, " i#", i);
+	ob.draw();
+    }		     
     console.log("display_canvas end msg=", msg, " l=", l, " final hints=", hints);
     console.groupEnd();
 };
