@@ -25,6 +25,12 @@ var editlog;
 var cleareditbut;
 var momc_count=0;
 
+function mom_number(obj) {
+    momc_count = momc_count+1;
+    obj.inum = momc_count;
+    return momc_count;
+}
+
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
     //create a in-memory div, set it's inner text(which jQuery automatically encodes)
@@ -162,8 +168,7 @@ var momp_scalar ={
 console.log("momp_scalar=", momp_scalar);
 var MomcScalar = function (text) {
     this.str = text;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcScalar this=", this);
 };
 MomcScalar.prototype = momp_scalar;
@@ -181,8 +186,7 @@ momp_nil_ref.prototype= momp_scalar;
 console.log("momp_nil_ref=", momp_nil_ref);
 var MomcNilRef = function () {
     this.str = "~";
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcNilRef this=", this);
 };
 MomcNilRef.prototype = momp_nil_ref;
@@ -206,9 +210,7 @@ var momp_nil_val = {
 momp_nil_val.__proto__ = momp_scalar;
 console.log ("momp_nil_val=", momp_nil_val);
 var MomcNilVal = function () {
-    momc_count = momc_count+1;
-    this.inum = momc_count;
-    //this.__proto__ = momp_nil_val;
+    mom_number(this);
     console.log ("MomcNilVal this=", this);
 };
 MomcNilVal.prototype = momp_nil_val;
@@ -232,8 +234,7 @@ console.log ("momp_item_val=", momp_item_val);
 var MomcItemVal = function (nam)
 {
     this.str = "~";
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcNilVal this=", this);
 };
 MomcItemVal.prototype = momp_item_val;
@@ -256,8 +257,7 @@ console.log ("momp_item_ref=", momp_item_ref);
 var MomcItemRef = function (nam)
 {
     this.str = nam;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcItemRef this=", this);
 };
 MomcItemRef.prototype = momp_item_ref;
@@ -279,8 +279,7 @@ momp_int.__proto__ = momp_scalar;
 console.log ("momp_int=", momp_int);
 var MomcInt = function (num) {
     this.str = num.toString();
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     this.number = num;
     console.log ("MomcInt this=", this);
 };
@@ -303,8 +302,7 @@ momp_double.__proto__ = momp_scalar;
 console.log ("momp_double=", momp_double);
 var MomcDouble = function (str) {
     this.str = str;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     this.number = str.toDouble();
     console.log ("MomcDouble this=", this);
 };
@@ -331,8 +329,7 @@ momp_string.__proto__ = momp_scalar;
 console.log ("momp_string=", momp_string);
 var MomcString = function (str) {
     this.str = str;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcString this=", this);
 };
 MomcString.prototype = momp_string;
@@ -692,8 +689,7 @@ momp_tuple.__proto__= momp_sequence;
 console.log ("momp_tuple=", momp_tuple);
 var MomcTuple = function (arr) {
     this.arr = arr;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcTuple this=", this);
 };
 MomcTuple.prototype = momp_tuple;
@@ -720,8 +716,7 @@ momp_set.__proto__= momp_sequence;
 console.log ("momp_set=", momp_set);
 var MomcSet = function (arr) {
     this.arr = arr;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     console.log ("MomcSet this=", this);
 };
 MomcSet.prototype = momp_set;
@@ -762,9 +757,7 @@ console.log ("momp_node=", momp_node);
 var MomcNode = function (conn, arr) {
     this.conn = conn;
     this.arr = arr;
-    momc_count = momc_count+1;
-    var myinum = momc_count;
-    this.inum = myinum;
+    var myinum = mom_number(this);
     var len = arr.length;
     for (var ix=0; ix<len; ix++) {
 	var comp = arr[ix];
@@ -911,8 +904,7 @@ console.log ("momp_top_entry=", momp_top_entry);
 var MomcTopEntry = function (eattr, eval) {
     this.entattr = eattr;
     this.entval = eval;
-    momc_count = momc_count+1;
-    this.inum = momc_count;
+    mom_number(this);
     //    this.__proto__ = momp_top_entry;
     console.log ("MomcTopEntry this=", this);
 };
