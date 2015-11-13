@@ -420,11 +420,11 @@ var momp_horizlayout = {
 	var len = arr.length;
 	var before = this.before;
 	var after = this.after;
-	var w, h, a, d;
+	var w=0, h=0, a=0, d=0;
 	var beforedim = before.get_dim(hints);
-	console.log("chorizlayout-get_dim beforedim=", beforedim);
+	console.log("chorizlayout-get_dim beforedim=", beforedim, " this=", this);
 	var afterdim = after.get_dim(hints);
-	console.log("chorizlayout-get_dim afterdim=", afterdim);
+	console.log("chorizlayout-get_dim afterdim=", afterdim, " this=", this);
 	var dimarr = new Array(len);
 	for (var ix=0; ix<len; ix++) {
 	    var comp = arr[ix];
@@ -439,7 +439,7 @@ var momp_horizlayout = {
 	if (len>0) {
 	    curow = new MomcHorizGroup(curarr);
 	}
-	var rowarr = new Array();
+	var rowsarr = new Array();
 	var dimrowarr = new Array();
 	var rightx = this.my_hindent + beforedim.width + this.my_hgap;
 	var firstinitialx = rightx;
@@ -450,12 +450,12 @@ var momp_horizlayout = {
 	    console.log ("chorizlayout-get_dim ix#", ix, " rightx=", rightx,
 			 " comp=", comp, " dimcomp=", dimcomp);
 	    if (rightx + dimcomp.width + this.my_rightgap > hints.maxwidth)   {
-		var rownum = rowarr.length;
-		rowarr.push(curow);
+		var rownum = rowsarr.length;
+		rowsarr.push(curow);
 		var oldrow = curow;
 		curarr = new Array();
 		curow = new MomcHorizGroup(curarr);
-		console.log ("chorizlayout-get_dim oldrow=", oldrow);
+		console.log ("chorizlayout-get_dim oldrow=", oldrow, " curow=", curow, " this=", this);
 		var oldrowdim
 		    = oldrow.get_dim ({maxwidth:hints.maxwidth,
 				       maxheight:hints.maxheight,
@@ -471,6 +471,7 @@ var momp_horizlayout = {
 	    }
 	    console.log ("chorizlayout-get_dim done ix#", ix, " this=", this);
 	}
+	///
 	console.log ("chorizlayout-get_dim last curow=", curow,
 		     " dimrowarr=", dimrowarr, " this=", this);
 	if (curow && curow.arr.length > 0) {
@@ -482,7 +483,7 @@ var momp_horizlayout = {
 				   maxheight:hints.maxheight,
 				   initialx:(rownum==0)?firstinitialx:this.my_leftgap,
 				   vgap:this.my_vgap});
-	    dimrowarr[rownum] = lastrowdim;
+	    dimrowarr.push(lastrowdim);
 	    console.log ("chorizlayout-get_dim lastrowdim=", lastrowdim, " lastrow=", lastrow, " this=", this);
 	}
 	var nbrows = rowarr.length;
@@ -533,7 +534,7 @@ var momp_horizlayout = {
 		var therow = rowarr[0];
 		var therowdim = dimrowarr[0];
 		console.log("chorizlayout-get_dim singlerow therow=", therow,
-			    " therowdim=", therowdim);
+			    " therowdim=", therowdim, " this=", this);
 		if ((w = beforedim.width + therowdim.width + afterdim.width + 4*this.my_hgap) < hints.maxwidth) {
 		    // all fits in a single level
 		    h = Math.max(beforedim.height, therowdim.height, afterdim.height)+ 2*this.my_vgap;
@@ -692,7 +693,7 @@ var momp_sequence = {
     name: "momcsequence",
     get_dim: function (hints) {
 	if (this.dim) {
-	    console.log ("csequence-get_dim has dim=", this.dim);
+	    console.log ("csequence-get_dim has dim=", this.dim, " this=", this);
 	    return this.dim;
 	}
 	if (!this.hasOwnProperty("hlayout")) {
@@ -709,11 +710,11 @@ var momp_sequence = {
 			       this.my_decofont_style || this.my_font_style,
 			       this.my_decofont_color || this.my_font_color || 'black');
 	    var hlayout = new MomcHorizLayout(beforedeco,this.arr,afterdeco);
-	    console.log ("csequence-get_dim hlayout=", hlayout);
+	    console.log ("csequence-get_dim hlayout=", hlayout, " for this=", this);
 	    this.hlayout = hlayout;
 	}
 	var dim = this.hlayout.get_dim(hints);
-	console.log("csequence-get_dim dim=", dim);
+	console.log("csequence-get_dim dim=", dim, " for this=", this);
 	this.dim = dim;
 	return dim;
     },
