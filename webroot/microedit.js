@@ -18,9 +18,9 @@
       <http://www.gnu.org/licenses/>.
 **/
 
-var editdiv;
-var editlog;
-var cleareditbut;
+var $editdiv;
+var $editlog;
+var $cleareditbut;
 
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
@@ -33,100 +33,62 @@ function htmlDecode(value){
   return $('<div/>').html(value).text();
 }
 
+
+function ajaxfillscript(script) {
+    console.log("ajaxfillscript:\n", script, "\n### endajaxfillscript\n");
+}
+
 /// see http://stackoverflow.com/q/33540051/841108
-function ignore_keypressev(evt) {
-    console.log("ignore_keypressev evt=", evt, " evt.target=", evt.target);
-    //evt.stopImmediatePropagation();
-    //evt.preventDefault();
-    return false;
-}
-
-function ignore_keydownev(evt) {
-    console.log("ignore_keydownev evt=", evt);
-    return false;
-}
-
-function changev(evt) {
-    console.log("changev evt=", evt);
-}
-
-function focusev(evt) {
-    console.log("focusev evt=", evt);
-}
-
-function blurev(evt) {
-    console.log("blurev evt=", evt);
-}
-
-function ignore_pastev(evt) {
-    console.log("ignore_pastev evt=", evt);
-    return false;
-}
-
-function ignore_cutev(evt) {
-    console.log("ignore_cutev evt=", evt);
-    return false;
-}
-
-function name_keypressev(evt) {
-    console.log("name_keypressev evt=", evt);
-}
-
-function name_focusev(evt) {
-    console.log("name_focusev evt=", evt);
-}
-
-function name_blurev(evt) {
-    console.log("name_blurev evt=", evt);
-}
-
-
 ////////
 
-function ajaxload(data) {
-    console.log("ajaxload data=",data);
-    editdiv.html(data);
-    console.log("ajaxload editdiv=",editdiv);
-    $("#microedit_id .momitemref_cl").each(function() {
-	console.log ("each itemref this=", $(this).html(), ": $(this)=", $(this), " this=", this);
-	//$(this).on("keypress",name_keypressev);
-	//$(this).on("focus",name_focusev);
-    });
-    $("#microedit_id .momitemval_cl").each(function() {
-	console.log ("each itemval this=", $(this).html(), ": $(this)=", $(this), " this=", this);
-	//$(this).on("keypress",name_keypressev);
-	//$(this).on("focus",name_focusev);
-    });
-    editdiv.on("keypress",".momname_bcl",name_keypressev);
-    editdiv.on("focus",".momname_bcl",name_focusev);
-    editdiv.on("focus",".momname_bcl",name_blurev);
-    editdiv.on("keypress",":not(.momname_bcl)",ignore_keypressev);
-    editdiv.on("keydown",":not(.momname_bcl)",ignore_keydownev);
-    console.log("ajaxload done editdiv=", editdiv);
+function mome_begin_fill(statitmid) {
+    console.log("mome_begin_fill statitmid=", statitmid);
+};
+
+function mome_nil_val() { /// a nil value
 }
 
-////////
+function mome_nil_ref() {	/// a nil item reference
+}
 
+function mome_item_val(itmname) {
+}
+
+function mome_item_ref(itmname) {
+}
+
+function mome_int (num) {
+}
+
+function mome_double(dbl) {
+}
+
+function mome_string(str) {
+}
+
+function mome_tuple(tuparr) {
+}
+
+function mome_set(setarr) {
+}
+
+function mome_node(connitm, sonsarr) {
+}
 
 $(document).ready(function(){
     console.log("document ready");
-    editdiv = $("#microedit_id");
-    editlog = $("#editlog_id");
-    cleareditbut = $("#cleareditbut_id");
-    editdiv.on("change",changev);
-    editdiv.on("focus",focusev);
-    editdiv.on("blur",blurev);
-    editdiv.on("cut",ignore_cutev);
-    editdiv.on("paste",ignore_pastev);
-    cleareditbut.click(function(evt){
+    $editdiv = $("#microedit_id");
+    $editlog = $("#editlog_id");
+    $cleareditbut = $("#cleareditbut_id");
+    $cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
-	editlog.html("");
+	$editlog.html("");
     });
     $.ajax
     ({url: "/microedit",
       method: "POST",
-      data: {"do_loadpage": true},
-      dataType: "html",
-      success: ajaxload
+      data: {"do_fillpage": true},
+      dataType: "script",
+      success: ajaxfillscript
      });
 });
