@@ -41,10 +41,48 @@ function ajaxfillscript(script) {
 /// see http://stackoverflow.com/q/33540051/841108
 ////////
 
+var momc_count=0;
+
+function mom_numbered(obj) {
+    momc_count = momc_count+1;
+    obj.inum = momc_count;
+    return momc_count;
+}
+
 function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid);
 };
 
+function mome_mtime(timestr) {
+    console.log("mome_mtime timestr=", timestr);
+};
+
+function mome_entries(entarr) {
+    console.log("mome_entries entarr=", entarr);
+};
+
+function mome_generated(msg) {
+    console.log("mome_generated msg=", msg);
+};
+
+
+
+////////////////
+function MomeEntry(entitm,entval) {
+    this.entryItem= entitm;
+    this.entryVal= entval;
+    mom_numbered(this);
+};
+MomeEntry.prototype = {
+    name: "MomeEntry"
+};
+function mome_entry(entitm,entval) {
+    console.log("mome_entry entitm=", entitm, " entval=", entval);
+    var res = new MomEntry(entitm, entval);
+    console.log("mome_entry res=", res);
+};
+
+console.warn("missing constructors to be called by functions below")
 function mome_nil_val() { /// a nil value
 }
 
@@ -75,8 +113,9 @@ function mome_set(setarr) {
 function mome_node(connitm, sonsarr) {
 }
 
+
 $(document).ready(function(){
-    console.log("document ready");
+    console.log("microedit document ready");
     $editdiv = $("#microedit_id");
     $editlog = $("#editlog_id");
     $cleareditbut = $("#cleareditbut_id");
@@ -84,6 +123,7 @@ $(document).ready(function(){
 	console.log("clearedit evt=", evt);
 	$editlog.html("");
     });
+    console.log("microedit before ajax do_fillpage");
     $.ajax
     ({url: "/microedit",
       method: "POST",
@@ -91,4 +131,5 @@ $(document).ready(function(){
       dataType: "script",
       success: ajaxfillscript
      });
+    console.log("microedit document done ready");
 });
