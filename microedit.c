@@ -78,10 +78,18 @@ showitem_microedit_mom(struct mom_webexch_st *wexch,
 static void
 newline_microedit_mom(struct mom_webexch_st *wexch, int depth)
 {
-  if (MOM_IS_DEBUGGING(web))
-    mom_wexch_puts (wexch, "                \n"+(15-depth%16));
-  else
-    mom_wexch_puts (wexch, "    \n"+(4-depth%16));    
+  char buf[24];
+  memset(buf, 0, sizeof(buf));
+  buf[0] = '\n';
+  if (MOM_IS_DEBUGGING(web)) {
+    int d = depth%16;
+    for (int ix=1; ix<=d; ix++) buf[ix] = ' ';
+  }
+  else {
+    int d = depth%4;
+    for (int ix=1; ix<=d; ix++) buf[ix] = ' ';
+  }
+  mom_wexch_puts (wexch, buf);    
 }
 
 static void
@@ -246,6 +254,7 @@ dofillpage_microedit_mom (struct mom_webexch_st *wexch,
 					      "%c %Z"),
                       (int) getpid (), monimelt_timestamp);
   }
+  MOM_WEXCH_PRINTF(wexch, "\n\n// end request #%ld\n\n", wexch->webx_count);
   mom_wexch_reply (wexch, HTTP_OK, "application/javascript");
   MOM_DEBUGPRINTF (web,
                    "dofillpage_microedit done webr#%ld tkitm=%s",
