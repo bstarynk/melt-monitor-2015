@@ -52,19 +52,34 @@ function mom_numbered(obj) {
 
 function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid);
+    $editdiv.html("<p class='mombeginfill_cl'>" + statitmid + "</p>");
 };
 
 function mome_mtime(timestr) {
     console.log("mome_mtime timestr=", timestr);
+    $("<p class='mommtime_cl'>" + htmlEncode(timestr) + "</p>").append($editdiv);
 };
 
 function mome_entries(entarr) {
-    console.log("mome_entries entarr=", entarr);
+    console.log("mome_entries entarr=", entarr, " $editdiv=", $editdiv);
     momv_entriesvar = entarr;
+    console.assert(Array.isArray(entarr),
+		   "mome_entries bad entarr=", entarr);
+    var nbent = entarr.length;
+    var entdl = $("<dl class='momentrieslist_cl'></dl>");
+    $editdiv.append(entdl);
+    for (var ixent = 0; ixent<nbent; ixent++) {
+	var curent = entarr[ixent];
+	console.log ("mome_entries ixent#", ixent, " curent=", curent);
+	curent.realize(entdl);
+	console.log ("mome_entries done ixent#", ixent, " curent=", curent);
+    }
+    console.log("mome_entries done entarr=", entarr, " $editdiv=", $editdiv);
 };
 
 function mome_generated(msg) {
     console.log("mome_generated msg=", msg);
+    $(msg).append($editlog);
 };
 
 
@@ -78,8 +93,12 @@ function MomeEntry(entitm,entval) {
 var momp_entry = {
     name: "MomeEntry",
     realize: function (cont) {
-	console.log("MomeEntry-realize start cont=", cont, " this=", this);
-	console.assert(cont.is("dl"), "MomeEntry invalid container cont=", cont);
+	console.log("MomeEntry-realize start cont=", cont, " this=", this,
+		    " $(cont).is('dl')=", $(cont).is('dl'),
+		    " cont.is('dl')=", cont.is('dl'),
+		    "\n"
+		   );
+	console.assert($(cont).is("dl"), "MomeEntry invalid container cont=", cont);
 	console.assert("entryItem" in this, "MomeEntry no entryItem in this=", this);
 	console.assert("entryVal" in this, "MomeEntry no entryVal in this=", this);
 	var eattelem = $("<dt class='statattr_cl'></dt>");
@@ -300,7 +319,7 @@ var momp_tuple_value = {
     __proto__: momp_value,
     realize: function (cont) {
 	console.log("MomeTupleValue-realize start cont=", cont, " this=", this);
-	console.assert(typeof (this.tup_val) === "array",
+	console.assert(Array.isArray (this.tup_val),
 		       "MomeTupleValue no tup_val in this=", this);
 	var etupelem = $("<span class='momtuple_cl'></span>");
 	etupelem.append(cont);
@@ -329,7 +348,7 @@ var momp_set_value = {
     name: "MomeSetValue",
     realize: function (cont) {
 	console.log("MomeSetValue-realize start cont=", cont, " this=", this);
-	console.assert(typeof (this.set_val) === "array",
+	console.assert(Array.isArray (this.set_val),
 		       "MomeSetValue no set_val in this=", this);
 	var esetelem = $("<span class='momset_cl'></span>");
 	esetelem.append(cont);
@@ -359,7 +378,7 @@ var momp_node_value = {
     realize: function (cont) {
 	console.log("MomeNodeValue-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.conn_itm) === "object"
-		       && typeof(this.sons_arr) === "array",
+		       && Array.isArray(this.sons_arr),
 		       "MomeSetValue no conn_itm&sons_arr in this=", this);
 	var etupelem = $("<span class='momnode_cl'></span>");
 	etupelem.append(cont);
