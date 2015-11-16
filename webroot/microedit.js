@@ -42,6 +42,7 @@ function ajaxfillscript(script) {
 ////////
 
 var momc_count=0;
+var mome_entries=null;
 
 function mom_numbered(obj) {
     momc_count = momc_count+1;
@@ -59,6 +60,7 @@ function mome_mtime(timestr) {
 
 function mome_entries(entarr) {
     console.log("mome_entries entarr=", entarr);
+    mome_entries = entarr;
 };
 
 function mome_generated(msg) {
@@ -73,9 +75,24 @@ function MomeEntry(entitm,entval) {
     this.entryVal= entval;
     mom_numbered(this);
 };
-MomeEntry.prototype = {
-    name: "MomeEntry"
+var momp_entry = {
+    name: "MomeEntry",
+    realize: function (cont) {
+	console.log("MomeEntry-realize start cont=", cont, " this=", this);
+	console.assert(cont.is("dl"), "MomeEntry invalid container cont=", cont);
+	console.assert("entryItem" in this, "MomeEntry no entryItem in this=", this);
+	console.assert("entryVal" in this, "MomeEntry no entryVal in this=", this);
+	var eattelem = $("<dt class='statattr_cl'></dt>");
+	this.entryItem.realize(eattelem);
+	var evalelem = $("<dd class='statval_cl'></dd>");
+	this.entryVal.realize(evalelem);
+	eattelem.append(cont);
+	evalelem.append(cont);
+	console.log("MomeEntry-realize done cont=", cont,
+		    " eattelem=", eattelem, " evalelem=", evalelem, "\n..this=", this);
+    }
 };
+MomeEntry.prototype = momp_entry;
 function mome_entry(entitm,entval) {
     console.log("mome_entry entitm=", entitm, " entval=", entval);
     var res = new MomeEntry(entitm, entval);
@@ -87,13 +104,27 @@ var momp_value = {
 };
 
 var momp_item_ref = {
+    name: "MomeItemRef",
+    realize: function (cont) {
+	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
+	var eitelem = $("<span class='momitemref_cl'>"+this.item_name+"</span>");
+	eitelem.append(cont);
+	console.log("MomeItemRef-realize done cont=", cont,
+		    " eitelem=", eitelem, "\n..this=", this);
+    }
 };
 
-var momp_nil_item = {
-    __proto__: momp_item_ref
-};
 
 var momp_nil_value = {
+    name: "MomeNilValue",
+    realize: function (cont) {
+	console.log("MomeNilValue-realize start cont=", cont, " this=", this);
+	var enilelem = $("<span class='span.momemptyval_cl'>~</span>");
+	enilelem.append(cont);
+	console.log("MomeNilValue-realize done cont=", cont,
+		    " enilelem=", enilelem, "\n..this=", this);
+    },
     __proto__: momp_value
 };
 
@@ -108,10 +139,21 @@ function mome_nil_val() { /// a nil value
     return res;
 };
 
+var momp_nil_ref = {
+    name: "MomeNilRef",
+    realize: function (cont) {
+	console.log("MomeNilRef-realize start cont=", cont, " this=", this);
+	var enilelem = $("<span class='span.momemptyval_cl'>~</span>");
+	enilelem.append(cont);
+	console.log("MomeNilRef-realize done cont=", cont,
+		    " enilelem=", enilelem, "\n..this=", this);
+    },
+    __proto__: momp_item_ref
+};
 function MomeNilRef() {
     mom_numbered(this);
 };
-MomeNilRef.prototype = momp_nil_item;
+MomeNilRef.prototype = momp_nil_ref;
 
 function mome_nil_ref() {	/// a nil item reference
     var res = new MomeNilRef();
@@ -120,6 +162,7 @@ function mome_nil_ref() {	/// a nil item reference
 };
 
 var momp_item_value = {
+    name: "MomeItemVal",
     __proto__: momp_value,
     val_kind: 'item'
 };

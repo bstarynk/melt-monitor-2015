@@ -36,6 +36,7 @@ span.momname_cl:hover {
     border-spacing: 3px;
 }
 
+
 span.momset_cl {
     font-family: serif;
     color: #604F62;
@@ -94,6 +95,13 @@ span.momstring_cl:hover {
     border-spacing: 3px;
 }
 
+span.momemptyval_cl {
+    font-family: serif;
+    color: #64157A;
+    border-spacing: 2px;
+    padding: 1px;
+}
+
 span.momnode_cl {
     font-family: serif;
     color: #153027;
@@ -136,6 +144,23 @@ span.momitemref_cl:hover {
     border-spacing: 3px;
 }
 
+span.momrefnil_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #3B101A;
+    border-spacing: 2px;
+    padding: 2px;
+}
+
+span.momrefnil_cl:hover {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #3B101A;
+    border: 1px dashed #560E24;
+    border-spacing: 3px;
+    padding: 2px;
+}
+
 span.momitemval_cl {
     font-family: Arial, Helvetica, sans-serif;
     font-style: oblique;
@@ -152,13 +177,13 @@ span.momitemval_cl:hover {
     border-spacing: 3px;
 }
 
-dt.statattr_cl {
+dt.entattr_cl {
     font-family: sans-serif;
     font-weight: bold;
     padding: 2px;
 }
 
-dt.statval_cl {
+dt.entval_cl {
     font-family: sans-serif;
     padding: 2px;
 }
