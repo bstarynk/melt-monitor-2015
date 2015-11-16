@@ -101,6 +101,9 @@ function mome_entry(entitm,entval) {
 };
 
 var momp_value = {
+    realize: function (cont) {
+	console.error("MomeValue-realize bad cont=", cont, " this=", this);
+    }
 };
 
 var momp_item_ref = {
@@ -116,12 +119,25 @@ var momp_item_ref = {
 };
 
 
+function MomeItemRef(iname) {
+    this.item_name = iname;
+    mom_numbered(this);
+};
+MomeItemRef.prototype = momp_item_ref;
+
+function mome_item_ref(itmname) {
+    var res = new MomeItemRef(itmname);
+    console.log ("mome_item_ref res=", res);
+    return res;
+};
+
 var momp_nil_value = {
     name: "MomeNilValue",
     realize: function (cont) {
 	console.log("MomeNilValue-realize start cont=", cont, " this=", this);
 	var enilelem = $("<span class='span.momemptyval_cl'>~</span>");
 	enilelem.append(cont);
+	enilelem.data("for", this);
 	console.log("MomeNilValue-realize done cont=", cont,
 		    " enilelem=", enilelem, "\n..this=", this);
     },
@@ -139,12 +155,14 @@ function mome_nil_val() { /// a nil value
     return res;
 };
 
+////////////////
 var momp_nil_ref = {
     name: "MomeNilRef",
     realize: function (cont) {
 	console.log("MomeNilRef-realize start cont=", cont, " this=", this);
-	var enilelem = $("<span class='span.momemptyval_cl'>~</span>");
+	var enilelem = $("<span class='momemptyval_cl'>~</span>");
 	enilelem.append(cont);
+	enilelem.data("for", this);
 	console.log("MomeNilRef-realize done cont=", cont,
 		    " enilelem=", enilelem, "\n..this=", this);
     },
@@ -161,9 +179,20 @@ function mome_nil_ref() {	/// a nil item reference
     return res;
 };
 
+////////////////
 var momp_item_value = {
     name: "MomeItemVal",
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.item_name) === "string",
+		       "MomeItemVal no item_name in this=", this);
+	var eitmelem = $("<span class='momitemval_cl'>"+ this.item_name +"</span>");
+	eitmelem.append(cont);
+	eitmelem.data("for", this);
+	console.log("MomeItemVal-realize done cont=", cont,
+		    " eitmelem=", enilelem, "\n..this=", this);
+    },
     val_kind: 'item'
 };
 
@@ -180,22 +209,21 @@ function mome_item_val(itmname) {
     return res;
 };
 
-function MomeItemRef(iname) {
-    this.item_name = iname;
-    mom_numbered(this);
-};
-MomeItemRef.prototype = momp_item_ref;
-
-function mome_item_ref(itmname) {
-    var res = new MomeItemRef(itmname);
-    console.log ("mome_item_ref res=", res);
-    return res;
-};
-
 
 ////////////////
 var momp_int_value = {
+    name: "MomeIntValue",
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeIntValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.int_val) === "number",
+		       "MomeIntValue no int_val in this=", this);
+	var eintelem = $("<span class='momnumber_cl'>"+ this.int_val.toString() +"</span>");
+	eintelem.append(cont);
+	eintelem.data("for", this);
+	console.log("MomeIntValue-realize done cont=", cont,
+		    " eintelem=", eintelem, "\n..this=", this);
+    },
     val_kind: 'int'
 };
 
@@ -213,7 +241,18 @@ function mome_int (num) {
 
 ////////////////
 var momp_double_value = {
+    name: "MomeDoubleValue",
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeDoubleValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.dbl_val) === "number",
+		       "MomeDoubleValue no dbl_val in this=", this);
+	var edblelem = $("<span class='momnumber_cl'>"+ this.dbl_val.toString() +"</span>");
+	edblelem.append(cont);
+	edblelem.data("for", this);
+	console.log("MomeDoubleValue-realize done cont=", cont,
+		    " edblelem=", edblelem, "\n..this=", this);
+    },
     val_kind: 'double'
 };
 function MomeDoubleValue(dval) {
@@ -229,7 +268,18 @@ function mome_double(dbl) {
 
 ////////////////
 var momp_string_value = {
+    name: 'MomeStringValue',
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeStringValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.str_val) === "string",
+		       "MomeStringValue no str_val in this=", this);
+	var estrelem = $("<q class='momstrquote_cl'><span class='momstring_cl'>"+ htmlEncode(this.str_val) +"</span></q>");
+	estrelem.append(cont);
+	estrelem.data("for", this);
+	console.log("MomeStringValue-realize done cont=", cont,
+		    " estrelem=", estrelem, "\n..this=", this);
+    },
     val_kind: 'string'
 };
 function MomeStringValue(str) {
@@ -246,7 +296,20 @@ function mome_string(str) {
 
 ////////////////
 var momp_tuple_value = {
+    name: 'MomeTupleValue',
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeTupleValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.tup_val) === "array",
+		       "MomeTupleValue no tup_val in this=", this);
+	var etupelem = $("<span class='momtuple_cl'></span>");
+	etupelem.append(cont);
+	$("[").append(etupelem);
+	$("]").append(etupelem);
+	etupelem.data("for", this);
+	console.log("MomeTupleValue-realize done cont=", cont,
+		    " etupelem=", etupelem, "\n..this=", this);
+    },
     val_kind: 'tuple'
 };
 function MomeTupleValue(arr) {
@@ -263,6 +326,19 @@ function mome_tuple(tuparr) {
 ////////////////
 var momp_set_value = {
     __proto__: momp_value,
+    name: "MomeSetValue",
+    realize: function (cont) {
+	console.log("MomeSetValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.set_val) === "array",
+		       "MomeSetValue no set_val in this=", this);
+	var esetelem = $("<span class='momset_cl'></span>");
+	esetelem.append(cont);
+	$("{").append(esetelem);
+	$("}").append(esetelem);
+	esetelem.data("for", this);
+	console.log("MomeSetValue-realize done cont=", cont,
+		    " esetelem=", esetelem, "\n..this=", this);
+    },
     val_kind: 'set'
 };
 function MomeSetValue(arr) {
@@ -279,19 +355,34 @@ function mome_set(setarr) {
 ////////////////
 var momp_node_value = {
     __proto__: momp_value,
+    name: "MomeNodeValue",
+    realize: function (cont) {
+	console.log("MomeNodeValue-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.conn_itm) === "object"
+		       && typeof(this.sons_arr) === "array",
+		       "MomeSetValue no conn_itm&sons_arr in this=", this);
+	var etupelem = $("<span class='momnode_cl'></span>");
+	etupelem.append(cont);
+	$("*").append(etupelem);
+	$("(").append(etupelem);
+	$(")").append(etupelem);
+	esetelem.data("for", this);
+	console.log("MomeSetValue-realize done cont=", cont,
+		    " esetelem=", esetelem, "\n..this=", this);
+    },
     val_kind: 'node'
 };
 function MomeNodeValue(conn,sons) {
     mom_numbered(this);
     this.conn_itm = conn;
     this.sons_arr = sons;
-}
+};
 MomeNodeValue.prototype = momp_node_value;
 function mome_node(connitm, sonsarr) {
     var res = new MomeNodeValue(connitm,sonsarr);
     console.log ("mome_node res=", res);
     return res;
-}
+};
 
 
 $(document).ready(function(){
