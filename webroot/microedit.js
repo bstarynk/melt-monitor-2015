@@ -42,7 +42,7 @@ function ajaxfillscript(script) {
 ////////
 
 var momc_count=0;
-var mome_entries=null;
+var momv_entriesvar=null;
 
 function mom_numbered(obj) {
     momc_count = momc_count+1;
@@ -60,7 +60,7 @@ function mome_mtime(timestr) {
 
 function mome_entries(entarr) {
     console.log("mome_entries entarr=", entarr);
-    mome_entries = entarr;
+    momv_entriesvar = entarr;
 };
 
 function mome_generated(msg) {
