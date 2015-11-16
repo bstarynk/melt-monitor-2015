@@ -380,14 +380,20 @@ var momp_node_value = {
 	console.assert(typeof (this.conn_itm) === "object"
 		       && Array.isArray(this.sons_arr),
 		       "MomeSetValue no conn_itm&sons_arr in this=", this);
-	var etupelem = $("<span class='momnode_cl'></span>");
-	etupelem.append(cont);
-	$("*").append(etupelem);
-	$("(").append(etupelem);
-	$(")").append(etupelem);
-	esetelem.data("for", this);
-	console.log("MomeSetValue-realize done cont=", cont,
-		    " esetelem=", esetelem, "\n..this=", this);
+	var enodelem = $("<span class='momnode_cl'></span>");
+	console.log("MomeNodeValue-realize enodelem=", enodelem);
+	enodelem.append(cont);
+	console.log("MomeNodeValue-realize/a enodelem=", enodelem);
+	///check how to append text
+	$("*").append(enodelem);
+	console.log("MomeNodeValue-realize/b enodelem=", enodelem);
+	$.text("(").append(enodelem);
+	console.log("MomeNodeValue-realize/c enodelem=", enodelem);
+	$.text(")").append(enodelem);
+	console.log("MomeNodeValue-realize/d enodelem=", enodelem);
+	enodelem.data("for", this);
+	console.log("MomeNodeValue-realize done cont=", cont,
+		    " enodelem=", enodelem, "\n..this=", this);
     },
     val_kind: 'node'
 };
