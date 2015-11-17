@@ -82,8 +82,25 @@ function mome_entries(entarr) {
 };
 
 function mome_generated(msg) {
-    console.log("mome_generated msg=", msg);
-    $(msg).appendTo($editlog);
+    console.log("mome_generated msg=", msg, "; $editdiv=", $editdiv, " this=", this);
+    var nbitem=0, nbvalue=0;
+    // on focus to any mom_item_bcl or mom_value_bcl, $editdiv should be made non-editable
+    // see http://stackoverflow.com/a/33541885/841108
+    $(".mom_item_bcl")
+	.each(function (ix, el) {
+	    nbitem++;
+	    console.log("mome_generated got item_bcl ix=", ix, " el=", el, " this=", this, " nbitem=", nbitem);	    
+	});
+    console.log("mome_generated counted nbitem=", nbitem);
+    $(".mom_value_bcl")
+	.each(function (ix, el) {
+	    nbvalue++;
+	    console.log("mome_generated got value_bcl ix=", ix, " el=", el, " this=", this, " nbvalue=", nbvalue);
+	});
+    console.log("mome_generated counted nbvalue=", nbvalue);
+    console.log("mome_generated ending $editlog=", $editlog, " msg=", msg);
+    $editlog.append(msg);
+    console.log("mome_generated end msg=", msg, "; $editdiv=", $editdiv,"; $editlog=", $editlog, " this=", this);
 };
 
 
@@ -480,6 +497,7 @@ $(document).ready(function(){
     $editdiv = $("#microedit_id");
     $editlog = $("#editlog_id");
     $cleareditbut = $("#cleareditbut_id");
+    console.log ("microedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     $cleareditbut.click(function(evt){
 	console.log("clearedit evt=", evt);
 	$editlog.html("");
