@@ -212,6 +212,7 @@ var momp_item_value = {
 	console.assert(typeof (this.item_name) === "string",
 		       "MomeItemVal no item_name in this=", this);
 	var eitmelem = $("<span class='momitemval_cl'>"+ this.item_name +"</span>");
+	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this);
 	eitmelem.appendTo(cont);
 	eitmelem.data("for", this);
 	console.log("MomeItemVal-realize done cont=", cont,
@@ -399,8 +400,23 @@ var momp_node_value = {
 	var et = null;
 	et = document.createTextNode("*");
 	$(et).appendTo(enodelem);
+	this.conn_itm.realize(enodelem);
+	console.log("MomeNodeValue-realize after connitm enodelem=", enodelem, " this=", this);
 	et = document.createTextNode("(");
 	$(et).appendTo(enodelem);
+	var nbsons = this.sons_arr.length;
+	console.log("MomeNodeValue-realize nbsons=", nbsons, " this=", this);
+	for (var sonix=0; sonix<nbsons; sonix++) {
+	    var curson = this.sons_arr[sonix];
+	    console.log("MomeNodeValue-realize sonix=", sonix, " curson=", curson, " this=", this);
+	    if (sonix>0) {
+		et = document.createTextNode(" ");
+		$(et).appendTo(enodelem);
+		et = null;
+	    };
+	    curson.realize(enodelem);
+	    console.log("MomeNodeValue-realize enodelem=", enodelem, " after sonix=", sonix);
+	}
 	et = document.createTextNode(")");
 	$(et).appendTo(enodelem);
 	et = null;
