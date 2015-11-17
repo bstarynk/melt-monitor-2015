@@ -333,6 +333,22 @@ var momp_tuple_value = {
 	var et = null;
 	et = document.createTextNode("[");
 	$(et).appendTo(etupelem);
+	et = null;
+	var nbcomp = this.tup_val.length;
+	for (var compix=0; compix<nbcomp; compix++) {
+	    var curcomp = this.tup_val[compix];
+	    console.log("MomeTupleValue-realize compix=", compix,
+			" curcomp=", curcomp,
+			" this=", this, " cont=", cont);
+	    if (compix > 0) {
+		et = document.createTextNode(" ");
+		$(et).appendTo(etupelem);
+		et = null;
+	    };
+	    curcomp.realize(etupelem);
+	    console.log("MomeTupleValue-realize did compix=", compix,
+			" curcomp=", curcomp, " etupelem=", etupelem);
+	}
 	et = document.createTextNode("]");
 	$(et).appendTo(etupelem);
 	et = null;
@@ -366,6 +382,22 @@ var momp_set_value = {
 	var et = null;
 	et = document.createTextNode("{");
 	$(et).appendTo(esetelem);
+	et = null;
+	var nbelem = this.set_val.length;
+	for (var elemix=0; elemix<nbelem; elemix++) {
+	    var curelem = this.set_val[elemix];
+	    console.log("MomeSetValue-realize elemix=", elemix,
+			" curelem=", curelem,
+			" this=", this, " cont=", cont);
+	    if (elemix > 0) {
+		et = document.createTextNode(" ");
+		$(et).appendTo(esetelem);
+		et = null;
+	    };
+	    curelem.realize(esetelem);
+	    console.log("MomeSetValue-realize did elemix=", elemix,
+			" curelem=", curelem, " esetelem=", esetelem);
+	}
 	et = document.createTextNode("}");
 	$(et).appendTo(esetelem);
 	et = null;

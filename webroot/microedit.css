@@ -117,7 +117,15 @@ span.momstring_cl:hover {
 span.momemptyval_cl {
     font-family: serif;
     color: #64157A;
-    border-spacing: 2px;
+    border-spacing: 3px;
+    padding: 1px;
+}
+
+span.momemptyval_cl:hover {
+    font-family: serif;
+    color: #64157A;
+    border: 1px dashed #954D2A;
+    border-spacing: 3px;
     padding: 1px;
 }
 
