@@ -431,9 +431,9 @@ var momp_node_value = {
 	console.log("MomeNodeValue-realize enodelem=", enodelem);
 	enodelem.appendTo(cont);
 	var et = null;
-	et = document.createTextNode("*");
-	$(et).appendTo(enodelem);
-	this.conn_itm.realize(enodelem);
+	var econnelem = $("<span class='momconn_cl'>*</span>");
+	econnelem.appendTo(enodelem);
+	this.conn_itm.realize(econnelem);
 	console.log("MomeNodeValue-realize after connitm enodelem=", enodelem, " this=", this);
 	et = document.createTextNode("(");
 	$(et).appendTo(enodelem);

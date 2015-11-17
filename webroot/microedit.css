@@ -104,7 +104,8 @@ span.momstring_cl {
     font-family: "Courier New", Courier, monospace;
     color: #354001;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
+    margin: 2px;
 }
 
 span.momstring_cl:hover {
@@ -112,6 +113,7 @@ span.momstring_cl:hover {
     color: #505D0A;
     border: 1px dashed #855D2A;
     border-spacing: 3px;
+    margin: 2px;
 }
 
 span.momemptyval_cl {
@@ -119,6 +121,7 @@ span.momemptyval_cl {
     color: #64157A;
     border-spacing: 3px;
     padding: 1px;
+    margin: 2px;
 }
 
 span.momemptyval_cl:hover {
@@ -134,6 +137,7 @@ span.momnode_cl {
     color: #153027;
     border-spacing: 2px;
     padding: 1px;
+    margin: 2px;
 }
 
 span.momnode_cl:hover {
@@ -141,20 +145,26 @@ span.momnode_cl:hover {
     color: #2d6351;
     border: 1px dashed #954D2A;
     border-spacing: 3px;
+    margin: 2px;
+    padding: 1px;
 }
 
 span.momconn_cl {
     font-family: Lucida Console, Monospace;
     color: #4E0C39;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
+    margin: 2px;
 }
 
 span.momconn_cl:hover {
     font-family: Lucida Console, Monospace;
     color: #8E1367;
+    background-color: #F7C5B5;
     border: 1px dashed #354126;
     border-spacing: 3px;
+    padding: 2px;
+    margin: 2px;
 }
 
 span.momitemref_cl {
@@ -162,6 +172,7 @@ span.momitemref_cl {
     color: #361753;
     border-spacing: 2px;
     padding: 2px;
+    margin: 2px;
 }
 
 span.momitemref_cl:hover {
@@ -169,6 +180,7 @@ span.momitemref_cl:hover {
     color: #AC1C90;
     border: 1px dashed #560E24;
     border-spacing: 3px;
+    padding: 2px;
 }
 
 span.momrefnil_cl {
@@ -177,6 +189,7 @@ span.momrefnil_cl {
     color: #3B101A;
     border-spacing: 2px;
     padding: 2px;
+    margin: 2px;
 }
 
 span.momrefnil_cl:hover {
@@ -186,6 +199,7 @@ span.momrefnil_cl:hover {
     border: 1px dashed #560E24;
     border-spacing: 3px;
     padding: 2px;
+    margin: 2px;
 }
 
 span.momitemval_cl {
@@ -194,6 +208,7 @@ span.momitemval_cl {
     color: #4e2a14;
     border-spacing: 2px;
     padding: 2px;
+    margin: 2px;
 }
 
 span.momitemval_cl:hover {
@@ -202,6 +217,8 @@ span.momitemval_cl:hover {
     color: #783c17;
     border: 1px dashed #560E24;
     border-spacing: 3px;
+    padding: 2px;
+    margin: 2px;
 }
 
 dt.entattr_cl {
