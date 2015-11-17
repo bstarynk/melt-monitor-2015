@@ -161,7 +161,7 @@ var momp_nil_value = {
 	console.log("MomeNilValue-realize start cont=", cont, " this=", this);
 	var enilelem = $("<span class='span.momemptyval_cl'>~</span>");
 	enilelem.appendTo(cont);
-	enilelem.data("for", this);
+	enilelem.data("momfor", this);
 	console.log("MomeNilValue-realize done cont=", cont,
 		    " enilelem=", enilelem, "\n..this=", this);
     },
@@ -186,7 +186,7 @@ var momp_nil_ref = {
 	console.log("MomeNilRef-realize start cont=", cont, " this=", this);
 	var enilelem = $("<span class='momemptyval_cl'>~</span>");
 	enilelem.appendTo(cont);
-	enilelem.data("for", this);
+	enilelem.data("momfor", this);
 	console.log("MomeNilRef-realize done cont=", cont,
 		    " enilelem=", enilelem, "\n..this=", this);
     },
@@ -212,11 +212,12 @@ var momp_item_value = {
 	console.assert(typeof (this.item_name) === "string",
 		       "MomeItemVal no item_name in this=", this);
 	var eitmelem = $("<span class='momitemval_cl'>"+ this.item_name +"</span>");
-	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this);
+	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
 	eitmelem.appendTo(cont);
-	eitmelem.data("for", this);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	
+	eitmelem.data("momfor", this);
 	console.log("MomeItemVal-realize done cont=", cont,
-		    " eitmelem=", enilelem, "\n..this=", this);
+		    " eitmelem=", eitmelem, "\n..this=", this);
     },
     val_kind: 'item'
 };
@@ -245,7 +246,7 @@ var momp_int_value = {
 		       "MomeIntValue no int_val in this=", this);
 	var eintelem = $("<span class='momnumber_cl'>"+ this.int_val.toString() +"</span>");
 	eintelem.appendTo(cont);
-	eintelem.data("for", this);
+	eintelem.data("momfor", this);
 	console.log("MomeIntValue-realize done cont=", cont,
 		    " eintelem=", eintelem, "\n..this=", this);
     },
@@ -274,7 +275,7 @@ var momp_double_value = {
 		       "MomeDoubleValue no dbl_val in this=", this);
 	var edblelem = $("<span class='momnumber_cl'>"+ this.dbl_val.toString() +"</span>");
 	edblelem.appendTo(cont);
-	edblelem.data("for", this);
+	edblelem.data("momfor", this);
 	console.log("MomeDoubleValue-realize done cont=", cont,
 		    " edblelem=", edblelem, "\n..this=", this);
     },
@@ -301,7 +302,7 @@ var momp_string_value = {
 		       "MomeStringValue no str_val in this=", this);
 	var estrelem = $("<q class='momstrquote_cl'><span class='momstring_cl'>"+ htmlEncode(this.str_val) +"</span></q>");
 	estrelem.appendTo(cont);
-	estrelem.data("for", this);
+	estrelem.data("momfor", this);
 	console.log("MomeStringValue-realize done cont=", cont,
 		    " estrelem=", estrelem, "\n..this=", this);
     },
@@ -335,7 +336,7 @@ var momp_tuple_value = {
 	et = document.createTextNode("]");
 	$(et).appendTo(etupelem);
 	et = null;
-	etupelem.data("for", this);
+	etupelem.data("momfor", this);
 	console.log("MomeTupleValue-realize done cont=", cont,
 		    " etupelem=", etupelem, "\n..this=", this);
     },
@@ -368,7 +369,7 @@ var momp_set_value = {
 	et = document.createTextNode("}");
 	$(et).appendTo(esetelem);
 	et = null;
-	esetelem.data("for", this);
+	esetelem.data("momfor", this);
 	console.log("MomeSetValue-realize done cont=", cont,
 		    " esetelem=", esetelem, "\n..this=", this);
     },
@@ -420,7 +421,7 @@ var momp_node_value = {
 	et = document.createTextNode(")");
 	$(et).appendTo(enodelem);
 	et = null;
-	enodelem.data("for", this);
+	enodelem.data("momfor", this);
 	console.log("MomeNodeValue-realize done cont=", cont,
 		    " enodelem=", enodelem, "\n..this=", this);
     },
