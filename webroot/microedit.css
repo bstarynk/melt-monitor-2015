@@ -136,8 +136,8 @@ span.momnode_cl {
     font-family: serif;
     color: #153027;
     border-spacing: 2px;
-    padding: 1px;
-    margin: 2px;
+    padding: 5px;
+    margin: 6px;
 }
 
 span.momnode_cl:hover {
@@ -145,8 +145,8 @@ span.momnode_cl:hover {
     color: #2d6351;
     border: 1px dashed #954D2A;
     border-spacing: 3px;
-    margin: 2px;
-    padding: 1px;
+    padding: 5px;
+    margin: 6px;
 }
 
 span.momconn_cl {
@@ -219,6 +219,24 @@ span.momitemval_cl:hover {
     border-spacing: 3px;
     padding: 2px;
     margin: 2px;
+}
+
+span.mom_item_bcl:hover {
+    background-color: rgba(210,165,246,0.5);
+}
+
+span.mom_item_bcl:focus {
+    background-color: #8970F7;
+    border: 3px solid rgba(43,113,53,0.5);
+}
+
+span.mom_value_bcl:hover {
+    background-color: rgba(252,186,145,0.5);
+}
+
+span.mom_value_bcl:focus {
+    background-color: #F09257;
+    border: 3px solid rgba(57,72,71,0.5);
 }
 
 dt.entattr_cl {
