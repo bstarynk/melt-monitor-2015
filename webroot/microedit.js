@@ -97,6 +97,8 @@ function mome_generated(msg) {
 		console.log("mome_generated-item_bcl focusin e=", e, "$(this)=", $(this), " this=", this); })
 	    .on("blur", function(e) {
 		console.log("mome_generated-item_bcl blur e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("keyup", function(e) {
+		console.log("mome_generated-item_bcl keyup e=", e, "$(this)=", $(this), " this=", this); })
     ;
     console.log("mome_generated counted nbitem=", nbitem);
     $(".mom_value_bcl")
@@ -129,7 +131,15 @@ function mome_generated(msg) {
     $editdiv.on("change",function(e) {
 	console.log ("mome_generated-edit:change e=", e, " $(this)=", $(this), " this=", this);
     });
-};
+    $editdiv.on("keydown",function(e) {
+	console.log ("mome_generated-edit:keydown e=", e, " $(this)=", $(this), " this=", this);
+    });
+    $editdiv.on("keyup",function(e) {
+	console.log ("mome_generated-edit:keyup e=", e, " $(this)=", $(this), " this=", this);
+    });
+    $editdiv.on("keypress",function(e) {
+	console.log ("mome_generated-edit:keypress e=", e, " $(this)=", $(this), " this=", this);
+    });
 
 
 
