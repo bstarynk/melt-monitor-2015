@@ -90,17 +90,32 @@ function mome_generated(msg) {
 	.each(function (ix, el) {
 	    nbitem++;
 	    console.log("mome_generated got item_bcl ix=", ix, " el=", el, " this=", this, " nbitem=", nbitem);	    
-	});
+	})
+	    .on("focus", function(e) {
+		console.log("mome_generated-item_bcl focus e=", e, "$(this)=", $(this), " this=", this); })
+	    .on("blur", function(e) {
+		console.log("mome_generated-item_bcl blur e=", e, "$(this)=", $(this), " this=", this); })
+    ;
     console.log("mome_generated counted nbitem=", nbitem);
     $(".mom_value_bcl")
 	.each(function (ix, el) {
 	    nbvalue++;
 	    console.log("mome_generated got value_bcl ix=", ix, " el=", el, " this=", this, " nbvalue=", nbvalue);
-	});
+	})
+	    .on("focus", function(e) {
+		console.log("mome_generated-value_bcl focus e=", e, "$(this)=", $(this), " this=", this); })
+	    .on("blur", function(e) {
+		console.log("mome_generated-value_bcl blur e=", e, "$(this)=", $(this), " this=", this); });
     console.log("mome_generated counted nbvalue=", nbvalue);
     console.log("mome_generated ending $editlog=", $editlog, " msg=", msg);
     $editlog.append(msg);
     console.log("mome_generated end msg=", msg, "; $editdiv=", $editdiv,"; $editlog=", $editlog, " this=", this);
+    $editdiv.on("focus",function(e) {
+	console.log ("mome_generated-edit:focus e=", e, " $(this)=", $(this), " this=", this);
+    });
+    $editdiv.on("blur",function(e) {
+	console.log ("mome_generated-edit:blur e=", e, " $(this)=", $(this), " this=", this);
+    });
 };
 
 
