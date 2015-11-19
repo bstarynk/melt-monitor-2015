@@ -17,7 +17,7 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-div.#microedit_id {
+div#microedit_id {
     border: 2px dashed navy;
     border-spacing: 4px;
     margin: 3px;

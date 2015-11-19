@@ -82,7 +82,7 @@ function mome_entries(entarr) {
 };
 
 function mome_generated(msg) {
-    console.log("mome_generated msg=", msg, "; $editdiv=", $editdiv, " this=", this);
+    console.log("mome_generated start msg=", msg, "; $editdiv=", $editdiv, " this=", this);
     var nbitem=0, nbvalue=0;
     // on focus to any mom_item_bcl or mom_value_bcl, $editdiv should be made non-editable
     // see http://stackoverflow.com/a/33541885/841108
@@ -99,6 +99,18 @@ function mome_generated(msg) {
 		console.log("mome_generated-item_bcl blur e=", e, "$(this)=", $(this), " this=", this); })
     	    .on("keyup", function(e) {
 		console.log("mome_generated-item_bcl keyup e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("keydown", function(e) {
+		console.log("mome_generated-item_bcl keydown e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("keypress", function(e) {
+		console.log("mome_generated-item_bcl keypress e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("input", function(e) {
+		console.log("mome_generated-item_bcl input e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("paste", function(e) {
+		console.log("mome_generated-item_bcl paste e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("beforeinput", function(e) {
+		console.log("mome_generated-item_bcl beforeinput e=", e, "$(this)=", $(this), " this=", this); })
+    	    .on("change", function(e) {
+		console.log("mome_generated-item_bcl change e=", e, "$(this)=", $(this), " this=", this); })
     ;
     console.log("mome_generated counted nbitem=", nbitem);
     $(".mom_value_bcl")
@@ -125,8 +137,14 @@ function mome_generated(msg) {
     $editdiv.on("blur",function(e) {
 	console.log ("mome_generated-edit:blur e=", e, " $(this)=", $(this), " this=", this);
     });
+    $editdiv.on("beforeinput",function(e) {
+	console.log ("mome_generated-edit:beforeinput e=", e, " $(this)=", $(this), " this=", this);
+    });
     $editdiv.on("input",function(e) {
 	console.log ("mome_generated-edit:input e=", e, " $(this)=", $(this), " this=", this);
+    });
+    $editdiv.on("paste",function(e) {
+	console.log ("mome_generated-edit:paste e=", e, " $(this)=", $(this), " this=", this);
     });
     $editdiv.on("change",function(e) {
 	console.log ("mome_generated-edit:change e=", e, " $(this)=", $(this), " this=", this);
