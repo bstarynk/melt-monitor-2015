@@ -137,6 +137,12 @@ function mome_generated(msg) {
     $editdiv.on("keyup",function(e) {
 	console.log ("mome_generated-edit:keyup e=", e, " $(this)=", $(this), " this=", this);
     });
+    $editdiv.on("mousedown",function(e) {
+	console.log ("mome_generated-edit:mousedown e=", e, " $(this)=", $(this), " this=", this);
+    });
+    $editdiv.on("mouseup",function(e) {
+	console.log ("mome_generated-edit:mouseup e=", e, " $(this)=", $(this), " this=", this);
+    });
     $editdiv.on("keypress",function(e) {
 	console.log ("mome_generated-edit:keypress e=", e, " $(this)=", $(this), " this=", this);
     });
