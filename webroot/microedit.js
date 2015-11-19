@@ -140,7 +140,7 @@ function mome_generated(msg) {
     $editdiv.on("keypress",function(e) {
 	console.log ("mome_generated-edit:keypress e=", e, " $(this)=", $(this), " this=", this);
     });
-
+};				// end mome_generated
 
 
 ////////////////
