@@ -247,9 +247,12 @@ var momp_item_value = {
 	eitmelem.appendTo(cont);
 	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	
 	eitmelem.data("momfor", this);
-	eitelem.on("input", this.gotinput);
-	eitelem.on("focusin", this.gotfocusin);
-	eitelem.on("focusout", this.gotfocusout);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotinput=", this.gotinput);
+	eitmelem.on("input", this.gotinput);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusin=", this.gotfocusin);
+	eitmelem.on("focusin", this.gotfocusin);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusout=", this.gotfocusout);
+	eitmelem.on("focusout", this.gotfocusout);
 	console.log("MomeItemVal-realize done cont=", cont,
 		    " eitmelem=", eitmelem, "\n..this=", this);
     },
