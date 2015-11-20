@@ -84,86 +84,12 @@ function mome_entries(entarr) {
 function mome_generated(msg) {
     console.log("mome_generated start msg=", msg, "; $editdiv=", $editdiv, " this=", this);
     var nbitem=0, nbvalue=0;
-    // on focus to any mom_item_bcl or mom_value_bcl, $editdiv should be made non-editable
-    // see http://stackoverflow.com/a/33541885/841108
-    $(".mom_item_bcl")
-	.each(function (ix, el) {
-	    nbitem++;
-	    console.log("mome_generated got item_bcl ix=", ix, " el=", el, " this=", this, " nbitem=", nbitem);	    
-	})
-	    .on("focus", function(e) {
-		console.log("mome_generated-item_bcl focus e=", e, "$(this)=", $(this), " this=", this); })
-	    .on("focusin", function(e) {
-		console.log("mome_generated-item_bcl focusin e=", e, "$(this)=", $(this), " this=", this); })
-	    .on("blur", function(e) {
-		console.log("mome_generated-item_bcl blur e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("keyup", function(e) {
-		console.log("mome_generated-item_bcl keyup e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("keydown", function(e) {
-		console.log("mome_generated-item_bcl keydown e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("keypress", function(e) {
-		console.log("mome_generated-item_bcl keypress e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("input", function(e) {
-		console.log("mome_generated-item_bcl input e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("paste", function(e) {
-		console.log("mome_generated-item_bcl paste e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("beforeinput", function(e) {
-		console.log("mome_generated-item_bcl beforeinput e=", e, "$(this)=", $(this), " this=", this); })
-    	    .on("change", function(e) {
-		console.log("mome_generated-item_bcl change e=", e, "$(this)=", $(this), " this=", this); })
-    ;
-    console.log("mome_generated counted nbitem=", nbitem);
-    $(".mom_value_bcl")
-	.each(function (ix, el) {
-	    nbvalue++;
-	    console.log("mome_generated got value_bcl ix=", ix, " el=", el, " this=", this, " nbvalue=", nbvalue);
-	})
-	    .on("focus", function(e) {
-		console.log("mome_generated-value_bcl focus e=", e, "$(this)=", $(this), " this=", this); })
-	    .on("focusin", function(e) {
-		console.log("mome_generated-value_bcl focusin e=", e, "$(this)=", $(this), " this=", this); })
-	    .on("blur", function(e) {
-		console.log("mome_generated-value_bcl blur e=", e, "$(this)=", $(this), " this=", this); });
-    console.log("mome_generated counted nbvalue=", nbvalue);
+    // see http://stackoverflow.com/a/33541885/841108 the git tag
+    // many-handler-debug, git commit 51c73df483c2281fa4a6 had lot of
+    // console debugging messages to handle events.
     console.log("mome_generated ending $editlog=", $editlog, " msg=", msg);
     $editlog.append(msg);
-    console.log("mome_generated end msg=", msg, "; $editdiv=", $editdiv,"; $editlog=", $editlog, " this=", this);
-    $editdiv.on("focus",function(e) {
-	console.log ("mome_generated-edit:focus e=", e,  " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("focusin",function(e) {
-	console.log ("mome_generated-edit:focusin e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("blur",function(e) {
-	console.log ("mome_generated-edit:blur e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("beforeinput",function(e) {
-	console.log ("mome_generated-edit:beforeinput e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("input",function(e) {
-	console.log ("mome_generated-edit:input e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("paste",function(e) {
-	console.log ("mome_generated-edit:paste e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("change",function(e) {
-	console.log ("mome_generated-edit:change e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("keydown",function(e) {
-	console.log ("mome_generated-edit:keydown e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("keyup",function(e) {
-	console.log ("mome_generated-edit:keyup e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("mousedown",function(e) {
-	console.log ("mome_generated-edit:mousedown e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("mouseup",function(e) {
-	console.log ("mome_generated-edit:mouseup e=", e, " $(this)=", $(this), " this=", this);
-    });
-    $editdiv.on("keypress",function(e) {
-	console.log ("mome_generated-edit:keypress e=", e, " $(this)=", $(this), " this=", this);
-    });
+
 };				// end mome_generated
 
 
@@ -210,11 +136,27 @@ var momp_value = {
 
 var momp_item_ref = {
     name: "MomeItemRef",
+    gotinput: function (ev) {
+	console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this));
+    },
+    gotfocusin: function (ev) {
+	//$(this).prop("contenteditable",true);
+	console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+    },
+    gotfocusout: function (ev) {
+	//$(this).prop("contenteditable",false);
+	console.log ("MomeItemRef-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+    },
     realize: function (cont) {
 	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
-	var eitelem = $("<span class='momitem_bcl momitemref_cl'>"+this.item_name+"</span>");
+	var eitelem = $("<span class='momitem_bcl momitemref_cl' contenteditable='true'>"+this.item_name+"</span>");
 	eitelem.appendTo(cont);
+	console.log("MomeItemRef-realize on eitelem=", eitelem, " gotinput=", this.gotinput,
+		    " gotfocusin=", this.gotfocusin, " gotfocusout=", this.gotfocusout);
+	eitelem.on("input", this.gotinput);
+	eitelem.on("focusin", this.gotfocusin);
+	eitelem.on("focusout", this.gotfocusout);
 	console.log("MomeItemRef-realize done cont=", cont,
 		    " eitelem=", eitelem, "\n..this=", this);
     }
@@ -285,15 +227,29 @@ function mome_nil_ref() {	/// a nil item reference
 var momp_item_value = {
     name: "MomeItemVal",
     __proto__: momp_value,
+    gotinput: function (ev) {
+	console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this));
+    },
+    gotfocusin: function (ev) {
+	//$(this).prop("contenteditable",true);
+	console.log ("MomeItemVal-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+    },
+    gotfocusout: function (ev) {
+	//$(this).prop("contenteditable",false);
+	console.log ("MomeItemVal-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+    },
     realize: function (cont) {
 	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.item_name) === "string",
 		       "MomeItemVal no item_name in this=", this);
-	var eitmelem = $("<span class=' mom_item_bcl momitemval_cl'>"+ this.item_name +"</span>");
+	var eitmelem = $("<span class=' mom_item_bcl momitemval_cl' contenteditable='true'>"+ this.item_name +"</span>");
 	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
 	eitmelem.appendTo(cont);
 	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	
 	eitmelem.data("momfor", this);
+	eitelem.on("input", this.gotinput);
+	eitelem.on("focusin", this.gotfocusin);
+	eitelem.on("focusout", this.gotfocusout);
 	console.log("MomeItemVal-realize done cont=", cont,
 		    " eitmelem=", eitmelem, "\n..this=", this);
     },
@@ -549,6 +505,13 @@ function mome_node(connitm, sonsarr) {
     return res;
 };
 
+//function editdivinput(ev) {
+//    console.log ("editdivinput ev=", ev, " this=", this);
+//}
+
+//function editdivbeforeinput(ev) {
+//    console.log ("editdivbeforeinput ev=", ev, " this=", this);
+//}
 
 $(document).ready(function(){
     console.log("microedit document ready");
@@ -565,6 +528,8 @@ $(document).ready(function(){
 	$editlog.html("");
     });
     console.log("microedit before ajax do_fillpage");
+//    $editdiv.on("input", editdivinput);
+//    $editdiv.on("beforeinput", editdivbeforeinput);
     $.ajax
     ({url: "/microedit",
       method: "POST",
@@ -572,6 +537,7 @@ $(document).ready(function(){
       dataType: "script",
       success: ajaxfillscript
      });
+    
     console.log("microedit document done ready");
 });
 
