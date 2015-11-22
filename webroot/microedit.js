@@ -284,6 +284,10 @@ var momp_item_value = {
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemVal-gotkeypress ev=", ev, " curtxt=", curtxt,
 		     " $(this)=", $(this), " curmatch=", curmatch);
+	if (ev.ctrlKey || ev.metaKey || !ev.key.match(mom_name_regexp)) {
+	    console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
+	    return false;
+	};
     },
     gotfocusin: function (ev) {
 	var oldtxt = $(this).text();

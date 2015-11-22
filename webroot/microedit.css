@@ -17,24 +17,24 @@
     <http://www.gnu.org/licenses/>.
 **/
 
-div#microedit_id {
+#microedit_id {
     border: 2px dashed navy;
     border-spacing: 4px;
     margin: 3px;
     background-color: #CCE5C3;
-};
+}
 
 p.mombeginfill_cl {
     font-family: Verdana;
     font-size: 90%;
     color: #0A261C;
-};
+}
 
 p.mommtime_cl {
     font-family: Times;
     font-size: 90%;
     color: #0A0B26;
-};
+}
 
 span.word_cl {
     font-family: Arial, Helvetiva;
