@@ -43,6 +43,37 @@ function ajaxfillscript(script) {
 
 var momc_count=0;
 var momv_entriesvar=null;
+var mom_name_regexp = /^[A-Za-z0-9_]*$/;
+
+var mom_name_cache = new Object();
+
+function mom_known_item(name) {
+    if (!name.match(mom_name_regexp))
+	return false;
+    if (mom_name_cache[name])
+	return true;
+    var res = null;
+    $.ajax
+    ({url: "/microedit",
+      method: "POST",
+      async: false,
+      data: {"do_knownitem": name},
+      dataType: "jsonp",
+      success: function (data, stat, jh) {
+	  console.log("mom_known_item success data=", data, " stat=", stat, " jh=", jh);
+	  if (data) {
+	      mom_known_item[name] = data;
+	      res = true;
+	  }
+	  else res = false;
+      },
+      error: function (jq, stat, err) {
+	  console.warn("mom_known_item error jq=", jq, " stat=", stat, " err=", err);
+	  res = false;
+      }
+     });
+    console.log ("mom_known_item name=", name, " res=", res);
+};
 
 function mom_numbered(obj) {
     momc_count = momc_count+1;
@@ -54,6 +85,7 @@ function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid, " $editdiv=", $editdiv);
     $("<p class='mombeginfill_cl'>" + statitmid + "</p>").appendTo($editdiv);
     console.log("mome_begin_fill $editdiv=", $editdiv, " this=", this);
+    mom_name_cache = new Object();
 };
 
 function mome_mtime(timestr) {
@@ -138,14 +170,26 @@ var momp_item_ref = {
     name: "MomeItemRef",
     gotinput: function (ev) {
 	console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this));
+	var curtxt = $(this).text();
+	var curmatch = curtxt.match(mom_name_regexp);
+	console.log ("MomeItemRef-gotinput curtxt=", curtxt, " curmatch=", curmatch);
+    },
+    gotkeypress: function (ev) {
+	var curtxt = $(this).text();
+	var curmatch = curtxt.match(mom_name_regexp);
+	console.log ("MomeItemRef-gotkeypress ev=", ev, " $(this)=", $(this),
+		     " curtxt=", curtxt, " curmatch=", curmatch);
     },
     gotfocusin: function (ev) {
 	//$(this).prop("contenteditable",true);
-	console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+	var oldtxt = $(this).text();
+	console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv, " oldtxt=", oldtxt);
+	$(this).old_text = oldtxt;
     },
     gotfocusout: function (ev) {
 	//$(this).prop("contenteditable",false);
 	console.log ("MomeItemRef-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+	delete $(this).old_text;
     },
     realize: function (cont) {
 	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
@@ -157,6 +201,7 @@ var momp_item_ref = {
 	eitelem.on("input", this.gotinput);
 	eitelem.on("focusin", this.gotfocusin);
 	eitelem.on("focusout", this.gotfocusout);
+	eitelem.on("keypress", this.gotkeypress);
 	console.log("MomeItemRef-realize done cont=", cont,
 		    " eitelem=", eitelem, "\n..this=", this);
     }
@@ -229,14 +274,26 @@ var momp_item_value = {
     __proto__: momp_value,
     gotinput: function (ev) {
 	console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this));
+	var curtxt = $(this).text();
+	var curmatch = curtxt.match(mom_name_regexp);
+	console.log ("MomeItemVal-gotinput curtxt=", curtxt, " curmatch=", curmatch);
+	if (!curmatch) return false;
+    },
+    gotkeypress: function (ev) {
+	var curtxt = $(this).text();
+	var curmatch = curtxt.match(mom_name_regexp);
+	console.log ("MomeItemVal-gotkeypress ev=", ev, " curtxt=", curtxt,
+		     " $(this)=", $(this), " curmatch=", curmatch);
     },
     gotfocusin: function (ev) {
-	//$(this).prop("contenteditable",true);
-	console.log ("MomeItemVal-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+	var oldtxt = $(this).text();
+	console.log ("MomeItemVal-gotfocusin ev=", ev, " oldtxt=", oldtxt,
+		     " $(this)=", $(this), " $editdiv=", $editdiv);
+	$(this).old_text = oldtxt;
     },
     gotfocusout: function (ev) {
-	//$(this).prop("contenteditable",false);
 	console.log ("MomeItemVal-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+	delete $(this).old_text;
     },
     realize: function (cont) {
 	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
@@ -253,6 +310,7 @@ var momp_item_value = {
 	eitmelem.on("focusin", this.gotfocusin);
 	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusout=", this.gotfocusout);
 	eitmelem.on("focusout", this.gotfocusout);
+	eitmelem.on("keypress", this.gotkeypress);
 	console.log("MomeItemVal-realize done cont=", cont,
 		    " eitmelem=", eitmelem, "\n..this=", this);
     },

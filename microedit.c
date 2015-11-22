@@ -261,6 +261,34 @@ dofillpage_microedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end doloadpage_microedit_mom */
 
+static void
+doknownitem_microedit_mom (struct mom_webexch_st *wexch,
+                           struct mom_item_st *tkitm,
+                           struct mom_item_st *wexitm,
+                           struct mom_item_st *thistatitm, const char *name)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  bool known = false;
+  MOM_DEBUGPRINTF (web,
+                   "doknownitem_microedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), name);
+  if (name)
+    {
+      struct mom_item_st *itm = mom_find_item_by_string (name);
+      MOM_DEBUGPRINTF (web,
+                       "doknownitem_microedit webr#%ld name=%s itm=%s\n",
+                       wexch->webx_count, name, mom_item_cstring (itm));
+      known = itm != NULL;
+    };
+  mom_wexch_puts (wexch, known ? "true\n" : "false\n");
+  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  MOM_DEBUGPRINTF (web,
+                   "doknowitem_microedit done webr#%ld tkitm=%s name %s known %s",
+                   wexch->webx_count, mom_item_cstring (tkitm), name,
+                   known ? "yes" : "no");
+}                               /* end doknownitem_microedit_mom */
 
 
 extern mom_tasklet_sig_t momf_microedit;
@@ -346,12 +374,17 @@ momf_microedit (struct mom_item_st *tkitm)
     {
       const char *dofillpage =
         onion_request_get_post (wexch->webx_requ, "do_fillpage");
+      const char *doknownitem =
+        onion_request_get_post (wexch->webx_requ, "do_knownitem");
       MOM_DEBUGPRINTF (web,
-                       "momf_microedit tkitm=%s wexch #%ld dofillpage %s",
+                       "momf_microedit tkitm=%s wexch #%ld dofillpage %s doknownitem %s",
                        mom_item_cstring (tkitm), wexch->webx_count,
-                       dofillpage);
+                       dofillpage, doknownitem);
       if (dofillpage)
         dofillpage_microedit_mom (wexch, tkitm, wexitm, thistatitm);
+      else if (doknownitem)
+        doknownitem_microedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                   doknownitem);
     }
 end:
   if (hsetitm)
