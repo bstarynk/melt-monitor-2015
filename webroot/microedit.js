@@ -53,12 +53,13 @@ function mom_known_item(name) {
     if (mom_name_cache[name])
 	return true;
     var res = null;
+    console.log("mom_known_item name=", name, " before ajaxing");
     $.ajax
     ({url: "/microedit",
       method: "POST",
       async: false,
       data: {"do_knownitem": name},
-      dataType: "jsonp",
+      dataType: "json",
       success: function (data, stat, jh) {
 	  console.log("mom_known_item success data=", data, " stat=", stat, " jh=", jh);
 	  if (data) {
@@ -73,6 +74,7 @@ function mom_known_item(name) {
       }
      });
     console.log ("mom_known_item name=", name, " res=", res);
+    return res;
 };
 
 function mom_numbered(obj) {
@@ -173,12 +175,19 @@ var momp_item_ref = {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemRef-gotinput curtxt=", curtxt, " curmatch=", curmatch);
+	if (!curmatch) {
+	    $(this).text($(this).old_text);
+	}
     },
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
-	console.log ("MomeItemRef-gotkeypress ev=", ev, " $(this)=", $(this),
+	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key='", ev.key, "' $(this)=", $(this),
 		     " curtxt=", curtxt, " curmatch=", curmatch);
+	if (ev.ctrlKey || ev.metaKey || !ev.key.match(mom_name_regexp)) {
+	    console.log ("MomeItemRef-gotkeypress ev=", ev, " reject strangekey");
+	    return false;
+	};
     },
     gotfocusin: function (ev) {
 	//$(this).prop("contenteditable",true);
@@ -277,12 +286,25 @@ var momp_item_value = {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemVal-gotinput curtxt=", curtxt, " curmatch=", curmatch);
-	if (!curmatch) return false;
+	if (!curmatch) {
+	    $(this).text($(this).old_text);
+	    return false;
+	}
+	if (mom_known_item(curtxt)) {
+	    console.log ("MomeItemVal-gotinput knownitem ", curtxt);
+	    $(this).addClass('momitemval_cl');
+	    $(this).removeClass('momname_cl');
+	}
+	else {
+	    console.log ("MomeItemVal-gotinput unknownitem ", curtxt);
+	    $(this).removeClass('momitemval_cl');
+	    $(this).addClass('momname_cl');
+	}
     },
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
-	console.log ("MomeItemVal-gotkeypress ev=", ev, " curtxt=", curtxt,
+	console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
 		     " $(this)=", $(this), " curmatch=", curmatch);
 	if (ev.ctrlKey || ev.metaKey || !ev.key.match(mom_name_regexp)) {
 	    console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
@@ -303,7 +325,8 @@ var momp_item_value = {
 	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.item_name) === "string",
 		       "MomeItemVal no item_name in this=", this);
-	var eitmelem = $("<span class=' mom_item_bcl momitemval_cl' contenteditable='true'>"+ this.item_name +"</span>");
+	var eitmelem = $("<span class='mom_item_bcl momitemval_cl' contenteditable='true'>"+ this.item_name +"</span>");
+	$(this).mom_span = eitmelem;
 	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
 	eitmelem.appendTo(cont);
 	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	

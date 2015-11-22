@@ -264,7 +264,7 @@ p.notice_cl {
 
 span.momname_bcl {
     background-color: #FBFADD;
-    gap: 1px;
+    //gap: 1px;
 }
 
 span.momname_cl:focus {
