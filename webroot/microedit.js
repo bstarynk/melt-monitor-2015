@@ -47,6 +47,12 @@ var mom_name_regexp = /^[A-Za-z0-9_]*$/;
 
 var mom_name_cache = new Object();
 
+function mom_numbered(obj) {
+    momc_count = momc_count+1;
+    obj.inum = momc_count;
+    return momc_count;
+};
+
 function mom_known_item(name) {
     if (!name.match(mom_name_regexp))
 	return false;
@@ -75,13 +81,35 @@ function mom_known_item(name) {
      });
     console.log ("mom_known_item name=", name, " res=", res);
     return res;
-};
+};				// end mom_known_item
 
-function mom_numbered(obj) {
-    momc_count = momc_count+1;
-    obj.inum = momc_count;
-    return momc_count;
-};
+function mom_complete_name(name) {
+    var res = null;
+    if (!name.match(mom_name_regexp)) {
+	console.log ("mom_complete_name bad name=", name);
+	return false;
+    }
+    else 
+    console.log("mom_complete_name name=", name, " before ajaxing");
+    $.ajax
+    ({url: "/microedit",
+      method: "POST",
+      async: false,
+      data: {"do_completename": name},
+      dataType: "json",
+      success: function (data, stat, jh) {
+	  console.log("mom_complete_name success data=", data, " stat=", stat, " jh=", jh);
+	  res = data;
+      },
+      error: function (jq, stat, err) {
+	  console.warn("mom_complete_name error jq=", jq, " stat=", stat, " err=", err);
+	  res = false;
+      }
+     });
+    console.log ("mom_complete_name name=", name, " res=", res);
+    return res;
+};				// end mom_complete_name
+
 
 function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid, " $editdiv=", $editdiv);
@@ -312,17 +340,21 @@ var momp_item_value = {
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
+	var compl = null;
 	console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
 		     " $(this)=", $(this), " curmatch=", curmatch);
 	if (ev.key === ' ') {
 	    console.log ("MomeItemVal-gotkeypress space ev=", ev);
 	    if (ev.ctrlKey && !ev.metaKey) {
+		console.log ("MomeItemVal-gotkeypress ctrlspace ev=", ev, " should complete curtxt=", curtxt);
+		comp = mom_complete_name(curtxt);
+		console.log ("MomeItemVal-gotkeypress completed curtxt=", curtxt, " got comp=", comp);
 	    }
 	    return false;
 	};
 	if (ev.ctrlKey || ev.metaKey
 	    || (typeof ev.key) !== "string"
-	    || !ev.key.match(mom_name_regexp))) {
+	    || !ev.key.match(mom_name_regexp)) {
 	    console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
 	    return false;
 	};

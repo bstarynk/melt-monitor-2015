@@ -313,13 +313,13 @@ docompletename_microedit_mom (struct mom_webexch_st *wexch,
   if (set)
     {
       unsigned siz = mom_size (set);
-      mom_wexch_puts (wexch, "[\n");
+      mom_wexch_puts (wexch, "[");
       for (unsigned ix = 0; ix < siz; ix++)
         {
           const struct mom_item_st *curitm = set->seqitem[ix];
           assert (curitm && curitm->va_itype == MOMITY_ITEM);
           if (ix > 0)
-            mom_wexch_puts (wexch, ",\n ");
+            mom_wexch_puts (wexch, MOM_IS_DEBUGGING(web)?",\n ":",");
           MOM_WEXCH_PRINTF (wexch, "'%s'", mom_item_cstring (curitm));
         }
       mom_wexch_puts (wexch, "]\n");
