@@ -304,10 +304,34 @@ docompletename_microedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), name);
-#warning docompletename_microedit unimplemented
-  MOM_FATAPRINTF
-    ("unimplemented docompletename_microedit_mom webr#%ld name %s",
-     wexch->webx_count, name);
+  const struct mom_boxset_st *set = mom_set_items_prefixed (name, -1);
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_microedit webr#%ld set %s",
+                   wexch->webx_count,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      set));
+  if (set)
+    {
+      unsigned siz = mom_size (set);
+      mom_wexch_puts (wexch, "[\n");
+      for (unsigned ix = 0; ix < siz; ix++)
+        {
+          const struct mom_item_st *curitm = set->seqitem[ix];
+          assert (curitm && curitm->va_itype == MOMITY_ITEM);
+          if (ix > 0)
+            mom_wexch_puts (wexch, ",\n ");
+          MOM_WEXCH_PRINTF (wexch, "'%s'", mom_item_cstring (curitm));
+        }
+      mom_wexch_puts (wexch, "]\n");
+    }
+  else
+    {
+      mom_wexch_puts (wexch, "null\n");
+    }
+  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_microedit webr#%ld done",
+                   wexch->webx_count);
 }                               /* end of docompletename_microedit */
 
 extern mom_tasklet_sig_t momf_microedit;
