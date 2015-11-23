@@ -435,12 +435,16 @@ not_found:
 }                               /* end mom_find_item_from_string */
 
 
+
 const struct mom_boxset_st *
 mom_set_items_prefixed (const char *str, int slen)
 {
   const struct mom_boxset_st *res = NULL;
   if (!str || str == MOM_EMPTY_SLOT || !isalpha (str[0]))
-    return NULL;
+    {
+      MOM_DEBUGPRINTF (item, "mom_set_items_prefixed invalid str");
+      return NULL;
+    }
   if (slen < 0)
     slen = strlen (str);
   int postwo = -1;
@@ -451,6 +455,8 @@ mom_set_items_prefixed (const char *str, int slen)
       if (str[ix] == '_' && postwo < 0 && ix > 0 && str[ix - 1] == '_')
         postwo = ix - 1;
     };
+  MOM_DEBUGPRINTF (item, "mom_set_items_prefixed str=%.*s slen=%d postwo=%d",
+                   slen, str, slen, postwo);
   if (postwo < 0)
     {                           // no __
       const struct mom_item_st **arr = NULL;
@@ -465,10 +471,16 @@ mom_set_items_prefixed (const char *str, int slen)
       int nbloop = 0;
       for (;;)
         {
+          MOM_DEBUGPRINTF (item,
+                           "mom_set_items_prefixed str=%.*s lo=%d hi=%d nbloop#%d",
+                           slen, str, lo, hi, nbloop);
           struct mom_itemname_tu *lorad = radix_arr_mom[lo]->rad_name;
           struct mom_itemname_tu *hirad = radix_arr_mom[hi]->rad_name;
           assert (lorad != NULL && lorad->itname_rank == (unsigned) lo);
           assert (hirad != NULL && hirad->itname_rank == (unsigned) hi);
+          MOM_DEBUGPRINTF (item, "mom_set_items_prefixed loname %s hiname %s",
+                           lorad->itname_string.cstr,
+                           hirad->itname_string.cstr);
           if (!strncmp (lorad->itname_string.cstr, str, slen)
               && !strncmp (hirad->itname_string.cstr, str, slen))
             break;
@@ -481,12 +493,20 @@ mom_set_items_prefixed (const char *str, int slen)
           assert (mdrad != NULL);
           assert (mdrad->itname_rank == (unsigned) md);
           int c = strncmp (mdrad->itname_string.cstr, str, slen);
-          if (c >= 0)
+          MOM_DEBUGPRINTF (item,
+                           "mom_set_items_prefixed str=%.*s md=%d mdname '%s' c=%d",
+                           slen, str, md, mdrad->itname_string.cstr, c);
+          if (c < 0)
             lo = md;
-          else
+          else if (c > 0)
             hi = md;
+          else if (c == 0)
+            break;
         };
       int siz = hi - lo;
+      MOM_DEBUGPRINTF (item,
+                       "mom_set_items_prefixed final lo=%d hi=%d siz=%d", lo,
+                       hi, siz);
       assert (siz >= 0 && siz <= (int) radix_cnt_mom);
       arr =                     //
         (siz < (int) (sizeof (smallarr) / sizeof (smallarr[0]))) ? smallarr
@@ -496,13 +516,21 @@ mom_set_items_prefixed (const char *str, int slen)
         {
           struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
           assert (curad != NULL && curad->itname_rank == (unsigned) ix);
+          MOM_DEBUGPRINTF (item,
+                           "mom_set_items_prefixed str=%.*s ix=%d curadname %s",
+                           slen, str, ix, curad->itname_string.cstr);
           if (!strncmp (curad->itname_string.cstr, str, slen))
             {
               const struct mom_item_st *curitm =
                 radix_arr_mom[ix]->rad_nakeditem;
+              MOM_DEBUGPRINTF (item,
+                               "mom_set_items_prefixed ix=%d naked curitm %s",
+                               ix, mom_item_cstring (curitm));
               if (curitm == NULL || curitm == MOM_EMPTY_SLOT)
                 continue;
               assert (cnt < siz);
+              MOM_DEBUGPRINTF (item, "mom_set_items_prefixed arr[%d] = %s",
+                               cnt, mom_item_cstring (curitm));
               arr[cnt++] = curitm;
             }
         }
@@ -524,30 +552,33 @@ mom_set_items_prefixed (const char *str, int slen)
             pthread_mutex_unlock (&radix_mtx_mom);
           }
           {
-	    char buf[MAXLEN_SUFFIXEDITEM_MOM];
-	    memset (buf, 0, sizeof (buf));
+            char buf[MAXLEN_SUFFIXEDITEM_MOM];
+            memset (buf, 0, sizeof (buf));
             pthread_mutex_lock (&curad->rad_mtx);
             hset =
               mom_hashset_reserve (NULL,
                                    9 + (curad->rad_count >> (slen - postwo)));
-	    unsigned rsiz = curad->rad_size;
-	    for (unsigned ix=0; ix<rsiz; ix++) {
-	      struct mom_item_st*curitm = curad->rad_items[ix];
-	      if (!curitm || curitm == MOM_EMPTY_SLOT) continue;
-	      char bufnum[MOM_HI_LO_SUFFIX_LEN];
-	      memset (bufnum, 0, sizeof (bufnum));
-	      memset (buf, 0, sizeof (buf));
-	      if (MOM_UNLIKELY (snprintf (buf, sizeof (buf), "%s_%s",
-					  radix->itname_string.cstr,
-					  mom_item_hi_lo_suffix (bufnum, curitm))
-				>= (int) sizeof (buf)))
-		MOM_FATAPRINTF ("too long item name %s", buf);
-	      if (!strncmp(buf, str, slen))
-		hset = mom_hashset_insert(hset, curitm);
-	    }
+            unsigned rsiz = curad->rad_size;
+            for (unsigned ix = 0; ix < rsiz; ix++)
+              {
+                struct mom_item_st *curitm = curad->rad_items[ix];
+                if (!curitm || curitm == MOM_EMPTY_SLOT)
+                  continue;
+                char bufnum[MOM_HI_LO_SUFFIX_LEN];
+                memset (bufnum, 0, sizeof (bufnum));
+                memset (buf, 0, sizeof (buf));
+                if (MOM_UNLIKELY (snprintf (buf, sizeof (buf), "%s_%s",
+                                            radix->itname_string.cstr,
+                                            mom_item_hi_lo_suffix (bufnum,
+                                                                   curitm)) >=
+                                  (int) sizeof (buf)))
+                  MOM_FATAPRINTF ("too long item name %s", buf);
+                if (!strncmp (buf, str, slen))
+                  hset = mom_hashset_insert (hset, curitm);
+              }
             pthread_mutex_unlock (&curad->rad_mtx);
           }
-	  res = mom_hashset_to_boxset(hset);
+          res = mom_hashset_to_boxset (hset);
         }
     }
   MOM_DEBUGPRINTF (item, "mom_set_items_prefixed %.*s = %s",
@@ -926,7 +957,13 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     newitm->itm_hid = hid;
     newitm->itm_lid = loid;
     if (!hid && !loid)
-      curad->rad_nakeditem = newitm;
+      {
+        curad->rad_nakeditem = newitm;
+        MOM_DEBUGPRINTF (item,
+                         "make_item_from_radix %s nakeditm %s @%p",
+                         radix->itname_string.cstr, mom_item_cstring (newitm),
+                         newitm);
+      }
     GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = newitm;
@@ -1643,6 +1680,8 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
                    (void *) itm, mom_item_cstring (itm), pos);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
+  if (!twou)
+    curad->rad_nakeditem = itm;
   curad->rad_items[pos] = itm;
   curad->rad_count++;
   pthread_mutex_unlock (&curad->rad_mtx);
