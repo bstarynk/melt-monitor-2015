@@ -20,6 +20,7 @@
 
 #include "meltmoni.h"
 
+#define MAXLEN_SUFFIXEDITEM_MOM 256
 /// we temporarily store the radix in a sorted dynamic array
 static pthread_mutex_t radix_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 
@@ -36,7 +37,8 @@ struct radix_mom_st
   uint32_t rad_size;            /* allocated size */
   uint32_t rad_count;           /* used count */
   pthread_mutex_t rad_mtx;
-  struct mom_item_st **rad_items;       /* of rad_size */
+  struct mom_item_st *rad_nakeditem;    /* the item without any prefix, i.e. zero hid & lid */
+  struct mom_item_st **rad_items;       /* hashtable of rad_size */
 };
 
 
@@ -433,6 +435,129 @@ not_found:
 }                               /* end mom_find_item_from_string */
 
 
+const struct mom_boxset_st *
+mom_set_items_prefixed (const char *str, int slen)
+{
+  const struct mom_boxset_st *res = NULL;
+  if (!str || str == MOM_EMPTY_SLOT || !isalpha (str[0]))
+    return NULL;
+  if (slen < 0)
+    slen = strlen (str);
+  int postwo = -1;
+  for (int ix = 0; ix < slen; ix++)
+    {
+      if (!isalnum (str[ix]) && str[ix] != '_')
+        return NULL;
+      if (str[ix] == '_' && postwo < 0 && ix > 0 && str[ix - 1] == '_')
+        postwo = ix - 1;
+    };
+  if (postwo < 0)
+    {                           // no __
+      const struct mom_item_st **arr = NULL;
+      const struct mom_item_st *smallarr[16] = { };
+      int cnt = 0;
+      memset (smallarr, 0, sizeof (smallarr));
+      pthread_mutex_lock (&radix_mtx_mom);
+      assert (radix_cnt_mom <= radix_siz_mom);
+      if (MOM_UNLIKELY (radix_cnt_mom == 0))
+        goto endradix;
+      int lo = 0, hi = (int) radix_cnt_mom - 1;
+      int nbloop = 0;
+      for (;;)
+        {
+          struct mom_itemname_tu *lorad = radix_arr_mom[lo]->rad_name;
+          struct mom_itemname_tu *hirad = radix_arr_mom[hi]->rad_name;
+          assert (lorad != NULL && lorad->itname_rank == (unsigned) lo);
+          assert (hirad != NULL && hirad->itname_rank == (unsigned) hi);
+          if (!strncmp (lorad->itname_string.cstr, str, slen)
+              && !strncmp (hirad->itname_string.cstr, str, slen))
+            break;
+          if (lo + 5 >= hi)
+            break;
+          nbloop++;
+          assert (nbloop < 100);
+          int md = (lo + hi) / 2;
+          struct mom_itemname_tu *mdrad = radix_arr_mom[md]->rad_name;
+          assert (mdrad != NULL);
+          assert (mdrad->itname_rank == (unsigned) md);
+          int c = strncmp (mdrad->itname_string.cstr, str, slen);
+          if (c >= 0)
+            lo = md;
+          else
+            hi = md;
+        };
+      int siz = hi - lo;
+      assert (siz >= 0 && siz <= (int) radix_cnt_mom);
+      arr =                     //
+        (siz < (int) (sizeof (smallarr) / sizeof (smallarr[0]))) ? smallarr
+        : mom_gc_alloc (siz * sizeof (struct mom_item_st *));
+      cnt = 0;
+      for (int ix = lo; ix <= hi; ix++)
+        {
+          struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
+          assert (curad != NULL && curad->itname_rank == (unsigned) ix);
+          if (!strncmp (curad->itname_string.cstr, str, slen))
+            {
+              const struct mom_item_st *curitm =
+                radix_arr_mom[ix]->rad_nakeditem;
+              if (curitm == NULL || curitm == MOM_EMPTY_SLOT)
+                continue;
+              assert (cnt < siz);
+              arr[cnt++] = curitm;
+            }
+        }
+    endradix:
+      pthread_mutex_unlock (&radix_mtx_mom);
+      res = mom_boxset_make_arr (cnt, arr);
+    }
+  else
+    {                           // we have __ at position postwo 
+      const struct mom_itemname_tu *radix =     //
+        mom_find_name_radix (str, postwo);
+      if (radix)
+        {
+          struct mom_hashset_st *hset = NULL;
+          struct radix_mom_st *curad = NULL;
+          {
+            pthread_mutex_lock (&radix_mtx_mom);
+            curad = radix_arr_mom[radix->itname_rank];
+            pthread_mutex_unlock (&radix_mtx_mom);
+          }
+          {
+	    char buf[MAXLEN_SUFFIXEDITEM_MOM];
+	    memset (buf, 0, sizeof (buf));
+            pthread_mutex_lock (&curad->rad_mtx);
+            hset =
+              mom_hashset_reserve (NULL,
+                                   9 + (curad->rad_count >> (slen - postwo)));
+	    unsigned rsiz = curad->rad_size;
+	    for (unsigned ix=0; ix<rsiz; ix++) {
+	      struct mom_item_st*curitm = curad->rad_items[ix];
+	      if (!curitm || curitm == MOM_EMPTY_SLOT) continue;
+	      char bufnum[MOM_HI_LO_SUFFIX_LEN];
+	      memset (bufnum, 0, sizeof (bufnum));
+	      memset (buf, 0, sizeof (buf));
+	      if (MOM_UNLIKELY (snprintf (buf, sizeof (buf), "%s_%s",
+					  radix->itname_string.cstr,
+					  mom_item_hi_lo_suffix (bufnum, curitm))
+				>= (int) sizeof (buf)))
+		MOM_FATAPRINTF ("too long item name %s", buf);
+	      if (!strncmp(buf, str, slen))
+		hset = mom_hashset_insert(hset, curitm);
+	    }
+            pthread_mutex_unlock (&curad->rad_mtx);
+          }
+	  res = mom_hashset_to_boxset(hset);
+        }
+    }
+  MOM_DEBUGPRINTF (item, "mom_set_items_prefixed %.*s = %s",
+                   slen, str,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      res));
+  return res;
+}                               /* end of mom_set_items_prefixed */
+
+
 struct mom_item_st *
 mom_make_item_from_string (const char *str, const char **pend)
 {
@@ -698,10 +823,14 @@ mom_cleanup_item (void *itmad, void *clad)
   assert (pos >= 0 && pos < (int) curad->rad_size);
   assert (curad->rad_items);
   assert (curad->rad_items[pos] == itm);
+  if (itm->itm_hid == 0 && itm->itm_lid == 0)
+    {
+      assert (curad->rad_nakeditem == itm);
+      curad->rad_nakeditem = NULL;
+    };
   curad->rad_items[pos] = MOM_EMPTY_SLOT;
   assert (curad->rad_count > 0 && curad->rad_count <= curad->rad_size);
   curad->rad_count--;
-
   pthread_mutex_destroy (&itm->itm_mtx);
   memset (itmad, 0, sizeof (struct mom_item_st));
   pthread_mutex_unlock (&curad->rad_mtx);
@@ -796,6 +925,8 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
     newitm->itm_hid = hid;
     newitm->itm_lid = loid;
+    if (!hid && !loid)
+      curad->rad_nakeditem = newitm;
     GC_REGISTER_FINALIZER_IGNORE_SELF (newitm, mom_cleanup_item, NULL, NULL,
                                        NULL);
     itm = newitm;
@@ -913,9 +1044,10 @@ mom_item_cstring (const struct mom_item_st *itm)
     return mom_item_radix_str (itm);
   else
     {
-      char buf[256];
+      char buf[MAXLEN_SUFFIXEDITEM_MOM];
       char bufnum[MOM_HI_LO_SUFFIX_LEN];
       memset (buf, 0, sizeof (buf));
+      memset (bufnum, 0, sizeof (bufnum));
       if (MOM_UNLIKELY (snprintf (buf, sizeof (buf), "%s_%s",
                                   mom_item_radix_str (itm),
                                   mom_item_hi_lo_suffix (bufnum, itm))
@@ -923,7 +1055,9 @@ mom_item_cstring (const struct mom_item_st *itm)
         MOM_FATAPRINTF ("too long item name %s", buf);
       return GC_STRDUP (buf);
     }
-}
+}                               /* end mom_item_cstring */
+
+
 
 int
 mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)

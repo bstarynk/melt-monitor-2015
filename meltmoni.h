@@ -122,6 +122,10 @@ const char *mom_hostname (void);
 #define MOM_UNUSED
 #endif
 
+
+// A non nil address which is *never* dereferencable and can be used
+// as an empty placeholder; in practice all Unix & POSIX systems dont
+// use that address
 #define MOM_EMPTY_SLOT ((void*)-1)
 
 // maximum number of threads
@@ -1235,6 +1239,14 @@ mom_find_item_by_string (const char *str)
 {
   return mom_find_item_from_string (str, NULL);
 }
+
+/// Return the set of items of some given prefix str.
+// if the prefix is invalid, return NULL.
+// if the prefix has no __, we give a set of non-suffixed items
+// otherwise a set of suffixed items
+const struct mom_boxset_st *mom_set_items_prefixed (const char *str,
+                                                    int slen);
+
 
 struct mom_item_st *mom_make_item_from_string (const char *str,
                                                const char **pend);

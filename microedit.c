@@ -299,7 +299,6 @@ docompletename_microedit_mom (struct mom_webexch_st *wexch,
                               const char *name)
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
-  bool known = false;
   MOM_DEBUGPRINTF (web,
                    "docompletename_microedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
                    wexch->webx_count, mom_item_cstring (tkitm),
