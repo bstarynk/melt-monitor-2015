@@ -848,10 +848,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                            reqcnt, wexch->webx_code, wexch->webx_mimetype);
           onion_response_set_code (resp, wexch->webx_code);
           if ((!strncmp (wexch->webx_mimetype, "text/", 5)
-	       || strstr(wexch->webx_mimetype, "json") != NULL
-	       || strstr(wexch->webx_mimetype, "xml") != NULL
-	       || strstr(wexch->webx_mimetype, "javascript") != NULL
-	       )
+               || strstr (wexch->webx_mimetype, "json") != NULL
+               || strstr (wexch->webx_mimetype, "xml") != NULL
+               || strstr (wexch->webx_mimetype, "javascript") != NULL)
               && !strstr (wexch->webx_mimetype, "charset"))
             {
               char fullmime[sizeof (wexch->webx_mimetype) + 16];
@@ -875,8 +874,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           MOM_DEBUGPRINTF (web, "webrequest#%ld off %ld", reqcnt, off);
           if (MOM_IS_DEBUGGING (web)
               && ((!strncmp (wexch->webx_mimetype, "text/", 5)
-                  || strstr (wexch->webx_mimetype, "javascript"))
-		  || strstr (wexch->webx_mimetype, "json")))
+                   || strstr (wexch->webx_mimetype, "javascript"))
+                  || strstr (wexch->webx_mimetype, "json")))
             MOM_DEBUGPRINTF (web,
                              "webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
                              reqcnt, wexch->webx_outbuf, off, reqcnt);

@@ -85,6 +85,7 @@ function mom_numbered(obj) {
 
 function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid, " $editdiv=", $editdiv);
+    $editdiv.empty();
     $("<p class='mombeginfill_cl'>" + statitmid + "</p>").appendTo($editdiv);
     console.log("mome_begin_fill $editdiv=", $editdiv, " this=", this);
     mom_name_cache = new Object();
@@ -182,9 +183,16 @@ var momp_item_ref = {
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
-	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key='", ev.key, "' $(this)=", $(this),
+	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' $(this)=", $(this),
 		     " curtxt=", curtxt, " curmatch=", curmatch);
-	if (ev.ctrlKey || ev.metaKey || !ev.key.match(mom_name_regexp)) {
+	if (ev.key === ' ') {
+	    console.log ("MomeItemRef-gotkeypress space ev=", ev);
+	    if (ev.ctrlKey && !ev.metaKey) {
+	    }
+	};
+	if (ev.ctrlKey || ev.metaKey
+	    || (typeof ev.key)!=="string"
+	    || !ev.key.match(mom_name_regexp)) {
 	    console.log ("MomeItemRef-gotkeypress ev=", ev, " reject strangekey");
 	    return false;
 	};
@@ -306,7 +314,15 @@ var momp_item_value = {
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
 		     " $(this)=", $(this), " curmatch=", curmatch);
-	if (ev.ctrlKey || ev.metaKey || !ev.key.match(mom_name_regexp)) {
+	if (ev.key === ' ') {
+	    console.log ("MomeItemVal-gotkeypress space ev=", ev);
+	    if (ev.ctrlKey && !ev.metaKey) {
+	    }
+	    return false;
+	};
+	if (ev.ctrlKey || ev.metaKey
+	    || (typeof ev.key) !== "string"
+	    || !ev.key.match(mom_name_regexp))) {
 	    console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
 	    return false;
 	};

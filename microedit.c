@@ -291,6 +291,26 @@ doknownitem_microedit_mom (struct mom_webexch_st *wexch,
 }                               /* end doknownitem_microedit_mom */
 
 
+static void
+docompletename_microedit_mom (struct mom_webexch_st *wexch,
+                              struct mom_item_st *tkitm,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              const char *name)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  bool known = false;
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_microedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), name);
+#warning docompletename_microedit unimplemented
+  MOM_FATAPRINTF
+    ("unimplemented docompletename_microedit_mom webr#%ld name %s",
+     wexch->webx_count, name);
+}                               /* end of docompletename_microedit */
+
 extern mom_tasklet_sig_t momf_microedit;
 const char momsig_microedit[] = "signature_tasklet";
 
@@ -372,19 +392,26 @@ momf_microedit (struct mom_item_st *tkitm)
   mom_item_lock (hsetitm);
   if (wexch->webx_meth == MOMWEBM_POST)
     {
-      const char *dofillpage =
-        onion_request_get_post (wexch->webx_requ, "do_fillpage");
-      const char *doknownitem =
-        onion_request_get_post (wexch->webx_requ, "do_knownitem");
+      const char *dofillpage = NULL;
+      const char *doknownitem = NULL;
+      const char *docompletename = NULL;
       MOM_DEBUGPRINTF (web,
-                       "momf_microedit tkitm=%s wexch #%ld dofillpage %s doknownitem %s",
-                       mom_item_cstring (tkitm), wexch->webx_count,
-                       dofillpage, doknownitem);
-      if (dofillpage)
+                       "momf_microedit tkitm=%s POST wexch #%ld",
+                       mom_item_cstring (tkitm), wexch->webx_count);
+      if ((dofillpage =
+           onion_request_get_post (wexch->webx_requ, "do_fillpage")) != NULL)
         dofillpage_microedit_mom (wexch, tkitm, wexitm, thistatitm);
-      else if (doknownitem)
+      else if ((doknownitem =
+                onion_request_get_post (wexch->webx_requ,
+                                        "do_knownitem")) != NULL)
         doknownitem_microedit_mom (wexch, tkitm, wexitm, thistatitm,
                                    doknownitem);
+      else
+        if ((docompletename =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_completename")) != NULL)
+        docompletename_microedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                      docompletename);
     }
 end:
   if (hsetitm)
