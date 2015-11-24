@@ -173,12 +173,15 @@ Javascript have). Most values are immutable (boxed strings, boxed
 numbers, sets or tuples of items, nodes), but *items* are mutable
 values (similar to "objects" or "structures" in Scheme or
 Javascript). We should later make that reflective, and generate all
-the C code related to that.
+the C -or GCCJIT- code related to that.
 
 + A node value has an item connective and a sequence of son values (a
   bit like Prolog terms). It might have some fixed metadata (a
   metaitem and a metarank), which is ignored for comparison, equality,
-  hashing. It is immutable.
+  hashing. It is immutable. Nodes are also having a
+  [closure](https://en.wikipedia.org/wiki/Closure_%28computer_programming%29)
+  role (the connective giving the code, the sons being the closed
+  values).
 
 + Items are externally identified by unique item names (internally,
   they are identified by their address). An item name has a radix
@@ -191,8 +194,9 @@ the C code related to that.
   represented in base 60). Notice that item names are on purpose
   acceptable identifiers in generated C and in generated
   Javascript. Items have attributes (a map or "dictionnary" of some
-  item associated to some non-nil value) and may have some unique
-  payload owned by the item. Each item has its mutex.
+  item associated to some non-nil value), components (a "vector" of
+  values), possibly a (C or GCCJIT) function pointer, and may have
+  some unique payload owned by the item. Each item has its mutex.
 
 + A persistent machinery, so the entire state of the *MELT monitor*,
   including its agenda, can be checkpointed and restarted on disk
@@ -205,13 +209,16 @@ the C code related to that.
   payload a queue of tasklet items. A fixed number (typically 3 to 10)
   of working threads are repeatedly fetching some tasklet from the
   agenda and running it. Of course tasklets are added (either in
-  front, or at the end) to `the_agenda`'s queue.
+  front, or at the end) to `the_agenda`'s queue, either by running
+  tasklets or by external events (such as some HTTP requests, an
+  external process completing, etc...).
 
 + A very incomplete web interface. I'm struggling learning more HTML5
   techniques, and most of my recent questions on
   [StackOverflow](http://stackoverflow.com/users/841108/basile-starynkevitch)
   are related to this. I'm understanding more and more that
-  metaprogramming techniques are practically essential.
+  metaprogramming techniques are practically
+  essential. [HOP](http://hop.inria.fr/) is inspirational.
 
 ### Source files
 
