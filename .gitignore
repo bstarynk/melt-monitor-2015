@@ -40,3 +40,6 @@ monimelt
 
 ## ignore core dumps
 core*
+
+## ignore the HTML version of README.md
+README.html

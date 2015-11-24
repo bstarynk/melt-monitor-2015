@@ -69,9 +69,10 @@ _timestamp.c:
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS) _timestamp.o
+monimelt: $(OBJECTS)
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
-	$(LINK.c)  $(LINKFLAGS) -rdynamic $^ $(LIBES) -o $@
+	$(MAKE) _timestamp.o
+	$(LINK.c)  $(LINKFLAGS) -rdynamic $^ $(LIBES) -o $@  _timestamp.o
 	rm _timestamp.*
 
 indent: .indent.pro

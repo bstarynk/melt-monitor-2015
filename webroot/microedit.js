@@ -228,7 +228,9 @@ var momp_item_ref = {
     gotfocusin: function (ev) {
 	//$(this).prop("contenteditable",true);
 	var oldtxt = $(this).text();
-	console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv, " oldtxt=", oldtxt);
+	var focusel = $(':focus');
+	console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv, " oldtxt=", oldtxt,
+		     " focusel=", focusel);
 	$(this).old_text = oldtxt;
     },
     gotfocusout: function (ev) {
@@ -239,7 +241,8 @@ var momp_item_ref = {
     realize: function (cont) {
 	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
-	var eitelem = $("<span class='momitem_bcl momitemref_cl' contenteditable='true'>"+this.item_name+"</span>");
+	/// perhaps need contenteditable in the span below?
+	var eitelem = $("<span class='momitem_bcl momitemref_cl'>"+this.item_name+"</span>");
 	eitelem.appendTo(cont);
 	console.log("MomeItemRef-realize on eitelem=", eitelem, " gotinput=", this.gotinput,
 		    " gotfocusin=", this.gotfocusin, " gotfocusout=", this.gotfocusout);
@@ -360,9 +363,11 @@ var momp_item_value = {
 	};
     },
     gotfocusin: function (ev) {
+	var focusel = $(':focus');
 	var oldtxt = $(this).text();
 	console.log ("MomeItemVal-gotfocusin ev=", ev, " oldtxt=", oldtxt,
-		     " $(this)=", $(this), " $editdiv=", $editdiv);
+		     " $(this)=", $(this), " $editdiv=", $editdiv,
+		     " focusel=", focusel);
 	$(this).old_text = oldtxt;
     },
     gotfocusout: function (ev) {
@@ -373,7 +378,8 @@ var momp_item_value = {
 	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.item_name) === "string",
 		       "MomeItemVal no item_name in this=", this);
-	var eitmelem = $("<span class='mom_item_bcl momitemval_cl' contenteditable='true'>"+ this.item_name +"</span>");
+	/// perhaps need contenteditable in the span below?
+	var eitmelem = $("<span class='mom_item_bcl momitemval_cl'>"+ this.item_name +"</span>");
 	$(this).mom_span = eitmelem;
 	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
 	eitmelem.appendTo(cont);
