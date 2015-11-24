@@ -647,9 +647,23 @@ function mome_node(connitm, sonsarr) {
     return res;
 };
 
-//function editdivinput(ev) {
-//    console.log ("editdivinput ev=", ev, " this=", this);
-//}
+function editdivinput(ev) {
+    console.log ("editdivinput ev=", ev, " this=", this,
+		 " $(this)=", $(this),
+		 " $(':focus')=", $(':focus'));
+};
+
+function editdivfocusin(ev) {
+    console.log ("editdivfocusin ev=", ev, " this=", this,
+		 " $(this)=", $(this),
+		 " $(':focus')=", $(':focus'));
+};
+
+function editdivfocusout(ev) {
+    console.log ("editdivfocusout ev=", ev, " this=", this,
+		 " $(this)=", $(this),
+		 " $(':focus')=", $(':focus'));
+};
 
 //function editdivbeforeinput(ev) {
 //    console.log ("editdivbeforeinput ev=", ev, " this=", this);
@@ -669,6 +683,9 @@ $(document).ready(function(){
 	console.log("clearedit evt=", evt);
 	$editlog.html("");
     });
+    $editdiv.on("input", editdivinput);
+    $editdiv.on("focusin", editdivfocusin);
+    $editdiv.on("focusout", editdivfocusout);
     console.log("microedit before ajax do_fillpage");
 //    $editdiv.on("input", editdivinput);
 //    $editdiv.on("beforeinput", editdivbeforeinput);
