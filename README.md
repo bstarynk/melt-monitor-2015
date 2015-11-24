@@ -15,19 +15,22 @@ for more (and,
 [this French page](http://gcc-melt.org/gcc-melt-feuillet.pdf) (single
 page, in French)....)
 
-The *MELT system* refers to a mix of this *MELT monitor* and
-[GCC MELT](http://gcc-melt.org/) customized compilations (including
-some future *MELT* extensions for *GCC* not yet developed; these
-extensions will communicate with this *MELT monitor* using some
-textual ad-hoc protocol on Unix sockets). The long-time goal of the
-*MELT system* is to provide a software development environment and
-static analysis tool for code compiled by GCC (putative free-software
-equivalent of non-sound static code analysis tools like Coverity,
-ParaSoft, etc...) and be able to help exploring and understanding and
-navigating source code of many software components at once (in our
-wildest dreams, all the free software packaged in a Debian
-distribution and compiled with GCC, and some large proprietary
-software provided by funding partners).
+
+## The MELT system
+
+The *MELT system* (still partially a dream) refers to a mix of this
+*MELT monitor* and [GCC MELT](http://gcc-melt.org/) customized
+compilations (including some future *MELT* extensions for *GCC* not
+yet developed; these extensions will communicate with this *MELT
+monitor* using some textual ad-hoc protocol on Unix sockets). The
+long-time goal of the *MELT system* is to provide a software
+development environment and static analysis tool for code compiled by
+GCC (putative free-software equivalent of non-sound static code
+analysis tools like Coverity, ParaSoft, etc...) and be able to help
+exploring and understanding and navigating source code of many
+software components at once (in our wildest dreams, all the free
+software packaged in a Debian distribution and compiled with GCC, and
+some large proprietary software provided by funding partners).
 
 You can use the
 [gcc-melt GoogleGroup](https://groups.google.com/forum/#!forum/gcc-melt)
@@ -44,7 +47,8 @@ interface, or at least a GUI one, and that most software developers
 -notably those working in industry- don't use the command line
 anymore, like I am used to do....). And with a Web interface, even
 non-Linux users could use it (although the *MELT system* targets only
-Linux)...
+Linux)... That interface would also be useful to *browse* (but not
+edit!) a large collection of 
 
 + Provide a web interface to edit some *abstract syntax tree* (ASTs)
   of some future DSL, to search into *MELT system* & *GCC* compiled
@@ -82,7 +86,7 @@ Not all of them are implemented in 2015. My roadmap includes, like I
 did in the *MELT plugin*, development of bootstrapped specific
 languages with a metaprogramming (and metaknowledge, inspired by
 [J.Pitrat's work and vision](http://bootstrappingartificialintelligence.fr/)
-approach. The *MELT monitor* will have some DSL and more and more of
+approach). The *MELT monitor* will have some DSL and more and more of
 its code will become self-generated.
 
 
@@ -93,8 +97,11 @@ system to be run and used)
 
 ### External dependencies
 
-The following software components are needed. When packaged in
-Debian(/Sid), I just name the Debian package. See the `Makefile`
+The following software components are needed (or are very likely to be
+needed later, I am listing -for reference- also some packages that are
+very likely to be useful in the future and that I have looked
+into). When packaged in Debian(/Sid), I just name the Debian
+package. See the `Makefile`
 
 + a recent *GCC* compiler (so `gcc-5` Debian package), in particular
   because even when running both *MELT plugin* and *MELT monitor* are
@@ -110,19 +117,39 @@ Debian(/Sid), I just name the Debian package. See the `Makefile`
 
 + [Boehm's garbage collector](http://www.hboehm.info/gc/) thru
 `libgc-dev` Debian package; I am aware of GC techniques, but coding a
-multi-threaded GC is too much work.
+multi-threaded GC is too much work (I did spend months debugging the
+single-thread GC in the *MELT plugin*, and before that I coded
+[Qish](http://starynkevitch.net/Basile/qishintro.html) and some
+proprietary GC inside *Fluctuat* so I consider myself experimented in
+[garbage collection](http://gchandbook.org/) techniques.). Ravenbrook
+[Memory Pool System](http://www.ravenbrook.com/project/mps/) might be
+considered as an alternative, at least after bootstrapping is
+completed.
 
 + the `pkg-config` utility (and `pkg-config` Debian package)
 
 + The [Glib](http://developer.gnome.org/glib/stable/) from GTK is a
 little bit used. so `libglib2.0-dev` Debian package.
 
-+ [sqlite](http://sqlite.org/) might be used, so `libsqlite3-dev`
++ [sqlite](http://sqlite.org/) might be used (for persistency), so `libsqlite3-dev`
 Debian package.
 
++ [codemirror](http://codemirror.net/) is embedded under `webroot/`,
+  to nicely show some C code in a web page.
+
++ [redis](http://redis.io/) might be used (for persistency), so `redis-server`,
+`redis-tools`, `libhiredis-dev` Debian packages
+
++ [PostGreSQL](http://postgresql.org/) might be used (for
+  persistency), so probably `libpq-dev`
+
++ [0mq](http://zeromq.org/) might and probably will be used for
+  messaging purposes, so probably `libzmq5-dev` or `libzmq3-dev` or
+  `libzmq-dev` Debian package.
+
 + [jansson](http://www.digip.org/jansson/) library for
-  [JSON](http://json.org/) is needed, so `libjansson-dev` Debian
-  package.
+  [JSON](http://json.org/) is needed (notably for AJAX), so
+  `libjansson-dev` Debian package.
 
 + [libonion](http://www.coralbits.com/libonion/) is an HTTP server
   library that is absolutely required, but it is not packaged in
@@ -169,8 +196,10 @@ the C code related to that.
 
 + A persistent machinery, so the entire state of the *MELT monitor*,
   including its agenda, can be checkpointed and restarted on disk
-  (persisted preferably in textual form, friendly to `git` version
-  control). That code should also be generated but is not yet.
+  (persisted preferably in textual form for MELT monitor data,
+  friendly to `git` version control, and for user data such as static
+  analysis information, in REDIS store or PostGreSQL databases). That
+  code should also be generated but it is not yet.
 
 + An agenda mechanism: `the_agenda` predefined item contains as its
   payload a queue of tasklet items. A fixed number (typically 3 to 10)
@@ -181,7 +210,8 @@ the C code related to that.
 + A very incomplete web interface. I'm struggling learning more HTML5
   techniques, and most of my recent questions on
   [StackOverflow](http://stackoverflow.com/users/841108/basile-starynkevitch)
-  are related to this.
+  are related to this. I'm understanding more and more that
+  metaprogramming techniques are practically essential.
 
 ### Source files
 
@@ -242,20 +272,24 @@ hashed associations, hashed maps, ... payloads.
 
 + `_mom_predef.h` is generated and contains the predefined items.
 
-+ `state.c` has the persistence machinery (loading and saving state notably in `global.mom`).
++ `state.c` has the persistence machinery (loading and saving state
+  notably in `global.mom` textual file). We'll need to persist to some
+  [REDIS](http://redis.io) store or some
+  [PostgreSQL](http://postgresql.org/) database as soon as we'll be
+  running in a distributed context (cloud or cluster).
 
 + `value.c` handle immutable values
 
 ### Running that
 
 It is *alpha-stage* software (and that is the third time I'm coding
-it). You won't be able to run it usefully in 2015. But if you want to
-help (e.g. to answer some questions I am asking on some forums) or see
-what is running, build it, then run `./monimelt --help` to get some
-command line help.  Later, try something like `./monimelt -Drun,web -W
-localhost.localdomain:8086/` in the terminal and use your browser on
-URLs like `http://localhost.localdomain:8086/hackc.html` to be able to
-type some C code and run it, or
+some MELT monitor). You won't be able to run it usefully in 2015. But
+if you want to help (e.g. to answer some questions I am asking on some
+forums) or see what is running, build it, then run `./monimelt --help`
+to get some command line help.  Later, try something like `./monimelt
+-Drun,web -W localhost.localdomain:8086/` in the terminal and use your
+browser on URLs like `http://localhost.localdomain:8086/hackc.html` to
+be able to type some C code and run it, or
 `http://localhost.localdomain:8086/microedit.html` to try the micro
 editor (very alpha, not working yet).
 
@@ -304,4 +338,9 @@ persons) of [CEA](http://ww.cea.fr/) (a 15000 persons, 4.4 billion
 euros/year budget, French government owned applied research agency,
 see
 [Commissariat a l'Energie Atomique et aux energies alternatives](https://en.wikipedia.org/wiki/Commissariat_%C3%A0_l%27%C3%A9nergie_atomique_et_aux_%C3%A9nergies_alternatives)
-wikipage). FWIW, the [Frama-C](http://frama-c.com/), [Papyrus](http://www.eclipse.org/papyrus), [Unisim](http://unisim-vp.org/), *Gatel* (and of course this MELT monitor and the [MELT plugin](http://gcc-melt.org/download.html) tools are developed in the same DILS department (100+ persons) where I work.
+wikipage). FWIW, the [Frama-C](http://frama-c.com/),
+[Papyrus](http://www.eclipse.org/papyrus),
+[Unisim](http://unisim-vp.org/), *Gatel* (and of course this MELT
+monitor and the [MELT plugin](http://gcc-melt.org/download.html)...)
+tools are developed in the same DILS department (100+ persons) where I
+work.
