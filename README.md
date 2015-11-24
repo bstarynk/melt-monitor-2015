@@ -32,6 +32,18 @@ software components at once (in our wildest dreams, all the free
 software packaged in a Debian distribution and compiled with GCC, and
 some large proprietary software provided by funding partners).
 
+In my vision, a user community (e.g. a team of dozens of developers
+working on some mid-sized software project compiled by
+[GCC](http://gcc.gnu.org/)...) would compile its software collection
+with a *MELT* enhanced [GCC](http://gcc.gnu.org/) (this should be as
+simple as adding `CC=gcc` and `CFLAGS += -fplugin=melt
+-fplugin-melt-arg-mode=super` in their `Makefile` or other build
+machinery; of course that might slow down a bit the compilation but
+won't change the habits of the developers...)  and use the *MELT
+system* (notably the web interface provided by the *MELT monitor*) to
+query, understand, analyze, navigate, and even discuss about the
+development of that software.
+
 You can use the
 [gcc-melt GoogleGroup](https://groups.google.com/forum/#!forum/gcc-melt)
 to discuss technical matters related to the *MELT system* (so both
@@ -48,14 +60,15 @@ interface, or at least a GUI one, and that most software developers
 anymore, like I am used to do....). And with a Web interface, even
 non-Linux users could use it (although the *MELT system* targets only
 Linux)... That interface would also be useful to *browse* (but not
-edit!) a large collection of 
+edit!) a large collection of user source code (compiled by a *MELT*
+enhanced `gcc`).
 
 + Provide a web interface to edit some *abstract syntax tree* (ASTs)
-  of some future DSL, to search into *MELT system* & *GCC* compiled
-  software, and give him the ability to document things in a *Wiki*
-  way. We don't want the user to type some DSL syntax (like the Lispy
-  *MELT DSL* inside our *MELT plugin*) as text, we want to assist him
-  in constructing ASTs; Old 1980s
+  of some future DSL (e.g. formalizing coding rules), to search into
+  *MELT system* & *GCC* compiled software, and give him the ability to
+  document things in a *Wiki* way. We don't want the user to type some
+  DSL syntax (like the Lispy *MELT DSL* inside our *MELT plugin*) as
+  text, we want to assist him in constructing ASTs; Old 1980s
   [MENTOR](https://hal.inria.fr/inria-00076535) system from INRIA (or
   some Smalltalk systems) is inspirational.
 
