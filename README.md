@@ -258,8 +258,8 @@ listing predefined items).
   by Makoto Matsumoto and Takuji Nishimura; I modified some function
   names by prefixing them with `momrand` and making them more
   thread-friendly.
-  
-  + `agenda.c` is the agenda mechanism
+
++ `agenda.c` is the agenda mechanism
 
 + `primes.c` contain many primes, and `mom_prime_above (int64_t)` and
   `mom_prime_below (int64_t)` functions. Prime numbers are e.g. useful
@@ -298,7 +298,10 @@ hashed associations, hashed maps, ... payloads.
   [PostgreSQL](http://postgresql.org/) database as soon as we'll be
   running in a distributed context (cloud or cluster).
 
-+ `value.c` handle immutable values
++ `value.c` handles immutable values
+
+It should be stressed that generating most of the above code is much
+simpler than hand-coding it.
 
 ### Running that
 
