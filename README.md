@@ -343,6 +343,10 @@ should follow the
 [Contribute to GCC](https://gcc.gnu.org/contribute.html) in particular
 its *demanding* legal prerequisites.
 
+Since I am a near newbie in HTML5+Javascript technologies, 
+I am sometimes asking questions on StackOverflow (and elsewhere) 
+related to them.  Please help me if you can.
+
 # Contact information
 
 [`basile` at `starynkevitch` dot `net`](mailto:basile@starynkevitch.net)
