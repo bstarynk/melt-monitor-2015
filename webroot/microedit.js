@@ -22,6 +22,16 @@ var $editdiv;
 var $editlog;
 var $cleareditbut;
 
+// maybe use http://jakiestfu.github.io/Medium.js/ ??
+
+// see also following links suggested by Alexandre Lissy
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/contenteditable
+// https://dxr.mozilla.org/mozilla-central/source/dom/html/nsGenericHTMLElement.h#193
+// https://developer.mozilla.org/en-US/docs/Web/API/Selection
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1196479
+
+// and from SO: http://stackoverflow.com/a/33911936/841108
+
 // from http://stackoverflow.com/a/1219983/841108
 function htmlEncode(value){
   //create a in-memory div, set it's inner text(which jQuery automatically encodes)
@@ -199,8 +209,23 @@ var momp_value = {
 
 var momp_item_ref = {
     name: "MomeItemRef",
+    realize: function (cont) {
+	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
+	/// perhaps need contenteditable in the span below?
+	var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='-1'>"+this.item_name+"</span>");
+	eitelem.appendTo(cont);
+	console.log("MomeItemRef-realize on eitelem=", eitelem, " gotinput=", this.gotinput,
+		    " gotfocusin=", this.gotfocusin, " gotfocusout=", this.gotfocusout);
+	eitelem.on("input", this.gotinput);
+	eitelem.on("focusin", this.gotfocusin);
+	eitelem.on("focusout", this.gotfocusout);
+	eitelem.on("keypress", this.gotkeypress);
+	console.log("MomeItemRef-realize done cont=", cont,
+		    " eitelem=", eitelem, "\n..this=", this);
+    },
     gotinput: function (ev) {
-	console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this));
+	console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemRef-gotinput curtxt=", curtxt, " curmatch=", curmatch);
@@ -211,8 +236,9 @@ var momp_item_ref = {
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
+	var focusel = $(':focus');
 	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' $(this)=", $(this),
-		     " curtxt=", curtxt, " curmatch=", curmatch);
+		     " curtxt=", curtxt, " curmatch=", curmatch, " focusel=", focusel);
 	if (ev.key === ' ') {
 	    console.log ("MomeItemRef-gotkeypress space ev=", ev);
 	    if (ev.ctrlKey && !ev.metaKey) {
@@ -237,21 +263,6 @@ var momp_item_ref = {
 	//$(this).prop("contenteditable",false);
 	console.log ("MomeItemRef-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
 	delete $(this).old_text;
-    },
-    realize: function (cont) {
-	console.log("MomeItemRef-realize start cont=", cont, " this=", this);
-	console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
-	/// perhaps need contenteditable in the span below?
-	var eitelem = $("<span class='momitem_bcl momitemref_cl'>"+this.item_name+"</span>");
-	eitelem.appendTo(cont);
-	console.log("MomeItemRef-realize on eitelem=", eitelem, " gotinput=", this.gotinput,
-		    " gotfocusin=", this.gotfocusin, " gotfocusout=", this.gotfocusout);
-	eitelem.on("input", this.gotinput);
-	eitelem.on("focusin", this.gotfocusin);
-	eitelem.on("focusout", this.gotfocusout);
-	eitelem.on("keypress", this.gotkeypress);
-	console.log("MomeItemRef-realize done cont=", cont,
-		    " eitelem=", eitelem, "\n..this=", this);
     }
 };
 
@@ -272,7 +283,7 @@ var momp_nil_value = {
     name: "MomeNilValue",
     realize: function (cont) {
 	console.log("MomeNilValue-realize start cont=", cont, " this=", this);
-	var enilelem = $("<span class=' momval_bcl momemptyval_cl'>~</span>");
+	var enilelem = $("<span class='momval_bcl momemptyval_cl' tabindex='-1'>~</span>");
 	enilelem.appendTo(cont);
 	enilelem.data("momfor", this);
 	console.log("MomeNilValue-realize done cont=", cont,
@@ -297,7 +308,7 @@ var momp_nil_ref = {
     name: "MomeNilRef",
     realize: function (cont) {
 	console.log("MomeNilRef-realize start cont=", cont, " this=", this);
-	var enilelem = $("<span class=' mom_item_bcl momrefnil_cl'>~</span>");
+	var enilelem = $("<span class=' mom_item_bcl momrefnil_cl' tabindex='-1'>~</span>");
 	enilelem.appendTo(cont);
 	enilelem.data("momfor", this);
 	console.log("MomeNilRef-realize done cont=", cont,
@@ -320,8 +331,29 @@ function mome_nil_ref() {	/// a nil item reference
 var momp_item_value = {
     name: "MomeItemVal",
     __proto__: momp_value,
+    realize: function (cont) {
+	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
+	console.assert(typeof (this.item_name) === "string",
+		       "MomeItemVal no item_name in this=", this);
+	/// perhaps need contenteditable in the span below?
+	var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='-1'>"+ this.item_name +"</span>");
+	$(this).mom_span = eitmelem;
+	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
+	eitmelem.appendTo(cont);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	
+	eitmelem.data("momfor", this);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotinput=", this.gotinput);
+	eitmelem.on("input", this.gotinput);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusin=", this.gotfocusin);
+	eitmelem.on("focusin", this.gotfocusin);
+	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusout=", this.gotfocusout);
+	eitmelem.on("focusout", this.gotfocusout);
+	eitmelem.on("keypress", this.gotkeypress);
+	console.log("MomeItemVal-realize done cont=", cont,
+		    " eitmelem=", eitmelem, "\n..this=", this);
+    },
     gotinput: function (ev) {
-	console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this));
+	console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
 	var curtxt = $(this).text();
 	var curmatch = curtxt.match(mom_name_regexp);
 	console.log ("MomeItemVal-gotinput curtxt=", curtxt, " curmatch=", curmatch);
@@ -345,7 +377,7 @@ var momp_item_value = {
 	var curmatch = curtxt.match(mom_name_regexp);
 	var compl = null;
 	console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
-		     " $(this)=", $(this), " curmatch=", curmatch);
+		     " $(this)=", $(this), " curmatch=", curmatch, " $(':focus')=", $(':focus'));
 	if (ev.key === ' ') {
 	    console.log ("MomeItemVal-gotkeypress space ev=", ev);
 	    if (ev.ctrlKey && !ev.metaKey) {
@@ -374,27 +406,6 @@ var momp_item_value = {
 	console.log ("MomeItemVal-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
 	delete $(this).old_text;
     },
-    realize: function (cont) {
-	console.log("MomeItemVal-realize start cont=", cont, " this=", this);
-	console.assert(typeof (this.item_name) === "string",
-		       "MomeItemVal no item_name in this=", this);
-	/// perhaps need contenteditable in the span below?
-	var eitmelem = $("<span class='mom_item_bcl momitemval_cl'>"+ this.item_name +"</span>");
-	$(this).mom_span = eitmelem;
-	console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this, " cont=", cont);
-	eitmelem.appendTo(cont);
-	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem);	
-	eitmelem.data("momfor", this);
-	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotinput=", this.gotinput);
-	eitmelem.on("input", this.gotinput);
-	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusin=", this.gotfocusin);
-	eitmelem.on("focusin", this.gotfocusin);
-	console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " gotfocusout=", this.gotfocusout);
-	eitmelem.on("focusout", this.gotfocusout);
-	eitmelem.on("keypress", this.gotkeypress);
-	console.log("MomeItemVal-realize done cont=", cont,
-		    " eitmelem=", eitmelem, "\n..this=", this);
-    },
     val_kind: 'item'
 };
 
@@ -420,7 +431,7 @@ var momp_int_value = {
 	console.log("MomeIntValue-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.int_val) === "number",
 		       "MomeIntValue no int_val in this=", this);
-	var eintelem = $("<span class='mom_value_bcl momnumber_cl'>"+ this.int_val.toString() +"</span>");
+	var eintelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='-1'>"+ this.int_val.toString() +"</span>");
 	eintelem.appendTo(cont);
 	eintelem.data("momfor", this);
 	console.log("MomeIntValue-realize done cont=", cont,
@@ -449,7 +460,7 @@ var momp_double_value = {
 	console.log("MomeDoubleValue-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.dbl_val) === "number",
 		       "MomeDoubleValue no dbl_val in this=", this);
-	var edblelem = $("<span class='mom_value_bcl momnumber_cl'>"+ this.dbl_val.toString() +"</span>");
+	var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='-1'>"+ this.dbl_val.toString() +"</span>");
 	edblelem.appendTo(cont);
 	edblelem.data("momfor", this);
 	console.log("MomeDoubleValue-realize done cont=", cont,
@@ -476,7 +487,7 @@ var momp_string_value = {
 	console.log("MomeStringValue-realize start cont=", cont, " this=", this);
 	console.assert(typeof (this.str_val) === "string",
 		       "MomeStringValue no str_val in this=", this);
-	var estrelem = $("<q class='momstrquote_cl'><span class='mom_value_bcl momstring_cl'>"+ htmlEncode(this.str_val) +"</span></q>");
+	var estrelem = $("<q class='momstrquote_cl'><span class='mom_value_bcl momstring_cl' tabindex='-1'>"+ htmlEncode(this.str_val) +"</span></q>");
 	estrelem.appendTo(cont);
 	estrelem.data("momfor", this);
 	console.log("MomeStringValue-realize done cont=", cont,
@@ -504,7 +515,7 @@ var momp_tuple_value = {
 	console.log("MomeTupleValue-realize start cont=", cont, " this=", this);
 	console.assert(Array.isArray (this.tup_val),
 		       "MomeTupleValue no tup_val in this=", this);
-	var etupelem = $("<span class='mom_value_bcl momtuple_cl'></span>");
+	var etupelem = $("<span class='mom_value_bcl momtuple_cl' tabindex='-1'></span>");
 	etupelem.appendTo(cont);
 	var et = null;
 	et = document.createTextNode("[");
@@ -553,7 +564,7 @@ var momp_set_value = {
 	console.log("MomeSetValue-realize start cont=", cont, " this=", this);
 	console.assert(Array.isArray (this.set_val),
 		       "MomeSetValue no set_val in this=", this);
-	var esetelem = $("<span class='mom_value_bcl momset_cl'></span>");
+	var esetelem = $("<span class='mom_value_bcl momset_cl' tabindex='-1'></span>");
 	esetelem.appendTo(cont);
 	var et = null;
 	et = document.createTextNode("{");
@@ -603,11 +614,11 @@ var momp_node_value = {
 	console.assert(typeof (this.conn_itm) === "object"
 		       && Array.isArray(this.sons_arr),
 		       "MomeSetValue no conn_itm&sons_arr in this=", this);
-	var enodelem = $("<span class='mom_value_bcl momnode_cl'></span>");
+	var enodelem = $("<span class='mom_value_bcl momnode_cl' tabindex='-1'></span>");
 	console.log("MomeNodeValue-realize enodelem=", enodelem);
 	enodelem.appendTo(cont);
 	var et = null;
-	var econnelem = $("<span class='momconn_cl'>*</span>");
+	var econnelem = $("<span class='momconn_cl' tabindex='-1'>*</span>");
 	econnelem.appendTo(enodelem);
 	this.conn_itm.realize(econnelem);
 	console.log("MomeNodeValue-realize after connitm enodelem=", enodelem, " this=", this);
@@ -653,6 +664,12 @@ function editdivinput(ev) {
 		 " $(':focus')=", $(':focus'));
 };
 
+function editdivkeypress(ev) {
+    console.log ("editdivkeypress ev=", ev, " this=", this,
+		 " $(this)=", $(this),
+		 " $(':focus')=", $(':focus'));
+};
+
 function editdivfocusin(ev) {
     console.log ("editdivfocusin ev=", ev, " this=", this,
 		 " $(this)=", $(this),
@@ -661,8 +678,7 @@ function editdivfocusin(ev) {
 
 function editdivfocusout(ev) {
     console.log ("editdivfocusout ev=", ev, " this=", this,
-		 " $(this)=", $(this),
-		 " $(':focus')=", $(':focus'));
+		 " $(this)=", $(this));
 };
 
 //function editdivbeforeinput(ev) {
@@ -684,6 +700,7 @@ $(document).ready(function(){
 	$editlog.html("");
     });
     $editdiv.on("input", editdivinput);
+    $editdiv.on("keypress", editdivkeypress);
     $editdiv.on("focusin", editdivfocusin);
     $editdiv.on("focusout", editdivfocusout);
     console.log("microedit before ajax do_fillpage");
