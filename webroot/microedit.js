@@ -228,18 +228,11 @@ var momp_item_ref = {
     gotinput: function (ev) {
 	console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
 	var curtxt = $(this).text();
-	var curmatch = curtxt.match(mom_name_regexp);
-	console.log ("MomeItemRef-gotinput curtxt=", curtxt, " curmatch=", curmatch);
-	if (!curmatch) {
-	    $(this).text($(this).old_text);
-	}
+	console.log ("MomeItemRef-gotinput curtxt=", curtxt);
     },
     gotkeypress: function (ev) {
-	var curtxt = $(this).text();
-	var curmatch = curtxt.match(mom_name_regexp);
 	var focusel = $(':focus');
-	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' $(this)=", $(this),
-		     " curtxt=", curtxt, " curmatch=", curmatch, " focusel=", focusel);
+	console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' $(this)=", $(this), " focusel=", focusel);
 	if (ev.key === ' ') {
 	    console.log ("MomeItemRef-gotkeypress space ev=", ev);
 	    if (ev.ctrlKey && !ev.metaKey) {
@@ -328,6 +321,62 @@ function mome_nil_ref() {	/// a nil item reference
     return res;
 };
 
+var momp_item_input = {
+    name: "MomeItemInput",
+    install_input: function () {
+	console.log ("MomeItemInput-install_input start this=", this);
+	console.trace();
+	var orig = this.mom_orig;
+	var inp = $("<input type='text' width='16' class='mom_item_input_cl'/>");
+	console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " orig=", orig);
+	orig.replaceWith(inp);
+	this.mom_input = inp;
+	// don't navigate away from the field on tab when selecting an item
+	inp.bind("keydown", function (ev) {
+	    console.log ("MomeItemInput keydown ev=", ev);
+	    if (ev.keyCode === $.ui.keyCode.TAB
+		&& inp.autocomplete("instance").menu.active) {
+		console.log ("MomeItemInput keydown ignore tab-menu");
+		ev.preventDefault();
+	    };	    
+	});
+	inp.on("change", function (ev) {
+	    console.log ("MomeItemInput change ev=", ev, " this=", this);
+	});
+	inp.on("input", function (ev) {
+	    console.log ("MomeItemInput input ev=", ev, " this=", this);
+	});
+	inp.autocomplete({
+	    minLength: 2,
+	    source: this.item_autocomplete
+	});
+    },
+    item_autocomplete: function (requ, respfun) {
+	console.log ("MomeItemInput-item_autocomplete start requ=", requ, " respfun=", respfun);
+	var compl = mom_complete_name(requ.term);
+	console.log ("MomeItemInput-item_autocomplete compl=", compl);
+	if (compl) respfun(compl);
+	else respfun("");
+    },
+    val_kind: "item"
+};
+
+function MomeItemInput(orig) {
+    this.mom_orig = orig;
+    console.log("MomeItemInput this=", this, " orig=", orig);
+};
+MomeItemInput.prototype = momp_item_input;
+
+function mome_replace_by_item_input(orig) {
+    console.log ("mome_replace_by_item_input start this=", this, " $(this)=", $(this), " orig=", orig);
+    console.log ("mome_replace_by_item_input trace:");
+    console.trace();
+    var inp = new MomeItemInput(orig);
+    inp.install_input();
+    console.log ("mome_replace_by_item_input end this=", this, " inp=", inp);
+    return inp;
+};
+
 ////////////////
 var momp_item_value = {
     name: "MomeItemVal",
@@ -356,12 +405,7 @@ var momp_item_value = {
     gotinput: function (ev) {
 	console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
 	var curtxt = $(this).text();
-	var curmatch = curtxt.match(mom_name_regexp);
-	console.log ("MomeItemVal-gotinput curtxt=", curtxt, " curmatch=", curmatch);
-	if (!curmatch) {
-	    $(this).text($(this).old_text);
-	    return false;
-	}
+	console.log ("MomeItemVal-gotinput curtxt=", curtxt);
 	if (mom_known_item(curtxt)) {
 	    console.log ("MomeItemVal-gotinput knownitem ", curtxt);
 	    $(this).addClass('momitemval_cl');
@@ -375,18 +419,15 @@ var momp_item_value = {
     },
     gotkeypress: function (ev) {
 	var curtxt = $(this).text();
-	var curmatch = curtxt.match(mom_name_regexp);
-	var compl = null;
 	console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
-		     " $(this)=", $(this), " curmatch=", curmatch, " $(':focus')=", $(':focus'));
+		     " $(this)=", $(this), " $(':focus')=", $(':focus'));
 	if (ev.key === ' ') {
-	    console.log ("MomeItemVal-gotkeypress space ev=", ev);
-	    if (ev.ctrlKey && !ev.metaKey) {
-		console.log ("MomeItemVal-gotkeypress ctrlspace ev=", ev, " should complete curtxt=", curtxt);
-		comp = mom_complete_name(curtxt);
-		console.log ("MomeItemVal-gotkeypress completed curtxt=", curtxt, " got comp=", comp);
-	    }
-	    return false;
+	    console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
+			 " $(this)=", $(this), 
+			 " before replace_by_item_input");
+	    console.trace();
+	    var inp = mome_replace_by_item_input(this.mom_span);
+	    this.mom_input_item = inp;
 	};
 	if (ev.ctrlKey || ev.metaKey
 	    || (typeof ev.key) !== "string"

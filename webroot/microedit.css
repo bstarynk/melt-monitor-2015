@@ -20,8 +20,9 @@
 #microedit_id {
     border: 2px dashed navy;
     border-spacing: 4px;
-    margin: 3px;
+    margin: 4px;
     background-color: #CCE5C3;
+    padding: 5px;
 }
 
 p.mombeginfill_cl {
@@ -39,12 +40,13 @@ p.mommtime_cl {
 span.word_cl {
     font-family: Arial, Helvetiva;
     color: #1f0ceC;
+    padding: 2px;
 }
 
 span.momname_cl {
     font-family: Georgia, serif;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
     color: #940f27;
 }
 
@@ -53,6 +55,7 @@ span.momname_cl:hover {
     color: #B30F2C;
     border: 1px dashed #6e107b;
     border-spacing: 3px;
+    padding: 2px;
 }
 
 
@@ -60,7 +63,7 @@ span.momset_cl {
     font-family: serif;
     color: #604F62;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
 }
 
 span.momset_cl:hover {
@@ -69,6 +72,7 @@ span.momset_cl:hover {
     color: #766B78;
     border: 1px dashed #6e107b;
     border-spacing: 3px;
+    padding: 2px;
 }
 
 
@@ -76,7 +80,7 @@ span.momtuple_cl {
     font-family: serif;
     color: #494030;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
 }
 
 span.momtuple_cl:hover {
@@ -84,13 +88,14 @@ span.momtuple_cl:hover {
     color: #5E4315;
     border: 1px dashed #8E5D0A;
     border-spacing: 3px;
+    padding: 2px;
 }
 
 span.momnumber_cl {
     font-family: "Courier New", Courier, monospace;
     color: #54062F;
     border-spacing: 2px;
-    padding: 1px;
+    padding: 2px;
 }
 
 span.momnumber_cl:hover {
@@ -98,6 +103,7 @@ span.momnumber_cl:hover {
     color: #812454;
     border: 1px dashed #855D2A;
     border-spacing: 3px;
+    padding: 2px;
 }
 
 span.momstring_cl {
@@ -105,7 +111,7 @@ span.momstring_cl {
     color: #354001;
     border-spacing: 2px;
     padding: 2px;
-    margin: 2px;
+    margin: 3px;
 }
 
 span.momstring_cl:hover {
@@ -113,15 +119,16 @@ span.momstring_cl:hover {
     color: #505D0A;
     border: 1px dashed #855D2A;
     border-spacing: 3px;
-    margin: 2px;
+    margin: 3px;
+    padding: 2px;
 }
 
 span.momemptyval_cl {
     font-family: serif;
     color: #64157A;
     border-spacing: 3px;
-    padding: 1px;
-    margin: 2px;
+    padding: 2px;
+    margin: 3px;
 }
 
 span.momemptyval_cl:hover {
@@ -129,7 +136,7 @@ span.momemptyval_cl:hover {
     color: #64157A;
     border: 1px dashed #954D2A;
     border-spacing: 3px;
-    padding: 1px;
+    padding: 2px;
 }
 
 span.momnode_cl {
@@ -154,7 +161,7 @@ span.momconn_cl {
     color: #4E0C39;
     border-spacing: 2px;
     padding: 2px;
-    margin: 2px;
+    margin: 3px;
 }
 
 span.momconn_cl:hover {
@@ -164,15 +171,15 @@ span.momconn_cl:hover {
     border: 1px dashed #354126;
     border-spacing: 3px;
     padding: 2px;
-    margin: 2px;
+    margin: 3px;
 }
 
 span.momitemref_cl {
     font-family: Arial, Helvetica, sans-serif;
     color: #361753;
     border-spacing: 2px;
-    padding: 2px;
-    margin: 2px;
+    padding: 3px;
+    margin: 3px;
 }
 
 span.momitemref_cl:hover {
@@ -180,7 +187,7 @@ span.momitemref_cl:hover {
     color: #AC1C90;
     border: 1px dashed #560E24;
     border-spacing: 3px;
-    padding: 2px;
+    padding: 3px;
 }
 
 span.momrefnil_cl {
@@ -189,7 +196,7 @@ span.momrefnil_cl {
     color: #3B101A;
     border-spacing: 2px;
     padding: 2px;
-    margin: 2px;
+    margin: 3px;
 }
 
 span.momrefnil_cl:hover {
@@ -199,7 +206,7 @@ span.momrefnil_cl:hover {
     border: 1px dashed #560E24;
     border-spacing: 3px;
     padding: 2px;
-    margin: 2px;
+    margin: 3px;
 }
 
 span.momitemval_cl {
@@ -207,8 +214,8 @@ span.momitemval_cl {
     font-style: oblique;
     color: #4e2a14;
     border-spacing: 2px;
-    padding: 2px;
-    margin: 2px;
+    padding: 3px;
+    margin: 3px;
 }
 
 span.momitemval_cl:hover {
@@ -217,8 +224,8 @@ span.momitemval_cl:hover {
     color: #783c17;
     border: 1px dashed #560E24;
     border-spacing: 3px;
-    padding: 2px;
-    margin: 2px;
+    padding: 3px;
+    margin: 3px;
 }
 
 span.mom_item_bcl:hover {
@@ -239,15 +246,29 @@ span.mom_value_bcl:focus {
     border: 3px solid rgba(57,72,71,0.5);
 }
 
+input.mom_item_input_cl {
+    font-family: Andale Mono, monospaced;
+    border: 2px dashed #041246;
+    background-color: #AAB8F3;
+    color: #120B2B;
+}
+
+input.mom_item_input_cl:focus {
+    font-family: Andale Mono, monospaced;
+    border: 3px solid #0B122B;
+    background-color: #AFB8F9;
+    color: #37107B;
+}
+
 dt.entattr_cl {
     font-family: sans-serif;
     font-weight: bold;
-    padding: 2px;
+    padding: 4px;
 }
 
 dt.entval_cl {
     font-family: sans-serif;
-    padding: 2px;
+    padding: 4px;
 }
 
 sup.momindex_cl {
