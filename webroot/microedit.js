@@ -324,9 +324,10 @@ function mome_nil_ref() {       /// a nil item reference
 var momp_item_input = {
     name: "MomeItemInput",
     install_input: function () {
-        console.log ("MomeItemInput-install_input start this=", this);
+        console.log ("MomeItemInput-install_input start this=", this, " $(this)=", $(this));
         console.trace();
         var orig = this.mom_orig;
+        console.assert (orig, "MomeItemInput-install_input bad orig");
         var inp = $("<input type='text' width='16' class='mom_item_input_cl'/>");
         console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " orig=", orig);
         orig.replaceWith(inp);
@@ -364,6 +365,7 @@ var momp_item_input = {
 function MomeItemInput(orig) {
     this.mom_orig = orig;
     console.log("MomeItemInput this=", this, " orig=", orig);
+    console.assert(orig, "MomeItemInput bad orig");
 };
 MomeItemInput.prototype = momp_item_input;
 
@@ -371,6 +373,7 @@ function mome_replace_by_item_input(orig) {
     console.log ("mome_replace_by_item_input start this=", this, " $(this)=", $(this), " orig=", orig);
     console.log ("mome_replace_by_item_input trace:");
     console.trace();
+    console.assert (orig, "mome_replace_by_item_input bad orig");
     var inp = new MomeItemInput(orig);
     inp.install_input();
     console.log ("mome_replace_by_item_input end this=", this, " inp=", inp);
@@ -382,13 +385,13 @@ var momp_item_value = {
     name: "MomeItemVal",
     __proto__: momp_value,
     realize: function (cont) {
-        console.log("MomeItemVal-realize start cont=", cont, " this=", this);
+        console.log("MomeItemVal-realize start cont=", cont, " this=", this, " $(this)=", $(this));
         console.assert(typeof (this.item_name) === "string",
                        "MomeItemVal no item_name in this=", this);
         /// perhaps need contenteditable in the span below?
         var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.item_name +"</span>");
-        $(this).mom_span = eitmelem;
-	eitmelem.data("mom_item_val", this);
+        this.mom_span = eitmelem;
+        eitmelem.data("mom_item_val", this);
         console.log("MomeItemVal-realize eitmelem=", eitmelem, " this=", this,  " $(this)=", $(this), " cont=", cont);
         eitmelem.appendTo(cont);
         console.log("MomeItemVal-realize updated cont=", cont, " this=", this, " eitmelem=", eitmelem); 
@@ -419,14 +422,20 @@ var momp_item_value = {
         }
     },
     gotkeypress: function (ev) {
+	// don't use .key in jquery keypress event, but only .which
+	// see https://api.jquery.com/keypress/
         var curtxt = $(this).text();
-        console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key, "' curtxt=", curtxt,
-                     " $(this)=", $(this), " $(':focus')=", $(':focus'));
-        if (ev.key === ' ') {
+        console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key,
+		     "' .keyCode=", ev.keyCode, " .which=", ev.which,
+		     " curtxt=", curtxt,
+                     " $(this)=", $(this), " this=", this, " $(':focus')=", $(':focus'));
+        if (ev.keyCode === $.ui.keyCode.SPACE
+            || ev.key === ' ') {
             console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
                          " $(this)=", $(this), 
                          " before replace_by_item_input");
             console.trace();
+	    console.assert($(this).mom_span, "MomeItemVal-gotkeypress bad mom_span");
             var inp = mome_replace_by_item_input($(this).mom_span);
             this.mom_input_item = inp;
         };
@@ -436,6 +445,7 @@ var momp_item_value = {
             console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
             return false;
         };
+        console.log ("MomeItemVal-gotkeypress done ev=", ev);
     },
     gotfocusin: function (ev) {
         var focusel = $(':focus');
@@ -756,7 +766,6 @@ $(document).ready(function(){
       dataType: "script",
       success: ajaxfillscript
      });
-    
     console.log("microedit document done ready");
 });
 
