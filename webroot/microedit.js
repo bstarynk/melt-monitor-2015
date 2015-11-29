@@ -108,8 +108,9 @@ function mom_complete_name(name) {
       async: false,
       data: {"do_completename": name},
       dataType: "json",
-      success: function (data, stat, jh) {
-          console.log("mom_complete_name success data=", data, " stat=", stat, " jh=", jh);
+      success: function (data) {
+          console.log("mom_complete_name success data=");
+	  console.trace();
           res = data;
       },
       error: function (jq, stat, err) {
@@ -435,8 +436,7 @@ var momp_item_value = {
                          " $(this)=", $(this), 
                          " before replace_by_item_input");
             console.trace();
-	    console.assert($(this).mom_span, "MomeItemVal-gotkeypress bad mom_span");
-            var inp = mome_replace_by_item_input($(this).mom_span);
+            var inp = mome_replace_by_item_input($(this));
             this.mom_input_item = inp;
         };
         if (ev.ctrlKey || ev.metaKey

@@ -320,7 +320,7 @@ docompletename_microedit_mom (struct mom_webexch_st *wexch,
           assert (curitm && curitm->va_itype == MOMITY_ITEM);
           if (ix > 0)
             mom_wexch_puts (wexch, MOM_IS_DEBUGGING (web) ? ",\n " : ",");
-          MOM_WEXCH_PRINTF (wexch, "'%s'", mom_item_cstring (curitm));
+          MOM_WEXCH_PRINTF (wexch, "\"%s\"", mom_item_cstring (curitm));
         }
       mom_wexch_puts (wexch, "]\n");
     }
