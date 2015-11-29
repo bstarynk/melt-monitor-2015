@@ -109,7 +109,7 @@ function mom_complete_name(name) {
       data: {"do_completename": name},
       dataType: "json",
       success: function (data) {
-          console.log("mom_complete_name success data=");
+          console.log("mom_complete_name success data=", data);
 	  console.trace();
           res = data;
       },
@@ -352,6 +352,8 @@ var momp_item_input = {
             minLength: 2,
             source: this.item_autocomplete
         });
+        console.log ("MomeItemInput-install_input this=", this, " give inp=", inp);
+	return inp;
     },
     item_autocomplete: function (requ, respfun) {
         console.log ("MomeItemInput-item_autocomplete start requ=", requ, " respfun=", respfun);
@@ -437,9 +439,10 @@ var momp_item_value = {
                          " before replace_by_item_input");
             console.trace();
             var inp = mome_replace_by_item_input($(this));
-            this.mom_input_item = inp;
-        };
-        if (ev.ctrlKey || ev.metaKey
+            console.log ("MomeItemVal-gotkeypress space this=", this, " inp=", inp);
+	    inp.focus();
+        }
+        else if (ev.ctrlKey || ev.metaKey
             || (typeof ev.key) !== "string"
             || !ev.key.match(mom_name_regexp)) {
             console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
