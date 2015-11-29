@@ -1,0 +1,187 @@
+## *** generated file global.mom - DO NOT EDIT 
+## Copyright (C) 2015 Basile Starynkevitch & later the Free Software Foundation, Inc. 
+## MONIMELT is a monitor for MELT - see http://gcc-melt.org/ 
+## This generated file global.mom is part of MONIMELT, part of GCC 
+##
+## GCC is free software; you can redistribute it and/or modify 
+## it under the terms of the GNU General Public License as published by 
+## the Free Software Foundation; either version 3, or (at your option) 
+## any later version. 
+##
+##  GCC is distributed in the hope that it will be useful, 
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+##  GNU General Public License for more details. 
+##  You should have received a copy of the GNU General Public License 
+##  along with GCC; see the file COPYING3.   If not see 
+##  <http://www.gnu.org/licenses/>. 
+##
+
+
+
+*canvasedit
+1446753296
+^mtime
+^func
+signature_tasklet
+^funsignature
+
+
+*comment
+1445968873
+^mtime
+(
+comment
+"comment in items"_
+)attrs
+
+
+*hackc
+1446033098
+^mtime
+(
+comment
+"hackc root proto"_
+)attrs
+
+
+*hashset
+1446576569
+^mtime
+(
+comment
+"hashed set"_
+)attrs
+
+
+*item
+1448027933
+^mtime
+
+
+*microedit
+1446463595
+^mtime
+^func
+signature_tasklet
+^funsignature
+
+
+*notice
+1446546422
+^mtime
+
+
+*signature_loader_caret
+1445950071
+^mtime
+
+
+*signature_loader_paren
+1446020701
+^mtime
+(
+comment
+"signature of load paren functions"_
+)attrs
+
+
+*signature_tasklet
+1446190348
+^mtime
+(
+comment
+"signature of tasklet functions"_
+)attrs
+
+
+*something
+1448027933
+^mtime
+
+
+*the_agenda
+1446476830
+^mtime
+(
+comment
+"the agenda is a queue of tasklet items"_
+)attrs
+(
+)payload_queue
+
+
+*the_system
+1445947163
+^mtime
+
+
+*web_handlers
+1446061228
+^mtime
+(
+comment
+"hashassoc for web handlers"_
+)attrs
+(
+canvasedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+canvasedit
+)node
+microedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+microedit
+)node
+)payload_hashassoc
+
+
+*web_session
+1446110845
+^mtime
+(
+comment
+"for web sessions"_
+)attrs
+
+
+*web_state
+1446463595
+^mtime
+
+
+*web_state__0dmo5BBWK0mbtv
+1446463595
+^mtime
+(
+item
+something
+
+#.. notice
+#.. (
+#.. "some simple notice"_
+#.. (
+#.. 2_
+#.. web_state
+#.. )node
+#.. hashset
+#.. (
+#.. canvasedit
+#.. microedit
+#.. the_agenda
+#.. )set
+#.. (
+#.. web_session
+#.. ~
+#.. the_system
+#.. )tuple
+#.. comment
+#.. )node
+
+)payload_hashmap
+
+
+### eof global.mom
