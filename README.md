@@ -305,6 +305,18 @@ simpler than hand-coding it.
 
 ### Running that
 
+#### compilation
+
+Install all the required dependencies, then run `make -j` to build (in
+the source directory containing the `Makefile` and this `README.md`
+....)
+
+Run the MELT monitor inside the source & build directory (the one
+containing the `Makefile`).
+
+
+#### test run
+
 It is *alpha-stage* software (and that is the third time I'm coding
 some MELT monitor). You won't be able to run it usefully in 2015. But
 if you want to help (e.g. to answer some questions I am asking on some
