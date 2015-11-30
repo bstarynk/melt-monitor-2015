@@ -247,8 +247,9 @@ var momp_item_ref = {
     },
     gotkeypress: function (ev) {
         var focusel = $(':focus');
-        console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' $(this)=", $(this), " focusel=", focusel);
-        if (ev.key === ' ') {
+        console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' .which=", ev.which,
+		     "$(this)=", $(this), " focusel=", focusel);
+        if (ev.which == 32 || ev.key === ' ') {
             console.log ("MomeItemRef-gotkeypress space ev=", ev);
             if (ev.ctrlKey && !ev.metaKey) {
             }
@@ -256,7 +257,7 @@ var momp_item_ref = {
         if (ev.ctrlKey || ev.metaKey
             || (typeof ev.key)!=="string"
             || !ev.key.match(mom_name_regexp)) {
-            console.log ("MomeItemRef-gotkeypress ev=", ev, " reject strangekey");
+            console.log ("MomeItemRef-gotkeypress ev=", ev, ".which=", ev.which, " reject strangekey");
             return false;
         };
     },
@@ -450,11 +451,13 @@ var momp_item_value = {
                      " curtxt=", curtxt,
                      " self=", self, " this=", this, " $(':focus')=", $(':focus'));
         if (ev.keyCode === $.ui.keyCode.SPACE
+	    || ev.which === 32
             || ev.key === ' ') {
             console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
                          " self=", self, 
                          " before replace_by_item_input_for");
             console.trace();
+	    self.blur();
             var inp = mome_replace_by_item_input_for($(this), function (del) {
                 console.log ("MomeItemVal gotkeypress replacing self=", self, " this=", this, " del=", del);
                 self.replaceWith(del);
@@ -466,10 +469,11 @@ var momp_item_value = {
         else if (ev.ctrlKey || ev.metaKey
                  || (typeof ev.key) !== "string"
                  || !ev.key.match(mom_name_regexp)) {
-            console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
+            console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey .which=", ev.which);
             return false;
         };
-        console.log ("MomeItemVal-gotkeypress done ev=", ev);
+        console.log ("MomeItemVal-gotkeypress done ev=", ev, " now focus=", $(':focus'),
+		     " activeElement=", document.activeElement);
     },
     gotfocusin: function (ev) {
         var focusel = $(':focus');
@@ -770,7 +774,9 @@ function editdivinput(ev) {
 };
 
 function editdivkeypress(ev) {
-    console.log ("editdivkeypress ev=", ev, " .key=`", ev.key, " this=", this,
+    console.log ("editdivkeypress ev=", ev, " .key=`", ev.key,
+		 "' .which=", ev.which,
+		 " this=", this,
                  " $(this)=", $(this),
                  " $(':focus')=", $(':focus'));
 };
