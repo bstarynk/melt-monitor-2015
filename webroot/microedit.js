@@ -110,7 +110,7 @@ function mom_complete_name(name) {
       dataType: "json",
       success: function (data) {
           console.log("mom_complete_name success data=", data);
-	  console.trace();
+          console.trace();
           res = data;
       },
       error: function (jq, stat, err) {
@@ -151,10 +151,10 @@ function mome_entries(entarr) {
         var curent = entarr[ixent];
         console.log ("mome_entries ixent#", ixent, " curent=", curent);
         curent.realize_for2(function(del1, del2) {
-	    console.log ("mome_entries curent=", curent , " for del1=", del1, " del2=", del2);
-	    del1.appendTo(entdl);
-	    del2.appendTo(entdl);
-	});
+            console.log ("mome_entries curent=", curent , " for del1=", del1, " del2=", del2);
+            del1.appendTo(entdl);
+            del2.appendTo(entdl);
+        });
         console.log ("mome_entries done ixent#", ixent, " curent=", curent);
     };
     console.log("mome_entries done entarr=", entarr, " $editdiv=", $editdiv);
@@ -184,26 +184,26 @@ var momp_entry = {
         console.log("MomeEntry-realize_for2 start rec2fun=", rec2fun, " this=", this,
                     "\n"
                    );
-	console.trace();
+        console.trace();
         console.assert("entryItem" in this, "MomeEntry no entryItem in this=", this);
         console.assert("entryVal" in this, "MomeEntry no entryVal in this=", this);
         var eattelem = $("<dt class='statattr_cl'></dt>");
-        var evalelem = $("<dd class='statval_cl'></dd>");	
-	var self = this;
+        var evalelem = $("<dd class='statval_cl'></dd>");
+        var self = this;
         console.log("MomeEntry-realize_for2 self=", self, " eattelem=", eattelem, " evalelem=", evalelem, " rec2fun=", rec2fun);
-	rec2fun(eattelem, evalelem);
+        rec2fun(eattelem, evalelem);
         console.log("MomeEntry-realize_for2 this=", this,
-		    " done rec2fun=", rec2fun);
+                    " done rec2fun=", rec2fun);
         this.entryItem.realize_for(function (del) {
-	    console.log ("MomeEntry-realize_for2 self=", self, " eattelem=", eattelem, " del=", del);
-	    console.trace();
-	    del.appendTo(eattelem);
-	});
+            console.log ("MomeEntry-realize_for2 self=", self, " eattelem=", eattelem, " del=", del);
+            console.trace();
+            del.appendTo(eattelem);
+        });
         this.entryVal.realize_for(function (del) {
-	    console.log ("MomeEntry-realize_for2 self=", self, " evalelem=", evalelem, " del=", del);
-	    console.trace();
-	    del.appendTo(evalelem);
-	});
+            console.log ("MomeEntry-realize_for2 self=", self, " evalelem=", evalelem, " del=", del);
+            console.trace();
+            del.appendTo(evalelem);
+        });
         console.log("MomeEntry-realize_for2 done rec2fun=", rec2fun,
                     " eattelem=", eattelem, " evalelem=", evalelem, "\n..this=", this);
     }
@@ -236,7 +236,7 @@ var momp_item_ref = {
         eitelem.on("focusout", this.gotfocusout);
         eitelem.on("keypress", this.gotkeypress);
         console.log("MomeItemRef-realize_for recfun=", recfun, " this=", this, " eitelem=", eitelem);
-	recfun(eitelem);
+        recfun(eitelem);
         console.log("MomeItemRef-realize_for done recfun=", recfun,
                     " eitelem=", eitelem, "\n..this=", this);
     },
@@ -292,11 +292,11 @@ var momp_nil_value = {
     name: "MomeNilValue",
     realize_for: function (recfun) {
         console.log("MomeNilValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         var enilelem = $("<span class='momval_bcl momemptyval_cl' tabindex='0'>~</span>");
         enilelem.data("momfor", this);
-	console.log("MomeNilValue-realize_for this=", this, " enilelem=", enilelem);
-	recfun(enilelem);
+        console.log("MomeNilValue-realize_for this=", this, " enilelem=", enilelem);
+        recfun(enilelem);
         console.log("MomeNilValue-realize_for done recfun=", recfun,
                     " enilelem=", enilelem, "\n..this=", this);
     },
@@ -319,11 +319,11 @@ var momp_nil_ref = {
     name: "MomeNilRef",
     realize_for: function (recfun) {
         console.log("MomeNilRef-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         var enilelem = $("<span class=' mom_item_bcl momrefnil_cl' tabindex='0'>~</span>");
-        enilelem.data("momfor", this);	
-	console.log("MomeNilRef-realize_for enilelem=", enilelem, " this=", this);
-	recfun(enilelem);
+        enilelem.data("momfor", this);
+        console.log("MomeNilRef-realize_for enilelem=", enilelem, " this=", this);
+        recfun(enilelem);
         console.log("MomeNilRef-realize_for done recfun=", recfun,
                     " enilelem=", enilelem, "\n..this=", this);
     },
@@ -345,6 +345,7 @@ var momp_item_input = {
     install_input: function () {
         console.log ("MomeItemInput-install_input start this=", this, " $(this)=", $(this));
         console.trace();
+        var self = this;
         var orig = this.mom_orig;
         console.assert (orig, "MomeItemInput-install_input bad orig");
         var inp = $("<input type='text' width='16' class='mom_item_input_cl'/>");
@@ -361,17 +362,17 @@ var momp_item_input = {
             };      
         });
         inp.on("change", function (ev) {
-            console.log ("MomeItemInput change ev=", ev, " this=", this);
+            console.log ("MomeItemInput change ev=", ev, " this=", this, " self=", self);
         });
         inp.on("input", function (ev) {
-            console.log ("MomeItemInput input ev=", ev, " this=", this);
+            console.log ("MomeItemInput input ev=", ev, " this=", this, " self=", self);
         });
         inp.autocomplete({
             minLength: 2,
             source: this.item_autocomplete
         });
         console.log ("MomeItemInput-install_input this=", this, " give inp=", inp);
-	return inp;
+        return inp;
     },
     item_autocomplete: function (requ, respfun) {
         console.log ("MomeItemInput-item_autocomplete start requ=", requ, " respfun=", respfun);
@@ -390,14 +391,13 @@ function MomeItemInput(orig) {
 };
 MomeItemInput.prototype = momp_item_input;
 
-function mome_replace_by_item_input(orig) {
-    console.log ("mome_replace_by_item_input start this=", this, " $(this)=", $(this), " orig=", orig);
-    console.log ("mome_replace_by_item_input trace:");
+function mome_replace_by_item_input_for(orig, recfun) {
+    console.log ("mome_replace_by_item_input_for start this=", this, " $(this)=", $(this), " orig=", orig, " recfun=", recfun);
     console.trace();
-    console.assert (orig, "mome_replace_by_item_input bad orig");
+    console.assert (orig, "mome_replace_by_item_input_for bad orig");
     var inp = new MomeItemInput(orig);
     inp.install_input();
-    console.log ("mome_replace_by_item_input end this=", this, " inp=", inp);
+    console.log ("mome_replace_by_item_input_for end this=", this, " inp=", inp);
     return inp;
 };
 
@@ -407,7 +407,7 @@ var momp_item_value = {
     __proto__: momp_value,
     realize_for: function (recfun) {
         console.log("MomeItemVal-realize_for start recfun=", recfun, " this=", this, " $(this)=", $(this));
-	console.trace();
+        console.trace();
         console.assert(typeof (this.item_name) === "string",
                        "MomeItemVal no item_name in this=", this);
         /// perhaps need contenteditable in the span below?
@@ -421,7 +421,7 @@ var momp_item_value = {
         eitmelem.on("focusout", this.gotfocusout);
         eitmelem.on("keypress", this.gotkeypress);
         console.log("MomeItemVal-realize_for this=", this, " before recfun=", recfun, " eitmelem=", eitmelem);
-	recfun(eitmelem);
+        recfun(eitmelem);
         console.log("MomeItemVal-realize_for done recfun=", recfun,
                     " eitmelem=", eitmelem, "\n..this=", this);
     },
@@ -441,26 +441,31 @@ var momp_item_value = {
         }
     },
     gotkeypress: function (ev) {
-	// don't use .key in jquery keypress event, but only .which
-	// see https://api.jquery.com/keypress/
-        var curtxt = $(this).text();
+        // don't use .key in jquery keypress event, but only .which
+        // see https://api.jquery.com/keypress/
+        var self = $(this);
+        var curtxt = self.text();
         console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key,
-		     "' .keyCode=", ev.keyCode, " .which=", ev.which,
-		     " curtxt=", curtxt,
-                     " $(this)=", $(this), " this=", this, " $(':focus')=", $(':focus'));
+                     "' .keyCode=", ev.keyCode, " .which=", ev.which,
+                     " curtxt=", curtxt,
+                     " self=", self, " this=", this, " $(':focus')=", $(':focus'));
         if (ev.keyCode === $.ui.keyCode.SPACE
             || ev.key === ' ') {
             console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
-                         " $(this)=", $(this), 
-                         " before replace_by_item_input");
+                         " self=", self, 
+                         " before replace_by_item_input_for");
             console.trace();
-            var inp = mome_replace_by_item_input($(this));
+            var inp = mome_replace_by_item_input_for($(this), function (del) {
+                console.log ("MomeItemVal gotkeypress replacing self=", self, " this=", this, " del=", del);
+                self.replaceWith(del);
+                del.focus();
+                console.log ("MomeItemVal gotkeypress done self=", self, " replaced by del=", del);
+            });
             console.log ("MomeItemVal-gotkeypress space this=", this, " inp=", inp);
-	    inp.focus();
         }
         else if (ev.ctrlKey || ev.metaKey
-            || (typeof ev.key) !== "string"
-            || !ev.key.match(mom_name_regexp)) {
+                 || (typeof ev.key) !== "string"
+                 || !ev.key.match(mom_name_regexp)) {
             console.log ("MomeItemVal-gotkeypress ev=", ev, " reject strangekey");
             return false;
         };
@@ -501,13 +506,13 @@ var momp_int_value = {
     __proto__: momp_value,
     realize_for: function (recfun) {
         console.log("MomeIntValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         console.assert(typeof (this.int_val) === "number",
                        "MomeIntValue no int_val in this=", this);
         var eintelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.int_val.toString() +"</span>");
         eintelem.data("momfor", this);
         console.log("MomeIntValue-realize_for this=", this, " before recfun=", recfun, " eintelem=", eintelem);
-	recfun(eintelem);
+        recfun(eintelem);
         console.log("MomeIntValue-realize_for done recfun=", recfun,
                     " eintelem=", eintelem, "\n..this=", this);
     },
@@ -532,13 +537,13 @@ var momp_double_value = {
     __proto__: momp_value,
     realize_for: function (recfun) {
         console.log("MomeDoubleValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         console.assert(typeof (this.dbl_val) === "number",
                        "MomeDoubleValue no dbl_val in this=", this);
         var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.dbl_val.toString() +"</span>");
         edblelem.data("momfor", this);
-	console.log("MomeDoubleValue-realize_for before recfun=", recfun, " this=", this, " edblelem=", edblelem);
-	recfun(edblelem);
+        console.log("MomeDoubleValue-realize_for before recfun=", recfun, " this=", this, " edblelem=", edblelem);
+        recfun(edblelem);
         console.log("MomeDoubleValue-realize_for done recfun=", recfun,
                     " edblelem=", edblelem, "\n..this=", this);
     },
@@ -566,7 +571,7 @@ var momp_string_value = {
         var estrelem = $("<q class='momstrquote_cl'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.str_val) +"</span></q>");
         estrelem.data("momfor", this);
         console.log("MomeStringValue-realize_for estrelem=", estrelem, " this=", this, " before recfun=", recfun);
-	recfun(estrelem);
+        recfun(estrelem);
         console.log("MomeStringValue-realize_for done recfun=", recfun,
                     " estrelem=", estrelem, "\n..this=", this);
     },
@@ -590,10 +595,10 @@ var momp_tuple_value = {
     __proto__: momp_value,
     realize_for: function (recfun) {
         console.log("MomeTupleValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         console.assert(Array.isArray (this.tup_val),
                        "MomeTupleValue no tup_val in this=", this);
-	var self = this;
+        var self = this;
         var etupelem = $("<span class='mom_value_bcl momtuple_cl' tabindex='0'></span>");
         var et = null;
         et = document.createTextNode("[");
@@ -611,10 +616,10 @@ var momp_tuple_value = {
                 et = null;
             };
             curcomp.realize_for(function (del) {
-		console.log("MomeTupleValue curcomp=", curcomp, " del=", del, " etupelem=", etupelem);
-		console.trace();
-		del.appendTo(etupelem);
-	    });
+                console.log("MomeTupleValue curcomp=", curcomp, " del=", del, " etupelem=", etupelem);
+                console.trace();
+                del.appendTo(etupelem);
+            });
             console.log("MomeTupleValue-realize_for did compix=", compix,
                         " curcomp=", curcomp, " etupelem=", etupelem);
         }
@@ -622,9 +627,9 @@ var momp_tuple_value = {
         $(et).appendTo(etupelem);
         et = null;
         etupelem.data("momfor", this);
-	console.log("MomeTupleValue-realize_for etupelem=", etupelem, " this=", this,
-		    " before recfun=", recfun);
-	recfun(etupelem);
+        console.log("MomeTupleValue-realize_for etupelem=", etupelem, " this=", this,
+                    " before recfun=", recfun);
+        recfun(etupelem);
         console.log("MomeTupleValue-realize_for done recfun=", recfun,
                     " etupelem=", etupelem, "\n..this=", this);
     },
@@ -647,7 +652,7 @@ var momp_set_value = {
     name: "MomeSetValue",
     realize_for: function (recfun) {
         console.log("MomeSetValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         console.assert(Array.isArray (this.set_val),
                        "MomeSetValue no set_val in this=", this);
         var esetelem = $("<span class='mom_value_bcl momset_cl' tabindex='0'></span>");
@@ -668,9 +673,9 @@ var momp_set_value = {
                 et = null;
             };
             curelem.realize_for(function (del) {
-		console.log ("MomeSetValue curelem=", curelem, " del=", del, " esetelem=", esetelem)
-		del.appendTo(esetelem);
-	    });
+                console.log ("MomeSetValue curelem=", curelem, " del=", del, " esetelem=", esetelem)
+                del.appendTo(esetelem);
+            });
             console.log("MomeSetValue-realize_for did elemix=", elemix,
                         " curelem=", curelem, " esetelem=", esetelem);
         }
@@ -678,8 +683,8 @@ var momp_set_value = {
         $(et).appendTo(esetelem);
         et = null;
         esetelem.data("momfor", this);
-	console.log("MomeSetValue-realize_for this=", this, " esetelem=", esetelem, " before recfun=", recfun);
-	recfun(esetelem);
+        console.log("MomeSetValue-realize_for this=", this, " esetelem=", esetelem, " before recfun=", recfun);
+        recfun(esetelem);
         console.log("MomeSetValue-realize_for done recfun=", recfun,
                     " esetelem=", esetelem, "\n..this=", this);
     },
@@ -701,9 +706,9 @@ var momp_node_value = {
     __proto__: momp_value,
     name: "MomeNodeValue",
     realize_for: function (recfun) {
-	var self = this;
+        var self = this;
         console.log("MomeNodeValue-realize_for start recfun=", recfun, " this=", this);
-	console.trace();
+        console.trace();
         console.assert(typeof (this.conn_itm) === "object"
                        && Array.isArray(this.sons_arr),
                        "MomeSetValue no conn_itm&sons_arr in this=", this);
@@ -713,9 +718,9 @@ var momp_node_value = {
         var econnelem = $("<span class='momconn_cl' tabindex='0'>*</span>");
         econnelem.appendTo(enodelem);
         this.conn_itm.realize_for(function (del) {
-	    console.log("MomeNodeValue connitm self=", self, " del=", del);
-	    del.appendTo(econnelem);
-	});
+            console.log("MomeNodeValue connitm self=", self, " del=", del);
+            del.appendTo(econnelem);
+        });
         console.log("MomeNodeValue-realize_for after connitm enodelem=", enodelem, " this=", this);
         et = document.createTextNode("(");
         $(et).appendTo(enodelem);
@@ -730,9 +735,9 @@ var momp_node_value = {
                 et = null;
             };
             curson.realize_for(function (del) {
-		console.log ("MomeNodeValue curson=", curson, " self=", self, " del=", del);
-		del.appendTo(enodelem);
-	    });
+                console.log ("MomeNodeValue curson=", curson, " self=", self, " del=", del);
+                del.appendTo(enodelem);
+            });
             console.log("MomeNodeValue-realize_for enodelem=", enodelem, " after sonix=", sonix);
         }
         et = document.createTextNode(")");
@@ -740,7 +745,7 @@ var momp_node_value = {
         et = null;
         enodelem.data("momfor", this);
         console.log("MomeNodeValue-realize_for self=", self, " enodelem=", enodelem, " before recfun=", recfun);
-	recfun (enodelem);
+        recfun (enodelem);
         console.log("MomeNodeValue-realize_for done recfun=", recfun,
                     " enodelem=", enodelem, "\n..this=", this);
     },
