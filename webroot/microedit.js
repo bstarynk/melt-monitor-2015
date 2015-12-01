@@ -779,7 +779,8 @@ function mome_node(connitm, sonsarr) {
 function editdivinput(ev) {
     console.log ("editdivinput ev=", ev, " this=", this,
                  " $(this)=", $(this),
-                 " $(':focus')=", $(':focus'));
+                 " $(':focus')=", $(':focus'),
+		 " activeElement=", document.activeElement);
 };
 
 function editdivkeypress(ev) {
@@ -787,18 +788,21 @@ function editdivkeypress(ev) {
 		 "' .which=", ev.which,
 		 " this=", this,
                  " $(this)=", $(this),
-                 " $(':focus')=", $(':focus'));
+                 " $(':focus')=", $(':focus'),
+		 " activeElement=", document.activeElement);
 };
 
 function editdivfocusin(ev) {
     console.log ("editdivfocusin ev=", ev, " this=", this,
                  " $(this)=", $(this),
-                 " $(':focus')=", $(':focus'));
+                 " $(':focus')=", $(':focus'),
+		 " activeElement=", document.activeElement);
 };
 
 function editdivfocusout(ev) {
     console.log ("editdivfocusout ev=", ev, " this=", this,
-                 " $(this)=", $(this));
+                 " $(this)=", $(this),
+		 " activeElement=", document.activeElement);
 };
 
 //function editdivbeforeinput(ev) {
