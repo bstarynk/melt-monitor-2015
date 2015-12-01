@@ -30,6 +30,7 @@ var $cleareditbut;
 // https://dxr.mozilla.org/mozilla-central/source/dom/html/nsGenericHTMLElement.h#193
 // https://developer.mozilla.org/en-US/docs/Web/API/Selection
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1196479
+// https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
 
 // and from SO: http://stackoverflow.com/a/33911936/841108
 
@@ -393,12 +394,15 @@ function MomeItemInput(orig) {
 MomeItemInput.prototype = momp_item_input;
 
 function mome_replace_by_item_input_for(orig, recfun) {
-    console.log ("mome_replace_by_item_input_for start this=", this, " $(this)=", $(this), " orig=", orig, " recfun=", recfun);
+    console.log ("mome_replace_by_item_input_for start this=", this,
+		 " $(this)=", $(this), " orig=", orig, " recfun=", recfun,
+		 " activeElement=", document.activeElement);
     console.trace();
     console.assert (orig, "mome_replace_by_item_input_for bad orig");
     var inp = new MomeItemInput(orig);
     inp.install_input();
-    console.log ("mome_replace_by_item_input_for end this=", this, " inp=", inp);
+    console.log ("mome_replace_by_item_input_for end this=", this, " inp=", inp,
+		 " activeElement=", document.activeElement);
     return inp;
 };
 
@@ -449,20 +453,25 @@ var momp_item_value = {
         console.log ("MomeItemVal-gotkeypress ev=", ev, ".key='", ev.key,
                      "' .keyCode=", ev.keyCode, " .which=", ev.which,
                      " curtxt=", curtxt,
-                     " self=", self, " this=", this, " $(':focus')=", $(':focus'));
+                     " self=", self, " this=", this, " $(':focus')=", $(':focus'),
+		     " activeElement=", document.activeElement);
         if (ev.keyCode === $.ui.keyCode.SPACE
 	    || ev.which === 32
             || ev.key === ' ') {
             console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
-                         " self=", self, 
-                         " before replace_by_item_input_for");
+                         " self=", self,
+                         " before replace_by_item_input_for",
+			 " activeElement=", document.activeElement);
             console.trace();
-	    self.blur();
+	    ////@@ self.blur();
+            ////@@ console.log ("MomeItemVal-gotkeypress space ev=", ev, " blurred self=", self,
+	    ////@@	 " activeElement=", document.activeElement);
             var inp = mome_replace_by_item_input_for($(this), function (del) {
                 console.log ("MomeItemVal gotkeypress replacing self=", self, " this=", this, " del=", del);
                 self.replaceWith(del);
                 del.focus();
-                console.log ("MomeItemVal gotkeypress done self=", self, " replaced by del=", del);
+                console.log ("MomeItemVal gotkeypress done self=", self, " replaced by del=", del,
+			     " activeElement=", document.activeElement);
             });
             console.log ("MomeItemVal-gotkeypress space this=", this, " inp=", inp);
         }
