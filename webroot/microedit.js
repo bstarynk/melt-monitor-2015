@@ -139,8 +139,16 @@ function mome_entries(entarr) {
                    "mome_entries bad entarr=", entarr);
     var nbent = entarr.length;
     var entdl = $("<dl class='momentrieslist_cl'></dl>");
+    var curent = null;
     entdl.appendTo($editdiv);
     entarr.mom_ast = "entries";
+    console.log("mome_entries before realize entarr=", entarr, " entdl=", entdl);
+    for (var ix=0; ix<nbent; ix++) {
+        curent = entarr[ix];
+        console.log("mome_entries curent=", curent, " ix#", ix);
+        curent.realize(entdl);
+        curent = null;
+    };
     console.log("mome_entries entdl=", entdl, " $editdiv=", $editdiv, " entarr=", entarr);
 };
 
@@ -183,7 +191,20 @@ function MomeEntry(entitm,entval) {
 var momp_entry = {
     name: "MomeEntry",
     realize: function (incont) {
-        console.error("MomeEntry-realize unimplemented incont=", incont);
+        console.log("MomeEntry-realize start incont=", incont, " this=", this);
+        console.trace();
+        var eattelem = $("<dt class='statattr_cl'></dt>");
+        var evalelem = $("<dd class='statval_cl'></dd>");
+        var self = this;
+        var thisitem = this.mom_entry_item;
+        var thisval = this.mom_entry_val;
+        console.log("MomeEntry-realize this=", this,
+                    " eattelem=", eattelem, " evalelem=", evalelem);
+        thisitem.realize(eattelem,self);
+        mom_put_jdom_in(incont,eattelem);
+        thisval.realize(evalitem,self);
+        mom_put_jdom_in(incont,evalelem);
+        console.log("MomeEntry-realize end this=", this);
     }
 };
 MomeEntry.prototype = momp_entry;
@@ -207,7 +228,8 @@ var momp_value = {
 var momp_item_ref = {
     name: "MomeItemRef",
     realize: function (incont,fromast) {
-        console.error("MomeItemRef-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeItemRef-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 function MomeItemRef(iname) {
@@ -227,7 +249,8 @@ function mome_item_ref(itmname) {
 var momp_nil_value = {
     name: "MomeNilValue",
     realize: function (incont,fromast) {
-        console.error("MomeNilValue-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeNilValue-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 function MomeNilValue() {
@@ -246,7 +269,8 @@ function mome_nil_val() { /// a nil value
 var momp_nil_ref = {
     name: "MomeNilRef",
     realize: function (incont,fromast) {
-        console.error("MomeNilRef-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeNilRef-realize unimplemented incont=", incont, " fromast=", fromast,
+                      " this=", this);
     }
 };
 function MomeNilRef() {
@@ -265,7 +289,8 @@ function mome_nil_ref() {       /// a nil item reference
 var momp_item_value = {
     name: "MomeItemValue",
     realize: function (incont,fromast) {
-        console.error("MomeItemValue-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeItemValue-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 function MomeItemValue(iname) {
@@ -288,7 +313,8 @@ function mome_item_val(itemname) { /// a nil value
 var momp_number_value = {
     name: "momp-number-value",
     realize:function (incont,fromast) {
-        console.error("momp-number-value-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("momp-number-value-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 }
 ////////////////
@@ -334,7 +360,8 @@ var momp_string_value = {
     name: 'MomeStringValue',
     __proto__: momp_value,
     realize: function (incont,fromast) {
-        console.error("MomeStringValue-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeStringValue-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 function MomeStringValue(sval) {
@@ -357,7 +384,8 @@ var momp_sequence_value = {
     name: 'momp-sequence-value',
     __proto__: momp_value,
     realize: function (incont,fromast) {
-        console.error("momp-sequence-value-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("momp-sequence-value-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 
@@ -404,7 +432,8 @@ var momp_node_value = {
     __proto__: momp_value,
     name: "MomeNodeValue",
     realize: function (incont,fromast) {
-        console.error("MomeNodeValue-realize unimplemented incont=", incont, " fromast=", fromast);
+        console.error("MomeNodeValue-realize unimplemented incont=", incont,
+                      " fromast=", fromast, " this=", this);
     }
 };
 function MomeNodeValue(conn,sons) {
