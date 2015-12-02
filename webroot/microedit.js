@@ -155,14 +155,89 @@ function mome_generated(msg) {
 function MomeEntry(entitm,entval) {
     this.mom_entry_item= entitm;
     this.mom_entry_val= entval;
+    this.mom_ast = "entry";
     mom_numbered(this);
 };
 var momp_entry = {
     name: "MomeEntry",
     realize: function (incont) {
-	console.err("MomeEntry-realize unimplemented incont=", incont);
+	console.error("MomeEntry-realize unimplemented incont=", incont);
     }
 };
 MomeEntry.prototype = momp_entry;
 function mome_entry(entitm,entval) {
+    console.log("mome_entry entitm=", entitm, " entval=", entval);
+    var res = new MomeEntry(entitm, entval);
+    console.log("mome_entry res=", res);
+    return res;
+};
+
+
+var momp_value = {
+    name: "MompValue",
+    realize: function (incont,fromast) {
+	console.error("MomeValue-realize bad incont=", incont, " fromast=", fromast);
+    }
+};
+////////////////////////////////////////////////////////////////
+
+
+var momp_item_ref = {
+    name: "MomeItemRef",
+    realize: function (incont,fromast) {
+	console.error("MomeItemRef-realize unimplemented incont=", incont, " fromast=", fromast);
+    }
+};
+function MomeItemRef(iname) {
+    this.mom_item_name = iname;
+    this.mom_ast = "item_ref";
+    mom_numbered(this);
+};
+MomeItemRef.prototype = momp_item_ref;
+function mome_item_ref(itmname) {
+    var res = new MomeItemRef(itmname);
+    console.log ("mome_item_ref res=", res);
+    return res;
+};
+
+
+////////////////
+var momp_nil_value = {
+    name: "MomeNilValue",
+    realize: function (incont,fromast) {
+	console.error("MomeNilValue-realize unimplemented incont=", incont, " fromast=", fromast);
+    }
+};
+function MomeNilValue() {
+    mom_numbered(this);
+    this.mom_ast = "nilval";
+};
+MomeNilValue.prototype = momp_nil_value;
+
+function mome_nil_val() { /// a nil value
+    var res = new MomeNilValue();
+    console.log ("mome_nil_val res=", res);
+    return res;
+};
+
+////////////////
+var momp_nil_ref = {
+    name: "MomeNilRef",
+    realize: function (incont,fromast) {
+	console.error("MomeNilRef-realize unimplemented incont=", incont, " fromast=", fromast);
+    }
+};
+function MomeNilRef() {
+    mom_numbered(this);
+    this.mom_ast = "nilref";
+};
+MomeNilRef.prototype = momp_nil_ref;
+
+function mome_nil_ref() {       /// a nil item reference
+    var res = new MomeNilRef();
+    console.log ("mome_nil_ref res=", res);
+    return res;
+};
+////////////////
+
 console.warn("incomplete new microedit.js, see also _old_microedit.js");
