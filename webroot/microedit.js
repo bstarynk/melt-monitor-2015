@@ -202,16 +202,18 @@ var momp_entry = {
         console.log("MomeEntry-realize_for2 this=", this,
                     " done rec2fun=", rec2fun);
         this.entryItem.realize_for(function (del) {
-            console.log ("MomeEntry-realize_for2 self=", self, " eattelem=", eattelem, " del=", del);
+            console.log ("MomeEntry-realize_for2 entitm/start self=", self, " eattelem=", eattelem, " del=", del);
             console.trace();
             del.appendTo(eattelem);
-	    del.mom_attr_entry = self;
+            del.mom_attr_entry = self;
+            console.log ("MomeEntry-realize_for2 entitem/end self=", self, " del=", del);
         });
         this.entryVal.realize_for(function (del) {
-            console.log ("MomeEntry-realize_for2 self=", self, " evalelem=", evalelem, " del=", del);
+            console.log ("MomeEntry-realize_for2 entval/start self=", self, " evalelem=", evalelem, " del=", del);
             console.trace();
             del.appendTo(evalelem);
-	    del.mom_val_entry = self;
+            del.mom_val_entry = self;
+            console.log ("MomeEntry-realize_for2 entval/end self=", self, " del=", del);
         });
         console.log("MomeEntry-realize_for2 done rec2fun=", rec2fun,
                     " eattelem=", eattelem, " evalelem=", evalelem, "\n..this=", this);
@@ -234,6 +236,7 @@ var momp_value = {
 var momp_item_ref = {
     name: "MomeItemRef",
     realize_for: function (recfun) {
+	var self = this;
         console.log("MomeItemRef-realize_for start recfun=", recfun, " this=", this);
         console.assert(typeof (this.item_name) === "string", "MomeItemRef no item_name in this=", this);
         /// perhaps need contenteditable in the span below?
@@ -244,6 +247,7 @@ var momp_item_ref = {
         eitelem.on("focusin", this.gotfocusin);
         eitelem.on("focusout", this.gotfocusout);
         eitelem.on("keypress", this.gotkeypress);
+	eitelem.mom_item_ref = self;
         console.log("MomeItemRef-realize_for recfun=", recfun, " this=", this, " eitelem=", eitelem);
         recfun(eitelem);
         console.log("MomeItemRef-realize_for done recfun=", recfun,
@@ -251,13 +255,13 @@ var momp_item_ref = {
     },
     gotinput: function (ev) {
         console.log ("MomeItemRef-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
-        var curtxt = $(this).text();
-        console.log ("MomeItemRef-gotinput curtxt=", curtxt);
+        var curval = $(this).val();
+        console.log ("MomeItemRef-gotinput curval=", curval, " activeElement=", document.activeElement);
     },
     gotkeypress: function (ev) {
         var focusel = $(':focus');
         console.log ("MomeItemRef-gotkeypress ev=", ev, " .key=`", ev.key, "' .which=", ev.which,
-		     "$(this)=", $(this), " focusel=", focusel);
+                     "$(this)=", $(this), " focusel=", focusel);
         if (ev.which == 32 || ev.key === ' ') {
             console.log ("MomeItemRef-gotkeypress space ev=", ev);
             if (ev.ctrlKey && !ev.metaKey) {
@@ -269,9 +273,9 @@ var momp_item_ref = {
             console.log ("MomeItemRef-gotkeypress ev=", ev, ".which=", ev.which, " reject strangekey");
             return false;
         };
+        console.log ("MomeItemRef-gotkeypress curval=", $(this).val(), " activeElement=", document.activeElement);
     },
     gotfocusin: function (ev) {
-        //$(this).prop("contenteditable",true);
         var oldtxt = $(this).text();
         var focusel = $(':focus');
         console.log ("MomeItemRef-gotfocusin ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv, " oldtxt=", oldtxt,
@@ -280,7 +284,8 @@ var momp_item_ref = {
     },
     gotfocusout: function (ev) {
         //$(this).prop("contenteditable",false);
-        console.log ("MomeItemRef-gotfocusout ev=", ev, " $(this)=", $(this), " $editdiv=", $editdiv);
+        console.log ("MomeItemRef-gotfocusout ev=", ev, " $(this)=", $(this),
+		     " curval=", $(this).val(), " $editdiv=", $editdiv);
         delete $(this).old_text;
     }
 };
@@ -354,43 +359,51 @@ var momp_item_input = {
     name: "MomeItemInput",
     install_input: function () {
         console.log ("MomeItemInput-install_input start this=", this, " $(this)=", $(this),
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
         console.trace();
         var self = this;
         var orig = this.mom_orig;
         console.assert (orig, "MomeItemInput-install_input bad orig");
         var inp = $("<input type='text' width='16' class='mom_item_input_cl'/>");
         console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " orig=", orig,
-		     " activeElement=", document.activeElement);
-	inp.mom_obj = this;
+                     " activeElement=", document.activeElement);
+        inp.mom_obj = this;
         orig.replaceWith(inp);
         console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " replaced orig=", orig,
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
         this.mom_input = inp;
-	inp.focus();
+        inp.focus();
         console.log ("MomeItemInput-install_input this=", this, " inp=", inp,
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
         // don't navigate away from the field on tab when selecting an item
         inp.bind("keydown", function (ev) {
-            console.log ("MomeItemInput keydown ev=", ev);
+            console.log ("MomeItemInput keydown ev=", ev, " which=", ev.which, " self=", self);
             if (ev.keyCode === $.ui.keyCode.TAB
                 && inp.autocomplete("instance").menu.active) {
                 console.log ("MomeItemInput keydown ignore tab-menu");
                 ev.preventDefault();
             };      
         });
+	inp.on("keypress", function (ev) {
+            console.log ("MomeItemInput keypress ev=", ev, " which=", ev.which, " self=", self,
+			 " this=", this, " inp=", inp,
+			 " val=`", $(this).val(), "' activeElement=", document.activeElement);
+	});
         inp.on("change", function (ev) {
-            console.log ("MomeItemInput change ev=", ev, " this=", this, " self=", self);
+            console.log ("MomeItemInput change ev=", ev, " this=", this, " self=", self, " inp=", inp,
+                         " val=`", $(this).val(), "' activeElement=", document.activeElement,
+			 " orig=", orig);
         });
         inp.on("input", function (ev) {
-            console.log ("MomeItemInput input ev=", ev, " this=", this, " self=", self);
+            console.log ("MomeItemInput input ev=", ev, " this=", this, " self=", self, " inp=", inp,
+                         " val=`", $(this).val(), "' activeElement=", document.activeElement);
         });
         inp.autocomplete({
             minLength: 2,
             source: this.item_autocomplete
         });
         console.log ("MomeItemInput-install_input this=", this, " give inp=", inp,
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
         return inp;
     },
     item_autocomplete: function (requ, respfun) {
@@ -412,14 +425,14 @@ MomeItemInput.prototype = momp_item_input;
 
 function mome_replace_by_item_input_for(orig, recfun) {
     console.log ("mome_replace_by_item_input_for start this=", this,
-		 " $(this)=", $(this), " orig=", orig, " recfun=", recfun,
-		 " activeElement=", document.activeElement);
+                 " $(this)=", $(this), " orig=", orig, " recfun=", recfun,
+                 " activeElement=", document.activeElement);
     console.trace();
     console.assert (orig, "mome_replace_by_item_input_for bad orig");
     var inp = new MomeItemInput(orig);
     inp.install_input();
-    console.log ("mome_replace_by_item_input_for end this=", this, " inp=", inp,
-		 " activeElement=", document.activeElement);
+    console.log ("mome_replace_by_item_input_for end this=", this, " inp=", inp, " orig=", orig,
+                 " activeElement=", document.activeElement);
     return inp;
 };
 
@@ -428,6 +441,7 @@ var momp_item_value = {
     name: "MomeItemVal",
     __proto__: momp_value,
     realize_for: function (recfun) {
+	var self = this;
         console.log("MomeItemVal-realize_for start recfun=", recfun, " this=", this, " $(this)=", $(this));
         console.trace();
         console.assert(typeof (this.item_name) === "string",
@@ -442,6 +456,7 @@ var momp_item_value = {
         eitmelem.on("focusin", this.gotfocusin);
         eitmelem.on("focusout", this.gotfocusout);
         eitmelem.on("keypress", this.gotkeypress);
+	eitmelem.mom_item_value = self;
         console.log("MomeItemVal-realize_for this=", this, " before recfun=", recfun, " eitmelem=", eitmelem);
         recfun(eitmelem);
         console.log("MomeItemVal-realize_for done recfun=", recfun,
@@ -450,7 +465,7 @@ var momp_item_value = {
     gotinput: function (ev) {
         console.log ("MomeItemVal-gotinput ev=", ev, " $(this)=", $(this), " $(':focus')=", $(':focus'));
         var curtxt = $(this).text();
-        console.log ("MomeItemVal-gotinput curtxt=", curtxt);
+        console.log ("MomeItemVal-gotinput curtxt=", curtxt, " activeElement=", document.activeElement);
         if (mom_known_item(curtxt)) {
             console.log ("MomeItemVal-gotinput knownitem ", curtxt);
             $(this).addClass('momitemval_cl');
@@ -460,7 +475,8 @@ var momp_item_value = {
             console.log ("MomeItemVal-gotinput unknownitem ", curtxt);
             $(this).removeClass('momitemval_cl');
             $(this).addClass('momname_cl');
-        }
+        };
+        console.log ("MomeItemVal-gotinput end ev=", ev, " activeElement=", activeElement, " $(this)=", $(this));
     },
     gotkeypress: function (ev) {
         // don't use .key in jquery keypress event, but only .which
@@ -471,24 +487,24 @@ var momp_item_value = {
                      "' .keyCode=", ev.keyCode, " .which=", ev.which,
                      " curtxt=", curtxt,
                      " self=", self, " this=", this, " $(':focus')=", $(':focus'),
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
         if (ev.keyCode === $.ui.keyCode.SPACE
-	    || ev.which === 32
+            || ev.which === 32
             || ev.key === ' ') {
             console.log ("MomeItemVal-gotkeypress space ev=", ev, " this=", this,
                          " self=", self,
                          " before replace_by_item_input_for",
-			 " activeElement=", document.activeElement);
+                         " activeElement=", document.activeElement);
             console.trace();
-	    ////@@ self.blur();
+            ////@@ self.blur();
             ////@@ console.log ("MomeItemVal-gotkeypress space ev=", ev, " blurred self=", self,
-	    ////@@	 " activeElement=", document.activeElement);
+            ////@@       " activeElement=", document.activeElement);
             var inp = mome_replace_by_item_input_for($(this), function (del) {
                 console.log ("MomeItemVal gotkeypress replacing self=", self, " this=", this, " del=", del);
                 self.replaceWith(del);
                 //del.focus();
                 console.log ("MomeItemVal gotkeypress done self=", self, " replaced by del=", del,
-			     " activeElement=", document.activeElement);
+                             " activeElement=", document.activeElement);
             });
             console.log ("MomeItemVal-gotkeypress space this=", this, " inp=", inp);
         }
@@ -499,7 +515,7 @@ var momp_item_value = {
             return false;
         };
         console.log ("MomeItemVal-gotkeypress done ev=", ev, " now focus=", $(':focus'),
-		     " activeElement=", document.activeElement);
+                     " activeElement=", document.activeElement);
     },
     gotfocusin: function (ev) {
         var focusel = $(':focus');
@@ -681,12 +697,14 @@ var momp_set_value = {
     __proto__: momp_value,
     name: "MomeSetValue",
     realize_for: function (recfun) {
+	var self = this;
         console.log("MomeSetValue-realize_for start recfun=", recfun, " this=", this);
         console.trace();
         console.assert(Array.isArray (this.set_val),
                        "MomeSetValue no set_val in this=", this);
         var esetelem = $("<span class='mom_value_bcl momset_cl' tabindex='0'></span>");
         console.log("MomeSetValue-realize_for esetelem=", esetelem);
+	esetelem.mom_set_value = self;
         var et = null;
         et = document.createTextNode("{");
         $(et).appendTo(esetelem);
@@ -744,6 +762,7 @@ var momp_node_value = {
                        "MomeSetValue no conn_itm&sons_arr in this=", this);
         var enodelem = $("<span class='mom_value_bcl momnode_cl' tabindex='0'></span>");
         console.log("MomeNodeValue-realize_for enodelem=", enodelem);
+	enodelem.mom_node_value = self;
         var et = null;
         var econnelem = $("<span class='momconn_cl' tabindex='0'>*</span>");
         econnelem.appendTo(enodelem);
@@ -797,29 +816,29 @@ function editdivinput(ev) {
     console.log ("editdivinput ev=", ev, " this=", this,
                  " $(this)=", $(this),
                  " $(':focus')=", $(':focus'),
-		 " activeElement=", document.activeElement);
+                 " activeElement=", document.activeElement);
 };
 
 function editdivkeypress(ev) {
     console.log ("editdivkeypress ev=", ev, " .key=`", ev.key,
-		 "' .which=", ev.which,
-		 " this=", this,
+                 "' .which=", ev.which,
+                 " this=", this,
                  " $(this)=", $(this),
                  " $(':focus')=", $(':focus'),
-		 " activeElement=", document.activeElement);
+                 " activeElement=", document.activeElement);
 };
 
 function editdivfocusin(ev) {
     console.log ("editdivfocusin ev=", ev, " this=", this,
                  " $(this)=", $(this),
                  " $(':focus')=", $(':focus'),
-		 " activeElement=", document.activeElement);
+                 " activeElement=", document.activeElement);
 };
 
 function editdivfocusout(ev) {
     console.log ("editdivfocusout ev=", ev, " this=", this,
                  " $(this)=", $(this),
-		 " activeElement=", document.activeElement);
+                 " activeElement=", document.activeElement);
 };
 
 //function editdivbeforeinput(ev) {
