@@ -46,8 +46,11 @@ function htmlDecode(value){
 };
 
 
+
+/// this function is called by /microedit AJAX for do_fillpage at document loading
 function ajaxfillscript(script) {
     console.log("ajaxfillscript:\n", script, "\n### endajaxfillscript\n");
+    console.trace();
 };
 
 /// see http://stackoverflow.com/q/33540051/841108
@@ -59,12 +62,14 @@ var mom_name_regexp = /^[A-Za-z0-9_]*$/;
 
 var mom_name_cache = new Object();
 
+// this utility function is assigning a unique number
 function mom_numbered(obj) {
     momc_count = momc_count+1;
     obj.inum = momc_count;
     return momc_count;
 };
 
+/// check if a name is some known item, with memoization & AJAX do_knownitem
 function mom_known_item(name) {
     if (!name.match(mom_name_regexp))
         return false;
@@ -95,6 +100,7 @@ function mom_known_item(name) {
     return res;
 };                              // end mom_known_item
 
+//// give the completion of some name string, using AJAX do_completename
 function mom_complete_name(name) {
     var res = null;
     if (!name.match(mom_name_regexp)) {
@@ -199,11 +205,13 @@ var momp_entry = {
             console.log ("MomeEntry-realize_for2 self=", self, " eattelem=", eattelem, " del=", del);
             console.trace();
             del.appendTo(eattelem);
+	    del.mom_attr_entry = self;
         });
         this.entryVal.realize_for(function (del) {
             console.log ("MomeEntry-realize_for2 self=", self, " evalelem=", evalelem, " del=", del);
             console.trace();
             del.appendTo(evalelem);
+	    del.mom_val_entry = self;
         });
         console.log("MomeEntry-realize_for2 done rec2fun=", rec2fun,
                     " eattelem=", eattelem, " evalelem=", evalelem, "\n..this=", this);
@@ -345,15 +353,23 @@ function mome_nil_ref() {       /// a nil item reference
 var momp_item_input = {
     name: "MomeItemInput",
     install_input: function () {
-        console.log ("MomeItemInput-install_input start this=", this, " $(this)=", $(this));
+        console.log ("MomeItemInput-install_input start this=", this, " $(this)=", $(this),
+		     " activeElement=", document.activeElement);
         console.trace();
         var self = this;
         var orig = this.mom_orig;
         console.assert (orig, "MomeItemInput-install_input bad orig");
         var inp = $("<input type='text' width='16' class='mom_item_input_cl'/>");
-        console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " orig=", orig);
+        console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " orig=", orig,
+		     " activeElement=", document.activeElement);
+	inp.mom_obj = this;
         orig.replaceWith(inp);
+        console.log ("MomeItemInput-install_input this=", this, " inp=", inp, " replaced orig=", orig,
+		     " activeElement=", document.activeElement);
         this.mom_input = inp;
+	inp.focus();
+        console.log ("MomeItemInput-install_input this=", this, " inp=", inp,
+		     " activeElement=", document.activeElement);
         // don't navigate away from the field on tab when selecting an item
         inp.bind("keydown", function (ev) {
             console.log ("MomeItemInput keydown ev=", ev);
@@ -373,7 +389,8 @@ var momp_item_input = {
             minLength: 2,
             source: this.item_autocomplete
         });
-        console.log ("MomeItemInput-install_input this=", this, " give inp=", inp);
+        console.log ("MomeItemInput-install_input this=", this, " give inp=", inp,
+		     " activeElement=", document.activeElement);
         return inp;
     },
     item_autocomplete: function (requ, respfun) {
@@ -469,7 +486,7 @@ var momp_item_value = {
             var inp = mome_replace_by_item_input_for($(this), function (del) {
                 console.log ("MomeItemVal gotkeypress replacing self=", self, " this=", this, " del=", del);
                 self.replaceWith(del);
-                del.focus();
+                //del.focus();
                 console.log ("MomeItemVal gotkeypress done self=", self, " replaced by del=", del,
 			     " activeElement=", document.activeElement);
             });
