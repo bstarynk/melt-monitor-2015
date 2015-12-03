@@ -254,15 +254,34 @@ var momp_item_ref = {
 	eitelem.on("keyup", this.gotkeyup);
         console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
     },
+    on_item_input: function (ev) {
+        console.log("MomeItemRef-on_item_input this=", this, " ev=", ev);
+    },
+    on_item_change: function (ev) {
+        console.log("MomeItemRef-on_item_change this=", this, " ev=", ev);
+    },
+    replace_by_item_input: function (str) {
+        console.log("MomeItemRef-replace_by_item_input this=", this, " str=", str);
+	var einput = $("<input type='text' pattern='^[A-Za-z0-9_]*$'/>");
+	einput.val(str);
+	einput.on("input",this.on_item_input);
+	einput.on("change",this.on_item_change);
+	$(this).replaceWith(einput);
+	einput.focus();
+        console.log("MomeItemRef-replace_by_item_input done this=", this, " einput=", einput);
+    },
     gotkeyup: function (ev) {
         var self = this;
         console.log("MomeItemRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
-		    " charCode=", ev.charCode, " key=", ev.key);
+		    " charCode=", ev.charCode, " key=", ev.key, " this=", this);
 	if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
-	    console.log("MomeItemRef-gotkeyup space ev=", ev, " this=", this);
+	    console.log("MomeItemRef-gotkeyup space ev=", ev, " this=", this, " $(this)=", $(this));
+	    console.assert(this.replace_by_item_input, "MomeItemRef-gotkeyup for replace_by_item_input bad this=", this);
+	    this.replace_by_item_input("");
 	}
 	else if (/[A-Za-z]/.test(String.fromCharCode(ev.which)) && !ev.ctrlKey && !ev.metaKey) { // letter
 	    console.log("MomeItemRef-gotkeyup letter ev=", ev, " this=", this);
+	    this.replace_by_item_input(String.fromCharCode(ev.which));
 	}
 	else if (ev.which == $.ui.keyCode.ESCAPE && !ev.ctrlKey && !ev.metaKey) { // escape
 	    console.log("MomeItemRef-gotkeyup escape ev=", ev, " this=", this);
