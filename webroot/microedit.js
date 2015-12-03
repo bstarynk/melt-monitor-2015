@@ -247,7 +247,30 @@ var momp_item_ref = {
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
         mom_put_jdom_in(eitelem,incont);
         mom_set_jdom_for_ast(eitelem,this);
+	/// dont handle keypress, but keyup, see http://stackoverflow.com/a/28502629/841108
+	/// maybe we want to use http://dmauro.github.io/Keypress/
+	/// see also http://unixpapa.com/js/key.html & http://www.openjs.com/scripts/events/keyboard_shortcuts/
+	/// and avoid functionkeys e.g. F1, see http://unixpapa.com/js/key.html
+	eitelem.on("keyup", this.gotkeyup);
         console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
+    },
+    gotkeyup: function (ev) {
+        var self = this;
+        console.log("MomeItemRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
+		    " charCode=", ev.charCode, " key=", ev.key);
+	if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
+	    console.log("MomeItemRef-gotkeyup space ev=", ev, " this=", this);
+	}
+	else if (/[A-Za-z]/.test(String.fromCharCode(ev.which)) && !ev.ctrlKey && !ev.metaKey) { // letter
+	    console.log("MomeItemRef-gotkeyup letter ev=", ev, " this=", this);
+	}
+	else if (ev.which == $.ui.keyCode.ESCAPE && !ev.ctrlKey && !ev.metaKey) { // escape
+	    console.log("MomeItemRef-gotkeyup escape ev=", ev, " this=", this);
+	}
+	else {
+	    console.log("MomeItemRef-gotkeyup ordinary ignored ev=", ev, " this=", this);
+	    return false;
+	}
     }
 };
 function MomeItemRef(iname) {
