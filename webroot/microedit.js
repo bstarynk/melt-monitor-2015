@@ -170,18 +170,19 @@ function mom_set_jdom_for_ast(jdom,ast) {
 };
 
 function mom_put_jdom_in(jdom,incont) {
-    console.log("mom_put_jdom_in jdom=", jdom, " incont=", incont);
     console.trace();
     console.assert (jdom instanceof jQuery, "mom_put_jdom_in bad jdom=", jdom);
     if (incont instanceof jQuery) {
+	console.log("mom_put_jdom_in jdom=", jdom, " appendTo incont=", incont);
         jdom.appendTo(incont);
     }
     else if (typeof incont=='function') {
+	console.log("mom_put_jdom_in jdom=", jdom, " calling incont=", incont);
         incont(jdom);
     }
     else
         console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
-    console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
+    //console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
 };
 
 ////////////////
@@ -207,11 +208,11 @@ var momp_entry = {
                     " eattelem=", eattelem, " evalelem=", evalelem, " thisitem=", thisitem);
         thisitem.realize(eattelem,self);
         console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " incont=", incont, " eattelem=", eattelem);
-        mom_put_jdom_in(incont,eattelem);
+        mom_put_jdom_in(eattelem,incont);
         console.log("MomeEntry-realize this=", this, " thisval=", thisval, " evalelem=", evalelem);
         thisval.realize(evalelem,self);
         console.log("MomeEntry-realize this=", this, " evalelem=", evalelem);
-        mom_put_jdom_in(incont,evalelem);
+        mom_put_jdom_in(evalelem,incont);
         console.log("MomeEntry-realize end this=", this, " incont=", incont, " eattelem=", eattelem, " evalelem=", evalelem);
     }
 };
@@ -244,7 +245,7 @@ var momp_item_ref = {
         console.assert ('mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
                         fromast);
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
-        mom_put_jdom_in(incont,eitelem);
+        mom_put_jdom_in(eitelem,incont);
         mom_set_jdom_for_ast(eitelem,this);
         console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
     }
@@ -311,7 +312,7 @@ var momp_item_value = {
 	var self = this;
         var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.item_name +"</span>");
         console.log ("MomeItemValue-realize this=", this, " eitmelem=", eitmelem);
-	mom_put_jdom_in(incont,eitmelem);
+	mom_put_jdom_in(eitmelem,incont);
 	mom_set_jdom_for_ast(eitmelem,this);
         console.log("MomeItemValue-realize done incont=", incont,
                     " fromast=", fromast, " this=", this, " eitmelem=", eitmelem);
