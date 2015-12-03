@@ -171,6 +171,7 @@ function mom_set_jdom_for_ast(jdom,ast) {
 
 function mom_put_jdom_in(jdom,incont) {
     console.log("mom_put_jdom_in jdom=", jdom, " incont=", incont);
+    console.trace();
     console.assert (jdom instanceof jQuery, "mom_put_jdom_in bad jdom=", jdom);
     if (incont instanceof jQuery) {
         jdom.appendTo(incont);
@@ -180,7 +181,7 @@ function mom_put_jdom_in(jdom,incont) {
     }
     else
         console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
-    //console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
+    console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
 };
 
 ////////////////
@@ -205,10 +206,10 @@ var momp_entry = {
         console.log("MomeEntry-realize this=", this,
                     " eattelem=", eattelem, " evalelem=", evalelem, " thisitem=", thisitem);
         thisitem.realize(eattelem,self);
-        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " incont=", incont);
+        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " incont=", incont, " eattelem=", eattelem);
         mom_put_jdom_in(incont,eattelem);
-        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " thisval=", thisval, " evalitem=", evalitem);
-        thisval.realize(evalitem,self);
+        console.log("MomeEntry-realize this=", this, " thisval=", thisval, " evalelem=", evalelem);
+        thisval.realize(evalelem,self);
         console.log("MomeEntry-realize this=", this, " evalelem=", evalelem);
         mom_put_jdom_in(incont,evalelem);
         console.log("MomeEntry-realize end this=", this, " incont=", incont, " eattelem=", eattelem, " evalelem=", evalelem);
