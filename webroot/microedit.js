@@ -173,11 +173,11 @@ function mom_put_jdom_in(jdom,incont) {
     console.trace();
     console.assert (jdom instanceof jQuery, "mom_put_jdom_in bad jdom=", jdom);
     if (incont instanceof jQuery) {
-	console.log("mom_put_jdom_in jdom=", jdom, " appendTo incont=", incont);
+        console.log("mom_put_jdom_in jdom=", jdom, " appendTo incont=", incont);
         jdom.appendTo(incont);
     }
     else if (typeof incont=='function') {
-	console.log("mom_put_jdom_in jdom=", jdom, " calling incont=", incont);
+        console.log("mom_put_jdom_in jdom=", jdom, " calling incont=", incont);
         incont(jdom);
     }
     else
@@ -197,8 +197,8 @@ var momp_entry = {
     realize: function (incont) {
         console.log("MomeEntry-realize start incont=", incont, " this=", this);
         console.trace();
-	console.assert('mom_entry_item' in this && 'mom_entry_val' in this,
-		       "MomeEntry-realize bad this:", this);
+        console.assert('mom_entry_item' in this && 'mom_entry_val' in this,
+                       "MomeEntry-realize bad this:", this);
         var eattelem = $("<dt class='statattr_cl'></dt>");
         var evalelem = $("<dd class='statval_cl'></dd>");
         var self = this;
@@ -309,11 +309,12 @@ var momp_item_value = {
     name: "MomeItemValue",
     realize: function (incont,fromast) {
         console.log ("MomeItemValue-realize this=", this, " incont=", incont, " fromast=", fromast);
-	var self = this;
-        var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.item_name +"</span>");
+        console.assert ('mom_item_name' in this, "MomeItemValue-realize bad this=", this);
+        var self = this;
+        var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.mom_item_name +"</span>");
         console.log ("MomeItemValue-realize this=", this, " eitmelem=", eitmelem);
-	mom_put_jdom_in(eitmelem,incont);
-	mom_set_jdom_for_ast(eitmelem,this);
+        mom_put_jdom_in(eitmelem,incont);
+        mom_set_jdom_for_ast(eitmelem,this);
         console.log("MomeItemValue-realize done incont=", incont,
                     " fromast=", fromast, " this=", this, " eitmelem=", eitmelem);
     }
