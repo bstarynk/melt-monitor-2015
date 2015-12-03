@@ -308,8 +308,13 @@ var momp_item_value = {
     name: "MomeItemValue",
     realize: function (incont,fromast) {
         console.log ("MomeItemValue-realize this=", this, " incont=", incont, " fromast=", fromast);
-        console.error("MomeItemValue-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+	var self = this;
+        var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.item_name +"</span>");
+        console.log ("MomeItemValue-realize this=", this, " eitmelem=", eitmelem);
+	mom_put_jdom_in(incont,eitmelem);
+	mom_set_jdom_for_ast(eitmelem,this);
+        console.log("MomeItemValue-realize done incont=", incont,
+                    " fromast=", fromast, " this=", this, " eitmelem=", eitmelem);
     }
 };
 function MomeItemValue(iname) {
