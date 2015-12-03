@@ -160,11 +160,11 @@ function mome_generated(msg) {
 };                              // end mome_generated
 
 
-function mom_set_dom_for_ast(ast,jdom) {
-    console.log("mom_set_dom_for_ast ast=", ast, " jdom=", jdom);
-    console.assert(jdom instanceof jQuery, "mom_set_dom_for_ast bad jdom=",
-                   dom);
-    console.assert("mom_ast" in ast, "mom_set_dom_for_ast bad ast=", ast);
+function mom_set_jdom_for_ast(jdom,ast) {
+    console.log("mom_set_jdom_for_ast jdom=", jdom, " ast=", ast);
+    console.assert(jdom instanceof jQuery, "mom_set_jdom_for_ast bad jdom=",
+                   jdom);
+    console.assert("mom_ast" in ast, "mom_set_jdom_for_ast bad ast=", ast);
     ast.mom_jdom = jdom;
     jdom.data("mom_ast", ast);
 };
@@ -178,7 +178,9 @@ function mom_put_jdom_in(jdom,incont) {
     else if (typeof incont=='function') {
         incont(jdom);
     }
-    else console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
+    else
+        console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
+    //console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
 };
 
 ////////////////
@@ -193,18 +195,23 @@ var momp_entry = {
     realize: function (incont) {
         console.log("MomeEntry-realize start incont=", incont, " this=", this);
         console.trace();
+	console.assert('mom_entry_item' in this && 'mom_entry_val' in this,
+		       "MomeEntry-realize bad this:", this);
         var eattelem = $("<dt class='statattr_cl'></dt>");
         var evalelem = $("<dd class='statval_cl'></dd>");
         var self = this;
         var thisitem = this.mom_entry_item;
         var thisval = this.mom_entry_val;
         console.log("MomeEntry-realize this=", this,
-                    " eattelem=", eattelem, " evalelem=", evalelem);
+                    " eattelem=", eattelem, " evalelem=", evalelem, " thisitem=", thisitem);
         thisitem.realize(eattelem,self);
+        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " incont=", incont);
         mom_put_jdom_in(incont,eattelem);
+        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " thisval=", thisval, " evalitem=", evalitem);
         thisval.realize(evalitem,self);
+        console.log("MomeEntry-realize this=", this, " evalelem=", evalelem);
         mom_put_jdom_in(incont,evalelem);
-        console.log("MomeEntry-realize end this=", this);
+        console.log("MomeEntry-realize end this=", this, " incont=", incont, " eattelem=", eattelem, " evalelem=", evalelem);
     }
 };
 MomeEntry.prototype = momp_entry;
@@ -228,8 +235,17 @@ var momp_value = {
 var momp_item_ref = {
     name: "MomeItemRef",
     realize: function (incont,fromast) {
-        console.error("MomeItemRef-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+        var self = this;
+        console.log("MomeItemRef-realize start incont=", incont, " of type:", typeof incont,
+                    " fromast=", fromast, " this=", this);
+        console.assert (incont instanceof jQuery || typeof incont === 'function',
+                        "MomeItemRef-realize bad incont=", incont);
+        console.assert ('mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
+                        fromast);
+        var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
+        mom_put_jdom_in(incont,eitelem);
+        mom_set_jdom_for_ast(eitelem,this);
+        console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
     }
 };
 function MomeItemRef(iname) {
@@ -269,6 +285,7 @@ function mome_nil_val() { /// a nil value
 var momp_nil_ref = {
     name: "MomeNilRef",
     realize: function (incont,fromast) {
+        console.log ("MomeNilRef-realize this=", this);
         console.error("MomeNilRef-realize unimplemented incont=", incont, " fromast=", fromast,
                       " this=", this);
     }
@@ -289,6 +306,7 @@ function mome_nil_ref() {       /// a nil item reference
 var momp_item_value = {
     name: "MomeItemValue",
     realize: function (incont,fromast) {
+        console.log ("MomeItemValue-realize this=", this, " incont=", incont, " fromast=", fromast);
         console.error("MomeItemValue-realize unimplemented incont=", incont,
                       " fromast=", fromast, " this=", this);
     }
