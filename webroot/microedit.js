@@ -233,6 +233,80 @@ var momp_value = {
 };
 ////////////////////////////////////////////////////////////////
 
+var momp_name_ref = {
+    name: "MomeNameRef",
+    oniteminput: function (ev) {
+        var data = ev.data;
+        console.log("MomeNameRef-oniteminput this=", this, " ev=", ev, " data=", data);
+    },
+    onitemchange: function (ev) {
+        var data = ev.data;
+        console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
+    },
+    onitemblur: function (ev) {
+        var data = ev.data;
+        console.log("MomeNameRef-onitemblur this=", this, " ev=", ev, " data=", data);
+    },
+    onitemfocus: function (ev) {
+        var data = ev.data;
+        console.log("MomeNameRef-onitemfocus this=", this, " ev=", ev, " data=", data);
+    },
+    itemautocomplete: function(requ, respfun) {
+        var compl = null;
+        console.log ("MomeNameRef-itemautocomplete start requ=", requ, " respfun=", respfun);
+        compl = mom_complete_name(requ.term);
+        console.log ("MomeNameRef-itemautocomplete compl=", compl, " for term=", requ.term);
+        if (compl) respfun(compl);
+        else respfun("");
+    },
+    replace_by_item_input: function (str) {
+        console.log("MomeNameRef-replace_by_item_input this=", this, " str=", str);
+        var einput = $("<input class='mom_item_input_cl' type='text' pattern='^[A-Za-z0-9_]*$'/>");
+        einput.val(str);
+        einput.on("input", null, this, this.oniteminput);
+        einput.on("change", null, this, this.onitemchange);
+        einput.on("blur", null, this, this.onitemblur);
+        einput.on("focus", null, this, this.onitemfocus);
+        this.mom_jdom.replaceWith(einput);
+        einput.autocomplete({
+            minLength:2,
+            source: this.itemautocomplete
+        });
+        console.log("MomeNameRef-replace_by_item_input this=", this, " einput=", einput);
+        einput.focus();
+        if (str.length>0)
+            einput[0].setSelectionRange(str.length,str.length);
+        console.log("MomeNameRef-replace_by_item_input done this=", this,
+                    " einput=", einput, " activeElement=", document.activeElement);
+    },
+    gotkeyup: function (ev) {
+        var self = this;
+        var data = ev.data;
+        console.log("MomeNameRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
+                    " charCode=", ev.charCode, " key=", ev.key, " this=", this, " data=", data);
+        if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
+            console.log("MomeNameRef-gotkeyup space ev=", ev, " this=", this, " $(this)=", $(this));
+            console.assert(data.replace_by_item_input, "MomeNameRef-gotkeyup for replace_by_item_input bad data=", data);
+            data.replace_by_item_input("");
+        }
+        else if (/[A-Za-z]/.test(String.fromCharCode(ev.which)) && !ev.ctrlKey && !ev.metaKey) { // letter
+            var kstr = null;
+            if ('key' in ev)
+                kstr = ev.key;
+            else
+                kstr = String.fromCharCode(ev.which);
+            console.log("MomeNameRef-gotkeyup letter ev=", ev, " this=", this, " kstr=`", kstr, "'");
+            data.replace_by_item_input(kstr);
+        }
+        else if (ev.which == $.ui.keyCode.ESCAPE && !ev.ctrlKey && !ev.metaKey) { // escape
+            console.log("MomeNameRef-gotkeyup escape ev=", ev, " this=", this);
+        }
+        else {
+            console.log("MomeNameRef-gotkeyup ordinary ignored ev=", ev, " this=", this);
+            return false;
+        }
+    }
+};
 
 var momp_item_ref = {
     name: "MomeItemRef",
@@ -247,52 +321,14 @@ var momp_item_ref = {
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
         mom_put_jdom_in(eitelem,incont);
         mom_set_jdom_for_ast(eitelem,this);
-	/// dont handle keypress, but keyup, see http://stackoverflow.com/a/28502629/841108
-	/// maybe we want to use http://dmauro.github.io/Keypress/
-	/// see also http://unixpapa.com/js/key.html & http://www.openjs.com/scripts/events/keyboard_shortcuts/
-	/// and avoid functionkeys e.g. F1, see http://unixpapa.com/js/key.html
-	eitelem.on("keyup", null, this, this.gotkeyup);
+        /// dont handle keypress, but keyup, see http://stackoverflow.com/a/28502629/841108
+        /// maybe we want to use http://dmauro.github.io/Keypress/
+        /// see also http://unixpapa.com/js/key.html & http://www.openjs.com/scripts/events/keyboard_shortcuts/
+        /// and avoid functionkeys e.g. F1, see http://unixpapa.com/js/key.html
+        eitelem.on("keyup", null, this, this.gotkeyup);
         console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
     },
-    oniteminput: function (ev) {
-        console.log("MomeItemRef-oniteminput this=", this, " ev=", ev);
-    },
-    onitemchange: function (ev) {
-        console.log("MomeItemRef-onitemchange this=", this, " ev=", ev);
-    },
-    replace_by_item_input: function (str) {
-        console.log("MomeItemRef-replace_by_item_input this=", this, " str=", str);
-	var einput = $("<input class='mom_item_input_cl' type='text' pattern='^[A-Za-z0-9_]*$'/>");
-	einput.val(str);
-	einput.on("input", null, this, this.oniteminput);
-	einput.on("change", null, this, this.onitemchange);
-	this.mom_jdom.replaceWith(einput);
-        console.log("MomeItemRef-replace_by_item_input this=", this, " einput=", einput);
-	einput.focus();
-        console.log("MomeItemRef-replace_by_item_input done this=", this, " einput=", einput);
-    },
-    gotkeyup: function (ev) {
-        var self = this;
-	var data = ev.data;
-        console.log("MomeItemRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
-		    " charCode=", ev.charCode, " key=", ev.key, " this=", this, " data=", data);
-	if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
-	    console.log("MomeItemRef-gotkeyup space ev=", ev, " this=", this, " $(this)=", $(this));
-	    console.assert(data.replace_by_item_input, "MomeItemRef-gotkeyup for replace_by_item_input bad data=", data);
-	    data.replace_by_item_input("");
-	}
-	else if (/[A-Za-z]/.test(String.fromCharCode(ev.which)) && !ev.ctrlKey && !ev.metaKey) { // letter
-	    console.log("MomeItemRef-gotkeyup letter ev=", ev, " this=", this);
-	    data.replace_by_item_input(String.fromCharCode(ev.which));
-	}
-	else if (ev.which == $.ui.keyCode.ESCAPE && !ev.ctrlKey && !ev.metaKey) { // escape
-	    console.log("MomeItemRef-gotkeyup escape ev=", ev, " this=", this);
-	}
-	else {
-	    console.log("MomeItemRef-gotkeyup ordinary ignored ev=", ev, " this=", this);
-	    return false;
-	}
-    }
+    __proto__: momp_name_ref
 };
 function MomeItemRef(iname) {
     this.mom_item_name = iname;
