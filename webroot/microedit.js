@@ -241,7 +241,27 @@ var momp_name_ref = {
     },
     onitemchange: function (ev) {
         var data = ev.data;
+	var str = null;
         console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
+	str = $(this).val();
+	console.log("MomeNameRef-onitemchange this=", this, " str=", str);
+	if (mom_known_item(str)) {
+	    var self = this;
+	    console.log("MomeNameRef-onitemchange this=", this, " known str=", str);
+	    self.__proto__ = momp_item_ref;
+	    console.log("MomeNameRef-onitemchange mutated self=", self);	    
+	    self.realize(function (del) {
+		console.log("MomeNameRef replace/realize onitemchange self=", self,
+			    " data=", data, " this=", this,
+			    " del=", del);
+		$(data).replaceWith(del);
+		console.log("MomeNameRef done replace onitemchange self=", self, ' data=', data);
+	    }, null);
+	    console.log("MomeNameRef-onitemchange updated self=", self);
+	}
+	else {
+	    console.log("MomeNameRef-onitemchange this=", this, " unknown str=", str);
+	}
     },
     onitemblur: function (ev) {
         var data = ev.data;
@@ -316,11 +336,13 @@ var momp_item_ref = {
                     " fromast=", fromast, " this=", this);
         console.assert (incont instanceof jQuery || typeof incont === 'function',
                         "MomeItemRef-realize bad incont=", incont);
-        console.assert ('mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
+        console.assert (!fromast || 'mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
                         fromast);
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
         mom_put_jdom_in(eitelem,incont);
         mom_set_jdom_for_ast(eitelem,this);
+	if (fromast && !('mom_from_ast' in this))
+	    this.mom_from_ast = fromast;
         /// dont handle keypress, but keyup, see http://stackoverflow.com/a/28502629/841108
         /// maybe we want to use http://dmauro.github.io/Keypress/
         /// see also http://unixpapa.com/js/key.html & http://www.openjs.com/scripts/events/keyboard_shortcuts/
