@@ -182,7 +182,7 @@ function mom_put_jdom_in(jdom,incont) {
     }
     else
         console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
-    //console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
+    console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
 };
 
 ////////////////
@@ -252,7 +252,8 @@ var momp_name_ref = {
 	    console.log("MomeNameRef-onitemchange mutated self=", self);	    
 	    self.realize(function (del) {
 		console.log("MomeNameRef replace/realize onitemchange self=", self,
-			    " data=", data, " this=", this,
+			    " data=", data, " $(data)=", $(data),
+			    " this=", this,
 			    " del=", del);
 		$(data).replaceWith(del);
 		console.log("MomeNameRef done replace onitemchange self=", self, ' data=', data);
