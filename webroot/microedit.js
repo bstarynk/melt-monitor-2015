@@ -243,20 +243,24 @@ var momp_name_ref = {
         var data = ev.data;
         var str = null;
         console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
-        str = $(this).val();
-        console.log("MomeNameRef-onitemchange this=", this, " str=", str);
+	var jthis = $(this);
+        str = jthis.val();
+        console.log("MomeNameRef-onitemchange this=", this, " jthis=", jthis, " str=", str);
         if (mom_known_item(str)) {
             var self = this;
             console.log("MomeNameRef-onitemchange this=", this, " known str=", str);
             self.__proto__ = momp_item_ref;
-            console.log("MomeNameRef-onitemchange mutated self=", self);
+            console.log("MomeNameRef-onitemchange mutated self=", self,
+			" $(self)=", $(self), " jthis=", jthis);
             self.realize(function (del) {
                 console.log("MomeNameRef replace/realize onitemchange self=", self,
                             " $(self)=", $(self),
                             " data=", data,
+                            " $(data)=", $(data),
                             " this=", this,
+                            " jthis=", jthis,
                             " del=", del);
-                $(self).replaceWith(del);
+                self.replaceWith(del);
                 console.log("MomeNameRef done replace onitemchange self=", self, ' data=', data);
             }, null);
             console.log("MomeNameRef-onitemchange updated self=", self);
@@ -341,7 +345,7 @@ var momp_item_ref = {
         console.assert (!fromast || 'mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
                         fromast);
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
-	console.log("MomeItemRef(realize eitelem=", eitelem, " incont=", incont, " this=", this);
+	console.log("MomeItemRef-realize eitelem=", eitelem, " incont=", incont, " this=", this);
         mom_put_jdom_in(eitelem,incont);
         mom_set_jdom_for_ast(eitelem,this);
         if (fromast && !('mom_from_ast' in this))
