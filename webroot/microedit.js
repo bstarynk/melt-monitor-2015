@@ -519,7 +519,11 @@ var momp_string_value = {
     name: 'MomeStringValue',
     __proto__: momp_value,
     make_jdom: function () {
-        console.error("MomeStringValue-make_jdom unimplemented this=", this);
+	console.assert ('str_val' in this, "MomeStringValue-make_jdom bad this=", this);
+        var estrelem = $("<q class='momstrquote_cl'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.str_val) +"</span></q>");
+        estrelem.data("mom_this", this);
+	console.log("MomeStringValue-make_jdom this=", this, " estrelem=", estrelem);
+	return estrelem;
     }
 };
 function MomeStringValue(sval) {
