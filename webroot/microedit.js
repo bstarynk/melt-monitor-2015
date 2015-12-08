@@ -238,8 +238,24 @@ var momp_name_ref = {
     },
     onitemchange: function (ev) {
         var data = ev.data;
-        var data = ev.data;
-        console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
+	var str = $(this).val();
+        console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data, " str=", str);
+	if (mom_known_item(str)) {
+	    var orig = data.mom_orig;
+	    var self = this;
+	    data.mom_name = str;
+            console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data, " knownitem str=", str);
+	    console.assert('mom_item_name' in orig, "MomeNameRef-onitemchange bad orig=", orig);
+	    orig.mom_item_name = str;
+	    var newel = orig.make_jdom();
+            console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " orig=", orig, " newel=", newel);
+	    $(this).replaceWith(newel);
+            console.log("MomeNameRef-onitemchange this=", this, " done knownitem str=", str, " ev=", ev);
+	}
+	else {
+            console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " unknownitem str=", str);
+	}
+        console.log("MomeNameRef-onitemchange done this=", this, " ev=", ev);
     },
     onitemblur: function (ev) {
         var data = ev.data;
@@ -286,6 +302,20 @@ var momp_name_ref = {
     }
 };
 
+function MomeNameRef(name, orig) {
+    this.mom_name= name;
+    if (orig) {
+	this.mom_orig= orig;
+	this.mom_ast_inum = orig.mom_ast_inum;
+    }
+    else
+	mom_ast_numbered(this);
+    this.mom_ast = "nameref";
+};
+MomeNameRef.prototype = momp_name_ref;
+
+////////////////
+
 var momp_item_ref = {
     name: "MomeItemRef",
     gotfocus: function (ev) {
@@ -295,9 +325,21 @@ var momp_item_ref = {
         console.log("MomeItemRef-gotblur ev=", ev);
     },
     gotkeypress: function (ev) {
-        console.log("MomeItemRef-gotkeypress ev=", ev);
+        console.log("MomeItemRef-gotkeypress ev=", ev, " which=", ev.which);
 	var ast = ev.data;
+	var njdom;
 	console.assert('mom_ast' in ast, "MomeItemRef-gotkeypress bad ast=", ast);
+	if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
+            console.log("MomeItemRef-gotkeyup space ev=", ev, " this=", this, " $(this)=", $(this), " ast=", ast);
+	    var nref = new MomeNameRef(this.mom_item_name, ast);
+	    console.log("MomeItemRef-gotkeyup space ev=", ev, " nref=", nref);
+	    var namelem = nref.make_jdom();
+	    console.log("MomeItemRef-gotkeyup space ev=", ev, " namelem=", namelem, " nref=", nref);
+	    $(this).replaceWith(namelem);
+	    namelem.focus();
+	    console.log("MomeItemRef-gotkeyup space ev=", ev, " done namelem=", namelem);
+	}
+	
     },
     make_jdom: function () {
         var self= this;
