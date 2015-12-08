@@ -243,6 +243,8 @@ var momp_name_ref = {
         var data = ev.data;
         var str = null;
         console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
+	var oldinp = data.mom_jdom;
+	console.log("MomeNameRef-onitemchange this=", this, " oldinp=", oldinp);
 	var jthis = $(this);
         str = jthis.val();
         console.log("MomeNameRef-onitemchange this=", this, " jthis=", jthis, " str=", str);
@@ -259,8 +261,10 @@ var momp_name_ref = {
                             " $(data)=", $(data),
                             " this=", this,
                             " jthis=", jthis,
+			    " oldinp=", oldinp,
                             " del=", del);
-                self.replaceWith(del);
+                oldinp.replaceWith(del);
+		data.mom_jdom = del;
                 console.log("MomeNameRef done replace onitemchange self=", self, ' data=', data);
             }, null);
             console.log("MomeNameRef-onitemchange updated self=", self);
@@ -294,6 +298,7 @@ var momp_name_ref = {
         einput.on("blur", null, this, this.onitemblur);
         einput.on("focus", null, this, this.onitemfocus);
         this.mom_jdom.replaceWith(einput);
+	this.mom_jdom = einput;
         einput.autocomplete({
             minLength:2,
             source: this.itemautocomplete
