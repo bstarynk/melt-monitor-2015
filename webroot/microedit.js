@@ -280,25 +280,38 @@ var momp_name_ref = {
         einput.on("change", null, this, this.onitemchange);
         einput.on("blur", null, this, this.onitemblur);
         einput.on("focus", null, this, this.onitemfocus);
+	einput.data("mom_this", this);
         einput.autocomplete({
             minLength:2,
-            source: this.itemautocomplete
+	    autoFocus: true,
+            source: this.itemautocomplete,
+	    close: this.itemclose,
         });
         console.log("MomeNameRef-make_jdom this=", this, " gives einput=", einput);
         return einput;
     },
     jdom_set_str: function (einp, str) {
         console.log("MomeNameRef-jdom_set_str einp=", einp, " str=", str);
-        einput.val(str);
-        einput.focus();
+        einp.val(str);
+        einp.focus();
         if (str.length>0)
-            einput[0].setSelectionRange(str.length,str.length);
+            einp[0].setSelectionRange(str.length,str.length);
     },
-    gotkeyup: function (ev) {
-        var self = this;
-        var data = ev.data;
-        console.log("MomeNameRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
-                    " charCode=", ev.charCode, " key=", ev.key, " this=", this, " data=", data);
+    itemclose: function (ev) {
+        console.log("MomeNameRef-itemclose this=", this, " ev=", ev);
+	var origev = ev.originalEvent;
+	var data, orig;
+	if (origev.keyCode === $.ui.keyCode.ESCAPE) {
+	    /// see https://forum.jquery.com/topic/jquery-s-autocomplete-customize-behavior-of-%E2%80%9Cescape%E2%80%9D-key-press
+            console.log("MomeNameRef-itemclose this=", this, " escaped ev=", ev, " origev=", origev);
+	    data = $(this).data("mom_this");
+            console.log("MomeNameRef-itemclose this=", this, " escaped ev=", ev, " data=", data);
+	    orig = data.mom_orig;
+	    var elorig = erig.make_jdom();
+            console.log("MomeNameRef-itemclose this=", this, " escaped ev=", ev, " orig=", orig, " elorig=", elorig);
+	    $(this).replaceWith(elorig);
+	    return false;	    
+	}
     }
 };
 
@@ -349,6 +362,7 @@ var momp_item_ref = {
         eitelem.on("blur", null, this, this.gotblur);
         eitelem.on("focus", null, this, this.gotfocus);
         eitelem.on("keypress", null, this, this.gotkeypress);
+	eitelem.data("mom_this", this);
         console.log("MomeItemRef-make_jdom eitelem=", eitelem);
         return eitelem;
     },
@@ -414,6 +428,7 @@ var momp_item_value = {
         var self = this;
         var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.mom_item_name +"</span>");
         console.log ("MomeItemValue-make_jdom this=", this, " eitmelem=", eitmelem);
+	eitmelem.data("mom_this", this);
         return eitmelem;
     }
 };
