@@ -146,7 +146,8 @@ function mome_entries(entarr) {
     for (var ix=0; ix<nbent; ix++) {
         curent = entarr[ix];
         console.log("mome_entries curent=", curent, " ix#", ix);
-        curent.realize(entdl);
+        curent.realize_entry(entdl);
+        console.log("mome_entries realized curent=", curent);
         curent = null;
     };
     console.log("mome_entries entdl=", entdl, " $editdiv=", $editdiv, " entarr=", entarr);
@@ -160,16 +161,8 @@ function mome_generated(msg) {
 };                              // end mome_generated
 
 
-function mom_set_jdom_for_ast(jdom,ast) {
-    console.log("mom_set_jdom_for_ast jdom=", jdom, " ast=", ast);
-    console.assert(jdom instanceof jQuery, "mom_set_jdom_for_ast bad jdom=",
-                   jdom);
-    console.assert("mom_ast" in ast, "mom_set_jdom_for_ast bad ast=", ast);
-    ast.mom_jdom = jdom;
-    jdom.data("mom_ast", ast);
-};
-
 function mom_put_jdom_in(jdom,incont) {
+    console.log("mom_put_jdom_in jdom=", jdom, " incont=", incont);
     console.trace();
     console.assert (jdom instanceof jQuery, "mom_put_jdom_in bad jdom=", jdom);
     if (incont instanceof jQuery) {
@@ -194,26 +187,32 @@ function MomeEntry(entitm,entval) {
 };
 var momp_entry = {
     name: "MomeEntry",
-    realize: function (incont) {
-        console.log("MomeEntry-realize start incont=", incont, " this=", this);
+    realize_entry: function (incont) {
+        console.log("MomeEntry-realize_entry start incont=", incont, " this=", this);
         console.trace();
         console.assert('mom_entry_item' in this && 'mom_entry_val' in this,
-                       "MomeEntry-realize bad this:", this);
+                       "MomeEntry-realize_entry bad this:", this);
         var eattelem = $("<dt class='statattr_cl'></dt>");
         var evalelem = $("<dd class='statval_cl'></dd>");
         var self = this;
         var thisitem = this.mom_entry_item;
         var thisval = this.mom_entry_val;
-        console.log("MomeEntry-realize this=", this,
+	var elemitem;
+	var elemval;
+        console.log("MomeEntry-realize_entry this=", this,
                     " eattelem=", eattelem, " evalelem=", evalelem, " thisitem=", thisitem);
-        thisitem.realize(eattelem,self);
-        console.log("MomeEntry-realize this=", this, " thisitem=", thisitem, " incont=", incont, " eattelem=", eattelem);
+	elemitem = thisitem.make_jdom();
+	console.log("MomeEntry-realize_entry this=", this, " elemitem=", elemitem);
+	mom_put_jdom_in(elemitem, eattelem);
+        console.log("MomeEntry-realize_entry this=", this, " thisitem=", thisitem, " elemitem=", elemitem, " eattelem=", eattelem);
         mom_put_jdom_in(eattelem,incont);
-        console.log("MomeEntry-realize this=", this, " thisval=", thisval, " evalelem=", evalelem);
-        thisval.realize(evalelem,self);
-        console.log("MomeEntry-realize this=", this, " evalelem=", evalelem);
+        console.log("MomeEntry-realize_entry this=", this, " thisval=", thisval, " evalelem=", evalelem);
+        elemval = thisval.make_jdom();
+        console.log("MomeEntry-realize_entry this=", this, " elemval=", elemval, " evalelem=", evalelem);
+        mom_put_jdom_in(elemval,evalelem);
         mom_put_jdom_in(evalelem,incont);
-        console.log("MomeEntry-realize end this=", this, " incont=", incont, " eattelem=", eattelem, " evalelem=", evalelem);
+        console.log("MomeEntry-realize_entry end this=", this, " incont=", incont,
+		    " eattelem=", eattelem, " evalelem=", evalelem);
     }
 };
 MomeEntry.prototype = momp_entry;
@@ -227,9 +226,7 @@ function mome_entry(entitm,entval) {
 
 var momp_value = {
     name: "MompValue",
-    realize: function (incont,fromast) {
-        console.error("MomeValue-realize bad incont=", incont, " fromast=", fromast);
-    }
+    make_jdom: function () { console.error("MompValue bad make_jdom arguments=", arguments); }
 };
 ////////////////////////////////////////////////////////////////
 
@@ -241,37 +238,8 @@ var momp_name_ref = {
     },
     onitemchange: function (ev) {
         var data = ev.data;
-        var str = null;
+        var data = ev.data;
         console.log("MomeNameRef-onitemchange this=", this, " ev=", ev, " data=", data);
-	var oldinp = data.mom_jdom;
-	console.log("MomeNameRef-onitemchange this=", this, " oldinp=", oldinp);
-	var jthis = $(this);
-        str = jthis.val();
-        console.log("MomeNameRef-onitemchange this=", this, " jthis=", jthis, " str=", str);
-        if (mom_known_item(str)) {
-            var self = this;
-            console.log("MomeNameRef-onitemchange this=", this, " known str=", str);
-            self.__proto__ = momp_item_ref;
-            console.log("MomeNameRef-onitemchange mutated self=", self,
-			" $(self)=", $(self), " jthis=", jthis);
-            self.realize(function (del) {
-                console.log("MomeNameRef replace/realize onitemchange self=", self,
-                            " $(self)=", $(self),
-                            " data=", data,
-                            " $(data)=", $(data),
-                            " this=", this,
-                            " jthis=", jthis,
-			    " oldinp=", oldinp,
-                            " del=", del);
-                oldinp.replaceWith(del);
-		data.mom_jdom = del;
-                console.log("MomeNameRef done replace onitemchange self=", self, ' data=', data);
-            }, null);
-            console.log("MomeNameRef-onitemchange updated self=", self);
-        }
-        else {
-            console.log("MomeNameRef-onitemchange this=", this, " unknown str=", str);
-        }
     },
     onitemblur: function (ev) {
         var data = ev.data;
@@ -289,78 +257,44 @@ var momp_name_ref = {
         if (compl) respfun(compl);
         else respfun("");
     },
-    replace_by_item_input: function (str) {
-        console.log("MomeNameRef-replace_by_item_input this=", this, " str=", str);
+    make_jdom: function () {
+        console.log("MomeNameRef-make_jdom this=", this);
         var einput = $("<input class='mom_item_input_cl' type='text' pattern='^[A-Za-z0-9_]*$'/>");
-        einput.val(str);
         einput.on("input", null, this, this.oniteminput);
         einput.on("change", null, this, this.onitemchange);
         einput.on("blur", null, this, this.onitemblur);
         einput.on("focus", null, this, this.onitemfocus);
-        this.mom_jdom.replaceWith(einput);
-	this.mom_jdom = einput;
         einput.autocomplete({
             minLength:2,
             source: this.itemautocomplete
         });
-        console.log("MomeNameRef-replace_by_item_input this=", this, " einput=", einput);
+        console.log("MomeNameRef-make_jdom this=", this, " gives einput=", einput);
+	return einput;
+    },
+    jdom_set_str: function (einp, str) {
+	console.log("MomeNameRef-jdom_set_str einp=", einp, " str=", str);
+        einput.val(str);
         einput.focus();
         if (str.length>0)
             einput[0].setSelectionRange(str.length,str.length);
-        console.log("MomeNameRef-replace_by_item_input done this=", this,
-                    " einput=", einput, " activeElement=", document.activeElement);
     },
     gotkeyup: function (ev) {
         var self = this;
         var data = ev.data;
         console.log("MomeNameRef-gotkeyup self=", self, " ev=", ev, " which=", ev.which, " keyCode=", ev.keyCode,
                     " charCode=", ev.charCode, " key=", ev.key, " this=", this, " data=", data);
-        if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
-            console.log("MomeNameRef-gotkeyup space ev=", ev, " this=", this, " $(this)=", $(this));
-            console.assert(data.replace_by_item_input, "MomeNameRef-gotkeyup for replace_by_item_input bad data=", data);
-            data.replace_by_item_input("");
-        }
-        else if (/[A-Za-z]/.test(String.fromCharCode(ev.which)) && !ev.ctrlKey && !ev.metaKey) { // letter
-            var kstr = null;
-            if ('key' in ev)
-                kstr = ev.key;
-            else
-                kstr = String.fromCharCode(ev.which);
-            console.log("MomeNameRef-gotkeyup letter ev=", ev, " this=", this, " kstr=`", kstr, "'");
-            data.replace_by_item_input(kstr);
-        }
-        else if (ev.which == $.ui.keyCode.ESCAPE && !ev.ctrlKey && !ev.metaKey) { // escape
-            console.log("MomeNameRef-gotkeyup escape ev=", ev, " this=", this);
-        }
-        else {
-            console.log("MomeNameRef-gotkeyup ordinary ignored ev=", ev, " this=", this);
-            return false;
-        }
     }
 };
 
 var momp_item_ref = {
     name: "MomeItemRef",
-    realize: function (incont,fromast) {
-        var self = this;
-        console.log("MomeItemRef-realize start incont=", incont, " of type:", typeof incont,
-                    " fromast=", fromast, " this=", this);
-        console.assert (incont instanceof jQuery || typeof incont === 'function',
-                        "MomeItemRef-realize bad incont=", incont);
-        console.assert (!fromast || 'mom_ast' in fromast, "MomeItemRef-realize bad fromast=",
-                        fromast);
+    make_jdom: function () {
+	var self= this;
+	console.log("MomeItemRef-make_jdom start self=", self);
+	console.assert ('mom_item_name' in self, "MomeItemRef-make_jdom bad self=", self);
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
-	console.log("MomeItemRef-realize eitelem=", eitelem, " incont=", incont, " this=", this);
-        mom_put_jdom_in(eitelem,incont);
-        mom_set_jdom_for_ast(eitelem,this);
-        if (fromast && !('mom_from_ast' in this))
-            this.mom_from_ast = fromast;
-        /// dont handle keypress, but keyup, see http://stackoverflow.com/a/28502629/841108
-        /// maybe we want to use http://dmauro.github.io/Keypress/
-        /// see also http://unixpapa.com/js/key.html & http://www.openjs.com/scripts/events/keyboard_shortcuts/
-        /// and avoid functionkeys e.g. F1, see http://unixpapa.com/js/key.html
-        eitelem.on("keyup", null, this, this.gotkeyup);
-        console.log("MomeItemRef-realize end this=", this, " eitelem=", eitelem);
+	console.log("MomeItemRef-make_jdom eitelem=", eitelem);
+	return eitelem;
     },
     __proto__: momp_name_ref
 };
@@ -380,9 +314,8 @@ function mome_item_ref(itmname) {
 ////////////////
 var momp_nil_value = {
     name: "MomeNilValue",
-    realize: function (incont,fromast) {
-        console.error("MomeNilValue-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+    make_jdom: function () {
+        console.error("MomeNilValue-make_jdom unimplemented this=", this);
     }
 };
 function MomeNilValue() {
@@ -400,10 +333,8 @@ function mome_nil_val() { /// a nil value
 ////////////////
 var momp_nil_ref = {
     name: "MomeNilRef",
-    realize: function (incont,fromast) {
-        console.log ("MomeNilRef-realize this=", this);
-        console.error("MomeNilRef-realize unimplemented incont=", incont, " fromast=", fromast,
-                      " this=", this);
+    make_jdom: function() {
+        console.error("MomeNilRef-make_jdom unimplemented this=", this);
     }
 };
 function MomeNilRef() {
@@ -421,16 +352,13 @@ function mome_nil_ref() {       /// a nil item reference
 
 var momp_item_value = {
     name: "MomeItemValue",
-    realize: function (incont,fromast) {
-        console.log ("MomeItemValue-realize this=", this, " incont=", incont, " fromast=", fromast);
-        console.assert ('mom_item_name' in this, "MomeItemValue-realize bad this=", this);
+    make_jdom: function() {
+        console.log ("MomeItemValue-make_jdom this=", this);
+	console.assert('mom_item_name' in this, "MomeItemValue-make_jdom bad this=", this);
         var self = this;
         var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.mom_item_name +"</span>");
-        console.log ("MomeItemValue-realize this=", this, " eitmelem=", eitmelem);
-        mom_put_jdom_in(eitmelem,incont);
-        mom_set_jdom_for_ast(eitmelem,this);
-        console.log("MomeItemValue-realize done incont=", incont,
-                    " fromast=", fromast, " this=", this, " eitmelem=", eitmelem);
+        console.log ("MomeItemValue-make_jdom this=", this, " eitmelem=", eitmelem);
+	return eitmelem;
     }
 };
 function MomeItemValue(iname) {
@@ -452,9 +380,8 @@ function mome_item_val(itemname) { /// a nil value
 ////////////////
 var momp_number_value = {
     name: "momp-number-value",
-    realize:function (incont,fromast) {
-        console.error("momp-number-value-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+    make_jdom: function () {
+        console.error("momp-number-value-make_jdom unimplemented this=", this);
     }
 }
 ////////////////
@@ -499,9 +426,8 @@ function mome_double (num) {
 var momp_string_value = {
     name: 'MomeStringValue',
     __proto__: momp_value,
-    realize: function (incont,fromast) {
-        console.error("MomeStringValue-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+    make_jdom: function () {
+        console.error("MomeStringValue-make_jdom unimplemented this=", this);
     }
 };
 function MomeStringValue(sval) {
@@ -523,9 +449,8 @@ function mome_string (str) {
 var momp_sequence_value = {
     name: 'momp-sequence-value',
     __proto__: momp_value,
-    realize: function (incont,fromast) {
-        console.error("momp-sequence-value-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+    make_jdom: function () {
+        console.error("MomeSequenceValue-make_jdom unimplemented this=", this);
     }
 };
 
@@ -571,9 +496,8 @@ function mome_set (arr) {
 var momp_node_value = {
     __proto__: momp_value,
     name: "MomeNodeValue",
-    realize: function (incont,fromast) {
-        console.error("MomeNodeValue-realize unimplemented incont=", incont,
-                      " fromast=", fromast, " this=", this);
+    make_jdom: function () {
+        console.error("MomeNodeValue-make_jdom unimplemented this=", this);
     }
 };
 function MomeNodeValue(conn,sons) {
