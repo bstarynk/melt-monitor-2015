@@ -197,13 +197,13 @@ var momp_entry = {
         var self = this;
         var thisitem = this.mom_entry_item;
         var thisval = this.mom_entry_val;
-	var elemitem;
-	var elemval;
+        var elemitem;
+        var elemval;
         console.log("MomeEntry-realize_entry this=", this,
                     " eattelem=", eattelem, " evalelem=", evalelem, " thisitem=", thisitem);
-	elemitem = thisitem.make_jdom();
-	console.log("MomeEntry-realize_entry this=", this, " elemitem=", elemitem);
-	mom_put_jdom_in(elemitem, eattelem);
+        elemitem = thisitem.make_jdom();
+        console.log("MomeEntry-realize_entry this=", this, " elemitem=", elemitem);
+        mom_put_jdom_in(elemitem, eattelem);
         console.log("MomeEntry-realize_entry this=", this, " thisitem=", thisitem, " elemitem=", elemitem, " eattelem=", eattelem);
         mom_put_jdom_in(eattelem,incont);
         console.log("MomeEntry-realize_entry this=", this, " thisval=", thisval, " evalelem=", evalelem);
@@ -212,7 +212,7 @@ var momp_entry = {
         mom_put_jdom_in(elemval,evalelem);
         mom_put_jdom_in(evalelem,incont);
         console.log("MomeEntry-realize_entry end this=", this, " incont=", incont,
-		    " eattelem=", eattelem, " evalelem=", evalelem);
+                    " eattelem=", eattelem, " evalelem=", evalelem);
     }
 };
 MomeEntry.prototype = momp_entry;
@@ -269,10 +269,10 @@ var momp_name_ref = {
             source: this.itemautocomplete
         });
         console.log("MomeNameRef-make_jdom this=", this, " gives einput=", einput);
-	return einput;
+        return einput;
     },
     jdom_set_str: function (einp, str) {
-	console.log("MomeNameRef-jdom_set_str einp=", einp, " str=", str);
+        console.log("MomeNameRef-jdom_set_str einp=", einp, " str=", str);
         einput.val(str);
         einput.focus();
         if (str.length>0)
@@ -288,13 +288,27 @@ var momp_name_ref = {
 
 var momp_item_ref = {
     name: "MomeItemRef",
+    gotfocus: function (ev) {
+        console.log("MomeItemRef-gotfocus ev=", ev);
+    },
+    gotblur: function (ev) {
+        console.log("MomeItemRef-gotblur ev=", ev);
+    },
+    gotkeypress: function (ev) {
+        console.log("MomeItemRef-gotkeypress ev=", ev);
+	var ast = ev.data;
+	console.assert('mom_ast' in ast, "MomeItemRef-gotkeypress bad ast=", ast);
+    },
     make_jdom: function () {
-	var self= this;
-	console.log("MomeItemRef-make_jdom start self=", self);
-	console.assert ('mom_item_name' in self, "MomeItemRef-make_jdom bad self=", self);
+        var self= this;
+        console.log("MomeItemRef-make_jdom start self=", self);
+        console.assert ('mom_item_name' in self, "MomeItemRef-make_jdom bad self=", self);
         var eitelem = $("<span class='momitem_bcl momitemref_cl' tabindex='0'>"+this.mom_item_name+"</span>");
-	console.log("MomeItemRef-make_jdom eitelem=", eitelem);
-	return eitelem;
+        eitelem.on("blur", null, this, this.gotblur);
+        eitelem.on("focus", null, this, this.gotfocus);
+        eitelem.on("keypress", null, this, this.gotkeypress);
+        console.log("MomeItemRef-make_jdom eitelem=", eitelem);
+        return eitelem;
     },
     __proto__: momp_name_ref
 };
@@ -354,11 +368,11 @@ var momp_item_value = {
     name: "MomeItemValue",
     make_jdom: function() {
         console.log ("MomeItemValue-make_jdom this=", this);
-	console.assert('mom_item_name' in this, "MomeItemValue-make_jdom bad this=", this);
+        console.assert('mom_item_name' in this, "MomeItemValue-make_jdom bad this=", this);
         var self = this;
         var eitmelem = $("<span class='mom_item_bcl momitemval_cl' tabindex='0'>"+ this.mom_item_name +"</span>");
         console.log ("MomeItemValue-make_jdom this=", this, " eitmelem=", eitmelem);
-	return eitmelem;
+        return eitmelem;
     }
 };
 function MomeItemValue(iname) {
