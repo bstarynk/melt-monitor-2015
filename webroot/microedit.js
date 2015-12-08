@@ -385,8 +385,12 @@ function mome_item_ref(itmname) {
 var momp_nil_value = {
     name: "MomeNilValue",
     make_jdom: function () {
-        console.error("MomeNilValue-make_jdom unimplemented this=", this);
-    }
+        var enilelem = $("<span class='momval_bcl momemptyval_cl' tabindex='0'>~</span>");
+        enilelem.data("mom_this", this);
+        console.log("MomeNilValue-make_jdom this=", this, " enilelem=", enilelem);
+	return enilelem;
+    },
+    __proto__: momp_value
 };
 function MomeNilValue() {
     mom_ast_numbered(this);
@@ -404,8 +408,13 @@ function mome_nil_val() { /// a nil value
 var momp_nil_ref = {
     name: "MomeNilRef",
     make_jdom: function() {
-        console.error("MomeNilRef-make_jdom unimplemented this=", this);
-    }
+        console.error("MomeNilRef-make_jdom this=", this);
+        var enilelem = $("<span class=' mom_item_bcl momrefnil_cl' tabindex='0'>~</span>");
+        enilelem.data("mom_this", this);
+        console.error("MomeNilRef-make_jdom this=", this, " enilelem=", enilelem);
+	return enilelem;
+    },
+    __proto__: momp_item_ref
 };
 function MomeNilRef() {
     mom_ast_numbered(this);
@@ -452,13 +461,19 @@ function mome_item_val(itemname) { /// a nil value
 var momp_number_value = {
     name: "momp-number-value",
     make_jdom: function () {
-        console.error("momp-number-value-make_jdom unimplemented this=", this);
+        console.error("momp-number-value-make_jdom this=", this);
     }
 }
 ////////////////
 var momp_int_value = {
     name: "MomeIntValue",
-    __proto__: momp_number_value
+    __proto__: momp_number_value,
+    make_jdom: function () {
+        var eintelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.int_val.toString() +"</span>");
+        eintelem.data("mom_this", this);
+	console.log("MomeIntValue-make_jdom this=", this, " eintelem=", eintelem);
+	return eintelem;
+    }
 };
 function MomeIntValue(ival) {
     console.assert (typeof ival === 'number',
@@ -477,6 +492,12 @@ function mome_int (num) {
 ////////////////
 var momp_double_value = {
     name: "MomeDoubleValue",
+    make_jdom: function () {
+        var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.dbl_val.toString() +"</span>");
+        edblelem.data("mom_this", this);
+	console.log("MomeDoubleValue-make_jdom this=", this, " edblelem=", edblelem);
+	return edblelem;
+    },
     __proto__: momp_number_value
 };
 function MomeDoubleValue(ival) {
