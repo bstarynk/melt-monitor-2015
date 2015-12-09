@@ -407,10 +407,9 @@ function mome_nil_val() { /// a nil value
 var momp_nil_ref = {
     name: "MomeNilRef",
     make_jdom: function() {
-        console.error("MomeNilRef-make_jdom this=", this);
         var enilelem = $("<span class=' mom_item_bcl momrefnil_cl' tabindex='0'>~</span>");
         enilelem.data("mom_this", this);
-        console.error("MomeNilRef-make_jdom this=", this, " enilelem=", enilelem);
+        console.log("MomeNilRef-make_jdom this=", this, " enilelem=", enilelem);
         return enilelem;
     },
     __proto__: momp_item_ref
@@ -518,8 +517,8 @@ var momp_string_value = {
     name: 'MomeStringValue',
     __proto__: momp_value,
     make_jdom: function () {
-        console.assert ('str_val' in this, "MomeStringValue-make_jdom bad this=", this);
-        var estrelem = $("<q class='momstrquote_cl' tabindex='0'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.str_val) +"</span></q>");
+        console.assert ('mom_str' in this, "MomeStringValue-make_jdom bad this=", this);
+        var estrelem = $("<q class='momstrquote_cl' tabindex='0'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.mom_str) +"</span></q>");
         estrelem.data("mom_this", this);
         console.log("MomeStringValue-make_jdom this=", this, " estrelem=", estrelem);
         return estrelem;
@@ -529,7 +528,7 @@ function MomeStringValue(sval) {
     console.assert (typeof sval === 'string',
                     "MomeStringValue check sval is number");
     mom_ast_numbered(this);
-    this.string_val = sval;
+    this.mom_str = sval;
 };
 MomeStringValue.prototype = momp_string_value;
 
@@ -548,15 +547,15 @@ var momp_tuple_value = {
     name: 'MomeTupleValue',
     make_jdom: function () {
         var self = this;
-        console.assert(Array.isArray (self.tup_val),
-                       "MomeTupleValue no tup_val in self=", self);
+        console.assert(Array.isArray (self.mom_comps),
+                       "MomeTupleValue no mom_comps in self=", self);
         var etupelem = $("<span class='mom_value_bcl momtuple_cl' tabindex='0'></span>");
         var et = null;
         et = document.createTextNode("[");
         $(et).appendTo(etupelem);
-        var nbcomp = self.tup_val.length;
+        var nbcomp = self.mom_comps.length;
         for (var compix=0; compix<nbcomp; compix++) {
-            var curcomp = self.tup_val[compix];
+            var curcomp = self.mom_comps[compix];
             console.log("MomeTupleValue-make_jdom compix=", compix,
                         " curcomp=", curcomp,
                         " self=", self, " etupelem=", etupelem);
@@ -581,7 +580,7 @@ function MomeTupleValue(tval) {
     console.assert (Array.isArray(tval),
                     "MomeTupleValue check tval=", tval);
     mom_ast_numbered(this);
-    this.mom_seq = tval;
+    this.mom_comps = tval;
 };
 MomeTupleValue.prototype = momp_tuple_value;
 
@@ -596,15 +595,15 @@ var momp_set_value = {
     name: 'MomeSetValue',
     make_jdom: function () {
         var self = this;
-        console.assert(Array.isArray (self.set_val),
-                       "MomeSetValue no set_val in self=", self);
+        console.assert(Array.isArray (self.mom_elems),
+                       "MomeSetValue no mom_elems in self=", self);
         var esetelem = $("<span class='mom_value_bcl momset_cl' tabindex='0'></span>");
         var et = null;
         et = document.createTextNode("{");
         $(et).appendTo(esetelem);
-        var nbcomp = self.set_val.length;
+        var nbcomp = self.mom_elems.length;
         for (var compix=0; compix<nbcomp; compix++) {
-            var curcomp = self.set_val[compix];
+            var curcomp = self.mom_elems[compix];
             console.log("MomeSetValue-make_jdom compix=", compix,
                         " curcomp=", curcomp,
                         " self=", self, " esetelem=", esetelem);
@@ -629,7 +628,7 @@ function MomeSetValue(tval) {
     console.assert (Array.isArray(tval),
                     "MomeSetValue check tval=", tval);
     mom_ast_numbered(this);
-    this.mom_seq = tval;
+    this.mom_elems = tval;
 };
 MomeSetValue.prototype = momp_set_value;
 
@@ -657,7 +656,7 @@ var momp_node_value = {
         connielem.appendTo(econnelem);
         et = document.createTextNode("(");
         $(et).appendTo(enodelem);
-        var nbsons = this.sons_arr.length;
+        var nbsons = this.mom_sons.length;
         for (var sonix=0; sonix<nbsons; sonix++) {
             var curson = this.mom_sons[sonix];
             if (sonix>0) {
@@ -682,6 +681,7 @@ function MomeNodeValue(conn,sons) {
     this.mom_conn = conn;
     this.mom_sons = sons;
 }
+MomeNodeValue.prototype= momp_node_value;
 function mome_node(connitm, sonsarr) {
     var res = new MomeNodeValue(connitm,sonsarr);
     console.log ("mome_node res=", res);
