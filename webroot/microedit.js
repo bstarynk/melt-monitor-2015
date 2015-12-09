@@ -469,7 +469,7 @@ var momp_int_value = {
     name: "MomeIntValue",
     __proto__: momp_number_value,
     make_jdom: function () {
-        var eintelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.int_val.toString() +"</span>");
+        var eintelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.mom_int_val.toString() +"</span>");
         eintelem.data("mom_this", this);
 	console.log("MomeIntValue-make_jdom this=", this, " eintelem=", eintelem);
 	return eintelem;
@@ -479,7 +479,7 @@ function MomeIntValue(ival) {
     console.assert (typeof ival === 'number',
                     "MomeIntValue check ival is number");
     mom_ast_numbered(this);
-    this.mom_num_val = ival;
+    this.mom_int_val = ival;
 };
 MomeIntValue.prototype = momp_int_value;
 
@@ -493,18 +493,18 @@ function mome_int (num) {
 var momp_double_value = {
     name: "MomeDoubleValue",
     make_jdom: function () {
-        var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.dbl_val.toString() +"</span>");
+        var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.mom_dbl_val.toString() +"</span>");
         edblelem.data("mom_this", this);
 	console.log("MomeDoubleValue-make_jdom this=", this, " edblelem=", edblelem);
 	return edblelem;
     },
     __proto__: momp_number_value
 };
-function MomeDoubleValue(ival) {
-    console.assert (typeof ival === 'number',
-                    "MomeDoubleValue check ival is number");
+function MomeDoubleValue(dval) {
+    console.assert (typeof dval === 'number',
+                    "MomeDoubleValue check dval is number");
     mom_ast_numbered(this);
-    this.mom_num_val = ival;
+    this.mom_dbl_val = dval;
 };
 MomeDoubleValue.prototype = momp_double_value;
 
@@ -520,7 +520,7 @@ var momp_string_value = {
     __proto__: momp_value,
     make_jdom: function () {
 	console.assert ('str_val' in this, "MomeStringValue-make_jdom bad this=", this);
-        var estrelem = $("<q class='momstrquote_cl'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.str_val) +"</span></q>");
+        var estrelem = $("<q class='momstrquote_cl' tabindex='0'><span class='mom_value_bcl momstring_cl' tabindex='0'>"+ htmlEncode(this.str_val) +"</span></q>");
         estrelem.data("mom_this", this);
 	console.log("MomeStringValue-make_jdom this=", this, " estrelem=", estrelem);
 	return estrelem;
@@ -545,14 +545,22 @@ function mome_string (str) {
 var momp_sequence_value = {
     name: 'momp-sequence-value',
     __proto__: momp_value,
+    mom_seq_html: null,
+    mom_prefix_html: null,
+    mom_suffix_html: null,
     make_jdom: function () {
         console.error("MomeSequenceValue-make_jdom unimplemented this=", this);
     }
 };
 
+
+/// what about inserting before, after, first/last, removing?
 ////////////////
 var momp_tuple_value = {
     name: 'MomeTupleValue',
+    mom_seq_html: "<span tabindex='0' class=''></span>",
+    mom_prefix_html: "[",
+    mom_suffix_html: "]",
     __proto__: momp_sequence_value
 };
 function MomeTupleValue(tval) {
