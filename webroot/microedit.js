@@ -541,27 +541,42 @@ function mome_string (str) {
 };
 
 
-////////////////
-var momp_sequence_value = {
-    name: 'momp-sequence-value',
-    __proto__: momp_value,
-    mom_seq_html: null,
-    mom_prefix_html: null,
-    mom_suffix_html: null,
-    make_jdom: function () {
-        console.error("MomeSequenceValue-make_jdom unimplemented this=", this);
-    }
-};
 
 
 /// what about inserting before, after, first/last, removing?
 ////////////////
 var momp_tuple_value = {
     name: 'MomeTupleValue',
-    mom_seq_html: "<span tabindex='0' class=''></span>",
-    mom_prefix_html: "[",
-    mom_suffix_html: "]",
-    __proto__: momp_sequence_value
+    make_jdom: function () {
+	var self = this;
+        console.assert(Array.isArray (self.tup_val),
+                       "MomeTupleValue no tup_val in self=", self);
+	var etupelem = $("<span class='mom_value_bcl momtuple_cl' tabindex='0'></span>");
+        var et = null;
+        et = document.createTextNode("[");
+        $(et).appendTo(etupelem);
+        var nbcomp = self.tup_val.length;
+        for (var compix=0; compix<nbcomp; compix++) {
+            var curcomp = self.tup_val[compix];
+            console.log("MomeTupleValue-make_jdom compix=", compix,
+                        " curcomp=", curcomp,
+                        " self=", self, " etupelem=", etupelem);
+            if (compix > 0) {
+                et = document.createTextNode(" ");
+                $(et).appendTo(etupelem);
+                et = null;
+            };
+	    var curjdom = curcomp.make_jdom();
+	    curjdom.appendTo(etupelem);
+            et = null;
+	};
+        et = document.createTextNode("]");
+        $(et).appendTo(etupelem);
+	etupelem.data("mom_this", self);
+        console.log("MomeTupleValue-make_jdom self=", self, " etupelem=", etupelem);
+	return etupelem;
+    },
+    __proto__: momp_value
 };
 function MomeTupleValue(tval) {
     console.assert (Array.isArray(tval),
@@ -579,8 +594,37 @@ function mome_tuple (arr) {
 
 ////////////////
 var momp_set_value = {
-    name: 'MomeTupleValue',
-    __proto__: momp_sequence_value
+    name: 'MomeSetValue',
+    make_jdom: function () {
+	var self = this;
+        console.assert(Array.isArray (self.set_val),
+                       "MomeSetValue no set_val in self=", self);
+	var esetelem = $("<span class='mom_value_bcl momset_cl' tabindex='0'></span>");
+        var et = null;
+        et = document.createTextNode("{");
+        $(et).appendTo(esetelem);
+        var nbcomp = self.set_val.length;
+        for (var compix=0; compix<nbcomp; compix++) {
+            var curcomp = self.set_val[compix];
+            console.log("MomeSetValue-make_jdom compix=", compix,
+                        " curcomp=", curcomp,
+                        " self=", self, " esetelem=", esetelem);
+            if (compix > 0) {
+                et = document.createTextNode(" ");
+                $(et).appendTo(esetelem);
+                et = null;
+            };
+	    var curjdom = curcomp.make_jdom();
+	    curjdom.appendTo(esetelem);
+            et = null;
+	};
+        et = document.createTextNode("}");
+        $(et).appendTo(esetelem);
+	esetelem.data("mom_this", self);
+        console.log("MomeSetValue-make_jdom self=", self, " esetelem=", esetelem);
+	return esetelem;
+    },
+    __proto__: momp_value
 };
 function MomeSetValue(tval) {
     console.assert (Array.isArray(tval),
@@ -588,7 +632,7 @@ function MomeSetValue(tval) {
     mom_ast_numbered(this);
     this.mom_seq = tval;
 };
-MomeSetValue.prototype = momp_tuple_value;
+MomeSetValue.prototype = momp_set_value;
 
 function mome_set (arr) {
     var res = new MomeSetValue(arr);
