@@ -358,9 +358,29 @@ var momp_item_ref = {
     gotblur: function (ev) {
         console.log("MomeItemRef-gotblur ev=", ev);
     },
+    gotuparrow: function(ev) {
+        console.log("MomeItemRef-gotuparrow ev=", ev, " this=", this);
+	var par = $(ev.target).parents();
+	console.log("MomeItemRef-gotuparrow par=", par);
+	par.each(function (ix, el) {
+	    console.log("MomeItemRef-gotuparrow par=", par, " each  ix=", ix, " el=", el);
+	    if ($(el).data("mom_this")) console.log("MomeItemRef-gotuparrow el=", el, " momthisdata=", 
+						    $(el).data("mom_this"));
+	});
+    },
+    gotdownarrow: function (ev) {
+        console.log("MomeItemRef-gotdownarrow ev=", ev, " this=", this);
+    },
+    gotleftarrow: function (ev) {
+        console.log("MomeItemRef-gotleftarrow ev=", ev, " this=", this);
+    },
+    gotrightarrow: function (ev) {
+        console.log("MomeItemRef-gotrightarrow ev=", ev, " this=", this);
+    },
     gotkeypress: function (ev) {
         var ast = ev.data;
-        console.log("MomeItemRef-gotkeypress ev=", ev, " which=", ev.which, " this=", this, " ast=", ast);
+        console.log("MomeItemRef-gotkeypress ev=", ev, " which=", ev.which,
+		    " keyCode=", ev.keyCode, " this=", this, " ast=", ast);
         var njdom;
         console.assert('mom_ast' in ast, "MomeItemRef-gotkeypress bad ast=", ast);
         if (ev.which === " ".charCodeAt(0) && !ev.ctrlKey && !ev.metaKey) { // space
@@ -375,15 +395,20 @@ var momp_item_ref = {
         }
         else if (ev.keyCode === 38 /*UP ARROW key*/ && !ev.ctrlKey && !ev.metaKey) {
             console.log("MomeItemRef-gotkeypress uparrow ev=", ev, " this=", this, " $(this)=", $(this), " ast=", ast);
+	    ast.gotuparrow(ev);
+            console.log("MomeItemRef-gotkeypress uparrow done ev=", ev, " this=", this);
         }
         else if (ev.keyCode === 40 /*DOWN ARROW key*/ && !ev.ctrlKey && !ev.metaKey) {
             console.log("MomeItemRef-gotkeypress downarrow ev=", ev, " this=", this, " $(this)=", $(this), " ast=", ast);
+	    this.gotdownarrow(ev);
         }
         else if (ev.keyCode === 37 /*LEFT ARROW key*/ && !ev.ctrlKey && !ev.metaKey) {
             console.log("MomeItemRef-gotkeypress leftarrow ev=", ev, " this=", this, " $(this)=", $(this), " ast=", ast);
+	    this.gotleftarrow(ev);
         }
         else if (ev.keyCode === 39 /*RIGHT ARROW key*/ && !ev.ctrlKey && !ev.metaKey) {
             console.log("MomeItemRef-gotkeypress rightarrow ev=", ev, " this=", this, " $(this)=", $(this), " ast=", ast);
+	    this.gotrightarrow(ev);
         }
     },
     install_jdom: function (jel) {
@@ -518,6 +543,7 @@ function MomeIntValue(ival) {
                     "MomeIntValue check ival is number");
     mom_ast_numbered(this);
     this.mom_int_val = ival;
+    this.mom_ast = "int";
 };
 MomeIntValue.prototype = momp_int_value;
 
@@ -621,6 +647,7 @@ function MomeTupleValue(tval) {
                     "MomeTupleValue check tval=", tval);
     mom_ast_numbered(this);
     this.mom_comps = tval;
+    this.mom_ast = "tuple";
 };
 MomeTupleValue.prototype = momp_tuple_value;
 
@@ -695,6 +722,7 @@ function MomeSetValue(tval) {
                     "MomeSetValue check tval=", tval);
     mom_ast_numbered(this);
     this.mom_elems = tval;
+    this.mom_ast = "set";
 };
 MomeSetValue.prototype = momp_set_value;
 
@@ -772,6 +800,7 @@ function MomeNodeValue(conn,sons) {
     console.assert(Array.isArray(sons), "MomeNodeValue bad sons=", sons);
     this.mom_conn = conn;
     this.mom_sons = sons;
+    this.mom_ast = "node";
 }
 MomeNodeValue.prototype= momp_node_value;
 function mome_node(connitm, sonsarr) {
