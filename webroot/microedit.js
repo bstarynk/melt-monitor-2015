@@ -31,17 +31,17 @@ function htmlEncode(value){
     //create a in-memory div, set it's inner text(which jQuery automatically encodes)
     //then grab the encoded contents back out.  The div never exists on the page.
     return $('<div/>').text(value).html();
-};
+}
 
 function htmlDecode(value){
     return $('<div/>').html(value).text();
-};
+}
 
 var momc_ast_count=0;
 var momv_entriesvar=null;
 var mom_name_regexp = /^[A-Za-z0-9_]*$/;
 
-var mom_name_cache = new Object();
+var mom_name_cache = {};
 
 /// see http://mikemurko.com/general/jquery-keycode-cheatsheet/
 
@@ -75,7 +75,7 @@ function mom_known_item(name) {
      });
     console.log ("mom_known_item name=", name, " res=", res);
     return res;
-};                              // end mom_known_item
+}                              // end mom_known_item
 
 //// give the completion of some name string, using AJAX do_completename
 function mom_complete_name(name) {
@@ -104,7 +104,7 @@ function mom_complete_name(name) {
      });
     console.log ("mom_complete_name name=", name, " res=", res);
     return res;
-};                              // end mom_complete_name
+}                              // end mom_complete_name
 
 
 
@@ -113,12 +113,13 @@ function mom_ast_numbered(obj) {
     momc_ast_count = momc_ast_count+1;
     obj.mom_ast_inum = momc_ast_count;
     return momc_ast_count;
-};
+}
+
 /// this function is called by /microedit AJAX for do_fillpage at document loading
 function mom_ajaxfillscript(script) {
     console.log("mom_ajaxfillscript:\n", script, "\n### endajaxfillscript\n");
     console.trace();
-};
+}
 
 function mome_begin_fill(statitmid) {
     console.log("mome_begin_fill statitmid=", statitmid, " $editdiv=", $editdiv);
@@ -126,13 +127,13 @@ function mome_begin_fill(statitmid) {
     $("<p class='mombeginfill_cl'>" + statitmid + "</p>").appendTo($editdiv);
     console.log("mome_begin_fill $editdiv=", $editdiv, " this=", this);
     mom_name_cache = new Object();
-};
+}
 
 function mome_mtime(timestr) {
     console.log("mome_mtime timestr=", timestr);
     $("<p class='mommtime_cl'>" + htmlEncode(timestr) + "</p>").appendTo($editdiv);
     console.log("mome_mtime $editdiv=", $editdiv, " this=", this);
-};
+}
 
 function mome_entries(entarr) {
     console.log("mome_entries entarr=", entarr, " $editdiv=", $editdiv,
@@ -152,16 +153,16 @@ function mome_entries(entarr) {
         curent.realize_entry(entdl);
         console.log("mome_entries realized curent=", curent);
         curent = null;
-    };
+    }
     console.log("mome_entries entdl=", entdl, " $editdiv=", $editdiv, " entarr=", entarr);
-};
+}
 
 
 function mome_generated(msg) {
     console.log("mome_generated start msg=", msg, "; $editdiv=", $editdiv, " this=", this);
     console.log("mome_generated ending $editlog=", $editlog, " msg=", msg);
     $editlog.append(msg);
-};                              // end mome_generated
+}                              // end mome_generated
 
 
 function mom_put_jdom_in(jdom,incont) {
@@ -179,7 +180,7 @@ function mom_put_jdom_in(jdom,incont) {
     else
         console.error("mom_put_jdom_in bad incont=", incont, " jdom=", jdom);
     console.log("mom_put_jdom_in done jdom=", jdom, " incont=", incont);
-};
+}
 
 ////////////////
 function MomeEntry(entitm,entval) {
@@ -187,7 +188,8 @@ function MomeEntry(entitm,entval) {
     this.mom_entry_val= entval;
     this.mom_ast = "entry";
     mom_ast_numbered(this);
-};
+}
+
 var momp_entry = {
     name: "MomeEntry",
     realize_entry: function (incont) {
@@ -224,11 +226,14 @@ function mome_entry(entitm,entval) {
     var res = new MomeEntry(entitm, entval);
     console.log("mome_entry res=", res);
     return res;
-};
+}
 
 
 var momp_value = {
     name: "MompValue",
+    dispatchkeypress: function (ev) {
+        console.log ("MompValue-dispatchkeypress ev=", ev, " this=", this);
+    },
     gotfocus: function (ev) {
         console.log ("MompValue-gotfocus ev=", ev, " this=", this);
     },
@@ -344,7 +349,7 @@ function MomeNameRef(name, orig) {
     else
         mom_ast_numbered(this);
     this.mom_ast = "nameref";
-};
+}
 MomeNameRef.prototype = momp_name_ref;
 
 ////////////////
@@ -359,13 +364,19 @@ var momp_item_ref = {
         console.log("MomeItemRef-gotblur ev=", ev);
     },
     gotuparrow: function(ev) {
+	var self=this;
         console.log("MomeItemRef-gotuparrow ev=", ev, " this=", this);
 	var par = $(ev.target).parents();
-	console.log("MomeItemRef-gotuparrow par=", par);
+	console.log("MomeItemRef-gotuparrow par=", par, " this=", this);
 	par.each(function (ix, el) {
-	    console.log("MomeItemRef-gotuparrow par=", par, " each  ix=", ix, " el=", el);
-	    if ($(el).data("mom_this")) console.log("MomeItemRef-gotuparrow el=", el, " momthisdata=", 
-						    $(el).data("mom_this"));
+	    var tdata = $(el).data("mom_this");
+	    console.log("MomeItemRef-gotuparrow par=", par, " each  ix=", ix,
+			" el=", el, " tdata=", tdata, " self=", self);
+	    if (tdata) {
+		console.log("MomeItemRef-gotuparrow good el=", el, " tdata=", tdata);
+		$(el).focus();
+		return false;
+	    }
 	});
     },
     gotdownarrow: function (ev) {
@@ -433,13 +444,13 @@ function MomeItemRef(iname) {
     this.mom_item_name = iname;
     this.mom_ast = "item_ref";
     mom_ast_numbered(this);
-};
+}
 MomeItemRef.prototype = momp_item_ref;
 function mome_item_ref(itmname) {
     var res = new MomeItemRef(itmname);
     console.log ("mome_item_ref res=", res);
     return res;
-};
+}
 
 
 ////////////////
@@ -456,14 +467,14 @@ var momp_nil_value = {
 function MomeNilValue() {
     mom_ast_numbered(this);
     this.mom_ast = "nilval";
-};
+}
 MomeNilValue.prototype = momp_nil_value;
 
 function mome_nil_val() { /// a nil value
     var res = new MomeNilValue();
     console.log ("mome_nil_val res=", res);
     return res;
-};
+}
 
 ////////////////
 var momp_nil_ref = {
@@ -480,14 +491,14 @@ var momp_nil_ref = {
 function MomeNilRef() {
     mom_ast_numbered(this);
     this.mom_ast = "nilref";
-};
+}
 MomeNilRef.prototype = momp_nil_ref;
 
 function mome_nil_ref() {       /// a nil item reference
     var res = new MomeNilRef();
     console.log ("mome_nil_ref res=", res);
     return res;
-};
+}
 ////////////////
 
 var momp_item_value = {
@@ -509,14 +520,14 @@ function MomeItemValue(iname) {
     mom_ast_numbered(this);
     this.mom_item_name = iname;
     this.mom_ast = "itemval";
-};
+}
 MomeItemValue.prototype = momp_item_value;
 
 function mome_item_val(itemname) { /// a nil value
     var res = new MomeItemValue(itemname);
     console.log ("mome_item_val res=", res);
     return res;
-};
+}
 
 
 ////////////////
@@ -526,7 +537,7 @@ var momp_number_value = {
     make_jdom: function () {
         console.error("momp-number-value-make_jdom this=", this);
     }
-}
+};
 ////////////////
 var momp_int_value = {
     name: "MomeIntValue",
@@ -544,14 +555,14 @@ function MomeIntValue(ival) {
     mom_ast_numbered(this);
     this.mom_int_val = ival;
     this.mom_ast = "int";
-};
+}
 MomeIntValue.prototype = momp_int_value;
 
 function mome_int (num) {
     var res = new MomeIntValue(num);
     console.log ("mome_int res=", res);
     return res;
-};
+}
 
 ////////////////
 var momp_double_value = {
@@ -559,7 +570,7 @@ var momp_double_value = {
     __proto__: momp_number_value,
     make_jdom: function () {
         var edblelem = $("<span class='mom_value_bcl momnumber_cl' tabindex='0'>"+ this.mom_dbl_val.toString() +"</span>");
-        this.install_jdom(edblelem),
+        this.install_jdom(edblelem);
         console.log("MomeDoubleValue-make_jdom this=", this, " edblelem=", edblelem);
         return edblelem;
     }
@@ -569,14 +580,14 @@ function MomeDoubleValue(dval) {
                     "MomeDoubleValue check dval is number");
     mom_ast_numbered(this);
     this.mom_dbl_val = dval;
-};
+}
 MomeDoubleValue.prototype = momp_double_value;
 
 function mome_double (num) {
     var res = new MomeDoubleValue(num);
     console.log ("mome_double res=", res);
     return res;
-};
+}
 
 ////////////////
 var momp_string_value = {
@@ -595,14 +606,14 @@ function MomeStringValue(sval) {
                     "MomeStringValue check sval is number");
     mom_ast_numbered(this);
     this.mom_str = sval;
-};
+}
 MomeStringValue.prototype = momp_string_value;
 
 function mome_string (str) {
     var res = new MomeStringValue(str);
     console.log ("mome_string res=", str);
     return res;
-};
+}
 
 
 
@@ -630,11 +641,11 @@ var momp_tuple_value = {
                 et = document.createTextNode(" ");
                 $(et).appendTo(etupelem);
                 et = null;
-            };
+            }
             var curjdom = curcomp.make_jdom();
             curjdom.appendTo(etupelem);
             et = null;
-        };
+        }
         et = document.createTextNode("]");
         $(et).appendTo(etupelem);
         this.install_jdom(etupelem);
@@ -648,14 +659,14 @@ function MomeTupleValue(tval) {
     mom_ast_numbered(this);
     this.mom_comps = tval;
     this.mom_ast = "tuple";
-};
+}
 MomeTupleValue.prototype = momp_tuple_value;
 
 function mome_tuple (arr) {
     var res = new MomeTupleValue(arr);
     console.log ("mome_tuple res=", res);
     return res;
-};
+}
 
 ////////////////
 var momp_set_value = {
@@ -705,11 +716,11 @@ var momp_set_value = {
                 et = document.createTextNode(" ");
                 $(et).appendTo(esetelem);
                 et = null;
-            };
+            }
             var curjdom = curcomp.make_jdom();
             curjdom.appendTo(esetelem);
             et = null;
-        };
+        }
         et = document.createTextNode("}");
         $(et).appendTo(esetelem);
         this.install_jdom(esetelem);
@@ -723,14 +734,14 @@ function MomeSetValue(tval) {
     mom_ast_numbered(this);
     this.mom_elems = tval;
     this.mom_ast = "set";
-};
+}
 MomeSetValue.prototype = momp_set_value;
 
 function mome_set (arr) {
     var res = new MomeSetValue(arr);
     console.log ("mome_set res=", res);
     return res;
-};
+}
 
 ////////////////
 var momp_node_value = {
@@ -764,8 +775,8 @@ var momp_node_value = {
     },
     make_jdom: function () {
         var self = this;
-        console.assert(typeof (this.mom_conn) === "object"
-                       && Array.isArray(this.mom_sons),
+        console.assert(typeof (this.mom_conn) === "object" &&
+                       Array.isArray(this.mom_sons),
                        "MomeNodeValue no mom_conn&mom_sons in this=", this);
         var enodelem = $("<span class='mom_value_bcl momnode_cl' tabindex='0'></span>");
         this.install_jdom(enodelem);
@@ -783,7 +794,7 @@ var momp_node_value = {
                 et = document.createTextNode(" ");
                 $(et).appendTo(enodelem);
                 et = null;
-            };
+            }
             var sonjdom = curson.make_jdom();
             sonjdom.appendTo(enodelem);
         }
@@ -807,7 +818,7 @@ function mome_node(connitm, sonsarr) {
     var res = new MomeNodeValue(connitm,sonsarr);
     console.log ("mome_node res=", res);
     return res;
-};
+}
 ////////////////////////////////////////////////////////////////
 
 
