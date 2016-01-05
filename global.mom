@@ -1,5 +1,5 @@
 ## *** generated file global.mom - DO NOT EDIT 
-## Copyright (C) 2015 Basile Starynkevitch & later the Free Software Foundation, Inc. 
+## Copyright (C) 2015 - 2016 Free Software Foundation, Inc. 
 ## MONIMELT is a monitor for MELT - see http://gcc-melt.org/ 
 ## This generated file global.mom is part of MONIMELT, part of GCC 
 ##
@@ -61,6 +61,14 @@ comment
 
 *microedit
 1446463595
+^mtime
+^func
+signature_tasklet
+^funsignature
+
+
+*nanoedit
+1452006207
 ^mtime
 ^func
 signature_tasklet
@@ -135,6 +143,12 @@ microedit
 web_state
 web_state__0dmo5BBWK0mbtv
 microedit
+)node
+nanoedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+nanoedit
 )node
 )payload_hashassoc
 
