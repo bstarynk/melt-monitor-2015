@@ -115,6 +115,120 @@ mom_output_gplv3_notice (FILE *out, const char *prefix, const char *suffix,
 
 
 void
+mom_output_utf8_escaped (FILE *f, const char *str, int len,
+                         mom_utf8escape_sig_t * rout, void *clientdata)
+{
+  if (!f)
+    return;
+  if (!str)
+    return;
+  assert (rout != NULL);
+  if (len < 0)
+    len = strlen (str);
+  const char *end = str + len;
+  gunichar uc = 0;
+  const char *s = str;
+  assert (s && g_utf8_validate (s, len, NULL));
+  assert (s && g_utf8_validate (s, len, NULL));
+  for (const char *pc = s; pc < end; pc = g_utf8_next_char (pc), uc = 0)
+    {
+      uc = g_utf8_get_char (pc);
+      switch (uc)
+        {
+        case 0:
+          (*rout) (f, uc, "\\0", clientdata);
+          break;
+        case '\"':
+          (*rout) (f, uc, "\\\"", clientdata);
+          break;
+        case '\'':
+          (*rout) (f, uc, "\\\'", clientdata);
+          break;
+        case '&':
+          (*rout) (f, uc, "&", clientdata);
+          break;
+        case '<':
+          (*rout) (f, uc, "<", clientdata);
+          break;
+        case '>':
+          (*rout) (f, uc, ">", clientdata);
+          break;
+          break;
+        case '\a':
+          (*rout) (f, uc, "\\a", clientdata);
+          break;
+        case '\b':
+          (*rout) (f, uc, "\\b", clientdata);
+          break;
+        case '\f':
+          (*rout) (f, uc, "\\f", clientdata);
+          break;
+        case '\n':
+          (*rout) (f, uc, "\\n", clientdata);
+          break;
+        case '\r':
+          (*rout) (f, uc, "\\r", clientdata);
+          break;
+        case '\t':
+          (*rout) (f, uc, "\\t", clientdata);
+          break;
+        case '\v':
+          (*rout) (f, uc, "\\v", clientdata);
+          break;
+        case '\033' /*ESCAPE*/:
+          (*rout) (f, uc, "\\e", clientdata);
+          break;
+        case '0' ... '9':
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case ',':
+        case ';':
+        case '.':
+        case ':':
+        case '^':
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case ' ':
+          goto print1char;
+        default:
+          if (uc < 127 && uc > 0 && isprint ((char) uc))
+          print1char:
+            fputc ((char) uc, f);
+          else
+            {
+              char buf[16];
+              memset (buf, 0, sizeof (buf));
+              if (uc > 0 && uc < 256)
+                {
+                  snprintf (buf, sizeof (buf), "\\x%02x", (int) uc);
+                }
+              else if (uc <= 0xffff)
+                {
+                  snprintf (buf, sizeof (buf), "\\u%04x", (int) uc);
+                }
+              else
+                {
+                  snprintf (buf, sizeof (buf), "\\U%08x", (int) uc);
+                }
+              (*rout) (f, uc, buf, clientdata);
+            }
+          break;
+        }
+    };
+}                               /* end of mom_output_utf8_escaped */
+
+
+
+
+void
 mom_output_utf8_encoded (FILE *f, const char *str, int len)
 {
   if (!f)
@@ -258,6 +372,9 @@ mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr)
         }
     }
 }                               /* end of mom_output_utf8_html */
+
+
+
 
 struct mom_string_and_size_st
 mom_input_quoted_utf8 (FILE *f)

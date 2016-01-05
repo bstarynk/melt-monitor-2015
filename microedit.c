@@ -75,6 +75,9 @@ showitem_microedit_mom (struct mom_webexch_st *wexch,
 }                               // end showitem_microedit_mom
 
 
+
+
+
 static void
 newline_microedit_mom (struct mom_webexch_st *wexch, int depth)
 {
@@ -95,6 +98,10 @@ newline_microedit_mom (struct mom_webexch_st *wexch, int depth)
     }
   mom_wexch_puts (wexch, buf);
 }
+
+
+
+
 
 static void
 showvalue_microedit_mom (struct mom_webexch_st *wexch,
@@ -199,6 +206,10 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
       break;
     }
 }                               /* end showvalue_microedit_mom */
+
+
+
+
 
 static void
 dofillpage_microedit_mom (struct mom_webexch_st *wexch,

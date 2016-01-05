@@ -1,6 +1,6 @@
 // file meltmoni.h - common header file to be included everywhere.
 
-/**   Copyright (C)  2015 Basile Starynkevitch, later FSF
+/**   Copyright (C)  2015 - 2016 Basile Starynkevitch, later FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -359,6 +359,11 @@ void mom_output_utf8_encoded (FILE *f, const char *str, int len);
 // output with HTML encoding an UTF8-encoded string str; if len<0 take
 // its strlen; without enclosing quotes; if nlisbr is true, newlines are emitted as <br/>
 void mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr);
+
+typedef void mom_utf8escape_sig_t (FILE *f, gunichar uc, const char *cescstr,
+                                   void *clientdata);
+void mom_output_utf8_escaped (FILE *f, const char *str, int len,
+                              mom_utf8escape_sig_t * rout, void *clientdata);
 
 
 const char *mom_double_to_cstr (double x, char *buf, size_t buflen);
