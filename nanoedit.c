@@ -104,6 +104,7 @@ utf8escape_nanoedit_mom (FILE *f, gunichar uc, const char *cescstr,
                          void *clientdata)
 {
   struct mom_webexch_st *wexch = clientdata;
+  assert (f == wexch->webx_outfil);
   switch (uc)
     {
     case '&':
@@ -209,7 +210,7 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
       {
         const struct mom_boxnode_st *nod = pval;
         unsigned siz = mom_raw_size (nod);
-        mom_wexch_puts (wexch, " <span class='momnode_cl'>*");
+        mom_wexch_puts (wexch, " <span class='momnode_cl'>%");
         showitem_nanoedit_mom (wexch, wexitm, thistatitm,
                                nod->nod_connitm, false);
         mom_wexch_puts (wexch, "(");
@@ -233,3 +234,224 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
       break;
     }
 }                               /* end showvalue_nanoedit_mom */
+
+
+
+static void
+dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
+                          struct mom_item_st *tkitm,
+                          struct mom_item_st *wexitm,
+                          struct mom_item_st *thistatitm)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "dofillpage_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm));
+  char modbuf[64];
+  memset (modbuf, 0, sizeof (modbuf));
+  MOM_WEXCH_PRINTF (wexch, "<h3><tt>%s</tt> generated on <i>%s</i></h3>\n",
+		    mom_item_cstring (thistatitm),
+                    mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",
+                                        thistatitm->itm_mtime));
+#warning dofillpage_nanoedit incomplete
+  mom_wexch_reply (wexch, HTTP_OK, "text/html");
+  MOM_DEBUGPRINTF (web,
+                   "dofillpage_nanoedit done webr#%ld tkitm=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm));
+} /* end of dofillpage_nanoedit_mom */
+
+
+
+static void
+doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
+                           struct mom_item_st *tkitm,
+                           struct mom_item_st *wexitm,
+                           struct mom_item_st *thistatitm, const char *name)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  bool known = false;
+  MOM_DEBUGPRINTF (web,
+                   "doknownitem_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), name);
+  if (name)
+    {
+      struct mom_item_st *itm = mom_find_item_by_string (name);
+      MOM_DEBUGPRINTF (web,
+                       "doknownitem_nanoedit webr#%ld name=%s itm=%s\n",
+                       wexch->webx_count, name, mom_item_cstring (itm));
+      known = itm != NULL;
+    };
+  mom_wexch_puts (wexch, known ? "true\n" : "false\n");
+  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  MOM_DEBUGPRINTF (web,
+                   "doknowitem_nanoedit done webr#%ld tkitm=%s name %s known %s",
+                   wexch->webx_count, mom_item_cstring (tkitm), name,
+                   known ? "yes" : "no");
+}                               /* end doknownitem_nanoedit_mom */
+
+
+
+
+static void
+docompletename_nanoedit_mom (struct mom_webexch_st *wexch,
+                              struct mom_item_st *tkitm,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              const char *name)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), name);
+  const struct mom_boxset_st *set = mom_set_items_prefixed (name, -1);
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_nanoedit webr#%ld set %s",
+                   wexch->webx_count,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      set));
+  if (set)
+    {
+      unsigned siz = mom_size (set);
+      mom_wexch_puts (wexch, "[");
+      for (unsigned ix = 0; ix < siz; ix++)
+        {
+          const struct mom_item_st *curitm = set->seqitem[ix];
+          assert (curitm && curitm->va_itype == MOMITY_ITEM);
+          if (ix > 0)
+            mom_wexch_puts (wexch, MOM_IS_DEBUGGING (web) ? ",\n " : ",");
+          MOM_WEXCH_PRINTF (wexch, "\"%s\"", mom_item_cstring (curitm));
+        }
+      mom_wexch_puts (wexch, "]\n");
+    }
+  else
+    {
+      mom_wexch_puts (wexch, "null\n");
+    }
+  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  MOM_DEBUGPRINTF (web,
+                   "docompletename_nanoedit webr#%ld done",
+                   wexch->webx_count);
+}                               /* end of docompletename_nanoedit_mom */
+
+
+
+
+extern mom_tasklet_sig_t momf_nanoedit;
+const char momsig_nanoedit[] = "signature_tasklet";
+
+void
+momf_nanoedit (struct mom_item_st *tkitm)
+{
+  enum nanoedit_closoff_en
+  {
+    mec_wexitm,
+    mec_protowebstate,
+    mec_thiswebstate,
+    mec__last
+  };
+  struct mom_item_st *wexitm = NULL;
+  struct mom_item_st *thistatitm = NULL;
+  struct mom_item_st *sessitm = NULL;
+  struct mom_item_st *hsetitm = NULL;
+  mom_item_lock (tkitm);
+  const struct mom_boxnode_st *tknod =
+    (struct mom_boxnode_st *) tkitm->itm_payload;
+  MOM_DEBUGPRINTF (web, "momf_nanoedit start tkitm=%s tknod=%s",
+                   mom_item_cstring (tkitm),
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      tknod));
+  if (mom_itype (tknod) != MOMITY_NODE || mom_raw_size (tknod) < mec__last)
+    {
+      /// should not happen
+      MOM_WARNPRINTF ("momf_nanoedit bad tknod %s",
+                      mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                         tknod));
+      goto end;
+    }
+  {
+    wexitm = mom_dyncast_item (tknod->nod_sons[mec_wexitm]);
+    assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+    mom_item_lock (wexitm);
+    thistatitm = mom_dyncast_item (tknod->nod_sons[mec_thiswebstate]);
+    assert (thistatitm && thistatitm->va_itype == MOMITY_ITEM);
+    MOM_DEBUGPRINTF (web,
+                     "momf_nanoedit tkitm=%s wexitm=%s paylkind %s thistatitm=%s",
+                     mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                     mom_itype_str (wexitm->itm_payload),
+                     mom_item_cstring (thistatitm));
+    mom_item_lock (thistatitm);
+  }
+  struct mom_webexch_st *wexch =
+    (struct mom_webexch_st *) wexitm->itm_payload;
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  sessitm = wexch->webx_sessitm;
+  mom_item_lock (sessitm);
+  MOM_DEBUGPRINTF (web,
+                   "momf_nanoedit tkitm=%s wexch #%ld meth %s fupath %s sessitm %s",
+                   mom_item_cstring (tkitm), wexch->webx_count,
+                   mom_webmethod_name (wexch->webx_meth),
+                   onion_request_get_fullpath (wexch->webx_requ),
+                   mom_item_cstring (sessitm));
+  sessitm->itm_pcomp = mom_vectvaldata_resize (sessitm->itm_pcomp, mes__last);
+  if (!
+      (hsetitm =
+       mom_dyncast_item (mom_vectvaldata_nth
+                         (sessitm->itm_pcomp, mes_itmhset))))
+    {
+      hsetitm = mom_clone_item (MOM_PREDEFITM (hashset));
+      mom_vectvaldata_put_nth (sessitm->itm_pcomp, mes_itmhset,
+                               (struct mom_hashedvalue_st *) hsetitm);
+      hsetitm->itm_payload =
+        (struct mom_anyvalue_st *) mom_hashset_reserve (NULL, 20);
+      MOM_DEBUGPRINTF (web,
+                       "momf_nanoedit tkitm=%s wexch #%ld new hsetitm %s",
+                       mom_item_cstring (tkitm), wexch->webx_count,
+                       mom_item_cstring (hsetitm));
+    }
+  else
+    MOM_DEBUGPRINTF (web,
+                     "momf_nanoedit tkitm=%s wexch #%ld got hsetitm %s",
+                     mom_item_cstring (tkitm), wexch->webx_count,
+                     mom_item_cstring (hsetitm));
+
+  mom_item_lock (hsetitm);
+  if (wexch->webx_meth == MOMWEBM_POST)
+    {
+      const char *dofillpage = NULL;
+      const char *doknownitem = NULL;
+      const char *docompletename = NULL;
+      MOM_DEBUGPRINTF (web,
+                       "momf_nanoedit tkitm=%s POST wexch #%ld",
+                       mom_item_cstring (tkitm), wexch->webx_count);
+      if ((dofillpage =
+           onion_request_get_post (wexch->webx_requ, "do_fillpage")) != NULL)
+        dofillpage_nanoedit_mom (wexch, tkitm, wexitm, thistatitm);
+      else if ((doknownitem =
+                onion_request_get_post (wexch->webx_requ,
+                                        "do_knownitem")) != NULL)
+        doknownitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                   doknownitem);
+      else
+        if ((docompletename =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_completename")) != NULL)
+        docompletename_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                      docompletename);
+    }
+end:
+  if (hsetitm)
+    mom_item_unlock (hsetitm);
+  if (thistatitm)
+    mom_item_unlock (thistatitm);
+  if (wexitm)
+    mom_item_unlock (wexitm);
+  if (sessitm)
+    mom_item_unlock (sessitm);
+  mom_item_unlock (tkitm);
+}                               /* end of momf_nanoedit */
