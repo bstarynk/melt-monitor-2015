@@ -54,6 +54,15 @@ comment
 )attrs
 
 
+*displayer
+1452104741
+^mtime
+(
+comment
+"attribute giving the displayer closure"_
+)attrs
+
+
 *hackc
 1446033098
 ^mtime
@@ -104,6 +113,15 @@ signature_tasklet
 (
 comment
 "for raw display"_
+)attrs
+
+
+*signature_displayer
+1452104741
+^mtime
+(
+comment
+"signature of displayer functions"_
 )attrs
 
 
