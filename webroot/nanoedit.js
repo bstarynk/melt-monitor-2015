@@ -120,7 +120,7 @@ function mom_ajaxfill(htmlc) {
 	$.ajax
 	({url: "/nanoedit",
 	  method: "POST",
-	  data: {"do_fillpage": true, "rawmode", valchecked},
+	  data: {"do_fillpage": true, "rawmode": valchecked},
 	  dataType: "html",
 	  success: mom_ajaxfill
 	 });

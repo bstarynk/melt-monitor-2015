@@ -36,6 +36,24 @@ comment
 )attrs
 
 
+*cooked
+1452095862
+^mtime
+(
+comment
+"for cooked display"_
+)attrs
+
+
+*display
+1452095862
+^mtime
+(
+comment
+"display mode"_
+)attrs
+
+
 *hackc
 1446033098
 ^mtime
@@ -78,6 +96,15 @@ signature_tasklet
 *notice
 1446546422
 ^mtime
+
+
+*raw
+1452095862
+^mtime
+(
+comment
+"for raw display"_
+)attrs
 
 
 *signature_loader_caret

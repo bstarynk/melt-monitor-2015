@@ -1,6 +1,6 @@
 // file item.c - managing items
 
-/**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -1436,6 +1436,39 @@ mom_dumpscan_assovaldata (struct mom_dumper_st *du,
     }
   MOM_DEBUGPRINTF (dump, "dumpscan_assovaldata asso@%p done", asso);
 }
+
+
+void
+mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
+                               const struct mom_item_st *itmat,
+                               const void *data)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return;
+  if (!itmat || itmat == MOM_EMPTY_SLOT || itmat->va_itype != MOMITY_ITEM)
+    return;
+  struct mom_assovaldata_st *attrs = mom_assovaldata_dyncast (itm->itm_pattr);
+  attrs = mom_assovaldata_put (attrs, itmat, data);
+  itm->itm_pattr = attrs;
+}                               /* end of mom_unsync_item_put_phys_attr */
+
+
+// remove a physical attribute from an item
+void
+mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
+                                  const struct mom_item_st *itmat)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return;
+  if (!itmat || itmat == MOM_EMPTY_SLOT || itmat->va_itype != MOMITY_ITEM)
+    return;
+  struct mom_assovaldata_st *attrs = mom_assovaldata_dyncast (itm->itm_pattr);
+  attrs = mom_assovaldata_remove (attrs, itmat);
+  itm->itm_pattr = attrs;
+}                               /* end of mom_unsync_item_remove_phys_attr */
+
+
+
 
 struct mom_vectvaldata_st *
 mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)

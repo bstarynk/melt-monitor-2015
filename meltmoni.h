@@ -1159,6 +1159,45 @@ mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
   return NULL;
 }
 
+static inline struct mom_hashedvalue_st *
+mom_unsync_item_get_phys_attr (const struct mom_item_st *itm,
+                               const struct mom_item_st *itmat)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return NULL;
+  if (!itmat || itmat == MOM_EMPTY_SLOT || itmat->va_itype != MOMITY_ITEM)
+    return NULL;
+  const struct mom_assovaldata_st *attrs =
+    mom_assovaldata_dyncast (itm->itm_pattr);
+  if (!attrs)
+    return NULL;
+  return mom_assovaldata_get (attrs, itmat);
+}                               /* end of mom_unsync_item_get_phys_attr */
+
+
+static inline const struct mom_boxset_st *
+mom_unsync_item_phys_set_attrs (const struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return NULL;
+  const struct mom_assovaldata_st *attrs =
+    mom_assovaldata_dyncast (itm->itm_pattr);
+  if (!attrs)
+    return NULL;
+  return mom_assovaldata_set_attrs (attrs);
+}                               /* end of mom_unsync_item_phys_set_attrs */
+
+
+// put a physical attribute inside an item
+void mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
+                                    const struct mom_item_st *itmat,
+                                    const void *data);
+
+// remove a physical attribute from an item
+void mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
+                                       const struct mom_item_st *itmat);
+
+
 void mom_initialize_items (void);
 
 static inline void

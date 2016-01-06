@@ -250,13 +250,40 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), rawmode);
+  bool israw = false;
+  if (rawmode)
+    {
+      israw = (!strcmp (rawmode, "true") || !strcmp (rawmode, "1"));
+      mom_unsync_item_put_phys_attr (thistatitm,
+                                     MOM_PREDEFITM (display),
+                                     israw ? MOM_PREDEFITM (raw) :
+                                     MOM_PREDEFITM (cooked));
+    }
+  else
+    {
+      struct mom_item_st *moditm
+        = mom_dyncast_item (mom_unsync_item_get_phys_attr (thistatitm,
+                                                           MOM_PREDEFITM
+                                                           (display)));
+      israw = (moditm == MOM_PREDEFITM (raw));
+      MOM_DEBUGPRINTF (web,
+                       "dofillpage_nanoedit webr#%ld  thistatitm=%s moditm=%s :: mode %s",
+                       wexch->webx_count, mom_item_cstring (thistatitm),
+                       mom_item_cstring (moditm), israw ? "raw" : "cooked");
+
+    }
   char modbuf[64];
   memset (modbuf, 0, sizeof (modbuf));
-  MOM_WEXCH_PRINTF (wexch, "<h3><tt>%s</tt> generated on <i>%s</i></h3>\n",
+  MOM_WEXCH_PRINTF (wexch, "<h3>%s <tt>%s</tt> generated on <i>%s</i></h3>\n",
+                    israw ? "raw" : "cooked",
                     mom_item_cstring (thistatitm),
                     mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",
                                         thistatitm->itm_mtime));
-  mom_wexch_puts (wexch, "<p id='momrawpara_id'>"
+  mom_wexch_puts (wexch, israw
+                  ? "<p id='momrawpara_id'>"
+                  "<input type='checkbox' id='momrawbox_id' name='mode' value='raw' checked/>"
+                  " raw display</p>\n"
+                  : "<p id='momrawpara_id'>"
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw'/>"
                   " raw display</p>\n");
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
