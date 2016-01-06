@@ -1,6 +1,6 @@
 // file value.c - managing values
 
-/**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -949,7 +949,7 @@ mom_output_value (FILE *fout, long *plastnl,
         {
           const struct mom_boxnode_st *nod
             = (const struct mom_boxnode_st *) val;
-          fputs ("*", fout);
+          fputs ("%", fout);
           fputs (mom_item_cstring (nod->nod_connitm), fout);
           if (nod->nod_metaitem || nod->nod_metarank)
             {

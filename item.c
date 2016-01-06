@@ -1447,7 +1447,8 @@ mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
     return;
   if (!itmat || itmat == MOM_EMPTY_SLOT || itmat->va_itype != MOMITY_ITEM)
     return;
-  struct mom_assovaldata_st *attrs = mom_assovaldata_dyncast (itm->itm_pattr);
+  struct mom_assovaldata_st *attrs =
+    (struct mom_assovaldata_st *) mom_assovaldata_dyncast (itm->itm_pattr);
   attrs = mom_assovaldata_put (attrs, itmat, data);
   itm->itm_pattr = attrs;
 }                               /* end of mom_unsync_item_put_phys_attr */
@@ -1462,7 +1463,8 @@ mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
     return;
   if (!itmat || itmat == MOM_EMPTY_SLOT || itmat->va_itype != MOMITY_ITEM)
     return;
-  struct mom_assovaldata_st *attrs = mom_assovaldata_dyncast (itm->itm_pattr);
+  struct mom_assovaldata_st *attrs =
+    (struct mom_assovaldata_st *) mom_assovaldata_dyncast (itm->itm_pattr);
   attrs = mom_assovaldata_remove (attrs, itmat);
   itm->itm_pattr = attrs;
 }                               /* end of mom_unsync_item_remove_phys_attr */

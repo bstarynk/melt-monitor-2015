@@ -210,6 +210,26 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
       {
         const struct mom_boxnode_st *nod = pval;
         unsigned siz = mom_raw_size (nod);
+        struct mom_item_st *moditm
+          = mom_dyncast_item (mom_unsync_item_get_phys_attr (thistatitm,
+                                                             MOM_PREDEFITM
+                                                             (display)));
+        MOM_DEBUGPRINTF (web,
+                         "showvalue_nanoedit wexitm=%s thistatitm=%s moditm=%s, depth#%d, node %s",
+                         mom_item_cstring (wexitm),
+                         mom_item_cstring (thistatitm),
+                         mom_item_cstring (moditm), depth,
+                         mom_value_cstring (pval));
+        if (moditm == MOM_PREDEFITM (cooked))
+          {
+#warning showitem_nanoedit_mom cooked mode unimplemented
+            MOM_WARNPRINTF
+              ("showvalue_nanoedit wexitm=%s thistatitm=%s cooked mode not implemented depth#%d node %s",
+               mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+               depth, mom_value_cstring (pval));
+
+
+          }
         mom_wexch_puts (wexch, " <span class='momnode_cl'>%");
         showitem_nanoedit_mom (wexch, wexitm, thistatitm,
                                nod->nod_connitm, false);
