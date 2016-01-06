@@ -1924,6 +1924,14 @@ mom_stop (void)
 
 void mom_stop_and_dump (void);
 
+// for signature_displayer
+typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
+                                  struct mom_webexch_st *wexch,
+                                  struct mom_item_st *wexitm,
+                                  struct mom_item_st *thistatitm,
+                                  const void *pval, int depth);
+
+
 ////////////////
 
 void mom_agenda_add_tasklet_front (const struct mom_item_st *tkletitm);

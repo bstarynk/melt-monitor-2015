@@ -222,13 +222,51 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
                          mom_value_cstring (pval));
         if (moditm == MOM_PREDEFITM (cooked))
           {
-#warning showitem_nanoedit_mom cooked mode unimplemented
-            MOM_WARNPRINTF
-              ("showvalue_nanoedit wexitm=%s thistatitm=%s cooked mode not implemented depth#%d node %s",
-               mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
-               depth, mom_value_cstring (pval));
-
-
+            struct mom_item_st *connitm = nod->nod_connitm;
+            struct mom_hashedvalue_st *conndisplayerv = NULL;
+            struct mom_item_st *dispitm = NULL;
+            struct mom_item_st *dsigitm = NULL;
+            mom_displayer_sig_t *disprout = NULL;
+            mom_item_lock (connitm);
+            conndisplayerv =
+              mom_unsync_item_get_phys_attr (connitm,
+                                             MOM_PREDEFITM (displayer));
+            mom_item_unlock (connitm);
+            MOM_DEBUGPRINTF (web,
+                             "showvalue_nanoedit wexitm=%s connitm=%s conndisplayerv=%s",
+                             mom_item_cstring (wexitm),
+                             mom_item_cstring (connitm),
+                             mom_value_cstring (conndisplayerv));
+            const struct mom_boxnode_st *conndispnod =
+              mom_dyncast_node (conndisplayerv);
+            if (conndispnod)
+              {
+                dispitm = conndispnod->nod_connitm;
+                if (dispitm)
+                  {
+                    mom_item_lock (dispitm);
+                    dsigitm = dispitm->itm_funsig;
+                    if (dsigitm == MOM_PREDEFITM (signature_displayer))
+                      disprout = (mom_displayer_sig_t *) dispitm->itm_funptr;
+                    mom_item_unlock (dispitm);
+                  }
+              }
+            if (disprout)
+              {
+                MOM_DEBUGPRINTF (web,
+                                 "showvalue_nanoedit wexitm=%s connitm=%s dispitm=%s",
+                                 mom_item_cstring (wexitm),
+                                 mom_item_cstring (connitm),
+                                 mom_item_cstring (dispitm));
+                (*disprout) (conndispnod, wexch, wexitm, thistatitm, pval,
+                             depth);
+                MOM_DEBUGPRINTF (web,
+                                 "showvalue_nanoedit done wexitm=%s connitm=%s dispitm=%s",
+                                 mom_item_cstring (wexitm),
+                                 mom_item_cstring (connitm),
+                                 mom_item_cstring (dispitm));
+                return;
+              }
           }
         mom_wexch_puts (wexch, " <span class='momnode_cl'>%");
         showitem_nanoedit_mom (wexch, wexitm, thistatitm,
@@ -255,6 +293,23 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
     }
 }                               /* end showvalue_nanoedit_mom */
 
+
+#warning should have a nano_displayer item
+const char momsig_nano_displayer[] = "signature_displayer";
+void
+momf_nano_displayer (const struct mom_boxnode_st *closnod,
+                     struct mom_webexch_st *wexch, struct mom_item_st *wexitm,
+                     struct mom_item_st *thistatitm, const void *pval,
+                     int depth)
+{
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (web,
+                   "nano_displayer closnod=%s wexitm=%s thistatitm=%s depth#%d pval=%s",
+                   mom_value_cstring ((void *) closnod),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   depth, mom_value_cstring (pval));
+  showvalue_nanoedit_mom (wexch, wexitm, thistatitm, pval, depth);
+}                               /* end of momf_nano_displayer */
 
 
 static void
@@ -294,7 +349,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
     }
   char modbuf[64];
   memset (modbuf, 0, sizeof (modbuf));
-  MOM_WEXCH_PRINTF (wexch, "<h3>%s <tt>%s</tt> generated on <i>%s</i></h3>\n",
+  MOM_WEXCH_PRINTF (wexch, "<h3>%s <tt>%s</tt> on <i>%s</i></h3>\n",
                     israw ? "raw" : "cooked",
                     mom_item_cstring (thistatitm),
                     mom_strftime_centi (modbuf, sizeof (modbuf) - 1, "%c %Z",

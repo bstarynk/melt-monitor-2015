@@ -94,6 +94,14 @@ signature_tasklet
 ^funsignature
 
 
+*nano_displayer
+1452115787
+^mtime
+^func
+signature_displayer
+^funsignature
+
+
 *nanoedit
 1452006207
 ^mtime
@@ -167,6 +175,9 @@ comment
 *the_system
 1445947163
 ^mtime
+(
+nano_displayer
+)comps
 
 
 *web_handlers
