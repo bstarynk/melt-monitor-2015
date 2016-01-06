@@ -175,7 +175,7 @@ item
 something
 notice
 (
-"some simple notice"_
+"some simple \ttab< notice"_
 (
 2_
 web_state

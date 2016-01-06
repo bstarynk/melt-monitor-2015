@@ -21,6 +21,7 @@
 var $editdiv;
 var $editlog;
 var $cleareditbut;
+var $rawmodebox;
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
@@ -110,6 +111,20 @@ function mom_ajaxfill(htmlc) {
     console.log("mom_ajaxfill:\n", htmlc, "\n### endajaxfill\n");
     console.trace();
     $editdiv.html(htmlc);
+    $rawmodebox = $("#momrawbox_id");
+    $rawmodebox.on("change", function() {
+	var valmode = $rawmodebox.val();
+	var valchecked = $rawmodebox.prop("checked");
+	console.log("mom_ajaxfill valmode=", valmode,
+		    " valchecked=", valchecked, " $rawmodebox=", $rawmodebox);
+	$.ajax
+	({url: "/nanoedit",
+	  method: "POST",
+	  data: {"do_fillpage": true, "rawmode", valchecked},
+	  dataType: "html",
+	  success: mom_ajaxfill
+	 });
+    });
 }
 
 
@@ -131,7 +146,7 @@ $(document).ready(function(){
     $.ajax
     ({url: "/nanoedit",
       method: "POST",
-      data: {"do_fillpage": true},
+      data: {"do_fillpage": true, "rawmode": true},
       dataType: "html",
       success: mom_ajaxfill
      });

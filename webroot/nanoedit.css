@@ -17,6 +17,14 @@
     <http://www.gnu.org/licenses/>.
 **/
 
+p#momrawpara_id {
+    font-family: serif;
+    font-size: 90%;
+    background-color: #D5EADC;
+    padding: 4px;
+    margin: 2px 3px 6px 3px;
+}
+
 span.momnilval_cl {
     font-family: serif;
     color: #64157A;
@@ -146,5 +154,69 @@ span.momstrval_cl:hover {
 span.momcharesc_cl {
     font-family: "Courier New", Courier, monospace;
     font-style: oblique;
-    color: ##4A3989;
+    font-weight: bold;
+    color: #3e2c0a;
 }
+
+
+span.momnode_cl {
+    font-family: serif;
+    color: #153027;
+    border-spacing: 2px;
+    padding: 5px;
+    margin: 6px;
+}
+
+span.momnode_cl:hover {
+    font-family: serif;
+    color: #2d6351;
+    border: 1px dashed #954D2A;
+    border-spacing: 3px;
+    padding: 5px;
+    margin: 6px;
+}
+
+dl.momlocbind_cl {
+    background-color: #E5CCF9;
+    border: 1px #260047;
+    border-spacing: 4px;
+    margin: 6px;
+    padding: 4px;
+}
+
+dt.momlocvaritem_cl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 110%;
+    font-weight: bold;
+    color: #361753;
+    border-spacing: 2px;
+    padding: 3px;
+    margin: 3px;
+}
+
+dt.momlocvaritem_cl:hover {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 110%;
+    font-weight: bold;
+    color: #561753;
+    border: 1px dashed #362047;
+    border-spacing: 2px;
+    padding: 3px;
+    margin: 3px;
+}
+
+dd.momlocvalue_cl {
+    font-size: 105%;
+    background-color: #F3F9A7;
+    margin: 5px;
+    padding: 4px;
+}
+dd.momlocvalue_cl:hover {
+    font-size: 105%;
+    background-color: #F3FD7E;
+    border: 1px dashed #010343;
+    margin: 5px;
+    padding: 4px;
+}
+
+/* end nanoedit.css */
