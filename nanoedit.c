@@ -294,7 +294,7 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end showvalue_nanoedit_mom */
 
 
-#warning should have a nano_displayer item
+
 const char momsig_nano_displayer[] = "signature_displayer";
 void
 momf_nano_displayer (const struct mom_boxnode_st *closnod,
@@ -582,3 +582,23 @@ end:
     mom_item_unlock (sessitm);
   mom_item_unlock (tkitm);
 }                               /* end of momf_nanoedit */
+
+
+#define NANOPARSING_MAGIC_MOM 886322565 /*0x34d43585 */
+struct nanoparsing_mom_st
+{
+  unsigned nanop_magic;
+  unsigned nanop_pos;
+  struct mom_boxstring_st *nanop_msgv;
+  jmp_buf nanop_jb;
+};
+
+#define NANOPARSING_FAILURE_MOM(Np,Pos,Fmt,...) do {		\
+    struct nanoparsing_mom_st *_np = (Np);			\
+    assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);	\
+    int _pos = (Pos);						\
+    if (_pos>0) _np->nanop_pos = _pos;				\
+    _np->nanop_msgv =						\
+      mom_boxstring_printf((Fmt),#__VA_ARGS__);			\
+    longjmp(_np->nanop_jb,__LINE__);				\
+  } while(0)

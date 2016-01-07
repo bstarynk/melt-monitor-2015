@@ -622,6 +622,11 @@ mom_boxstring_cstr (const void *p)
 
 const struct mom_boxstring_st *mom_boxstring_make (const char *s);
 
+const struct mom_boxstring_st *mom_boxstring_printf (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+
+
 #define MOM_SEQITEMS_FIELDS			\
   MOM_SIZEDVALUE_FIELDS;			\
   struct mom_item_st* seqitem[] /* actual size sva_size */

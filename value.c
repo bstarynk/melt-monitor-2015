@@ -111,6 +111,36 @@ mom_boxstring_make (const char *s)
 }
 
 
+const struct mom_boxstring_st *
+mom_boxstring_printf (const char *fmt, ...)
+{
+  char *s = NULL;
+  const struct mom_boxstring_st *bsv = NULL;
+  char buf[200];
+  memset (buf, 0, sizeof (buf));
+  va_list args;
+  va_start (args, fmt);
+  int ln = vsnprintf (buf, sizeof (buf), fmt, args);
+  va_end (args);
+  if (ln >= (int) sizeof (buf) - 1)
+    {
+      unsigned sz = ((ln + 2) | 3) + 1;
+      s = malloc (sz);
+      if (MOM_UNLIKELY (!s))
+        MOM_FATAPRINTF ("failed malloc for boxstring_printf %s", fmt);
+      va_start (args, fmt);
+      vsnprintf (s, sz, fmt, args);
+      va_end (args);
+    }
+  else
+    s = buf;
+  bsv = mom_boxstring_make (s);
+  if (s != buf)
+    free (s);
+  return bsv;
+}                               /* end of mom_boxstring_printf */
+
+
 momhash_t
 mom_double_hash (double d)
 {
