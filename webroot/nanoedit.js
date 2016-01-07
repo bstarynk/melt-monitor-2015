@@ -21,6 +21,7 @@
 var $editdiv;
 var $editlog;
 var $cleareditbut;
+var $exitbut;
 var $rawmodebox;
 
 ////////////////////////////////////////////////////////////////
@@ -127,6 +128,13 @@ function mom_ajaxfill(htmlc) {
     });
 }
 
+function mom_doexit(jsex) {
+    console.log("nanoedit mom_doexit jsex=", jsex);
+    var realt = jsex.elapsedreal;
+    var cput = jsex.processcpu;
+    $editdiv.html("<b>exited</b> ("+realt.toPrecision(3)+" real seconds, "
+		  +cput.toPrecision(3)+" cpu seconds).");
+}
 
 $(document).ready(function(){
     console.log("nanoedit document ready");
@@ -137,6 +145,7 @@ $(document).ready(function(){
     $editdiv = $("#nanoedit_id");
     $editlog = $("#editlog_id");
     $cleareditbut = $("#cleareditbut_id");
+    $exitbut = $("#exitbut_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
@@ -150,6 +159,15 @@ $(document).ready(function(){
       dataType: "html",
       success: mom_ajaxfill
      });
+    $exitbut.click(function (evt) {
+	console.log ("exit button clicked evt=", evt);
+	$.ajax({url: "/nanoedit",
+		method: "POST",
+		data: {"do_exit": true},
+		dataType: "json",
+		success: mom_doexit
+	       })
+    });
     console.log("nanoedit document done ready");
 });
 
