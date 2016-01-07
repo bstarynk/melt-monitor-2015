@@ -467,6 +467,28 @@ docompletename_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of docompletename_nanoedit_mom */
 
 
+static void
+doexit_nanoedit_mom (struct mom_webexch_st *wexch,
+                     struct mom_item_st *tkitm,
+                     struct mom_item_st *wexitm,
+                     struct mom_item_st *thistatitm, const char *doexit)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "doexit_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s doexit=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), doexit);
+  json_t *jreply = json_pack ("{s:f,s:f}",
+                              "elapsedreal", mom_elapsed_real_time (),
+                              "processcpu", mom_process_cpu_time ());;
+  // json_dumps will use GC_STRDUP...
+  MOM_DEBUGPRINTF (web, "doexit_nanoedit jreply=%s",
+                   json_dumps (jreply, JSON_INDENT (1)));
+  mom_wexch_puts (wexch, json_dumps (jreply, JSON_INDENT (1)));
+  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  mom_stop_and_dump ();
+}                               /* end of doexit_nanoedit_mom */
 
 
 extern mom_tasklet_sig_t momf_nanoedit;
@@ -553,6 +575,7 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *dofillpage = NULL;
       const char *doknownitem = NULL;
       const char *docompletename = NULL;
+      const char *doexit = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
                        mom_item_cstring (tkitm), wexch->webx_count);
@@ -564,12 +587,14 @@ momf_nanoedit (struct mom_item_st *tkitm)
                                         "do_knownitem")) != NULL)
         doknownitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
                                   doknownitem);
-      else
-        if ((docompletename =
-             onion_request_get_post (wexch->webx_requ,
-                                     "do_completename")) != NULL)
+      else if ((docompletename =
+                onion_request_get_post (wexch->webx_requ,
+                                        "do_completename")) != NULL)
         docompletename_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
                                      docompletename);
+      else if ((doexit = onion_request_get_post (wexch->webx_requ,
+                                                 "do_exit")) != NULL)
+        doexit_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, doexit);
     }
 end:
   if (hsetitm)
@@ -602,3 +627,6 @@ struct nanoparsing_mom_st
       mom_boxstring_printf((Fmt),#__VA_ARGS__);			\
     longjmp(_np->nanop_jb,__LINE__);				\
   } while(0)
+
+
+/*** end of file nanoedit.c ***/

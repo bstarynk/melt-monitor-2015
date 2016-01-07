@@ -1918,6 +1918,7 @@ extern const char *mom_webdir[MOM_MAX_WEBDIR];
 #define MOM_PATH_MAX 384
 
 void mom_start_web (const char *webservice);
+void mom_stop_web (void);
 
 extern volatile atomic_bool mom_should_run;
 

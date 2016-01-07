@@ -1372,6 +1372,12 @@ main (int argc_main, char **argv_main)
     }
   usleep (10 * 1000);
   MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
+  if (web_service_mom)
+    {
+      usleep (5 * 1000);
+      mom_stop_web ();
+      usleep (20 * 1000);
+    }
   if (should_dump_mom)
     {
       char cwdbuf[128];

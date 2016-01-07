@@ -341,6 +341,7 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
       onion_response_write0 (resp, "\n");
       mom_stop_and_dump ();
       onion_listen_stop (onion_mom);
+      onion_mom = NULL;
       MOM_DEBUGPRINTF (web, "hackc_code #%ld do_stop stopping", reqcnt);
       return OCS_PROCESSED;
     }
@@ -1015,3 +1016,16 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   pthread_cond_broadcast (&wex->webx_donecond);
 }                               /* end mom_wexch_reply */
+
+
+void
+mom_stop_web (void)
+{
+  MOM_DEBUGPRINTF (web, "mom_stop_web onion_mom=%p", onion_mom);
+  if (onion_mom)
+    {
+      onion_listen_stop (onion_mom);
+      onion_mom = NULL;
+      MOM_INFORMPRINTF ("stopping web serving");
+    }
+}                               /* end of mom_stop_web */
