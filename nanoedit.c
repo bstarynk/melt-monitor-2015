@@ -390,6 +390,11 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end of dofillpage_nanoedit_mom */
 
+static void
+doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
+                             struct mom_item_st *tkitm,
+                             struct mom_item_st *wexitm,
+                             struct mom_item_st *thistatitm, const char *cmd);
 
 
 static void
@@ -576,6 +581,7 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *doknownitem = NULL;
       const char *docompletename = NULL;
       const char *doexit = NULL;
+      const char *doparsecommand = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
                        mom_item_cstring (tkitm), wexch->webx_count);
@@ -592,8 +598,13 @@ momf_nanoedit (struct mom_item_st *tkitm)
                                         "do_completename")) != NULL)
         docompletename_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
                                      docompletename);
-      else if ((doexit = onion_request_get_post (wexch->webx_requ,
-                                                 "do_exit")) != NULL)
+      else if ((doparsecommand = onion_request_get_post (wexch->webx_requ,
+                                                         "do_parsecommand"))
+               != NULL)
+        doparsecommand_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                     doparsecommand);
+      else if ((doexit = onion_request_get_post (wexch->webx_requ, "do_exit"))
+               != NULL)
         doexit_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, doexit);
     }
 end:
@@ -628,5 +639,21 @@ struct nanoparsing_mom_st
     longjmp(_np->nanop_jb,__LINE__);				\
   } while(0)
 
+static void
+doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
+                             struct mom_item_st *tkitm,
+                             struct mom_item_st *wexitm,
+                             struct mom_item_st *thistatitm, const char *cmd)
+{
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "doparsecommand_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s cmd=%s",
+                   wexch->webx_count, mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), cmd);
+  MOM_WARNPRINTF ("unimplemented doparsecommand_nanoedit webr#%ld cmd=%s",
+                  wexch->webx_count, cmd);
+#warning doparsecommand_nanoedit_mom unimplemented
+}                               /* end of doparsecommand_nanoedit_mom */
 
 /*** end of file nanoedit.c ***/

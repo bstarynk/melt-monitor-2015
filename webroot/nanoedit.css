@@ -248,4 +248,35 @@ dd.momlocvalue_cl:hover {
     padding: 4px;
 }
 
+label#commandlab_id {
+    font-size: 106%;
+    font-family: serif;
+    font-weight: bold;
+    margin: 5px;
+    padding: 3px;
+}
+
+textarea#commandtext_id {
+    font-family: monospace, Courier;
+    font-weight: bold;
+    background-color: #FAFAC4;
+    border: 2px dashed #060923;
+}
+textarea#commandtext_id:focus {
+    font-family: monospace, Courier;
+    font-weight: bold;
+    background-color: #EFFAC4;
+    border: 2px dotted #261923;
+}
+
+input#commandsend_id {
+    font-family: Verdana, Sans-serif;
+    font-size: 108%;
+    font-weight: bold;
+    background-color: #F0CF91;
+}
+
+button#commandclear_id {
+    background-color: #F3DFB1;
+}
 /* end nanoedit.css */

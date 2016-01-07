@@ -928,7 +928,10 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           waitreply = false;
         }
       else
-        waitreply = true;
+        {
+          usleep (5 * 1000);
+          waitreply = true;
+        }
       mom_item_unlock (wexitm);
     }
   while (waitreply);

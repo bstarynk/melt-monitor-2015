@@ -22,7 +22,11 @@ var $editdiv;
 var $editlog;
 var $cleareditbut;
 var $exitbut;
+var $resetcmdbut;
+var $commandtext;
+var $sendcmdbut;
 var $rawmodebox;
+var $parsedcmddiv;
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
@@ -136,6 +140,11 @@ function mom_doexit(jsex) {
 		  +cput.toPrecision(3)+" cpu seconds).");
 }
 
+function mom_ajaxparsecommand(htmlc) {
+    console.log("nanoedit mom_ajaxparsecommand htmlc=", htmlc);
+    $parsedcmddiv.html(htmlc);
+}
+
 $(document).ready(function(){
     console.log("nanoedit document ready");
     // see http://stackoverflow.com/a/10556743/841108
@@ -146,10 +155,30 @@ $(document).ready(function(){
     $editlog = $("#editlog_id");
     $cleareditbut = $("#cleareditbut_id");
     $exitbut = $("#exitbut_id");
+    $resetcmdbut = $("#commandclear_id");
+    $commandtext = $("#commandtext_id");
+    $sendcmdbut = $("#commandsend_id");
+    $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");
+    });
+    $resetcmdbut.click(function(evt) {
+	console.log("resetcmd evt=", evt);	
+	$commandtext.val("");
+    });
+    $sendcmdbut.click(function(evt) {
+	var cmdtext = $commandtext.val();
+	console.log("sendcmd evt=", evt, " cmdtext=", cmdtext);
+	$.ajax
+    ({url: "/nanoedit",
+      method: "POST",
+      data: {"do_parsecommand": true,
+	     "command": cmdtext},
+      dataType: "html",
+      success: mom_ajaxparsecommand
+     });      
     });
     console.log("nanoedit before ajax do_fillpage");
     $.ajax
