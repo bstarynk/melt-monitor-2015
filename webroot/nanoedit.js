@@ -153,10 +153,22 @@ function mom_cmdkeypress(evt) {
 	console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
 	/// see http://stackoverflow.com/a/5592852/841108
 	var result = /\S+$/.exec(this.value.slice(0, curspos));
-	var lastWord = result ? result[0] : null;
+	var lastword = result ? result[0] : null;
 	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
+		    " result=", result,
 		    " lastword=", lastword);
+	if (lastword.length >= 2) {
+	}
     }
+}
+
+function mom_commandautocomplete(requ,resp) {
+    console.log("commandautocomplete requ=", requ);
+    var acomp = mom_complete_name(requ.term);
+    console.log("commandautocomplete acomp=", acomp);
+    if (acomp) resp(acomp);
+    else resp(null);
+    console.log("commandautocomplete done acomp=", acomp);
 }
 
 $(document).ready(function(){
@@ -174,7 +186,13 @@ $(document).ready(function(){
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
-    $commandtext.keypress(mom_cmdkeypress);
+    $commandtext.autocomplete({
+	delay: 300,
+	minLength: 2,
+	source: mom_commandautocomplete,
+	disabled: false
+    });
+    //$commandtext.keypress(mom_cmdkeypress);
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");

@@ -358,7 +358,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
   memset (timbuf, 0, sizeof (timbuf));
   mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
                           "%Y %b %d, %H:%M:%S.__ %Z");
-  MOM_WEXCH_PRINTF (wexch, "<small>(generated on %s)</small>\n", timbuf);
+  MOM_WEXCH_PRINTF (wexch, "<small>(generated on %s by commit: <tt>%s</tt>)</small>\n", timbuf, monimelt_lastgitcommit);
   mom_wexch_puts (wexch, israw
                   ? "<p id='momrawpara_id'>"
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw' checked/>"
