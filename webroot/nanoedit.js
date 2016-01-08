@@ -145,6 +145,20 @@ function mom_ajaxparsecommand(htmlc) {
     $parsedcmddiv.html(htmlc);
 }
 
+function mom_cmdkeypress(evt) {
+    console.log("mom_cmdkeypress evt=", evt);
+    if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) {
+	/// see http://stackoverflow.com/a/7745958/841108
+	var curspos = $commandtext.prop("selectionStart");
+	console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
+	/// see http://stackoverflow.com/a/5592852/841108
+	var result = /\S+$/.exec(this.value.slice(0, curspos));
+	var lastWord = result ? result[0] : null;
+	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
+		    " lastword=", lastword);
+    }
+}
+
 $(document).ready(function(){
     console.log("nanoedit document ready");
     // see http://stackoverflow.com/a/10556743/841108
@@ -160,6 +174,7 @@ $(document).ready(function(){
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
+    $commandtext.keypress(mom_cmdkeypress);
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");
