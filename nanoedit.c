@@ -625,19 +625,22 @@ struct nanoparsing_mom_st
 {
   unsigned nanop_magic;
   unsigned nanop_pos;
-  struct mom_boxstring_st *nanop_msgv;
+  struct mom_boxstring_st *nanop_errmsgv;
+  const char* nanop_cmdstr;
   jmp_buf nanop_jb;
 };
 
-#define NANOPARSING_FAILURE_MOM(Np,Pos,Fmt,...) do {		\
-    struct nanoparsing_mom_st *_np = (Np);			\
-    assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);	\
-    int _pos = (Pos);						\
-    if (_pos>0) _np->nanop_pos = _pos;				\
-    _np->nanop_msgv =						\
-      mom_boxstring_printf((Fmt),#__VA_ARGS__);			\
-    longjmp(_np->nanop_jb,__LINE__);				\
+#define NANOPARSING_FAILURE_MOM(Np,Pos,Fmt,...) do {            \
+    struct nanoparsing_mom_st *_np = (Np);                      \
+    assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
+    int _pos = (Pos);                                           \
+    if (_pos>0) _np->nanop_pos = _pos;                          \
+    _np->nanop_errmsgv =                                        \
+      mom_boxstring_printf((Fmt),#__VA_ARGS__);                 \
+    longjmp(_np->nanop_jb,__LINE__);                            \
   } while(0)
+
+
 
 static void
 doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
@@ -651,9 +654,24 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), cmd);
-  MOM_WARNPRINTF ("unimplemented doparsecommand_nanoedit webr#%ld cmd=%s",
-                  wexch->webx_count, cmd);
+  struct nanoparsing_mom_st nanopars;
+  memset (&nanopars, 0, sizeof(nanopars));
+  nanopars.nanop_magic =  NANOPARSING_MAGIC_MOM;
+  nanopars.nanop_pos = 0;
+  nanopars.nanop_cmdstr = cmd;
+  int linerr = 0;
+  if ((linerr = setjmp(&nanopars.nanop_jb)) != 0) {
+    MOM_WARNPRINTF("doparsecommand_nanoedit parsing error from %s:%d: %s"
+		   "\n.. at position %u of:\n%s\n",
+		   __FILE__, linerr, mom_boxstring_cstr(nanopars.nanop_errmsgv),
+		   nanopars.nanop_pos, nanopars.nanop_cmdstr);
+  }
+  else {
+    MOM_WARNPRINTF ("unimplemented doparsecommand_nanoedit webr#%ld cmd=%s",
+		    wexch->webx_count, cmd);
 #warning doparsecommand_nanoedit_mom unimplemented
+  }
+  memset (&nanopars, 0, sizeof(nanopars));
 }                               /* end of doparsecommand_nanoedit_mom */
 
 /*** end of file nanoedit.c ***/
