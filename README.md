@@ -61,7 +61,10 @@ anymore, like I am used to do....). And with a Web interface, even
 non-Linux users could use it (although the *MELT system* targets only
 Linux)... That interface would also be useful to *browse* (but not
 edit!) a large collection of user source code (compiled by a *MELT*
-enhanced `gcc`).
+enhanced `gcc`), and most of *GCC internal representations* (in its
+middle-end) of that user code (perhaps even *explaining* some of the
+GCC compiler's decisions, e.g. why that function was inlined here and
+not there...).
 
 + Provide a web interface to edit some *abstract syntax tree* (ASTs)
   of some future DSL (e.g. formalizing coding rules), to search into
