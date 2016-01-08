@@ -70,7 +70,10 @@ enhanced `gcc`).
   DSL syntax (like the Lispy *MELT DSL* inside our *MELT plugin*) as
   text, we want to assist him in constructing ASTs; Old 1980s
   [MENTOR](https://hal.inria.fr/inria-00076535) system from INRIA (or
-  some Smalltalk systems) is inspirational.
+  some Smalltalk systems) is inspirational. Notice that the *MELT
+  monitor* is a specialized Web server with *very few* simultaneous users
+  (usually one, in the future a small team working on the same
+  software project, e.g. a dozen of users).
 
 + provide a persistent machinery to the *MELT system*, that is a
   long-term store usable by MELT extensions to keep, enhance, and
