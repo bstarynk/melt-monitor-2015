@@ -158,6 +158,10 @@ function mom_cmdkeypress(evt) {
 		    " result=", result,
 		    " lastword=", lastword);
 	if (lastword.length >= 2) {
+	    var acomp = mom_complete_name(lastword);
+	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp);
+	    if (!acomp || acomp.length==0) {
+	    }
 	}
     }
 }
@@ -186,13 +190,15 @@ $(document).ready(function(){
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
+    /***
     $commandtext.autocomplete({
 	delay: 300,
 	minLength: 2,
 	source: mom_commandautocomplete,
 	disabled: false
     });
-    //$commandtext.keypress(mom_cmdkeypress);
+    ***/
+    $commandtext.keypress(mom_cmdkeypress);
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");
