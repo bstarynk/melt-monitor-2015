@@ -358,12 +358,13 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
   memset (timbuf, 0, sizeof (timbuf));
   mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
                           "%Y %b %d, %H:%M:%S.__ %Z");
-  MOM_WEXCH_PRINTF (wexch, "<small>(generated on %s by commit: <tt>%s</tt>)</small>\n", timbuf, monimelt_lastgitcommit);
-  mom_wexch_puts (wexch, israw
-                  ? "<p id='momrawpara_id'>"
+  MOM_WEXCH_PRINTF (wexch,
+                    "<small>(generated on %s by commit: <tt>%s</tt>)</small>\n",
+                    timbuf, monimelt_lastgitcommit);
+  mom_wexch_puts (wexch,
+                  israw ? "<p id='momrawpara_id'>"
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw' checked/>"
-                  " raw display</p>\n"
-                  : "<p id='momrawpara_id'>"
+                  " raw display</p>\n" : "<p id='momrawpara_id'>"
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw'/>"
                   " raw display</p>\n");
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
@@ -632,6 +633,10 @@ struct nanoparsing_mom_st
   unsigned nanop_pos;
   struct mom_boxstring_st *nanop_errmsgv;
   const char *nanop_cmdstr;
+  struct mom_webexch_st *nanop_wexch;
+  struct mom_item_st *nanop_tkitm;
+  struct mom_item_st *nanop_wexitm;
+  struct mom_item_st *nanop_thistatitm;
   jmp_buf nanop_jb;
 };
 
@@ -654,42 +659,56 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                              struct mom_item_st *thistatitm, const char *cmd)
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
-  struct mom_item_st *seqitm = NULL;
+  struct mom_item_st *queitm = NULL;
+  struct queue_st *que = NULL;
   MOM_DEBUGPRINTF (web,
                    "doparsecommand_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s cmd=%s",
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), cmd);
-  struct nanoparsing_mom_st nanopars;
-  memset (&nanopars, 0, sizeof (nanopars));
-  nanopars.nanop_magic = NANOPARSING_MAGIC_MOM;
-  nanopars.nanop_pos = 0;
-  nanopars.nanop_cmdstr = cmd;
+  struct nanoparsing_mom_st npars;
+  memset (&nanopars, 0, sizeof (npars));
+  npars.nanop_magic = NANOPARSING_MAGIC_MOM;
+  npars.nanop_pos = 0;
+  npars.nanop_cmdstr = cmd;
+  npars.nanop_wexch = wexch;
+  npars.nanop_tkitm = tkitm;
+  npars.nanop_wexitm = wexitm;
+  npars.nanop_thistatitm = thistatitm;
   int linerr = 0;
-  if ((linerr = setjmp (nanopars.nanop_jb)) != 0)
+  if ((linerr = setjmp (npars.nanop_jb)) != 0)
     {
       MOM_WARNPRINTF ("doparsecommand_nanoedit parsing error from %s:%d: %s"
                       "\n.. at position %u of:\n%s\n",
                       __FILE__, linerr,
-                      mom_boxstring_cstr (nanopars.nanop_errmsgv),
-                      nanopars.nanop_pos, nanopars.nanop_cmdstr);
+                      mom_boxstring_cstr (npars.nanop_errmsgv),
+                      npars.nanop_pos, npars.nanop_cmdstr);
       goto end;
     }
   else
     {
       {
-	struct mom_item_st* itm = mom_clone_item(MOM_PREDEFITM(sequence));
-	mom_item_lock(itm);
-	seqitm = itm;
+        struct mom_item_st *itm = mom_clone_item (MOM_PREDEFITM (queue));
+        que = mom_queue_make ();
+        itm->itm_payload = que;
+        mom_item_lock (itm);
+        queitm = itm;
+        while (cmd[npars.nanop_pos] != (char) 0)
+          {
+#warning doparsecommand_nanoedit a completer
+            MOM_FATAPRINTF ("doparsecommand_nanoedit a completer");
+          }
       }
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit queitm=%s",
+                       mom_item_cstring (queitm));
       MOM_WARNPRINTF ("unimplemented doparsecommand_nanoedit webr#%ld cmd=%s",
                       wexch->webx_count, cmd);
 #warning doparsecommand_nanoedit_mom unimplemented
     }
- end:
+end:
   memset (&nanopars, 0, sizeof (nanopars));
-  if (seqitm)
-    mom_item_unlock(seqitm);
+  if (queitm)
+    mom_item_unlock (queitm);
 }                               /* end of doparsecommand_nanoedit_mom */
 
 /*** end of file nanoedit.c ***/
