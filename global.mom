@@ -115,6 +115,15 @@ signature_tasklet
 ^mtime
 
 
+*queue
+1452423077
+^mtime
+(
+comment
+"for queues"_
+)attrs
+
+
 *raw
 1452095862
 ^mtime

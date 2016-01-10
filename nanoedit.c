@@ -654,6 +654,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                              struct mom_item_st *thistatitm, const char *cmd)
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
+  struct mom_item_st *seqitm = NULL;
   MOM_DEBUGPRINTF (web,
                    "doparsecommand_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s cmd=%s",
                    wexch->webx_count, mom_item_cstring (tkitm),
@@ -672,14 +673,23 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                       __FILE__, linerr,
                       mom_boxstring_cstr (nanopars.nanop_errmsgv),
                       nanopars.nanop_pos, nanopars.nanop_cmdstr);
+      goto end;
     }
   else
     {
+      {
+	struct mom_item_st* itm = mom_clone_item(MOM_PREDEFITM(sequence));
+	mom_item_lock(itm);
+	seqitm = itm;
+      }
       MOM_WARNPRINTF ("unimplemented doparsecommand_nanoedit webr#%ld cmd=%s",
                       wexch->webx_count, cmd);
 #warning doparsecommand_nanoedit_mom unimplemented
     }
+ end:
   memset (&nanopars, 0, sizeof (nanopars));
+  if (seqitm)
+    mom_item_unlock(seqitm);
 }                               /* end of doparsecommand_nanoedit_mom */
 
 /*** end of file nanoedit.c ***/
