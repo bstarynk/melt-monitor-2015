@@ -28,6 +28,7 @@ var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
 var $commandcompletemenu;
+var $commanddialog;
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
@@ -184,15 +185,17 @@ function mom_cmdkeypress(evt) {
 	/// see http://stackoverflow.com/a/5592852/841108
 	var result = /\S+$/.exec(this.value.slice(0, curspos));
 	var lastword = result ? result[0] : null;
+	var coords = null;
 	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
 		    " result=", result,
 		    " lastword=", lastword);
 	if (lastword.length >= 2) {
 	    var acomp = mom_complete_name(lastword);
 	    var nbcomp = acomp.length;
-	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp);
+	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp, " lastword=", lastword);
 	    if (!acomp || nbcomp==0) {
 		alert ("<b>word</b> <tt>"+lastword+"</tt> <b>without completion</b>");
+		return false;
 	    }
 	    else if (nbcomp === 1) {
 		var complword = acomp[0];
@@ -208,6 +211,8 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
+		coords = getCaretCoordinates($commandtext, $commandtext.selectionEnd);
+		console.log("mom_cmdkeypress coords=", coords);
 		$commandcompletemenu.html("<li>-</li>");
 		for (var ix=0; ix<nbcomp; ix++) {
 		    $commandcompletemenu.append("<li>"+acomp[ix]+"</li>\n");
@@ -253,6 +258,7 @@ $(document).ready(function(){
     $resetcmdbut = $("#commandclear_id");
     $commandtext = $("#commandtext_id");
     $commandcompletemenu = $("#commandcompletemenu_id");
+    $commanddialog = $("#commanddialog_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut,
@@ -266,6 +272,10 @@ $(document).ready(function(){
     });
     ***/
     $commandtext.keypress(mom_cmdkeypress);
+    $commanddialog.dialog({
+	autoOpen: false,
+	modal: true
+    });
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");
