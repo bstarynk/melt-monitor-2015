@@ -188,7 +188,8 @@ function mom_cmdkeypress(evt) {
 	var coords = null;
 	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
 		    " result=", result,
-		    " lastword=", lastword);
+		    " lastword=", lastword,
+		    " $commandtext=", $commandtext);
 	if (lastword.length >= 2) {
 	    var acomp = mom_complete_name(lastword);
 	    var nbcomp = acomp.length;
@@ -211,16 +212,49 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
-		coords = getCaretCoordinates($commandtext, $commandtext.selectionEnd);
-		console.log("mom_cmdkeypress coords=", coords);
+		var tsel = $commandtext.getSelection();
+		var cmdpos = $commandtext.position(); // relative to parent, i.e. body
+		var cmdoff = $commandtext.offset(); // relative to document
+		var cmdwidth = $commandtext.innerWidth();
+		var cmdheight = $commandtext.innerHeight();
+		var menupos = null;
+		coords = getCaretCoordinates($commandtext[0], tsel.end);
+		// coords is {top=..., left=...} w.r.t. $commandtext
+		// cmdoff is {top=..., left=...} w.r.t. document		
+		console.log("mom_cmdkeypress coords=", coords,
+			    " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
+			    " cmdwidth=", cmdwidth, " cmdheight=", cmdheight);
 		$commandcompletemenu.html("<li>-</li>");
 		for (var ix=0; ix<nbcomp; ix++) {
 		    $commandcompletemenu.append("<li>"+acomp[ix]+"</li>\n");
 		}
+		if (coords.left < cmdwidth/2) {
+		    if (coords.top < cmdheight/2) {
+			menupos = {my: "left top+20",
+				   at: "top left+"+ coords.left.toFixed(0),
+				   of: $commandtext};
+		    }
+		    else {
+			menupos = {my: "right bottom-20",
+				   at: "top left+"+ coords.left.toFixed(0),
+				   of: $commandtext};
+		    }
+		}
+		else {
+		    if (coords.top < cmdheight/2) {
+			menupos = {my: "left top+20",
+				   at: "left bottom-20",
+				   of: $commandtext};
+		    }
+		    else {
+			menupos = {my: "right bottom-20", at: "right bottom+10",
+				   of: $commandtext}
+		    }
+		}		
+		console.log("mom_cmdkeypress menupos=", menupos);
 		$commandcompletemenu.css("display", "inline");
 		$commandcompletemenu.menu({
-		    position: { // my: "left top" //, at: .... 
-			      },
+		    position: menupos,
 		    select: function (ev,ui) {
 			console.debug("mom_cmdkeypress menuselect ev=", ev, " ui=", ui);
 			$commandcompletemenu.blur();
