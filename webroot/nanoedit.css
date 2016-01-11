@@ -256,6 +256,7 @@ label#commandlab_id {
     padding: 3px;
 }
 
+
 textarea#commandtext_id {
     font-family: monospace, Courier;
     font-weight: bold;
@@ -267,6 +268,12 @@ textarea#commandtext_id:focus {
     font-weight: bold;
     background-color: #EFFAC4;
     border: 2px dotted #261923;
+}
+
+ul#commandcompletemenu_id {
+    display: none;
+    border: 1px dotted #411320;
+    background-color: rgba(248,219,241,0.8);
 }
 
 input#commandsend_id {

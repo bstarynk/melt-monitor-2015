@@ -27,6 +27,7 @@ var $commandtext;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
+var $commandcompletemenu;
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
@@ -109,6 +110,7 @@ function mom_known_item(name) {
     return res;
 }                              // end mom_known_item
 
+
 //// give the completion of some name string, using AJAX do_completename
 function mom_complete_name(name) {
     var res = null;
@@ -187,11 +189,12 @@ function mom_cmdkeypress(evt) {
 		    " lastword=", lastword);
 	if (lastword.length >= 2) {
 	    var acomp = mom_complete_name(lastword);
+	    var nbcomp = acomp.length;
 	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp);
-	    if (!acomp || acomp.length==0) {
+	    if (!acomp || nbcomp==0) {
 		alert ("<b>word</b> <tt>"+lastword+"</tt> <b>without completion</b>");
 	    }
-	    else if (acomp.length === 1) {
+	    else if (nbcomp === 1) {
 		var complword = acomp[0];
 		console.assert (complword.length >= lastword.length,
 				"bad complword=", complword,
@@ -202,6 +205,27 @@ function mom_cmdkeypress(evt) {
 		console.log("mom_cmdkeypress ctrlspace singlecompletion restword=",
 			    restword);
 		$commandtext.insertAtCaret (restword);
+		return false;
+	    }
+	    else {
+		$commandcompletemenu.html("<li>-</li>");
+		for (var ix=0; ix<nbcomp; ix++) {
+		    $commandcompletemenu.append("<li>"+acomp[ix]+"</li>\n");
+		}
+		$commandcompletemenu.css("display", "inline");
+		$commandcompletemenu.menu({
+		    position: { // my: "left top" //, at: .... 
+			      },
+		    select: function (ev,ui) {
+			console.debug("mom_cmdkeypress menuselect ev=", ev, " ui=", ui);
+			$commandcompletemenu.blur();
+			$commandcompletemenu.html("");
+			$commandcompletemenu.css("display", "none");
+			console.debug("mom_cmdkeypress menuselect $commandcompletemenu=", $commandcompletemenu);
+		    }
+		});
+		$commandcompletemenu.menu("enable");
+		console.log("mom_cmdkeypress $commandcompletemenu=", $commandcompletemenu);
 	    }
 	}
     }
@@ -228,9 +252,11 @@ $(document).ready(function(){
     $exitbut = $("#exitbut_id");
     $resetcmdbut = $("#commandclear_id");
     $commandtext = $("#commandtext_id");
+    $commandcompletemenu = $("#commandcompletemenu_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
-    console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
+    console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut,
+		 " commandcompletemenu=", $commandcompletemenu);
     /***
     $commandtext.autocomplete({
 	delay: 300,
