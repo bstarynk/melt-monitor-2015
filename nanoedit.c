@@ -660,14 +660,14 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
   struct mom_item_st *queitm = NULL;
-  struct queue_st *que = NULL;
+  struct mom_queue_st *que = NULL;
   MOM_DEBUGPRINTF (web,
                    "doparsecommand_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s cmd=%s",
                    wexch->webx_count, mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), cmd);
   struct nanoparsing_mom_st npars;
-  memset (&nanopars, 0, sizeof (npars));
+  memset (&npars, 0, sizeof (npars));
   npars.nanop_magic = NANOPARSING_MAGIC_MOM;
   npars.nanop_pos = 0;
   npars.nanop_cmdstr = cmd;
@@ -690,7 +690,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       {
         struct mom_item_st *itm = mom_clone_item (MOM_PREDEFITM (queue));
         que = mom_queue_make ();
-        itm->itm_payload = que;
+        itm->itm_payload = (struct mom_anyvalue_st*)que;
         mom_item_lock (itm);
         queitm = itm;
         while (cmd[npars.nanop_pos] != (char) 0)
@@ -706,7 +706,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
 #warning doparsecommand_nanoedit_mom unimplemented
     }
 end:
-  memset (&nanopars, 0, sizeof (nanopars));
+  memset (&npars, 0, sizeof (npars));
   if (queitm)
     mom_item_unlock (queitm);
 }                               /* end of doparsecommand_nanoedit_mom */
