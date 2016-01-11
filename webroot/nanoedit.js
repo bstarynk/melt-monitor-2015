@@ -49,6 +49,34 @@ var mom_name_cache = {};
 
 /// see http://mikemurko.com/general/jquery-keycode-cheatsheet/
 
+///insert string in textarea at current caret
+/// from http://stackoverflow.com/a/4456598/841108
+$.fn.insertAtCaret = function(text) {
+    return this.each(function() {
+        if (document.selection && this.tagName == 'TEXTAREA') {
+            //IE textarea support
+            this.focus();
+            sel = document.selection.createRange();
+            sel.text = text;
+            this.focus();
+        } else if (this.selectionStart || this.selectionStart == '0') {
+            //MOZILLA/NETSCAPE support
+            startPos = this.selectionStart;
+            endPos = this.selectionEnd;
+            scrollTop = this.scrollTop;
+            this.value = this.value.substring(0, startPos) + text + this.value.substring(endPos, this.value.length);
+            this.focus();
+            this.selectionStart = startPos + text.length;
+            this.selectionEnd = startPos + text.length;
+            this.scrollTop = scrollTop;
+        } else {
+            // IE input[type=text] and other browsers
+            this.value += text;
+            this.focus();
+            this.value = this.value;    // forces cursor to end
+        }
+    });
+};
 
 /// check if a name is some known item, with memoization & AJAX do_knownitem
 function mom_known_item(name) {
@@ -161,6 +189,19 @@ function mom_cmdkeypress(evt) {
 	    var acomp = mom_complete_name(lastword);
 	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp);
 	    if (!acomp || acomp.length==0) {
+		alert ("<b>word</b> <tt>"+lastword+"</tt> <b>without completion</b>");
+	    }
+	    else if (acomp.length === 1) {
+		var complword = acomp[0];
+		console.assert (complword.length >= lastword.length,
+				"bad complword=", complword,
+				" acomp=", acomp,
+				" lastword=", lastword,
+				" curspos=", curspos);
+		var restword = complword.substr (lastword.length);
+		console.log("mom_cmdkeypress ctrlspace singlecompletion restword=",
+			    restword);
+		$commandtext.insertAtCaret (restword);
 	    }
 	}
     }

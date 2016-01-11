@@ -50,6 +50,7 @@ all: monimelt
 clean:
 	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.orig README.html
 	$(RM) modules/*.so modules/*~ modules/*%
+	$(RM) _timestamp*
 	$(RM) core*
 
 

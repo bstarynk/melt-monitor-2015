@@ -690,7 +690,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       {
         struct mom_item_st *itm = mom_clone_item (MOM_PREDEFITM (queue));
         que = mom_queue_make ();
-        itm->itm_payload = (struct mom_anyvalue_st*)que;
+        itm->itm_payload = (struct mom_anyvalue_st *) que;
         mom_item_lock (itm);
         queitm = itm;
         while (cmd[npars.nanop_pos] != (char) 0)
