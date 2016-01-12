@@ -270,10 +270,10 @@ textarea#commandtext_id:focus {
     border: 2px dotted #261923;
 }
 
-ul#commandcompletemenu_id {
-    display: none;
+ul.mom_commandcompletemenu_cl {
     border: 1px dotted #411320;
     background-color: rgba(248,219,241,0.4);
+    width: auto;
     z-index: -1;
 }
 

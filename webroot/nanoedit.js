@@ -24,6 +24,7 @@ var $cleareditbut;
 var $exitbut;
 var $resetcmdbut;
 var $commandtext;
+var $commanddiv;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
@@ -212,13 +213,20 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
-		var menuhtml = "<ul id='commandcompletemenu_id'>";
-		for (var ix=0; ix<nbcomp; ix++)
-		    menuhtml += "<li>"+acomp[ix]+"</li>\n";
-		menuhtml += "</ul>";
+		var menuhtml = "<ul class='ui-menu mom_commandcompletemenu_cl' id='commandcompletemenu_id'><li>-</li></ul>";
 		$commandtext.after(menuhtml);
 		var menuel = $("#commandcompletemenu_id");
-		console.log ("mom_cmdkeypress menuel=", menuel);
+		for (var ix=0; ix<nbcomp; ix++) {
+		    menuel.append("<li>"+acomp[ix]+"</li>");
+		}
+		var minwidth = 40;
+		/// dont work, the el has same width as body
+		menuel.children("li").each(function(ix,el) {
+		    console.log("mom_cmdkeypress ix=", ix, " el=", el);
+		    if (minwidth<$(el).innerWidth())
+			minwidth=$(el).innerWidth();
+		});
+		console.log ("mom_cmdkeypress menuel=", menuel, " minwidth=", minwidth);
 		var tsel = $commandtext.getSelection();
 		var cmdpos = $commandtext.position(); // relative to parent, i.e. body
 		var cmdoff = $commandtext.offset(); // relative to document
@@ -230,35 +238,42 @@ function mom_cmdkeypress(evt) {
 		// cmdoff is {top=..., left=...} w.r.t. document		
 		console.log("mom_cmdkeypress coords=", coords,
 			    " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
-			    " cmdwidth=", cmdwidth, " cmdheight=", cmdheight);
+			    " cmdwidth=", cmdwidth,
+			    " cmdheight=", cmdheight);
 		if (coords.left < cmdwidth/2) {
 		    if (coords.top < cmdheight/2) {
+			console.log("mom_cmdkeypress coords topleft ", coords);
 			menupos = {my: "left top+20",
-				   at: "top left+"+ coords.left.toFixed(0),
+				   at: "left+"+ coords.left.toFixed(0) + " top",
 				   of: $commandtext};
 		    }
 		    else {
+			console.log("mom_cmdkeypress coords bottomleft ", coords);
 			menupos = {my: "right bottom-20",
-				   at: "top left+"+ coords.left.toFixed(0),
-				   of: $commandtext};
+				   at: "left+"+ coords.left.toFixed(0) + " top",
+				   of: $commanddiv};
 		    }
 		}
 		else {
 		    if (coords.top < cmdheight/2) {
+			console.log("mom_cmdkeypress coords topright ", coords);
 			menupos = {my: "left top+20",
 				   at: "left bottom-20",
-				   of: $commandtext};
+				   of: $commanddiv};
 		    }
 		    else {
-			menupos = {my: "right bottom-20", at: "right bottom+10",
-				   of: $commandtext}
+			console.log("mom_cmdkeypress coords bottomright ", coords);
+			menupos = {my: "right bottom-20",
+				   at: "right bottom+10",
+				   of: $commanddiv}
 		    }
 		}
 		console.log("mom_cmdkeypress menupos=", menupos);
 		menuel.menu({
 		    position: menupos,
 		    select: function(ev,ui) {
-			console.log("mom_cmdkeypress-menu ev=", ev, " ui=", ui,
+			console.log("mom_cmdkeypress-menu ev=",
+				    ev, " ui=", ui,
 				    " menuel=", menuel);
 			setTimeout(function() {
 			    console.log("mom_cmdkeypress-menutimeout menuel=", menuel);
@@ -266,9 +281,10 @@ function mom_cmdkeypress(evt) {
 			    menuel.remove();
 			    menuel = null;
 			}, 100);
-		    }
+		    },
+		    disabled: false
 		});
-		console.log("mom_cmdkeypress menuel=", menuel);
+		console.log("mom_cmdkeypress menuel=", menuel, " of position=", menuel.menu("option","position"));
 	    }
 	}
     }
@@ -294,6 +310,7 @@ $(document).ready(function(){
     $cleareditbut = $("#cleareditbut_id");
     $exitbut = $("#exitbut_id");
     $resetcmdbut = $("#commandclear_id");
+    $commanddiv = $("#commanddiv_id");
     $commandtext = $("#commandtext_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
