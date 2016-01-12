@@ -27,8 +27,8 @@ var $commandtext;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
-var $commandcompletemenu;
-var $commanddialog;
+
+
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
@@ -212,6 +212,13 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
+		var menuhtml = "<ul id='commandcompletemenu_id'>";
+		for (var ix=0; ix<nbcomp; ix++)
+		    menuhtml += "<li>"+acomp[ix]+"</li>\n";
+		menuhtml += "</ul>";
+		$commandtext.after(menuhtml);
+		var menuel = $("#commandcompletemenu_id");
+		console.log ("mom_cmdkeypress menuel=", menuel);
 		var tsel = $commandtext.getSelection();
 		var cmdpos = $commandtext.position(); // relative to parent, i.e. body
 		var cmdoff = $commandtext.offset(); // relative to document
@@ -224,10 +231,6 @@ function mom_cmdkeypress(evt) {
 		console.log("mom_cmdkeypress coords=", coords,
 			    " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
 			    " cmdwidth=", cmdwidth, " cmdheight=", cmdheight);
-		$commandcompletemenu.html("<li>-</li>");
-		for (var ix=0; ix<nbcomp; ix++) {
-		    $commandcompletemenu.append("<li>"+acomp[ix]+"</li>\n");
-		}
 		if (coords.left < cmdwidth/2) {
 		    if (coords.top < cmdheight/2) {
 			menupos = {my: "left top+20",
@@ -250,21 +253,22 @@ function mom_cmdkeypress(evt) {
 			menupos = {my: "right bottom-20", at: "right bottom+10",
 				   of: $commandtext}
 		    }
-		}		
+		}
 		console.log("mom_cmdkeypress menupos=", menupos);
-		$commandcompletemenu.css("display", "inline");
-		$commandcompletemenu.menu({
+		menuel.menu({
 		    position: menupos,
-		    select: function (ev,ui) {
-			console.debug("mom_cmdkeypress menuselect ev=", ev, " ui=", ui);
-			$commandcompletemenu.blur();
-			$commandcompletemenu.html("");
-			$commandcompletemenu.css("display", "none");
-			console.debug("mom_cmdkeypress menuselect $commandcompletemenu=", $commandcompletemenu);
+		    select: function(ev,ui) {
+			console.log("mom_cmdkeypress-menu ev=", ev, " ui=", ui,
+				    " menuel=", menuel);
+			setTimeout(function() {
+			    console.log("mom_cmdkeypress-menutimeout menuel=", menuel);
+			    menuel.menu("destroy");
+			    menuel.remove();
+			    menuel = null;
+			}, 100);
 		    }
 		});
-		$commandcompletemenu.menu("enable");
-		console.log("mom_cmdkeypress $commandcompletemenu=", $commandcompletemenu);
+		console.log("mom_cmdkeypress menuel=", menuel);
 	    }
 	}
     }
@@ -291,12 +295,9 @@ $(document).ready(function(){
     $exitbut = $("#exitbut_id");
     $resetcmdbut = $("#commandclear_id");
     $commandtext = $("#commandtext_id");
-    $commandcompletemenu = $("#commandcompletemenu_id");
-    $commanddialog = $("#commanddialog_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
-    console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut,
-		 " commandcompletemenu=", $commandcompletemenu);
+    console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     /***
     $commandtext.autocomplete({
 	delay: 300,
@@ -306,10 +307,6 @@ $(document).ready(function(){
     });
     ***/
     $commandtext.keypress(mom_cmdkeypress);
-    $commanddialog.dialog({
-	autoOpen: false,
-	modal: true
-    });
     $cleareditbut.click(function(evt){
         console.log("clearedit evt=", evt);
         $editlog.html("");
