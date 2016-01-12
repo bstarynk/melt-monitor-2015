@@ -213,7 +213,7 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
-		var menuhtml = "<ul class='ui-menu mom_commandcompletemenu_cl' id='commandcompletemenu_id'><li>-</li></ul>";
+		var menuhtml = "<ul class='mom_commandcompletemenu_cl' id='commandcompletemenu_id'><li>-</li></ul>";
 		$commandtext.after(menuhtml);
 		var menuel = $("#commandcompletemenu_id");
 		for (var ix=0; ix<nbcomp; ix++) {
@@ -222,9 +222,11 @@ function mom_cmdkeypress(evt) {
 		var minwidth = 40;
 		/// dont work, the el has same width as body
 		menuel.children("li").each(function(ix,el) {
-		    console.log("mom_cmdkeypress ix=", ix, " el=", el);
-		    if (minwidth<$(el).innerWidth())
-			minwidth=$(el).innerWidth();
+		    console.log("mom_cmdkeypress ix=", ix, " el=", el, " .firstChild=", el.firstChild);
+		    var elw = el.firstChild.clientWidth;
+		    console.log("mom_cmdkeypress ix=", ix, " elw=", elw);
+		    if (minwidth<elw)
+			minwidth=elw;
 		});
 		console.log ("mom_cmdkeypress menuel=", menuel, " minwidth=", minwidth);
 		var tsel = $commandtext.getSelection();
