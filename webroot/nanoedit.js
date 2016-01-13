@@ -29,7 +29,37 @@ var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
 
-
+/// in our command text, we want to be able to type the 4 keys $ a n d
+/// then the key Escape to get ∧
+var mom_escape_encoding_dict = {
+    "and": "∧",
+    "alpha": "α",
+    "asterism": "⁂",
+    "beta": "β",
+    "gamma": "γ",
+    "bullet": "•",
+    "exists" : "∃",
+    "forall": "∀",
+    "ge": "≥",
+    "in": "∈",
+    "subset": "⊂",
+    "include": "⊆",
+    "integer": "ℤ",
+    "intersection": "∩",
+    "le": "≤",
+    "leftarrow": "←",
+    "natural": "ℕ",
+    "not": "¬",
+    "notin": "∉",
+    "or": "∨",
+    "rightarrow": "→",
+    "union": "∪",
+    "imply": "⇒",
+    "equiv": "⇔",
+    "lambda": "λ",
+    "Lambda", "Λ",
+    "~": null //// last place-holder
+}
 
 ////////////////////////////////////////////////////////////////
 ///// utility functions
