@@ -1638,6 +1638,15 @@ void mom_queue_prepend (struct mom_queue_st *qu, const void *data);
 void mom_queue_append (struct mom_queue_st *qu, const void *data);
 void mom_queue_pop_front (struct mom_queue_st *qu);
 
+static inline struct mom_queue_st *
+mom_dyncast_queue (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_QUEUE)
+    return (struct mom_queue_st *) p;
+  return NULL;
+}
+
 static inline bool
 mom_queue_nonempty (const struct mom_queue_st *qu)
 {
