@@ -274,6 +274,7 @@ ul.mom_commandcompletemenu_cl {
     border: 1px dotted #411320;
     background-color: rgba(248,219,241,0.4);
     align-items: flex-start;
+    position: absolute;
     width: auto;
     display: table;	/* see http://stackoverflow.com/a/34753674/841108 */
     z-index: -1;

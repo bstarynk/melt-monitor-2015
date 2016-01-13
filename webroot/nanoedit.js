@@ -45,6 +45,7 @@ function htmlDecode(value){
     return $('<div/>').html(value).text();
 }
 
+
 var mom_name_regexp = /^[A-Za-z0-9_]*$/;
 
 
@@ -177,7 +178,16 @@ function mom_ajaxparsecommand(htmlc) {
     $parsedcmddiv.html(htmlc);
 }
 
+var mom_menucmdcount = 0;
+var mom_menucmdel = null;
 function mom_cmdkeypress(evt) {
+    var removemenu = function () {
+	if (!mom_menucmdel) return;
+	var oldmenu = mom_menucmdel;
+	mom_menucmdel = null;
+	oldmenu.menu("destroy");
+	oldmenu.remove();
+    };
     console.log("mom_cmdkeypress evt=", evt);
     if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) {
 	/// see http://stackoverflow.com/a/7745958/841108
@@ -213,85 +223,101 @@ function mom_cmdkeypress(evt) {
 		return false;
 	    }
 	    else {
-		var menuhtml = "<ul class='mom_commandcompletemenu_cl' id='commandcompletemenu_id'><li>-</li></ul>";
+		mom_menucmdcount += 1;
+		var menuid = 'commandcompletemenu_id' + mom_menucmdcount;
+		var menuhtml = "<ul class='mom_commandcompletemenu_cl' id='"+menuid+"'><li>-</li></ul>";
 		$commandtext.after(menuhtml);
-		var menuel = $("#commandcompletemenu_id");
+		mom_menucmdel = $("#"+menuid);
 		for (var ix=0; ix<nbcomp; ix++) {
-		    menuel.append("<li>"+acomp[ix]+"</li>");
+		    mom_menucmdel.append("<li>"+acomp[ix]+"</li>");
 		}
-		var minwidth = 40;
-		/// dont work, the el has same width as body
-		menuel.children("li").each(function(ix,el) {
-		    console.log("mom_cmdkeypress ix=", ix, " el=", el, " .firstChild=", el.firstChild);
-		    var elw = el.firstChild.clientWidth;
-		    console.log("mom_cmdkeypress ix=", ix, " elw=", elw);
-		    if (minwidth<elw)
-			minwidth=elw;
-		});
-		console.log ("mom_cmdkeypress menuel=", menuel, " minwidth=", minwidth);
 		var tsel = $commandtext.getSelection();
 		var cmdpos = $commandtext.position(); // relative to parent, i.e. body
 		var cmdoff = $commandtext.offset(); // relative to document
 		var cmdwidth = $commandtext.innerWidth();
 		var cmdheight = $commandtext.innerHeight();
-		var menupos = null;
+		var menuwidth = mom_menucmdel.innerWidth();
+		var menuheight = mom_menucmdel.innerHeight();
+		var menutop = null, menuleft = null;
 		coords = getCaretCoordinates($commandtext[0], tsel.end);
 		// coords is {top=..., left=...} w.r.t. $commandtext
 		// cmdoff is {top=..., left=...} w.r.t. document		
 		console.log("mom_cmdkeypress coords=", coords,
 			    " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
 			    " cmdwidth=", cmdwidth,
-			    " cmdheight=", cmdheight);
+			    " cmdheight=", cmdheight,
+			    " menuheight=", menuheight,
+			    " menuwidth=", menuwidth);
 		if (coords.left < cmdwidth/2) {
 		    if (coords.top < cmdheight/2) {
 			console.log("mom_cmdkeypress coords topleft ", coords);
-			menupos = {my: "left top+20",
-				   at: "left+"+ coords.left.toFixed(0) + " top",
-				   of: $commandtext};
+			menutop = Math.round(cmdoff.top + coords.top + 10);
+			menuleft = Math.round(cmdoff.left + coords.left + 10);
 		    }
 		    else {
+			menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+			menuleft = Math.round(cmdoff.left + coords.left + 10);
 			console.log("mom_cmdkeypress coords bottomleft ", coords);
-			menupos = {my: "right bottom-20",
-				   at: "left+"+ coords.left.toFixed(0) + " top",
-				   of: $commanddiv};
 		    }
 		}
-		else {
+		else { /* coords.left >= cmdwidth/2 */
 		    if (coords.top < cmdheight/2) {
 			console.log("mom_cmdkeypress coords topright ", coords);
-			menupos = {my: "left top+20",
-				   at: "left bottom-20",
-				   of: $commanddiv};
+			menutop = Math.round(cmdoff.top + coords.top + 10);
+			menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
 		    }
 		    else {
+			menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+			menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
 			console.log("mom_cmdkeypress coords bottomright ", coords);
-			menupos = {my: "right bottom-20",
-				   at: "right bottom+10",
-				   of: $commanddiv}
 		    }
 		}
-		console.log("mom_cmdkeypress menupos=", menupos);
-		menuel.menu({
-		    position: menupos,
+		console.log("mom_cmdkeypress menuleft=", menuleft, " menutop=", menutop);
+		mom_menucmdel.menu({
 		    select: function(ev,ui) {
-			console.log("mom_cmdkeypress-menu ev=",
+			var selword = ui.item.text();
+			var subword = selword.substr(lastword.length);
+			console.log("mom_cmdkeypress-menu-sel ev=",
 				    ev, " ui=", ui,
-				    " menuel=", menuel);
+				    " mom_menucmdel=", mom_menucmdel,
+				    " selword=", selword,
+				    " subword=", subword);
+			$commandtext.insertAtCaret (subword);
 			setTimeout(function() {
-			    console.log("mom_cmdkeypress-menutimeout menuel=", menuel);
-			    menuel.menu("destroy");
-			    menuel.remove();
-			    menuel = null;
+			    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
+			    removemenu();
 			}, 100);
+		    },
+		    blur: function(ev,ui) {
+			console.log("mom_cmdkeypress-menu-blur ev=",
+				    ev, " ui=", ui,
+				    " mom_menucmdel=", mom_menucmdel);
+			removemenu();
 		    },
 		    disabled: false
 		});
-		console.log("mom_cmdkeypress menuel=", menuel, " of position=", menuel.menu("option","position"));
+		setTimeout(function()
+			   {
+			       console.log("mom_cmdkeypress-delayedmenudestroy mom_menucmdel=",
+					   mom_menucmdel);
+			       removemenu();
+			   }, 6500);
+		mom_menucmdel[0].style.top = menutop + "px";
+		mom_menucmdel[0].style.left = menuleft + "px";
+		mom_menucmdel[0].style.zIndex = "99";
+		console.log("mom_cmdkeypress mom_menucmdel=", mom_menucmdel,
+			    " menutop=", menutop,  " menuleft=", menuleft);
 	    }
 	}
     }
+    else if (evt.keyCode === $.ui.keyCode.ESCAPE) {
+	console.log("mom_cmdkeypress escape evt=", evt, " mom_menucmdel=", mom_menucmdel);
+	if (mom_menucmdel)
+	    removemenu();
+    }
 }
 
+/***
 function mom_commandautocomplete(requ,resp) {
     console.log("commandautocomplete requ=", requ);
     var acomp = mom_complete_name(requ.term);
@@ -300,6 +326,7 @@ function mom_commandautocomplete(requ,resp) {
     else resp(null);
     console.log("commandautocomplete done acomp=", acomp);
 }
+****/
 
 $(document).ready(function(){
     console.log("nanoedit document ready");
