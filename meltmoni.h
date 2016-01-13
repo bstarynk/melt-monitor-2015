@@ -622,6 +622,10 @@ mom_boxstring_cstr (const void *p)
 
 const struct mom_boxstring_st *mom_boxstring_make (const char *s);
 
+// make a string of given length or the strlen(s) if len<0 or len bigger
+const struct mom_boxstring_st *mom_boxstring_make_len (const char *s,
+                                                       int len);
+
 const struct mom_boxstring_st *mom_boxstring_printf (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 

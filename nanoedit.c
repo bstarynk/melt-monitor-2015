@@ -653,6 +653,71 @@ struct nanoparsing_mom_st
 
 
 static void
+parse_token_nanoedit_mom (struct nanoparsing_mom_st *np,
+                          struct mom_item_st *queitm)
+{
+  struct mom_queue_st *que = NULL;
+  const char *cmd = NULL;
+  char c = 0;
+  assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
+  cmd = np->nanop_cmdstr;
+  assert (cmd != NULL);
+  assert (queitm && queitm->va_itype == MOMITY_ITEM);
+  assert ((que = ((struct mom_queue_st *) (queitm->itm_payload))) != NULL
+          && que->va_itype == MOMITY_QUEUE);
+  while ((c = cmd[np->nanop_pos]) != 0 && isspace (c))
+    np->nanop_pos++;
+  if (!c)
+    return;
+  if (isalpha (c))
+    {
+      char nc = 0;
+      const char *endp = NULL;
+      unsigned startword = np->nanop_pos;
+      unsigned endword = startword;
+      while ((nc = cmd[endword]) && (isalnum (nc) || nc == '_'))
+        endword++;
+      if (mom_valid_name_radix (cmd + startword, endword - startword))
+        {
+          struct mom_item_st *itm
+            = mom_find_item_from_string (cmd + startword, &endp);
+          if (itm)
+            {
+              assert (endp == cmd + endword);
+              mom_queue_append (que, itm);
+              np->nanop_pos = endword;
+              MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u item %s\n",
+                               endword, mom_item_cstring (itm));
+              return;
+            }
+          else
+            {                   // valid item name, but not found
+              const struct mom_boxstring_st *namev
+                =
+                mom_boxstring_make_len (cmd + startword, endword - startword);
+              const struct mom_boxnode_st *nodv =
+                mom_boxnode_meta_make_va (NULL, startword,
+                                          MOM_PREDEFITM (name),
+                                          1,
+                                          namev);
+              mom_queue_append (que, nodv);
+              MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u name %s\n",
+                               endword,
+                               mom_value_cstring ((const struct
+                                                   mom_hashedvalue_st
+                                                   *) (nodv)));
+              return;
+            }
+        }
+      /// invalid name so word
+#warning incomplete parse_token_nanoedit_mom
+    }
+  NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
+                           "unexpected token %s", cmd + nanop_pos);
+}
+
+
+static void
 doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                              struct mom_item_st *tkitm,
                              struct mom_item_st *wexitm,
@@ -694,10 +759,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
         mom_item_lock (itm);
         queitm = itm;
         while (cmd[npars.nanop_pos] != (char) 0)
-          {
-#warning doparsecommand_nanoedit a completer
-            MOM_FATAPRINTF ("doparsecommand_nanoedit a completer");
-          }
+          parse_token_nanoedit_mom (&npars, queitm);
       }
       MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit queitm=%s",
                        mom_item_cstring (queitm));

@@ -94,6 +94,15 @@ signature_tasklet
 ^funsignature
 
 
+*name
+1452697324
+^mtime
+(
+comment
+"for unknown names"_
+)attrs
+
+
 *nano_displayer
 1452115787
 ^mtime
@@ -272,6 +281,15 @@ the_system
 comment
 )node
 )payload_hashmap
+
+
+*word
+1452697324
+^mtime
+(
+comment
+"for unknown words"_
+)attrs
 
 
 ### eof global.mom

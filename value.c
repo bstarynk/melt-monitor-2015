@@ -110,6 +110,30 @@ mom_boxstring_make (const char *s)
   return bs;
 }
 
+const struct mom_boxstring_st *
+mom_boxstring_make_len (const char *s, int len)
+{
+  if (!s || s == MOM_EMPTY_SLOT)
+    return NULL;
+  if (len < 0)
+    len = strlen (s);
+  if (len >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too long %d boxed string %.60s", len, s);
+  for (int ix = 0; ix < len; ix++)
+    if (s[ix] == 0)
+      {
+        len = ix;
+        break;
+      };
+  struct mom_boxstring_st *bs =
+    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + (len + 1));
+  bs->va_itype = MOMITY_BOXSTRING;
+  bs->va_hsiz = len >> 16;
+  bs->va_lsiz = len & 0xffff;
+  bs->hva_hash = mom_cstring_hash_len (s, len);
+  memcpy (bs->cstr, s, len);
+  return bs;
+}
 
 const struct mom_boxstring_st *
 mom_boxstring_printf (const char *fmt, ...)
