@@ -180,15 +180,14 @@ function mom_ajaxparsecommand(htmlc) {
 
 var mom_menucmdcount = 0;
 var mom_menucmdel = null;
-function mom_cmdkeypress(evt) {
-    var removemenu = function () {
-	if (!mom_menucmdel) return;
-	var oldmenu = mom_menucmdel;
+function mom_removecmdmenu(oldmenu) {
+    if (!oldmenu) oldmenu = mom_menucmdel;
 	mom_menucmdel = null;
 	oldmenu.menu("destroy");
-	oldmenu.remove();
-    };
-    console.log("mom_cmdkeypress evt=", evt);
+    oldmenu.remove();
+}
+    
+function mom_cmdkeypress(evt) {
     if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) {
 	/// see http://stackoverflow.com/a/7745958/841108
 	var curspos = $commandtext.prop("selectionStart");
@@ -285,14 +284,14 @@ function mom_cmdkeypress(evt) {
 			$commandtext.insertAtCaret (subword);
 			setTimeout(function() {
 			    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
-			    removemenu();
+			    mom_removecmdmenu();
 			}, 100);
 		    },
 		    blur: function(ev,ui) {
 			console.log("mom_cmdkeypress-menu-blur ev=",
 				    ev, " ui=", ui,
 				    " mom_menucmdel=", mom_menucmdel);
-			removemenu();
+			mom_removecmdmenu();
 		    },
 		    disabled: false
 		});
@@ -300,7 +299,7 @@ function mom_cmdkeypress(evt) {
 			   {
 			       console.log("mom_cmdkeypress-delayedmenudestroy mom_menucmdel=",
 					   mom_menucmdel);
-			       removemenu();
+			       mom_removecmdmenu();
 			   }, 6500);
 		mom_menucmdel[0].style.top = menutop + "px";
 		mom_menucmdel[0].style.left = menuleft + "px";
@@ -313,7 +312,7 @@ function mom_cmdkeypress(evt) {
     else if (evt.keyCode === $.ui.keyCode.ESCAPE) {
 	console.log("mom_cmdkeypress escape evt=", evt, " mom_menucmdel=", mom_menucmdel);
 	if (mom_menucmdel)
-	    removemenu();
+	    mom_removecmdmenu();
     }
 }
 
