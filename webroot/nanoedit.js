@@ -57,7 +57,7 @@ var mom_escape_encoding_dict = {
     "imply": "⇒",
     "equiv": "⇔",
     "lambda": "λ",
-    "Lambda", "Λ",
+    "Lambda": "Λ",
     "~": null //// last place-holder
 }
 
@@ -396,8 +396,7 @@ $(document).ready(function(){
 	$.ajax
     ({url: "/nanoedit",
       method: "POST",
-      data: {"do_parsecommand": true,
-	     "command": cmdtext},
+      data: {"do_parsecommand": cmdtext},
       dataType: "html",
       success: mom_ajaxparsecommand
      });      

@@ -259,15 +259,15 @@ label#commandlab_id {
 
 textarea#commandtext_id {
     font-family: monospace, Courier;
-    font-weight: bold;
+    font-weight: normal;
     background-color: #FAFAC4;
-    border: 2px dashed #060923;
+    border: 1px dashed #062933 ;
 }
 textarea#commandtext_id:focus {
     font-family: monospace, Courier;
     font-weight: bold;
     background-color: #EFFAC4;
-    border: 2px dotted #261923;
+    border: 2px dashed #261943 ;
 }
 
 ul.mom_commandcompletemenu_cl {

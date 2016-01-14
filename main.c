@@ -206,11 +206,7 @@ mom_output_utf8_escaped (FILE *f, const char *str, int len,
             {
               char buf[16];
               memset (buf, 0, sizeof (buf));
-              if (uc > 0 && uc < 256)
-                {
-                  snprintf (buf, sizeof (buf), "\\x%02x", (int) uc);
-                }
-              else if (uc <= 0xffff)
+              if (uc <= 0xffff)
                 {
                   snprintf (buf, sizeof (buf), "\\u%04x", (int) uc);
                 }
@@ -286,11 +282,7 @@ mom_output_utf8_encoded (FILE *f, const char *str, int len)
             fputc ((char) uc, f);
           else
             {
-              if (uc > 0 && uc < 256)
-                {
-                  fprintf (f, "\\x%02x", (int) uc);
-                }
-              else if (uc <= 0xffff)
+              if (uc <= 0xffff)
                 {
                   fprintf (f, "\\u%04x", (int) uc);
                 }
