@@ -662,6 +662,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   struct mom_queue_st *que = NULL;
   const char *cmd = NULL;
   const char *pc = NULL;
+  char rawprefix[16] = { 0 };
+  int pos = 0;
   gunichar uc = 0;
   char nc = 0;
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
@@ -851,6 +853,29 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
                                            mom_hashedvalue_st *) (strv)));
       return;
     }                           /* end escaped string parsing */
+
+  else if (uc == '(' && isalpha (pc[1])
+           && ((pos = 0), (memset (rawprefix, 0, sizeof (rawprefix))),
+               sscanf (pc, "(%10[A-Za-z]\"%n", rawprefix + 1, &pos)) >= 1
+           && pos > 0)
+    {                           // raw string parsing, like (ABC"some\escaped"ABC)  
+      const char *starts = pc;
+      rawprefix[0] = '"';
+      const char *raws = pc + pos;
+      const char *endraws = strstr (raws, rawprefix);
+      const struct mom_boxstring_st *strv = NULL;
+      if (!endraws || endraws[strlen(rawprefix+1)] != ')')
+        NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
+                                 "raw string not ended by %s)", rawprefix);
+      strv = mom_boxstring_make_len (raws, endraws - raws);
+      np->nanop_pos = endraws + strlen (rawprefix+1) + 1 - cmd;
+      MOM_DEBUGPRINTF (web,
+                       "parse_token_nanoedit pos#%u raw prefixed %s string: %s\n",
+                       (unsigned) (starts - cmd), rawprefix + 1,
+                       mom_value_cstring ((const struct mom_hashedvalue_st
+                                           *) (strv)));
+      return;
+    }                           /* end raw string parsing */
 
   else if (g_unichar_isalpha (uc))
     {                           // word starting by extended letter
