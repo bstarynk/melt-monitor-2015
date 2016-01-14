@@ -659,12 +659,13 @@ struct nanoparsing_mom_st
 static bool
 is_utf8_delim_mom (gunichar uc)
 {
+  if (!uc)
+    return false;
   if (uc < 128)
-    return isdelim (uc);
+    return ispunct (uc);
   if (g_unichar_ispunct (uc))
     return true;
-#if 0
-  enum GUnicodeType gty = g_unichar_type (uc);
+  GUnicodeType gty = g_unichar_type (uc);
   switch (gty)
     {
       //// see https://developer.gnome.org/glib/stable/glib-Unicode-Manipulation.html#GUnicodeType
@@ -675,12 +676,37 @@ is_utf8_delim_mom (gunichar uc)
     case G_UNICODE_FINAL_PUNCTUATION:
     case G_UNICODE_INITIAL_PUNCTUATION:
     case G_UNICODE_OTHER_PUNCTUATION:
+    case G_UNICODE_OPEN_PUNCTUATION:
+    case G_UNICODE_CURRENCY_SYMBOL:
+    case G_UNICODE_MODIFIER_SYMBOL:
+    case G_UNICODE_MATH_SYMBOL:
+    case G_UNICODE_OTHER_SYMBOL:
       return true;
-#endif
-#warning more delim types are missing
+    case G_UNICODE_CONTROL:
+    case G_UNICODE_FORMAT:
+    case G_UNICODE_UNASSIGNED:
+    case G_UNICODE_PRIVATE_USE:
+    case G_UNICODE_SURROGATE:
+    case G_UNICODE_LOWERCASE_LETTER:
+    case G_UNICODE_MODIFIER_LETTER:
+    case G_UNICODE_OTHER_LETTER:
+    case G_UNICODE_TITLECASE_LETTER:
+    case G_UNICODE_UPPERCASE_LETTER:
+    case G_UNICODE_SPACING_MARK:
+    case G_UNICODE_NON_SPACING_MARK:
+    case G_UNICODE_DECIMAL_NUMBER:
+    case G_UNICODE_LETTER_NUMBER:
+    case G_UNICODE_OTHER_NUMBER:
+    case G_UNICODE_LINE_SEPARATOR:
+    case G_UNICODE_PARAGRAPH_SEPARATOR:
+    case G_UNICODE_SPACE_SEPARATOR:
+      return false;
     }
   return false;
 }                               /* end of is_utf8_delim_mom */
+
+
+
 
 static void
 parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
@@ -698,8 +724,13 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   assert (np->nanop_pos <= np->nanop_cmdlen);
   struct mom_item_st *queitm = np->nanop_queitm;
   assert (queitm && queitm->va_itype == MOMITY_ITEM);
-  assert ((que = ((struct mom_queue_st *) (queitm->itm_payload))) != NULL
-          && que->va_itype == MOMITY_QUEUE);
+  que = mom_dyncast_queue (queitm->itm_payload);
+  assert (que != NULL && que->va_itype == MOMITY_QUEUE);
+  struct mom_item_st *delimitm = np->nanop_delimitm;
+  assert (delimitm && delimitm->va_itype == MOMITY_ITEM);
+  struct mom_hashassoc_st *delimass =
+    mom_hashassoc_dyncast (delimitm->itm_payload);
+  assert (delimass != NULL);
   // skip ASCII spaces
   for (pc = cmd + np->nanop_pos; *pc; pc = g_utf8_next_char (pc), uc = 0)
     {
@@ -883,7 +914,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   else if (uc == '(' && isalpha (pc[1])
            && ((pos = 0), (memset (rawprefix, 0, sizeof (rawprefix))),
                sscanf (pc, "(%10[A-Za-z]\"%n", rawprefix + 1, &pos)) >= 1
-           && pos > 0)
+           && pos > 0 && pos < (int) sizeof (rawprefix))
     {                           // raw string parsing, like (ABC"some\escaped"ABC)  
       const char *starts = pc;
       rawprefix[0] = '"';
@@ -934,8 +965,90 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       return;
     }                           /* end extended word */
 
-  else if ((uc < 128 && isdelim (uc)) || is_utf8_delim_mom (uc))
+  else if (is_utf8_delim_mom (uc))      /* delimiters - one to four UTF8 */
     {
+      const char *endp = NULL;
+      const char *pc0 = pc;
+      const char *pc1 = NULL;
+      const char *pc2 = NULL;
+      const char *pc3 = NULL;
+      gunichar uc1 = 0;
+      gunichar uc2 = 0;
+      gunichar uc3 = 0;
+      const struct mom_boxstring_st *delimstrv = NULL;
+      const struct mom_hashedvalue_st *delimval = NULL;
+      pc1 = g_utf8_next_char (pc);
+      uc1 = (pc1 && *pc1) ? g_utf8_get_char (pc1) : 0;
+      if (is_utf8_delim_mom (uc1))
+        {
+          pc2 = g_utf8_next_char (pc1);
+          uc2 = (pc2 && *pc2) ? g_utf8_get_char (pc2) : 0;
+          if (is_utf8_delim_mom (uc2))
+            {
+              pc3 = g_utf8_next_char (pc2);
+              uc3 = (pc3 && *pc3) ? g_utf8_get_char (pc3) : 0;
+              if (is_utf8_delim_mom (uc3))
+                {
+                  endp = g_utf8_next_char (pc3);
+                  delimstrv = mom_boxstring_make_len (pc, endp - pc);
+                  delimval =
+                    mom_hashassoc_get (delimass,
+                                       (const struct mom_hashedvalue_st *)
+                                       delimstrv);
+                  if (!delimval)
+                    goto threedelims;
+                }
+              else              /*uc3 not delim */
+              threedelims:
+                {
+                  endp = pc3;
+                  delimstrv = mom_boxstring_make_len (pc, endp - pc);
+                  delimval =
+                    mom_hashassoc_get (delimass,
+                                       (const struct mom_hashedvalue_st *)
+                                       delimstrv);
+                  if (!delimval)
+                    goto twodelims;
+                };
+            }
+          else                  /*uc2 not delim */
+          twodelims:
+            {
+              endp = pc2;
+              delimstrv = mom_boxstring_make_len (pc, endp - pc);
+              delimval =
+                mom_hashassoc_get (delimass,
+                                   (const struct mom_hashedvalue_st *)
+                                   delimstrv);
+              if (!delimval)
+                goto onedelim;
+            };
+        }
+      else                      /*uc1 not delim */
+      onedelim:
+        {
+          endp = pc1;
+          delimstrv = mom_boxstring_make_len (pc, endp - pc);
+          delimval =
+            mom_hashassoc_get (delimass,
+                               (const struct mom_hashedvalue_st *) delimstrv);
+          if (!delimval)
+            delimval = (const struct mom_hashedvalue_st *) delimstrv;
+        };
+      assert (delimval != NULL);
+      const struct mom_boxnode_st *nodv =
+        mom_boxnode_meta_make_va (NULL, pc0 - cmd,
+                                  MOM_PREDEFITM (delimiter),
+                                  1,
+                                  delimval);
+      mom_queue_append (que, nodv);
+      np->nanop_pos = endp - cmd;
+      MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u delimiter %s\n",
+                       (unsigned) (pc0 - cmd),
+                       mom_value_cstring ((const struct
+                                           mom_hashedvalue_st *) (nodv)));
+      return;
+
     }
 
 #warning incomplete parse_token_nanoedit_mom
@@ -975,7 +1088,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   npars.nanop_wexitm = wexitm;
   npars.nanop_thistatitm = thistatitm;
   int linerr = 0;
-// create the queue item
+  // create the queue item
   {
     struct mom_item_st *itm = mom_clone_item (MOM_PREDEFITM (queue));
     que = mom_queue_make ();
@@ -985,12 +1098,13 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
     MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit queitm=%s",
                      mom_item_cstring (npars.nanop_queitm));
   }
-// retrieve the delim item
+  // retrieve the delim item
   {
     assert (delimitm != NULL && delimitm->va_itype == MOMITY_ITEM);
     MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit delimitm=%s",
                      mom_item_cstring (delimitm));
     mom_item_lock (delimitm);
+    assert (mom_hashassoc_dyncast (delimitm->itm_payload) != NULL);
     npars.nanop_delimitm = delimitm;
   }
   if ((linerr = setjmp (npars.nanop_jb)) != 0)

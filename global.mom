@@ -45,6 +45,15 @@ comment
 )attrs
 
 
+*delimiter
+1452808377
+^mtime
+(
+comment
+"for delimiter"_
+)attrs
+
+
 *display
 1452095862
 ^mtime
@@ -110,6 +119,8 @@ comment
 comment
 "dictionnary of delimiters for nanoedit"_
 )attrs
+(
+)payload_hashassoc
 
 
 *nano_displayer
