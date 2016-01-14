@@ -103,6 +103,15 @@ comment
 )attrs
 
 
+*nano_delimiters
+1452779982
+^mtime
+(
+comment
+"dictionnary of delimiters for nanoedit"_
+)attrs
+
+
 *nano_displayer
 1452115787
 ^mtime
@@ -231,6 +240,7 @@ nanoedit
 (
 web_state
 web_state__0dmo5BBWK0mbtv
+nano_delimiters
 nanoedit
 )node
 )payload_hashassoc

@@ -27,6 +27,14 @@ enum nanoedit_sessfields_en
   mes__last
 };
 
+enum nanoedit_closoff_en
+{
+  mec_wexitm,
+  mec_protowebstate,
+  mec_thiswebstate,
+  mec_delimiters,
+  mec__last
+};
 
 static void
 showitem_nanoedit_mom (struct mom_webexch_st *wexch,
@@ -508,13 +516,6 @@ const char momsig_nanoedit[] = "signature_tasklet";
 void
 momf_nanoedit (struct mom_item_st *tkitm)
 {
-  enum nanoedit_closoff_en
-  {
-    mec_wexitm,
-    mec_protowebstate,
-    mec_thiswebstate,
-    mec__last
-  };
   struct mom_item_st *wexitm = NULL;
   struct mom_item_st *thistatitm = NULL;
   struct mom_item_st *sessitm = NULL;
@@ -639,6 +640,7 @@ struct nanoparsing_mom_st
   struct mom_item_st *nanop_wexitm;
   struct mom_item_st *nanop_thistatitm;
   struct mom_item_st *nanop_queitm;
+  struct mom_item_st *nanop_delimitm;
   jmp_buf nanop_jb;
 };
 
@@ -901,6 +903,11 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                    mom_item_cstring (wexitm),
                    mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), cmd);
+  assert (tkitm && tkitm->va_itype == MOMITY_ITEM);
+  const struct mom_boxnode_st *tknod = mom_dyncast_node (tkitm->itm_payload);
+  assert (tknod != NULL && mom_raw_size (tknod) >= mec__last);
+  struct mom_item_st *delimitm
+    = mom_dyncast_item (tknod->nod_sons[mec_delimiters]);
   struct nanoparsing_mom_st npars;
   memset (&npars, 0, sizeof (npars));
   npars.nanop_magic = NANOPARSING_MAGIC_MOM;
@@ -912,6 +919,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   npars.nanop_wexitm = wexitm;
   npars.nanop_thistatitm = thistatitm;
   int linerr = 0;
+// create the queue item
   {
     struct mom_item_st *itm = mom_clone_item (MOM_PREDEFITM (queue));
     que = mom_queue_make ();
@@ -920,6 +928,14 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
     npars.nanop_queitm = itm;
     MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit queitm=%s",
                      mom_item_cstring (npars.nanop_queitm));
+  }
+// retrieve the delim item
+  {
+    assert (delimitm != NULL && delimitm->va_itype == MOMITY_ITEM);
+    MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit delimitm=%s",
+                     mom_item_cstring (delimitm));
+    mom_item_lock (delimitm);
+    npars.nanop_delimitm = delimitm;
   }
   if ((linerr = setjmp (npars.nanop_jb)) != 0)
     {
@@ -948,6 +964,8 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
 end:
   if (npars.nanop_queitm)
     mom_item_unlock (npars.nanop_queitm);
+  if (npars.nanop_delimitm)
+    mom_item_unlock (npars.nanop_delimitm);
   memset (&npars, 0, sizeof (npars));
 }                               /* end of doparsecommand_nanoedit_mom */
 
