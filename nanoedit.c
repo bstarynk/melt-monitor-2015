@@ -656,6 +656,32 @@ struct nanoparsing_mom_st
 
 
 
+static bool
+is_utf8_delim_mom (gunichar uc)
+{
+  if (uc < 128)
+    return isdelim (uc);
+  if (g_unichar_ispunct (uc))
+    return true;
+#if 0
+  enum GUnicodeType gty = g_unichar_type (uc);
+  switch (gty)
+    {
+      //// see https://developer.gnome.org/glib/stable/glib-Unicode-Manipulation.html#GUnicodeType
+    case G_UNICODE_ENCLOSING_MARK:
+    case G_UNICODE_CONNECT_PUNCTUATION:
+    case G_UNICODE_DASH_PUNCTUATION:
+    case G_UNICODE_CLOSE_PUNCTUATION:
+    case G_UNICODE_FINAL_PUNCTUATION:
+    case G_UNICODE_INITIAL_PUNCTUATION:
+    case G_UNICODE_OTHER_PUNCTUATION:
+      return true;
+#endif
+#warning more delim types are missing
+    }
+  return false;
+}                               /* end of is_utf8_delim_mom */
+
 static void
 parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 {
@@ -864,11 +890,11 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       const char *raws = pc + pos;
       const char *endraws = strstr (raws, rawprefix);
       const struct mom_boxstring_st *strv = NULL;
-      if (!endraws || endraws[strlen(rawprefix+1)] != ')')
+      if (!endraws || endraws[strlen (rawprefix + 1)] != ')')
         NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
                                  "raw string not ended by %s)", rawprefix);
       strv = mom_boxstring_make_len (raws, endraws - raws);
-      np->nanop_pos = endraws + strlen (rawprefix+1) + 1 - cmd;
+      np->nanop_pos = endraws + strlen (rawprefix + 1) + 1 - cmd;
       MOM_DEBUGPRINTF (web,
                        "parse_token_nanoedit pos#%u raw prefixed %s string: %s\n",
                        (unsigned) (starts - cmd), rawprefix + 1,
@@ -907,6 +933,11 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
                                            mom_hashedvalue_st *) (nodv)));
       return;
     }                           /* end extended word */
+
+  else if ((uc < 128 && isdelim (uc)) || is_utf8_delim_mom (uc))
+    {
+    }
+
 #warning incomplete parse_token_nanoedit_mom
 
   NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
