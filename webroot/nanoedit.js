@@ -391,7 +391,7 @@ function mom_cmdkeypress(evt) {
 			console.log ("mom_cmdkeypress all dollvalseq=", dollvalseq);			
 		    };
 		    if (dollvalseq.length == 1)
-			replacedollar(dollvalseq[0]);
+			replacedollar(mom_escape_encoding_dict[dollvalseq[0]]);
 		    else {
 			// popup a replacement menu
 			mom_menucmdcount += 1;
@@ -413,7 +413,7 @@ function mom_cmdkeypress(evt) {
 				replacedollar(repstr);
 				setTimeout(function() {
 				    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
-				    mom_removecmdmenu();
+				    mom_menucmdel.fadeOut(200+25*dollvalseq.length,mom_removecmdmenu);
 				}, 200);
 			    },
 			    blur: function(ev,ui) {
@@ -424,12 +424,22 @@ function mom_cmdkeypress(evt) {
 			    },
 			    disabled: false
 			});
+			var curmenu = mom_menucmdel;
+			curmenu.mousemove
+			(function(ev)
+			 { console.log("momdelayrepl movefinishing ev=", ev, " curmenu=", curmenu);
+			   curmenu.finish();
+			 });
 			setTimeout(function()
 				   {
-				       console.log("mom_cmdkeypress-delayedreplmenudestroy mom_menucmdel=",
-						   mom_menucmdel);
-				       mom_removecmdmenu();
-				   }, 6500);						
+				       console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
+						   curmenu);
+				       curmenu.delay(100).fadeOut(800+75*dollvalseq.length,
+							     function () {
+								 console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
+								 mom_removecmdmenu();
+							     });
+				   }, 9500);						
 		    }
 		}
 	    }
