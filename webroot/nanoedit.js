@@ -343,6 +343,29 @@ function mom_cmdkeypress(evt) {
 	console.log("mom_cmdkeypress escape evt=", evt, " mom_menucmdel=", mom_menucmdel);
 	if (mom_menucmdel)
 	    mom_removecmdmenu();
+	else {
+	    var curspos = $commandtext.prop("selectionStart");
+	    var endpos = $commandtext.prop("selectionEnd");
+	    var scrollpos = $commandtext.prop("scrollTop");
+	    var result = /\$\S+$/.exec(this.value.slice(0, curspos));
+	    var lastdoll = result ? result[0] : null;
+	    console.log("mom_cmdkeypress escape evt=", evt,  " lastdoll=", lastdoll, " curspos=", curspos);
+	    if (lastdoll) {
+		var dollname = lastdoll.substr(1);
+		if (mom_escape_encoding_dict.hasOwnProperty(dollname)) {
+		    var dollval = mom_escape_encoding_dict[dollname];
+		    var oldval = $commandtext.val();
+		    console.log("mom_cmdkeypress escape evt=", evt,
+				" dollname=", dollname, " dollval=", dollval);
+		    $commandtext.val(oldval.substr(0, curspos-lastdoll.length) + dollval
+				     + oldval.substr(curspos));
+		    oldval = null;
+		    $commandtext[0].focus();
+		    $commandtext[0].selectionStart = $commandtext[0].selectionEnd = curspos + dollval.length;
+		    $commandtext[0].scrollTop = scrollpos;		    
+		}
+	    }
+	}
     }
 }
 
