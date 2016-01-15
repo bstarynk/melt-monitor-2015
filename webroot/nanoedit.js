@@ -32,20 +32,23 @@ var $parsedcmddiv;
 /// in our command text, we want to be able to type the 4 keys $ a n d
 /// then the key Escape to get ∧
 var mom_escape_encoding_dict = {
-    "and": "∧",
+    "Lambda": "Λ",
     "alpha": "α",
+    "and": "∧",
     "asterism": "⁂",
     "beta": "β",
-    "gamma": "γ",
     "bullet": "•",
+    "equiv": "⇔",
     "exists" : "∃",
     "forall": "∀",
+    "gamma": "γ",
     "ge": "≥",
+    "imply": "⇒",
     "in": "∈",
-    "subset": "⊂",
     "include": "⊆",
     "integer": "ℤ",
     "intersection": "∩",
+    "lambda": "λ",
     "le": "≤",
     "leftarrow": "←",
     "natural": "ℕ",
@@ -53,11 +56,8 @@ var mom_escape_encoding_dict = {
     "notin": "∉",
     "or": "∨",
     "rightarrow": "→",
+    "subset": "⊂",
     "union": "∪",
-    "imply": "⇒",
-    "equiv": "⇔",
-    "lambda": "λ",
-    "Lambda": "Λ",
     "~": null //// last place-holder
 }
 
@@ -211,14 +211,69 @@ function mom_ajaxparsecommand(htmlc) {
 var mom_menucmdcount = 0;
 var mom_menucmdel = null;
 function mom_removecmdmenu(oldmenu) {
-    if (!oldmenu) oldmenu = mom_menucmdel;
-	mom_menucmdel = null;
+    if (!oldmenu)
+	oldmenu = mom_menucmdel;
+    mom_menucmdel = null;
+    if (oldmenu) {
 	oldmenu.menu("destroy");
-    oldmenu.remove();
+	oldmenu.remove();
+    };
+    oldmenu = null;
 }
-    
+
+function mom_position_menucmd() {
+    var tsel = $commandtext.getSelection();
+    var cmdpos = $commandtext.position(); // relative to parent, i.e. body
+    var cmdoff = $commandtext.offset(); // relative to document
+    var cmdwidth = $commandtext.innerWidth();
+    var cmdheight = $commandtext.innerHeight();
+    var menuwidth = mom_menucmdel.innerWidth();
+    var menuheight = mom_menucmdel.innerHeight();
+    var menutop = null, menuleft = null;
+    coords = getCaretCoordinates($commandtext[0], tsel.end);
+    // coords is {top=..., left=...} w.r.t. $commandtext
+    // cmdoff is {top=..., left=...} w.r.t. document		
+    console.log("mom_position_menucmd coords=", coords,
+		" tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
+		" cmdwidth=", cmdwidth,
+		" cmdheight=", cmdheight,
+		" menuheight=", menuheight,
+		" menuwidth=", menuwidth);
+    if (coords.left < cmdwidth/2) {
+	if (coords.top < cmdheight/2) {
+	    console.log("mom_position_menucmd coords topleft ", coords);
+	    menutop = Math.round(cmdoff.top + coords.top + 10);
+	    menuleft = Math.round(cmdoff.left + coords.left + 10);
+	}
+	else {
+	    menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+	    menuleft = Math.round(cmdoff.left + coords.left + 10);
+	    console.log("mom_position_menucmd coords bottomleft ", coords);
+	}
+    }
+    else { /* coords.left >= cmdwidth/2 */
+	if (coords.top < cmdheight/2) {
+	    console.log("mom_position_menucmd coords topright ", coords);
+	    menutop = Math.round(cmdoff.top + coords.top + 10);
+	    menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
+	}
+	else {
+	    menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+	    menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
+	    console.log("mom_position_menucmd coords bottomright ", coords);
+	}
+    }
+    console.log("mom_position_menucmd menuleft=", menuleft, " menutop=", menutop);
+    mom_menucmdel[0].style.top = menutop + "px";
+    mom_menucmdel[0].style.left = menuleft + "px";
+    mom_menucmdel[0].style.zIndex = "99";
+    console.log("mom_position_menucmd mom_menucmdel=", mom_menucmdel,
+		" menutop=", menutop,  " menuleft=", menuleft);
+}				// end of mom_position_menucmd
+
+
 function mom_cmdkeypress(evt) {
-    if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) {
+    if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) { // control space for autocompletion
 	/// see http://stackoverflow.com/a/7745958/841108
 	var curspos = $commandtext.prop("selectionStart");
 	console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
@@ -235,7 +290,7 @@ function mom_cmdkeypress(evt) {
 	    var nbcomp = acomp.length;
 	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp, " lastword=", lastword);
 	    if (!acomp || nbcomp==0) {
-		alert ("<b>word</b> <tt>"+lastword+"</tt> <b>without completion</b>");
+		alert ("word '"+lastword+"' without completion");
 		return false;
 	    }
 	    else if (nbcomp === 1) {
@@ -253,55 +308,14 @@ function mom_cmdkeypress(evt) {
 	    }
 	    else {
 		mom_menucmdcount += 1;
-		var menuid = 'commandcompletemenu_id' + mom_menucmdcount;
-		var menuhtml = "<ul class='mom_commandcompletemenu_cl' id='"+menuid+"'><li>-</li></ul>";
+		var menuid = 'mom_commandmenu_id' + mom_menucmdcount;
+		var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
 		$commandtext.after(menuhtml);
 		mom_menucmdel = $("#"+menuid);
 		for (var ix=0; ix<nbcomp; ix++) {
 		    mom_menucmdel.append("<li>"+acomp[ix]+"</li>");
 		}
-		var tsel = $commandtext.getSelection();
-		var cmdpos = $commandtext.position(); // relative to parent, i.e. body
-		var cmdoff = $commandtext.offset(); // relative to document
-		var cmdwidth = $commandtext.innerWidth();
-		var cmdheight = $commandtext.innerHeight();
-		var menuwidth = mom_menucmdel.innerWidth();
-		var menuheight = mom_menucmdel.innerHeight();
-		var menutop = null, menuleft = null;
-		coords = getCaretCoordinates($commandtext[0], tsel.end);
-		// coords is {top=..., left=...} w.r.t. $commandtext
-		// cmdoff is {top=..., left=...} w.r.t. document		
-		console.log("mom_cmdkeypress coords=", coords,
-			    " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
-			    " cmdwidth=", cmdwidth,
-			    " cmdheight=", cmdheight,
-			    " menuheight=", menuheight,
-			    " menuwidth=", menuwidth);
-		if (coords.left < cmdwidth/2) {
-		    if (coords.top < cmdheight/2) {
-			console.log("mom_cmdkeypress coords topleft ", coords);
-			menutop = Math.round(cmdoff.top + coords.top + 10);
-			menuleft = Math.round(cmdoff.left + coords.left + 10);
-		    }
-		    else {
-			menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
-			menuleft = Math.round(cmdoff.left + coords.left + 10);
-			console.log("mom_cmdkeypress coords bottomleft ", coords);
-		    }
-		}
-		else { /* coords.left >= cmdwidth/2 */
-		    if (coords.top < cmdheight/2) {
-			console.log("mom_cmdkeypress coords topright ", coords);
-			menutop = Math.round(cmdoff.top + coords.top + 10);
-			menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
-		    }
-		    else {
-			menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
-			menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
-			console.log("mom_cmdkeypress coords bottomright ", coords);
-		    }
-		}
-		console.log("mom_cmdkeypress menuleft=", menuleft, " menutop=", menutop);
+		mom_position_menucmd();
 		mom_menucmdel.menu({
 		    select: function(ev,ui) {
 			var selword = ui.item.text();
@@ -331,11 +345,6 @@ function mom_cmdkeypress(evt) {
 					   mom_menucmdel);
 			       mom_removecmdmenu();
 			   }, 6500);
-		mom_menucmdel[0].style.top = menutop + "px";
-		mom_menucmdel[0].style.left = menuleft + "px";
-		mom_menucmdel[0].style.zIndex = "99";
-		console.log("mom_cmdkeypress mom_menucmdel=", mom_menucmdel,
-			    " menutop=", menutop,  " menuleft=", menuleft);
 	    }
 	}
     }
@@ -347,7 +356,7 @@ function mom_cmdkeypress(evt) {
 	    var curspos = $commandtext.prop("selectionStart");
 	    var endpos = $commandtext.prop("selectionEnd");
 	    var scrollpos = $commandtext.prop("scrollTop");
-	    var result = /\$\S+$/.exec(this.value.slice(0, curspos));
+	    var result = /\$\S*$/.exec(this.value.slice(0, curspos));
 	    var lastdoll = result ? result[0] : null;
 	    console.log("mom_cmdkeypress escape evt=", evt,  " lastdoll=", lastdoll, " curspos=", curspos);
 	    if (lastdoll) {
@@ -371,19 +380,63 @@ function mom_cmdkeypress(evt) {
 		    var dollvalseq = new Array();
 		    for (var kname in mom_escape_encoding_dict) {
 			console.log ("mom_cmdkeypress escape kname=", kname);
-			if (kname.length > dollnamelen && kname.substr(0, dollnamelen) == dollname)
+			if (kname.length > dollnamelen && kname != "~" && kname.substr(0, dollnamelen) == dollname)
 			    dollvalseq.push(kname);
 		    }
+		    dollvalseq = dollvalseq.sort();
+		    console.log ("mom_cmdkeypress dollvalseq=", dollvalseq);
+		    if (dollvalseq.length == 0) {
+			dollvalseq = Object.getOwnPropertyNames(mom_escape_encoding_dict).sort();
+			dollvalseq.pop(); // remove the "~"
+			console.log ("mom_cmdkeypress all dollvalseq=", dollvalseq);			
+		    };
 		    if (dollvalseq.length == 1)
 			replacedollar(dollvalseq[0]);
 		    else {
 			// popup a replacement menu
+			mom_menucmdcount += 1;
+			var menuid = 'mom_commandreplmenu_id' + mom_menucmdcount;
+			var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
+			$commandtext.after(menuhtml);
+			mom_menucmdel = $("#"+menuid);
+			dollvalseq.forEach(function (kel,ix,arr) {
+			    var repl = mom_escape_encoding_dict[kel];
+			    console.log ("mom_cmdkeypress kel=", kel, " repl=", repl);
+			    mom_menucmdel.append("<li data-dollrepl='"+repl+"'><i>$"+kel+"</i> &nbsp;: <b>"+repl+"</b></li>");
+			});
+			mom_position_menucmd();
+			mom_menucmdel.menu({
+			    select: function(ev,ui) {
+				console.log("mom_cmdkeypress-replmenu-sel ev=", ev, " ui=", ui);
+				var repstr = ui.item.data("dollrepl");
+				console.log("mom_cmdkeypress-replmenu-sel repstr=", repstr);
+				replacedollar(repstr);
+				setTimeout(function() {
+				    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
+				    mom_removecmdmenu();
+				}, 200);
+			    },
+			    blur: function(ev,ui) {
+				console.log("mom_cmdkeypress-replmenu-blur ev=",
+					    ev, " ui=", ui,
+					    " mom_menucmdel=", mom_menucmdel);
+				mom_removecmdmenu();
+			    },
+			    disabled: false
+			});
+			setTimeout(function()
+				   {
+				       console.log("mom_cmdkeypress-delayedreplmenudestroy mom_menucmdel=",
+						   mom_menucmdel);
+				       mom_removecmdmenu();
+				   }, 6500);						
 		    }
 		}
 	    }
 	}
     }
 }
+
 
 /***
 function mom_commandautocomplete(requ,resp) {

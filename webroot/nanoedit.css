@@ -270,7 +270,7 @@ textarea#commandtext_id:focus {
     border: 2px dashed #261943 ;
 }
 
-ul.mom_commandcompletemenu_cl {
+ul.mom_commandmenu_cl {
     border: 1px dotted #411320;
     background-color: rgba(248,219,241,0.4);
     align-items: flex-start;
@@ -280,7 +280,7 @@ ul.mom_commandcompletemenu_cl {
     z-index: -1;
 }
 
-ul.mom_commandcompletemenu_cl li {
+ul.mom_commandmenu_cl li {
     display: flex;
 }
 
