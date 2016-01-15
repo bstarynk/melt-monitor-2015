@@ -169,7 +169,10 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
                              (struct mom_item_st *) pval, true);
       return;
     case MOMITY_BOXSTRING:
-      mom_wexch_puts (wexch, "\"<span class='momstrval_cl'>");
+      mom_wexch_puts (wexch, "\"<span class='momstrval_cl' data-momstring='");
+      mom_output_utf8_html (wexch->webx_outfil, ((const struct mom_boxstring_st *) pval)->cstr,
+			    mom_size (pval), false);
+      mom_wexch_puts (wexch, "'>");
       mom_output_utf8_escaped (wexch->webx_outfil,
                                ((const struct mom_boxstring_st *) pval)->cstr,
                                mom_size (pval), utf8escape_nanoedit_mom,

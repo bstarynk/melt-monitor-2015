@@ -352,17 +352,33 @@ function mom_cmdkeypress(evt) {
 	    console.log("mom_cmdkeypress escape evt=", evt,  " lastdoll=", lastdoll, " curspos=", curspos);
 	    if (lastdoll) {
 		var dollname = lastdoll.substr(1);
-		if (mom_escape_encoding_dict.hasOwnProperty(dollname)) {
-		    var dollval = mom_escape_encoding_dict[dollname];
+		var dollnamelen = dollname.length;
+		var replacedollar = function (dollval) {
 		    var oldval = $commandtext.val();
-		    console.log("mom_cmdkeypress escape evt=", evt,
-				" dollname=", dollname, " dollval=", dollval);
+		    console.log("replacedollar dollname=", dollname, " dollval=", dollval);
 		    $commandtext.val(oldval.substr(0, curspos-lastdoll.length) + dollval
 				     + oldval.substr(curspos));
 		    oldval = null;
 		    $commandtext[0].focus();
 		    $commandtext[0].selectionStart = $commandtext[0].selectionEnd = curspos + dollval.length;
-		    $commandtext[0].scrollTop = scrollpos;		    
+		    $commandtext[0].scrollTop = scrollpos;
+		};
+		if (mom_escape_encoding_dict.hasOwnProperty(dollname)) {
+		    var dollval = mom_escape_encoding_dict[dollname];
+		    replacedollar(dollval);
+		}
+		else {
+		    var dollvalseq = new Array();
+		    for (var kname in mom_escape_encoding_dict) {
+			console.log ("mom_cmdkeypress escape kname=", kname);
+			if (kname.length > dollnamelen && kname.substr(0, dollnamelen) == dollname)
+			    dollvalseq.push(kname);
+		    }
+		    if (dollvalseq.length == 1)
+			replacedollar(dollvalseq[0]);
+		    else {
+			// popup a replacement menu
+		    }
 		}
 	    }
 	}
