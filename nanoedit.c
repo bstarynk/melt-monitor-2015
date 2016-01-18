@@ -645,6 +645,7 @@ struct nanoparsing_mom_st
   struct mom_item_st *nanop_thistatitm;
   struct mom_item_st *nanop_queitm;
   struct mom_item_st *nanop_delimitm;
+  const struct mom_node_st*nanop_nodexpr;
   jmp_buf nanop_jb;
 };
 
@@ -1106,6 +1107,13 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 
+
+
+
+
+static const void*
+parsexpr_nanoedit_mom(struct nanoparsing_mom_st *np, int pos) {
+} /* end parsexpr_nanoedit_mom */
 
 
 
