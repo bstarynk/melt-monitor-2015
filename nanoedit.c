@@ -170,8 +170,9 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
       return;
     case MOMITY_BOXSTRING:
       mom_wexch_puts (wexch, "\"<span class='momstrval_cl' data-momstring='");
-      mom_output_utf8_html (wexch->webx_outfil, ((const struct mom_boxstring_st *) pval)->cstr,
-			    mom_size (pval), false);
+      mom_output_utf8_html (wexch->webx_outfil,
+                            ((const struct mom_boxstring_st *) pval)->cstr,
+                            mom_size (pval), false);
       mom_wexch_puts (wexch, "'>");
       mom_output_utf8_escaped (wexch->webx_outfil,
                                ((const struct mom_boxstring_st *) pval)->cstr,
@@ -822,6 +823,49 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       return;
     }                           /* end if uc is an ASCII letter */
 
+  else if (uc == '0' && pc[1] == '\'' && pc[2])
+    {                           // 0'z is inputting the integer
+      // code of UTF8 character z
+      pc += 2;
+      gunichar u = g_utf8_get_char (pc);
+      pc = g_utf8_next_char (pc);
+      const struct mom_boxint_st *intv = mom_boxint_make (u);
+      mom_queue_append (que, intv);
+      MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u charcode int %s\n",
+                       np->nanop_pos,
+                       mom_value_cstring ((const struct
+                                           mom_hashedvalue_st *) (intv)));
+      np->nanop_pos = pc - cmd;
+      return;
+    }                           /* end of integer character code à la 0'z */
+
+  else if (uc == '0' && pc[1] == '\\' && isalpha (pc[2]))
+    {                           // 0\n is inputting the
+      // escaped char \n
+      char escbuf[4] = "";
+      escbuf[0] = pc[1];
+      escbuf[1] = pc[2];
+      FILE *f = fmemopen ((void *) escbuf, 2, "r");
+      struct mom_string_and_size_st ss = mom_input_quoted_utf8 (f);
+      fclose (f);
+      if (ss.ss_len == 1)
+        {
+          const struct mom_boxint_st *intv = mom_boxint_make (ss.ss_str[0]);
+          mom_queue_append (que, intv);
+          MOM_DEBUGPRINTF (web,
+                           "parse_token_nanoedit pos#%u charcode int %s\n",
+                           np->nanop_pos,
+                           mom_value_cstring ((const struct mom_hashedvalue_st
+                                               *) (intv)));
+          np->nanop_pos += 3;
+        }
+      else
+        NANOPARSING_FAILURE_MOM (np, np->nanop_pos, "bad escchar int 0%s",
+                                 escbuf);
+
+      ss.ss_str = NULL, ss.ss_len = 0;
+    }                           /* end of integer escaped character code à la 0\n */
+
   else if ((uc < 128 && isdigit (uc))
            || ((uc == '+' || uc == '-') && (nc = pc[1])
                && (isdigit (nc)
@@ -1059,6 +1103,10 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
                            "unexpected token %s", cmd + np->nanop_pos);
 }                               /* end parse_token_nanoedit_mom */
+
+
+
+
 
 
 static void

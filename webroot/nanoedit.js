@@ -210,6 +210,7 @@ function mom_ajaxparsecommand(htmlc) {
 
 var mom_menucmdcount = 0;
 var mom_menucmdel = null;
+var mom_menutimeout = null;
 function mom_removecmdmenu(oldmenu) {
     if (!oldmenu)
 	oldmenu = mom_menucmdel;
@@ -218,6 +219,11 @@ function mom_removecmdmenu(oldmenu) {
 	oldmenu.menu("destroy");
 	oldmenu.remove();
     };
+    var oldtimeout = mom_menutimeout;
+    mom_menutimeout = null;
+    // see http://stackoverflow.com/a/34848872/841108
+    if (oldtimeout)
+	clearTimeout(oldtimeout);
     oldmenu = null;
 }
 
@@ -339,7 +345,7 @@ function mom_cmdkeypress(evt) {
 		    },
 		    disabled: false
 		});
-		setTimeout(function()
+		mom_menutimeout = setTimeout(function()
 			   {
 			       console.log("mom_cmdkeypress-delayedmenudestroy mom_menucmdel=",
 					   mom_menucmdel);
@@ -428,9 +434,9 @@ function mom_cmdkeypress(evt) {
 			curmenu.mousemove
 			(function(ev)
 			 { console.log("momdelayrepl movefinishing ev=", ev, " curmenu=", curmenu);
-			   curmenu.finish();
+			   clearTimeout(mom_menutimeout);
 			 });
-			setTimeout(function()
+			mom_menutimeout = setTimeout(function()
 				   {
 				       console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
 						   curmenu);
