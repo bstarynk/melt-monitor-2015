@@ -203,9 +203,10 @@ function mom_doexit(jsex) {
 		  +cput.toPrecision(3)+" cpu seconds).");
 }
 
-function mom_ajaxparsecommand(htmlc) {
-    console.log("nanoedit mom_ajaxparsecommand htmlc=", htmlc);
-    $parsedcmddiv.html(htmlc);
+function mom_ajaxparsecommand(js) {
+    console.log("nanoedit mom_ajaxparsecommand js=", js);
+    if (js.html)
+	$parsedcmddiv.html(js.html);
 }
 
 var mom_menucmdcount = 0;
@@ -505,7 +506,7 @@ $(document).ready(function(){
     ({url: "/nanoedit",
       method: "POST",
       data: {"do_parsecommand": cmdtext},
-      dataType: "html",
+      dataType: "json",
       success: mom_ajaxparsecommand
      });      
     });

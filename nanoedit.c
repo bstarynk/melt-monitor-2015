@@ -1296,10 +1296,34 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
                npars.nanop_cmdstr);
         }
-
+      const char *errhtml = NULL;
+      {
+        char *errbuf = NULL;
+        size_t errsiz = 0;
+        FILE *ferr = open_memstream (&errbuf, &errsiz);
+        if (!ferr)
+          MOM_FATAPRINTF ("failed to open memory stream for error %s - %m",
+                          mom_boxstring_cstr (npars.nanop_errmsgv));
+        fprintf (ferr, "<b>parsing error @%d</b>: <tt>", npars.nanop_pos);
+        mom_output_utf8_html (ferr, mom_boxstring_cstr (npars.nanop_errmsgv),
+                              -1, true);
+        fputs ("</tt>", ferr);
+        fflush (ferr);
+        errhtml = GC_STRDUP (errbuf);
+        fclose (ferr);
+        free (errbuf);
+      }
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit errhtml=%s", errhtml);
+      mom_wexch_puts (wexch, "{ \"html\": \"");
+      mom_output_utf8_encoded (wexch->webx_outfil, errhtml, -1);
+      mom_wexch_puts (wexch, "\",\n");
+      if (npars.nanop_pos > 0)
+        MOM_WEXCH_PRINTF (wexch, " \"position\": %d,\n", npars.nanop_pos);
+      MOM_WEXCH_PRINTF (wexch, " \"error_from\": %d }\n", linerr);
+      mom_wexch_reply (wexch, HTTP_OK, "application/json");
       goto end;
-    }
-  else
+    }                           /* end error processing after longjmp */
+  else                          /* no error, i.e. first time... */
     {
       const char *gend = NULL;
       if (!g_utf8_validate (cmd, -1, &gend))
