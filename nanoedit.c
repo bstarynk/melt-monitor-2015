@@ -635,7 +635,7 @@ end:
 struct nanoparsing_mom_st
 {
   unsigned nanop_magic;
-  unsigned nanop_pos;
+  int nanop_pos;
   const struct mom_boxstring_st *nanop_errmsgv;
   const char *nanop_cmdstr;
   unsigned nanop_cmdlen;
@@ -645,7 +645,7 @@ struct nanoparsing_mom_st
   struct mom_item_st *nanop_thistatitm;
   struct mom_item_st *nanop_queitm;
   struct mom_item_st *nanop_delimitm;
-  const struct mom_node_st*nanop_nodexpr;
+  const struct mom_boxnode_st *nanop_nodexpr;
   jmp_buf nanop_jb;
 };
 
@@ -653,7 +653,7 @@ struct nanoparsing_mom_st
     struct nanoparsing_mom_st *_np = (Np);                      \
     assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
     int _pos = (Pos);                                           \
-    if (_pos>0) _np->nanop_pos = _pos;                          \
+    if (_pos!=0) _np->nanop_pos = _pos;                         \
     _np->nanop_errmsgv =                                        \
       mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
     longjmp(_np->nanop_jb,__LINE__);                            \
@@ -1111,9 +1111,48 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 
-static const void*
-parsexpr_nanoedit_mom(struct nanoparsing_mom_st *np, int pos) {
-} /* end parsexpr_nanoedit_mom */
+static const void *
+parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
+{
+  assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
+  const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
+  assert (nodexp && nodexp->va_itype == MOMITY_NODE);
+  assert (posptr != NULL);
+  int pos = *posptr;
+  unsigned nlen = mom_raw_size (nodexp);
+  if (pos < 0 || pos >= (int) nlen)
+    return NULL;
+  struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[pos];
+  if (!curtokv)
+    NANOPARSING_FAILURE_MOM (np, -pos, "no token at position #%d", pos);
+  switch (mom_itype (curtokv))
+    {
+    case MOMITY_BOXINT:
+    case MOMITY_BOXDOUBLE:
+    case MOMITY_BOXSTRING:
+    case MOMITY_ITEM:
+      {
+        *posptr = pos + 1;
+        MOM_DEBUGPRINTF (web, "parsexpr_nanoedit scalar %s at pos#%d",
+                         mom_value_cstring (curtokv), pos);
+        return curtokv;
+      }
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nodtok =
+          (const struct mom_boxnode_st *) curtokv;
+        MOM_DEBUGPRINTF (web, "parsexpr_nanoedit composite token %s at position #%d",
+                         mom_value_cstring (curtokv), pos);
+#warning incomplete code
+      }
+    default:
+      break;
+    }
+  NANOPARSING_FAILURE_MOM (np, -pos, "parsexpr_nanoedit unexpected token %s",
+                           mom_value_cstring (curtokv));
+}                               /* end parsexpr_nanoedit_mom */
+
+
 
 
 
@@ -1168,11 +1207,19 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   }
   if ((linerr = setjmp (npars.nanop_jb)) != 0)
     {
-      MOM_WARNPRINTF
-        ("doparsecommand_nanoedit parsing error from %s:%d: %s"
-         "\n.. at position %u of:\n%s\n", __FILE__, linerr,
-         mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
-         npars.nanop_cmdstr);
+      if (npars.nanop_pos >= 0)
+        MOM_WARNPRINTF
+          ("doparsecommand_nanoedit parsing error from %s:%d: %s"
+           "\n.. at position %u of:\n%s\n", __FILE__, linerr,
+           mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
+           npars.nanop_cmdstr);
+      else
+        MOM_WARNPRINTF
+          ("doparsecommand_nanoedit parsing error from %s:%d: %s"
+           "\n.. at index %d of:\n%s\n", __FILE__, linerr,
+           mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
+           npars.nanop_cmdstr);
+
       goto end;
     }
   else
@@ -1188,6 +1235,11 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit lexqnod=%s",
                        mom_value_cstring ((struct mom_hashedvalue_st *)
                                           lexqnod));
+      npars.nanop_nodexpr = lexqnod;
+      int pos = 0;
+      void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d",
+                       mom_value_cstring (exprv), pos);
 #warning doparsecommand_nanoedit_mom unimplemented
     }
 end:
@@ -1198,4 +1250,6 @@ end:
   memset (&npars, 0, sizeof (npars));
 }                               /* end of doparsecommand_nanoedit_mom */
 
-/*** end of file nanoedit.c ***/
+
+
+/********************* end of file nanoedit.c **********************/

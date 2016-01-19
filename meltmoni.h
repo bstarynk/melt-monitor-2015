@@ -748,7 +748,7 @@ struct mom_boxnode_st
   intptr_t nod_metarank;
   struct mom_item_st *nod_metaitem;
   struct mom_item_st *nod_connitm;
-  struct mom_hashedvalue_st *nod_sons[];        /* actual size sva_size */
+  struct mom_hashedvalue_st *nod_sons[];        /* actual size is the mom_raw_size */
 };
 static inline const struct mom_boxnode_st *
 mom_dyncast_node (const void *p)
@@ -1532,10 +1532,11 @@ mom_ldstate_make_set (const struct mom_boxset_st *se)
 
 
 
-static inline const struct mom_node_st *
+static inline const struct mom_boxnode_st *
 mom_ldstate_dynnode (const struct mom_statelem_st se)
 {
-  return (const struct mom_node_st *) mom_dyncast_node (mom_ldstate_val (se));
+  return (const struct mom_boxnode_st *)
+    mom_dyncast_node (mom_ldstate_val (se));
 };
 
 
