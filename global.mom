@@ -27,6 +27,15 @@ signature_tasklet
 ^funsignature
 
 
+*comma_delim
+1453199017
+^mtime
+(
+comment
+"for , delimiter token"_
+)attrs
+
+
 *comment
 1445968873
 ^mtime
@@ -95,6 +104,33 @@ comment
 ^mtime
 
 
+*left_brace_delim
+1453199148
+^mtime
+(
+comment
+"for { delimiter token"_
+)attrs
+
+
+*left_bracket_delim
+1453199107
+^mtime
+(
+comment
+"for [ delimiter token"_
+)attrs
+
+
+*left_paren_delim
+1453199017
+^mtime
+(
+comment
+"for ( delimiter token"_
+)attrs
+
+
 *microedit
 1446463595
 ^mtime
@@ -144,6 +180,15 @@ signature_tasklet
 ^mtime
 
 
+*percent_delim
+1453199017
+^mtime
+(
+comment
+"for % delimiter token"_
+)attrs
+
+
 *queue
 1452423077
 ^mtime
@@ -159,6 +204,42 @@ comment
 (
 comment
 "for raw display"_
+)attrs
+
+
+*right_brace_delim
+1453199148
+^mtime
+(
+comment
+"for } delimiter token"_
+)attrs
+
+
+*right_bracket_delim
+1453199107
+^mtime
+(
+comment
+"for ] delimiter token"_
+)attrs
+
+
+*right_paren_delim
+1453199017
+^mtime
+(
+comment
+"for ) delimiter token"_
+)attrs
+
+
+*semicolon_delim
+1453199107
+^mtime
+(
+comment
+"for ; delimiter token"_
 )attrs
 
 

@@ -726,7 +726,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   cmd = np->nanop_cmdstr;
   assert (cmd != NULL);
-  assert (np->nanop_pos <= np->nanop_cmdlen);
+  assert (np->nanop_pos <= (int)np->nanop_cmdlen);
   struct mom_item_st *queitm = np->nanop_queitm;
   assert (queitm && queitm->va_itype == MOMITY_ITEM);
   que = mom_dyncast_queue (queitm->itm_payload);
@@ -746,7 +746,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
         break;
     }
   np->nanop_pos = pc - cmd;
-  if (!uc || np->nanop_pos >= np->nanop_cmdlen)
+  if (!uc || np->nanop_pos >= (int)np->nanop_cmdlen)
     {
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u end (cmdlen %u)",
                        np->nanop_pos, np->nanop_cmdlen);
@@ -1237,7 +1237,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                                           lexqnod));
       npars.nanop_nodexpr = lexqnod;
       int pos = 0;
-      void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
+      const void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
       MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d",
                        mom_value_cstring (exprv), pos);
 #warning doparsecommand_nanoedit_mom unimplemented
