@@ -156,6 +156,22 @@ comment
 "dictionnary of delimiters for nanoedit"_
 )attrs
 (
+"%"_
+percent_delim
+"("_
+left_paren_delim
+")"_
+right_paren_delim
+","_
+comma_delim
+";"_
+semicolon_delim
+"["_
+left_bracket_delim
+"]"_
+right_bracket_delim
+"{"_
+left_brace_delim
 )payload_hashassoc
 
 
