@@ -456,7 +456,7 @@ const char *mom_itype_str (const void *p);
 static inline unsigned
 mom_raw_size (const void *p)
 {
-  assert (p != NULL);
+  assert (p != NULL && p != MOM_EMPTY_SLOT);
   return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
     (((const struct mom_anyvalue_st *) p)->va_lsiz);
 }

@@ -637,6 +637,7 @@ struct nanoparsing_mom_st
   unsigned nanop_magic;
   int nanop_pos;
   const struct mom_boxstring_st *nanop_errmsgv;
+  const void *nanop_errval;
   const char *nanop_cmdstr;
   unsigned nanop_cmdlen;
   struct mom_webexch_st *nanop_wexch;
@@ -654,6 +655,18 @@ struct nanoparsing_mom_st
     assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
     int _pos = (Pos);                                           \
     if (_pos!=0) _np->nanop_pos = _pos;                         \
+    _np->nanop_errmsgv =                                        \
+      mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
+    longjmp(_np->nanop_jb,__LINE__);                            \
+  } while(0)
+
+
+#define NANOPARSING_FAILURE_WITH_MOM(Np,Pos,Val,Fmt,...) do {	\
+    struct nanoparsing_mom_st *_np = (Np);                      \
+    assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
+    int _pos = (Pos);                                           \
+    if (_pos!=0) _np->nanop_pos = _pos;                         \
+    _np->nanop_errval = (Val);					\
     _np->nanop_errmsgv =                                        \
       mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
     longjmp(_np->nanop_jb,__LINE__);                            \
@@ -726,7 +739,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   cmd = np->nanop_cmdstr;
   assert (cmd != NULL);
-  assert (np->nanop_pos <= (int)np->nanop_cmdlen);
+  assert (np->nanop_pos <= (int) np->nanop_cmdlen);
   struct mom_item_st *queitm = np->nanop_queitm;
   assert (queitm && queitm->va_itype == MOMITY_ITEM);
   que = mom_dyncast_queue (queitm->itm_payload);
@@ -746,7 +759,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
         break;
     }
   np->nanop_pos = pc - cmd;
-  if (!uc || np->nanop_pos >= (int)np->nanop_cmdlen)
+  if (!uc || np->nanop_pos >= (int) np->nanop_cmdlen)
     {
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u end (cmdlen %u)",
                        np->nanop_pos, np->nanop_cmdlen);
@@ -1109,6 +1122,26 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 
+static inline bool
+isdelim_nanoedit_mom (struct nanoparsing_mom_st *np, int pos,
+                      struct mom_item_st *delimitm)
+{
+  assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
+  const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
+  assert (nodexp && nodexp->va_itype == MOMITY_NODE);
+  assert (delimitm && delimitm->va_itype == MOMITY_ITEM);
+  unsigned nlen = mom_raw_size (nodexp);
+  if (pos < 0 || pos >= (int) nlen)
+    return false;
+  struct mom_hashedvalue_st *tokv = nodexp->nod_sons[pos];
+  const struct mom_boxnode_st *toknod = mom_dyncast_node (tokv);
+  if (!toknod || mom_raw_size (toknod) != 1)
+    return false;
+  if (toknod->nod_connitm != MOM_PREDEFITM (delimiter))
+    return false;
+  return (const void *) toknod->nod_sons[0] == (const void *) delimitm;
+}                               /* end of isdelim_nanoedit_mom */
+
 
 
 static const void *
@@ -1139,11 +1172,35 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
       }
     case MOMITY_NODE:
       {
+        int off = 0;
         const struct mom_boxnode_st *nodtok =
           (const struct mom_boxnode_st *) curtokv;
-        MOM_DEBUGPRINTF (web, "parsexpr_nanoedit composite token %s at position #%d",
+        if (nodtok->nod_metarank > 0)
+          off = nodtok->nod_metarank;
+        else
+          off = -(pos + 1);
+        MOM_DEBUGPRINTF (web,
+                         "parsexpr_nanoedit composite token %s at position #%d",
                          mom_value_cstring (curtokv), pos);
-#warning incomplete code
+        if (pos + 3 < (int) nlen
+            && isdelim_nanoedit_mom (np, pos, MOM_PREDEFITM (percent_delim)))
+          {
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
+            struct mom_hashedvalue_st *next2tokv = nodexp->nod_sons[pos + 2];
+            struct mom_item_st *connitm = mom_dyncast_item (next1tokv);
+            if (!connitm)
+              NANOPARSING_FAILURE_WITH_MOM (np, off, next1tokv,
+                                            "parsexpr_nanoedit unexpected connective %s",
+                                            mom_value_cstring (next1tokv));
+            if (!isdelim_nanoedit_mom
+                (np, pos + 2, MOM_PREDEFITM (left_paren_delim)))
+              NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
+                                            "parsexpr_nanoedit expected left parenthesis got %s after connective %s",
+                                            mom_value_cstring (next2tokv),
+                                            mom_item_cstring (connitm));
+
+          }
+#warning incomplete code parsexpr_nanoedit
       }
     default:
       break;
@@ -1208,17 +1265,37 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   if ((linerr = setjmp (npars.nanop_jb)) != 0)
     {
       if (npars.nanop_pos >= 0)
-        MOM_WARNPRINTF
-          ("doparsecommand_nanoedit parsing error from %s:%d: %s"
-           "\n.. at position %u of:\n%s\n", __FILE__, linerr,
-           mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
-           npars.nanop_cmdstr);
+        {
+          if (npars.nanop_errval)
+            MOM_WARNPRINTF
+              ("doparsecommand_nanoedit parsing error from %s:%d with %s: %s"
+               "\n.. at position %u of:\n%s\n", __FILE__, linerr,
+               mom_value_cstring (npars.nanop_errval),
+               mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
+               npars.nanop_cmdstr);
+          else
+            MOM_WARNPRINTF
+              ("doparsecommand_nanoedit parsing error from %s:%d: %s"
+               "\n.. at position %u of:\n%s\n", __FILE__, linerr,
+               mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
+               npars.nanop_cmdstr);
+        }
       else
-        MOM_WARNPRINTF
-          ("doparsecommand_nanoedit parsing error from %s:%d: %s"
-           "\n.. at index %d of:\n%s\n", __FILE__, linerr,
-           mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
-           npars.nanop_cmdstr);
+        {
+          if (npars.nanop_errval)
+            MOM_WARNPRINTF
+              ("doparsecommand_nanoedit parsing error from %s:%d with %s: %s"
+               "\n.. at index %d of:\n%s\n", __FILE__, linerr,
+               mom_value_cstring (npars.nanop_errval),
+               mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
+               npars.nanop_cmdstr);
+          else
+            MOM_WARNPRINTF
+              ("doparsecommand_nanoedit parsing error from %s:%d: %s"
+               "\n.. at index %d of:\n%s\n", __FILE__, linerr,
+               mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
+               npars.nanop_cmdstr);
+        }
 
       goto end;
     }
