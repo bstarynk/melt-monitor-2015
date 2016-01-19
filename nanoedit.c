@@ -1297,7 +1297,9 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                npars.nanop_cmdstr);
         }
       const char *errhtml = NULL;
+      const struct mom_boxstring_st *badnamstr = NULL;
       {
+        const struct mom_boxnode_st *errnod = NULL;
         char *errbuf = NULL;
         size_t errsiz = 0;
         FILE *ferr = open_memstream (&errbuf, &errsiz);
@@ -1308,6 +1310,14 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
         mom_output_utf8_html (ferr, mom_boxstring_cstr (npars.nanop_errmsgv),
                               -1, true);
         fputs ("</tt>", ferr);
+        if ((errnod = mom_dyncast_node (npars.nanop_errval))
+            && errnod->nod_connitm == MOM_PREDEFITM (name)
+            && mom_raw_size (errnod) == 1
+            && (badnamstr = mom_dyncast_boxstring (errnod->nod_sons[0])))
+          {
+            MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit badnamstr=%s",
+                             mom_boxstring_cstr (badnamstr));
+          }
         fflush (ferr);
         errhtml = GC_STRDUP (errbuf);
         fclose (ferr);
@@ -1319,6 +1329,10 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "\",\n");
       if (npars.nanop_pos > 0)
         MOM_WEXCH_PRINTF (wexch, " \"position\": %d,\n", npars.nanop_pos);
+      if (badnamstr)
+        MOM_WEXCH_PRINTF (wexch, " \"bad_name\": \"%s\",\n",
+                          mom_boxstring_cstr (badnamstr));
+
       MOM_WEXCH_PRINTF (wexch, " \"error_from\": %d }\n", linerr);
       mom_wexch_reply (wexch, HTTP_OK, "application/json");
       goto end;

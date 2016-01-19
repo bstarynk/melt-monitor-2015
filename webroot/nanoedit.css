@@ -294,4 +294,9 @@ input#commandsend_id {
 button#commandclear_id {
     background-color: #F3DFB1;
 }
+
+div.mom_asknewname_cl {
+    background-color: #B2EBF7;
+    font-size: 95%;
+}
 /* end nanoedit.css */

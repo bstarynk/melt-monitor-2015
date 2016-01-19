@@ -204,9 +204,44 @@ function mom_doexit(jsex) {
 }
 
 function mom_ajaxparsecommand(js) {
+    var badnamedlg = null;
+    var badnamedid = null;
+    var badcommid = null;
+    var badcomminp = null;
     console.log("nanoedit mom_ajaxparsecommand js=", js);
     if (js.html)
 	$parsedcmddiv.html(js.html);
+    if (js.bad_name) {
+	console.log("nanoedit mom_ajaxparsecommand bad_name=", js.bad_name);
+	badnamedid = "mom_badnamed_" + js.bad_name;
+	badcommid = "mom_badcomm_" + js.bad_name;
+	badnamedlg = $parsedcmddiv.append("<div class='mom_asknewname_cl ui-widget' title='create item?'>"
+					  +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
+					  +"<label for='"+ badcommid + ">Comment:</label>"
+					  +"<input name='" + badcommid + " type='text'/>"
+					  +"</div>");
+	badcomminp = $("#"+badcommid);
+	badnamedlg.dialog
+	({
+	    modal: true,
+	    buttons: [
+		{text: "create",
+		 click: function() {
+		     $( this ).dialog("close");
+		     console.log("should create item " + js.bad_name);
+		     badnamedlg = null;
+		 }},
+		{text: "cancel",
+		 click: function() {
+		     $( this ).dialog("close");
+		     console.log("cancel new item " + js.bad_name);
+		     badnamedlg = null;
+		 }}
+	    ]
+	});
+	
+	
+    }
 }
 
 var mom_menucmdcount = 0;
@@ -483,12 +518,12 @@ $(document).ready(function(){
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     /***
-    $commandtext.autocomplete({
+	$commandtext.autocomplete({
 	delay: 300,
 	minLength: 2,
 	source: mom_commandautocomplete,
 	disabled: false
-    });
+	});
     ***/
     $commandtext.keypress(mom_cmdkeypress);
     $cleareditbut.click(function(evt){
@@ -503,12 +538,12 @@ $(document).ready(function(){
 	var cmdtext = $commandtext.val();
 	console.log("sendcmd evt=", evt, " cmdtext=", cmdtext);
 	$.ajax
-    ({url: "/nanoedit",
-      method: "POST",
-      data: {"do_parsecommand": cmdtext},
-      dataType: "json",
-      success: mom_ajaxparsecommand
-     });      
+	({url: "/nanoedit",
+	  method: "POST",
+	  data: {"do_parsecommand": cmdtext},
+	  dataType: "json",
+	  success: mom_ajaxparsecommand
+	 });      
     });
     console.log("nanoedit before ajax do_fillpage");
     $.ajax
