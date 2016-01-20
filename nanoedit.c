@@ -1187,7 +1187,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 #warning incomplete parse_token_nanoedit_mom
 
   NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
-                           "unexpected token %s", cmd + np->nanop_pos);
+                           "bad lexical token %s", cmd + np->nanop_pos);
 }                               /* end parse_token_nanoedit_mom */
 
 
@@ -1270,7 +1270,33 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                             "parsexpr_nanoedit expected left parenthesis got %s after connective %s",
                                             mom_value_cstring (next2tokv),
                                             mom_item_cstring (connitm));
+            MOM_DEBUGPRINTF (web,
+                             "parsexpr_nanoedit percent-expr pos#%d off@%d connitm %s",
+                             pos, off, mom_item_cstring (connitm));
+            struct mom_vectvaldata_st *vec =
+              mom_vectvaldata_reserve (NULL, 5);
+            assert (vec != NULL);
+            int curpos = pos + 3;
+            while (curpos < (int) nlen
+                   && !isdelim_nanoedit_mom (np, curpos,
+                                             MOM_PREDEFITM (right_paren_delim)))
+              {
+                int prevpos = curpos;
+                const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
+                if (!subexpv && curpos == prevpos)
+                  NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
+                                                "parsexpr_nanoedit bad subexpression#%d in percent-node of connective %s",
+                                                mom_vectvaldata_count (vec),
+                                                mom_item_cstring (connitm));
 
+                vec = mom_vectvaldata_append (vec, subexpv);
+                if (isdelim_nanoedit_mom
+                    (np, curpos, MOM_PREDEFITM (comma_delim)))
+                  curpos++;
+		else if (isdelim_nanoedit_mom (np, curpos,
+					       MOM_PREDEFITM (right_paren_delim)))
+		  break;
+              }
           }
 #warning incomplete code parsexpr_nanoedit
       }

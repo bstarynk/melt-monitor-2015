@@ -211,6 +211,7 @@ function mom_ajaxparsecommand(js) {
     console.log("mom_ajaxparsecommand js=", js);
     if (js.html)
         $parsedcmddiv.html(js.html);
+    console.log("mom_ajaxparsecommand updated $parsedcmddiv=", $parsedcmddiv);
     if (js.bad_name) {
         console.log("mom_ajaxparsecommand bad_name=", js.bad_name);
         badnamedid = "mom_badnamed_" + js.bad_name;
@@ -254,8 +255,15 @@ function mom_ajaxparsecommand(js) {
                  }}
             ]
         });
-        console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);       
+        console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);
+	return;
     }
+    else if (js.error_from) {
+	console.log ("mom_ajaxparsecommand error from ", js.error_from);
+	if (js.error_from > 0)
+            $commandtext[0].selectionStart = $commandtext[0].selectionEnd = js.error_from; 
+    }
+    console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
 
 
