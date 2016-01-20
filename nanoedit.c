@@ -514,6 +514,23 @@ doexit_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of doexit_nanoedit_mom */
 
 
+static void
+docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
+                           struct mom_item_st *tkitm,
+                           struct mom_item_st *wexitm,
+                           struct mom_item_st *thistatitm,
+                           struct mom_item_st *sessitm,
+                           const char *itemnamestr, const char *commentstr)
+{
+  MOM_DEBUGPRINTF (web, "docreateitem_nanoedit tkitm=%s wexitm=%s"
+                   " thistatitm=%s sessitm=%s itemnamestr=%s commentstr=%s",
+                   mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), itemnamestr, commentstr);
+#warning docreateitem_nanoedit incomplete
+}                               /* end of docreateitem_nanoedit_mom */
+
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";
 
@@ -593,6 +610,8 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *docompletename = NULL;
       const char *doexit = NULL;
       const char *doparsecommand = NULL;
+      const char *docreateitem = NULL;
+      const char *commentstr = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
                        mom_item_cstring (tkitm), wexch->webx_count);
@@ -617,6 +636,14 @@ momf_nanoedit (struct mom_item_st *tkitm)
       else if ((doexit = onion_request_get_post (wexch->webx_requ, "do_exit"))
                != NULL)
         doexit_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, doexit);
+      else
+        if ((docreateitem =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_createitem")) != NULL
+            && (commentstr =
+                onion_request_get_post (wexch->webx_requ, "comment")) != NULL)
+        docreateitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, sessitm,
+                                   docreateitem, commentstr);
     }
 end:
   if (hsetitm)

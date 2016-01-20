@@ -208,27 +208,31 @@ function mom_ajaxparsecommand(js) {
     var badnamedid = null;
     var badcommid = null;
     var badcomminp = null;
-    console.log("nanoedit mom_ajaxparsecommand js=", js);
+    console.log("mom_ajaxparsecommand js=", js);
     if (js.html)
 	$parsedcmddiv.html(js.html);
     if (js.bad_name) {
-	console.log("nanoedit mom_ajaxparsecommand bad_name=", js.bad_name);
+	console.log("mom_ajaxparsecommand bad_name=", js.bad_name);
 	badnamedid = "mom_badnamed_" + js.bad_name;
 	badcommid = "mom_badcomm_" + js.bad_name;
 	badnamedlg = $parsedcmddiv.append("<div class='mom_asknewname_cl ui-widget' title='create item?'>"
 					  +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
-					  +"<label for='"+ badcommid + ">Comment:</label>"
-					  +"<input name='" + badcommid + " type='text'/>"
+					  +"<label for='"+ badcommid + "'>Comment:</label>"
+					  +" <input id='" + badcommid + "' name='comment' type='text'/>"
 					  +"</div>");
 	badcomminp = $("#"+badcommid);
 	badnamedlg.dialog
 	({
 	    modal: true,
+	    title: "create " + js.bad_name + " ?",
 	    buttons: [
 		{text: "create",
 		 click: function() {
-		     $( this ).dialog("close");
-		     console.log("should create item " + js.bad_name);
+		     var self=$(this);
+		     var itemname = js.bad_name;
+		     var itemcomment = badcomminp.val();
+		     console.log("should create item " + itemname + " with comment " + itemcomment);
+		     self.dialog("close");
 		     badnamedlg = null;
 		 }},
 		{text: "cancel",
@@ -239,10 +243,11 @@ function mom_ajaxparsecommand(js) {
 		 }}
 	    ]
 	});
-	
-	
+	console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);	
     }
-}
+}				// end of mom_ajaxparsecommand
+
+
 
 var mom_menucmdcount = 0;
 var mom_menucmdel = null;
@@ -320,7 +325,7 @@ function mom_cmdkeypress(evt) {
 	var curspos = $commandtext.prop("selectionStart");
 	console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
 	/// see http://stackoverflow.com/a/5592852/841108
-	var result = /\S+$/.exec(this.value.slice(0, curspos));
+	var result = /[A-Za-z0-9_]+$/.exec(this.value.slice(0, curspos));
 	var lastword = result ? result[0] : null;
 	var coords = null;
 	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
