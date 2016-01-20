@@ -232,8 +232,19 @@ function mom_ajaxparsecommand(js) {
 		     var itemname = js.bad_name;
 		     var itemcomment = badcomminp.val();
 		     console.log("should create item " + itemname + " with comment " + itemcomment);
-		     self.dialog("close");
-		     badnamedlg = null;
+		     $.ajax({
+			 url: "/nanoedit",
+			 method: "POST",
+			 data: {"do_createitem": itemname,
+				"comment": itemcomment },
+			 dataType: 'html',
+			 success: function (hdata) {
+			     console.log("do_createitem hdata=", hdata);
+			     $parsedcmddiv.html(hdata);
+			     self.dialog("close");
+			     badnamedlg = null;
+			 }
+		     });
 		 }},
 		{text: "cancel",
 		 click: function() {
