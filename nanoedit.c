@@ -1216,8 +1216,14 @@ isdelim_nanoedit_mom (struct nanoparsing_mom_st *np, int pos,
 
 
 
+static const void *parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np,
+                                              int prec, int *posptr);
+
+static const void *parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np,
+                                          int *posptr);
+
 static const void *
-parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
+parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
@@ -1229,7 +1235,8 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
     return NULL;
   struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[pos];
   if (!curtokv)
-    NANOPARSING_FAILURE_MOM (np, -pos, "no token at position #%d", pos);
+    NANOPARSING_FAILURE_MOM (np, -pos, "(primary) no token at position #%d",
+                             pos);
   switch (mom_itype (curtokv))
     {
     case MOMITY_BOXINT:
@@ -1238,7 +1245,7 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
     case MOMITY_ITEM:
       {
         *posptr = pos + 1;
-        MOM_DEBUGPRINTF (web, "parsexpr_nanoedit scalar %s at pos#%d",
+        MOM_DEBUGPRINTF (web, "parsprimary_nanoedit scalar %s at pos#%d",
                          mom_value_cstring (curtokv), pos);
         return curtokv;
       }
@@ -1252,7 +1259,7 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
         else
           off = -(pos + 1);
         MOM_DEBUGPRINTF (web,
-                         "parsexpr_nanoedit composite token %s at position #%d",
+                         "parsprimary_nanoedit composite token %s at position #%d",
                          mom_value_cstring (curtokv), pos);
         if (pos + 3 < (int) nlen
             && isdelim_nanoedit_mom (np, pos, MOM_PREDEFITM (percent_delim)))
@@ -1262,16 +1269,16 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             struct mom_item_st *connitm = mom_dyncast_item (next1tokv);
             if (!connitm)
               NANOPARSING_FAILURE_WITH_MOM (np, off, next1tokv,
-                                            "parsexpr_nanoedit unexpected connective %s",
+                                            "parsprimary_nanoedit unexpected connective %s",
                                             mom_value_cstring (next1tokv));
             if (!isdelim_nanoedit_mom
                 (np, pos + 2, MOM_PREDEFITM (left_paren_delim)))
               NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
-                                            "parsexpr_nanoedit expected left parenthesis got %s after connective %s",
+                                            "parsprimary_nanoedit expected left parenthesis got %s after connective %s",
                                             mom_value_cstring (next2tokv),
                                             mom_item_cstring (connitm));
             MOM_DEBUGPRINTF (web,
-                             "parsexpr_nanoedit percent-expr pos#%d off@%d connitm %s",
+                             "parsprimary_nanoedit percent-expr pos#%d off@%d connitm %s",
                              pos, off, mom_item_cstring (connitm));
             struct mom_vectvaldata_st *vec =
               mom_vectvaldata_reserve (NULL, 5);
@@ -1279,13 +1286,14 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             int curpos = pos + 3;
             while (curpos < (int) nlen
                    && !isdelim_nanoedit_mom (np, curpos,
-                                             MOM_PREDEFITM (right_paren_delim)))
+                                             MOM_PREDEFITM
+                                             (right_paren_delim)))
               {
                 int prevpos = curpos;
                 const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
                 if (!subexpv && curpos == prevpos)
                   NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
-                                                "parsexpr_nanoedit bad subexpression#%d in percent-node of connective %s",
+                                                "parsprimary_nanoedit bad subexpression#%d in percent-node of connective %s",
                                                 mom_vectvaldata_count (vec),
                                                 mom_item_cstring (connitm));
 
@@ -1293,23 +1301,59 @@ parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                 if (isdelim_nanoedit_mom
                     (np, curpos, MOM_PREDEFITM (comma_delim)))
                   curpos++;
-		else if (isdelim_nanoedit_mom (np, curpos,
-					       MOM_PREDEFITM (right_paren_delim)))
-		  break;
+                else if (isdelim_nanoedit_mom (np, curpos,
+                                               MOM_PREDEFITM
+                                               (right_paren_delim)))
+                  break;
               }
           }
-#warning incomplete code parsexpr_nanoedit
+#warning incomplete code parsprimary_nanoedit
       }
     default:
       break;
     }
-  NANOPARSING_FAILURE_MOM (np, -pos, "parsexpr_nanoedit unexpected token %s",
+  NANOPARSING_FAILURE_MOM (np, -pos,
+                           "parsprimary_nanoedit unexpected token %s",
                            mom_value_cstring (curtokv));
-}                               /* end parsexpr_nanoedit_mom */
+}                               /* end parsprimary_nanoedit_mom */
+
+// precedence 1 is the highest, precedence 15 is the lowest
+// e.g. http://en.cppreference.com/w/c/language/operator_precedence 
+#define NANOEDIT_MAX_PRECEDENCE_MOM 16
+static const void *
+parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
+                           int *posptr)
+{
+  assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
+  const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
+  assert (nodexp && nodexp->va_itype == MOMITY_NODE);
+  assert (posptr != NULL);
+  assert (prec >= 0 && prec < NANOEDIT_MAX_PRECEDENCE_MOM);
+  if (prec == 0)
+    return parsprimary_nanoedit_mom (np, posptr);
+  int startpos = *posptr;
+  unsigned nlen = mom_raw_size (nodexp);
+  if (startpos < 0 || startpos >= (int) nlen)
+    return NULL;
+  struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[startpos];
+  if (!curtokv)
+    NANOPARSING_FAILURE_MOM (np, -startpos,
+                             "(expr prec#%d) no token at position #%d", prec,
+                             startpos);
+  if (prec == 0)
+    return parsprimary_nanoedit_mom (np, posptr);
+#warning unimplemented parsexprprec_nanoedit_mom
+  NANOPARSING_FAILURE_MOM (np, -startpos,
+                           "unimplemented parsexprprec_nanoedit prec%d",
+                           prec);
+}                               /* end parsexprprec_nanoedit_mom */
 
 
-
-
+static const void *
+parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
+{
+  return parsexprprec_nanoedit_mom (np, NANOEDIT_MAX_PRECEDENCE_MOM, posptr);
+}
 
 static void
 doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
