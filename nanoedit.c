@@ -408,6 +408,8 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end of dofillpage_nanoedit_mom */
 
+
+
 static void
 doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                              struct mom_item_st *tkitm,
@@ -522,14 +524,57 @@ docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
                            struct mom_item_st *sessitm,
                            const char *itemnamestr, const char *commentstr)
 {
+  struct mom_item_st *hsetitm = NULL;
+  struct mom_item_st *newitm = NULL;
   MOM_DEBUGPRINTF (web, "docreateitem_nanoedit tkitm=%s wexitm=%s"
                    " thistatitm=%s sessitm=%s itemnamestr=%s commentstr=%s",
                    mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm),
                    mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), itemnamestr, commentstr);
-#warning docreateitem_nanoedit incomplete
+  if (!
+      (hsetitm =
+       mom_dyncast_item (mom_vectvaldata_nth
+                         (sessitm->itm_pcomp, mes_itmhset))))
+    MOM_FATAPRINTF
+      ("docreateitem_nanoedit wexitm %s has sessitm %s without hashset",
+       mom_item_cstring (wexitm), mom_item_cstring (sessitm));
+  assert (mom_itype (hsetitm->itm_payload) == MOMITY_HASHSET);
+  newitm = mom_make_item_by_string (itemnamestr);
+  if (!newitm)
+    {
+      MOM_WARNPRINTF ("docreateitem_nanoedit failed to create item named %s",
+                      itemnamestr);
+      MOM_WEXCH_PRINTF (wexch, "<b>failed to create item <tt>%s</tt></b>\n",
+                        itemnamestr);
+      mom_wexch_reply (wexch, HTTP_FORBIDDEN, "text/html");
+      return;
+    }
+  else
+    {
+      char timbuf[64];
+      memset (timbuf, 0, sizeof (timbuf));
+      time_t now = time (&newitm->itm_mtime);
+      mom_strftime_centi (timbuf, sizeof (timbuf), "%c %Z", (double) now);
+      mom_item_put_space (newitm, MOMSPA_GLOBAL);
+      MOM_DEBUGPRINTF (web, "docreateitem_nanoedit created item %s at %ld",
+                       mom_item_cstring (newitm), (long) now);
+      newitm->itm_pattr =       //
+        mom_assovaldata_put (NULL,
+                             MOM_PREDEFITM (comment),
+                             (struct mom_hashedvalue_st *)
+                             mom_boxstring_make (commentstr));
+      hsetitm->itm_payload = (struct mom_anyvalue_st *)
+        mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
+                            (struct mom_item_st *) newitm);
+      MOM_WEXCH_PRINTF (wexch,
+                        "<b>created item <tt>%s</tt></b> on <i>%s</i>\n",
+                        mom_item_cstring (newitm), timbuf);
+      mom_wexch_reply (wexch, HTTP_OK, "text/html");
+      return;
+    }
 }                               /* end of docreateitem_nanoedit_mom */
+
 
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";

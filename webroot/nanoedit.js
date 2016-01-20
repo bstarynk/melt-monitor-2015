@@ -181,17 +181,17 @@ function mom_ajaxfill(htmlc) {
     $editdiv.html(htmlc);
     $rawmodebox = $("#momrawbox_id");
     $rawmodebox.on("change", function() {
-	var valmode = $rawmodebox.val();
-	var valchecked = $rawmodebox.prop("checked");
-	console.log("mom_ajaxfill valmode=", valmode,
-		    " valchecked=", valchecked, " $rawmodebox=", $rawmodebox);
-	$.ajax
-	({url: "/nanoedit",
-	  method: "POST",
-	  data: {"do_fillpage": true, "rawmode": valchecked},
-	  dataType: "html",
-	  success: mom_ajaxfill
-	 });
+        var valmode = $rawmodebox.val();
+        var valchecked = $rawmodebox.prop("checked");
+        console.log("mom_ajaxfill valmode=", valmode,
+                    " valchecked=", valchecked, " $rawmodebox=", $rawmodebox);
+        $.ajax
+        ({url: "/nanoedit",
+          method: "POST",
+          data: {"do_fillpage": true, "rawmode": valchecked},
+          dataType: "html",
+          success: mom_ajaxfill
+         });
     });
 }
 
@@ -200,7 +200,7 @@ function mom_doexit(jsex) {
     var realt = jsex.elapsedreal;
     var cput = jsex.processcpu;
     $editdiv.html("<b>exited</b> ("+realt.toPrecision(3)+" real seconds, "
-		  +cput.toPrecision(3)+" cpu seconds).");
+                  +cput.toPrecision(3)+" cpu seconds).");
 }
 
 function mom_ajaxparsecommand(js) {
@@ -210,53 +210,53 @@ function mom_ajaxparsecommand(js) {
     var badcomminp = null;
     console.log("mom_ajaxparsecommand js=", js);
     if (js.html)
-	$parsedcmddiv.html(js.html);
+        $parsedcmddiv.html(js.html);
     if (js.bad_name) {
-	console.log("mom_ajaxparsecommand bad_name=", js.bad_name);
-	badnamedid = "mom_badnamed_" + js.bad_name;
-	badcommid = "mom_badcomm_" + js.bad_name;
-	badnamedlg = $parsedcmddiv.append("<div class='mom_asknewname_cl ui-widget' title='create item?'>"
-					  +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
-					  +"<label for='"+ badcommid + "'>Comment:</label>"
-					  +" <input id='" + badcommid + "' name='comment' type='text'/>"
-					  +"</div>");
-	badcomminp = $("#"+badcommid);
-	badnamedlg.dialog
-	({
-	    modal: true,
-	    title: "create " + js.bad_name + " ?",
-	    buttons: [
-		{text: "create",
-		 click: function() {
-		     var self=$(this);
-		     var itemname = js.bad_name;
-		     var itemcomment = badcomminp.val();
-		     console.log("should create item " + itemname + " with comment " + itemcomment);
-		     $.ajax({
-			 url: "/nanoedit",
-			 method: "POST",
-			 data: {"do_createitem": itemname,
-				"comment": itemcomment },
-			 dataType: 'html',
-			 success: function (hdata) {
-			     console.log("do_createitem hdata=", hdata);
-			     $parsedcmddiv.html(hdata);
-			     self.dialog("close");
-			     badnamedlg = null;
-			 }
-		     });
-		 }},
-		{text: "cancel",
-		 click: function() {
-		     $( this ).dialog("close");
-		     console.log("cancel new item " + js.bad_name);
-		     badnamedlg = null;
-		 }}
-	    ]
-	});
-	console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);	
+        console.log("mom_ajaxparsecommand bad_name=", js.bad_name);
+        badnamedid = "mom_badnamed_" + js.bad_name;
+        badcommid = "mom_badcomm_" + js.bad_name;
+        badnamedlg = $parsedcmddiv.append("<div class='mom_asknewname_cl ui-widget' title='create item?'>"
+                                          +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
+                                          +"<label for='"+ badcommid + "'>Comment:</label>"
+                                          +" <input id='" + badcommid + "' name='comment' type='text' size='48'/>"
+                                          +"</div>\n");
+        badcomminp = $("#"+badcommid);
+        badnamedlg.dialog
+        ({
+            modal: true,
+            title: "create " + js.bad_name + " ?",
+            buttons: [
+                {text: "create",
+                 click: function() {
+                     var self=$(this);
+                     var itemname = js.bad_name;
+                     var itemcomment = badcomminp.val();
+                     console.log("should create item " + itemname + " with comment " + itemcomment);
+                     $.ajax({
+                         url: "/nanoedit",
+                         method: "POST",
+                         data: {"do_createitem": itemname,
+                                "comment": itemcomment },
+                         dataType: 'html',
+                         success: function (hdata) {
+                             console.log("do_createitem hdata=", hdata);
+                             $parsedcmddiv.html(hdata);
+                             self.dialog("close");
+                             badnamedlg = null;
+                         }
+                     });
+                 }},
+                {text: "cancel",
+                 click: function() {
+                     $( this ).dialog("close");
+                     console.log("cancel new item " + js.bad_name);
+                     badnamedlg = null;
+                 }}
+            ]
+        });
+        console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);       
     }
-}				// end of mom_ajaxparsecommand
+}                               // end of mom_ajaxparsecommand
 
 
 
@@ -265,17 +265,17 @@ var mom_menucmdel = null;
 var mom_menutimeout = null;
 function mom_removecmdmenu(oldmenu) {
     if (!oldmenu)
-	oldmenu = mom_menucmdel;
+        oldmenu = mom_menucmdel;
     mom_menucmdel = null;
     if (oldmenu) {
-	oldmenu.menu("destroy");
-	oldmenu.remove();
+        oldmenu.menu("destroy");
+        oldmenu.remove();
     };
     var oldtimeout = mom_menutimeout;
     mom_menutimeout = null;
     // see http://stackoverflow.com/a/34848872/841108
     if (oldtimeout)
-	clearTimeout(oldtimeout);
+        clearTimeout(oldtimeout);
     oldmenu = null;
 }
 
@@ -290,231 +290,231 @@ function mom_position_menucmd() {
     var menutop = null, menuleft = null;
     coords = getCaretCoordinates($commandtext[0], tsel.end);
     // coords is {top=..., left=...} w.r.t. $commandtext
-    // cmdoff is {top=..., left=...} w.r.t. document		
+    // cmdoff is {top=..., left=...} w.r.t. document            
     console.log("mom_position_menucmd coords=", coords,
-		" tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
-		" cmdwidth=", cmdwidth,
-		" cmdheight=", cmdheight,
-		" menuheight=", menuheight,
-		" menuwidth=", menuwidth);
+                " tsel=", tsel, " cmdpos=", cmdpos, " cmdoff=", cmdoff,
+                " cmdwidth=", cmdwidth,
+                " cmdheight=", cmdheight,
+                " menuheight=", menuheight,
+                " menuwidth=", menuwidth);
     if (coords.left < cmdwidth/2) {
-	if (coords.top < cmdheight/2) {
-	    console.log("mom_position_menucmd coords topleft ", coords);
-	    menutop = Math.round(cmdoff.top + coords.top + 10);
-	    menuleft = Math.round(cmdoff.left + coords.left + 10);
-	}
-	else {
-	    menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
-	    menuleft = Math.round(cmdoff.left + coords.left + 10);
-	    console.log("mom_position_menucmd coords bottomleft ", coords);
-	}
+        if (coords.top < cmdheight/2) {
+            console.log("mom_position_menucmd coords topleft ", coords);
+            menutop = Math.round(cmdoff.top + coords.top + 10);
+            menuleft = Math.round(cmdoff.left + coords.left + 10);
+        }
+        else {
+            menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+            menuleft = Math.round(cmdoff.left + coords.left + 10);
+            console.log("mom_position_menucmd coords bottomleft ", coords);
+        }
     }
     else { /* coords.left >= cmdwidth/2 */
-	if (coords.top < cmdheight/2) {
-	    console.log("mom_position_menucmd coords topright ", coords);
-	    menutop = Math.round(cmdoff.top + coords.top + 10);
-	    menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
-	}
-	else {
-	    menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
-	    menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
-	    console.log("mom_position_menucmd coords bottomright ", coords);
-	}
+        if (coords.top < cmdheight/2) {
+            console.log("mom_position_menucmd coords topright ", coords);
+            menutop = Math.round(cmdoff.top + coords.top + 10);
+            menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
+        }
+        else {
+            menutop = Math.round(cmdoff.top + cmdheight - menuheight - 10);
+            menuleft = Math.round(cmdoff.left + cmdwidth - menuwidth - 10);
+            console.log("mom_position_menucmd coords bottomright ", coords);
+        }
     }
     console.log("mom_position_menucmd menuleft=", menuleft, " menutop=", menutop);
     mom_menucmdel[0].style.top = menutop + "px";
     mom_menucmdel[0].style.left = menuleft + "px";
     mom_menucmdel[0].style.zIndex = "99";
     console.log("mom_position_menucmd mom_menucmdel=", mom_menucmdel,
-		" menutop=", menutop,  " menuleft=", menuleft);
-}				// end of mom_position_menucmd
+                " menutop=", menutop,  " menuleft=", menuleft);
+}                               // end of mom_position_menucmd
 
 
 function mom_cmdkeypress(evt) {
     if (evt.which === " ".charCodeAt(0) && evt.ctrlKey) { // control space for autocompletion
-	/// see http://stackoverflow.com/a/7745958/841108
-	var curspos = $commandtext.prop("selectionStart");
-	console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
-	/// see http://stackoverflow.com/a/5592852/841108
-	var result = /[A-Za-z0-9_]+$/.exec(this.value.slice(0, curspos));
-	var lastword = result ? result[0] : null;
-	var coords = null;
-	console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
-		    " result=", result,
-		    " lastword=", lastword,
-		    " $commandtext=", $commandtext);
-	if (lastword.length >= 2) {
-	    var acomp = mom_complete_name(lastword);
-	    var nbcomp = acomp.length;
-	    console.log("mom_cmdkeypress ctrlspace acomp=", acomp, " lastword=", lastword);
-	    if (!acomp || nbcomp==0) {
-		alert ("word '"+lastword+"' without completion");
-		return false;
-	    }
-	    else if (nbcomp === 1) {
-		var complword = acomp[0];
-		console.assert (complword.length >= lastword.length,
-				"bad complword=", complword,
-				" acomp=", acomp,
-				" lastword=", lastword,
-				" curspos=", curspos);
-		var restword = complword.substr (lastword.length);
-		console.log("mom_cmdkeypress ctrlspace singlecompletion restword=",
-			    restword);
-		$commandtext.insertAtCaret (restword);
-		return false;
-	    }
-	    else {
-		mom_menucmdcount += 1;
-		var menuid = 'mom_commandmenu_id' + mom_menucmdcount;
-		var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
-		$commandtext.after(menuhtml);
-		mom_menucmdel = $("#"+menuid);
-		for (var ix=0; ix<nbcomp; ix++) {
-		    mom_menucmdel.append("<li>"+acomp[ix]+"</li>");
-		}
-		mom_position_menucmd();
-		mom_menucmdel.menu({
-		    select: function(ev,ui) {
-			var selword = ui.item.text();
-			var subword = selword.substr(lastword.length);
-			console.log("mom_cmdkeypress-menu-sel ev=",
-				    ev, " ui=", ui,
-				    " mom_menucmdel=", mom_menucmdel,
-				    " selword=", selword,
-				    " subword=", subword);
-			$commandtext.insertAtCaret (subword);
-			setTimeout(function() {
-			    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
-			    mom_removecmdmenu();
-			}, 100);
-		    },
-		    blur: function(ev,ui) {
-			console.log("mom_cmdkeypress-menu-blur ev=",
-				    ev, " ui=", ui,
-				    " mom_menucmdel=", mom_menucmdel);
-			mom_removecmdmenu();
-		    },
-		    disabled: false
-		});
-		mom_menutimeout = setTimeout(function()
-			   {
-			       console.log("mom_cmdkeypress-delayedmenudestroy mom_menucmdel=",
-					   mom_menucmdel);
-			       mom_removecmdmenu();
-			   }, 6500);
-	    }
-	}
+        /// see http://stackoverflow.com/a/7745958/841108
+        var curspos = $commandtext.prop("selectionStart");
+        console.log("mom_cmdkeypress ctrlspace curspos=", curspos);
+        /// see http://stackoverflow.com/a/5592852/841108
+        var result = /[A-Za-z0-9_]+$/.exec(this.value.slice(0, curspos));
+        var lastword = result ? result[0] : null;
+        var coords = null;
+        console.log("mom_cmdkeypress ctrlspace evt=", evt, " curspos=", curspos,
+                    " result=", result,
+                    " lastword=", lastword,
+                    " $commandtext=", $commandtext);
+        if (lastword.length >= 2) {
+            var acomp = mom_complete_name(lastword);
+            var nbcomp = acomp.length;
+            console.log("mom_cmdkeypress ctrlspace acomp=", acomp, " lastword=", lastword);
+            if (!acomp || nbcomp==0) {
+                alert ("word '"+lastword+"' without completion");
+                return false;
+            }
+            else if (nbcomp === 1) {
+                var complword = acomp[0];
+                console.assert (complword.length >= lastword.length,
+                                "bad complword=", complword,
+                                " acomp=", acomp,
+                                " lastword=", lastword,
+                                " curspos=", curspos);
+                var restword = complword.substr (lastword.length);
+                console.log("mom_cmdkeypress ctrlspace singlecompletion restword=",
+                            restword);
+                $commandtext.insertAtCaret (restword);
+                return false;
+            }
+            else {
+                mom_menucmdcount += 1;
+                var menuid = 'mom_commandmenu_id' + mom_menucmdcount;
+                var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
+                $commandtext.after(menuhtml);
+                mom_menucmdel = $("#"+menuid);
+                for (var ix=0; ix<nbcomp; ix++) {
+                    mom_menucmdel.append("<li>"+acomp[ix]+"</li>");
+                }
+                mom_position_menucmd();
+                mom_menucmdel.menu({
+                    select: function(ev,ui) {
+                        var selword = ui.item.text();
+                        var subword = selword.substr(lastword.length);
+                        console.log("mom_cmdkeypress-menu-sel ev=",
+                                    ev, " ui=", ui,
+                                    " mom_menucmdel=", mom_menucmdel,
+                                    " selword=", selword,
+                                    " subword=", subword);
+                        $commandtext.insertAtCaret (subword);
+                        setTimeout(function() {
+                            console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
+                            mom_removecmdmenu();
+                        }, 100);
+                    },
+                    blur: function(ev,ui) {
+                        console.log("mom_cmdkeypress-menu-blur ev=",
+                                    ev, " ui=", ui,
+                                    " mom_menucmdel=", mom_menucmdel);
+                        mom_removecmdmenu();
+                    },
+                    disabled: false
+                });
+                mom_menutimeout = setTimeout(function()
+                                             {
+                                                 console.log("mom_cmdkeypress-delayedmenudestroy mom_menucmdel=",
+                                                             mom_menucmdel);
+                                                 mom_removecmdmenu();
+                                             }, 6500);
+            }
+        }
     }
     else if (evt.keyCode === $.ui.keyCode.ESCAPE) {
-	console.log("mom_cmdkeypress escape evt=", evt, " mom_menucmdel=", mom_menucmdel);
-	if (mom_menucmdel)
-	    mom_removecmdmenu();
-	else {
-	    var curspos = $commandtext.prop("selectionStart");
-	    var endpos = $commandtext.prop("selectionEnd");
-	    var scrollpos = $commandtext.prop("scrollTop");
-	    var result = /\$\S*$/.exec(this.value.slice(0, curspos));
-	    var lastdoll = result ? result[0] : null;
-	    console.log("mom_cmdkeypress escape evt=", evt,  " lastdoll=", lastdoll, " curspos=", curspos);
-	    if (lastdoll) {
-		var dollname = lastdoll.substr(1);
-		var dollnamelen = dollname.length;
-		var replacedollar = function (dollval) {
-		    var oldval = $commandtext.val();
-		    console.log("replacedollar dollname=", dollname, " dollval=", dollval);
-		    $commandtext.val(oldval.substr(0, curspos-lastdoll.length) + dollval
-				     + oldval.substr(curspos));
-		    oldval = null;
-		    $commandtext[0].focus();
-		    $commandtext[0].selectionStart = $commandtext[0].selectionEnd = curspos + dollval.length;
-		    $commandtext[0].scrollTop = scrollpos;
-		};
-		if (mom_escape_encoding_dict.hasOwnProperty(dollname)) {
-		    var dollval = mom_escape_encoding_dict[dollname];
-		    replacedollar(dollval);
-		}
-		else {
-		    var dollvalseq = new Array();
-		    for (var kname in mom_escape_encoding_dict) {
-			console.log ("mom_cmdkeypress escape kname=", kname);
-			if (kname.length > dollnamelen && kname != "~" && kname.substr(0, dollnamelen) == dollname)
-			    dollvalseq.push(kname);
-		    }
-		    dollvalseq = dollvalseq.sort();
-		    console.log ("mom_cmdkeypress dollvalseq=", dollvalseq);
-		    if (dollvalseq.length == 0) {
-			dollvalseq = Object.getOwnPropertyNames(mom_escape_encoding_dict).sort();
-			dollvalseq.pop(); // remove the "~"
-			console.log ("mom_cmdkeypress all dollvalseq=", dollvalseq);			
-		    };
-		    if (dollvalseq.length == 1)
-			replacedollar(mom_escape_encoding_dict[dollvalseq[0]]);
-		    else {
-			// popup a replacement menu
-			mom_menucmdcount += 1;
-			var menuid = 'mom_commandreplmenu_id' + mom_menucmdcount;
-			var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
-			$commandtext.after(menuhtml);
-			mom_menucmdel = $("#"+menuid);
-			dollvalseq.forEach(function (kel,ix,arr) {
-			    var repl = mom_escape_encoding_dict[kel];
-			    console.log ("mom_cmdkeypress kel=", kel, " repl=", repl);
-			    mom_menucmdel.append("<li data-dollrepl='"+repl+"'><i>$"+kel+"</i> &nbsp;: <b>"+repl+"</b></li>");
-			});
-			mom_position_menucmd();
-			mom_menucmdel.menu({
-			    select: function(ev,ui) {
-				console.log("mom_cmdkeypress-replmenu-sel ev=", ev, " ui=", ui);
-				var repstr = ui.item.data("dollrepl");
-				console.log("mom_cmdkeypress-replmenu-sel repstr=", repstr);
-				replacedollar(repstr);
-				setTimeout(function() {
-				    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
-				    mom_menucmdel.fadeOut(200+25*dollvalseq.length,mom_removecmdmenu);
-				}, 200);
-			    },
-			    blur: function(ev,ui) {
-				console.log("mom_cmdkeypress-replmenu-blur ev=",
-					    ev, " ui=", ui,
-					    " mom_menucmdel=", mom_menucmdel);
-				mom_removecmdmenu();
-			    },
-			    disabled: false
-			});
-			var curmenu = mom_menucmdel;
-			curmenu.mousemove
-			(function(ev)
-			 { console.log("momdelayrepl movefinishing ev=", ev, " curmenu=", curmenu);
-			   clearTimeout(mom_menutimeout);
-			 });
-			mom_menutimeout = setTimeout(function()
-				   {
-				       console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
-						   curmenu);
-				       curmenu.delay(100).fadeOut(800+75*dollvalseq.length,
-							     function () {
-								 console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
-								 mom_removecmdmenu();
-							     });
-				   }, 9500);						
-		    }
-		}
-	    }
-	}
+        console.log("mom_cmdkeypress escape evt=", evt, " mom_menucmdel=", mom_menucmdel);
+        if (mom_menucmdel)
+            mom_removecmdmenu();
+        else {
+            var curspos = $commandtext.prop("selectionStart");
+            var endpos = $commandtext.prop("selectionEnd");
+            var scrollpos = $commandtext.prop("scrollTop");
+            var result = /\$\S*$/.exec(this.value.slice(0, curspos));
+            var lastdoll = result ? result[0] : null;
+            console.log("mom_cmdkeypress escape evt=", evt,  " lastdoll=", lastdoll, " curspos=", curspos);
+            if (lastdoll) {
+                var dollname = lastdoll.substr(1);
+                var dollnamelen = dollname.length;
+                var replacedollar = function (dollval) {
+                    var oldval = $commandtext.val();
+                    console.log("replacedollar dollname=", dollname, " dollval=", dollval);
+                    $commandtext.val(oldval.substr(0, curspos-lastdoll.length) + dollval
+                                     + oldval.substr(curspos));
+                    oldval = null;
+                    $commandtext[0].focus();
+                    $commandtext[0].selectionStart = $commandtext[0].selectionEnd = curspos + dollval.length;
+                    $commandtext[0].scrollTop = scrollpos;
+                };
+                if (mom_escape_encoding_dict.hasOwnProperty(dollname)) {
+                    var dollval = mom_escape_encoding_dict[dollname];
+                    replacedollar(dollval);
+                }
+                else {
+                    var dollvalseq = new Array();
+                    for (var kname in mom_escape_encoding_dict) {
+                        console.log ("mom_cmdkeypress escape kname=", kname);
+                        if (kname.length > dollnamelen && kname != "~" && kname.substr(0, dollnamelen) == dollname)
+                            dollvalseq.push(kname);
+                    }
+                    dollvalseq = dollvalseq.sort();
+                    console.log ("mom_cmdkeypress dollvalseq=", dollvalseq);
+                    if (dollvalseq.length == 0) {
+                        dollvalseq = Object.getOwnPropertyNames(mom_escape_encoding_dict).sort();
+                        dollvalseq.pop(); // remove the "~"
+                        console.log ("mom_cmdkeypress all dollvalseq=", dollvalseq);                    
+                    };
+                    if (dollvalseq.length == 1)
+                        replacedollar(mom_escape_encoding_dict[dollvalseq[0]]);
+                    else {
+                        // popup a replacement menu
+                        mom_menucmdcount += 1;
+                        var menuid = 'mom_commandreplmenu_id' + mom_menucmdcount;
+                        var menuhtml = "<ul class='mom_commandmenu_cl' id='"+menuid+"'><li>-</li></ul>";
+                        $commandtext.after(menuhtml);
+                        mom_menucmdel = $("#"+menuid);
+                        dollvalseq.forEach(function (kel,ix,arr) {
+                            var repl = mom_escape_encoding_dict[kel];
+                            console.log ("mom_cmdkeypress kel=", kel, " repl=", repl);
+                            mom_menucmdel.append("<li data-dollrepl='"+repl+"'><i>$"+kel+"</i> &nbsp;: <b>"+repl+"</b></li>");
+                        });
+                        mom_position_menucmd();
+                        mom_menucmdel.menu({
+                            select: function(ev,ui) {
+                                console.log("mom_cmdkeypress-replmenu-sel ev=", ev, " ui=", ui);
+                                var repstr = ui.item.data("dollrepl");
+                                console.log("mom_cmdkeypress-replmenu-sel repstr=", repstr);
+                                replacedollar(repstr);
+                                setTimeout(function() {
+                                    console.log("mom_cmdkeypress-menutimeout mom_menucmdel=", mom_menucmdel);
+                                    mom_menucmdel.fadeOut(200+25*dollvalseq.length,mom_removecmdmenu);
+                                }, 200);
+                            },
+                            blur: function(ev,ui) {
+                                console.log("mom_cmdkeypress-replmenu-blur ev=",
+                                            ev, " ui=", ui,
+                                            " mom_menucmdel=", mom_menucmdel);
+                                mom_removecmdmenu();
+                            },
+                            disabled: false
+                        });
+                        var curmenu = mom_menucmdel;
+                        curmenu.mousemove
+                        (function(ev)
+                         { console.log("momdelayrepl movefinishing ev=", ev, " curmenu=", curmenu);
+                           clearTimeout(mom_menutimeout);
+                         });
+                        mom_menutimeout = setTimeout(function()
+                                                     {
+                                                         console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
+                                                                     curmenu);
+                                                         curmenu.delay(100).fadeOut(800+75*dollvalseq.length,
+                                                                                    function () {
+                                                                                        console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
+                                                                                        mom_removecmdmenu();
+                                                                                    });
+                                                     }, 9500);                                          
+                    }
+                }
+            }
+        }
     }
 }
 
 
 /***
-function mom_commandautocomplete(requ,resp) {
+    function mom_commandautocomplete(requ,resp) {
     console.log("commandautocomplete requ=", requ);
     var acomp = mom_complete_name(requ.term);
     console.log("commandautocomplete acomp=", acomp);
     if (acomp) resp(acomp);
     else resp(null);
     console.log("commandautocomplete done acomp=", acomp);
-}
+    }
 ****/
 
 $(document).ready(function(){
@@ -534,12 +534,12 @@ $(document).ready(function(){
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     /***
-	$commandtext.autocomplete({
-	delay: 300,
-	minLength: 2,
-	source: mom_commandautocomplete,
-	disabled: false
-	});
+        $commandtext.autocomplete({
+        delay: 300,
+        minLength: 2,
+        source: mom_commandautocomplete,
+        disabled: false
+        });
     ***/
     $commandtext.keypress(mom_cmdkeypress);
     $cleareditbut.click(function(evt){
@@ -547,19 +547,19 @@ $(document).ready(function(){
         $editlog.html("");
     });
     $resetcmdbut.click(function(evt) {
-	console.log("resetcmd evt=", evt);	
-	$commandtext.val("");
+        console.log("resetcmd evt=", evt);      
+        $commandtext.val("");
     });
     $sendcmdbut.click(function(evt) {
-	var cmdtext = $commandtext.val();
-	console.log("sendcmd evt=", evt, " cmdtext=", cmdtext);
-	$.ajax
-	({url: "/nanoedit",
-	  method: "POST",
-	  data: {"do_parsecommand": cmdtext},
-	  dataType: "json",
-	  success: mom_ajaxparsecommand
-	 });      
+        var cmdtext = $commandtext.val();
+        console.log("sendcmd evt=", evt, " cmdtext=", cmdtext);
+        $.ajax
+        ({url: "/nanoedit",
+          method: "POST",
+          data: {"do_parsecommand": cmdtext},
+          dataType: "json",
+          success: mom_ajaxparsecommand
+         });      
     });
     console.log("nanoedit before ajax do_fillpage");
     $.ajax
@@ -570,13 +570,13 @@ $(document).ready(function(){
       success: mom_ajaxfill
      });
     $exitbut.click(function (evt) {
-	console.log ("exit button clicked evt=", evt);
-	$.ajax({url: "/nanoedit",
-		method: "POST",
-		data: {"do_exit": true},
-		dataType: "json",
-		success: mom_doexit
-	       })
+        console.log ("exit button clicked evt=", evt);
+        $.ajax({url: "/nanoedit",
+                method: "POST",
+                data: {"do_exit": true},
+                dataType: "json",
+                success: mom_doexit
+               })
     });
     console.log("nanoedit document done ready");
 });
