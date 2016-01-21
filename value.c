@@ -1389,6 +1389,7 @@ momf_ldp_nodemeta (struct mom_item_st *itm,
                    mom_item_cstring (itm), elemsize);
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
+  assert (elemsize==0 || elemarr);
 #warning unimplemented momf_ldp_nodemeta
   MOM_FATAPRINTF ("unimplemented momf_ldp_nodemeta itm=%s",
                   mom_item_cstring (itm));

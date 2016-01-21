@@ -1322,11 +1322,15 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             const struct mom_boxnode_st *nodres =
               mom_boxnode_make_meta (connitm,
                                      mom_vectvaldata_count (vec),
-                                     mom_vectvaldata_valvect (vec),
+                                     ((const struct mom_hashedvalue_st **)
+                                      mom_vectvaldata_valvect (vec)),
                                      np->nanop_wexitm, pos);
             MOM_DEBUGPRINTF (web,
                              "parsprimary_nanoedit percent-expr curpos#%d nodres=%s ",
-                             curpos, mom_value_cstring (nodres));
+                             curpos,
+                             mom_value_cstring ((const struct
+                                                 mom_hashedvalue_st *)
+                                                nodres));
             *posptr = curpos;
             return nodres;
           }
@@ -1382,7 +1386,14 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
     nexttokv = nodexp->nod_sons[curpos];
   MOM_DEBUGPRINTF (web, "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s",
                    prec, curpos, mom_value_cstring (nexttokv));
-  if (!nexttokv)
+  if (!nexttokv
+      /// this are the terminating delimiters
+      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(comma_delim))
+      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(semicolon_delim))
+      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_paren_delim))
+      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_bracket_delim))
+      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_brace_delim))
+      )
     {
       MOM_DEBUGPRINTF
         (web,
@@ -1391,13 +1402,13 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
       *posptr = curpos;
       return leftexprv;
     };
-
-
 #warning unimplemented parsexprprec_nanoedit_mom
   NANOPARSING_FAILURE_MOM (np, -startpos,
-                           "unimplemented parsexprprec_nanoedit prec%d",
-                           prec);
+                           "unimplemented parsexprprec_nanoedit prec%d (curpos %d)",
+                           prec, curpos);
 }                               /* end parsexprprec_nanoedit_mom */
+
+
 
 
 static const void *
@@ -1548,6 +1559,9 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       const void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
       MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d",
                        mom_value_cstring (exprv), pos);
+      MOM_WARNPRINTF("doparsecommand_nanoedit exprv=%s pos#%d incomplete",
+                       mom_value_cstring (exprv), pos);
+      // we should emit some HTML reply
 #warning doparsecommand_nanoedit_mom unimplemented
     }
 end:
