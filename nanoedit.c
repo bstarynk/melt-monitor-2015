@@ -1328,10 +1328,10 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
   assert (nodexp && nodexp->va_itype == MOMITY_NODE);
   assert (posptr != NULL);
-  assert (prec >= 0 && prec < NANOEDIT_MAX_PRECEDENCE_MOM);
-  if (prec == 0)
-    return parsprimary_nanoedit_mom (np, posptr);
   int startpos = *posptr;
+  assert (prec >= 0 && prec <= NANOEDIT_MAX_PRECEDENCE_MOM);
+  if (prec <= 0)
+    return parsprimary_nanoedit_mom (np, posptr);
   unsigned nlen = mom_raw_size (nodexp);
   if (startpos < 0 || startpos >= (int) nlen)
     return NULL;
@@ -1340,8 +1340,33 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
     NANOPARSING_FAILURE_MOM (np, -startpos,
                              "(expr prec#%d) no token at position #%d", prec,
                              startpos);
-  if (prec == 0)
-    return parsprimary_nanoedit_mom (np, posptr);
+  MOM_DEBUGPRINTF (web,
+                   "parsexprprec_nanoedit prec=%d startpos=%d curtokv=%s",
+                   prec, startpos, mom_value_cstring(curtokv));
+  int curpos = startpos;
+  const void *leftexprv = parsexprprec_nanoedit_mom (np, prec - 1, &curpos);
+  MOM_DEBUGPRINTF
+    (web, "parsexprprec_nanoedit prec=%d leftexprv=%s curpos=%d startpos=%d", prec,
+     mom_value_cstring (leftexprv), curpos, startpos);
+  if (!leftexprv && curpos <= startpos)
+    NANOPARSING_FAILURE_MOM (np, -startpos,
+                             "failed to parse subexpression of precedence %d",
+                             prec - 1);
+  struct mom_hashedvalue_st *nexttokv = NULL;
+  if (curpos >= 0 && curpos < (int)nlen)
+    nexttokv = nodexp->nod_sons[curpos];
+  MOM_DEBUGPRINTF (web, "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s",
+                   prec, curpos, mom_value_cstring(nexttokv));
+  if (!nexttokv)
+    {
+      MOM_DEBUGPRINTF
+        (web, "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d returning leftexprv=%s",
+         prec, startpos, curpos, mom_value_cstring (leftexprv));
+      *posptr = curpos;
+      return leftexprv;
+    };
+
+
 #warning unimplemented parsexprprec_nanoedit_mom
   NANOPARSING_FAILURE_MOM (np, -startpos,
                            "unimplemented parsexprprec_nanoedit prec%d",
