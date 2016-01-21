@@ -1319,6 +1319,16 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                              "parsprimary_nanoedit percent-expr final curpos=%d connitm=%s",
                              curpos, mom_item_cstring (connitm));
             // use mom_boxnode_make_meta...
+            const struct mom_boxnode_st *nodres =
+              mom_boxnode_make_meta (connitm,
+                                     mom_vectvaldata_count (vec),
+                                     mom_vectvaldata_valvect (vec),
+                                     np->nanop_wexitm, pos);
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit percent-expr curpos#%d nodres=%s ",
+                             curpos, mom_value_cstring (nodres));
+            *posptr = curpos;
+            return nodres;
           }
 #warning incomplete code parsprimary_nanoedit
       }
@@ -1329,6 +1339,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                            "parsprimary_nanoedit unexpected token %s",
                            mom_value_cstring (curtokv));
 }                               /* end parsprimary_nanoedit_mom */
+
+
 
 // precedence 1 is the highest, precedence 15 is the lowest
 // e.g. http://en.cppreference.com/w/c/language/operator_precedence 

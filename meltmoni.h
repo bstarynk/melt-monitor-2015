@@ -759,12 +759,10 @@ mom_dyncast_node (const void *p)
   return NULL;
 }
 
-const struct mom_boxnode_st *mom_boxnode_make_meta (const struct mom_item_st
-                                                    *conn, unsigned size,
-                                                    const struct
-                                                    mom_hashedvalue_st **sons,
-                                                    const struct mom_item_st
-                                                    *meta, intptr_t metarank);
+const struct mom_boxnode_st *   //
+mom_boxnode_make_meta (const struct mom_item_st *conn, unsigned size,
+                       const struct mom_hashedvalue_st **sons,
+                       const struct mom_item_st *meta, intptr_t metarank);
 
 static inline const struct mom_boxnode_st *
 mom_boxnode_make (const struct mom_item_st *conn,
