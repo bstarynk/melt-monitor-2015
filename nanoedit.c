@@ -1291,6 +1291,12 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
               {
                 int prevpos = curpos;
                 const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit percent-expr prevpos#%d curpos#%d"
+                                 " subexpv %s count %d",
+                                 prevpos, curpos,
+                                 mom_value_cstring (subexpv),
+                                 mom_vectvaldata_count (vec));
                 if (!subexpv && curpos == prevpos)
                   NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
                                                 "parsprimary_nanoedit bad subexpression#%d in percent-node of connective %s",
@@ -1304,8 +1310,15 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                 else if (isdelim_nanoedit_mom (np, curpos,
                                                MOM_PREDEFITM
                                                (right_paren_delim)))
-                  break;
+                  {
+                    curpos++;
+                    break;
+                  }
               }
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit percent-expr final curpos=%d connitm=%s",
+                             curpos, mom_item_cstring (connitm));
+            // use mom_boxnode_make_meta...
           }
 #warning incomplete code parsprimary_nanoedit
       }
@@ -1342,25 +1355,26 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
                              startpos);
   MOM_DEBUGPRINTF (web,
                    "parsexprprec_nanoedit prec=%d startpos=%d curtokv=%s",
-                   prec, startpos, mom_value_cstring(curtokv));
+                   prec, startpos, mom_value_cstring (curtokv));
   int curpos = startpos;
   const void *leftexprv = parsexprprec_nanoedit_mom (np, prec - 1, &curpos);
   MOM_DEBUGPRINTF
-    (web, "parsexprprec_nanoedit prec=%d leftexprv=%s curpos=%d startpos=%d", prec,
-     mom_value_cstring (leftexprv), curpos, startpos);
+    (web, "parsexprprec_nanoedit prec=%d leftexprv=%s curpos=%d startpos=%d",
+     prec, mom_value_cstring (leftexprv), curpos, startpos);
   if (!leftexprv && curpos <= startpos)
     NANOPARSING_FAILURE_MOM (np, -startpos,
                              "failed to parse subexpression of precedence %d",
                              prec - 1);
   struct mom_hashedvalue_st *nexttokv = NULL;
-  if (curpos >= 0 && curpos < (int)nlen)
+  if (curpos >= 0 && curpos < (int) nlen)
     nexttokv = nodexp->nod_sons[curpos];
   MOM_DEBUGPRINTF (web, "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s",
-                   prec, curpos, mom_value_cstring(nexttokv));
+                   prec, curpos, mom_value_cstring (nexttokv));
   if (!nexttokv)
     {
       MOM_DEBUGPRINTF
-        (web, "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d returning leftexprv=%s",
+        (web,
+         "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d returning leftexprv=%s",
          prec, startpos, curpos, mom_value_cstring (leftexprv));
       *posptr = curpos;
       return leftexprv;
