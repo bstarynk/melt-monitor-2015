@@ -36,6 +36,7 @@ enum nanoedit_closoff_en
   mec__last
 };
 
+#warning perhaps the showitem & showvalue should output into some buffer...
 static void
 showitem_nanoedit_mom (struct mom_webexch_st *wexch,
                        struct mom_item_st *wexitm,
@@ -1557,11 +1558,18 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       npars.nanop_nodexpr = lexqnod;
       int pos = 0;
       const void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
-      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d",
-                       mom_value_cstring (exprv), pos);
+      bool rawmode = 
+	(const void*) mom_unsync_item_get_phys_attr (thistatitm,
+                                     MOM_PREDEFITM (display))
+	== (const void*) MOM_PREDEFITM (raw);
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d %s",
+                       mom_value_cstring (exprv), pos, rawmode?"raw":"cooked");
+      mom_unsync_item_put_phys_attr(thistatitm,
+				    MOM_PREDEFITM(expression),
+				    exprv);
+      // we should emit some JSON reply containing HTML
       MOM_WARNPRINTF("doparsecommand_nanoedit exprv=%s pos#%d incomplete",
                        mom_value_cstring (exprv), pos);
-      // we should emit some HTML reply
 #warning doparsecommand_nanoedit_mom unimplemented
     }
 end:
