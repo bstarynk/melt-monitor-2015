@@ -26,6 +26,11 @@ mom_make_filebuffer (void)
 {
   struct mom_filebuffer_st *mb =
     mom_gc_alloc (sizeof (struct mom_filebuffer_st));
-  MOM_FATAPRINTF ("unimplemented mom_make_filebuffer mb=%p", mb);
+  mb->va_itype = MOMITY_FILEBUFFER;
+  mb->mom_filebuffer = NULL;
+  mb->mom_filebufsize = 0;
+  mb->mom_file = open_memstream (&mb->mom_filebuffer, &mb->mom_filebufsize);
+  if (!mb->mom_file)
+    MOM_FATAPRINTF ("failed to open_memstream %m");
   return mb;
 }                               /* end of mom_make_filebuffer */
