@@ -411,6 +411,8 @@ enum momitype_en
   MOMITY_WEBEXCH,
   MOMITY_WEBSESSION,
   MOMITY_TASKLET,
+  MOMITY_FILE,
+  MOMITY_FILEBUFFER,
 };
 struct mom_item_st;
 struct mom_loader_st;
@@ -1757,7 +1759,7 @@ mom_item_unsync_webexch (struct mom_item_st *itm)
 
 #define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {		\
     struct mom_webexch_st*wex_##Lin = (Wex);		\
-    if (wex_##Lin && wex_##Lin != MOM_EMPTY_SLOT		\
+    if (wex_##Lin && wex_##Lin != MOM_EMPTY_SLOT       	\
 	&& wex_##Lin->va_itype == MOMITY_WEBEXCH	\
 	&& wex_##Lin->webx_outfil)			\
       fprintf(wex_##Lin->webx_outfil, __VA_ARGS__);	\
@@ -1951,6 +1953,47 @@ typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
                                   struct mom_item_st *thistatitm,
                                   const void *pval, int depth);
 
+
+////////////////
+/**** for MOMITY_FILE & MOMITY_FILEBUFFER *****/
+#define MOM_FILE_FIELDS				\
+  MOM_ANYVALUE_FIELDS;				\
+  FILE* mom_file
+
+//// file payload for MOMITY_FILE
+struct mom_file_st
+{
+  MOM_FILE_FIELDS;
+};
+
+
+#define MOM_FILEBUFFER_FIELDS					\
+  MOM_FILE_FIELDS; /* the mom_file is from open_memstream */	\
+  char*mom_filebuffer;						\
+  size_t mom_filebufsize
+
+//// filebuffer payload for MOMITY_FILEBUFFER
+struct mom_filebuffer_st
+{
+  MOM_FILEBUFFER_FIELDS;
+};
+
+static inline void
+mom_file_puts (void *mfil, const char *str)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT || !str || str == MOM_EMPTY_SLOT
+      || !str[0])
+    return;
+  struct mom_file_st *mf = (struct mom_file_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return;
+  if (!mf->mom_file)
+    return;
+  fputs (str, mf->mom_file);
+}
+
+// allocate a GC-finalized file buffer
+struct mom_filebuffer_st *mom_make_filebuffer (void);
 
 ////////////////
 

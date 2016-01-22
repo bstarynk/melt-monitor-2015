@@ -1389,12 +1389,12 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
                    prec, curpos, mom_value_cstring (nexttokv));
   if (!nexttokv
       /// this are the terminating delimiters
-      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(comma_delim))
-      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(semicolon_delim))
-      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_paren_delim))
-      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_bracket_delim))
-      || isdelim_nanoedit_mom(np, curpos, MOM_PREDEFITM(right_brace_delim))
-      )
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (comma_delim))
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (semicolon_delim))
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_paren_delim))
+      || isdelim_nanoedit_mom (np, curpos,
+                               MOM_PREDEFITM (right_bracket_delim))
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_brace_delim)))
     {
       MOM_DEBUGPRINTF
         (web,
@@ -1558,18 +1558,19 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       npars.nanop_nodexpr = lexqnod;
       int pos = 0;
       const void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
-      bool rawmode = 
-	(const void*) mom_unsync_item_get_phys_attr (thistatitm,
-                                     MOM_PREDEFITM (display))
-	== (const void*) MOM_PREDEFITM (raw);
-      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exprv=%s final pos#%d %s",
-                       mom_value_cstring (exprv), pos, rawmode?"raw":"cooked");
-      mom_unsync_item_put_phys_attr(thistatitm,
-				    MOM_PREDEFITM(expression),
-				    exprv);
+      bool rawmode = (const void *) mom_unsync_item_get_phys_attr (thistatitm,
+                                                                   MOM_PREDEFITM
+                                                                   (display))
+        == (const void *) MOM_PREDEFITM (raw);
+      MOM_DEBUGPRINTF (web,
+                       "doparsecommand_nanoedit exprv=%s final pos#%d %s",
+                       mom_value_cstring (exprv), pos,
+                       rawmode ? "raw" : "cooked");
+      mom_unsync_item_put_phys_attr (thistatitm, MOM_PREDEFITM (expression),
+                                     exprv);
       // we should emit some JSON reply containing HTML
-      MOM_WARNPRINTF("doparsecommand_nanoedit exprv=%s pos#%d incomplete",
-                       mom_value_cstring (exprv), pos);
+      MOM_WARNPRINTF ("doparsecommand_nanoedit exprv=%s pos#%d incomplete",
+                      mom_value_cstring (exprv), pos);
 #warning doparsecommand_nanoedit_mom unimplemented
     }
 end:
