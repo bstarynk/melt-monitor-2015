@@ -1958,7 +1958,7 @@ typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
 /**** for MOMITY_FILE & MOMITY_FILEBUFFER *****/
 #define MOM_FILE_FIELDS				\
   MOM_ANYVALUE_FIELDS;				\
-  FILE* mom_file
+   FILE* _Atomic mom_filp
 
 //// file payload for MOMITY_FILE
 struct mom_file_st
@@ -1969,14 +1969,28 @@ struct mom_file_st
 
 #define MOM_FILEBUFFER_FIELDS					\
   MOM_FILE_FIELDS; /* the mom_file is from open_memstream */	\
-  char*mom_filebuffer;						\
-  size_t mom_filebufsize
+  char*mom_filbuf;						\
+  size_t mom_filbufsiz
 
 //// filebuffer payload for MOMITY_FILEBUFFER
 struct mom_filebuffer_st
 {
   MOM_FILEBUFFER_FIELDS;
 };
+
+static inline FILE *
+mom_file (void *mfil)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return NULL;
+  struct mom_file_st *mf = (struct mom_file_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return NULL;
+  FILE *f = atomic_load (&mf->mom_filp);
+  return f;
+}
+
+void mom_file_close (void *mfil);
 
 static inline void
 mom_file_puts (void *mfil, const char *str)
@@ -1987,13 +2001,27 @@ mom_file_puts (void *mfil, const char *str)
   struct mom_file_st *mf = (struct mom_file_st *) mfil;
   if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
     return;
-  if (!mf->mom_file)
+  FILE *f = atomic_load (&mf->mom_filp);
+  if (!f)
     return;
-  fputs (str, mf->mom_file);
+  fputs (str, f);
 }
+
+void mom_file_printf (void *mfil, const char *fmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
 
 // allocate a GC-finalized file buffer
 struct mom_filebuffer_st *mom_make_filebuffer (void);
+// give its boxedstring content, closing it iff close is set
+const struct mom_boxstring_st *mom_filebuffer_boxstring (struct
+                                                         mom_filebuffer_st
+                                                         *mf, bool close);
+// give its GC_strdup content, closing it iff close is set
+const char *mom_filebuffer_strdup (struct mom_filebuffer_st *mf, bool close);
+enum
+{ MOM_FILEBUFFER_KEEPOPEN, MOM_FILEBUFFER_CLOSE };
+
+
 
 ////////////////
 
