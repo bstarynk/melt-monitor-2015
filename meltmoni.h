@@ -418,6 +418,8 @@ struct mom_item_st;
 struct mom_loader_st;
 struct mom_dumper_st;
 struct mom_tasklet_st;
+struct mom_filebuffer_st;
+
 
 #define MOM_PREDEFITM(Nam) (&mompredef_##Nam)
 
@@ -1914,6 +1916,10 @@ void
 mom_dumpemit_hashassoc_payload (struct mom_dumper_st *du,
                                 struct mom_hashassoc_st *hass);
 
+void
+mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
+                                 struct mom_filebuffer_st *fb);
+
 void mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
                                    struct mom_hashmap_st *hmap);
 
@@ -2012,6 +2018,9 @@ void mom_file_printf (void *mfil, const char *fmt, ...)
 
 // allocate a GC-finalized file buffer
 struct mom_filebuffer_st *mom_make_filebuffer (void);
+// allocate a GC-finalized file
+struct mom_file_st *mom_make_file (FILE *);
+
 // give its boxedstring content, closing it iff close is set
 const struct mom_boxstring_st *mom_filebuffer_boxstring (struct
                                                          mom_filebuffer_st

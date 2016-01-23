@@ -58,6 +58,22 @@ mom_make_filebuffer (void)
   return mb;
 }                               /* end of mom_make_filebuffer */
 
+struct mom_file_st *
+mom_make_file (FILE *f)
+{
+  if (!f)
+    return NULL;
+  struct mom_filebuffer_st *mb =
+    mom_gc_alloc (sizeof (struct mom_filebuffer_st));
+  mb->va_itype = MOMITY_FILE;
+  mb->mom_filbuf = NULL;
+  mb->mom_filbufsiz = 0;
+  mb->mom_filp = NULL;
+  atomic_init (&mb->mom_filp, f);
+  GC_REGISTER_FINALIZER_IGNORE_SELF (mb, file_finalize_mom, NULL, NULL, NULL);
+  return mb;
+}                               /* end of mom_make_file */
+
 void
 mom_file_close (void *mfil)
 {
@@ -149,3 +165,43 @@ mom_filebuffer_strdup (struct mom_filebuffer_st *mf, bool closeit)
     }
   return bs;
 }                               /* end of mom_filebuffer_strdup */
+
+
+void
+mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
+                                 struct mom_filebuffer_st *fb)
+{
+  if (!fb || fb == MOM_EMPTY_SLOT || fb->va_itype != MOMITY_FILEBUFFER)
+    return;
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  const struct mom_boxstring_st *bs =
+    mom_filebuffer_boxstring (fb, MOM_FILEBUFFER_KEEPOPEN);
+  if (!bs)
+    return;
+#warning missing mom_dumpemit_filebuffer_payload
+  MOM_FATAPRINTF ("unimplemented mom_dumpemit_filebuffer_payload fb@%p",
+                  (void *) fb);
+  /* we should emit ( )payload_filebuffer with several line strings inside */
+}                               /* end of mom_dumpemit_filebuffer_payload */
+
+extern mom_loader_paren_sig_t momf_ldp_payload_filebuffer;
+
+const char momsig_ldp_payload_filebuffer[] = "signature_loader_paren";
+void
+momf_ldp_payload_filebuffer (struct mom_item_st *itm,
+                             struct mom_loader_st *ld,
+                             struct mom_statelem_st *elemarr,
+                             unsigned elemsize)
+{
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldp_payload_filebuffer start itm=%s elemsize=%u",
+                   mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_filebuffer itm %s",
+                  mom_item_cstring (itm));
+#warning unimplemented momf_ldp_payload_filebuffer
+  /* collect the linestrings and catenate them */
+}                               /* end momf_ldp_payload_filebuffer */
