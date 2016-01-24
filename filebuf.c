@@ -197,6 +197,8 @@ mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
 
 extern mom_loader_paren_sig_t momf_ldp_payload_filebuffer;
 
+
+
 const char momsig_ldp_payload_filebuffer[] = "signature_loader_paren";
 void
 momf_ldp_payload_filebuffer (struct mom_item_st *itm,
@@ -209,8 +211,13 @@ momf_ldp_payload_filebuffer (struct mom_item_st *itm,
                    mom_item_cstring (itm), elemsize);
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_filebuffer itm %s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_filebuffer
-  /* collect the linestrings and catenate them */
+  struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+  assert (fb);
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      const char *s = mom_ldstate_cstring (elemarr[ix]);
+      if (!s)
+        continue;
+      mom_file_puts (fb, s);
+    }
 }                               /* end momf_ldp_payload_filebuffer */

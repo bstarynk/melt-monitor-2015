@@ -1997,6 +1997,12 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           mom_dumpemit_hashassoc_payload (du,
                                           (struct mom_hashassoc_st *) payl);
           break;
+        case MOMITY_FILEBUFFER:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s filebuffer",
+                           mom_item_cstring (itm));
+          mom_dumpemit_filebuffer_payload (du,
+                                           (struct mom_filebuffer_st *) payl);
+          break;
         default:
           MOM_DEBUGPRINTF (dump,
                            "dumpemit_item_content itm %s other payload %s @%p",
