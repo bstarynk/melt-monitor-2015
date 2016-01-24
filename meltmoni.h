@@ -589,21 +589,13 @@ const struct mom_boxdouble_st *mom_boxdouble_make (double x);
 
 
 
-/// sized values have sva_ prefix, with sva_size
-#define MOM_SIZEDVALUE_FIELDS			\
-  MOM_HASHEDVALUE_FIELDS;			\
-  uint32_t sva_size
-struct mom_sizedvalue_st
-{
-  MOM_SIZEDVALUE_FIELDS;
-};
 
 
 struct mom_boxstring_st
 {
   MOM_HASHEDVALUE_FIELDS;
   // here
-  char cstr[];                  /* actual size sva_size+1 */
+  char cstr[];                  /* actual size mom_raw_size+1 */
 };
 
 static inline const struct mom_boxstring_st *
@@ -636,8 +628,8 @@ const struct mom_boxstring_st *mom_boxstring_printf (const char *fmt, ...)
 
 
 #define MOM_SEQITEMS_FIELDS			\
-  MOM_SIZEDVALUE_FIELDS;			\
-  struct mom_item_st* seqitem[] /* actual size sva_size */
+  MOM_HASHEDVALUE_FIELDS;			\
+  struct mom_item_st* seqitem[] /* actual size mom_raw_size */
 struct mom_seqitems_st
 {
   MOM_SEQITEMS_FIELDS;

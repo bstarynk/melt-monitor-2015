@@ -63,11 +63,8 @@ mom_make_file (FILE *f)
 {
   if (!f)
     return NULL;
-  struct mom_filebuffer_st *mb =
-    mom_gc_alloc (sizeof (struct mom_filebuffer_st));
+  struct mom_file_st *mb = mom_gc_alloc (sizeof (struct mom_file_st));
   mb->va_itype = MOMITY_FILE;
-  mb->mom_filbuf = NULL;
-  mb->mom_filbufsiz = 0;
   mb->mom_filp = NULL;
   atomic_init (&mb->mom_filp, f);
   GC_REGISTER_FINALIZER_IGNORE_SELF (mb, file_finalize_mom, NULL, NULL, NULL);
@@ -180,10 +177,22 @@ mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
     mom_filebuffer_boxstring (fb, MOM_FILEBUFFER_KEEPOPEN);
   if (!bs)
     return;
-#warning missing mom_dumpemit_filebuffer_payload
-  MOM_FATAPRINTF ("unimplemented mom_dumpemit_filebuffer_payload fb@%p",
-                  (void *) fb);
-  /* we should emit ( )payload_filebuffer with several line strings inside */
+  const char *pc = bs->cstr;
+  unsigned len = mom_raw_size (bs);
+  assert (pc[len] == (char) 0);
+  const char *end = pc + len;
+  fputs ("(\n", femit);
+  while (pc < end)
+    {
+      const char *npc = (pc + 20 < end) ? strchr (pc + 15, '\n') : end;
+      if (!npc)
+        npc = end;
+      fputs ("\"", femit);
+      mom_output_utf8_encoded (femit, pc, npc - pc);
+      fputs ("\"\n", femit);
+      pc = npc;
+    };
+  fputs (")payload_filebuffer\n", femit);
 }                               /* end of mom_dumpemit_filebuffer_payload */
 
 extern mom_loader_paren_sig_t momf_ldp_payload_filebuffer;

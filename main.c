@@ -949,7 +949,6 @@ mom_print_sizes (void)
   PRINT_SIZEOF (struct mom_anyvalue_st);
   PRINT_SIZEOF (struct mom_boxint_st);
   PRINT_SIZEOF (struct mom_boxdouble_st);
-  PRINT_SIZEOF (struct mom_sizedvalue_st);
   PRINT_SIZEOF (struct mom_boxstring_st);
   PRINT_SIZEOF (struct mom_seqitems_st);
   PRINT_SIZEOF (struct mom_boxnode_st);
