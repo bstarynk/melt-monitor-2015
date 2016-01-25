@@ -579,6 +579,23 @@ docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of docreateitem_nanoedit_mom */
 
 
+static void
+doeval_nanoedit_mom (struct mom_webexch_st *wexch,
+                     struct mom_item_st *tkitm,
+                     struct mom_item_st *wexitm,
+                     struct mom_item_st *thistatitm,
+                     struct mom_item_st *sessitm, const char *doeval)
+{
+  MOM_DEBUGPRINTF (web,
+                   "doeval_nanoedit start tkitm=%s wexitm=%s thistatitm=%s"
+                   " sessitm=%s doeval=%s", mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (sessitm), doeval);
+  MOM_FATAPRINTF ("doeval_nanoedit tkitm=%s doeval=%s unimplemented",
+                  mom_item_cstring (tkitm), doeval);
+}                               /* end of doeval_nanoedit_mom */
+
+
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";
 
@@ -659,6 +676,7 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *doexit = NULL;
       const char *doparsecommand = NULL;
       const char *docreateitem = NULL;
+      const char *doeval = NULL;
       const char *commentstr = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
@@ -684,6 +702,10 @@ momf_nanoedit (struct mom_item_st *tkitm)
       else if ((doexit = onion_request_get_post (wexch->webx_requ, "do_exit"))
                != NULL)
         doexit_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, doexit);
+      else if ((doeval = onion_request_get_post (wexch->webx_requ, "do_eval"))
+               != NULL)
+        doeval_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, sessitm,
+                             doeval);
       else
         if ((docreateitem =
              onion_request_get_post (wexch->webx_requ,

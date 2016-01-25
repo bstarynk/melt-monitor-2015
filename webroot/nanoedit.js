@@ -28,7 +28,7 @@ var $commanddiv;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
-vr mom_eval_counter=0;
+var mom_eval_counter=0;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
 /// then the key Escape to get ∧
@@ -277,10 +277,11 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
 			     +" value='evaluate'/>");
 	evalbut = $("#" + evalid);
 	console.log ("mom_ajaxparsecommand evalbut=", evalbut);
-	evalbut.onclick(function (ev) {
-	    console.log ("mom evalcmd ev=", ev, " evalid=", evalid, " $parsedcmddiv=", $parsedcmddiv);
+	evalbut.click(function (ev) {
+	    console.log ("mom evalcmd click ev=", ev, " evalid=", evalid, " $parsedcmddiv=", $parsedcmddiv);
 	    $parsedcmddiv.html("");
 	});
+	evalbut.focus();
     }
     console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
