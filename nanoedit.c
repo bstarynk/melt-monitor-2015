@@ -36,7 +36,7 @@ enum nanoedit_closoff_en
   mec__last
 };
 
-#warning perhaps the showitem & showvalue should output into some buffer...
+
 static void
 showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                        struct mom_item_st *wexitm,
@@ -1570,10 +1570,17 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                        rawmode ? "raw" : "cooked");
       mom_unsync_item_put_phys_attr (thistatitm, MOM_PREDEFITM (expression),
                                      exprv);
-      // we should emit some JSON reply containing HTML
-      MOM_WARNPRINTF ("doparsecommand_nanoedit exprv=%s pos#%d incomplete",
-                      mom_value_cstring (exprv), pos);
-#warning doparsecommand_nanoedit_mom unimplemented
+      struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, exprv, 0);
+      const char *exbuf = mom_filebuffer_strdup (fb, MOM_FILEBUFFER_CLOSE);
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit exbuf=%s", exbuf);
+      mom_wexch_puts (wexch, "{ \"html\": \"");
+      mom_output_utf8_encoded (wexch->webx_outfil, exbuf, -1);
+      mom_wexch_puts (wexch, "\",\n");
+      MOM_WEXCH_PRINTF (wexch, " \"expr_inside\": \"%s\" }\n",
+                        mom_item_cstring (thistatitm));
+      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      goto end;
     }
 end:
   if (npars.nanop_queitm)
