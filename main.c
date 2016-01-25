@@ -238,6 +238,7 @@ mom_output_utf8_encoded (FILE *f, const char *str, int len)
   assert (s && g_utf8_validate (s, len, NULL));
   for (const char *pc = s; pc < end; pc = g_utf8_next_char (pc), uc = 0)
     {
+      /// notice that the single quote should not be escaped, e.g. for JSON
       uc = g_utf8_get_char (pc);
       switch (uc)
         {
@@ -246,9 +247,6 @@ mom_output_utf8_encoded (FILE *f, const char *str, int len)
           break;
         case '\"':
           fputs ("\\\"", f);
-          break;
-        case '\'':
-          fputs ("\\\'", f);
           break;
         case '\\':
           fputs ("\\\\", f);

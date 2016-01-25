@@ -28,6 +28,7 @@ var $commanddiv;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
+vr mom_eval_counter=0;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
 /// then the key Escape to get ∧
@@ -203,12 +204,14 @@ function mom_doexit(jsex) {
                   +cput.toPrecision(3)+" cpu seconds).");
 }
 
-function mom_ajaxparsecommand(js) {
+
+
+function mom_ajaxparsecommand(js,rstat,jqxhr) {
     var badnamedlg = null;
     var badnamedid = null;
     var badcommid = null;
     var badcomminp = null;
-    console.log("mom_ajaxparsecommand js=", js);
+    console.log("mom_ajaxparsecommand js=", js, " rstat=", rstat, " jqxhr=", jqxhr);
     if (js.html)
         $parsedcmddiv.html(js.html);
     console.log("mom_ajaxparsecommand updated $parsedcmddiv=", $parsedcmddiv);
@@ -262,6 +265,22 @@ function mom_ajaxparsecommand(js) {
 	console.log ("mom_ajaxparsecommand error from ", js.error_from);
 	if (js.error_from > 0)
             $commandtext[0].selectionStart = $commandtext[0].selectionEnd = js.error_from; 
+    }
+    else if (js.expr_inside) {
+	var expinside = js.expr_inside;
+	mom_eval_counter++;
+	var evalid = "momeval_" + expinside + "_id_" + mom_eval_counter;
+	var evalbut;
+	console.log ("mom_ajaxparsecommand expinside ", expinside, " evalid=", evalid);
+        $parsedcmddiv.append("<br/><input type='button' name='evalexpr' "
+			     +" id='" + evalid + "'"
+			     +" value='evaluate'/>");
+	evalbut = $("#" + evalid);
+	console.log ("mom_ajaxparsecommand evalbut=", evalbut);
+	evalbut.onclick(function (ev) {
+	    console.log ("mom evalcmd ev=", ev, " evalid=", evalid, " $parsedcmddiv=", $parsedcmddiv);
+	    $parsedcmddiv.html("");
+	});
     }
     console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
@@ -556,7 +575,7 @@ $(document).ready(function(){
     });
     $resetcmdbut.click(function(evt) {
         console.log("resetcmd evt=", evt);      
-        $commandtext.val("");
+	$commandtext.val("");
     });
     $sendcmdbut.click(function(evt) {
         var cmdtext = $commandtext.val();
@@ -566,7 +585,11 @@ $(document).ready(function(){
           method: "POST",
           data: {"do_parsecommand": cmdtext},
           dataType: "json",
-          success: mom_ajaxparsecommand
+          success: mom_ajaxparsecommand,
+	  error: function (jqxhr, rstat, errt) {
+	      console.log("sendparsecmd error jqxhr=", jqxhr,
+			  " rstat=", rstat, " errt=", errt);
+	  }
          });      
     });
     console.log("nanoedit before ajax do_fillpage");
