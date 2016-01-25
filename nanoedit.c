@@ -38,24 +38,25 @@ enum nanoedit_closoff_en
 
 #warning perhaps the showitem & showvalue should output into some buffer...
 static void
-showitem_nanoedit_mom (struct mom_webexch_st *wexch,
+showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                        struct mom_item_st *wexitm,
-                       struct mom_item_st *thistatitm,
                        const struct mom_item_st *curitm, bool isval)
 {
   struct mom_item_st *hsetitm = NULL;
   struct mom_item_st *sessitm = NULL;
-  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  assert (fb && fb->va_itype == MOMITY_FILEBUFFER);
+  struct mom_file_st *fil = (struct mom_file_st *) fb;
   assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
-  assert (thistatitm && thistatitm->va_itype == MOMITY_ITEM);
+  struct mom_webexch_st *wexch = mom_item_unsync_webexch (wexitm);
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
   sessitm = wexch->webx_sessitm;
   assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
       if (isval)
-        mom_wexch_puts (wexch, "<span class='momnilval_cl'>~</span>");
+        mom_file_puts (fil, "<span class='momnilval_cl'>~</span>");
       else
-        mom_wexch_puts (wexch, "<span class='momnilitem_cl'>~</span>");
+        mom_file_puts (fil, "<span class='momnilitem_cl'>~</span>");
     }
   else
     {
@@ -75,19 +76,19 @@ showitem_nanoedit_mom (struct mom_webexch_st *wexch,
         mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
                             (struct mom_item_st *) curitm);
       if (isval)
-        MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemval_cl'>%s</span>",
-                          mom_item_cstring (curitm));
+        mom_file_printf (fil,
+                         "<span class='momitemval_cl'>%s</span>",
+                         mom_item_cstring (curitm));
       else
-        MOM_WEXCH_PRINTF (wexch,
-                          "<span class='momitemref_cl'>%s</span>",
-                          mom_item_cstring (curitm));
+        mom_file_printf (fil,
+                         "<span class='momitemref_cl'>%s</span>",
+                         mom_item_cstring (curitm));
     }
 }                               // end showitem_nanoedit_mom
 
 
 static void
-newline_nanoedit_mom (struct mom_webexch_st *wexch, int depth)
+newline_nanoedit_mom (struct mom_filebuffer_st *fb, int depth)
 {
   char buf[24];
   memset (buf, 0, sizeof (buf));
@@ -104,7 +105,7 @@ newline_nanoedit_mom (struct mom_webexch_st *wexch, int depth)
       for (int ix = 1; ix <= d; ix++)
         buf[ix] = ' ';
     }
-  mom_wexch_puts (wexch, buf);
+  mom_file_puts ((struct mom_file_st *) fb, buf);
 }                               /* end of newline_nanoedit_mom */
 
 
@@ -112,111 +113,109 @@ static void
 utf8escape_nanoedit_mom (FILE *f, gunichar uc, const char *cescstr,
                          void *clientdata)
 {
-  struct mom_webexch_st *wexch = clientdata;
-  assert (f == wexch->webx_outfil);
+  assert (f != NULL);
+  assert (clientdata != NULL);
   switch (uc)
     {
     case '&':
-      mom_wexch_puts (wexch, "&amp;");
+      fputs ("&amp;", f);
       break;
     case '<':
-      mom_wexch_puts (wexch, "&lt;");
+      fputs ("&lt;", f);
       break;
     case '>':
-      mom_wexch_puts (wexch, "&gt;");
+      fputs ("&gt;", f);
       break;
     case '\'':
-      mom_wexch_puts (wexch, "<span class='momcharesc_cl'>\\&apos;</span>");
+      fputs ("<span class='momcharesc_cl'>\\&apos;</span>", f);
       break;
     case '\"':
-      mom_wexch_puts (wexch, "<span class='momcharesc_cl'>\\&quot;</span>");
+      fputs ("<span class='momcharesc_cl'>\\&quot;</span>", f);
       break;
     default:
-      MOM_WEXCH_PRINTF (wexch, "<span class='momcharesc_cl'>%s</span>",
-                        cescstr);
+      fprintf (f, "<span class='momcharesc_cl'>%s</span>", cescstr);
       break;
     }
 }
 
 
 static void
-showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
+showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
                         struct mom_item_st *wexitm,
                         struct mom_item_st *thistatitm, const void *pval,
                         int depth)
 {
+  assert (fb && fb->va_itype == MOMITY_FILEBUFFER);
+  struct mom_file_st *fil = (struct mom_file_st *) fb;
   switch (mom_itype (pval))
     {
     case MOMITY_NONE:
-      mom_wexch_puts (wexch, "<span class='momnilval_cl'>~</span>");
+      mom_file_puts (fil, "<span class='momnilval_cl'>~</span>");
       return;
     case MOMITY_BOXINT:
-      MOM_WEXCH_PRINTF (wexch, "<span class='momintval_cl'>%lld</span>",
-                        (long long) ((const struct mom_boxint_st *)
-                                     pval)->boxi_int);
+      mom_file_printf (fil, "<span class='momintval_cl'>%lld</span>",
+                       (long long) ((const struct mom_boxint_st *)
+                                    pval)->boxi_int);
       return;
     case MOMITY_BOXDOUBLE:
       {
         char buf[48];
         memset (buf, 0, sizeof (buf));
         double x = ((const struct mom_boxdouble_st *) pval)->boxd_dbl;
-        MOM_WEXCH_PRINTF
-          (wexch, "<span class='momdblval_cl'>%s</span>",
+        mom_file_printf
+          (fil, "<span class='momdblval_cl'>%s</span>",
            mom_double_to_cstr (x, buf, sizeof (buf)));
       }
       return;
     case MOMITY_ITEM:
-      showitem_nanoedit_mom (wexch, wexitm, thistatitm,
-                             (struct mom_item_st *) pval, true);
+      showitem_nanoedit_mom (fb, wexitm, (struct mom_item_st *) pval, true);
       return;
     case MOMITY_BOXSTRING:
-      mom_wexch_puts (wexch, "\"<span class='momstrval_cl' data-momstring='");
-      mom_output_utf8_html (wexch->webx_outfil,
+      mom_file_puts (fil, "\"<span class='momstrval_cl' data-momstring='");
+      mom_output_utf8_html (mom_file (fil),
                             ((const struct mom_boxstring_st *) pval)->cstr,
                             mom_size (pval), false);
-      mom_wexch_puts (wexch, "'>");
-      mom_output_utf8_escaped (wexch->webx_outfil,
+      mom_file_puts (fil, "'>");
+      mom_output_utf8_escaped (mom_file (fil),
                                ((const struct mom_boxstring_st *) pval)->cstr,
                                mom_size (pval), utf8escape_nanoedit_mom,
-                               wexch);
-      mom_wexch_puts (wexch, "</span>\"");
+                               wexitm);
+      mom_file_puts (fil, "</span>\"");
       return;
     case MOMITY_TUPLE:
       {
         const struct mom_boxtuple_st *tup = pval;
         unsigned siz = mom_raw_size (tup);
-        mom_wexch_puts (wexch, " <span class='momtup_cl'>[");
+        mom_file_puts (fil, " <span class='momtup_cl'>[");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              mom_wexch_puts (wexch, ",");
+              mom_file_puts (fil, ",");
             if (ix % 4 == 0)
-              newline_nanoedit_mom (wexch, depth);
+              newline_nanoedit_mom (fb, depth);
             else
-              mom_wexch_puts (wexch, " ");
-            showitem_nanoedit_mom (wexch, wexitm, thistatitm,
-                                   tup->seqitem[ix], false);
+              mom_file_puts (fil, " ");
+            showitem_nanoedit_mom (fb, wexitm, tup->seqitem[ix], false);
           }
-        mom_wexch_puts (wexch, "]</span>");
+        mom_file_puts (fil, "]</span>");
       }
       return;
     case MOMITY_SET:
       {
         const struct mom_boxset_st *set = pval;
         unsigned siz = mom_raw_size (set);
-        mom_wexch_puts (wexch, " <span class='momset_cl'>{");
+        mom_file_puts (fil, " <span class='momset_cl'>{");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              mom_wexch_puts (wexch, ",");
+              mom_file_puts (fil, ",");
             if (ix % 4 == 0)
-              newline_nanoedit_mom (wexch, depth);
+              newline_nanoedit_mom (fb, depth);
             else
-              mom_wexch_puts (wexch, " ");
-            showitem_nanoedit_mom (wexch, wexitm, thistatitm,
-                                   set->seqitem[ix], false);
+              mom_file_puts (fil, " ");
+            showitem_nanoedit_mom (fb, wexitm, set->seqitem[ix], false);
           }
-        mom_wexch_puts (wexch, "}</span>");
+        mom_file_puts (fil, "}</span>");
       }
       return;
     case MOMITY_NODE:
@@ -271,7 +270,7 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
                                  mom_item_cstring (wexitm),
                                  mom_item_cstring (connitm),
                                  mom_item_cstring (dispitm));
-                (*disprout) (conndispnod, wexch, wexitm, thistatitm, pval,
+                (*disprout) (conndispnod, fb, wexitm, thistatitm, pval,
                              depth);
                 MOM_DEBUGPRINTF (web,
                                  "showvalue_nanoedit done wexitm=%s connitm=%s dispitm=%s",
@@ -281,22 +280,21 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
                 return;
               }
           }
-        mom_wexch_puts (wexch, " <span class='momnode_cl'>%");
-        showitem_nanoedit_mom (wexch, wexitm, thistatitm,
-                               nod->nod_connitm, false);
-        mom_wexch_puts (wexch, "(");
+        mom_file_puts (fil, " <span class='momnode_cl'>%");
+        showitem_nanoedit_mom (fb, wexitm, nod->nod_connitm, false);
+        mom_file_puts (fil, "(");
         for (unsigned ix = 0; ix < siz; ix++)
           {
             if (ix > 0)
-              mom_wexch_puts (wexch, ",");
+              mom_file_puts (fil, ",");
             if (ix % 2 == 0)
-              newline_nanoedit_mom (wexch, depth);
+              newline_nanoedit_mom (fb, depth);
             else
-              mom_wexch_puts (wexch, " ");
-            showvalue_nanoedit_mom (wexch, wexitm, thistatitm,
+              mom_file_puts (fil, " ");
+            showvalue_nanoedit_mom (fb, wexitm, thistatitm,
                                     nod->nod_sons[ix], depth + 1);
           };
-        mom_wexch_puts (wexch, ")</span>");
+        mom_file_puts (fil, ")</span>");
       }
       return;
     default:
@@ -311,7 +309,7 @@ showvalue_nanoedit_mom (struct mom_webexch_st *wexch,
 const char momsig_nano_displayer[] = "signature_displayer";
 void
 momf_nano_displayer (const struct mom_boxnode_st *closnod,
-                     struct mom_webexch_st *wexch, struct mom_item_st *wexitm,
+                     struct mom_filebuffer_st *fb, struct mom_item_st *wexitm,
                      struct mom_item_st *thistatitm, const void *pval,
                      int depth)
 {
@@ -321,7 +319,7 @@ momf_nano_displayer (const struct mom_boxnode_st *closnod,
                    mom_value_cstring ((void *) closnod),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    depth, mom_value_cstring (pval));
-  showvalue_nanoedit_mom (wexch, wexitm, thistatitm, pval, depth);
+  showvalue_nanoedit_mom (fb, wexitm, thistatitm, pval, depth);
 }                               /* end of momf_nano_displayer */
 
 
@@ -332,6 +330,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                          struct mom_item_st *thistatitm)
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
+#warning should create a filebuffer
   const char *rawmode = onion_request_get_post (wexch->webx_requ, "rawmode");
   MOM_DEBUGPRINTF (web,
                    "dofillpage_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s rawmode=%s",
@@ -392,14 +391,17 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
       const struct mom_item_st *curatitm = atset->seqitem[ix];
       const struct mom_hashedvalue_st *curval =
         mom_hashmap_get (hmap, curatitm);
+      struct mom_filebuffer_st *fb = mom_make_filebuffer ();
       MOM_DEBUGPRINTF (web,
                        "dofillpage_nanoedit webr#%ld ix%d curatitm %s curval %s",
                        wexch->webx_count, ix, mom_item_cstring (curatitm),
                        mom_value_cstring (curval));
+      assert (fb != NULL);
       MOM_WEXCH_PRINTF (wexch, "<dt class='momlocvaritem_cl'>%s</dt>\n",
                         mom_item_cstring (curatitm));
       mom_wexch_puts (wexch, "<dd class='momlocvalue_cl'>\n");
-      showvalue_nanoedit_mom (wexch, wexitm, thistatitm, curval, 0);
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
+      mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
       mom_wexch_puts (wexch, "</dd>\n");
     }
   mom_wexch_puts (wexch, "</dl>\n");

@@ -1946,7 +1946,7 @@ void mom_stop_and_dump (void);
 
 // for signature_displayer
 typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
-                                  struct mom_webexch_st *wexch,
+                                  struct mom_filebuffer_st *fb,
                                   struct mom_item_st *wexitm,
                                   struct mom_item_st *thistatitm,
                                   const void *pval, int depth);
@@ -2022,6 +2022,9 @@ const char *mom_filebuffer_strdup (struct mom_filebuffer_st *mf, bool close);
 enum
 { MOM_FILEBUFFER_KEEPOPEN, MOM_FILEBUFFER_CLOSE };
 
+// put the content of a filebuffer inside some output file
+void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
+                          bool close);
 
 
 ////////////////

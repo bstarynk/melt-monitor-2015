@@ -165,6 +165,34 @@ mom_filebuffer_strdup (struct mom_filebuffer_st *mf, bool closeit)
 
 
 void
+mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb, bool closeit)
+{
+  if (!fb || fb == MOM_EMPTY_SLOT || fb->va_itype != MOMITY_FILEBUFFER)
+    return;
+  if (!outf || outf == MOM_EMPTY_SLOT)
+    return;
+  FILE *f = (closeit == MOM_FILEBUFFER_KEEPOPEN)
+    ? atomic_load (&fb->mom_filp) : atomic_exchange (&fb->mom_filp, NULL);
+  if (!f)
+    return;
+  fflush (f);
+  long ln = ftell (f);
+  if (ln < 0)
+    return;
+  const char *b = fb->mom_filbuf;
+  if (!b)
+    return;
+  fwrite (b, ln, 1, outf);
+  if (closeit != MOM_FILEBUFFER_KEEPOPEN)
+    {
+      fclose (f);
+      free (fb->mom_filbuf), fb->mom_filbuf = NULL;
+      fb->mom_filbufsiz = 0;
+    }
+}                               /* end of mom_puts_filebuffer */
+
+
+void
 mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
                                  struct mom_filebuffer_st *fb)
 {
