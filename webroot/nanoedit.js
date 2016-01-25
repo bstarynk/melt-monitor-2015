@@ -259,29 +259,41 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
             ]
         });
         console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);
-	return;
+        return;
     }
     else if (js.error_from) {
-	console.log ("mom_ajaxparsecommand error from ", js.error_from);
-	if (js.error_from > 0)
+        console.log ("mom_ajaxparsecommand error from ", js.error_from);
+        if (js.error_from > 0)
             $commandtext[0].selectionStart = $commandtext[0].selectionEnd = js.error_from; 
     }
     else if (js.expr_inside) {
-	var expinside = js.expr_inside;
-	mom_eval_counter++;
-	var evalid = "momeval_" + expinside + "_id_" + mom_eval_counter;
-	var evalbut;
-	console.log ("mom_ajaxparsecommand expinside ", expinside, " evalid=", evalid);
+        var expinside = js.expr_inside;
+        mom_eval_counter++;
+        var evalid = "momeval_" + expinside + "_id_" + mom_eval_counter;
+        var evalbut;
+        console.log ("mom_ajaxparsecommand expinside ", expinside, " evalid=", evalid);
         $parsedcmddiv.append("<br/><input type='button' name='evalexpr' "
-			     +" id='" + evalid + "'"
-			     +" value='evaluate'/>");
-	evalbut = $("#" + evalid);
-	console.log ("mom_ajaxparsecommand evalbut=", evalbut);
-	evalbut.click(function (ev) {
-	    console.log ("mom evalcmd click ev=", ev, " evalid=", evalid, " $parsedcmddiv=", $parsedcmddiv);
-	    $parsedcmddiv.html("");
-	});
-	evalbut.focus();
+                             +" id='" + evalid + "'"
+                             +" value='evaluate'/>");
+        evalbut = $("#" + evalid);
+        console.log ("mom_ajaxparsecommand evalbut=", evalbut);
+        evalbut.click(function (ev) {
+            console.log ("mom evalcmd click ev=", ev, " evalid=", evalid, " $parsedcmddiv=", $parsedcmddiv, " expinside=", expinside);
+            $parsedcmddiv.html("");
+            $.ajax({
+                url: "/nanoedit",
+                async: false,
+                method: "POST",
+                data: {"do_eval": expinside},
+                dataType: "json",
+                success: mom_ajaxparsecommand,
+                error: function (jqxhr, rstat, errt) {
+                    console.log("mom evalcmd error expinside=", expinside, " jqxhr=", jqxhr,
+                                " rstat=", rstat, " errt=", errt);
+                }
+            });
+        });
+        evalbut.focus();
     }
     console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
@@ -576,7 +588,7 @@ $(document).ready(function(){
     });
     $resetcmdbut.click(function(evt) {
         console.log("resetcmd evt=", evt);      
-	$commandtext.val("");
+        $commandtext.val("");
     });
     $sendcmdbut.click(function(evt) {
         var cmdtext = $commandtext.val();
@@ -587,10 +599,10 @@ $(document).ready(function(){
           data: {"do_parsecommand": cmdtext},
           dataType: "json",
           success: mom_ajaxparsecommand,
-	  error: function (jqxhr, rstat, errt) {
-	      console.log("sendparsecmd error jqxhr=", jqxhr,
-			  " rstat=", rstat, " errt=", errt);
-	  }
+          error: function (jqxhr, rstat, errt) {
+              console.log("sendparsecmd error jqxhr=", jqxhr,
+                          " rstat=", rstat, " errt=", errt);
+          }
          });      
     });
     console.log("nanoedit before ajax do_fillpage");
