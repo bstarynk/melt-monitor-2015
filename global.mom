@@ -28,6 +28,15 @@ comment
 )attrs
 
 
+*before_dump
+1453830276
+^mtime
+(
+comment
+"to do before dump"_
+)attrs
+
+
 *canvasedit
 1446753296
 ^mtime
@@ -292,6 +301,15 @@ comment
 (
 comment
 "signature of closure with one integer formal & no results"_
+)attrs
+
+
+*signature_closure_void_to_void
+1453831944
+^mtime
+(
+comment
+"signature for void -> void closures"_
 )attrs
 
 

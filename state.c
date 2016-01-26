@@ -658,7 +658,8 @@ start_after_load_mom (unsigned nbitems)
          mom_value_cstring (closv), mom_item_cstring (closigitm));
       return;
     }
-  mom_closure_1int_to_void_sig_t *fun = (mom_closure_1int_to_void_sig_t *) funptr;
+  mom_closure_1int_to_void_sig_t *fun =
+    (mom_closure_1int_to_void_sig_t *) funptr;
   MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
                    mom_value_cstring (closv), funptr);
   (*fun) (closnod, (intptr_t) nbitems);
@@ -903,12 +904,68 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
     }
 }
 
+static void
+before_dump_mom ()
+{
+  struct mom_hashedvalue_st *closv = NULL;
+  mom_item_lock (MOM_PREDEFITM (the_system));
+  closv =
+    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
+                                   MOM_PREDEFITM (after_load));
+  MOM_DEBUGPRINTF (dump, "before_dump closv=%s", mom_value_cstring (closv));
+  if (!closv)
+    goto end;
+  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
+  if (!closnod)
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has non-node `before_dump` value %s, ignoring it",
+         mom_value_cstring (closv));
+      goto end;
+    }
+  struct mom_item_st *clositm = closnod->nod_connitm;
+  MOM_DEBUGPRINTF (dump, "before_dump clositm=%s",
+                   mom_item_cstring (clositm));
+  assert (clositm && clositm->va_itype == MOMITY_ITEM);
+  const void *funptr = clositm->itm_funptr;
+  if (!funptr)
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has non-closure `before_dump` value %s, ignoring it",
+         mom_value_cstring (closv));
+      goto end;
+    }
+  struct mom_item_st *closigitm = clositm->itm_funsig;
+  MOM_DEBUGPRINTF (dump, "before_dump closigitm=%s",
+                   mom_item_cstring (closigitm));
+  if (closigitm != MOM_PREDEFITM (signature_closure_void_to_void))
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has `before_dump` value %s with bad signature %s, ignoring it",
+         mom_value_cstring (closv), mom_item_cstring (closigitm));
+      goto end;
+    }
+  {
+    mom_closure_void_to_void_sig_t *fun =
+      (mom_closure_void_to_void_sig_t *) funptr;
+    mom_item_unlock (MOM_PREDEFITM (the_system));
+    MOM_DEBUGPRINTF (dump, "before_dump before applying %s",
+                     mom_value_cstring (closv));
+    (*fun) (closv);
+    MOM_DEBUGPRINTF (dump, "before_dump after applying %s",
+                     mom_value_cstring (closv));
+    return;
+  }
+end:
+  mom_item_unlock (MOM_PREDEFITM (the_system));
+}                               /* end of before_dump_mom */
 
 void
 mom_dump_state (void)
 {
   double startrealtime = mom_elapsed_real_time ();
   double startcputime = mom_process_cpu_time ();
+  before_dump_mom ();
   struct mom_dumper_st *du = mom_gc_alloc (sizeof (struct mom_dumper_st));
   du->va_itype = MOMITY_DUMPER;
   du->du_state = MOMDUMP_NONE;
