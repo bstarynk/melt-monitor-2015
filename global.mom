@@ -19,6 +19,15 @@
 
 
 
+*after_load
+1453801577
+^mtime
+(
+comment
+"give closure to run after loading"_
+)attrs
+
+
 *canvasedit
 1446753296
 ^mtime
@@ -274,6 +283,15 @@ comment
 (
 comment
 "for sequences"_
+)attrs
+
+
+*signature_closure_1int_to_void
+1453805064
+^mtime
+(
+comment
+"signature of closure with one integer formal & no results"_
 )attrs
 
 

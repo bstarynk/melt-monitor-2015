@@ -1,6 +1,6 @@
 // file state.c - managing state
 
-/**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -225,7 +225,7 @@ initialize_load_state_mom (const char *statepath)
   mom_loader->ld_file = f;
   mom_loader->ld_path = GC_STRDUP (statepath);
   MOM_DEBUGPRINTF (load, "ld_path=%s fisiz=%ld", mom_loader->ld_path, fisiz);
-}
+}                               // end initialize_load_state_mom 
 
 
 void
@@ -620,6 +620,53 @@ second_pass_loader_mom (struct mom_loader_st *ld)
 
 
 void
+start_after_load_mom (unsigned nbitems)
+{
+  MOM_DEBUGPRINTF (load, "start_after_load nbitems=%u", nbitems);
+  struct mom_hashedvalue_st *closv = NULL;
+  closv =
+    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
+                                   MOM_PREDEFITM (after_load));
+  MOM_DEBUGPRINTF (load, "start_after_load closv=",
+                   mom_value_cstring (closv));
+  if (!closv)
+    return;
+  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
+  if (!closnod)
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has non-node `after_load` value %s, ignoring it",
+         mom_value_cstring (closv));
+      return;
+    }
+  struct mom_item_st *clositm = closnod->nod_connitm;
+  MOM_DEBUGPRINTF (load, "start_after_load clositm=%s",
+                   mom_item_cstring (clositm));
+  assert (clositm && clositm->va_itype == MOMITY_ITEM);
+  const void *funptr = clositm->itm_funptr;
+  struct mom_item_st *closigitm = clositm->itm_funsig;
+  if (!funptr)
+    {
+      MOM_WARNPRINTF ("`after_load` closure %s has no function",
+                      mom_value_cstring (closv));
+      return;
+    }
+  if (closigitm != MOM_PREDEFITM (signature_closure_1int_to_void))
+    {
+      MOM_WARNPRINTF
+        ("`after_load` closure %s has bad signature %s - expecting signature_closure_1int_to_void",
+         mom_value_cstring (closv), mom_item_cstring (closigitm));
+      return;
+    }
+  mom_tasklet_sig_t *fun = (mom_tasklet_sig_t *) funptr;
+  MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
+                   mom_value_cstring (closv), funptr);
+  (*fun) (closnod, (intptr_t) nbitems);
+  MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
+                   mom_value_cstring (closv), funptr);
+}                               /* end start_after_load_mom */
+
+void
 mom_load_state (const char *statepath)
 {
   double startrealtime = mom_elapsed_real_time ();
@@ -632,9 +679,11 @@ mom_load_state (const char *statepath)
   initialize_load_state_mom (statepath);
   first_pass_loader_mom (mom_loader);
   second_pass_loader_mom (mom_loader);
+  unsigned nbitems = mom_loader->ld_hsetitems->cda_count;
+  mom_loader = NULL;
+  start_after_load_mom (nbitems);
   double endrealtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
-  unsigned nbitems = mom_loader->ld_hsetitems->cda_count;
   MOM_INFORMPRINTF
     ("completed load of state from %s with %u items; "
      "in %.3f real, %.4f cpu seconds (%.3f real, %.3f cpu µs/item)",
@@ -642,7 +691,6 @@ mom_load_state (const char *statepath)
      endcputime - startcputime,
      (endrealtime - startrealtime) * (1.0e6 / nbitems),
      (endcputime - startcputime) * (1.0e6 / nbitems));
-  mom_loader = NULL;
 }                               /* end mom_load_state */
 
 void
@@ -908,3 +956,6 @@ mom_dump_state (void)
        (endcputime - startcputime) * (1.0e6 / nbitems));
   };
 }                               /* end mom_dump_state */
+
+
+/// eof state.c
