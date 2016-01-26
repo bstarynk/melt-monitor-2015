@@ -627,7 +627,7 @@ start_after_load_mom (unsigned nbitems)
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
                                    MOM_PREDEFITM (after_load));
-  MOM_DEBUGPRINTF (load, "start_after_load closv=",
+  MOM_DEBUGPRINTF (load, "start_after_load closv=%s",
                    mom_value_cstring (closv));
   if (!closv)
     return;
@@ -658,7 +658,7 @@ start_after_load_mom (unsigned nbitems)
          mom_value_cstring (closv), mom_item_cstring (closigitm));
       return;
     }
-  mom_tasklet_sig_t *fun = (mom_tasklet_sig_t *) funptr;
+  mom_closure_1int_to_void_sig_t *fun = (mom_closure_1int_to_void_sig_t *) funptr;
   MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
                    mom_value_cstring (closv), funptr);
   (*fun) (closnod, (intptr_t) nbitems);

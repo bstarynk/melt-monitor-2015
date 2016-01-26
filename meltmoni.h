@@ -2044,5 +2044,5 @@ typedef void mom_tasklet_sig_t (struct mom_item_st *tkitm);
 
 //// for signature_closure_1int_to_void
 typedef void mom_closure_1int_to_void_sig_t (const struct mom_boxnode_st
-                                             *clonod, intptr_t int);
+                                             *clonod, intptr_t num);
 #endif /*MONIMELT_INCLUDED_ */
