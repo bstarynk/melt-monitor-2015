@@ -651,20 +651,33 @@ start_after_load_mom (unsigned nbitems)
                       mom_value_cstring (closv));
       return;
     }
-  if (closigitm != MOM_PREDEFITM (signature_closure_1int_to_void))
+  if (closigitm == MOM_PREDEFITM (signature_closure_1int_to_void))
+    {
+      mom_closure_1int_to_void_sig_t *fun =
+        (mom_closure_1int_to_void_sig_t *) funptr;
+      MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
+                       mom_value_cstring (closv), funptr);
+      (*fun) (closnod, (intptr_t) nbitems);
+      MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
+                       mom_value_cstring (closv), funptr);
+    }
+  else if (closigitm == MOM_PREDEFITM (signature_closure_void_to_void))
+    {
+      mom_closure_void_to_void_sig_t *fun =
+        (mom_closure_void_to_void_sig_t *) funptr;
+      MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
+                       mom_value_cstring (closv), funptr);
+      (*fun) (closnod);
+      MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
+                       mom_value_cstring (closv), funptr);
+    }
+  else
     {
       MOM_WARNPRINTF
         ("`after_load` closure %s has bad signature %s - expecting signature_closure_1int_to_void",
          mom_value_cstring (closv), mom_item_cstring (closigitm));
       return;
     }
-  mom_closure_1int_to_void_sig_t *fun =
-    (mom_closure_1int_to_void_sig_t *) funptr;
-  MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
-                   mom_value_cstring (closv), funptr);
-  (*fun) (closnod, (intptr_t) nbitems);
-  MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
-                   mom_value_cstring (closv), funptr);
 }                               /* end start_after_load_mom */
 
 void
