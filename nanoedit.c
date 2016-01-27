@@ -591,8 +591,25 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                    " sessitm=%s doeval=%s", mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), doeval);
-  MOM_FATAPRINTF ("doeval_nanoedit tkitm=%s doeval=%s unimplemented",
-                  mom_item_cstring (tkitm), doeval);
+  assert (doeval != NULL);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  if (strcmp (doeval, mom_item_cstring (thistatitm)))
+    MOM_FATAPRINTF
+      ("doeval_nanoedit tkitm=%s doeval=%s different of thistatitm=%s",
+       mom_item_cstring (tkitm), doeval, mom_item_cstring (thistatitm));
+  const struct mom_hashedvalue_st *curexpv = NULL;
+  {
+    mom_item_lock (thistatitm);
+    curexpv =
+      mom_unsync_item_get_phys_attr (thistatitm, MOM_PREDEFITM (expression));
+    mom_item_unlock (thistatitm);
+  }
+  MOM_DEBUGPRINTF (web, "doeval_nanoedit curexprv=%s",
+                   mom_value_cstring (curexpv));
+  MOM_FATAPRINTF ("doeval_nanoedit unimplemented curexprv=%s",
+                  mom_value_cstring (curexpv));
+#warning doeval_nanoedit_mom unimplemented
 }                               /* end of doeval_nanoedit_mom */
 
 
