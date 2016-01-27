@@ -197,6 +197,8 @@ unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
   return run;
 }                               /* end unsync_run_node_tasklet_mom */
 
+
+
 static bool
 unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
                               struct mom_tasklet_st *tkstack)
@@ -204,8 +206,10 @@ unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
   MOM_FATAPRINTF
     ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstack@%p",
      mom_item_cstring (tkitm), tkstack);
-#warning unsync_run_stack_tasklet_mom unimplemented
-}
+#warning unsync_run_stack_tasklet_mom unimplemented see mom_tasklet_st
+}                               /* end of unsync_run_stack_tasklet_mom */
+
+
 
 static void
 run_tasklet_mom (struct mom_item_st *tkitm)

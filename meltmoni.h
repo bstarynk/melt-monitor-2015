@@ -2028,6 +2028,23 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
 
 
 ////////////////
+/// for MOMITY_TASKLET payload
+#define MOM_TASKLET_FIELDS			\
+  MOM_ANYVALUE_FIELDS;				\
+
+struct mom_tasklet_st
+{
+  MOM_TASKLET_FIELDS;
+  unsigned mom_tasklet_scasiz;
+  unsigned mom_tasklet_scatop;
+  intptr_t *mom_tasklet_scalars;
+  unsigned mom_tasklet_ptrsiz;
+  unsigned mom_tasklet_ptrtop;
+  void **mom_tasklet_pointers;
+};
+#warning tasklets are incomplete...
+
+////////////////
 
 void mom_agenda_add_tasklet_front (const struct mom_item_st *tkletitm);
 void mom_agenda_add_tasklet_back (const struct mom_item_st *tkletitm);
