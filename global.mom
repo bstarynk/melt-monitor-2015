@@ -19,6 +19,15 @@
 
 
 
+*after_dump
+1453887296
+^mtime
+(
+comment
+"to do after dump"_
+)attrs
+
+
 *after_load
 1453801577
 ^mtime
