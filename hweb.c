@@ -1,6 +1,6 @@
 // file hweb.c - handling web interface
 
-/**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -24,7 +24,7 @@
 #define SESSION_TIMEOUT_MOM 4000        /* a bit more than one hour of inactivity */
 
 // maximal reply delay for a web request - in seconds
-#define REPLY_TIMEOUT_MOM (MOM_IS_DEBUGGING(web)?10.2:3.5)      /* reply timeout in seconds */
+#define REPLY_TIMEOUT_MOM (MOM_IS_DEBUGGING(web)?14.2:4.5)      /* reply timeout in seconds */
 
 const char *web_hostname_mom;
 static struct mom_hashset_st *sessions_hset_mom;
