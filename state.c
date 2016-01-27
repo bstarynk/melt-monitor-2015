@@ -911,7 +911,7 @@ before_dump_mom ()
   mom_item_lock (MOM_PREDEFITM (the_system));
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
-                                   MOM_PREDEFITM (after_load));
+                                   MOM_PREDEFITM (before_dump));
   MOM_DEBUGPRINTF (dump, "before_dump closv=%s", mom_value_cstring (closv));
   if (!closv)
     goto end;
@@ -951,7 +951,7 @@ before_dump_mom ()
     mom_item_unlock (MOM_PREDEFITM (the_system));
     MOM_DEBUGPRINTF (dump, "before_dump before applying %s",
                      mom_value_cstring (closv));
-    (*fun) (closv);
+    (*fun) (closnod);
     MOM_DEBUGPRINTF (dump, "before_dump after applying %s",
                      mom_value_cstring (closv));
     return;
@@ -959,6 +959,65 @@ before_dump_mom ()
 end:
   mom_item_unlock (MOM_PREDEFITM (the_system));
 }                               /* end of before_dump_mom */
+
+
+
+static void
+after_dump_mom ()
+{
+  struct mom_hashedvalue_st *closv = NULL;
+  mom_item_lock (MOM_PREDEFITM (the_system));
+  closv =
+    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
+                                   MOM_PREDEFITM (after_dump));
+  MOM_DEBUGPRINTF (dump, "after_dump closv=%s", mom_value_cstring (closv));
+  if (!closv)
+    goto end;
+  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
+  if (!closnod)
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has non-node `after_dump` value %s, ignoring it",
+         mom_value_cstring (closv));
+      goto end;
+    }
+  struct mom_item_st *clositm = closnod->nod_connitm;
+  MOM_DEBUGPRINTF (dump, "after_dump clositm=%s", mom_item_cstring (clositm));
+  assert (clositm && clositm->va_itype == MOMITY_ITEM);
+  const void *funptr = clositm->itm_funptr;
+  if (!funptr)
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has non-closure `after_dump` value %s, ignoring it",
+         mom_value_cstring (closv));
+      goto end;
+    }
+  struct mom_item_st *closigitm = clositm->itm_funsig;
+  MOM_DEBUGPRINTF (dump, "after_dump closigitm=%s",
+                   mom_item_cstring (closigitm));
+  if (closigitm != MOM_PREDEFITM (signature_closure_void_to_void))
+    {
+      MOM_WARNPRINTF
+        ("`the_system` has `after_dump` value %s with bad signature %s, ignoring it",
+         mom_value_cstring (closv), mom_item_cstring (closigitm));
+      goto end;
+    }
+  {
+    mom_closure_void_to_void_sig_t *fun =
+      (mom_closure_void_to_void_sig_t *) funptr;
+    mom_item_unlock (MOM_PREDEFITM (the_system));
+    MOM_DEBUGPRINTF (dump, "after_dump before applying %s",
+                     mom_value_cstring (closv));
+    (*fun) (closnod);
+    MOM_DEBUGPRINTF (dump, "after_dump after applying %s",
+                     mom_value_cstring (closv));
+    return;
+  }
+end:
+  mom_item_unlock (MOM_PREDEFITM (the_system));
+}                               /* end of after_dump_mom */
+
+
 
 void
 mom_dump_state (void)
@@ -996,6 +1055,7 @@ mom_dump_state (void)
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
                                       mom_hashset_to_boxset
                                       (du->du_itemset)));
+  after_dump_mom ();
   {
     char cwdbuf[MOM_PATH_MAX];
     memset (cwdbuf, 0, sizeof (cwdbuf));
