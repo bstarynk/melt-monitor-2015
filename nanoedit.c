@@ -335,7 +335,7 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
   mom_item_lock (curitm);
   {
     mom_file_printf (fb,
-                     "<p class='showcontent_title_cl' data-titlecontentitem='%s'> * ",
+                     "<p class='showcontent_title_cl' data-contentitem='%s'> * ",
                      mom_item_cstring (curitm));
     showitem_nanoedit_mom (fb, wexitm, curitm, false);
     mom_file_puts (fb, " * </p>\n");
@@ -345,10 +345,10 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     if (nbattrs > 0)
       {
         mom_file_printf (fb,
-                         "<p class='showcontent_attributes_cl' data-titlecontentitem='%s'>%d attributes.<br/>\n",
+                         "<p class='showcontent_attributes_cl' data-contentitem='%s'>%d attributes.<br/>\n",
                          mom_item_cstring (curitm), nbattrs);
         mom_file_printf (fb,
-                         "<dl class='showcontent_attributelist_cl' data-titlecontentitem='%s'>\n",
+                         "<dl class='showcontent_attributelist_cl' data-contentitem='%s'>\n",
                          mom_item_cstring (curitm));
         for (unsigned atix = 0; atix < nbattrs; atix++)
           {
@@ -359,9 +359,34 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                              "showcontent_nanoedit atix#%d curatitm=%s curval=%s",
                              atix, mom_item_cstring (curatitm),
                              mom_value_cstring (curval));
-#warning should show every attribute inside item content
+            mom_file_printf (fb, "<dt class='momattitem_cl'>%s</dt>\n",
+                             mom_item_cstring (curatitm));
+            mom_file_printf (fb, "<dd class='momattvalue_cl'>\n");
+            showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
+            mom_file_puts (fb, "</dd>\n");
           }
         mom_file_puts (fb, "</dl></p>\n");
+      };
+    unsigned nbcomp = mom_vectvaldata_count (curitm->itm_pcomp);
+    if (nbcomp > 0)
+      {
+        mom_file_printf (fb,
+                         "<p class='showcontent_components_cl' data-contentitem='%s'>%d components.<br/>\n",
+                         mom_item_cstring (curitm), nbattrs);
+        mom_file_printf (fb,
+                         "<ul class='showcontent_components_cl' data-contentitem='%s'>\n",
+                         mom_item_cstring (curitm));
+        for (unsigned compix = 0; compix < nbcomp; compix++)
+          {
+            const struct mom_hashedvalue_st *curcomp =
+              mom_vectvaldata_nth (curitm->itm_pcomp, compix);
+            MOM_DEBUGPRINTF (web, "showcontent_nanoedit compix#%d curcomp=%s",
+                             compix, curcomp);
+#warning showcontent_nanoedit should show the curcomp
+
+          }
+        mom_file_puts (fb, "</ul>\n");
+
       }
   }
   mom_item_unlock (curitm);
