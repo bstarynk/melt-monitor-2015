@@ -667,13 +667,23 @@ mom_seqitems_arr (const void *p)
   return NULL;
 }
 
+
+static inline unsigned
+mom_seqitems_length (const void *p)
+{
+  const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
+  if (si)
+    return mom_raw_size (si);
+  return 0;
+}
+
 static inline const struct mom_item_st *
 mom_seqitems_nth (const void *p, int rk)
 {
   const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
   if (!si)
     return NULL;
-  unsigned sz = (si->va_hsiz << 16) + si->va_lsiz;
+  unsigned sz = mom_raw_size (si);
   if (rk < 0)
     rk += sz;
   if (rk >= 0 && rk < (int) sz)
@@ -699,6 +709,29 @@ mom_dyncast_set (const void *p)
   return NULL;
 }
 
+
+static inline unsigned
+mom_boxtuple_length (const struct mom_boxtuple_st *btup)
+{
+  if (btup && btup != MOM_EMPTY_SLOT && btup->va_itype != MOMITY_TUPLE)
+    return 0;
+  return mom_raw_size (btup);
+}                               /* end of mom_boxtuple_length */
+
+static inline const struct mom_item_st *
+mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
+{
+  if (btup && btup != MOM_EMPTY_SLOT && btup->va_itype != MOMITY_TUPLE)
+    return NULL;
+  unsigned sz = mom_raw_size (btup);
+  if (rk < 0)
+    rk += sz;
+  if (rk >= 0 && rk < (int) sz)
+    return btup->seqitem[rk];
+  return NULL;
+}                               /* end of mom_boxtuple_nth */
+
+
 const struct mom_boxtuple_st *mom_boxtuple_make_arr2 (unsigned siz1,
                                                       const struct mom_item_st
                                                       **arr1, unsigned siz2,
@@ -716,6 +749,28 @@ const struct mom_boxtuple_st *mom_boxtuple_make_sentinel_va (struct
                                                              ...)
   __attribute__ ((sentinel));
 #define mom_boxtuple_make_sentinel(...) mom_boxtuple_make_sentinel_va(##__VA_ARGS__, NULL)
+
+static inline unsigned
+mom_boxset_length (const struct mom_boxset_st *bset)
+{
+  if (bset && bset != MOM_EMPTY_SLOT && bset->va_itype != MOMITY_SET)
+    return 0;
+  return mom_raw_size (bset);
+}                               /* end of mom_boxset_length */
+
+static inline const struct mom_item_st *
+mom_boxset_nth (const struct mom_boxset_st *bset, int rk)
+{
+  if (bset && bset != MOM_EMPTY_SLOT && bset->va_itype != MOMITY_SET)
+    return NULL;
+  unsigned sz = mom_raw_size (bset);
+  if (rk < 0)
+    rk += sz;
+  if (rk >= 0 && rk < (int) sz)
+    return bset->seqitem[rk];
+  return NULL;
+}                               /* end of mom_boxset_nth */
+
 
 const struct mom_boxset_st *mom_boxset_make_arr2 (unsigned siz1,
                                                   const struct mom_item_st
@@ -2039,7 +2094,7 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
   intptr_t *tkl_scalars; /* scalar zone  */	\
   unsigned tkl_ptrsiz; /* pointer zone size */	\
   unsigned tkl_ptrtop; /* pointer zone top */	\
-  void **tkl_pointers; /* pointer zone */
+  void **tkl_pointers;          /* pointer zone */
 
 struct mom_tasklet_st
 {

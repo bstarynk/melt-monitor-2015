@@ -36,6 +36,12 @@ enum nanoedit_closoff_en
   mec__last
 };
 
+static void
+showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              const struct mom_item_st *curitm);
+
 
 static void
 showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
@@ -305,6 +311,67 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
 }                               /* end showvalue_nanoedit_mom */
 
 
+static void
+showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              const struct mom_item_st *curitm)
+{
+  MOM_DEBUGPRINTF (web,
+                   "showcontentitem_nanoedit wexitm=%s thistatitm=%s curitm=%s",
+                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   mom_item_cstring (curitm));
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (curitm != NULL && curitm != MOM_EMPTY_SLOT
+          && curitm->va_itype == MOMITY_ITEM);
+  mom_file_printf (fb,
+                   "<div id='showcontentitem_%s_id' name='%s' class='mom_showcontentitem_cl'>\n",
+                   mom_item_cstring (curitm), mom_item_cstring (curitm));
+  mom_item_lock (curitm);
+  {
+    mom_file_printf (fb,
+                     "<p class='showcontent_title_cl' data-titlecontentitem='%s'> * ",
+                     mom_item_cstring (curitm));
+    showitem_nanoedit_mom (fb, wexitm, curitm, false);
+    mom_file_puts (fb, " * </p>\n");
+    const struct mom_boxset_st *attset =
+      mom_unsync_item_phys_set_attrs (curitm);
+    unsigned nbattrs = mom_boxset_length (attset);
+    if (nbattrs > 0)
+      {
+        mom_file_printf (fb,
+                         "<p class='showcontent_attributes_cl' data-titlecontentitem='%s'>%d attributes.<br/>\n",
+                         mom_item_cstring (curitm), nbattrs);
+        mom_file_printf (fb,
+                         "<dl class='showcontent_attributelist_cl' data-titlecontentitem='%s'>\n",
+                         mom_item_cstring (curitm));
+        for (unsigned atix = 0; atix < nbattrs; atix++)
+          {
+            struct mom_item_st *curatitm = mom_boxset_nth (attset, atix);
+            const struct mom_hashedvalue_st *curval =
+              mom_unsync_item_get_phys_attr (curitm, curatitm);
+            MOM_DEBUGPRINTF (web,
+                             "showcontent_nanoedit atix#%d curatitm=%s curval=%s",
+                             atix, mom_item_cstring (curatitm),
+                             mom_value_cstring (curval));
+#warning should show every attribute inside item content
+          }
+        mom_file_puts (fb, "</dl></p>\n");
+      }
+  }
+  mom_item_unlock (curitm);
+  mom_file_puts (fb, "</div>\n");
+  MOM_FATAPRINTF
+    ("unimplemented showcontentitem_nanoedit wexitm=%s curitm=%s",
+     mom_item_cstring (wexitm), mom_item_cstring (curitm));
+#warning showcontentitem_nanoedit unimplemented
+}                               /* end of showcontentitem_nanoedit_mom */
+
 
 const char momsig_nano_displayer[] = "signature_displayer";
 void
@@ -330,7 +397,6 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                          struct mom_item_st *thistatitm)
 {
   struct mom_item_st *sessitm = wexch->webx_sessitm;
-#warning should create a filebuffer
   const char *rawmode = onion_request_get_post (wexch->webx_requ, "rawmode");
   MOM_DEBUGPRINTF (web,
                    "dofillpage_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s rawmode=%s",
@@ -380,34 +446,58 @@ dofillpage_nanoedit_mom (struct mom_webexch_st *wexch,
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw'/>"
                   " raw display</p>\n");
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
+  struct mom_hashedvalue_st *dispv =
+    mom_unsync_item_get_phys_attr (thistatitm, MOM_PREDEFITM (display));
+  const struct mom_boxset_st *dispset = mom_dyncast_set (dispv);
   const struct mom_boxset_st *atset = mom_hashmap_keyset (hmap);
-  MOM_DEBUGPRINTF (web, "dofillpage_nanoedit webr#%ld atset %s",
+  MOM_DEBUGPRINTF (web, "dofillpage_nanoedit webr#%ld atset %s dispv %s",
                    wexch->webx_count,
-                   mom_value_cstring ((struct mom_hashedvalue_st *) atset));
+                   mom_value_cstring ((struct mom_hashedvalue_st *) atset),
+                   mom_value_cstring (dispv));
   unsigned nbat = mom_size (atset);
-  mom_wexch_puts (wexch, "<dl class='momlocbind_cl'>\n");
-  for (unsigned ix = 0; ix < nbat; ix++)
+  if (nbat > 0)
     {
-      const struct mom_item_st *curatitm = atset->seqitem[ix];
-      const struct mom_hashedvalue_st *curval =
-        mom_hashmap_get (hmap, curatitm);
-      struct mom_filebuffer_st *fb = mom_make_filebuffer ();
-      MOM_DEBUGPRINTF (web,
-                       "dofillpage_nanoedit webr#%ld ix%d curatitm %s curval %s",
-                       wexch->webx_count, ix, mom_item_cstring (curatitm),
-                       mom_value_cstring (curval));
-      assert (fb != NULL);
-      MOM_WEXCH_PRINTF (wexch, "<dt class='momlocvaritem_cl'>%s</dt>\n",
-                        mom_item_cstring (curatitm));
-      mom_wexch_puts (wexch, "<dd class='momlocvalue_cl'>\n");
-      showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
-      mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
-      mom_wexch_puts (wexch, "</dd>\n");
+      mom_wexch_puts (wexch, "<dl class='momlocbind_cl'>\n");
+      for (unsigned ix = 0; ix < nbat; ix++)
+        {
+          const struct mom_item_st *curatitm = atset->seqitem[ix];
+          const struct mom_hashedvalue_st *curval =
+            mom_hashmap_get (hmap, curatitm);
+          struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+          MOM_DEBUGPRINTF (web,
+                           "dofillpage_nanoedit webr#%ld ix%d curatitm %s curval %s",
+                           wexch->webx_count, ix, mom_item_cstring (curatitm),
+                           mom_value_cstring (curval));
+          assert (fb != NULL);
+          MOM_WEXCH_PRINTF (wexch, "<dt class='momlocvaritem_cl'>%s</dt>\n",
+                            mom_item_cstring (curatitm));
+          mom_wexch_puts (wexch, "<dd class='momlocvalue_cl'>\n");
+          showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
+          mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
+          mom_wexch_puts (wexch, "</dd>\n");
+        }
+      mom_wexch_puts (wexch, "</dl>\n");
     }
-  mom_wexch_puts (wexch, "</dl>\n");
+  unsigned nbdisp = mom_size (dispset);
+  MOM_DEBUGPRINTF (web, "dofillpage_nanoedit webr#%ld nbdisp=%d dispset %s",
+                   wexch->webx_count, nbdisp,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) dispset));
+  if (nbdisp > 0)
+    {
+      for (unsigned ix = 0; ix < nbdisp; ix++)
+        {
+          const struct mom_item_st *curdispitm = dispset->seqitem[ix];
+          MOM_DEBUGPRINTF (web,
+                           "dofillpage_nanoedit webr#%ld ix%d curdispitm %s",
+                           wexch->webx_count, ix,
+                           mom_item_cstring (curdispitm));
+          struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+          assert (fb != NULL);
+          showcontentitem_nanoedit_mom (fb, wexitm, thistatitm, curdispitm);
+        }
+    }
   mom_wexch_reply (wexch, HTTP_OK, "text/html");
-  MOM_DEBUGPRINTF (web,
-                   "dofillpage_nanoedit done webr#%ld tkitm=%s",
+  MOM_DEBUGPRINTF (web, "dofillpage_nanoedit done webr#%ld tkitm=%s",
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end of dofillpage_nanoedit_mom */
 
@@ -419,7 +509,6 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
                              struct mom_item_st *wexitm,
                              struct mom_item_st *thistatitm, const char *cmd);
 
-
 static void
 doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
                           struct mom_item_st *tkitm,
@@ -430,14 +519,15 @@ doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
   bool known = false;
   MOM_DEBUGPRINTF (web,
                    "doknownitem_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
-                   wexch->webx_count, mom_item_cstring (tkitm),
-                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   wexch->webx_count,
+                   mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), name);
   if (name)
     {
       struct mom_item_st *itm = mom_find_item_by_string (name);
-      MOM_DEBUGPRINTF (web,
-                       "doknownitem_nanoedit webr#%ld name=%s itm=%s\n",
+      MOM_DEBUGPRINTF (web, "doknownitem_nanoedit webr#%ld name=%s itm=%s\n",
                        wexch->webx_count, name, mom_item_cstring (itm));
       known = itm != NULL;
     };
@@ -461,15 +551,17 @@ docompletename_nanoedit_mom (struct mom_webexch_st *wexch,
   struct mom_item_st *sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
                    "docompletename_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s name=%s",
-                   wexch->webx_count, mom_item_cstring (tkitm),
-                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   wexch->webx_count,
+                   mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), name);
   const struct mom_boxset_st *set = mom_set_items_prefixed (name, -1);
   MOM_DEBUGPRINTF (web,
                    "docompletename_nanoedit webr#%ld set %s",
                    wexch->webx_count,
-                   mom_value_cstring ((const struct mom_hashedvalue_st *)
-                                      set));
+                   mom_value_cstring ((const struct
+                                       mom_hashedvalue_st *) set));
   if (set)
     {
       unsigned siz = mom_size (set);
@@ -489,8 +581,7 @@ docompletename_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "null\n");
     }
   mom_wexch_reply (wexch, HTTP_OK, "application/json");
-  MOM_DEBUGPRINTF (web,
-                   "docompletename_nanoedit webr#%ld done",
+  MOM_DEBUGPRINTF (web, "docompletename_nanoedit webr#%ld done",
                    wexch->webx_count);
 }                               /* end of docompletename_nanoedit_mom */
 
@@ -504,12 +595,14 @@ doexit_nanoedit_mom (struct mom_webexch_st *wexch,
   struct mom_item_st *sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
                    "doexit_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s doexit=%s",
-                   wexch->webx_count, mom_item_cstring (tkitm),
-                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   wexch->webx_count,
+                   mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), doexit);
-  json_t *jreply = json_pack ("{s:f,s:f}",
-                              "elapsedreal", mom_elapsed_real_time (),
-                              "processcpu", mom_process_cpu_time ());;
+  json_t *jreply = json_pack ("{s:f,s:f}", "elapsedreal",
+                              mom_elapsed_real_time (), "processcpu",
+                              mom_process_cpu_time ());;
   // json_dumps will use GC_STRDUP...
   MOM_DEBUGPRINTF (web, "doexit_nanoedit jreply=%s",
                    json_dumps (jreply, JSON_INDENT (1)));
@@ -529,7 +622,8 @@ docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
 {
   struct mom_item_st *hsetitm = NULL;
   struct mom_item_st *newitm = NULL;
-  MOM_DEBUGPRINTF (web, "docreateitem_nanoedit tkitm=%s wexitm=%s"
+  MOM_DEBUGPRINTF (web,
+                   "docreateitem_nanoedit tkitm=%s wexitm=%s"
                    " thistatitm=%s sessitm=%s itemnamestr=%s commentstr=%s",
                    mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm),
@@ -546,9 +640,10 @@ docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
   newitm = mom_make_item_by_string (itemnamestr);
   if (!newitm)
     {
-      MOM_WARNPRINTF ("docreateitem_nanoedit failed to create item named %s",
-                      itemnamestr);
-      MOM_WEXCH_PRINTF (wexch, "<b>failed to create item <tt>%s</tt></b>\n",
+      MOM_WARNPRINTF
+        ("docreateitem_nanoedit failed to create item named %s", itemnamestr);
+      MOM_WEXCH_PRINTF (wexch,
+                        "<b>failed to create item <tt>%s</tt></b>\n",
                         itemnamestr);
       mom_wexch_reply (wexch, HTTP_FORBIDDEN, "text/html");
       return;
@@ -568,7 +663,8 @@ docreateitem_nanoedit_mom (struct mom_webexch_st *wexch,
                              (struct mom_hashedvalue_st *)
                              mom_boxstring_make (commentstr));
       hsetitm->itm_payload = (struct mom_anyvalue_st *)
-        mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
+        mom_hashset_insert ((struct mom_hashset_st *)
+                            hsetitm->itm_payload,
                             (struct mom_item_st *) newitm);
       MOM_WEXCH_PRINTF (wexch,
                         "<b>created item <tt>%s</tt></b> on <i>%s</i>\n",
@@ -588,8 +684,10 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
 {
   MOM_DEBUGPRINTF (web,
                    "doeval_nanoedit start tkitm=%s wexitm=%s thistatitm=%s"
-                   " sessitm=%s doeval=%s", mom_item_cstring (tkitm),
-                   mom_item_cstring (wexitm), mom_item_cstring (thistatitm),
+                   " sessitm=%s doeval=%s",
+                   mom_item_cstring (tkitm),
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), doeval);
   assert (doeval != NULL);
   assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
@@ -607,15 +705,15 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   }
   MOM_DEBUGPRINTF (web, "doeval_nanoedit curexprv=%s",
                    mom_value_cstring (curexpv));
-  MOM_FATAPRINTF ("doeval_nanoedit unimplemented curexprv=%s",
-                  mom_value_cstring (curexpv));
+  MOM_FATAPRINTF
+    ("doeval_nanoedit unimplemented curexprv=%s",
+     mom_value_cstring (curexpv));
 #warning doeval_nanoedit_mom unimplemented
 }                               /* end of doeval_nanoedit_mom */
 
 
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";
-
 void
 momf_nanoedit (struct mom_item_st *tkitm)
 {
@@ -626,16 +724,17 @@ momf_nanoedit (struct mom_item_st *tkitm)
   mom_item_lock (tkitm);
   const struct mom_boxnode_st *tknod =
     (struct mom_boxnode_st *) tkitm->itm_payload;
-  MOM_DEBUGPRINTF (web, "momf_nanoedit start tkitm=%s tknod=%s",
+  MOM_DEBUGPRINTF (web,
+                   "momf_nanoedit start tkitm=%s tknod=%s",
                    mom_item_cstring (tkitm),
-                   mom_value_cstring ((const struct mom_hashedvalue_st *)
-                                      tknod));
+                   mom_value_cstring ((const struct
+                                       mom_hashedvalue_st *) tknod));
   if (mom_itype (tknod) != MOMITY_NODE || mom_raw_size (tknod) < mec__last)
     {
       /// should not happen
       MOM_WARNPRINTF ("momf_nanoedit bad tknod %s",
-                      mom_value_cstring ((const struct mom_hashedvalue_st *)
-                                         tknod));
+                      mom_value_cstring ((const struct
+                                          mom_hashedvalue_st *) tknod));
       goto end;
     }
   {
@@ -646,7 +745,8 @@ momf_nanoedit (struct mom_item_st *tkitm)
     assert (thistatitm && thistatitm->va_itype == MOMITY_ITEM);
     MOM_DEBUGPRINTF (web,
                      "momf_nanoedit tkitm=%s wexitm=%s paylkind %s thistatitm=%s",
-                     mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                     mom_item_cstring (tkitm),
+                     mom_item_cstring (wexitm),
                      mom_itype_str (wexitm->itm_payload),
                      mom_item_cstring (thistatitm));
     mom_item_lock (thistatitm);
@@ -658,10 +758,11 @@ momf_nanoedit (struct mom_item_st *tkitm)
   mom_item_lock (sessitm);
   MOM_DEBUGPRINTF (web,
                    "momf_nanoedit tkitm=%s wexch #%ld meth %s fupath %s sessitm %s",
-                   mom_item_cstring (tkitm), wexch->webx_count,
+                   mom_item_cstring (tkitm),
+                   wexch->webx_count,
                    mom_webmethod_name (wexch->webx_meth),
-                   onion_request_get_fullpath (wexch->webx_requ),
-                   mom_item_cstring (sessitm));
+                   onion_request_get_fullpath
+                   (wexch->webx_requ), mom_item_cstring (sessitm));
   sessitm->itm_pcomp = mom_vectvaldata_resize (sessitm->itm_pcomp, mes__last);
   if (!
       (hsetitm =
@@ -675,15 +776,14 @@ momf_nanoedit (struct mom_item_st *tkitm)
         (struct mom_anyvalue_st *) mom_hashset_reserve (NULL, 20);
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s wexch #%ld new hsetitm %s",
-                       mom_item_cstring (tkitm), wexch->webx_count,
-                       mom_item_cstring (hsetitm));
+                       mom_item_cstring (tkitm),
+                       wexch->webx_count, mom_item_cstring (hsetitm));
     }
   else
     MOM_DEBUGPRINTF (web,
                      "momf_nanoedit tkitm=%s wexch #%ld got hsetitm %s",
-                     mom_item_cstring (tkitm), wexch->webx_count,
-                     mom_item_cstring (hsetitm));
-
+                     mom_item_cstring (tkitm),
+                     wexch->webx_count, mom_item_cstring (hsetitm));
   mom_item_lock (hsetitm);
   if (wexch->webx_meth == MOMWEBM_POST)
     {
@@ -701,35 +801,41 @@ momf_nanoedit (struct mom_item_st *tkitm)
       if ((dofillpage =
            onion_request_get_post (wexch->webx_requ, "do_fillpage")) != NULL)
         dofillpage_nanoedit_mom (wexch, tkitm, wexitm, thistatitm);
-      else if ((doknownitem =
-                onion_request_get_post (wexch->webx_requ,
-                                        "do_knownitem")) != NULL)
+      else
+        if ((doknownitem =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_knownitem")) != NULL)
         doknownitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
                                   doknownitem);
-      else if ((docompletename =
-                onion_request_get_post (wexch->webx_requ,
-                                        "do_completename")) != NULL)
-        docompletename_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
-                                     docompletename);
-      else if ((doparsecommand = onion_request_get_post (wexch->webx_requ,
-                                                         "do_parsecommand"))
-               != NULL)
-        doparsecommand_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
-                                     doparsecommand);
-      else if ((doexit = onion_request_get_post (wexch->webx_requ, "do_exit"))
-               != NULL)
+      else
+        if ((docompletename =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_completename")) != NULL)
+        docompletename_nanoedit_mom (wexch, tkitm, wexitm,
+                                     thistatitm, docompletename);
+      else
+        if ((doparsecommand =
+             onion_request_get_post (wexch->webx_requ,
+                                     "do_parsecommand")) != NULL)
+        doparsecommand_nanoedit_mom (wexch, tkitm,
+                                     wexitm, thistatitm, doparsecommand);
+      else
+        if ((doexit =
+             onion_request_get_post (wexch->webx_requ, "do_exit")) != NULL)
         doexit_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, doexit);
-      else if ((doeval = onion_request_get_post (wexch->webx_requ, "do_eval"))
-               != NULL)
-        doeval_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, sessitm,
-                             doeval);
+      else
+        if ((doeval =
+             onion_request_get_post (wexch->webx_requ, "do_eval")) != NULL)
+        doeval_nanoedit_mom (wexch, tkitm, wexitm,
+                             thistatitm, sessitm, doeval);
       else
         if ((docreateitem =
              onion_request_get_post (wexch->webx_requ,
                                      "do_createitem")) != NULL
             && (commentstr =
                 onion_request_get_post (wexch->webx_requ, "comment")) != NULL)
-        docreateitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm, sessitm,
+        docreateitem_nanoedit_mom (wexch, tkitm, wexitm,
+                                   thistatitm, sessitm,
                                    docreateitem, commentstr);
     }
 end:
@@ -763,7 +869,6 @@ struct nanoparsing_mom_st
   const struct mom_boxnode_st *nanop_nodexpr;
   jmp_buf nanop_jb;
 };
-
 #define NANOPARSING_FAILURE_MOM(Np,Pos,Fmt,...) do {            \
     struct nanoparsing_mom_st *_np = (Np);                      \
     assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
@@ -773,8 +878,6 @@ struct nanoparsing_mom_st
       mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
     longjmp(_np->nanop_jb,__LINE__);                            \
   } while(0)
-
-
 #define NANOPARSING_FAILURE_WITH_MOM(Np,Pos,Val,Fmt,...) do {	\
     struct nanoparsing_mom_st *_np = (Np);                      \
     assert (_np && _np->nanop_magic == NANOPARSING_MAGIC_MOM);  \
@@ -785,9 +888,6 @@ struct nanoparsing_mom_st
       mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
     longjmp(_np->nanop_jb,__LINE__);                            \
   } while(0)
-
-
-
 static bool
 is_utf8_delim_mom (gunichar uc)
 {
@@ -846,7 +946,9 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   struct mom_queue_st *que = NULL;
   const char *cmd = NULL;
   const char *pc = NULL;
-  char rawprefix[16] = { 0 };
+  char rawprefix[16] = {
+    0
+  };
   int pos = 0;
   gunichar uc = 0;
   char nc = 0;
@@ -875,11 +977,13 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
   np->nanop_pos = pc - cmd;
   if (!uc || np->nanop_pos >= (int) np->nanop_cmdlen)
     {
-      MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u end (cmdlen %u)",
+      MOM_DEBUGPRINTF (web,
+                       "parse_token_nanoedit pos#%u end (cmdlen %u)",
                        np->nanop_pos, np->nanop_cmdlen);
       return;
     }
-  MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u uc %#x %c",
+  MOM_DEBUGPRINTF (web,
+                   "parse_token_nanoedit pos#%u uc %#x %c",
                    np->nanop_pos, uc, (uc < 128) ? (char) uc : '?');
   if (uc < 128 && isalpha (uc))
     {
@@ -909,7 +1013,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
               assert (endp == endw);
               mom_queue_append (que, itm);
               np->nanop_pos = endw - cmd;
-              MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u item %s\n",
+              MOM_DEBUGPRINTF (web,
+                               "parse_token_nanoedit pos#%u item %s\n",
                                (unsigned) (endw - cmd),
                                mom_item_cstring (itm));
             }
@@ -924,7 +1029,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
                                           namev);
               mom_queue_append (que, nodv);
               np->nanop_pos = endw - cmd;
-              MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u name %s\n",
+              MOM_DEBUGPRINTF (web,
+                               "parse_token_nanoedit pos#%u name %s\n",
                                (unsigned) (endw - cmd),
                                mom_value_cstring ((const struct
                                                    mom_hashedvalue_st
@@ -943,7 +1049,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
                                       wordv);
           mom_queue_append (que, nodv);
           np->nanop_pos = endw - cmd;
-          MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u word %s\n",
+          MOM_DEBUGPRINTF (web,
+                           "parse_token_nanoedit pos#%u word %s\n",
                            (unsigned) (startw - cmd),
                            mom_value_cstring ((const struct
                                                mom_hashedvalue_st *) (nodv)));
@@ -961,8 +1068,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       mom_queue_append (que, intv);
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u charcode int %s\n",
                        np->nanop_pos,
-                       mom_value_cstring ((const struct
-                                           mom_hashedvalue_st *) (intv)));
+                       mom_value_cstring ((const struct mom_hashedvalue_st
+                                           *) (intv)));
       np->nanop_pos = pc - cmd;
       return;
     }                           /* end of integer character code à la 0'z */
@@ -983,23 +1090,23 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
           MOM_DEBUGPRINTF (web,
                            "parse_token_nanoedit pos#%u charcode int %s\n",
                            np->nanop_pos,
-                           mom_value_cstring ((const struct mom_hashedvalue_st
-                                               *) (intv)));
+                           mom_value_cstring ((const struct
+                                               mom_hashedvalue_st *) (intv)));
           np->nanop_pos += 3;
         }
       else
         NANOPARSING_FAILURE_MOM (np, np->nanop_pos, "bad escchar int 0%s",
                                  escbuf);
-
       ss.ss_str = NULL, ss.ss_len = 0;
     }                           /* end of integer escaped character code à la 0\n */
 
-  else if ((uc < 128 && isdigit (uc))
-           || ((uc == '+' || uc == '-') && (nc = pc[1])
-               && (isdigit (nc)
-                   || ((!strncasecmp (pc + 1, "INF", 3)
-                        || !strncasecmp (pc + 1, "NAN", 3))
-                       && !isalnum (*(pc + 4))))))
+  else
+    if ((uc < 128 && isdigit (uc))
+        || ((uc == '+' || uc == '-') && (nc = pc[1])
+            && (isdigit (nc)
+                || ((!strncasecmp (pc + 1, "INF", 3)
+                     || !strncasecmp (pc + 1, "NAN", 3))
+                    && !isalnum (*(pc + 4))))))
     {                           // some kind of number
       char *endlng = NULL;
       char *enddbl = NULL;
@@ -1009,7 +1116,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
         {
           const struct mom_boxint_st *intv = mom_boxint_make (l);
           mom_queue_append (que, intv);
-          MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u int %s\n",
+          MOM_DEBUGPRINTF (web,
+                           "parse_token_nanoedit pos#%u int %s\n",
                            np->nanop_pos,
                            mom_value_cstring ((const struct
                                                mom_hashedvalue_st *) (intv)));
@@ -1019,7 +1127,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
         {
           const struct mom_boxdouble_st *dblv = mom_boxdouble_make (d);
           mom_queue_append (que, dblv);
-          MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u double %s\n",
+          MOM_DEBUGPRINTF (web,
+                           "parse_token_nanoedit pos#%u double %s\n",
                            np->nanop_pos,
                            mom_value_cstring ((const struct
                                                mom_hashedvalue_st *) (dblv)));
@@ -1036,19 +1145,17 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
              && (*endc != '\n' || *endc != '\r' || *endc != '\f'
                  || *endc != '\v'))
         endc++;
-      const struct mom_boxstring_st *commv
-        = mom_boxstring_make_len (startc, endc - startc);
+      const struct mom_boxstring_st *commv =
+        mom_boxstring_make_len (startc, endc - startc);
       const struct mom_boxnode_st *nodv =
-        mom_boxnode_meta_make_va (NULL, startc - cmd,
-                                  MOM_PREDEFITM (comment),
-                                  1,
-                                  commv);
+        mom_boxnode_meta_make_va (NULL, startc - cmd, MOM_PREDEFITM (comment),
+                                  1, commv);
       mom_queue_append (que, nodv);
       np->nanop_pos = endc - cmd;
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u comment: %s\n",
                        (unsigned) (startc - cmd),
-                       mom_value_cstring ((const struct
-                                           mom_hashedvalue_st *) (nodv)));
+                       mom_value_cstring ((const struct mom_hashedvalue_st
+                                           *) (nodv)));
       return;
     }                           /* end line comment parsing */
 
@@ -1058,7 +1165,9 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       const char *ends = NULL;
       const struct mom_boxstring_st *strv = NULL;
       {
-        struct mom_string_and_size_st ss = { NULL, 0 };
+        struct mom_string_and_size_st ss = {
+          NULL, 0
+        };
         const char *endl = starts;
         while (*endl
                && (*endl != '\n' || *endl != '\r' || *endl != '\f'
@@ -1081,15 +1190,17 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       np->nanop_pos = ends - cmd;
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u string: %s\n",
                        (unsigned) (starts - cmd),
-                       mom_value_cstring ((const struct
-                                           mom_hashedvalue_st *) (strv)));
+                       mom_value_cstring ((const struct mom_hashedvalue_st
+                                           *) (strv)));
       return;
     }                           /* end escaped string parsing */
 
-  else if (uc == '(' && isalpha (pc[1])
-           && ((pos = 0), (memset (rawprefix, 0, sizeof (rawprefix))),
-               sscanf (pc, "(%10[A-Za-z]\"%n", rawprefix + 1, &pos)) >= 1
-           && pos > 0 && pos < (int) sizeof (rawprefix))
+  else
+    if (uc == '(' && isalpha (pc[1])
+        && ((pos = 0),
+            (memset (rawprefix, 0, sizeof (rawprefix))),
+            sscanf (pc, "(%10[A-Za-z]\"%n", rawprefix + 1,
+                    &pos)) >= 1 && pos > 0 && pos < (int) sizeof (rawprefix))
     {                           // raw string parsing, like (ABC"some\escaped"ABC)  
       const char *starts = pc;
       rawprefix[0] = '"';
@@ -1124,19 +1235,17 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
             break;
         };
       endw = pc;
-      const struct mom_boxstring_st *wordv
-        = mom_boxstring_make_len (startw, endw - startw);
+      const struct mom_boxstring_st *wordv =
+        mom_boxstring_make_len (startw, endw - startw);
       const struct mom_boxnode_st *nodv =
-        mom_boxnode_meta_make_va (NULL, startw - cmd,
-                                  MOM_PREDEFITM (word),
-                                  1,
+        mom_boxnode_meta_make_va (NULL, startw - cmd, MOM_PREDEFITM (word), 1,
                                   wordv);
       mom_queue_append (que, nodv);
       np->nanop_pos = endw - cmd;
       MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u extendedword %s\n",
                        (unsigned) (startw - cmd),
-                       mom_value_cstring ((const struct
-                                           mom_hashedvalue_st *) (nodv)));
+                       mom_value_cstring ((const struct mom_hashedvalue_st
+                                           *) (nodv)));
       return;
     }                           /* end extended word */
 
@@ -1213,23 +1322,22 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       assert (delimval != NULL);
       const struct mom_boxnode_st *nodv =
         mom_boxnode_meta_make_va (NULL, pc0 - cmd,
-                                  MOM_PREDEFITM (delimiter),
-                                  1,
+                                  MOM_PREDEFITM (delimiter), 1,
                                   delimval);
       mom_queue_append (que, nodv);
       np->nanop_pos = endp - cmd;
-      MOM_DEBUGPRINTF (web, "parse_token_nanoedit pos#%u delimiter %s\n",
+      MOM_DEBUGPRINTF (web,
+                       "parse_token_nanoedit pos#%u delimiter %s\n",
                        (unsigned) (pc0 - cmd),
                        mom_value_cstring ((const struct
                                            mom_hashedvalue_st *) (nodv)));
       return;
-
     }
 
 #warning incomplete parse_token_nanoedit_mom
 
-  NANOPARSING_FAILURE_MOM (np, np->nanop_pos,
-                           "bad lexical token %s", cmd + np->nanop_pos);
+  NANOPARSING_FAILURE_MOM (np, np->nanop_pos, "bad lexical token %s",
+                           cmd + np->nanop_pos);
 }                               /* end parse_token_nanoedit_mom */
 
 
@@ -1237,8 +1345,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 static inline bool
-isdelim_nanoedit_mom (struct nanoparsing_mom_st *np, int pos,
-                      struct mom_item_st *delimitm)
+isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
+                      int pos, struct mom_item_st *delimitm)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
@@ -1258,12 +1366,12 @@ isdelim_nanoedit_mom (struct nanoparsing_mom_st *np, int pos,
 
 
 
-static const void *parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np,
-                                              int prec, int *posptr);
-
-static const void *parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np,
-                                          int *posptr);
-
+static const void *parsexprprec_nanoedit_mom (struct
+                                              nanoparsing_mom_st
+                                              *np, int prec, int *posptr);
+static const void *parsexpr_nanoedit_mom (struct
+                                          nanoparsing_mom_st
+                                          *np, int *posptr);
 static const void *
 parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
@@ -1277,8 +1385,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
     return NULL;
   struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[pos];
   if (!curtokv)
-    NANOPARSING_FAILURE_MOM (np, -pos, "(primary) no token at position #%d",
-                             pos);
+    NANOPARSING_FAILURE_MOM (np, -pos,
+                             "(primary) no token at position #%d", pos);
   switch (mom_itype (curtokv))
     {
     case MOMITY_BOXINT:
@@ -1287,7 +1395,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
     case MOMITY_ITEM:
       {
         *posptr = pos + 1;
-        MOM_DEBUGPRINTF (web, "parsprimary_nanoedit scalar %s at pos#%d",
+        MOM_DEBUGPRINTF (web,
+                         "parsprimary_nanoedit scalar %s at pos#%d",
                          mom_value_cstring (curtokv), pos);
         return curtokv;
       }
@@ -1310,14 +1419,16 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             struct mom_hashedvalue_st *next2tokv = nodexp->nod_sons[pos + 2];
             struct mom_item_st *connitm = mom_dyncast_item (next1tokv);
             if (!connitm)
-              NANOPARSING_FAILURE_WITH_MOM (np, off, next1tokv,
+              NANOPARSING_FAILURE_WITH_MOM (np, off,
+                                            next1tokv,
                                             "parsprimary_nanoedit unexpected connective %s",
                                             mom_value_cstring (next1tokv));
             if (!isdelim_nanoedit_mom
                 (np, pos + 2, MOM_PREDEFITM (left_paren_delim)))
               NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
                                             "parsprimary_nanoedit expected left parenthesis got %s after connective %s",
-                                            mom_value_cstring (next2tokv),
+                                            mom_value_cstring
+                                            (next2tokv),
                                             mom_item_cstring (connitm));
             MOM_DEBUGPRINTF (web,
                              "parsprimary_nanoedit percent-expr pos#%d off@%d connitm %s",
@@ -1344,14 +1455,14 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                                 "parsprimary_nanoedit bad subexpression#%d in percent-node of connective %s",
                                                 mom_vectvaldata_count (vec),
                                                 mom_item_cstring (connitm));
-
                 vec = mom_vectvaldata_append (vec, subexpv);
                 if (isdelim_nanoedit_mom
                     (np, curpos, MOM_PREDEFITM (comma_delim)))
                   curpos++;
-                else if (isdelim_nanoedit_mom (np, curpos,
-                                               MOM_PREDEFITM
-                                               (right_paren_delim)))
+                else
+                  if (isdelim_nanoedit_mom (np, curpos,
+                                            MOM_PREDEFITM
+                                            (right_paren_delim)))
                   {
                     curpos++;
                     break;
@@ -1364,8 +1475,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             const struct mom_boxnode_st *nodres =
               mom_boxnode_make_meta (connitm,
                                      mom_vectvaldata_count (vec),
-                                     ((const struct mom_hashedvalue_st **)
-                                      mom_vectvaldata_valvect (vec)),
+                                     ((const struct mom_hashedvalue_st
+                                       **) mom_vectvaldata_valvect (vec)),
                                      np->nanop_wexitm, pos);
             MOM_DEBUGPRINTF (web,
                              "parsprimary_nanoedit percent-expr curpos#%d nodres=%s ",
@@ -1392,8 +1503,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 // e.g. http://en.cppreference.com/w/c/language/operator_precedence 
 #define NANOEDIT_MAX_PRECEDENCE_MOM 16
 static const void *
-parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
-                           int *posptr)
+parsexprprec_nanoedit_mom (struct
+                           nanoparsing_mom_st *np, int prec, int *posptr)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
@@ -1409,32 +1520,40 @@ parsexprprec_nanoedit_mom (struct nanoparsing_mom_st *np, int prec,
   struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[startpos];
   if (!curtokv)
     NANOPARSING_FAILURE_MOM (np, -startpos,
-                             "(expr prec#%d) no token at position #%d", prec,
-                             startpos);
+                             "(expr prec#%d) no token at position #%d",
+                             prec, startpos);
   MOM_DEBUGPRINTF (web,
                    "parsexprprec_nanoedit prec=%d startpos=%d curtokv=%s",
                    prec, startpos, mom_value_cstring (curtokv));
   int curpos = startpos;
   const void *leftexprv = parsexprprec_nanoedit_mom (np, prec - 1, &curpos);
-  MOM_DEBUGPRINTF
-    (web, "parsexprprec_nanoedit prec=%d leftexprv=%s curpos=%d startpos=%d",
-     prec, mom_value_cstring (leftexprv), curpos, startpos);
+  MOM_DEBUGPRINTF (web,
+                   "parsexprprec_nanoedit prec=%d leftexprv=%s curpos=%d startpos=%d",
+                   prec, mom_value_cstring (leftexprv), curpos, startpos);
   if (!leftexprv && curpos <= startpos)
-    NANOPARSING_FAILURE_MOM (np, -startpos,
+    NANOPARSING_FAILURE_MOM (np,
+                             -startpos,
                              "failed to parse subexpression of precedence %d",
                              prec - 1);
   struct mom_hashedvalue_st *nexttokv = NULL;
   if (curpos >= 0 && curpos < (int) nlen)
     nexttokv = nodexp->nod_sons[curpos];
-  MOM_DEBUGPRINTF (web, "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s",
+  MOM_DEBUGPRINTF (web,
+                   "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s",
                    prec, curpos, mom_value_cstring (nexttokv));
   if (!nexttokv
       /// this are the terminating delimiters
-      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (comma_delim))
-      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (semicolon_delim))
-      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_paren_delim))
       || isdelim_nanoedit_mom (np, curpos,
-                               MOM_PREDEFITM (right_bracket_delim))
+                               MOM_PREDEFITM (comma_delim))
+      || isdelim_nanoedit_mom (np, curpos,
+                               MOM_PREDEFITM
+                               (semicolon_delim))
+      || isdelim_nanoedit_mom (np, curpos,
+                               MOM_PREDEFITM
+                               (right_paren_delim))
+      || isdelim_nanoedit_mom (np, curpos,
+                               MOM_PREDEFITM
+                               (right_bracket_delim))
       || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_brace_delim)))
     {
       MOM_DEBUGPRINTF
@@ -1469,15 +1588,16 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   struct mom_queue_st *que = NULL;
   MOM_DEBUGPRINTF (web,
                    "doparsecommand_nanoedit webr#%ld tkitm=%s wexitm=%s thistatitm=%s sessitm=%s cmd=%s",
-                   wexch->webx_count, mom_item_cstring (tkitm),
+                   wexch->webx_count,
+                   mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm),
                    mom_item_cstring (thistatitm),
                    mom_item_cstring (sessitm), cmd);
   assert (tkitm && tkitm->va_itype == MOMITY_ITEM);
   const struct mom_boxnode_st *tknod = mom_dyncast_node (tkitm->itm_payload);
   assert (tknod != NULL && mom_raw_size (tknod) >= mec__last);
-  struct mom_item_st *delimitm
-    = mom_dyncast_item (tknod->nod_sons[mec_delimiters]);
+  struct mom_item_st *delimitm =
+    mom_dyncast_item (tknod->nod_sons[mec_delimiters]);
   struct nanoparsing_mom_st npars;
   memset (&npars, 0, sizeof (npars));
   npars.nanop_magic = NANOPARSING_MAGIC_MOM;
@@ -1502,7 +1622,8 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
   // retrieve the delim item
   {
     assert (delimitm != NULL && delimitm->va_itype == MOMITY_ITEM);
-    MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit delimitm=%s",
+    MOM_DEBUGPRINTF (web,
+                     "doparsecommand_nanoedit delimitm=%s",
                      mom_item_cstring (delimitm));
     mom_item_lock (delimitm);
     assert (mom_hashassoc_dyncast (delimitm->itm_payload) != NULL);
@@ -1533,14 +1654,14 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
               ("doparsecommand_nanoedit parsing error from %s:%d with %s: %s"
                "\n.. at index %d of:\n%s\n", __FILE__, linerr,
                mom_value_cstring (npars.nanop_errval),
-               mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
-               npars.nanop_cmdstr);
+               mom_boxstring_cstr (npars.nanop_errmsgv),
+               -npars.nanop_pos, npars.nanop_cmdstr);
           else
             MOM_WARNPRINTF
               ("doparsecommand_nanoedit parsing error from %s:%d: %s"
                "\n.. at index %d of:\n%s\n", __FILE__, linerr,
-               mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
-               npars.nanop_cmdstr);
+               mom_boxstring_cstr (npars.nanop_errmsgv),
+               -npars.nanop_pos, npars.nanop_cmdstr);
         }
       const char *errhtml = NULL;
       const struct mom_boxstring_st *badnamstr = NULL;
@@ -1550,18 +1671,21 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
         size_t errsiz = 0;
         FILE *ferr = open_memstream (&errbuf, &errsiz);
         if (!ferr)
-          MOM_FATAPRINTF ("failed to open memory stream for error %s - %m",
-                          mom_boxstring_cstr (npars.nanop_errmsgv));
+          MOM_FATAPRINTF
+            ("failed to open memory stream for error %s - %m",
+             mom_boxstring_cstr (npars.nanop_errmsgv));
         fprintf (ferr, "<b>parsing error @%d</b>: <tt>", npars.nanop_pos);
-        mom_output_utf8_html (ferr, mom_boxstring_cstr (npars.nanop_errmsgv),
-                              -1, true);
+        mom_output_utf8_html (ferr,
+                              mom_boxstring_cstr
+                              (npars.nanop_errmsgv), -1, true);
         fputs ("</tt>", ferr);
         if ((errnod = mom_dyncast_node (npars.nanop_errval))
             && errnod->nod_connitm == MOM_PREDEFITM (name)
             && mom_raw_size (errnod) == 1
             && (badnamstr = mom_dyncast_boxstring (errnod->nod_sons[0])))
           {
-            MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit badnamstr=%s",
+            MOM_DEBUGPRINTF (web,
+                             "doparsecommand_nanoedit badnamstr=%s",
                              mom_boxstring_cstr (badnamstr));
           }
         fflush (ferr);
@@ -1578,7 +1702,6 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
       if (badnamstr)
         MOM_WEXCH_PRINTF (wexch, " \"bad_name\": \"%s\",\n",
                           mom_boxstring_cstr (badnamstr));
-
       MOM_WEXCH_PRINTF (wexch, " \"error_from\": %d }\n", linerr);
       mom_wexch_reply (wexch, HTTP_OK, "application/json");
       goto end;
@@ -1594,8 +1717,8 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st *wexch,
         mom_queue_node (mom_dyncast_queue (npars.nanop_queitm->itm_payload),
                         MOM_PREDEFITM (queue));
       MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit lexqnod=%s",
-                       mom_value_cstring ((struct mom_hashedvalue_st *)
-                                          lexqnod));
+                       mom_value_cstring ((struct
+                                           mom_hashedvalue_st *) lexqnod));
       npars.nanop_nodexpr = lexqnod;
       int pos = 0;
       const void *exprv = parsexpr_nanoedit_mom (&npars, &pos);
