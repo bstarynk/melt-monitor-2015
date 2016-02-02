@@ -311,6 +311,121 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
 }                               /* end showvalue_nanoedit_mom */
 
 
+
+static void
+showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              struct mom_assovaldata_st *ass)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (ass != NULL && ass != MOM_EMPTY_SLOT
+          && ass->va_itype == MOMITY_ASSOVALDATA);
+#warning showassovaldata_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showassovaldata_nanoedit_mom unimplemented ass@%p", ass);
+}                               /* end of showassovaldata_nanoedit_mom */
+
+static void
+showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
+                              struct mom_item_st *wexitm,
+                              struct mom_item_st *thistatitm,
+                              struct mom_vectvaldata_st *vec)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (vec != NULL && vec != MOM_EMPTY_SLOT
+          && vec->va_itype == MOMITY_ASSOVALDATA);
+#warning showvectvaldata_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showvectvaldata_nanoedit_mom unimplemented vec@%p", vec);
+}                               /* end of showvectvaldata_nanoedit_mom */
+
+static void
+showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
+                        struct mom_item_st *wexitm,
+                        struct mom_item_st *thistatitm,
+                        struct mom_queue_st *que)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (que != NULL && que != MOM_EMPTY_SLOT
+          && que->va_itype == MOMITY_QUEUE);
+#warning showqueue_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showqueue_nanoedit_mom unimplemented que@%p", que);
+}                               /* end of showqueue_nanoedit_mom */
+
+
+static void
+showhashset_nanoedit_mom (struct mom_filebuffer_st *fb,
+                          struct mom_item_st *wexitm,
+                          struct mom_item_st *thistatitm,
+                          struct mom_hashset_st *hset)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (hset != NULL && hset != MOM_EMPTY_SLOT
+          && hset->va_itype == MOMITY_HASHSET);
+#warning showhashset_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hset@%p", hset);
+}                               /* end of showqueue_nanoedit_mom */
+
+
+
+static void
+showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
+                          struct mom_item_st *wexitm,
+                          struct mom_item_st *thistatitm,
+                          struct mom_hashmap_st *hmap)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (hmap != NULL && hmap != MOM_EMPTY_SLOT
+          && hmap->va_itype == MOMITY_HASHSET);
+#warning showhashmap_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hmap@%p", hmap);
+}                               /* end of showhashset_nanoedit_mom */
+
+
+static void
+showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
+                            struct mom_item_st *wexitm,
+                            struct mom_item_st *thistatitm,
+                            struct mom_hashassoc_st *hass)
+{
+  assert (fb != NULL && fb != MOM_EMPTY_SLOT
+          && fb->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm != NULL && wexitm != MOM_EMPTY_SLOT
+          && wexitm->va_itype == MOMITY_ITEM);
+  assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
+          && thistatitm->va_itype == MOMITY_ITEM);
+  assert (hass != NULL && hass != MOM_EMPTY_SLOT
+          && hass->va_itype == MOMITY_HASHSET);
+#warning showhashmap_nanoedit_mom incomplete
+  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hass@%p", hass);
+}                               /* end of showhashassoc_nanoedit_mom */
+
+
+
 static void
 showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
@@ -417,6 +532,37 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
           case MOMITY_NODE:
             showvalue_nanoedit_mom (fb, wexitm, thistatitm,
                                     curitm->itm_payload, 0);
+            break;
+          case MOMITY_ASSOVALDATA:
+            showassovaldata_nanoedit_mom (fb, wexitm, thistatitm,
+                                          (struct mom_assovaldata_st *)
+                                          curitm->itm_payload);
+            break;
+          case MOMITY_VECTVALDATA:
+            showvectvaldata_nanoedit_mom (fb, wexitm, thistatitm,
+                                          (struct mom_vectvaldata_st *)
+                                          curitm->itm_payload);
+            break;
+          case MOMITY_QUEUE:
+            showqueue_nanoedit_mom (fb, wexitm, thistatitm,
+                                    (struct mom_queue_st *)
+                                    curitm->itm_payload);
+            break;
+          case MOMITY_HASHSET:
+            showhashset_nanoedit_mom (fb, wexitm, thistatitm,
+                                      (struct mom_hashset_st *)
+                                      curitm->itm_payload);
+            break;
+          case MOMITY_HASHMAP:
+            showhashmap_nanoedit_mom (fb, wexitm, thistatitm,
+                                      (struct mom_hashmap_st *)
+                                      curitm->itm_payload);
+            break;
+          case MOMITY_HASHASSOC:
+            showhashassoc_nanoedit_mom (fb, wexitm, thistatitm,
+                                        (struct mom_hashassoc_st *)
+                                        curitm->itm_payload);
+            break;
           }
 #warning showcontentitem_nanoedit incomplete for payload
         mom_file_puts (fb, "</div>\n");
