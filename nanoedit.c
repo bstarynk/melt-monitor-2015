@@ -332,12 +332,20 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
   mom_file_printf (fb,
                    "<div id='showcontentitem_%s_id' name='%s' class='mom_showcontentitem_cl'>\n",
                    mom_item_cstring (curitm), mom_item_cstring (curitm));
-  mom_item_lock (curitm);
+  mom_item_lock ((struct mom_item_st *) curitm);
   {
     mom_file_printf (fb,
                      "<p class='showcontent_title_cl' data-contentitem='%s'> * ",
                      mom_item_cstring (curitm));
     showitem_nanoedit_mom (fb, wexitm, curitm, false);
+    {
+      char timbuf[64];
+      memset (timbuf, 0, sizeof (timbuf));
+      mom_file_printf (fb, "updated on <i>%s</i>",
+                       mom_strftime_centi (timbuf, sizeof (timbuf),
+                                           "%c %Z",
+                                           (double) curitm->itm_mtime));
+    }
     mom_file_puts (fb, " * </p>\n");
     const struct mom_boxset_st *attset =
       mom_unsync_item_phys_set_attrs (curitm);
@@ -352,7 +360,8 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                          mom_item_cstring (curitm));
         for (unsigned atix = 0; atix < nbattrs; atix++)
           {
-            struct mom_item_st *curatitm = mom_boxset_nth (attset, atix);
+            const struct mom_item_st *curatitm =
+              mom_boxset_nth (attset, atix);
             const struct mom_hashedvalue_st *curval =
               mom_unsync_item_get_phys_attr (curitm, curatitm);
             MOM_DEBUGPRINTF (web,
@@ -371,7 +380,7 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     if (nbcomp > 0)
       {
         mom_file_printf (fb,
-                         "<p class='showcontent_components_cl' data-contentitem='%s'>%d components.<br/>\n",
+                         "<p class='showcontent_componentslist_cl' data-contentitem='%s'>%d components.<br/>\n",
                          mom_item_cstring (curitm), nbattrs);
         mom_file_printf (fb,
                          "<ul class='showcontent_components_cl' data-contentitem='%s'>\n",
@@ -381,15 +390,17 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
             const struct mom_hashedvalue_st *curcomp =
               mom_vectvaldata_nth (curitm->itm_pcomp, compix);
             MOM_DEBUGPRINTF (web, "showcontent_nanoedit compix#%d curcomp=%s",
-                             compix, curcomp);
-#warning showcontent_nanoedit should show the curcomp
+                             compix, mom_value_cstring (curcomp));
+            mom_file_puts (fb, "<li> ");
+            showvalue_nanoedit_mom (fb, wexitm, thistatitm, curcomp, 0);
+            mom_file_puts (fb, "</li>\n");
 
           }
         mom_file_puts (fb, "</ul>\n");
 
       }
   }
-  mom_item_unlock (curitm);
+  mom_item_unlock ((struct mom_item_st *) curitm);
   mom_file_puts (fb, "</div>\n");
   MOM_FATAPRINTF
     ("unimplemented showcontentitem_nanoedit wexitm=%s curitm=%s",
