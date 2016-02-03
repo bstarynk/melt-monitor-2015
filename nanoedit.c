@@ -316,7 +316,7 @@ static void
 showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
                               struct mom_item_st *thistatitm,
-                              struct mom_assovaldata_st *ass)
+                              const struct mom_assovaldata_st *ass)
 {
   assert (fb != NULL && fb != MOM_EMPTY_SLOT
           && fb->va_itype == MOMITY_FILEBUFFER);
@@ -344,9 +344,20 @@ showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (vec != NULL && vec != MOM_EMPTY_SLOT
           && vec->va_itype == MOMITY_ASSOVALDATA);
-#warning showvectvaldata_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showvectvaldata_nanoedit_mom unimplemented vec@%p", vec);
+  unsigned cnt = mom_vectvaldata_count (vec);
+  mom_file_printf (fb, "<i>vector of %d</i>\n", cnt);
+  mom_file_puts (fb, "<ol class='mom_vectorval_cl'>\n");
+  for (unsigned ix = 0; ix < cnt; ix++)
+    {
+      struct mom_hashedvalue_st *compv = mom_vectvaldata_nth (vec, ix);
+      mom_file_puts (fb, "<li>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, compv, 0);
+      mom_file_puts (fb, "</li>\n");
+    }
+  mom_file_puts (fb, "</ol>\n");
 }                               /* end of showvectvaldata_nanoedit_mom */
+
+
 
 static void
 showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
@@ -365,6 +376,7 @@ showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
 #warning showqueue_nanoedit_mom incomplete
   MOM_WARNPRINTF ("showqueue_nanoedit_mom unimplemented que@%p", que);
 }                               /* end of showqueue_nanoedit_mom */
+
 
 
 static void
