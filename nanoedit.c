@@ -964,6 +964,30 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
 }                               /* end of docreateitem_nanoedit_mom */
 
 
+#define NANOEVAL_MAGIC_MOM 617373733    /*0x24cc6025 */
+struct nanoeval_mom_st
+{
+  unsigned nanev_magic;         /* always NANOEVAL_MAGIC_MOM */
+  struct mom_item_st *nanev_tkitm;
+  struct mom_item_st *nanev_wexitm;
+  struct mom_item_st *nanev_thistatitm;
+  struct mom_item_st *nanev_sessitm;
+  void *nanev_fail;
+  void *nanev_expr;
+  jmp_buf nanev_jb;
+};
+#define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
+    struct nanoeval_mom_st*_ne = (Ne);				\
+    assert (_ne && _ne->nanev_magic = NANOEVAL_MAGIC_MOM);	\
+    _ne->nanev_fail = (Fail);					\
+    _ne->nanev_expr = (Expr);					\
+    longjmp(_ne->nanev_jb,__LINE__);				\
+  } while(0)
+
+static void *nanoeval_mom (struct nanoeval_mom_st *nev,
+                           struct mom_item_st *envitm, const void *expr,
+                           int depth);
+
 static void
 doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                      struct mom_item_st *tkitm,
@@ -995,12 +1019,44 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   }
   MOM_DEBUGPRINTF (web, "doeval_nanoedit curexprv=%s",
                    mom_value_cstring (curexpv));
-  MOM_FATAPRINTF
-    ("doeval_nanoedit unimplemented curexprv=%s",
-     mom_value_cstring (curexpv));
-#warning doeval_nanoedit_mom unimplemented
+  struct nanoeval_mom_st nev = { 0 };
+  memset (&nev, 0, sizeof (nev));
+  nev.nanev_magic = NANOEVAL_MAGIC_MOM;
+  nev.nanev_tkitm = tkitm;
+  nev.nanev_wexitm = wexitm;
+  nev.nanev_thistatitm = thistatitm;
+  nev.nanev_sessitm = sessitm;
+  int errlin = 0;
+  if ((errlin = setjmp (nev.nanev_jb)) > 0)
+    {
+      MOM_WARNPRINTF ("nanoedit failure from %s:%d: failure %s with expr %s",
+                      __FILE__, errlin, mom_value_cstring (nev.nanev_fail),
+                      mom_value_cstring (nev.nanev_expr));
+    }
+  else
+    {
+      MOM_DEBUGPRINTF (run,
+                       "doeval_nanoedit evaluating curexprv=%s in thistatitm.env=%s",
+                       mom_value_cstring (curexpv),
+                       mom_item_cstring (thistatitm));
+
+#warning should call nanoeval_mom
+      MOM_FATAPRINTF
+        ("doeval_nanoedit unimplemented curexprv=%s",
+         mom_value_cstring (curexpv));
+    };
 }                               /* end of doeval_nanoedit_mom */
 
+
+static void *
+nanoeval_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
+              const void *expr, int depth)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  if (!expr)
+    return NULL;
+}                               /* end of nanoeval_mom */
 
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";
