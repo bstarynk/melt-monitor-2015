@@ -968,6 +968,8 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
 struct nanoeval_mom_st
 {
   unsigned nanev_magic;         /* always NANOEVAL_MAGIC_MOM */
+  long nanev_count;
+  long nanev_maxstep;
   struct mom_item_st *nanev_tkitm;
   struct mom_item_st *nanev_wexitm;
   struct mom_item_st *nanev_thistatitm;
@@ -978,7 +980,7 @@ struct nanoeval_mom_st
 };
 #define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
     struct nanoeval_mom_st*_ne = (Ne);				\
-    assert (_ne && _ne->nanev_magic = NANOEVAL_MAGIC_MOM);	\
+    assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
     _ne->nanev_fail = (Fail);					\
     _ne->nanev_expr = (Expr);					\
     longjmp(_ne->nanev_jb,__LINE__);				\
@@ -995,13 +997,14 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                      struct mom_item_st *thistatitm,
                      struct mom_item_st *sessitm, const char *doeval)
 {
+  long maxstep = MOM_IS_DEBUGGING (run) ? 2097152 : 16777216;
   MOM_DEBUGPRINTF (web,
                    "doeval_nanoedit start tkitm=%s wexitm=%s thistatitm=%s"
-                   " sessitm=%s doeval=%s",
+                   " sessitm=%s doeval=%s maxstep=%ld",
                    mom_item_cstring (tkitm),
                    mom_item_cstring (wexitm),
                    mom_item_cstring (thistatitm),
-                   mom_item_cstring (sessitm), doeval);
+                   mom_item_cstring (sessitm), doeval, maxstep);
   assert (doeval != NULL);
   assert (thistatitm != NULL
           && thistatitm != MOM_EMPTY_SLOT
@@ -1026,6 +1029,8 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   nev.nanev_wexitm = wexitm;
   nev.nanev_thistatitm = thistatitm;
   nev.nanev_sessitm = sessitm;
+  nev.nanev_count = 0;
+  nev.nanev_maxstep = maxstep;
   int errlin = 0;
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
@@ -1039,8 +1044,12 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                        "doeval_nanoedit evaluating curexprv=%s in thistatitm.env=%s",
                        mom_value_cstring (curexpv),
                        mom_item_cstring (thistatitm));
-
-#warning should call nanoeval_mom
+      void *res = nanoeval_mom (&nev, thistatitm, curexpv, 0);
+      MOM_DEBUGPRINTF (run,
+                       "doeval_nanoedit curexpv=%s evaluated to res=%s in %ld steps",
+                       mom_value_cstring (curexpv), mom_value_cstring (res),
+                       nev.nanev_count);
+#warning should output something to the webrequest
       MOM_FATAPRINTF
         ("doeval_nanoedit unimplemented curexprv=%s",
          mom_value_cstring (curexpv));
@@ -1048,15 +1057,88 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of doeval_nanoedit_mom */
 
 
+#define NANOEVAL_MAXDEPTH_MOM 256
+
 static void *
-nanoeval_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
-              const void *expr, int depth)
+nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
+                   const struct mom_boxnode_st *nod, int depth)
 {
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
-  if (!expr)
+  assert (nod && nod->va_itype == MOMITY_NODE);
+  struct mom_item_st *opitm = nod->nod_connitm;
+  assert (opitm && opitm->va_itype == MOMITY_NODE);
+  switch (opitm->hva_hash % 317)
+    {
+#define CASE_OPITM_NANOEVAL_MOM(Nam) momhashpredef_##Nam % 317: \
+    if (opitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; goto defaultcase; foundcase_##Nam
+    case CASE_OPITM_NANOEVAL_MOM (display):
+      {
+#warning incomplete nanoeval_node_mom
+      }
+      break;
+    defaultcase:
+    default:
+      break;
+    }
+  MOM_FATAPRINTF ("unimplemented eval of node %s",
+                  mom_value_cstring ((struct mom_hashedvalue_st *) nod));
+}                               /* end of nanoeval_node_mom */
+
+
+
+static void *
+nanoeval_item_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
+                   struct mom_item_st *itm, int depth)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+}                               /* end nanoeval_item_mom */
+
+
+static void *
+nanoeval_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
+              const void *exprv, int depth)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  if (!exprv)
     return NULL;
+  unsigned typexpr = mom_itype (exprv);
+  long stepcount = nev->nanev_count;
+  switch (typexpr)
+    {
+    case MOMITY_NODE:
+      {
+        if (stepcount >= nev->nanev_maxstep)
+          NANOEVAL_FAILURE_MOM (nev, exprv,
+                                mom_boxnode_make_va (MOM_PREDEFITM (step), 1,
+                                                     mom_boxint_make
+                                                     (stepcount)));
+        nev->nanev_count = stepcount + 1;
+        if (depth >= NANOEVAL_MAGIC_MOM)
+          NANOEVAL_FAILURE_MOM (nev, exprv,
+                                mom_boxnode_make_va (MOM_PREDEFITM (depth), 1,
+                                                     mom_boxint_make
+                                                     (depth)));
+        return nanoeval_node_mom (nev, envitm,
+                                  (const struct mom_boxnode_st *) exprv,
+                                  depth);
+      }
+      break;
+    case MOMITY_ITEM:
+      {
+        return nanoeval_item_mom (nev, envitm,
+                                  (const struct mom_item_st *) exprv, depth);
+      }
+      break;
+    default:
+      return exprv;
+    }
 }                               /* end of nanoeval_mom */
+
+
 
 extern mom_tasklet_sig_t momf_nanoedit;
 const char momsig_nanoedit[] = "signature_tasklet";

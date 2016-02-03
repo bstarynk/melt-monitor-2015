@@ -426,6 +426,12 @@ struct mom_filebuffer_st;
 #define MOM_HAS_PREDEFINED(Nam,Hash) extern struct mom_item_st mompredef_##Nam;
 #include "_mom_predef.h"
 
+enum
+{
+#define MOM_HAS_PREDEFINED(Nam,Hash) momhashpredef_##Nam = Hash,
+#include "_mom_predef.h"
+};
+
 #define MOM_HEADER "_mom_predef.h"
 #define MOM_GLOBAL_STATE "global.mom"
 

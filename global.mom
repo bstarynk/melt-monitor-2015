@@ -90,6 +90,15 @@ comment
 )attrs
 
 
+*depth
+1454531567
+^mtime
+(
+comment
+"for depth"_
+)attrs
+
+
 *display
 1452095862
 ^mtime
@@ -357,6 +366,15 @@ comment
 *something
 1448027933
 ^mtime
+
+
+*step
+1454531512
+^mtime
+(
+comment
+"for steps, e.g. limits"_
+)attrs
 
 
 *the_agenda
