@@ -435,7 +435,7 @@ showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
       const struct mom_item_st *keyitm = ks->seqitem[ix];
       assert (keyitm && keyitm->va_itype == MOMITY_ITEM);
       const struct mom_hashedvalue_st *val = mom_hashmap_get (hmap, keyitm);
-      mom_file_printf (fb, "<dt class='mom_hashkey_cl'>%s</dt>\n",
+      mom_file_printf (fb, "<dt class='mom_hashkeyitem_cl'>%s</dt>\n",
                        mom_item_cstring (keyitm));
       mom_file_puts (fb, "<dd class='mom_hashval_cl'>");
       showvalue_nanoedit_mom (fb, wexitm, thistatitm, val, 0);
@@ -462,8 +462,20 @@ showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
   const struct mom_boxnode_st *keynod =
     mom_hashassoc_sorted_key_node (hass, MOM_PREDEFITM (sequence));
   assert (keynod != NULL && keynod->va_itype == MOMITY_NODE);
-#warning showhashmap_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hass@%p", hass);
+  unsigned nbkeys = mom_raw_size (keynod);
+  mom_file_puts (fb, "<dl class='mom_hashassoc_cl'>\n");
+  for (unsigned ix = 0; ix < nbkeys; ix++)
+    {
+      const struct mom_hashedvalue_st *keyv = keynod->nod_sons[ix];
+      const struct mom_hashedvalue_st *valv = mom_hashassoc_get (hass, keyv);
+      mom_file_puts (fb, "<dt class='mom_hashassockey_cl'>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, keyv, 0);
+      mom_file_puts (fb, "</dt>\n");
+      mom_file_puts (fb, "<dd class='mom_hashassocval_cl'>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, valv, 0);
+      mom_file_puts (fb, "</dd>\n");
+    };
+  mom_file_puts (fb, "</dl>\n");
 }                               /* end of showhashassoc_nanoedit_mom */
 
 
