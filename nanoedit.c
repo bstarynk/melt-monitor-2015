@@ -373,8 +373,20 @@ showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (que != NULL && que != MOM_EMPTY_SLOT
           && que->va_itype == MOMITY_QUEUE);
-#warning showqueue_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showqueue_nanoedit_mom unimplemented que@%p", que);
+  const struct mom_boxnode_st *qnod
+    = mom_queue_node (que, MOM_PREDEFITM (queue));
+  assert (qnod != NULL && qnod->va_itype == MOMITY_NODE);
+  unsigned qlen = mom_raw_size (qnod);
+  mom_file_puts (fb, "<ol class='mom_queueval_cl'>\n");
+  for (unsigned ix = 0; ix < qlen; ix++)
+    {
+      struct mom_hashedvalue_st *compv = qnod->nod_sons[ix];
+      mom_file_puts (fb, "<li>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, compv, 0);
+      mom_file_puts (fb, "</li>\n");
+    }
+  qnod = NULL;
+  mom_file_puts (fb, "</ul>\n");
 }                               /* end of showqueue_nanoedit_mom */
 
 
@@ -393,9 +405,10 @@ showhashset_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (hset != NULL && hset != MOM_EMPTY_SLOT
           && hset->va_itype == MOMITY_HASHSET);
-#warning showhashset_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hset@%p", hset);
-}                               /* end of showqueue_nanoedit_mom */
+  const struct mom_boxset_st *bs = mom_hashset_to_boxset (hset);
+  assert (bs != NULL && bs->va_itype == MOMITY_SET);
+  showvalue_nanoedit_mom (fb, wexitm, thistatitm, bs, 0);
+}                               /* end of showhashset_nanoedit_mom */
 
 
 
@@ -413,9 +426,23 @@ showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (hmap != NULL && hmap != MOM_EMPTY_SLOT
           && hmap->va_itype == MOMITY_HASHSET);
-#warning showhashmap_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hmap@%p", hmap);
-}                               /* end of showhashset_nanoedit_mom */
+  const struct mom_boxset_st *ks = mom_hashmap_keyset (hmap);
+  assert (ks != NULL && ks->va_itype == MOMITY_SET);
+  mom_file_puts (fb, "<dl class='mom_hashset_cl'>\n");
+  unsigned cnt = mom_raw_size (ks);
+  for (unsigned ix = 0; ix < cnt; ix++)
+    {
+      const struct mom_item_st *keyitm = ks->seqitem[ix];
+      assert (keyitm && keyitm->va_itype == MOMITY_ITEM);
+      const struct mom_hashedvalue_st *val = mom_hashmap_get (hmap, keyitm);
+      mom_file_printf (fb, "<dt class='mom_hashkey_cl'>%s</dt>\n",
+                       mom_item_cstring (keyitm));
+      mom_file_puts (fb, "<dd class='mom_hashval_cl'>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, val, 0);
+      mom_file_puts (fb, "</dd>\n");
+    }
+  mom_file_puts (fb, "</dl>\n");
+}                               /* end of showhashmap_nanoedit_mom */
 
 
 static void
@@ -432,6 +459,9 @@ showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (hass != NULL && hass != MOM_EMPTY_SLOT
           && hass->va_itype == MOMITY_HASHSET);
+  const struct mom_boxnode_st *keynod =
+    mom_hashassoc_sorted_key_node (hass, MOM_PREDEFITM (sequence));
+  assert (keynod != NULL && keynod->va_itype == MOMITY_NODE);
 #warning showhashmap_nanoedit_mom incomplete
   MOM_WARNPRINTF ("showhashset_nanoedit_mom unimplemented hass@%p", hass);
 }                               /* end of showhashassoc_nanoedit_mom */
