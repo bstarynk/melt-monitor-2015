@@ -1084,13 +1084,14 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   assert (nod && nod->va_itype == MOMITY_NODE);
+  unsigned arity = mom_raw_size (nod);
   struct mom_item_st *opitm = nod->nod_connitm;
   assert (opitm && opitm->va_itype == MOMITY_NODE);
   switch (opitm->hva_hash % 317)
     {
-#define CASE_OPITM_NANOEVAL_MOM(Nam) momhashpredef_##Nam % 317: \
+#define OPITM_NANOEVALNODE_MOM(Nam) momhashpredef_##Nam % 317: \
     if (opitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; goto defaultcase; foundcase_##Nam
-    case CASE_OPITM_NANOEVAL_MOM (display):
+    case OPITM_NANOEVALNODE_MOM (display):
       {
 #warning incomplete nanoeval_node_mom
       }
@@ -1109,9 +1110,27 @@ static void *
 nanoeval_item_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                    struct mom_item_st *itm, int depth)
 {
+  void *res = NULL;
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   assert (itm && itm->va_itype == MOMITY_ITEM);
+  while (envitm != NULL)
+    {
+      struct mom_item_st *prevenvitm = NULL;
+      assert (envitm->va_itype == MOMITY_ITEM);
+      mom_item_lock (envitm);
+      prevenvitm =
+        mom_unsync_item_get_phys_attr (envitm, MOM_PREDEFITM (parent));
+      if (mom_itype (envitm->itm_payload) == MOMITY_HASHMAP)
+        {
+          res = mom_hashmap_get (envitm->itm_payload, itm);
+          if (res)
+            prevenvitm = NULL;
+        }
+      mom_item_unlock (envitm);
+      envitm = prevenvitm;
+    }
+  return res;
 }                               /* end nanoeval_item_mom */
 
 
