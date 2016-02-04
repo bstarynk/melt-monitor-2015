@@ -1093,6 +1093,47 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
     if (opitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; goto defaultcase; foundcase_##Nam
     case OPITM_NANOEVALNODE_MOM (display):
       {
+        MOM_DEBUGPRINTF (run, "nanoeval_node display node %s in envitm %s",
+                         mom_value_cstring ((const struct mom_hashedvalue_st
+                                             *) nod),
+                         mom_item_cstring (envitm));
+        struct mom_hashset_st *hset =
+          mom_hashset_reserve (NULL, 4 * arity / 3 + 6);
+        for (unsigned ix = 0; ix < arity; ix++)
+          {
+            const struct mom_hashedvalue_st *curexprv = nod->nod_sons[ix];
+            MOM_DEBUGPRINTF (run,
+                             "nanoeval_node display ix=%d depth=%d curexprv=%s",
+                             ix, depth, mom_value_cstring (curexprv));
+            void *curdispv = nanoeval_mom (nev, envitm, curexprv, depth);
+            struct mom_item_st *dispitm = mom_dyncast_item (curdispv);
+            MOM_DEBUGPRINTF (run,
+                             "nanoeval_node display ix=%d depth=%d curdispv=%s",
+                             ix, depth, mom_value_cstring (curdispv));
+            if (!dispitm)
+              dispitm = mom_dyncast_item (curexprv);
+            if (!dispitm)
+              continue;
+            hset = mom_hashset_insert (hset, dispitm);
+          }
+        struct mom_hashedvalue_st *oldispv =
+          mom_unsync_item_get_phys_attr (nev->nanev_thistatitm,
+                                         MOM_PREDEFITM (display));
+        const struct mom_boxset_st *oldispset = mom_dyncast_set (oldispv);
+        MOM_DEBUGPRINTF (run, "nanoeval_node display oldispv=%s",
+                         mom_value_cstring (oldispv));
+        unsigned oldsiz = mom_raw_size (oldispset);
+        for (unsigned oix = 0; oix < oldsiz; oix++)
+          {
+            struct mom_item_st *olditm = oldispset->seqitem[oix];
+            assert (olditm && olditm->va_itype == MOMITY_ITEM);
+            hset = mom_hashset_insert (hset, olditm);
+          }
+
+        const struct mom_boxset_st *dispset = mom_hashset_to_boxset (hset);
+        MOM_DEBUGPRINTF (run, "nanoeval_node display dispset=%s",
+                         mom_value_cstring ((struct mom_hashedvalue_st *)
+                                            dispset));
 #warning incomplete nanoeval_node_mom
       }
       break;
@@ -1120,10 +1161,13 @@ nanoeval_item_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
       assert (envitm->va_itype == MOMITY_ITEM);
       mom_item_lock (envitm);
       prevenvitm =
-        mom_unsync_item_get_phys_attr (envitm, MOM_PREDEFITM (parent));
+        mom_dyncast_item (mom_unsync_item_get_phys_attr
+                          (envitm, MOM_PREDEFITM (parent)));
       if (mom_itype (envitm->itm_payload) == MOMITY_HASHMAP)
         {
-          res = mom_hashmap_get (envitm->itm_payload, itm);
+          res =
+            mom_hashmap_get ((struct mom_hashmap_st *) envitm->itm_payload,
+                             itm);
           if (res)
             prevenvitm = NULL;
         }
