@@ -191,7 +191,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
     case MOMITY_TUPLE:
       {
         const struct mom_boxtuple_st *tup = pval;
-        unsigned siz = mom_raw_size (tup);
+        unsigned siz = mom_size (tup);
         mom_file_puts (fil, " <span class='momtup_cl'>[");
         for (unsigned ix = 0; ix < siz; ix++)
           {
@@ -209,7 +209,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
     case MOMITY_SET:
       {
         const struct mom_boxset_st *set = pval;
-        unsigned siz = mom_raw_size (set);
+        unsigned siz = mom_size (set);
         mom_file_puts (fil, " <span class='momset_cl'>{");
         for (unsigned ix = 0; ix < siz; ix++)
           {
@@ -227,7 +227,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
     case MOMITY_NODE:
       {
         const struct mom_boxnode_st *nod = pval;
-        unsigned siz = mom_raw_size (nod);
+        unsigned siz = mom_size (nod);
         struct mom_item_st *moditm
           = mom_dyncast_item (mom_unsync_item_get_phys_attr (thistatitm,
                                                              MOM_PREDEFITM
@@ -328,7 +328,7 @@ showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
           && ass->va_itype == MOMITY_ASSOVALDATA);
   const struct mom_boxset_st *setat = mom_assovaldata_set_attrs (ass);
   assert (setat != NULL && setat->va_itype == MOMITY_SET);
-  unsigned nbat = mom_raw_size (setat);
+  unsigned nbat = mom_size (setat);
   mom_file_puts (fb, "<dl class='mom_assoval_cl'>\n");
   for (unsigned ix = 0; ix < nbat; ix++)
     {
@@ -394,7 +394,7 @@ showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
   const struct mom_boxnode_st *qnod
     = mom_queue_node (que, MOM_PREDEFITM (queue));
   assert (qnod != NULL && qnod->va_itype == MOMITY_NODE);
-  unsigned qlen = mom_raw_size (qnod);
+  unsigned qlen = mom_size (qnod);
   mom_file_puts (fb, "<ol class='mom_queueval_cl'>\n");
   for (unsigned ix = 0; ix < qlen; ix++)
     {
@@ -447,7 +447,7 @@ showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
   const struct mom_boxset_st *ks = mom_hashmap_keyset (hmap);
   assert (ks != NULL && ks->va_itype == MOMITY_SET);
   mom_file_puts (fb, "<dl class='mom_hashset_cl'>\n");
-  unsigned cnt = mom_raw_size (ks);
+  unsigned cnt = mom_size (ks);
   for (unsigned ix = 0; ix < cnt; ix++)
     {
       const struct mom_item_st *keyitm = ks->seqitem[ix];
@@ -480,7 +480,7 @@ showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
   const struct mom_boxnode_st *keynod =
     mom_hashassoc_sorted_key_node (hass, MOM_PREDEFITM (sequence));
   assert (keynod != NULL && keynod->va_itype == MOMITY_NODE);
-  unsigned nbkeys = mom_raw_size (keynod);
+  unsigned nbkeys = mom_size (keynod);
   mom_file_puts (fb, "<dl class='mom_hashassoc_cl'>\n");
   for (unsigned ix = 0; ix < nbkeys; ix++)
     {
@@ -1081,12 +1081,16 @@ static void *
 nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                    const struct mom_boxnode_st *nod, int depth)
 {
+  MOM_DEBUGPRINTF (run, "nanoeval_nod start envitm=%s nod=%s depth#%d",
+                   mom_item_cstring (envitm),
+                   mom_value_cstring ((struct mom_boxnode_st *) nod), depth);
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   assert (nod && nod->va_itype == MOMITY_NODE);
-  unsigned arity = mom_raw_size (nod);
+  unsigned arity = mom_size (nod);
   struct mom_item_st *opitm = nod->nod_connitm;
-  assert (opitm && opitm->va_itype == MOMITY_NODE);
+  MOM_DEBUGPRINTF (run, "nanoeval_nod opitm=%s", mom_item_cstring (opitm));
+  assert (opitm && opitm->va_itype == MOMITY_ITEM);
   switch (opitm->hva_hash % 317)
     {
 #define OPITM_NANOEVALNODE_MOM(Nam) momhashpredef_##Nam % 317: \
@@ -1122,7 +1126,7 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
         const struct mom_boxset_st *oldispset = mom_dyncast_set (oldispv);
         MOM_DEBUGPRINTF (run, "nanoeval_node display oldispv=%s",
                          mom_value_cstring (oldispv));
-        unsigned oldsiz = mom_raw_size (oldispset);
+        unsigned oldsiz = mom_size (oldispset);
         for (unsigned oix = 0; oix < oldsiz; oix++)
           {
             struct mom_item_st *olditm = oldispset->seqitem[oix];
@@ -1866,12 +1870,12 @@ isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
   assert (nodexp && nodexp->va_itype == MOMITY_NODE);
   assert (delimitm && delimitm->va_itype == MOMITY_ITEM);
-  unsigned nlen = mom_raw_size (nodexp);
+  unsigned nlen = mom_size (nodexp);
   if (pos < 0 || pos >= (int) nlen)
     return false;
   struct mom_hashedvalue_st *tokv = nodexp->nod_sons[pos];
   const struct mom_boxnode_st *toknod = mom_dyncast_node (tokv);
-  if (!toknod || mom_raw_size (toknod) != 1)
+  if (!toknod || mom_size (toknod) != 1)
     return false;
   if (toknod->nod_connitm != MOM_PREDEFITM (delimiter))
     return false;
@@ -1894,7 +1898,7 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
   assert (nodexp && nodexp->va_itype == MOMITY_NODE);
   assert (posptr != NULL);
   int pos = *posptr;
-  unsigned nlen = mom_raw_size (nodexp);
+  unsigned nlen = mom_size (nodexp);
   if (pos < 0 || pos >= (int) nlen)
     return NULL;
   struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[pos];
@@ -2031,7 +2035,7 @@ parsexprprec_nanoedit_mom (struct
   assert (prec >= 0 && prec <= NANOEDIT_MAX_PRECEDENCE_MOM);
   if (prec <= 0)
     return parsprimary_nanoedit_mom (np, posptr);
-  unsigned nlen = mom_raw_size (nodexp);
+  unsigned nlen = mom_size (nodexp);
   if (startpos < 0 || startpos >= (int) nlen)
     return NULL;
   struct mom_hashedvalue_st *curtokv = nodexp->nod_sons[startpos];
@@ -2115,7 +2119,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
                    mom_item_cstring (sessitm), cmd);
   assert (tkitm && tkitm->va_itype == MOMITY_ITEM);
   const struct mom_boxnode_st *tknod = mom_dyncast_node (tkitm->itm_payload);
-  assert (tknod != NULL && mom_raw_size (tknod) >= mec__last);
+  assert (tknod != NULL && mom_size (tknod) >= mec__last);
   struct mom_item_st *delimitm =
     mom_dyncast_item (tknod->nod_sons[mec_delimiters]);
   struct nanoparsing_mom_st npars;
