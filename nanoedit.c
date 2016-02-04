@@ -1120,6 +1120,7 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
               continue;
             hset = mom_hashset_insert (hset, dispitm);
           }
+#warning the displayed items set should not be in the display attribute, but something else...
         struct mom_hashedvalue_st *oldispv =
           mom_unsync_item_get_phys_attr (nev->nanev_thistatitm,
                                          MOM_PREDEFITM (display));
