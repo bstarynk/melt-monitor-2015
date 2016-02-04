@@ -326,9 +326,27 @@ showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (ass != NULL && ass != MOM_EMPTY_SLOT
           && ass->va_itype == MOMITY_ASSOVALDATA);
-#warning showassovaldata_nanoedit_mom incomplete
-  MOM_WARNPRINTF ("showassovaldata_nanoedit_mom unimplemented ass@%p", ass);
+  const struct mom_boxset_st *setat = mom_assovaldata_set_attrs (ass);
+  assert (setat != NULL && setat->va_itype == MOMITY_SET);
+  unsigned nbat = mom_raw_size (setat);
+  mom_file_puts (fb, "<dl class='mom_assoval_cl'>\n");
+  for (unsigned ix = 0; ix < nbat; ix++)
+    {
+      const struct mom_item_st *atitm = setat->seqitem[ix];
+      assert (atitm && atitm->va_itype == MOMITY_SET);
+      const struct mom_hashedvalue_st *curval =
+        mom_assovaldata_get (ass, atitm);
+      mom_file_puts (fb, "<dt class='mom_assocattr_cl'>");
+      showitem_nanoedit_mom (fb, wexitm, atitm, false);
+      mom_file_puts (fb, "</dt>\n");
+      mom_file_puts (fb, "<dd class='mom_assocval_cl'>");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
+      mom_file_puts (fb, "</dd>");
+    }
+  mom_file_puts (fb, "</dl>\n");
 }                               /* end of showassovaldata_nanoedit_mom */
+
+
 
 static void
 showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
