@@ -537,6 +537,11 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     const struct mom_boxset_st *attset =
       mom_unsync_item_phys_set_attrs (curitm);
     unsigned nbattrs = mom_boxset_length (attset);
+    MOM_DEBUGPRINTF (web,
+                     "showcontent_nanoedit curitm=%s nbattrs#%d attset=%s",
+                     mom_item_cstring (curitm), nbattrs,
+                     mom_value_cstring ((struct mom_hashedvalue_st *)
+                                        attset));
     if (nbattrs > 0)
       {
         mom_file_printf (fb,
@@ -564,6 +569,9 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
         mom_file_puts (fb, "</dl></p>\n");
       };
     unsigned nbcomp = mom_vectvaldata_count (curitm->itm_pcomp);
+    MOM_DEBUGPRINTF (web,
+                     "showcontent_nanoedit curitm=%s nbcomp=%d",
+                     mom_item_cstring (curitm), nbcomp);
     if (nbcomp > 0)
       {
         mom_file_printf (fb,
@@ -786,6 +794,11 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
           struct mom_filebuffer_st *fb = mom_make_filebuffer ();
           assert (fb != NULL);
           showcontentitem_nanoedit_mom (fb, wexitm, thistatitm, curdispitm);
+          MOM_WEXCH_PRINTF (wexch,
+                            "<div class='mom_itemdisplaycontent_cl' data-dispitem='%s' data-ix='%d'>\n",
+                            mom_item_cstring (curdispitm), ix);
+          mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
+          mom_wexch_puts (wexch, "</div>\n");
         }
     }
   mom_wexch_reply (wexch, HTTP_OK, "text/html");

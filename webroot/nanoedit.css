@@ -299,4 +299,9 @@ div.mom_asknewname_cl {
     background-color: #B2EBF7;
     font-size: 95%;
 }
+
+div.mom_itemdisplaycontent_cl {
+    border: 1px dotted #340939;
+    background-color: #E1F9D7;
+}
 /* end nanoedit.css */
