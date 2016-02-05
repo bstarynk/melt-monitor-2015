@@ -719,7 +719,7 @@ mom_dyncast_set (const void *p)
 static inline unsigned
 mom_boxtuple_length (const struct mom_boxtuple_st *btup)
 {
-  if (btup && btup != MOM_EMPTY_SLOT && btup->va_itype != MOMITY_TUPLE)
+  if (!btup || btup == MOM_EMPTY_SLOT || btup->va_itype != MOMITY_TUPLE)
     return 0;
   return mom_raw_size (btup);
 }                               /* end of mom_boxtuple_length */
@@ -727,7 +727,7 @@ mom_boxtuple_length (const struct mom_boxtuple_st *btup)
 static inline const struct mom_item_st *
 mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
 {
-  if (btup && btup != MOM_EMPTY_SLOT && btup->va_itype != MOMITY_TUPLE)
+  if (!btup || btup == MOM_EMPTY_SLOT || btup->va_itype != MOMITY_TUPLE)
     return NULL;
   unsigned sz = mom_raw_size (btup);
   if (rk < 0)
@@ -759,7 +759,7 @@ const struct mom_boxtuple_st *mom_boxtuple_make_sentinel_va (struct
 static inline unsigned
 mom_boxset_length (const struct mom_boxset_st *bset)
 {
-  if (bset && bset != MOM_EMPTY_SLOT && bset->va_itype != MOMITY_SET)
+  if (!bset || bset == MOM_EMPTY_SLOT || bset->va_itype != MOMITY_SET)
     return 0;
   return mom_raw_size (bset);
 }                               /* end of mom_boxset_length */
@@ -767,7 +767,7 @@ mom_boxset_length (const struct mom_boxset_st *bset)
 static inline const struct mom_item_st *
 mom_boxset_nth (const struct mom_boxset_st *bset, int rk)
 {
-  if (bset && bset != MOM_EMPTY_SLOT && bset->va_itype != MOMITY_SET)
+  if (!bset || bset != MOM_EMPTY_SLOT || bset->va_itype != MOMITY_SET)
     return NULL;
   unsigned sz = mom_raw_size (bset);
   if (rk < 0)

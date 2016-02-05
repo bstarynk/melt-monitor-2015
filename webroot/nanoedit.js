@@ -194,6 +194,7 @@ function mom_ajaxfill(htmlc) {
           success: mom_ajaxfill
          });
     });
+    console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox);
 }
 
 function mom_doexit(jsex) {
@@ -296,8 +297,18 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
         evalbut.focus();
     }
     else if (js.resultcount) {
-	console.log ("mom_ajaxparsecommand result count ", js.resultcount);
+        var valchecked = $rawmodebox.prop("checked");
+	console.log ("mom_ajaxparsecommand result count ", js.resultcount,
+		     " valchecked=", valchecked);
 	mom_ajaxfill("<br/> in " + js.resultcount + " steps.");
+	console.log ("mom_ajaxparsecommand after ajaxfill js=", js);
+        $.ajax
+        ({url: "/nanoedit",
+          method: "POST",
+          data: {"do_fillpage": true, "rawmode": valchecked},
+          dataType: "html",
+          success: mom_ajaxfill
+         });
     }
     console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
