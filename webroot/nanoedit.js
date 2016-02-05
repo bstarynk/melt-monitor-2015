@@ -175,7 +175,7 @@ function mom_complete_name(name) {
 }                              // end mom_complete_name
 
 
-/// this function is called by /microedit AJAX for do_fillpage at document loading
+/// this function is called by /nanoedit AJAX for do_fillpage at document loading
 function mom_ajaxfill(htmlc) {
     console.log("mom_ajaxfill:\n", htmlc, "\n### endajaxfill\n");
     console.trace();
@@ -294,6 +294,10 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
             });
         });
         evalbut.focus();
+    }
+    else if (js.resultcount) {
+	console.log ("mom_ajaxparsecommand result count ", js.resultcount);
+	mom_ajaxfill("<br/> in " + js.resultcount + " steps.");
     }
     console.log ("mom_ajaxparsecommand done js=", js);
 }                               // end of mom_ajaxparsecommand
