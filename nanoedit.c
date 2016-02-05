@@ -1081,7 +1081,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "{ \"html\": \"");
       mom_output_utf8_encoded (wexch->webx_outfil, reshtml, -1);
       mom_wexch_puts (wexch, "\",\n");
-      mom_wexch_printf (wexch, " \"resultcount\", %d }\n", nev.nanev_count);
+      MOM_WEXCH_PRINTF (wexch, " \"resultcount\", %d }\n", nev.nanev_count);
       GC_FREE (reshtml), reshtml = NULL;
       mom_wexch_reply (wexch, HTTP_OK, "application/json");
     };
