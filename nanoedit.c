@@ -731,17 +731,18 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw'/>"
                   " raw display</p>\n");
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
-  struct mom_hashedvalue_st *dispv =
+  struct mom_hashedvalue_st *dispitemv =
     mom_unsync_item_get_phys_attr (thistatitm,
-                                   MOM_PREDEFITM (display));
-  const struct mom_boxset_st *dispset = mom_dyncast_set (dispv);
+                                   MOM_PREDEFITM (item));
+  const struct mom_boxset_st *dispset = mom_dyncast_set (dispitemv);
   const struct mom_boxset_st *atset = mom_hashmap_keyset (hmap);
   MOM_DEBUGPRINTF (web,
                    "dofillpage_nanoedit webr#%ld atset %s dispv %s",
                    wexch->webx_count,
                    mom_value_cstring ((struct
                                        mom_hashedvalue_st
-                                       *) atset), mom_value_cstring (dispv));
+                                       *) atset),
+                   mom_value_cstring (dispitemv));
   unsigned nbat = mom_size (atset);
   if (nbat > 0)
     {
@@ -1110,23 +1111,53 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                              "nanoeval_node display ix=%d depth=%d curexprv=%s",
                              ix, depth, mom_value_cstring (curexprv));
             void *curdispv = nanoeval_mom (nev, envitm, curexprv, depth);
-            struct mom_item_st *dispitm = mom_dyncast_item (curdispv);
             MOM_DEBUGPRINTF (run,
                              "nanoeval_node display ix=%d depth=%d curdispv=%s",
                              ix, depth, mom_value_cstring (curdispv));
-            if (!dispitm)
-              dispitm = mom_dyncast_item (curexprv);
-            if (!dispitm)
-              continue;
-            hset = mom_hashset_insert (hset, dispitm);
+            struct mom_item_st *dispitm = NULL;
+            struct mom_boxset_st *dispset = NULL;
+            if ((dispset = mom_dyncast_set (curdispv)) != NULL)
+              {
+                unsigned nbdisp = mom_raw_size (dispset);
+                for (unsigned elix = 0; elix < nbdisp; elix++)
+                  {
+                    dispitm = dispset->seqitem[elix];
+                    assert (dispitm && dispitm->va_itype == MOMITY_ITEM);
+                    hset = mom_hashset_insert (hset, dispitm);
+                    MOM_DEBUGPRINTF (run,
+                                     "nanoeval_node display ix=%d elix=%d dispitm=%s",
+                                     ix, elix, mom_item_cstring (dispitm));
+                  }
+              }
+            else if ((dispitm = mom_dyncast_item (curdispv)) != NULL)
+              {
+                hset = mom_hashset_insert (hset, dispitm);
+                MOM_DEBUGPRINTF (run,
+                                 "nanoeval_node display ix=%d dispitm=%s",
+                                 ix, mom_item_cstring (dispitm));
+              }
+            else if ((dispitm = mom_dyncast_item (curexprv)) != NULL)
+              {
+                hset = mom_hashset_insert (hset, dispitm);
+                MOM_DEBUGPRINTF (run,
+                                 "nanoeval_node display ix=%d expr dispitm=%s",
+                                 ix, mom_item_cstring (dispitm));
+              }
+            else
+              {
+                MOM_WARNPRINTF
+                  ("display expression#%d %s has unexpected value %s", ix,
+                   mom_value_cstring (curexprv),
+                   mom_value_cstring (curdispv));
+                continue;
+              }
           }
-#warning the displayed items set should not be in the display attribute, but something else...
-        struct mom_hashedvalue_st *oldispv =
+        struct mom_hashedvalue_st *oldispitemv =
           mom_unsync_item_get_phys_attr (nev->nanev_thistatitm,
-                                         MOM_PREDEFITM (display));
-        const struct mom_boxset_st *oldispset = mom_dyncast_set (oldispv);
-        MOM_DEBUGPRINTF (run, "nanoeval_node display oldispv=%s",
-                         mom_value_cstring (oldispv));
+                                         MOM_PREDEFITM (item));
+        const struct mom_boxset_st *oldispset = mom_dyncast_set (oldispitemv);
+        MOM_DEBUGPRINTF (run, "nanoeval_node display oldispitemv=%s",
+                         mom_value_cstring (oldispitemv));
         unsigned oldsiz = mom_size (oldispset);
         for (unsigned oix = 0; oix < oldsiz; oix++)
           {
@@ -1134,12 +1165,14 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
             assert (olditm && olditm->va_itype == MOMITY_ITEM);
             hset = mom_hashset_insert (hset, olditm);
           }
-
         const struct mom_boxset_st *dispset = mom_hashset_to_boxset (hset);
-        MOM_DEBUGPRINTF (run, "nanoeval_node display dispset=%s",
+        MOM_DEBUGPRINTF (run, "nanoeval_node display new dispset=%s",
                          mom_value_cstring ((struct mom_hashedvalue_st *)
                                             dispset));
-#warning incomplete nanoeval_node_mom
+        mom_unsync_item_put_phys_attr (nev->nanev_thistatitm,
+                                       MOM_PREDEFITM (item),
+                                       (struct mom_hashedvalue_st *) dispset);
+        return dispset;
       }
       break;
     defaultcase:
