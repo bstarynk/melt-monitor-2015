@@ -767,7 +767,7 @@ mom_boxset_length (const struct mom_boxset_st *bset)
 static inline const struct mom_item_st *
 mom_boxset_nth (const struct mom_boxset_st *bset, int rk)
 {
-  if (!bset || bset != MOM_EMPTY_SLOT || bset->va_itype != MOMITY_SET)
+  if (!bset || bset == MOM_EMPTY_SLOT || bset->va_itype != MOMITY_SET)
     return NULL;
   unsigned sz = mom_raw_size (bset);
   if (rk < 0)

@@ -194,7 +194,21 @@ function mom_ajaxfill(htmlc) {
           success: mom_ajaxfill
          });
     });
-    console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox);
+    console.log("mom_ajaxfill before $editdiv=", $editdiv);
+    $editdiv.find(".mom_itemdisplaycontent_cl").each(function (ix, el) {
+	console.log("mom_ajaxfill found itemdispcont ix=", ix, " el=", el);
+	var elnamitem = $(el).data("dispitem");
+	console.log("itemdispcont el=", el, " elnamitem=", elnamitem);
+	$(el).dialog({
+	    title: elnamitem,
+	    close: function (ev,ui) {
+		console.log("itemdispcont close el=", el, " ev=", ev,
+			    " ui=", ui);
+	    }
+	});
+    });
+    console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox,
+		" $editdiv=", $editdiv);
 }
 
 function mom_doexit(jsex) {

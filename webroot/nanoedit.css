@@ -304,4 +304,26 @@ div.mom_itemdisplaycontent_cl {
     border: 1px dotted #340939;
     background-color: #E1F9D7;
 }
+
+dt.momattitem_cl {
+    background-color: #ECBD9E;
+}
+
+span.infocount_cl {
+    font-size: 85%;
+    font-family: Arial;
+    font-style: oblique;
+}
+
+span.itemupdated_cl {
+    font-size: 80%;
+    font-weight: normal;
+}
+
+p.showcontent_title_cl {
+    align: center;
+    font-size: 107%;
+    font-weight: bold;
+}
+
 /* end nanoedit.css */

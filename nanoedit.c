@@ -528,7 +528,7 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     {
       char timbuf[64];
       memset (timbuf, 0, sizeof (timbuf));
-      mom_file_printf (fb, "updated on <i>%s</i>",
+      mom_file_printf (fb, "<span class='itemupdated_cl'>updated on <i>%s</i></span>",
                        mom_strftime_centi (timbuf, sizeof (timbuf),
                                            "%c %Z",
                                            (double) curitm->itm_mtime));
@@ -545,7 +545,7 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     if (nbattrs > 0)
       {
         mom_file_printf (fb,
-                         "<p class='showcontent_attributes_cl' data-contentitem='%s'>%d attributes.<br/>\n",
+                         "<p class='showcontent_attributes_cl' data-contentitem='%s'><span class='infocount_cl'>%d attributes.</span><br/>\n",
                          mom_item_cstring (curitm), nbattrs);
         mom_file_printf (fb,
                          "<dl class='showcontent_attributelist_cl' data-contentitem='%s'>\n",
@@ -560,8 +560,9 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                              "showcontent_nanoedit atix#%d curatitm=%s curval=%s",
                              atix, mom_item_cstring (curatitm),
                              mom_value_cstring (curval));
-            mom_file_printf (fb, "<dt class='momattitem_cl'>%s</dt>\n",
-                             mom_item_cstring (curatitm));
+            mom_file_puts (fb, "<dt class='momattitem_cl'>");
+	    showitem_nanoedit_mom(fb, wexitm, curatitm, false);
+	    mom_file_puts (fb, "</dt>\n");
             mom_file_printf (fb, "<dd class='momattvalue_cl'>\n");
             showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
             mom_file_puts (fb, "</dd>\n");
@@ -575,7 +576,7 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     if (nbcomp > 0)
       {
         mom_file_printf (fb,
-                         "<p class='showcontent_componentslist_cl' data-contentitem='%s'>%d components.<br/>\n",
+                         "<p class='showcontent_componentslist_cl' data-contentitem='%s'><span class='infocount_cl'>%d components.</span><br/>\n",
                          mom_item_cstring (curitm), nbattrs);
         mom_file_printf (fb,
                          "<ul class='showcontent_components_cl' data-contentitem='%s'>\n",
