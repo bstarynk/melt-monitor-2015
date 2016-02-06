@@ -528,11 +528,14 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     {
       char timbuf[64];
       memset (timbuf, 0, sizeof (timbuf));
-      mom_file_printf (fb, "<span class='itemupdated_cl'>updated on <i>%s</i></span>",
-                       mom_strftime_centi (timbuf, sizeof (timbuf),
-                                           "%c %Z",
+      mom_file_printf (fb,
+                       "<span class='itemupdated_cl'>updated on <i>%s</i></span>",
+                       mom_strftime_centi (timbuf, sizeof (timbuf), "%c %Z",
                                            (double) curitm->itm_mtime));
     }
+    mom_file_printf (fb,
+                     " &nbsp; <button class='buthideitem_cl' data-hideitem='%s'>hide</button>",
+                     mom_item_cstring (curitm));
     mom_file_puts (fb, " * </p>\n");
     const struct mom_boxset_st *attset =
       mom_unsync_item_phys_set_attrs (curitm);
@@ -561,8 +564,8 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                              atix, mom_item_cstring (curatitm),
                              mom_value_cstring (curval));
             mom_file_puts (fb, "<dt class='momattitem_cl'>");
-	    showitem_nanoedit_mom(fb, wexitm, curatitm, false);
-	    mom_file_puts (fb, "</dt>\n");
+            showitem_nanoedit_mom (fb, wexitm, curatitm, false);
+            mom_file_puts (fb, "</dt>\n");
             mom_file_printf (fb, "<dd class='momattvalue_cl'>\n");
             showvalue_nanoedit_mom (fb, wexitm, thistatitm, curval, 0);
             mom_file_puts (fb, "</dd>\n");
@@ -1371,6 +1374,7 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *doparsecommand = NULL;
       const char *docreateitem = NULL;
       const char *doeval = NULL;
+      const char *dohideitem = NULL;
       const char *commentstr = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
@@ -1416,6 +1420,13 @@ momf_nanoedit (struct mom_item_st *tkitm)
                                    wexitm,
                                    thistatitm,
                                    sessitm, docreateitem, commentstr);
+      else if ((dohideitem =
+                onion_request_get_post (wexch->webx_requ,
+                                        "do_hideitem")) != NULL)
+        {
+#warning do_hideitem not handled
+          MOM_FATAPRINTF ("do_hideitem %s not handled", dohideitem);
+        }
     }
 end:
   if (hsetitm)

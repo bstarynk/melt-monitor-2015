@@ -199,12 +199,16 @@ function mom_ajaxfill(htmlc) {
 	console.log("mom_ajaxfill found itemdispcont ix=", ix, " el=", el);
 	var elnamitem = $(el).data("dispitem");
 	console.log("itemdispcont el=", el, " elnamitem=", elnamitem);
-	$(el).dialog({
-	    title: elnamitem,
-	    close: function (ev,ui) {
-		console.log("itemdispcont close el=", el, " ev=", ev,
-			    " ui=", ui);
-	    }
+	$(el).find(".buthideitem_cl").click(function (ev) {
+	    console.log("ajaxfill itemdispcont $(this)=", $(this),
+			" ev=", ev, " elnamitem=", elnamitem);
+	    $.ajax
+	    ({url:"/nanoedit",
+	      method: "POST",
+	      data: {"do_hideitem": elnamitem},
+	      dataType: "html",
+	      success: mom_ajaxfill
+	     });
 	});
     });
     console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox,

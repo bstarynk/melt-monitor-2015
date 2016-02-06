@@ -326,4 +326,9 @@ p.showcontent_title_cl {
     font-weight: bold;
 }
 
+button.buthideitem_cl {
+    font-size: 95%;
+    font-family: Helvetica;
+    background-color: #BEE3D0;
+}
 /* end nanoedit.css */
