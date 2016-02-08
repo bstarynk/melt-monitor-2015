@@ -209,6 +209,18 @@ function mom_ajaxfill(htmlc) {
 	      dataType: "html",
 	      success: function (htmlc) {
 		  console.log("ajaxfill hide htmlc=", htmlc);
+		  var valchecked = $rawmodebox.prop("checked");
+		  console.log ("ajaxfill hideitem valchecked=", valchecked);
+		  $parsedcmddiv.html(htmlc);
+		  mom_ajaxfill(htmlc);
+		  console.log ("ajaxfill hideitem htmlc=", htmlc);
+		  $.ajax
+		  ({url: "/nanoedit",
+		    method: "POST",
+		    data: {"do_fillpage": true, "rawmode": valchecked},
+		    dataType: "html",
+		    success: mom_ajaxfill
+		   });
 	      }
 	     });
 	});
