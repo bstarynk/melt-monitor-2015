@@ -599,6 +599,16 @@ mom_boxset_difference (const struct mom_boxset_st *set1,
           i1++, i2++;
         }
     }
+  if (i1 < card1)
+    {
+      for (; i1 < card1; i1++)
+        {
+          const struct mom_item_st *itm1 = set1->seqitem[i1];
+          assert (itm1 && itm1->va_itype == MOMITY_ITEM);
+          assert (nbdi < siz);
+          arr[nbdi++] = itm1;
+        };
+    }
   return mom_boxset_make_arr (nbdi, arr);
 }                               /* end of mom_boxset_difference */
 
