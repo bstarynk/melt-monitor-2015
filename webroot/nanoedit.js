@@ -207,7 +207,9 @@ function mom_ajaxfill(htmlc) {
 	      method: "POST",
 	      data: {"do_hideitem": elnamitem},
 	      dataType: "html",
-	      success: mom_ajaxfill
+	      success: function (htmlc) {
+		  console.log("ajaxfill hide htmlc=", htmlc);
+	      }
 	     });
 	});
     });

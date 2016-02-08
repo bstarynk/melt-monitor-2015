@@ -1000,6 +1000,23 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
 }                               /* end of docreateitem_nanoedit_mom */
 
 
+static void
+dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
+                         struct mom_item_st *tkitm,
+                         struct mom_item_st *wexitm,
+                         struct mom_item_st *thistatitm,
+                         const char *dohideitem)
+{
+  MOM_DEBUGPRINTF (web,
+                   "dohideitem_nanoedit tkitm=%s wexitm=%s thistatitm=%s dohideitem=%s",
+                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm), dohideitem);
+  MOM_FATAPRINTF ("unimplemented dohideitem_nanoedit_mom dohideitem=%s",
+                  dohideitem);
+#warning dohide_nanoedit_mom unimplemented
+}                               /* end dohideitem_nanoedit_mom */
+
+
 #define NANOEVAL_MAGIC_MOM 617373733    /*0x24cc6025 */
 struct nanoeval_mom_st
 {
@@ -1423,10 +1440,8 @@ momf_nanoedit (struct mom_item_st *tkitm)
       else if ((dohideitem =
                 onion_request_get_post (wexch->webx_requ,
                                         "do_hideitem")) != NULL)
-        {
-#warning do_hideitem not handled
-          MOM_FATAPRINTF ("do_hideitem %s not handled", dohideitem);
-        }
+        dohideitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                 dohideitem);
     }
 end:
   if (hsetitm)
