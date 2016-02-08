@@ -28,6 +28,7 @@ var $commanddiv;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
+var $itemctxmenu;
 var mom_eval_counter=0;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
@@ -223,6 +224,15 @@ function mom_ajaxfill(htmlc) {
 		   });
 	      }
 	     });
+	});
+    });
+    console.log("mom_ajaxfill $itemctxmenu=", $itemctxmenu);
+    $editdiv.find(".momitemref_cl").each(function (ix, el) {
+	console.log("mom_ajaxfill-itemref el=", el);
+	$(el).attr("contextmenu", $itemctxmenu[0]);
+	$(el).on("contextmenu", function (ev) {
+	    console.log("mom_ajaxfill-itemref-contextmenu ev=", ev, " $(this)=", $(this));
+	    return true;
 	});
     });
     console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox,
@@ -619,6 +629,7 @@ $(document).ready(function(){
     $commandtext = $("#commandtext_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
+    $itemctxmenu = $("#nanoctxmenuitem_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     /***
         $commandtext.autocomplete({
