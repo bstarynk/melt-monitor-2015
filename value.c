@@ -194,13 +194,31 @@ mom_boxdouble_make (double x)
   return bd;
 }
 
+
+
+////////////////
+#define SEQITEM_EMPTY_HASH_MOM(Ty) (127 * (Ty))
+static const struct mom_boxset_st empty_boxset_mom = {
+  .va_itype = MOMITY_SET,
+  .va_hsiz = 0,
+  .va_lsiz = 0,
+  .hva_hash = SEQITEM_EMPTY_HASH_MOM (MOMITY_SET)
+};
+
+static const struct mom_boxtuple_st empty_boxtuple_mom = {
+  .va_itype = MOMITY_TUPLE,
+  .va_hsiz = 0,
+  .va_lsiz = 0,
+  .hva_hash = SEQITEM_EMPTY_HASH_MOM (MOMITY_TUPLE)
+};
+
 static void
 seqitem_hash_compute_mom (struct mom_seqitems_st *si)
 {
   assert (si);
   assert (si->hva_hash == 0);
   unsigned l = ((si->va_hsiz << 16) + si->va_lsiz);
-  momhash_t h = 17 * l + 127 * si->va_itype;
+  momhash_t h = 17 * l + SEQITEM_EMPTY_HASH_MOM (si->va_itype);
   for (unsigned ix = 0; ix < l; ix++)
     {
       if (ix & 1)
@@ -237,8 +255,8 @@ mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
       siz2 = 0;
       arr2 = NULL;
     };
-  if (!arr1 && !arr2)
-    return NULL;
+  if (MOM_UNLIKELY (siz1 == 0 && siz2 == 0))
+    return &empty_boxtuple_mom;
   unsigned tsiz = siz1 + siz2;
   if (siz1 > MOM_SIZE_MAX || siz2 > MOM_SIZE_MAX || tsiz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big tuple from siz1=%d, siz2=%d", siz1, siz2);
@@ -264,6 +282,8 @@ mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st **arr)
     return NULL;
   if (siz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big tuple %d", siz);
+  if (MOM_UNLIKELY (!arr || siz == 0))
+    return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) + siz * sizeof (void *));
   tup->va_itype = MOMITY_TUPLE;
@@ -283,6 +303,8 @@ mom_boxtuple_make_va (unsigned siz, ...)
   va_list args;
   if (siz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big tuple %d", siz);
+  if (MOM_UNLIKELY (siz == 0))
+    return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) + siz * sizeof (void *));
   tup->va_itype = MOMITY_TUPLE;
@@ -333,6 +355,7 @@ compare_item_ptr_mom (const void *p1, const void *p2)
                        *(const struct mom_item_st **) p2);
 }
 
+
 const struct mom_boxset_st *
 mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
                       unsigned siz2, const struct mom_item_st **arr2)
@@ -347,8 +370,8 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
       siz2 = 0;
       arr2 = NULL;
     };
-  if (!arr1 && !arr2)
-    return NULL;
+  if (MOM_UNLIKELY (siz1 == 0 && siz2 == 0))
+    return &empty_boxset_mom;
   unsigned tsiz = siz1 + siz2;
   if (siz1 > MOM_SIZE_MAX || siz2 > MOM_SIZE_MAX || tsiz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big set from siz1=%d, siz2=%d", siz1, siz2);
@@ -440,7 +463,147 @@ mom_boxset_make_sentinel_va (struct mom_item_st *itm1, ...)
   return mom_boxset_make_arr (siz, (const struct mom_item_st **) arr);
 }
 
+const struct mom_boxset_st *
+mom_boxset_union (const struct mom_boxset_st *set1,
+                  const struct mom_boxset_st *set2)
+{
+  unsigned card1 = 0, card2 = 0;
+  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+      || !(card1 = mom_raw_size (set1)))
+    set1 = NULL;
+  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+      || !(card2 = mom_raw_size (set2)))
+    set2 = NULL;
+  if (MOM_UNLIKELY (card1 == 0 && card2 == 0))
+    return &empty_boxset_mom;
+  if (!set1)
+    return set2;
+  if (!set2)
+    return set1;
+  if (card1 > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big set1@%p of size %u", set1, card1);
+  if (card2 > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big set2@%p of size %u", set2, card2);
+  unsigned siz = card1 + card2 + 1;
+  const struct mom_item_st **arr =
+    mom_gc_alloc (siz * sizeof (struct mom_item_st *));
+  unsigned i1 = 0, i2 = 0;
+  unsigned nbun = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      const struct mom_item_st *itm1 = set1->seqitem[i1];
+      const struct mom_item_st *itm2 = set2->seqitem[i2];
+      assert (itm1 && itm1->va_itype == MOMITY_ITEM);
+      assert (itm2 && itm2->va_itype == MOMITY_ITEM);
+      assert (nbun < siz);
+      int cmp = mom_item_cmp (itm1, itm2);
+      if (cmp < 0)
+        {
+          arr[nbun++] = itm1;
+          i1++;
+        }
+      else if (cmp > 0)
+        {
+          arr[nbun++] = itm2;
+          i2++;
+        }
+      else
+        {
+          assert (itm1 == itm2);
+          arr[nbun++] = itm1;
+          i1++, i2++;
+        }
+    }
+  return mom_boxset_make_arr (nbun, arr);
+}                               /* end of mom_boxset_union */
 
+
+
+const struct mom_boxset_st *
+mom_boxset_intersection (const struct mom_boxset_st *set1,
+                         const struct mom_boxset_st *set2)
+{
+  unsigned card1 = 0, card2 = 0;
+  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+      || !(card1 = mom_raw_size (set1)))
+    return &empty_boxset_mom;
+  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+      || !(card2 = mom_raw_size (set2)))
+    return &empty_boxset_mom;
+  unsigned siz = ((card1 < card2) ? card1 : card2) + 1;
+  const struct mom_item_st **arr =
+    mom_gc_alloc (sizeof (struct mom_item_st *) * siz);
+  unsigned i1 = 0, i2 = 0, nbin = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      const struct mom_item_st *itm1 = set1->seqitem[i1];
+      const struct mom_item_st *itm2 = set2->seqitem[i2];
+      assert (itm1 && itm1->va_itype == MOMITY_ITEM);
+      assert (itm2 && itm2->va_itype == MOMITY_ITEM);
+      assert (nbin < siz);
+      if (itm1 == itm2)
+        goto same;
+      int cmp = mom_item_cmp (itm1, itm2);
+      if (cmp < 0)
+        i1++;
+      else if (cmp > 0)
+        i2++;
+      else
+      same:
+        {
+          assert (itm1 == itm2);
+          arr[nbin++] = itm1;
+          i1++, i2++;
+        }
+    }
+  return mom_boxset_make_arr (nbin, arr);
+}                               /* end of mom_boxset_intersection */
+
+
+const struct mom_boxset_st *
+mom_boxset_difference (const struct mom_boxset_st *set1,
+                       const struct mom_boxset_st *set2)
+{
+  unsigned card1 = 0, card2 = 0;
+  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+      || !(card1 = mom_raw_size (set1)))
+    return &empty_boxset_mom;
+  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+      || !(card2 = mom_raw_size (set2)))
+    return set1;
+  unsigned siz = card1 + 1;
+  const struct mom_item_st **arr =
+    mom_gc_alloc (sizeof (struct mom_item_st *) * siz);
+  unsigned i1 = 0, i2 = 0, nbdi = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      const struct mom_item_st *itm1 = set1->seqitem[i1];
+      const struct mom_item_st *itm2 = set2->seqitem[i2];
+      assert (itm1 && itm1->va_itype == MOMITY_ITEM);
+      assert (itm2 && itm2->va_itype == MOMITY_ITEM);
+      assert (nbdi < siz);
+      if (itm1 == itm2)
+        goto same;
+      int cmp = mom_item_cmp (itm1, itm2);
+      if (cmp < 0)
+        {
+          i1++;
+          arr[nbdi++] = itm1;
+        }
+      else if (cmp > 0)
+        i2++;
+      else
+      same:
+        {
+          assert (itm1 == itm2);
+          i1++, i2++;
+        }
+    }
+  return mom_boxset_make_arr (nbdi, arr);
+}                               /* end of mom_boxset_difference */
+
+
+////////////////
 static void
 update_node_hash_mom (struct mom_boxnode_st *nod)
 {

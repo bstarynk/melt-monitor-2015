@@ -798,6 +798,21 @@ const struct mom_boxset_st *mom_boxset_make_sentinel_va (struct mom_item_st *,
 #define mom_boxset_make_sentinel(...) mom_boxset_make_sentinel_va(##__VA_ARGS__, NULL)
 
 
+const struct mom_boxset_st *mom_boxset_union (const struct mom_boxset_st
+                                              *set1,
+                                              const struct mom_boxset_st
+                                              *set2);
+const struct mom_boxset_st *mom_boxset_intersection (const struct
+                                                     mom_boxset_st *set1,
+                                                     const struct
+                                                     mom_boxset_st *set2);
+const struct mom_boxset_st *mom_boxset_difference (const struct mom_boxset_st
+                                                   *set1,
+                                                   const struct mom_boxset_st
+                                                   *set2);
+
+////////////////
+
 struct mom_boxnode_st
 {
   MOM_HASHEDVALUE_FIELDS;
@@ -816,12 +831,13 @@ mom_dyncast_node (const void *p)
   return NULL;
 }
 
-const struct mom_boxnode_st *   //
 
-
-mom_boxnode_make_meta (const struct mom_item_st *conn, unsigned size,
-                       const struct mom_hashedvalue_st **sons,
-                       const struct mom_item_st *meta, intptr_t metarank);
+const struct mom_boxnode_st *mom_boxnode_make_meta (const struct mom_item_st
+                                                    *conn, unsigned size,
+                                                    const struct
+                                                    mom_hashedvalue_st **sons,
+                                                    const struct mom_item_st
+                                                    *meta, intptr_t metarank);
 
 static inline const struct mom_boxnode_st *
 mom_boxnode_make (const struct mom_item_st *conn,
