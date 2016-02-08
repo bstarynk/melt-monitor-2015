@@ -230,10 +230,12 @@ function mom_ajaxfill(htmlc) {
     $editdiv.find(".momitemref_cl").each(function (ix, el) {
 	console.log("mom_ajaxfill-itemref el=", el);
 	$(el).attr("contextmenu", $itemctxmenu[0]);
+	/*
 	$(el).on("contextmenu", function (ev) {
 	    console.log("mom_ajaxfill-itemref-contextmenu ev=", ev, " $(this)=", $(this));
 	    return true;
 	});
+	*/
     });
     console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox,
 		" $editdiv=", $editdiv);
