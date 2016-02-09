@@ -229,11 +229,21 @@ function mom_ajaxfill(htmlc) {
              });
         });
     });
+    function removeitemmenu(itmen) {
+	console.log("removeitemmenu itmen=", itmen);
+	if (itmen) {
+	    itmen.menu("destroy");
+	    itmen.remove();
+	    itmen = null;
+	}
+    };
     function handleitemspan(ix, el) {   
         console.log("handleitemspan ix=", ix, " el=", el);
         $(el).mousedown(function (ev) {
             if (ev.which != 3) return false;
             mom_menuitemcount ++;
+	    console.log ("handleitemspan down ev=", ev,
+			 " #", mom_menuitemcount);
             var itemmenu = null;
             var menupos = null;
             var menuid = "mom_itemmenu_" + mom_menuitemcount + "_id";
@@ -271,6 +281,18 @@ function mom_ajaxfill(htmlc) {
             itemmenu[0].style.left = menuleft + "px";
             itemmenu[0].style.zIndex = "99";
             itemmenu.menu({
+		select: function(ev,ui) {
+		    console.log ("handleitemspan-select ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
+		    setTimeout(function ()
+			       { var itmen = itemmenu;
+				 itemmenu = null;
+				 removeitemmenu(itmen);
+			       },
+			       250);
+		},
+		blur: function(ev,ui) {
+		    console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
+		}
             });
         });
     };

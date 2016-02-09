@@ -328,10 +328,10 @@ some MELT monitor). You won't be able to run it usefully in 2015. But
 if you want to help (e.g. to answer some questions I am asking on some
 forums) or see what is running, build it, then run `./monimelt --help`
 to get some command line help.  Later, try something like `./monimelt
--Drun,web -W localhost.localdomain:8086/` in the terminal and use your
+-Drun,web -W localhost.localdomain:8086/ -J 3` in the terminal and use your
 browser on URLs like `http://localhost.localdomain:8086/hackc.html` to
 be able to type some C code and run it, or
-`http://localhost.localdomain:8086/microedit.html` to try the micro
+`http://localhost.localdomain:8086/nanoedit.html` to try the nano
 editor (very alpha, not working yet).
 
 To simply dump the state and test the persistency machinery, try
