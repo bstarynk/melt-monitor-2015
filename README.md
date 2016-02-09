@@ -290,9 +290,14 @@ hashed associations, hashed maps, ... payloads.
 
 + `main.c` is the main program and utilities.
 
++ `filebuf.c` is for file & string buffers
+
 + `microedit.c`, `webroot/microedit.css`, `webroot/microedit.html`,
   `webroot/microedit.js` is a micro editor (HTML5 contenteditable!) to
-  be able to edit values and use them.
+  be able to edit values and use them. I am not happy with it, so I coded again the ....
+
++ `nanoedit.c`,  `webroot/nanoedit.css`, `webroot/nanoedit.html`,
+  `webroot/microedit.js` is a nano editor (no contenteditable)
 
 + `modules/` should contain generated C code.
 
