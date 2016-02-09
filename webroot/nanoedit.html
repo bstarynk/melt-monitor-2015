@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <!--  Copyright (C)  2015  Basile Starynkevitch and later the FSF
+  <!--  Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file nanoedit.html is part of GCC & MELT.
   
@@ -25,6 +25,7 @@
     <script src='jquery-ui/jquery-ui.js'></script> <!-- use jquery-ui.min.js in production -->
     <script src='textarea-caret-position.js'></script>
     <script src='rangyinputs-jquery.js'></script>
+    <script src='clipboard.js'></script>
     <script src='nanoedit.js'></script>
     <link rel="stylesheet" type="text/css" href="nanoedit.css">
     <link rel="stylesheet" type="text/css" href="jquery-ui/jquery-ui.css">
@@ -34,9 +35,6 @@
     <h1>Nano Editing Monimelt</h1>
     <input type='button' id='exitbut_id' name='do_exit' value='dump then Exit'/>
     <div id='nanoedit_id'>
-      <menu type='context' id='nanoctxmenuitem_id'>
-	<menuitem id='nanoitemshowmenu_id' label='Show Item'>!</menuitem>
-      </menu>
     </div>
     <div id='parsedcommand_id'></div>
     <div id='commanddiv_id'>

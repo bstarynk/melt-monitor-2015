@@ -28,7 +28,8 @@ var $commanddiv;
 var $sendcmdbut;
 var $rawmodebox;
 var $parsedcmddiv;
-var $itemctxmenu;
+var $clipboardh;
+
 var mom_eval_counter=0;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
@@ -176,6 +177,8 @@ function mom_complete_name(name) {
 }                              // end mom_complete_name
 
 
+
+var mom_menuitemcount = 0;
 /// this function is called by /nanoedit AJAX for do_fillpage at document loading
 function mom_ajaxfill(htmlc) {
     console.log("mom_ajaxfill:\n", htmlc, "\n### endajaxfill\n");
@@ -197,48 +200,84 @@ function mom_ajaxfill(htmlc) {
     });
     console.log("mom_ajaxfill before $editdiv=", $editdiv);
     $editdiv.find(".mom_itemdisplaycontent_cl").each(function (ix, el) {
-	console.log("mom_ajaxfill found itemdispcont ix=", ix, " el=", el);
-	var elnamitem = $(el).data("dispitem");
-	console.log("itemdispcont el=", el, " elnamitem=", elnamitem);
-	$(el).find(".buthideitem_cl").click(function (ev) {
-	    console.log("ajaxfill itemdispcont $(this)=", $(this),
-			" ev=", ev, " elnamitem=", elnamitem);
-	    $.ajax
-	    ({url:"/nanoedit",
-	      method: "POST",
-	      data: {"do_hideitem": elnamitem},
-	      dataType: "html",
-	      success: function (htmlc) {
-		  console.log("ajaxfill hide htmlc=", htmlc);
-		  var valchecked = $rawmodebox.prop("checked");
-		  console.log ("ajaxfill hideitem valchecked=", valchecked);
-		  $parsedcmddiv.html(htmlc);
-		  mom_ajaxfill(htmlc);
-		  console.log ("ajaxfill hideitem htmlc=", htmlc);
-		  $.ajax
-		  ({url: "/nanoedit",
-		    method: "POST",
-		    data: {"do_fillpage": true, "rawmode": valchecked},
-		    dataType: "html",
-		    success: mom_ajaxfill
-		   });
-	      }
-	     });
-	});
+        console.log("mom_ajaxfill found itemdispcont ix=", ix, " el=", el);
+        var elnamitem = $(el).data("dispitem");
+        console.log("itemdispcont el=", el, " elnamitem=", elnamitem);
+        $(el).find(".buthideitem_cl").click(function (ev) {
+            console.log("ajaxfill itemdispcont $(this)=", $(this),
+                        " ev=", ev, " elnamitem=", elnamitem);
+            $.ajax
+            ({url:"/nanoedit",
+              method: "POST",
+              data: {"do_hideitem": elnamitem},
+              dataType: "html",
+              success: function (htmlc) {
+                  console.log("ajaxfill hide htmlc=", htmlc);
+                  var valchecked = $rawmodebox.prop("checked");
+                  console.log ("ajaxfill hideitem valchecked=", valchecked);
+                  $parsedcmddiv.html(htmlc);
+                  mom_ajaxfill(htmlc);
+                  console.log ("ajaxfill hideitem htmlc=", htmlc);
+                  $.ajax
+                  ({url: "/nanoedit",
+                    method: "POST",
+                    data: {"do_fillpage": true, "rawmode": valchecked},
+                    dataType: "html",
+                    success: mom_ajaxfill
+                   });
+              }
+             });
+        });
     });
-    console.log("mom_ajaxfill $itemctxmenu=", $itemctxmenu);
-    $editdiv.find(".momitemref_cl").each(function (ix, el) {
-	console.log("mom_ajaxfill-itemref el=", el);
-	$(el).attr("contextmenu", $itemctxmenu[0]);
-	/*
-	$(el).on("contextmenu", function (ev) {
-	    console.log("mom_ajaxfill-itemref-contextmenu ev=", ev, " $(this)=", $(this));
-	    return true;
-	});
-	*/
-    });
+    function handleitemspan(ix, el) {   
+        console.log("handleitemspan ix=", ix, " el=", el);
+        $(el).mousedown(function (ev) {
+            if (ev.which != 3) return false;
+            mom_menuitemcount ++;
+            var itemmenu = null;
+            var menupos = null;
+            var menuid = "mom_itemmenu_" + mom_menuitemcount + "_id";
+            var edivheight = $editdiv.innerHeight();
+            var edivwidth = $editdiv.innerWidth();
+            var edivoff = $editdiv.offset(); // {top=, left=...} relative to the document
+            console.log (" handleitemspan mouse3 el=", el, " ev=", ev,
+                         // pageX & pageY are mousepos relative to top,left of the entire document
+                         " ev.pageX=", ev.pageX, " ev.pageY=", ev.pageY,
+                         " edivheight=", edivheight, " edivwidth=", edivwidth, " edivoff=", edivoff);
+            var itemname = $(el).text();
+            console.log (" handleitemspan mouse3 itemname=", itemname);
+            $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid+"'><li class='ui-state-disabled'>* <i>"+itemname
+                                       +"</i> *</li>"
+                                       +"<li>Show</li>"
+                                       +"<li>Copy</li>"
+                           +"<li>Hilight</li></ul>");
+            itemmenu = $("#" + menuid);
+            var menuheight = itemmenu.innerHeight();
+            var menuwidth = itemmenu.innerWidth();
+            var menutop = 10;
+            var menuleft = 20;
+            console.log (" handleitemspan mouse3 itemmenu=", itemmenu,
+                         " menuheight=", menuheight, " menuwidth=", menuwidth);
+            if (ev.pageX + menuwidth + 10 < edivwidth)
+                menuleft = Math.round(ev.pageX + 5);
+            else
+                menuleft = Math.round(ev.pageX - menuwidth + 3);
+            if (ev.pageY + menuheight + 10 < edivheight)
+                menutop = Math.round(ev.pageY + 5);
+            else
+                menutop = Math.round(ev.pageY + menuheight - 5);
+            console.log (" handleitemspan mouse3 menuleft=", menuleft, " menutop=", menutop);
+            itemmenu[0].style.top = menutop + "px";
+            itemmenu[0].style.left = menuleft + "px";
+            itemmenu[0].style.zIndex = "99";
+            itemmenu.menu({
+            });
+        });
+    };
+    $editdiv.find(".momitemref_cl").each(handleitemspan);
+    $editdiv.find(".momitemval_cl").each(handleitemspan);
     console.log("mom_ajaxfill end $rawmodebox=", $rawmodebox,
-		" $editdiv=", $editdiv);
+                " $editdiv=", $editdiv);
 }
 
 function mom_doexit(jsex) {
@@ -342,10 +381,10 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
     }
     else if (js.resultcount) {
         var valchecked = $rawmodebox.prop("checked");
-	console.log ("mom_ajaxparsecommand result count ", js.resultcount,
-		     " valchecked=", valchecked);
-	mom_ajaxfill("<br/> in " + js.resultcount + " steps.");
-	console.log ("mom_ajaxparsecommand after ajaxfill js=", js);
+        console.log ("mom_ajaxparsecommand result count ", js.resultcount,
+                     " valchecked=", valchecked);
+        mom_ajaxfill("<br/> in " + js.resultcount + " steps.");
+        console.log ("mom_ajaxparsecommand after ajaxfill js=", js);
         $.ajax
         ({url: "/nanoedit",
           method: "POST",
@@ -362,6 +401,11 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
 var mom_menucmdcount = 0;
 var mom_menucmdel = null;
 var mom_menutimeout = null;
+
+
+
+
+
 function mom_removecmdmenu(oldmenu) {
     if (!oldmenu)
         oldmenu = mom_menucmdel;
@@ -631,7 +675,6 @@ $(document).ready(function(){
     $commandtext = $("#commandtext_id");
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
-    $itemctxmenu = $("#nanoctxmenuitem_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     /***
         $commandtext.autocomplete({
