@@ -179,7 +179,7 @@ function mom_complete_name(name) {
 
 
 var mom_menuitemcount = 0;
-var mom_menuitem;
+var mom_menuitem = null;
 
 /// this function is called by /nanoedit AJAX for do_fillpage at document loading
 function mom_ajaxfill(htmlc) {
@@ -232,23 +232,30 @@ function mom_ajaxfill(htmlc) {
         });
     });
     function removeitemmenu(itmen) {
-	console.log("removeitemmenu itmen=", itmen);
-	if (itmen) {
-	    itmen.menu("destroy");
-	    itmen.remove();
-	    itmen = null;
-	}
+        console.log("removeitemmenu itmen=", itmen, " mom_menuitem=", mom_menuitem);
+        if (itmen) {
+            itmen.menu("destroy");
+            itmen.remove();
+        }
+        if (mom_menuitem) {
+            if (mom_menuitem != itmen) {
+                mom_menuitem.menu("destroy");
+                mom_menuitem.remove();
+            }
+        }
+        itmen = null;
+        mom_menuitem = null;
     };
     function handleitemspan(ix, el) {   
         console.log("handleitemspan ix=", ix, " el=", el);
-	$(el).contextmenu(function (ev) { return false; });
+        $(el).contextmenu(function (ev) { return false; });
         $(el).mousedown(function (ev) {   
             console.log("handleitemspan-mousedown el=", el,
-			"el-text=", $(el).text(), " ev=", ev);
+                        "el-text=", $(el).text(), " ev=", ev);
             if (ev.which != 3) return false;
             mom_menuitemcount ++;
-	    console.log ("handleitemspan down ev=", ev,
-			 " #", mom_menuitemcount);
+            console.log ("handleitemspan down ev=", ev,
+                         " #", mom_menuitemcount, " old mom_menuitem=", mom_menuitem);
             var itemmenu = null;
             var menupos = null;
             var menuid = "mom_itemmenu_" + mom_menuitemcount + "_id";
@@ -261,18 +268,22 @@ function mom_ajaxfill(htmlc) {
                          " edivheight=", edivheight, " edivwidth=", edivwidth, " edivoff=", edivoff);
             var itemname = $(el).text();
             console.log (" handleitemspan mouse3 itemname=", itemname);
-            $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid+"'><li class='ui-state-disabled'>* <i>"+itemname
-                                       +"</i> *</li>"
-                                       +"<li>Show</li>"
-                                       +"<li>Copy</li>"
-                           +"<li>Hilight</li></ul>");
-	    if (mom_menuitem) {
-		var oldmenuitem = mom_menuitem;
-		mom_menuitem = null;
-		console.log ("handleitemspan-mouse3 oldmenuitem=", oldmenuitem);
-		oldmenuitem.destroy();
-		oldmenuitem = null;
-	    };
+            $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid+"'>"
+                           +"<li class='ui-state-disabled'>* <i>"+itemname
+                           +"</i> *</li>"
+                           // the text inside the following <li> matters, see switch uitext below
+                           +"<li>Display</li>"
+                           +"<li>Copy</li>"
+                           +"<li>Hilight</li>"
+                           +"</ul>");
+            if (mom_menuitem) {
+                var oldmenuitem = mom_menuitem;
+                mom_menuitem = null;
+                console.log ("handleitemspan-mouse3 oldmenuitem=", oldmenuitem);
+                oldmenuitem.destroy();
+                oldmenuitem.remove();
+                oldmenuitem = null;
+            };
             itemmenu = $("#" + menuid);
             var menuheight = itemmenu.innerHeight();
             var menuwidth = itemmenu.innerWidth();
@@ -288,25 +299,46 @@ function mom_ajaxfill(htmlc) {
                 menutop = Math.round(ev.pageY + 5);
             else
                 menutop = Math.round(ev.pageY + menuheight - 5);
-            console.log (" handleitemspan mouse3 menuleft=", menuleft, " menutop=", menutop);
+            console.log ("handleitemspan mouse3 menuleft=", menuleft, " menutop=", menutop);
             itemmenu[0].style.top = menutop + "px";
             itemmenu[0].style.left = menuleft + "px";
             itemmenu[0].style.zIndex = "99";
             itemmenu.menu({
-		select: function(ev,ui) {
-		    console.log ("handleitemspan-select ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
-		    setTimeout(function ()
-			       { var itmen = itemmenu;
-				 itemmenu = null;
-				 removeitemmenu(itmen);
-			       },
-			       250);
-		},
-		blur: function(ev,ui) {
-		    console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
-		}
+                select: function(ev,ui) {
+                    var uitext;
+                    console.log ("handleitemspan-select ev=", ev, " ui=", ui,
+                                 " ui.item=", ui.item,
+                                 " itemmenu=", itemmenu);
+                    uitext = ui.item.text();
+                    console.log ("handleitemspan-select uitext=", uitext, " itemname=", itemname);
+                    switch (uitext) {
+                    case "Display":
+                        console.log ("handleitemspan-select should display itemname=", itemname);
+                        break;
+                    case "Copy":
+                        console.log ("handleitemspan-select should copy itemname=", itemname);
+			ui.item.select();
+			document.execCommand('copy');
+                        break;
+                    case "Hilight":
+                        console.log ("handleitemspan-select should hilight itemname=", itemname);
+                        break;
+                    default:
+                        console.error("handleitemspan-select bad uitext=", uitext);
+                    }
+                    setTimeout(function ()
+                               { var itmen = itemmenu;
+                                 itemmenu = null;
+                                 removeitemmenu(itmen);
+                               },
+                               250);
+                },
+                blur: function(ev,ui) {
+                    console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
+                }
             });
-	    mom_itemmenu = itemmenu;
+            mom_menuitem = itemmenu;
+            console.log("handleitemspan mouse3 mom_menuitem=", mom_menuitem);
         });
     };
     $editdiv.find(".momitemref_cl").each(handleitemspan);
@@ -711,6 +743,11 @@ $(document).ready(function(){
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
+    $clipboardh = new Clipboard(".momitemref_cl");
+    console.log ("nanoedit $clipboardh=", $clipboardh);
+    $clipboardh.on("success", function (ev) {
+	console.log("clipboardsuccess ev=", ev, " $clipboardh=", $clipboardh);
+    });
     /***
         $commandtext.autocomplete({
         delay: 300,
