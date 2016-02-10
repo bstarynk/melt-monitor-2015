@@ -179,6 +179,8 @@ function mom_complete_name(name) {
 
 
 var mom_menuitemcount = 0;
+var mom_menuitem;
+
 /// this function is called by /nanoedit AJAX for do_fillpage at document loading
 function mom_ajaxfill(htmlc) {
     console.log("mom_ajaxfill:\n", htmlc, "\n### endajaxfill\n");
@@ -239,7 +241,10 @@ function mom_ajaxfill(htmlc) {
     };
     function handleitemspan(ix, el) {   
         console.log("handleitemspan ix=", ix, " el=", el);
-        $(el).mousedown(function (ev) {
+	$(el).contextmenu(function (ev) { return false; });
+        $(el).mousedown(function (ev) {   
+            console.log("handleitemspan-mousedown el=", el,
+			"el-text=", $(el).text(), " ev=", ev);
             if (ev.which != 3) return false;
             mom_menuitemcount ++;
 	    console.log ("handleitemspan down ev=", ev,
@@ -261,6 +266,13 @@ function mom_ajaxfill(htmlc) {
                                        +"<li>Show</li>"
                                        +"<li>Copy</li>"
                            +"<li>Hilight</li></ul>");
+	    if (mom_menuitem) {
+		var oldmenuitem = mom_menuitem;
+		mom_menuitem = null;
+		console.log ("handleitemspan-mouse3 oldmenuitem=", oldmenuitem);
+		oldmenuitem.destroy();
+		oldmenuitem = null;
+	    };
             itemmenu = $("#" + menuid);
             var menuheight = itemmenu.innerHeight();
             var menuwidth = itemmenu.innerWidth();
@@ -294,6 +306,7 @@ function mom_ajaxfill(htmlc) {
 		    console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
 		}
             });
+	    mom_itemmenu = itemmenu;
         });
     };
     $editdiv.find(".momitemref_cl").each(handleitemspan);
