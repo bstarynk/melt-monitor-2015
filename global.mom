@@ -391,7 +391,7 @@ comment
 
 
 *the_agenda
-1452200786
+1455181584
 ^mtime
 (
 comment
@@ -463,6 +463,17 @@ comment
 (
 display
 raw
+expression
+(
+the_system
+notice
+display
+)node
+item
+(
+notice
+the_system
+)set
 )attrs
 (
 item

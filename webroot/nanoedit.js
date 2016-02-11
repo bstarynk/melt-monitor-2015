@@ -31,6 +31,8 @@ var $parsedcmddiv;
 var $clipboardh;
 
 var mom_eval_counter=0;
+var mom_menuitemcount = 0;
+var mom_menuitem = null;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
 /// then the key Escape to get ∧
@@ -178,8 +180,6 @@ function mom_complete_name(name) {
 
 
 
-var mom_menuitemcount = 0;
-var mom_menuitem = null;
 
 /// this function is called by /nanoedit AJAX for do_fillpage at document loading
 function mom_ajaxfill(htmlc) {
@@ -268,7 +268,8 @@ function mom_ajaxfill(htmlc) {
                          " edivheight=", edivheight, " edivwidth=", edivwidth, " edivoff=", edivoff);
             var itemname = $(el).text();
             console.log (" handleitemspan mouse3 itemname=", itemname);
-            $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid+"'>"
+            $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid
+			   +"' data-momitem='"+itemname+"'>"
                            +"<li class='ui-state-disabled'>* <i>"+itemname
                            +"</i> *</li>"
                            // the text inside the following <li> matters, see switch uitext below
@@ -316,9 +317,9 @@ function mom_ajaxfill(htmlc) {
                         console.log ("handleitemspan-select should display itemname=", itemname);
                         break;
                     case "Copy":
-                        console.log ("handleitemspan-select should copy itemname=", itemname);
 			ui.item.select();
 			document.execCommand('copy');
+                        console.log ("handleitemspan-select copying itemname=", itemname, "ui.item=", ui.item);
                         break;
                     case "Hilight":
                         console.log ("handleitemspan-select should hilight itemname=", itemname);
@@ -332,6 +333,7 @@ function mom_ajaxfill(htmlc) {
                                  removeitemmenu(itmen);
                                },
                                250);
+                    console.log ("handleitemspan-select done uitext=", uitext);
                 },
                 blur: function(ev,ui) {
                     console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
@@ -743,7 +745,12 @@ $(document).ready(function(){
     $sendcmdbut = $("#commandsend_id");
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
-    $clipboardh = new Clipboard(".momitemref_cl");
+    $clipboardh = new Clipboard(".momitemref_cl", {
+	text: function (tri) {
+	    console.log ("$clipboardh.text tri=", tri, " $clipboardh=", $clipboardh, " mom_menuitem=", mom_menuitem);
+	    console.trace();
+	}
+    });
     console.log ("nanoedit $clipboardh=", $clipboardh);
     $clipboardh.on("success", function (ev) {
 	console.log("clipboardsuccess ev=", ev, " $clipboardh=", $clipboardh);
