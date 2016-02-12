@@ -33,6 +33,7 @@ var $clipboardh;
 var mom_eval_counter=0;
 var mom_menuitemcount = 0;
 var mom_menuitem = null;
+var mom_itemname = null;
 
 /// in our command text, we want to be able to type the 4 keys $ a n d
 /// then the key Escape to get ∧
@@ -232,7 +233,8 @@ function mom_ajaxfill(htmlc) {
         });
     });
     function removeitemmenu(itmen) {
-        console.log("removeitemmenu itmen=", itmen, " mom_menuitem=", mom_menuitem);
+        console.log("removeitemmenu itmen=", itmen, " mom_menuitem=", mom_menuitem,
+		    " mom_itemname=", mom_itemname);
         if (itmen) {
             itmen.menu("destroy");
             itmen.remove();
@@ -245,6 +247,14 @@ function mom_ajaxfill(htmlc) {
         }
         itmen = null;
         mom_menuitem = null;
+	mom_itemname= null;
+    };
+    function hilightitemspan(ix, el) {
+        console.log("hilightitemspan ix=", ix, " el=", el);
+	var eltext= $(el).text();
+	if (eltext == mom_itemname) {
+	    $(el).toggleClass("momitemhilight_cl");
+	}
     };
     function handleitemspan(ix, el) {   
         console.log("handleitemspan ix=", ix, " el=", el);
@@ -269,7 +279,7 @@ function mom_ajaxfill(htmlc) {
             var itemname = $(el).text();
             console.log (" handleitemspan mouse3 itemname=", itemname);
             $editdiv.after("<ul class='mom_itemmenu_cl' id='"+menuid
-			   +"' data-momitem='"+itemname+"'>"
+                           +"' data-momitem='"+itemname+"'>"
                            +"<li class='ui-state-disabled'>* <i>"+itemname
                            +"</i> *</li>"
                            // the text inside the following <li> matters, see switch uitext below
@@ -290,8 +300,10 @@ function mom_ajaxfill(htmlc) {
             var menuwidth = itemmenu.innerWidth();
             var menutop = 10;
             var menuleft = 20;
+	    mom_itemname = itemname;
             console.log (" handleitemspan mouse3 itemmenu=", itemmenu,
-                         " menuheight=", menuheight, " menuwidth=", menuwidth);
+                         " menuheight=", menuheight, " menuwidth=", menuwidth,
+			 " mom_itemname=", mom_itemname);
             if (ev.pageX + menuwidth + 10 < edivwidth)
                 menuleft = Math.round(ev.pageX + 5);
             else
@@ -311,18 +323,28 @@ function mom_ajaxfill(htmlc) {
                                  " ui.item=", ui.item,
                                  " itemmenu=", itemmenu);
                     uitext = ui.item.text();
-                    console.log ("handleitemspan-select uitext=", uitext, " itemname=", itemname);
+                    console.log ("handleitemspan-select uitext=", uitext,
+                                 " itemname=", itemname, " mom_itemname=", mom_itemname);
                     switch (uitext) {
                     case "Display":
-                        console.log ("handleitemspan-select should display itemname=", itemname);
+                        console.log ("handleitemspan-select should display itemname=",
+                                     itemname);
                         break;
                     case "Copy":
-			ui.item.select();
-			document.execCommand('copy');
-                        console.log ("handleitemspan-select copying itemname=", itemname, "ui.item=", ui.item);
+                        console.log ("handleitemspan-select before copying itemname=",
+                                     itemname);
+                        ui.item.select();
+			/// only textarea can be selected, see http://stackoverflow.com/a/35364371/841108
+                        var okcopy = document.execCommand('copy');			
+                        console.log ("handleitemspan-select copying itemname=",
+                                     itemname, "ui.item=",
+                                     ui.item, " okcopy=", okcopy);
                         break;
                     case "Hilight":
-                        console.log ("handleitemspan-select should hilight itemname=", itemname);
+                        console.log ("handleitemspan-select should hilight itemname=",
+                                     itemname, " mom_itemname=", mom_itemname);
+			$editdiv.find(".momitemref_cl").each(hilightitemspan);
+			$editdiv.find(".momitemval_cl").each(hilightitemspan);
                         break;
                     default:
                         console.error("handleitemspan-select bad uitext=", uitext);
@@ -336,7 +358,8 @@ function mom_ajaxfill(htmlc) {
                     console.log ("handleitemspan-select done uitext=", uitext);
                 },
                 blur: function(ev,ui) {
-                    console.log ("handleitemspan-blur ev=", ev, " ui=", ui, " itemmenu=", itemmenu);
+                    console.log ("handleitemspan-blur ev=", ev, " ui=", ui,
+                                 " itemmenu=", itemmenu);
                 }
             });
             mom_menuitem = itemmenu;
@@ -411,7 +434,8 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
                  }}
             ]
         });
-        console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);
+        console.log ("mom_ajaxparsecommand badnamedlg=", badnamedlg,
+                     " badcomminp=", badcomminp);
         return;
     }
     else if (js.error_from) {
@@ -700,16 +724,18 @@ function mom_cmdkeypress(evt) {
                          { console.log("momdelayrepl movefinishing ev=", ev, " curmenu=", curmenu);
                            clearTimeout(mom_menutimeout);
                          });
-                        mom_menutimeout = setTimeout(function()
-                                                     {
-                                                         console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
-                                                                     curmenu);
-                                                         curmenu.delay(100).fadeOut(800+75*dollvalseq.length,
-                                                                                    function () {
-                                                                                        console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
-                                                                                        mom_removecmdmenu();
-                                                                                    });
-                                                     }, 9500);                                          
+                        mom_menutimeout =
+                            setTimeout(function()
+                                       {
+                                           console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
+                                                       curmenu);
+                                           curmenu.delay(100)
+					       .fadeOut(800+75*dollvalseq.length,
+                                                                      function () {
+                                                                          console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
+                                                                          mom_removecmdmenu();
+                                                                      });
+                                       }, 9500);                                          
                     }
                 }
             }
@@ -746,14 +772,19 @@ $(document).ready(function(){
     $parsedcmddiv = $("#parsedcommand_id");
     console.log ("nanoedit readying $editdiv=", $editdiv, " $editlog=", $editlog, " $cleareditbut=", $cleareditbut);
     $clipboardh = new Clipboard(".momitemref_cl", {
-	text: function (tri) {
-	    console.log ("$clipboardh.text tri=", tri, " $clipboardh=", $clipboardh, " mom_menuitem=", mom_menuitem);
-	    console.trace();
-	}
+        text: function (tri) {
+            console.log ("$clipboardh.text tri=", tri, " $clipboardh=", $clipboardh,
+			 " mom_menuitem=", mom_menuitem,
+			 " mom_itemname=", mom_itemname);
+            console.trace();
+	    if (mom_itemname)
+		return mom_itemname;
+        }
     });
     console.log ("nanoedit $clipboardh=", $clipboardh);
     $clipboardh.on("success", function (ev) {
-	console.log("clipboardsuccess ev=", ev, " $clipboardh=", $clipboardh);
+        console.log("clipboardsuccess ev=", ev, " $clipboardh=", $clipboardh,
+		    " mom_itemname=", mom_itemname);
     });
     /***
         $commandtext.autocomplete({

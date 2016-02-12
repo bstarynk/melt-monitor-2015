@@ -104,6 +104,11 @@ span.momitemref_cl:hover {
 }
 
 
+span.momitemhilight_cl {
+    background-color: orange;
+    border: 2px dashed navy;
+}
+
 span.momintval_cl {
     font-family: "Courier New", Courier, monospace;
     color: #54062F;
