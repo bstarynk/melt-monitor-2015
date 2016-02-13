@@ -37,6 +37,15 @@ comment
 )attrs
 
 
+*arity
+1455359989
+^mtime
+(
+comment
+"arity of some node"_
+)attrs
+
+
 *before_dump
 1453830276
 ^mtime
@@ -123,6 +132,15 @@ comment
 (
 comment
 "for expression"_
+)attrs
+
+
+*get
+1455358475
+^mtime
+(
+comment
+"to get something"_
 )attrs
 
 
@@ -260,6 +278,15 @@ comment
 (
 comment
 "for % delimiter token"_
+)attrs
+
+
+*put
+1455358475
+^mtime
+(
+comment
+"to put something"_
 )attrs
 
 

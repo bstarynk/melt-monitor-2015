@@ -1152,7 +1152,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "{ \"html\": \"");
       mom_output_utf8_encoded (wexch->webx_outfil, reshtml, -1);
       mom_wexch_puts (wexch, "\",\n");
-      MOM_WEXCH_PRINTF (wexch, " \"resultcount\": %d }\n", nev.nanev_count);
+      MOM_WEXCH_PRINTF (wexch, " \"resultcount\": %ld }\n", nev.nanev_count);
       GC_FREE (reshtml), reshtml = NULL;
       mom_wexch_reply (wexch, HTTP_OK, "application/json");
     };
@@ -1181,7 +1181,8 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
     {
 #define OPITM_NANOEVALNODE_MOM(Nam) momhashpredef_##Nam % 317: \
     if (opitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; goto defaultcase; foundcase_##Nam
-    case OPITM_NANOEVALNODE_MOM (display):
+      //////
+    case OPITM_NANOEVALNODE_MOM (display):     ///// %display(<items...>)
       {
         MOM_DEBUGPRINTF (run, "nanoeval_node display node %s in envitm %s",
                          mom_value_cstring ((const struct mom_hashedvalue_st
@@ -1195,7 +1196,7 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
             MOM_DEBUGPRINTF (run,
                              "nanoeval_node display ix=%d depth=%d curexprv=%s",
                              ix, depth, mom_value_cstring (curexprv));
-            void *curdispv = nanoeval_mom (nev, envitm, curexprv, depth);
+            void *curdispv = nanoeval_mom (nev, envitm, curexprv, depth + 1);
             MOM_DEBUGPRINTF (run,
                              "nanoeval_node display ix=%d depth=%d curdispv=%s",
                              ix, depth, mom_value_cstring (curdispv));
@@ -1258,6 +1259,37 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                                        MOM_PREDEFITM (item),
                                        (struct mom_hashedvalue_st *) dispset);
         return dispset;
+      }
+      break;
+    case OPITM_NANOEVALNODE_MOM (get): ///// %get(<item>,<itemattr>[,<default>]) or %get(<seq>,<rank>[,<default>])
+      {
+        MOM_DEBUGPRINTF (run, "nanoeval_node get node %s in envitm %s",
+                         mom_value_cstring ((const struct mom_hashedvalue_st
+                                             *) nod),
+                         mom_item_cstring (envitm));
+        if (arity != 2 && arity != 3)
+          NANOEVAL_FAILURE_MOM (nev, nod,
+                                mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                                     mom_boxint_make
+                                                     (arity)));
+        const struct mom_hashedvalue_st *firstargv = nod->nod_sons[0];
+        MOM_DEBUGPRINTF (run, "nanoeval_node get first son %s depth %d",
+                         mom_value_cstring (firstargv), depth);
+        const void *firstv = nanoeval_mom (nev, envitm, firstargv, depth + 1);
+        MOM_DEBUGPRINTF (run, "nanoeval_node get first son value %s depth %d",
+                         mom_value_cstring (firstv), depth);
+        if (!firstv && mom_itype (firstargv) == MOMITY_ITEM)
+          firstv = firstargv;
+        const struct mom_hashedvalue_st *secondargv = nod->nod_sons[0];
+        MOM_DEBUGPRINTF (run, "nanoeval_node get second son %s depth %d",
+                         mom_value_cstring (secondargv), depth);
+        const void *secondv =
+          nanoeval_mom (nev, envitm, secondargv, depth + 1);
+        MOM_DEBUGPRINTF (run, "nanoeval_node get first son value %s depth %d",
+                         mom_value_cstring (secondv), depth);
+        if (!secondv && mom_itype (secondargv) == MOMITY_ITEM)
+          secondv = secondargv;
+#warning nanoeval_node get inncomplete
       }
       break;
     defaultcase:
