@@ -37,6 +37,15 @@ comment
 )attrs
 
 
+*and
+1455462876
+^mtime
+(
+comment
+"for conjunctions"_
+)attrs
+
+
 *arity
 1455359989
 ^mtime
@@ -78,6 +87,15 @@ comment
 (
 comment
 "comment in items"_
+)attrs
+
+
+*cond
+1455462590
+^mtime
+(
+comment
+"for conditionals"_
 )attrs
 
 
@@ -263,6 +281,15 @@ signature_tasklet
 ^mtime
 
 
+*or
+1455462876
+^mtime
+(
+comment
+"for disjunctions"_
+)attrs
+
+
 *parent
 1454575823
 ^mtime
@@ -440,6 +467,15 @@ nano_displayer
 )comps
 
 
+*truth
+1455463429
+^mtime
+(
+comment
+"for true value"_
+)attrs
+
+
 *web_handlers
 1446061228
 ^mtime
@@ -526,6 +562,15 @@ the_system
 comment
 )node
 )payload_hashmap
+
+
+*when
+1455462590
+^mtime
+(
+comment
+"inside conditionals"_
+)attrs
 
 
 *word
