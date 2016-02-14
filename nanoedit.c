@@ -1415,6 +1415,18 @@ nanoeval_ornode_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
   MOM_DEBUGPRINTF (run, "nanoeval_ornode node %s in envitm %s",
                    mom_value_cstring ((const struct mom_hashedvalue_st
                                        *) nod), mom_item_cstring (envitm));
+  resv = MOM_PREDEFITM (truth);
+  for (int ix = 0; ix < (int) arity; ix++)
+    {
+      const struct mom_hashedvalue_st *curexpv = nod->nod_sons[ix];
+      MOM_DEBUGPRINTF (run, "nanoeval_ornode ix#%d curexpv %s depth %d", ix,
+                       mom_value_cstring (curexpv), depth);
+      resv = nanoeval_mom (nev, envitm, curexpv, depth + 1);
+      MOM_DEBUGPRINTF (run, "nanoeval_ornode ix#%d resv %s", ix,
+                       mom_value_cstring (resv));
+      if (resv)
+        break;
+    };
   return resv;
 }                               /* end of nanoeval_ornode_mom */
 
@@ -1434,6 +1446,17 @@ nanoeval_andnode_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
   MOM_DEBUGPRINTF (run, "nanoeval_ornode node %s in envitm %s",
                    mom_value_cstring ((const struct mom_hashedvalue_st
                                        *) nod), mom_item_cstring (envitm));
+  for (int ix = 0; ix < (int) arity; ix++)
+    {
+      const struct mom_hashedvalue_st *curexpv = nod->nod_sons[ix];
+      MOM_DEBUGPRINTF (run, "nanoeval_andnode ix#%d curexpv %s depth %d", ix,
+                       mom_value_cstring (curexpv), depth);
+      resv = nanoeval_mom (nev, envitm, curexpv, depth + 1);
+      MOM_DEBUGPRINTF (run, "nanoeval_andnode ix#%d resv %s", ix,
+                       mom_value_cstring (resv));
+      if (!resv)
+        break;
+    };
   return resv;
 }                               /* end of nanoeval_andnode_mom */
 
