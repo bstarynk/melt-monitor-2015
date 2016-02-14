@@ -831,6 +831,29 @@ mom_dyncast_node (const void *p)
   return NULL;
 }
 
+static inline struct mom_item_st *
+mom_boxnode_conn (const void *p)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_NODE)
+    return ((const struct mom_boxnode_st *) p)->nod_connitm;
+  return NULL;
+}
+
+static inline struct mom_hashedvalue_st *
+mom_boxnode_nth (const void *p, int rk)
+{
+  if (p && p != MOM_EMPTY_SLOT
+      && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_NODE)
+    {
+      unsigned sz = mom_raw_size (p);
+      if (rk < 0)
+        rk += sz;
+      if (rk >= 0 && rk < (int) sz)
+        return ((const struct mom_boxnode_st *) p)->nod_sons[rk];
+    }
+  return NULL;
+}
 
 const struct mom_boxnode_st *mom_boxnode_make_meta (const struct mom_item_st
                                                     *conn, unsigned size,
