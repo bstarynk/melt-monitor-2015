@@ -1567,6 +1567,23 @@ nanoeval_itemnode_mom (struct nanoeval_mom_st *nev,
 
 
 static void *
+nanoeval_othernode_mom (struct nanoeval_mom_st *nev,
+                        struct mom_item_st *envitm,
+                        const struct mom_boxnode_st *nod, int depth)
+{
+  void *resv = NULL;
+  MOM_DEBUGPRINTF (run, "nanoeval_othernode start envitm=%s nod=%s depth#%d",
+                   mom_item_cstring (envitm),
+                   mom_value_cstring ((struct mom_boxnode_st *) nod), depth);
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  assert (nod && nod->va_itype == MOMITY_NODE);
+  unsigned arity = mom_size (nod);
+
+}                               /* end of nanoeval_othernode_mom */
+
+
+static void *
 nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                    const struct mom_boxnode_st *nod, int depth)
 {
@@ -1604,7 +1621,7 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
         return nanoeval_whilenode_mom (nev, envitm, nod, depth);
     defaultcase:
     default:
-      break;
+      return nanoeval_othernode_mom (nev, envitm, nod, depth);
     }
   MOM_FATAPRINTF ("unimplemented eval of node %s",
                   mom_value_cstring ((struct mom_hashedvalue_st *) nod));
@@ -2143,6 +2160,18 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       return;
     }                           /* end line comment parsing */
 
+  else if (uc == '€'          /* +20AC EURO SIGN, utf8 "\342\202\254" */
+           && sscanf (pc, "€%10[A-Za-z]{%n", rawprefix + sizeof ("€") - 1,
+                      &pos) >= 1 && pos > 0
+           && pos < (int) sizeof (rawprefix) - sizeof ("€"))
+    {
+      assert (uc == 0x20ac);
+      strncpy (rawprefix, "€", sizeof ("€") - 1);
+      const char *starts = pc;
+      const char *endraws = strstr (raws, rawprefix);
+      const struct mom_boxstring_st *strv = NULL;
+#warning should parse code chunks with euro sign
+    }
   else if (uc == '"')
     {                           // escaped string
       const char *starts = pc + 1;
