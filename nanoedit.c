@@ -1521,6 +1521,51 @@ nanoeval_whilenode_mom (struct nanoeval_mom_st *nev,
   return resv;
 }                               /* end nanoeval_whilenode_mom */
 
+
+
+static void *
+nanoeval_itemnode_mom (struct nanoeval_mom_st *nev,
+                       struct mom_item_st *envitm,
+                       const struct mom_boxnode_st *nod, int depth)
+{
+  void *resv = NULL;
+  MOM_DEBUGPRINTF (run, "nanoeval_itemnode start envitm=%s nod=%s depth#%d",
+                   mom_item_cstring (envitm),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) nod),
+                   depth);
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  assert (nod && nod->va_itype == MOMITY_NODE);
+  unsigned arity = mom_size (nod);;
+  if (arity != 1)
+    NANOEVAL_FAILURE_MOM (nev, nod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (arity)));
+  const struct mom_hashedvalue_st *argitv = nod->nod_sons[0];
+  struct mom_item_st *argitm = mom_dyncast_item (argitv);
+  if (argitm != NULL)
+    {
+      resv = mom_clone_item (argitm);
+      MOM_DEBUGPRINTF (run, "nanoeval_itemnode cloned resv=%s",
+                       mom_item_cstring (resv));
+    }
+  else
+    {
+      const struct mom_hashedvalue_st *val =
+        nanoeval_mom (nev, envitm, argitv, depth + 1);
+      argitm = mom_dyncast_item (val);
+      if (!argitm)
+        NANOEVAL_FAILURE_MOM (nev, nod,
+                              mom_boxnode_make_va (MOM_PREDEFITM (item), 1,
+                                                   val));
+      resv = mom_clone_item (argitm);
+      MOM_DEBUGPRINTF (run, "nanoeval_itemnode cloned resv=%s",
+                       mom_item_cstring (resv));
+    }
+  return resv;
+}                               /* end nanoeval_itemnode_mom */
+
+
 static void *
 nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
                    const struct mom_boxnode_st *nod, int depth)
@@ -1552,6 +1597,8 @@ nanoeval_node_mom (struct nanoeval_mom_st *nev, struct mom_item_st *envitm,
       return nanoeval_andnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (verbatim):    ///// %verbatim(it)
       return nanoeval_verbatimnode_mom (nev, envitm, nod, depth);
+    case OPITM_NANOEVALNODE_MOM (item):        ///// %item(it)
+      return nanoeval_itemnode_mom (nev, envitm, nod, depth);
       case OPITM_NANOEVALNODE_MOM (while)
     :                          ///// %while(<cond>,...)
         return nanoeval_whilenode_mom (nev, envitm, nod, depth);
