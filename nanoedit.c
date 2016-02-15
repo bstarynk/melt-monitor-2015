@@ -2168,6 +2168,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
       assert (uc == 0x20ac);
       strncpy (rawprefix, "€", sizeof ("€") - 1);
       const char *starts = pc;
+      const char *raws = pc + pos;
       const char *endraws = strstr (raws, rawprefix);
       const struct mom_boxstring_st *strv = NULL;
 #warning should parse code chunks with euro sign
