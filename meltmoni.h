@@ -2222,4 +2222,32 @@ typedef void mom_closure_1int_to_void_sig_t (const struct mom_boxnode_st
 //// for signature_closure_void_to_void
 typedef void mom_closure_void_to_void_sig_t (const struct mom_boxnode_st
                                              *clonod);
+
+
+#define NANOEVAL_MAGIC_MOM 617373733    /*0x24cc6025 */
+struct mom_nanoeval_st
+{
+  unsigned nanev_magic;         /* always NANOEVAL_MAGIC_MOM */
+  long nanev_count;
+  long nanev_maxstep;
+  struct mom_item_st *nanev_tkitm;
+  struct mom_item_st *nanev_wexitm;
+  struct mom_item_st *nanev_thistatitm;
+  struct mom_item_st *nanev_sessitm;
+  const void *nanev_fail;
+  const void *nanev_expr;
+  jmp_buf nanev_jb;
+};
+#define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
+    struct mom_nanoeval_st*_ne = (Ne);				\
+    assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
+    _ne->nanev_fail = (Fail);					\
+    _ne->nanev_expr = (Expr);					\
+    longjmp(_ne->nanev_jb,__LINE__);				\
+  } while(0)
+
+
+const void *mom_nanoeval (struct mom_nanoeval_st *nev,
+                          struct mom_item_st *envitm, const void *exprv,
+                          int depth);
 #endif /*MONIMELT_INCLUDED_ */
