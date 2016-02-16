@@ -1296,6 +1296,24 @@ do_add_predefined_mom (void)
 }                               /* end of do_add_predefined_mom */
 
 
+/***
+commit 7e43dcafd3eb09de4d623b05dbb25d0d272508fa
+Author: Basile Starynkevitch <basile@starynkevitch.net>
+Date:   Tue Feb 16 13:03:31 2016 +0100
+
+    add and use signature predefined. It is dumped in wrong order in _mom_predef.h
+
+is the first commit which fails for dumping
+ ***/
+
+void
+momtest_comparesig (const char *arg)
+{
+  MOM_INFORMPRINTF ("start momtest_comparesig arg=%s", arg);
+  MOM_FATAPRINTF ("missing momtest_comparesig arg=%s", arg);
+#warning momtest_comparesig missing
+}                               /* end of momtest_comparesig */
+
 
 static void
 do_run_tests_mom (void)
