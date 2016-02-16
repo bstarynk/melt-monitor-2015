@@ -1,6 +1,6 @@
 // file main.c - main program and utilities
 
-/**   Copyright (C)  2015  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -43,6 +43,15 @@ static struct predefadd_mom_st added_predef_mom[MAX_ADDED_PREDEF_MOM];
 static unsigned count_added_predef_mom;
 
 #define BASE_YEAR_MOM 2015
+
+#define MAX_TEST_MOM 16
+struct test_mom_st
+{
+  const char *test_name;
+  const char *test_arg;
+};
+static struct test_mom_st testarr_mom[MAX_TEST_MOM];
+static unsigned testcount_mom;
 
 const char *
 mom_hostname (void)
@@ -1015,6 +1024,8 @@ enum extraopt_en
   xtraopt_commentpredef,
   xtraopt_webdir,
   xtraopt_info,
+  xtraopt_testarg,
+  xtraopt_testrun,
 };
 
 static const struct option mom_long_options[] = {
@@ -1030,6 +1041,8 @@ static const struct option mom_long_options[] = {
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
   {"comment-predefined", required_argument, NULL, xtraopt_commentpredef},
+  {"test-arg", required_argument, NULL, xtraopt_testarg},
+  {"test-run", required_argument, NULL, xtraopt_testrun},
   {"webdir", required_argument, NULL, xtraopt_webdir},
   {"info", no_argument, NULL, xtraopt_info},
   /* Terminating NULL placeholder.  */
@@ -1064,6 +1077,8 @@ usage_mom (const char *argv0)
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
+  printf ("\t --test-arg <testarg>" " \t#Argument to next test.\n");
+  printf ("\t --test-run <testname>" " \t#Name of test to run after load.\n");
   printf ("\t --info" " \t#Give various information\n");
 }
 
@@ -1084,6 +1099,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
+  char *testargstr = NULL;
   while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:",
                              mom_long_options, NULL)) >= 0)
     {
@@ -1184,6 +1200,24 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           should_dump_mom = true;
           count_added_predef_mom++;
           break;
+        case xtraopt_testarg:
+          testargstr = optarg;
+          break;
+        case xtraopt_testrun:
+          {
+            const char *testarg = testargstr ? GC_strdup (testargstr) : NULL;
+            testargstr = NULL;
+            const char *testname = optarg;
+            if (testcount_mom >= MAX_TEST_MOM)
+              MOM_FATAPRINTF ("too many %d tests", testcount_mom);
+            for (const char *tp = testname; *tp; tp++)
+              if (!isalnum (*tp) && *tp != '_')
+                MOM_FATAPRINTF ("invalid testname %s", testname);
+            testarr_mom[testcount_mom].test_name = testname;
+            testarr_mom[testcount_mom].test_arg = testarg;
+            testcount_mom++;
+          }
+          break;
         case xtraopt_info:
 #warning unhandled xtraopt_info
           MOM_FATAPRINTF ("unimplemented --info");
@@ -1262,6 +1296,30 @@ do_add_predefined_mom (void)
 }                               /* end of do_add_predefined_mom */
 
 
+
+static void
+do_run_tests_mom (void)
+{
+  MOM_INFORMPRINTF ("should run %d tests.", testcount_mom);
+  assert (testcount_mom <= MAX_TEST_MOM);
+  for (unsigned tix = 0; tix < testcount_mom; tix++)
+    {
+      char tnambuf[80];
+      memset (tnambuf, 0, sizeof (tnambuf));
+      const char *testname = testarr_mom[tix].test_name;
+      const char *testarg = testarr_mom[tix].test_arg;
+      MOM_INFORMPRINTF ("running test#%d %s with %s", tix, testname, testarg);
+      snprintf (tnambuf, sizeof (tnambuf), "momtest_%s", testname);
+      void *ad = dlsym (mom_prog_dlhandle, tnambuf);
+      if (!ad)
+        MOM_FATAPRINTF ("missing test %s - %s", tnambuf, dlerror ());
+      mom_test_sig_t *tfun = (mom_test_sig_t *) ad;
+      (*tfun) (testarg);
+      MOM_INFORMPRINTF ("done test#%d %s with %s\n", tix, testname, testarg);
+    }
+  MOM_INFORMPRINTF ("*all %d tests run successfully*", testcount_mom);
+}                               /* end of do_run_tests_mom */
+
 void
 mom_stop_and_dump (void)
 {
@@ -1335,6 +1393,8 @@ main (int argc_main, char **argv_main)
     }
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
+  if (testcount_mom > 0)
+    do_run_tests_mom ();
   if (dir_after_load_mom)
     {
       if (chdir (dir_after_load_mom))

@@ -2296,4 +2296,8 @@ typedef const void *mom_nanoevalany_sig_t (struct mom_nanoeval_st *nev,
                                            const struct mom_boxnode_st
                                            *closnod, unsigned nbval,
                                            const void **valarr);
+
+
+/// tests could be run after load
+typedef void mom_test_sig_t (const char *);
 #endif /*MONIMELT_INCLUDED_ */
