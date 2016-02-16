@@ -257,8 +257,8 @@ first_pass_loader_mom (struct mom_loader_st *ld)
           const char *end = NULL;
           struct mom_item_st *itm =
             mom_make_item_from_string (linbuf + 1, &end);
-          MOM_DEBUGPRINTF (load, "first pass line#%d made item %s",
-                           linecount, mom_item_cstring (itm));
+          MOM_DEBUGPRINTF (load, "first pass line#%d made item %s (@%p)",
+                           linecount, mom_item_cstring (itm), (void *) itm);
           ld->ld_hsetitems = mom_hashset_insert (ld->ld_hsetitems, itm);
         }
     }
@@ -585,6 +585,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           if (eol)
             *eol = (char) 0;
           curitm = mom_find_item_from_string (linbuf + 1, &end);
+          MOM_DEBUGPRINTF (load, "second_pass curitm=%s (@%p) linecount#%d",
+                           mom_item_cstring (curitm), curitm, linecount);
           if (!curitm)
             MOM_FATAPRINTF ("failed to find defined item for line#%d: '%s'",
                             linecount, linbuf);
