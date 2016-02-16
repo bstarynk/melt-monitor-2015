@@ -55,6 +55,15 @@ comment
 )attrs
 
 
+*be
+1455623664
+^mtime
+(
+comment
+"be inside let for bindings"_
+)attrs
+
+
 *before_dump
 1453830276
 ^mtime
@@ -213,6 +222,24 @@ comment
 (
 comment
 "for ( delimiter token"_
+)attrs
+
+
+*let
+1455623664
+^mtime
+(
+comment
+"let keyword"_
+)attrs
+
+
+*letrec
+1455623664
+^mtime
+(
+comment
+"letrec keyword"_
 )attrs
 
 
@@ -481,6 +508,15 @@ comment
 (
 comment
 "signature for nanoevalany"_
+)attrs
+
+
+*signature
+1455623962
+^mtime
+(
+comment
+"signature keyword"_
 )attrs
 
 
