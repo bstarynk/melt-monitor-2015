@@ -45,7 +45,7 @@ struct radix_mom_st
 /// actually, it might be better to have each element of the array be
 /// individually allocated, with its own mutex...
 
-static struct radix_mom_st **radix_arr_mom;
+static struct radix_mom_st **radix_arr_mom;     // sorted by alphabetic name
 static unsigned radix_siz_mom;  /* allocated size of radix_arr_mom */
 static unsigned radix_cnt_mom;  /* used count of radix_arr_mom */
 
@@ -185,6 +185,9 @@ mom_find_name_radix (const char *str, int len)
     {
       struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
       assert (curad != NULL);
+      assert (ix == 0
+              || strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                         curad->itname_string.cstr) < 0);
       assert (curad->itname_rank == (unsigned) ix);
       if (!strncmp (curad->itname_string.cstr, str, len)
           && curad->itname_string.cstr[len] == (char) 0)
@@ -204,6 +207,7 @@ const struct mom_itemname_tu *
 mom_make_name_radix (const char *str, int len)
 {
   int tix = -1;
+  static long makecounter;
   struct mom_itemname_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
@@ -211,10 +215,19 @@ mom_make_name_radix (const char *str, int len)
     len = strlen (str);
   if (len >= 256)
     MOM_FATAPRINTF ("too big length %d for name radix %.*s", len, len, str);
-  MOM_DEBUGPRINTF (item, "mom_make_name_radix %.*s", len, str);
   if (!mom_valid_name_radix (str, len))
     return NULL;
   pthread_mutex_lock (&radix_mtx_mom);
+  makecounter++;
+  MOM_DEBUGPRINTF (item, "mom_make_name_radix %.*s #%ld", len, str,
+                   makecounter);
+  assert (makecounter > 0);
+#ifndef NDEBUG
+  if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
+    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+#endif /*NDEBUG*/
   assert (radix_cnt_mom <= radix_siz_mom);
   if (MOM_UNLIKELY (radix_cnt_mom + 2 >= radix_siz_mom))
     {
@@ -264,6 +277,12 @@ mom_make_name_radix (const char *str, int len)
           goto end;
         }
     };
+#ifndef NDEBUG
+  if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
+    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+#endif /*NDEBUG*/
   int lo = 0, hi = (int) radix_cnt_mom;
   while (lo + 5 < hi)
     {
@@ -356,6 +375,12 @@ mom_make_name_radix (const char *str, int len)
     }
 end:
   MOM_DEBUGPRINTF (item, "make name radix final radix_cnt=%d", radix_cnt_mom);
+#ifndef NDEBUG
+  if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
+    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+#endif /*NDEBUG*/
   if (MOM_IS_DEBUGGING (item))
     for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
       {
