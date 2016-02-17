@@ -232,7 +232,7 @@ compare_radix_mom (const struct mom_itemname_tu *curad, const char *str,
   assert (len >= 0);
   assert (curad != NULL);
   assert (str != NULL);
-  int c = strncmp (str, curad->itname_string.cstr, len);
+  int c = strncmp (curad->itname_string.cstr, str, len);
   if (c != 0)
     {
       MOM_DEBUGPRINTF (item,
@@ -244,7 +244,7 @@ compare_radix_mom (const struct mom_itemname_tu *curad, const char *str,
   if (curad->itname_string.cstr[len])
     {
       MOM_DEBUGPRINTF (item,
-                       "compare_radix_mom curad@%p '%s' above str '%.*s'",
+                       "compare_radix_mom curad@%p '%s' after str '%.*s'",
                        curad, curad->itname_string.cstr, len, str);
       return +1;
     }
@@ -329,7 +329,7 @@ mom_make_name_radix (const char *str, int len)
           radix_siz_mom = radsiz;
           tun = nam;
           tix = 0;
-          MOM_DEBUGPRINTF (item, "make first radix hash %u '%s'",
+          MOM_DEBUGPRINTF (item, "make_name_radix first hash %u '%s'",
                            nam->itname_string.hva_hash,
                            nam->itname_string.cstr);
           goto end;
@@ -348,8 +348,9 @@ mom_make_name_radix (const char *str, int len)
       assert (radix_arr_mom[md]);
       struct mom_itemname_tu *curad = radix_arr_mom[md]->rad_name;
       assert (curad != NULL);
-      MOM_DEBUGPRINTF (item, "make radix loop lo=%d hi=%d md=%d curadname %s",
-                       lo, hi, md, curad->itname_string.cstr);
+      MOM_DEBUGPRINTF (item,
+                       "make_name_radix loop lo=%d hi=%d md=%d curadname '%s' str '%.*s'",
+                       lo, hi, md, curad->itname_string.cstr, len, str);
       assert (curad->itname_rank == (unsigned) md);
       int c = compare_radix_mom (curad, str, len);
       if (c == 0)
@@ -363,8 +364,9 @@ mom_make_name_radix (const char *str, int len)
       else
         lo = md;
     };
-  MOM_DEBUGPRINTF (item, "make radix loop lo=%d hi=%d radix_cnt=%d",
-                   lo, hi, radix_cnt_mom);
+  MOM_DEBUGPRINTF (item,
+                   "make_name_radix loop lo=%d hi=%d radix_cnt=%d str '%.*s'",
+                   lo, hi, radix_cnt_mom, len, str);
   for (int ix = lo; ix < (int) radix_cnt_mom; ix++)
     {
       assert (radix_arr_mom[ix]);
@@ -373,14 +375,14 @@ mom_make_name_radix (const char *str, int len)
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
       int c = compare_radix_mom (curad, str, len);
-      MOM_DEBUGPRINTF (item, "make radix loop ix=%d curadname '%s' c=%d", ix,
-                       curad->itname_string.cstr, c);
+      MOM_DEBUGPRINTF (item, "make_name_radix loop ix=%d curadname '%s' c=%d",
+                       ix, curad->itname_string.cstr, c);
       if (c == 0)
         {
           tun = curad;
           tix = ix;
           MOM_DEBUGPRINTF (item,
-                           "make radix loop found ix=%d curadname '%s'", ix,
+                           "make_name_radix found ix=%d curadname '%s'", ix,
                            curad->itname_string.cstr);
           goto end;
         }
@@ -391,7 +393,7 @@ mom_make_name_radix (const char *str, int len)
                                    len) > 0)))
         {                       // insert at ix
           MOM_DEBUGPRINTF (item,
-                           "make radix loop inserting %s ix=%d next '%s'",
+                           "make_name_radix loop inserting %s ix=%d next '%s'",
                            (c <= 0) ? "at" : "after", ix,
                            nextrad ? nextrad->itname_string.cstr : "?none?");
           if (c > 0 && ix + 1 == (int) radix_cnt_mom)
@@ -414,7 +416,7 @@ mom_make_name_radix (const char *str, int len)
           strncpy (nam->itname_string.cstr, str, len);
           nam->itname_string.cstr[len] = (char) 0;
           MOM_DEBUGPRINTF (item,
-                           "make radix loop insert ix=%d name '%s' hash %u",
+                           "make_name_radix loop insert ix=%d name '%s' hash %u",
                            ix, nam->itname_string.cstr,
                            nam->itname_string.hva_hash);
           newrdx->rad_name = nam;
@@ -433,7 +435,9 @@ mom_make_name_radix (const char *str, int len)
         }
     }
 end:
-  MOM_DEBUGPRINTF (item, "make name radix final radix_cnt=%d", radix_cnt_mom);
+  MOM_DEBUGPRINTF (item,
+                   "make_name_radix final radix_cnt=%d str='%.*s' tix=%d",
+                   radix_cnt_mom, len, str, tix);
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
     {
@@ -447,7 +451,7 @@ end:
     {
       for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
         {
-          MOM_DEBUGPRINTF (item, "make name radix [%d] @%p '%s' /%u", ix,
+          MOM_DEBUGPRINTF (item, "make_name_radix [%d] @%p '%s' /%u", ix,
                            radix_arr_mom[ix],
                            radix_arr_mom[ix]->rad_name->itname_string.cstr,
                            radix_arr_mom[ix]->rad_name->
@@ -1803,7 +1807,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   itm->itm_lid = lid;
   time (&itm->itm_mtime);
   int pos = index_item_in_radix_mom (curad, itm);
-  MOM_DEBUGPRINTF (item, "predefined itm@%p %s pos %d",
+  MOM_DEBUGPRINTF (item, "predefined itm@%p '%s' pos %d",
                    (void *) itm, mom_item_cstring (itm), pos);
   assert (pos >= 0 && pos < (int) sz);
   assert (curad->rad_items[pos] == NULL);
