@@ -421,10 +421,13 @@ end:
   MOM_DEBUGPRINTF (item, "make name radix final radix_cnt=%d", radix_cnt_mom);
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
-    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
-      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    {
+      for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+        assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                        radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    };
 #endif /*NDEBUG*/
+    ////
     if (MOM_IS_DEBUGGING (item))
     {
       for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
@@ -1813,6 +1816,23 @@ mom_initialize_items (void)
 #define MOM_HAS_PREDEFINED(Nam,Hash) \
   initialize_predefined_mom(&mompredef_##Nam, #Nam, Hash);
 #include "_mom_predef.h"
+  if (MOM_IS_DEBUGGING (item))
+    {
+      MOM_DEBUGPRINTF (item, "showing %d predefined", MOM_NB_PREDEFINED);
+      mom_debugprint_radixtable ();
+      for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+        {
+          assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                          radix_arr_mom[ix]->rad_name->itname_string.cstr) <
+                  0);
+        }
+    }
+  else if (MOM_IS_DEBUGGING (load))
+    {
+      MOM_DEBUGPRINTF (item, "showing %d predefined before loading",
+                       MOM_NB_PREDEFINED);
+      mom_debugprint_radixtable ();
+    }
   MOM_DEBUGPRINTF (item, "done predefined %d", MOM_NB_PREDEFINED);
 }
 
