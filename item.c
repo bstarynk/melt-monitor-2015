@@ -259,6 +259,46 @@ compare_radix_mom (const struct mom_itemname_tu *curad, const char *str,
 
 
 
+struct both_name_and_radix_mom_st
+{
+  struct mom_itemname_tu *btn_name;
+  struct radix_mom_st *btn_radix;
+};
+
+struct both_name_and_radix_mom_st
+put_name_radix_mom (int ix, const char *str, int len)
+{
+  assert (ix >= 0 && ix < (int) radix_siz_mom);
+  assert (str != NULL);
+  assert (len >= 0);
+  assert (radix_arr_mom[ix] == NULL);
+  struct mom_itemname_tu *newnam =
+    mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
+                           2) | 3) + 1);
+  newnam->itname_rank = 0;
+  newnam->itname_string.va_itype = MOMITY_BOXSTRING;
+  newnam->itname_string.va_hsiz = len >> 8;
+  newnam->itname_string.va_lsiz = len & 0xffff;
+  newnam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
+  strncpy (newnam->itname_string.cstr, str, len);
+  newnam->itname_string.cstr[len] = (char) 0;
+  struct radix_mom_st *newrad = mom_gc_alloc (sizeof (struct radix_mom_st));
+  const unsigned itmsiz = 7;
+  newrad->rad_name = newnam;
+  newrad->rad_size = itmsiz;
+  pthread_mutex_init (&newrad->rad_mtx, NULL);
+  newrad->rad_items = mom_gc_alloc (itmsiz * sizeof (struct mom_item_st *));
+  newrad->rad_size = itmsiz;
+  newrad->rad_count = 0;
+  radix_arr_mom[ix] = newrad;
+  MOM_DEBUGPRINTF (item, "put_name_radix ix=%d newnam@%p '%s', newrad@%p",
+                   ix, newnam, newnam->itname_string.cstr, newrad);
+  return (struct both_name_and_radix_mom_st)
+  {
+  newnam, newrad};
+}                               /* end of put_name_radix_mom */
+
+
 
 const struct mom_itemname_tu *
 mom_make_name_radix (const char *str, int len)
@@ -302,36 +342,18 @@ mom_make_name_radix (const char *str, int len)
       radix_siz_mom = newsiz;
       if (MOM_UNLIKELY (radix_cnt_mom == 0))
         {                       // create the first radix
-          struct mom_itemname_tu *nam =
-            mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
-                                   2) | 3) + 1);
-          nam->itname_rank = 0;
-          nam->itname_string.va_itype = MOMITY_BOXSTRING;
-          nam->itname_string.va_hsiz = len >> 8;
-          nam->itname_string.va_lsiz = len & 0xffff;
-          nam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
-          strncpy (nam->itname_string.cstr, str, len);
-          nam->itname_string.cstr[len] = (char) 0;
-          struct radix_mom_st *newrad =
-            mom_gc_alloc (sizeof (struct radix_mom_st));
-          const unsigned itmsiz = 7;
-          newrad->rad_name = nam;
-          newrad->rad_size = itmsiz;
-          pthread_mutex_init (&newrad->rad_mtx, NULL);
-          newrad->rad_items =
-            mom_gc_alloc (itmsiz * sizeof (struct mom_item_st *));
-          newrad->rad_size = itmsiz;
-          newrad->rad_count = 0;
           const unsigned radsiz = 15;
           radix_arr_mom = mom_gc_alloc (radsiz * sizeof (void *));
-          radix_arr_mom[0] = newrad;
+          radix_arr_mom[0] = NULL;
           radix_cnt_mom = 1;
           radix_siz_mom = radsiz;
-          tun = nam;
+          struct both_name_and_radix_mom_st both =
+            put_name_radix_mom (0, str, len);
+          tun = both.btn_name;
           tix = 0;
           MOM_DEBUGPRINTF (item, "make_name_radix first hash %u '%s'",
-                           nam->itname_string.hva_hash,
-                           nam->itname_string.cstr);
+                           both.btn_name->itname_string.hva_hash,
+                           both.btn_name->itname_string.cstr);
           goto end;
         }
     };
@@ -389,7 +411,7 @@ mom_make_name_radix (const char *str, int len)
       else if (ix + 1 >= (int) radix_cnt_mom
                || (c < 0
                    && ((nextrad = radix_arr_mom[ix + 1]->rad_name)
-                       && compare_radix_mom(nextrad, str, len) > 0)))
+                       && compare_radix_mom (nextrad, str, len) > 0)))
         {                       // insert at ix
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop inserting %s ix=%d next '%s'",
@@ -402,41 +424,24 @@ mom_make_name_radix (const char *str, int len)
               radix_arr_mom[j] = radix_arr_mom[j - 1];
               radix_arr_mom[j]->rad_name->itname_rank = j;
             };
-          struct radix_mom_st *newrdx =
-            mom_gc_alloc (sizeof (struct radix_mom_st));
-          struct mom_itemname_tu *nam =
-            mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
-                                   2) | 3) + 1);
-          nam->itname_rank = ix;
-          nam->itname_string.va_itype = MOMITY_BOXSTRING;
-          nam->itname_string.va_hsiz = len >> 8;
-          nam->itname_string.va_lsiz = len & 0xffff;
-          nam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
-          strncpy (nam->itname_string.cstr, str, len);
-          nam->itname_string.cstr[len] = (char) 0;
+          radix_arr_mom[ix] = NULL;
+          struct both_name_and_radix_mom_st both =
+            put_name_radix_mom (ix, str, len);
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop insert ix=%d name '%s' hash %u",
-                           ix, nam->itname_string.cstr,
-                           nam->itname_string.hva_hash);
-          newrdx->rad_name = nam;
-          const unsigned itmsiz = 7;
-          pthread_mutex_init (&newrdx->rad_mtx, NULL);
-          struct mom_item_st **newritems =
-            mom_gc_alloc (itmsiz * sizeof (void *));
-          newrdx->rad_size = itmsiz;
-          newrdx->rad_count = 0;
-          newrdx->rad_items = newritems;
-          radix_arr_mom[ix] = newrdx;
-          tun = nam;
+                           ix, both.btn_name->itname_string.cstr,
+                           both.btn_name->itname_string.hva_hash);
+          tun = both.btn_name;
           tix = ix;
           radix_cnt_mom++;
           goto end;
         }
-      else {
-	MOM_DEBUGPRINTF(item, "make_name_radix continue ix=%d", ix);
-	continue;
-      }
-    } /* end for (ix=...) */
+      else
+        {
+          MOM_DEBUGPRINTF (item, "make_name_radix continue ix=%d", ix);
+          continue;
+        }
+    }                           /* end for (ix=...) */
 end:
   MOM_DEBUGPRINTF (item,
                    "make_name_radix final radix_cnt=%d str='%.*s' tix=%d",
