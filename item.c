@@ -212,6 +212,15 @@ mom_debugprint_radixtable (void)
     printf ("radix_arr_mom[%d]: %s (@%p)\n",
             ix, radix_arr_mom[ix]->rad_name->itname_string.cstr,
             (void *) radix_arr_mom[ix]);
+  for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+    if (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                radix_arr_mom[ix]->rad_name->itname_string.cstr) >= 0)
+      {
+        MOM_WARNPRINTF ("missorted radix ([%d] %s :: [%d] %s)", ix - 1,
+                        radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                        ix, radix_arr_mom[ix]->rad_name->itname_string.cstr);
+        assert (ix > 0);
+      }
 }                               /* end mom_debugprint_radixtable */
 
 
@@ -1818,7 +1827,8 @@ mom_initialize_items (void)
 #include "_mom_predef.h"
   if (MOM_IS_DEBUGGING (item))
     {
-      MOM_DEBUGPRINTF (item, "showing %d predefined", MOM_NB_PREDEFINED);
+      MOM_DEBUGPRINTF (item, "showing %d predefined items",
+                       MOM_NB_PREDEFINED);
       mom_debugprint_radixtable ();
       for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
         {
@@ -1826,10 +1836,12 @@ mom_initialize_items (void)
                           radix_arr_mom[ix]->rad_name->itname_string.cstr) <
                   0);
         }
+      MOM_DEBUGPRINTF (item, "well sorted %d predefined (radix_cnt_mom=%d)",
+                       MOM_NB_PREDEFINED, radix_cnt_mom);
     }
   else if (MOM_IS_DEBUGGING (load))
     {
-      MOM_DEBUGPRINTF (item, "showing %d predefined before loading",
+      MOM_DEBUGPRINTF (load, "showing %d predefined before loading",
                        MOM_NB_PREDEFINED);
       mom_debugprint_radixtable ();
     }
