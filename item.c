@@ -387,10 +387,9 @@ mom_make_name_radix (const char *str, int len)
           goto end;
         }
       else if (ix + 1 >= (int) radix_cnt_mom
-               || (c <= 0
+               || (c < 0
                    && ((nextrad = radix_arr_mom[ix + 1]->rad_name)
-                       && strncmp (nextrad->itname_string.cstr, str,
-                                   len) > 0)))
+                       && compare_radix_mom(nextrad, str, len) > 0)))
         {                       // insert at ix
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop inserting %s ix=%d next '%s'",
@@ -433,7 +432,11 @@ mom_make_name_radix (const char *str, int len)
           radix_cnt_mom++;
           goto end;
         }
-    }
+      else {
+	MOM_DEBUGPRINTF(item, "make_name_radix continue ix=%d", ix);
+	continue;
+      }
+    } /* end for (ix=...) */
 end:
   MOM_DEBUGPRINTF (item,
                    "make_name_radix final radix_cnt=%d str='%.*s' tix=%d",
