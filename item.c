@@ -397,8 +397,9 @@ mom_make_name_radix (const char *str, int len)
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
       int c = compare_radix_mom (curad, str, len);
-      MOM_DEBUGPRINTF (item, "make_name_radix loop ix=%d curadname '%s' c=%d",
-                       ix, curad->itname_string.cstr, c);
+      MOM_DEBUGPRINTF (item,
+                       "make_name_radix loop ix=%d curad='%s' str='%.*s' c=%d",
+                       ix, curad->itname_string.cstr, len, str, c);
       if (c == 0)
         {
           tun = curad;
@@ -408,10 +409,33 @@ mom_make_name_radix (const char *str, int len)
                            curad->itname_string.cstr);
           goto end;
         }
-      else if (ix + 1 >= (int) radix_cnt_mom
-               || (c < 0
-                   && ((nextrad = radix_arr_mom[ix + 1]->rad_name)
-                       && compare_radix_mom (nextrad, str, len) > 0)))
+#warning to recode probably
+      else if (ix + 1 >= (int) radix_cnt_mom)
+        {
+          MOM_DEBUGPRINTF (item,
+                           "make_name_radix got end ix=%d c=%d str='%.*s'",
+                           ix, c, len, str);
+          struct both_name_and_radix_mom_st both = { NULL, NULL };
+          if (c < 0)
+            {
+              both = put_name_radix_mom (ix + 1, str, len);
+              tix = ix + 1;
+            }
+          else
+            {
+              radix_arr_mom[ix + 1] = radix_arr_mom[ix];
+              radix_arr_mom[ix] = NULL;
+              both = put_name_radix_mom (ix, str, len);
+              tix = ix;
+            }
+          tun = both.btn_name;
+          radix_cnt_mom++;
+          MOM_DEBUGPRINTF (item, "make_name_radix tix=%d", tix);
+          goto end;
+        }
+      else if (c < 0
+               && ((nextrad = radix_arr_mom[ix + 1]->rad_name)
+                   && compare_radix_mom (nextrad, str, len) > 0))
         {                       // insert at ix
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop inserting %s ix=%d next '%s'",
