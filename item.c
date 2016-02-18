@@ -214,7 +214,7 @@ mom_debugprint_radixtable (void)
                 (void *) radix_arr_mom[ix]);
       else
         printf ("radix_arr_mom[%d] **NULL**", ix);
-      if (radix_arr_mom[ix]->rad_name->itname_rank != ix)
+      if (radix_arr_mom[ix]->rad_name->itname_rank != (unsigned) ix)
         printf (" !!ix:%d != itname_rank:%d!!", ix,
                 radix_arr_mom[ix]->rad_name->itname_rank);
       putchar ('\n');
@@ -254,7 +254,7 @@ put_name_radix_mom (int ix, const char *str)
   struct mom_itemname_tu *newnam =
     mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
                            2) | 3) + 1);
-  newnam->itname_rank = 0;
+  newnam->itname_rank = ix;
   newnam->itname_string.va_itype = MOMITY_BOXSTRING;
   newnam->itname_string.va_hsiz = len >> 8;
   newnam->itname_string.va_lsiz = len & 0xffff;
@@ -346,7 +346,7 @@ mom_make_name_radix (const char *str)
 
           assert (radix_arr_mom[ix] != NULL);
           assert (radix_arr_mom[ix]->rad_name != NULL);
-          assert (radix_arr_mom[ix]->rad_name->itname_rank == ix);
+          assert (radix_arr_mom[ix]->rad_name->itname_rank == (unsigned) ix);
           assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
                           radix_arr_mom[ix]->rad_name->itname_string.cstr) <
                   0);
@@ -463,7 +463,7 @@ end:
             assert (strcmp
                     (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
-          assert (radix_arr_mom[ix]->rad_name->itname_rank == ix);
+          assert (radix_arr_mom[ix]->rad_name->itname_rank == (unsigned) ix);
         }
     }
   pthread_mutex_unlock (&radix_mtx_mom);
