@@ -241,7 +241,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
         if (moditm == MOM_PREDEFITM (cooked))
           {
             struct mom_item_st *connitm = nod->nod_connitm;
-            struct mom_hashedvalue_st *conndisplayerv = NULL;
+            const struct mom_hashedvalue_st *conndisplayerv = NULL;
             struct mom_item_st *dispitm = NULL;
             struct mom_item_st *dsigitm = NULL;
             mom_displayer_sig_t *disprout = NULL;
@@ -1433,7 +1433,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
             break;
         };
       endw = pc;
-      if (asciiw && mom_valid_name_radix (startw, endw - startw))
+      if (asciiw && mom_valid_name_radix_len (startw, endw - startw))
         {
           const char *endp = NULL;
           struct mom_item_st *itm = mom_find_item_from_string (startw, &endp);

@@ -1188,7 +1188,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
         case xtraopt_addpredef:
           if (!optarg)
             MOM_FATAPRINTF ("missing predefined name for --add-predefined");
-          if (!isalpha (optarg[0]) || !mom_valid_name_radix (optarg, -1))
+          if (!isalpha (optarg[0]) || !mom_valid_name_radix (optarg))
             MOM_FATAPRINTF ("invalid predefined name %s", optarg);
           if (count_added_predef_mom >= MAX_ADDED_PREDEF_MOM)
             MOM_FATAPRINTF ("too many %d added predefined",

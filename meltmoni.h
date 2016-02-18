@@ -1246,10 +1246,67 @@ mom_dyncast_item (const void *p)
 momhash_t mom_cstring_hash_len (const char *str, int len);
 
 
-bool mom_valid_name_radix (const char *str, int len);
+bool mom_valid_name_radix_len (const char *str, int len);
 
-const struct mom_itemname_tu *mom_find_name_radix (const char *str, int len);
-const struct mom_itemname_tu *mom_make_name_radix (const char *str, int len);
+static inline bool
+mom_valid_name_radix (const char *str)
+{
+  return str && str != MOM_EMPTY_SLOT
+    && mom_valid_name_radix_len (str, strlen (str));
+}
+
+
+const struct mom_itemname_tu *mom_find_name_radix (const char *str);
+static inline const struct mom_itemname_tu *
+mom_find_name_radix_len (const char *str, int len)
+{
+  if (!str || str == MOM_EMPTY_SLOT || len == 0)
+    return NULL;
+  if (len < 0)
+    return mom_find_name_radix (str);
+  if (str[len] == (char) 0 && (int) strlen (str) == len)
+    return mom_find_name_radix (str);
+  char copybuf[64];
+  memset (copybuf, 0, sizeof (copybuf));
+  if (len < (int) sizeof (copybuf) - 1)
+    {
+      strncpy (copybuf, str, len);
+      return mom_find_name_radix (copybuf);
+    }
+  else
+    {
+      char *cbuf = mom_gc_alloc_atomic (len + 1);
+      strncpy (cbuf, str, len);
+      return mom_find_name_radix (cbuf);
+    }
+}                               /* end of mom_find_name_radix_len */
+
+
+const struct mom_itemname_tu *mom_make_name_radix (const char *str);
+static inline const struct mom_itemname_tu *
+mom_make_name_radix_len (const char *str, int len)
+{
+  if (!str || str == MOM_EMPTY_SLOT || len == 0)
+    return NULL;
+  if (len < 0)
+    return mom_make_name_radix (str);
+  if (str[len] == (char) 0 && (int) strlen (str) == len)
+    return mom_make_name_radix (str);
+  char copybuf[64];
+  memset (copybuf, 0, sizeof (copybuf));
+  if (len < (int) sizeof (copybuf) - 1)
+    {
+      strncpy (copybuf, str, len);
+      return mom_make_name_radix (copybuf);
+    }
+  else
+    {
+      char *cbuf = mom_gc_alloc_atomic (len + 1);
+      strncpy (cbuf, str, len);
+      return mom_make_name_radix (cbuf);
+    }
+}                               /* end of mom_make_name_radix_len */
+
 struct mom_item_st *mom_find_item_from_radix_id (const struct mom_itemname_tu
                                                  *radix, uint16_t hid,
                                                  uint64_t loid);
@@ -1258,7 +1315,7 @@ static inline struct mom_item_st *
 mom_find_item_from_str_id (const char *str, int len, uint16_t hid,
                            uint64_t loid)
 {
-  const struct mom_itemname_tu *tu = mom_find_name_radix (str, len);
+  const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
   if (tu)
     return mom_find_item_from_radix_id (tu, hid, loid);
   return NULL;
@@ -1331,7 +1388,7 @@ static inline struct mom_item_st *
 mom_make_item_from_str_id (const char *str, int len,
                            uint16_t hid, uint64_t loid)
 {
-  const struct mom_itemname_tu *tu = mom_find_name_radix (str, len);
+  const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
   if (tu)
     return mom_make_item_from_radix_id (tu, hid, loid);
   return NULL;

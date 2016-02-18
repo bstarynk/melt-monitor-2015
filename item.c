@@ -51,7 +51,7 @@ static unsigned radix_cnt_mom;  /* used count of radix_arr_mom */
 
 
 bool
-mom_valid_name_radix (const char *str, int len)
+mom_valid_name_radix_len (const char *str, int len)
 {
   if (!str)
     return false;
@@ -149,15 +149,14 @@ mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo)
   return false;
 }
 
+
 const struct mom_itemname_tu *
-mom_find_name_radix (const char *str, int len)
+mom_find_name_radix (const char *str)
 {
   struct mom_itemname_tu *tun = NULL;
-  if (!str || !str[0])
+  if (!str || str == MOM_EMPTY_SLOT || !str[0])
     return NULL;
-  if (len < 0)
-    len = strlen (str);
-  if (!mom_valid_name_radix (str, len))
+  if (!mom_valid_name_radix (str))
     return NULL;
   pthread_mutex_lock (&radix_mtx_mom);
   assert (radix_cnt_mom <= radix_siz_mom);
@@ -170,8 +169,8 @@ mom_find_name_radix (const char *str, int len)
       struct mom_itemname_tu *curad = radix_arr_mom[md]->rad_name;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) md);
-      int c = strncmp (str, curad->itname_string.cstr, len);
-      if (c == 0 && curad->itname_string.cstr[len] == (char) 0)
+      int c = strcmp (str, curad->itname_string.cstr);
+      if (c == 0)
         {
           tun = curad;
           goto end;
@@ -189,8 +188,7 @@ mom_find_name_radix (const char *str, int len)
               || strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
                          curad->itname_string.cstr) < 0);
       assert (curad->itname_rank == (unsigned) ix);
-      if (!strncmp (curad->itname_string.cstr, str, len)
-          && curad->itname_string.cstr[len] == (char) 0)
+      if (!strcmp (curad->itname_string.cstr, str))
         {
           tun = curad;
           goto end;
@@ -225,39 +223,6 @@ mom_debugprint_radixtable (void)
 
 
 
-static inline int
-compare_radix_mom (const struct mom_itemname_tu *curad, const char *str,
-                   int len)
-{
-  assert (len >= 0);
-  assert (curad != NULL);
-  assert (str != NULL);
-  int c = strncmp (curad->itname_string.cstr, str, len);
-  if (c != 0)
-    {
-      MOM_DEBUGPRINTF (item,
-                       "compare_radix_mom curad@%p '%s' is %s than str '%.*s' ",
-                       curad, curad->itname_string.cstr,
-                       (c < 0) ? "less" : "greater", len, str);
-      return c;
-    }
-  if (curad->itname_string.cstr[len])
-    {
-      MOM_DEBUGPRINTF (item,
-                       "compare_radix_mom curad@%p '%s' after str '%.*s'",
-                       curad, curad->itname_string.cstr, len, str);
-      return +1;
-    }
-  else
-    {
-      MOM_DEBUGPRINTF (item,
-                       "compare_radix_mom curad@%p '%s' same str '%.*s'",
-                       curad, curad->itname_string.cstr, len, str);
-      return 0;
-    }
-}                               /* end of compare_radix_mom */
-
-
 
 struct both_name_and_radix_mom_st
 {
@@ -266,11 +231,11 @@ struct both_name_and_radix_mom_st
 };
 
 struct both_name_and_radix_mom_st
-put_name_radix_mom (int ix, const char *str, int len)
+put_name_radix_mom (int ix, const char *str)
 {
   assert (ix >= 0 && ix < (int) radix_siz_mom);
   assert (str != NULL);
-  assert (len >= 0);
+  int len = (int) strlen (str);
   assert (radix_arr_mom[ix] == NULL);
   struct mom_itemname_tu *newnam =
     mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
@@ -301,18 +266,17 @@ put_name_radix_mom (int ix, const char *str, int len)
 
 
 const struct mom_itemname_tu *
-mom_make_name_radix (const char *str, int len)
+mom_make_name_radix (const char *str)
 {
   int tix = -1;
   static long makecounter;
   struct mom_itemname_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
-  if (len < 0)
-    len = strlen (str);
+  int len = (int) strlen (str);
   if (len >= 256)
     MOM_FATAPRINTF ("too big length %d for name radix %.*s", len, len, str);
-  if (!mom_valid_name_radix (str, len))
+  if (!mom_valid_name_radix (str))
     return NULL;
   pthread_mutex_lock (&radix_mtx_mom);
   makecounter++;
@@ -348,7 +312,7 @@ mom_make_name_radix (const char *str, int len)
           radix_cnt_mom = 1;
           radix_siz_mom = radsiz;
           struct both_name_and_radix_mom_st both =
-            put_name_radix_mom (0, str, len);
+            put_name_radix_mom (0, str);
           tun = both.btn_name;
           tix = 0;
           MOM_DEBUGPRINTF (item, "make_name_radix first hash %u '%s'",
@@ -374,7 +338,7 @@ mom_make_name_radix (const char *str, int len)
                        "make_name_radix loop lo=%d hi=%d md=%d curadname '%s' str '%.*s'",
                        lo, hi, md, curad->itname_string.cstr, len, str);
       assert (curad->itname_rank == (unsigned) md);
-      int c = compare_radix_mom (curad, str, len);
+      int c = strcmp (curad->itname_string.cstr, str);
       if (c == 0)
         {
           tun = curad;
@@ -387,8 +351,8 @@ mom_make_name_radix (const char *str, int len)
         lo = md;
     };
   MOM_DEBUGPRINTF (item,
-                   "make_name_radix loop lo=%d hi=%d radix_cnt=%d str '%.*s'",
-                   lo, hi, radix_cnt_mom, len, str);
+                   "make_name_radix loop lo=%d hi=%d radix_cnt=%d str '%s'",
+                   lo, hi, radix_cnt_mom, str);
   for (int ix = lo; ix < (int) radix_cnt_mom; ix++)
     {
       assert (radix_arr_mom[ix]);
@@ -396,10 +360,11 @@ mom_make_name_radix (const char *str, int len)
       struct mom_itemname_tu *nextrad = NULL;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
-      int c = compare_radix_mom (curad, str, len);
+      int c = strcmp (curad->itname_string.cstr, str);
+      int nc = 0;
       MOM_DEBUGPRINTF (item,
-                       "make_name_radix loop ix=%d curad='%s' str='%.*s' c=%d",
-                       ix, curad->itname_string.cstr, len, str, c);
+                       "make_name_radix loop ix=%d curad='%s' str='%s' c=%d",
+                       ix, curad->itname_string.cstr, str, c);
       if (c == 0)
         {
           tun = curad;
@@ -418,14 +383,14 @@ mom_make_name_radix (const char *str, int len)
           struct both_name_and_radix_mom_st both = { NULL, NULL };
           if (c < 0)
             {
-              both = put_name_radix_mom (ix + 1, str, len);
+              both = put_name_radix_mom (ix + 1, str);
               tix = ix + 1;
             }
           else
             {
               radix_arr_mom[ix + 1] = radix_arr_mom[ix];
               radix_arr_mom[ix] = NULL;
-              both = put_name_radix_mom (ix, str, len);
+              both = put_name_radix_mom (ix, str);
               tix = ix;
             }
           tun = both.btn_name;
@@ -434,8 +399,8 @@ mom_make_name_radix (const char *str, int len)
           goto end;
         }
       else if (c < 0
-               && ((nextrad = radix_arr_mom[ix + 1]->rad_name)
-                   && compare_radix_mom (nextrad, str, len) > 0))
+               && (nextrad = radix_arr_mom[ix + 1]->rad_name) != NULL
+               && (nc = strcmp (str, nextrad->itname_string.cstr) < 0))
         {                       // insert at ix
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop inserting %s ix=%d next '%s'",
@@ -450,7 +415,7 @@ mom_make_name_radix (const char *str, int len)
             };
           radix_arr_mom[ix] = NULL;
           struct both_name_and_radix_mom_st both =
-            put_name_radix_mom (ix, str, len);
+            put_name_radix_mom (ix, str);
           MOM_DEBUGPRINTF (item,
                            "make_name_radix loop insert ix=%d name '%s' hash %u",
                            ix, both.btn_name->itname_string.cstr,
@@ -524,7 +489,7 @@ mom_find_item_from_string (const char *str, const char **pend)
   uint16_t hid = 0;
   uint64_t lid = 0;
   const struct mom_itemname_tu *radix = NULL;
-  radix = mom_find_name_radix (str, endradix - str);
+  radix = mom_find_name_radix_len (str, endradix - str);
   if (!radix)
     goto not_found;
   if (endradix && endradix[0] == '_' && endradix[1] == '_'
@@ -669,7 +634,7 @@ mom_set_items_prefixed (const char *str, int slen)
   else
     {                           // we have __ at position postwo 
       const struct mom_itemname_tu *radix =     //
-        mom_find_name_radix (str, postwo);
+        mom_find_name_radix_len (str, postwo);
       if (radix)
         {
           struct mom_hashset_st *hset = NULL;
@@ -736,7 +701,7 @@ mom_make_item_from_string (const char *str, const char **pend)
   uint16_t hid = 0;
   uint64_t lid = 0;
   const struct mom_itemname_tu *radix = NULL;
-  radix = mom_make_name_radix (str, endradix - str);
+  radix = mom_make_name_radix_len (str, endradix - str);
   if (!radix)
     goto not_found;
   if (endradix && endradix[0] == '_' && endradix[1] == '_'
@@ -1781,7 +1746,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
       hid = 0;
       lid = 0;
     };
-  const struct mom_itemname_tu *radix = mom_make_name_radix (name, -1);
+  const struct mom_itemname_tu *radix = mom_make_name_radix (name);
   if (!radix)
     MOM_FATAPRINTF ("initialize_predefined failed to make radix %s", name);
   struct radix_mom_st *curad = NULL;
