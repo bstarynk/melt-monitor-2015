@@ -209,11 +209,15 @@ mom_debugprint_radixtable (void)
   for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
     {
       if (radix_arr_mom[ix])
-        printf ("radix_arr_mom[%d]: %s (@%p)\n",
+        printf ("radix_arr_mom[%d]: %s (@%p)",
                 ix, radix_arr_mom[ix]->rad_name->itname_string.cstr,
                 (void *) radix_arr_mom[ix]);
       else
-        printf ("radix_arr_mom[%d] **NULL**\n", ix);
+        printf ("radix_arr_mom[%d] **NULL**", ix);
+      if (radix_arr_mom[ix]->rad_name->itname_rank != ix)
+        printf (" !!ix:%d != itname_rank:%d!!", ix,
+                radix_arr_mom[ix]->rad_name->itname_rank);
+      putchar ('\n');
     }
   for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
     {
@@ -299,7 +303,7 @@ mom_make_name_radix (const char *str)
       for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
         assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
                         radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
-    }
+    };
 #endif /*NDEBUG*/
     assert (radix_cnt_mom <= radix_siz_mom);
   if (MOM_UNLIKELY (radix_cnt_mom + 2 >= radix_siz_mom))
@@ -336,9 +340,17 @@ mom_make_name_radix (const char *str)
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
     {
+      assert (radix_cnt_mom <= radix_siz_mom);
       for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
-        assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                        radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+        {
+
+          assert (radix_arr_mom[ix] != NULL);
+          assert (radix_arr_mom[ix]->rad_name != NULL);
+          assert (radix_arr_mom[ix]->rad_name->itname_rank == ix);
+          assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                          radix_arr_mom[ix]->rad_name->itname_string.cstr) <
+                  0);
+        }
     }
 #endif /*NDEBUG*/
   int lo = 0, hi = (int) radix_cnt_mom;
@@ -376,7 +388,7 @@ mom_make_name_radix (const char *str)
       struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
-      int c = strcmp (curad->itname_string.cstr, str);
+      int c = strcmp (str, curad->itname_string.cstr);
       MOM_DEBUGPRINTF (item,
                        "make_name_radix loop ix=%d curad='%s' str='%s' c=%d",
                        ix, curad->itname_string.cstr, str, c);
@@ -451,6 +463,7 @@ end:
             assert (strcmp
                     (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+          assert (radix_arr_mom[ix]->rad_name->itname_rank == ix);
         }
     }
   pthread_mutex_unlock (&radix_mtx_mom);
