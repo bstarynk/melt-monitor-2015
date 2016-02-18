@@ -238,6 +238,9 @@ mom_debugprint_radixtable (void)
 
 
 
+static long makeradixcounter_mom;
+
+
 struct both_name_and_radix_mom_st
 {
   struct mom_itemname_tu *btn_name;
@@ -270,8 +273,11 @@ put_name_radix_mom (int ix, const char *str)
   newrad->rad_size = itmsiz;
   newrad->rad_count = 0;
   radix_arr_mom[ix] = newrad;
-  MOM_DEBUGPRINTF (item, "put_name_radix ix=%d newnam@%p '%s', newrad@%p",
-                   ix, newnam, newnam->itname_string.cstr, newrad);
+  makeradixcounter_mom++;
+  MOM_DEBUGPRINTF (item,
+                   "put_name_radix ix=%d newnam@%p '%s', newrad@%p makeradixcounter=%ld",
+                   ix, newnam, newnam->itname_string.cstr, newrad,
+                   makeradixcounter_mom);
   return (struct both_name_and_radix_mom_st)
   {
   newnam, newrad};
@@ -279,11 +285,11 @@ put_name_radix_mom (int ix, const char *str)
 
 
 
+
 const struct mom_itemname_tu *
 mom_make_name_radix (const char *str)
 {
   int tix = -1;
-  static long makecounter;
   struct mom_itemname_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
@@ -293,10 +299,9 @@ mom_make_name_radix (const char *str)
   if (!mom_valid_name_radix (str))
     return NULL;
   pthread_mutex_lock (&radix_mtx_mom);
-  makecounter++;
   MOM_DEBUGPRINTF (item, "mom_make_name_radix '%.*s' #%ld", len, str,
-                   makecounter);
-  assert (makecounter > 0);
+                   makeradixcounter_mom);
+  assert (makeradixcounter_mom >= 0);
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
     {
@@ -367,7 +372,7 @@ mom_make_name_radix (const char *str)
                        "make_name_radix loop lo=%d hi=%d md=%d curadname '%s' str '%.*s'",
                        lo, hi, md, curad->itname_string.cstr, len, str);
       assert (curad->itname_rank == (unsigned) md);
-      int c = strcmp (curad->itname_string.cstr, str);
+      int c = strcmp (str, curad->itname_string.cstr);
       if (c == 0)
         {
           tun = curad;
@@ -467,8 +472,9 @@ end:
         }
     }
   pthread_mutex_unlock (&radix_mtx_mom);
-  MOM_DEBUGPRINTF (item, "mom_make_name_radix done '%.*s' tix %d", len, str,
-                   tix);
+  MOM_DEBUGPRINTF (item,
+                   "mom_make_name_radix done '%.*s' tix %d (makeradixcounter#%ld)",
+                   len, str, tix, makeradixcounter_mom);
   return tun;
 }                               /* end of mom_make_name_radix */
 
