@@ -1996,6 +1996,39 @@ parsexprprec_nanoedit_mom (struct
       *posptr = curpos;
       return leftexprv;
     };
+  const struct mom_boxnode_st *nexttoknod = mom_dyncast_node (nexttokv);
+  struct mom_item_st *delimitm = NULL;
+  if (nexttoknod && nexttoknod->nod_connitm == MOM_PREDEFITM (delimiter)
+      && mom_size (nexttoknod) == 1
+      && (delimitm = mom_dyncast_item (nexttoknod->nod_sons[0])) != NULL)
+    {
+      int delimprec = -1;
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit prec=%d curpos=%d nexttokv=%s delimitm=%s",
+                       prec, curpos, mom_value_cstring (nexttokv),
+                       mom_item_cstring (delimitm));
+      {
+        mom_item_lock (delimitm);
+        const struct mom_hashedvalue_st *delimprecv
+          = mom_unsync_item_get_phys_attr (delimitm,
+                                           MOM_PREDEFITM (precedence));
+        delimprec = mom_boxint_val_def (delimprecv, -1);
+        mom_item_unlock (delimitm);
+        MOM_DEBUGPRINTF (web,
+                         "parsexprprec_nanoedit delimprecv=%s delimprec#%d",
+                         mom_value_cstring (delimprecv), delimprec);
+      }
+      if (delimprec != prec)
+        {
+          MOM_DEBUGPRINTF
+            (web,
+             "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d returning leftexprv=%s with delimprec %d",
+             prec, startpos, curpos, mom_value_cstring (leftexprv),
+             delimprec);
+          *posptr = curpos;
+          return leftexprv;
+        }
+    }
 #warning unimplemented parsexprprec_nanoedit_mom
   NANOPARSING_FAILURE_MOM (np, -startpos,
                            "unimplemented parsexprprec_nanoedit prec%d (curpos %d)",

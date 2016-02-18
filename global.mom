@@ -292,6 +292,8 @@ percent_delim
 left_paren_delim
 ")"_
 right_paren_delim
+"+"_
+plus_delim
 ","_
 comma_delim
 ";"_
@@ -359,6 +361,26 @@ comment
 (
 comment
 "for % delimiter token"_
+)attrs
+
+
+*plus_delim
+1455805494
+^mtime
+(
+comment
+"for + delimiter token"_
+precedence
+2_
+)attrs
+
+
+*precedence
+1455805494
+^mtime
+(
+comment
+"for precedence"_
 )attrs
 
 
