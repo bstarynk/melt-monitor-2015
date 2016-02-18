@@ -46,6 +46,15 @@ comment
 )attrs
 
 
+*arg
+1455801211
+^mtime
+(
+comment
+"for arguments"_
+)attrs
+
+
 *arity
 1455359989
 ^mtime
@@ -159,6 +168,15 @@ comment
 (
 comment
 "for expression"_
+)attrs
+
+
+*func
+1455800324
+^mtime
+(
+comment
+"for functions & closures"_
 )attrs
 
 

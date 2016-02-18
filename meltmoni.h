@@ -2309,6 +2309,11 @@ const void *mom_nanoeval (struct mom_nanoeval_st *nev,
                           struct mom_item_st *envitm, const void *exprv,
                           int depth);
 
+const void *mom_nanoapply (struct mom_nanoeval_st *nev,
+                           struct mom_item_st *envitm,
+                           const struct mom_boxnode_st *nodfun,
+                           unsigned nbargs, const void **argv, int depth);
+
 /// for signature_nanoeval0
 typedef const void *mom_nanoeval0_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
