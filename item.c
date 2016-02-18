@@ -207,18 +207,28 @@ mom_debugprint_radixtable (void)
   printf ("radix_cnt_mom=%d radix_siz_mom=%d\n",
           radix_cnt_mom, radix_siz_mom);
   for (int ix = 0; ix < (int) radix_cnt_mom; ix++)
-    printf ("radix_arr_mom[%d]: %s (@%p)\n",
-            ix, radix_arr_mom[ix]->rad_name->itname_string.cstr,
-            (void *) radix_arr_mom[ix]);
+    {
+      if (radix_arr_mom[ix])
+        printf ("radix_arr_mom[%d]: %s (@%p)\n",
+                ix, radix_arr_mom[ix]->rad_name->itname_string.cstr,
+                (void *) radix_arr_mom[ix]);
+      else
+        printf ("radix_arr_mom[%d] **NULL**\n", ix);
+    }
   for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
-    if (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                radix_arr_mom[ix]->rad_name->itname_string.cstr) >= 0)
-      {
-        MOM_WARNPRINTF ("missorted radix ([%d] %s :: [%d] %s)", ix - 1,
-                        radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                        ix, radix_arr_mom[ix]->rad_name->itname_string.cstr);
-        assert (ix > 0);
-      }
+    {
+      if (!radix_arr_mom[ix - 1] || !radix_arr_mom[ix])
+        continue;
+      if (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                  radix_arr_mom[ix]->rad_name->itname_string.cstr) >= 0)
+        {
+          MOM_WARNPRINTF ("missorted radix ([%d] %s :: [%d] %s)", ix - 1,
+                          radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                          ix,
+                          radix_arr_mom[ix]->rad_name->itname_string.cstr);
+          assert (ix > 0);
+        }
+    }
 }                               /* end mom_debugprint_radixtable */
 
 
@@ -285,9 +295,11 @@ mom_make_name_radix (const char *str)
   assert (makecounter > 0);
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
-    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
-      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    {
+      for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+        assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                        radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    }
 #endif /*NDEBUG*/
     assert (radix_cnt_mom <= radix_siz_mom);
   if (MOM_UNLIKELY (radix_cnt_mom + 2 >= radix_siz_mom))
@@ -323,11 +335,16 @@ mom_make_name_radix (const char *str)
     };
 #ifndef NDEBUG
   if (MOM_IS_DEBUGGING (load) || MOM_IS_DEBUGGING (item))
-    for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
-      assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
-                      radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    {
+      for (int ix = 1; ix < (int) radix_cnt_mom; ix++)
+        assert (strcmp (radix_arr_mom[ix - 1]->rad_name->itname_string.cstr,
+                        radix_arr_mom[ix]->rad_name->itname_string.cstr) < 0);
+    }
 #endif /*NDEBUG*/
   int lo = 0, hi = (int) radix_cnt_mom;
+  MOM_DEBUGPRINTF (item,
+                   "make_name_radix beforeloop lo=%d hi=%d str='%s'",
+                   lo, hi, str);
   while (lo + 5 < hi)
     {
       int md = (lo + hi) / 2;
@@ -357,11 +374,9 @@ mom_make_name_radix (const char *str)
     {
       assert (radix_arr_mom[ix]);
       struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
-      struct mom_itemname_tu *nextrad = NULL;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
       int c = strcmp (curad->itname_string.cstr, str);
-      int nc = 0;
       MOM_DEBUGPRINTF (item,
                        "make_name_radix loop ix=%d curad='%s' str='%s' c=%d",
                        ix, curad->itname_string.cstr, str, c);
@@ -374,54 +389,33 @@ mom_make_name_radix (const char *str)
                            curad->itname_string.cstr);
           goto end;
         }
-#warning to recode probably
-      else if (ix + 1 >= (int) radix_cnt_mom)
+      else if (c < 0)
         {
+          // we need to insert just before curad
           MOM_DEBUGPRINTF (item,
-                           "make_name_radix got end ix=%d c=%d str='%.*s'",
-                           ix, c, len, str);
-          struct both_name_and_radix_mom_st both = { NULL, NULL };
-          if (c < 0)
-            {
-              both = put_name_radix_mom (ix + 1, str);
-              tix = ix + 1;
-            }
-          else
-            {
-              radix_arr_mom[ix + 1] = radix_arr_mom[ix];
-              radix_arr_mom[ix] = NULL;
-              both = put_name_radix_mom (ix, str);
-              tix = ix;
-            }
-          tun = both.btn_name;
-          radix_cnt_mom++;
-          MOM_DEBUGPRINTF (item, "make_name_radix tix=%d", tix);
-          goto end;
-        }
-      else if (c < 0
-               && (nextrad = radix_arr_mom[ix + 1]->rad_name) != NULL
-               && (nc = strcmp (str, nextrad->itname_string.cstr) < 0))
-        {                       // insert at ix
-          MOM_DEBUGPRINTF (item,
-                           "make_name_radix loop inserting %s ix=%d next '%s'",
-                           (c <= 0) ? "at" : "after", ix,
-                           nextrad ? nextrad->itname_string.cstr : "?none?");
-          if (c > 0 && ix + 1 == (int) radix_cnt_mom)
-            ix++;
+                           "make_name_radix should insert before ix=%d curadname '%s' str '%s'",
+                           ix, curad->itname_string.cstr, str);
           for (int j = radix_cnt_mom; j > ix; j--)
             {
               radix_arr_mom[j] = radix_arr_mom[j - 1];
               radix_arr_mom[j]->rad_name->itname_rank = j;
             };
           radix_arr_mom[ix] = NULL;
-          struct both_name_and_radix_mom_st both =
-            put_name_radix_mom (ix, str);
-          MOM_DEBUGPRINTF (item,
-                           "make_name_radix loop insert ix=%d name '%s' hash %u",
-                           ix, both.btn_name->itname_string.cstr,
-                           both.btn_name->itname_string.hva_hash);
+          struct both_name_and_radix_mom_st both
+            = put_name_radix_mom (ix, str);
           tun = both.btn_name;
-          tix = ix;
+          radix_cnt_mom++;
+          goto end;
+        }
+      else if (ix + 1 == (int) radix_cnt_mom)
+        {
+          // we need to append after end
+          MOM_DEBUGPRINTF (item,
+                           "make_name_radix should append str='%s' cnt=%d",
+                           str, (int) radix_cnt_mom);
+          struct both_name_and_radix_mom_st both
+            = put_name_radix_mom (radix_cnt_mom, str);
+          tun = both.btn_name;
           radix_cnt_mom++;
           goto end;
         }
