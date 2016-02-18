@@ -416,6 +416,15 @@ comment
 )attrs
 
 
+*signature
+1455623962
+^mtime
+(
+comment
+"signature keyword"_
+)attrs
+
+
 *signature_closure_1int_to_void
 1453805064
 ^mtime
@@ -508,15 +517,6 @@ comment
 (
 comment
 "signature for nanoevalany"_
-)attrs
-
-
-*signature
-1455623962
-^mtime
-(
-comment
-"signature keyword"_
 )attrs
 
 
