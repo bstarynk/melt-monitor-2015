@@ -1504,6 +1504,8 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
         {
           for (int j = (int)cnt; j > ix; j--)
             asso->ada_ents[j] = asso->ada_ents[j - 1];
+          asso->ada_ents[ix].ient_itm = (struct mom_item_st *) itmat;
+          asso->ada_ents[ix].ient_val = (struct mom_hashedvalue_st *) data;
           asso->cda_count = cnt + 1;
           return asso;
         }
