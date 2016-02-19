@@ -2061,6 +2061,38 @@ parsexprprec_nanoedit_mom (struct
           exparr = newexparr;
           esize = newsiz;
         };
+      MOM_DEBUGPRINTF
+        (web,
+         "parsexprprec_nanoedit prec=%d parsing subexpr#%d at curpos=%d after operator %s",
+         prec, ecount, curpos, mom_item_cstring (delimitm));
+      void *subexprv = parsexprprec_nanoedit_mom (np, prec - 1, &curpos);
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit prec=%d subexprv#%d=%s curpos=%d startpos=%d",
+                       prec, ecount, mom_value_cstring (subexprv), curpos,
+                       startpos);
+      if (!subexprv && curpos <= startpos)
+        NANOPARSING_FAILURE_MOM (np, -startpos,
+                                 "failed to parse subexpression of precedence %d after operator %s",
+                                 prec - 1, mom_item_cstring (delimitm));
+      delitmarr[ecount] = delimitm;
+      exparr[ecount] = subexprv;
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit prec=%d ecount=%d delimitm=%s associtm=%s subexprv=%s",
+                       prec, ecount, mom_item_cstring (delimitm),
+                       mom_item_cstring (associtm),
+                       mom_value_cstring (subexprv));
+      ecount++;
+    }
+  MOM_DEBUGPRINTF (web,
+                   "parsexprprec_nanoedit startpos=%d curpos=%d prec=%d final ecount=%d",
+                   startpos, curpos, prec, ecount);
+  if (MOM_IS_DEBUGGING (web))
+    {
+      for (int ix = 0; ix < (int) ecount; ix++)
+        MOM_DEBUGPRINTF (web,
+                         "parsexprprec_nanoedit delitmarr[%d]=%s exparr[%d]=%s",
+                         ix, mom_item_cstring (delitmarr[ix]),
+                         mom_value_cstring (exparr[ix]));
     }
 #warning unimplemented parsexprprec_nanoedit_mom
   NANOPARSING_FAILURE_MOM (np, -startpos,
