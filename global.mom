@@ -19,6 +19,15 @@
 
 
 
+*add
+1455882213
+^mtime
+(
+comment
+"the addition operator"_
+)attrs
+
+
 *after_dump
 1453887296
 ^mtime
@@ -364,6 +373,15 @@ comment
 ^mtime
 
 
+*operator
+1455881447
+^mtime
+(
+comment
+"for operator in delimiters, etc..."_
+)attrs
+
+
 *or
 1455462876
 ^mtime
@@ -399,6 +417,8 @@ associativity
 right_assoc
 comment
 "for + delimiter token"_
+operator
+add
 precedence
 2_
 )attrs

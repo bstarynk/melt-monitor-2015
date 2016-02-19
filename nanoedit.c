@@ -2000,6 +2000,7 @@ parsexprprec_nanoedit_mom (struct
   struct mom_item_st *delimitm = NULL;
   unsigned ecount = 0, esize = 0;
   struct mom_item_st **delitmarr = NULL;
+  int *posarr = NULL;
   void **exparr = NULL;
   while (curpos >= 0 && curpos < (int) nlen
          && (nexttokv = nodexp->nod_sons[curpos]) != NULL
@@ -2049,21 +2050,27 @@ parsexprprec_nanoedit_mom (struct
           struct mom_item_st **newdelitmarr =
             mom_gc_alloc (newsiz * sizeof (struct mom_item_st *));
           void **newexparr = mom_gc_alloc (newsiz * sizeof (void *));
+          int *newposarr = mom_gc_alloc_atomic (newsiz * sizeof (int));
           if (ecount > 0)
             {
               memcpy (newdelitmarr, delitmarr,
                       ecount * sizeof (struct mom_item_st *));
               memcpy (newexparr, exparr, ecount * sizeof (void *));
+              memcpy (newposarr, posarr, ecount * sizeof (int));
               GC_FREE (delitmarr), delitmarr = NULL;
               GC_FREE (exparr), exparr = NULL;
+              GC_FREE (posarr), posarr = NULL;
             }
           delitmarr = newdelitmarr;
           exparr = newexparr;
+          posarr = newposarr;
           esize = newsiz;
         };
+      int delimpos = curpos;
+      curpos++;                 // to consume the delimiter
       MOM_DEBUGPRINTF
         (web,
-         "parsexprprec_nanoedit prec=%d parsing subexpr#%d at curpos=%d after operator %s",
+         "parsexprprec_nanoedit prec=%d parsing subexpr#%d at curpos=%d after operator %s before subexpr parsing",
          prec, ecount, curpos, mom_item_cstring (delimitm));
       void *subexprv = parsexprprec_nanoedit_mom (np, prec - 1, &curpos);
       MOM_DEBUGPRINTF (web,
@@ -2076,9 +2083,10 @@ parsexprprec_nanoedit_mom (struct
                                  prec - 1, mom_item_cstring (delimitm));
       delitmarr[ecount] = delimitm;
       exparr[ecount] = subexprv;
+      posarr[ecount] = delimpos;
       MOM_DEBUGPRINTF (web,
-                       "parsexprprec_nanoedit prec=%d ecount=%d delimitm=%s associtm=%s subexprv=%s",
-                       prec, ecount, mom_item_cstring (delimitm),
+                       "parsexprprec_nanoedit prec=%d ecount=%d delimitm=%s delimpos=%d associtm=%s subexprv=%s",
+                       prec, ecount, mom_item_cstring (delimitm), delimpos,
                        mom_item_cstring (associtm),
                        mom_value_cstring (subexprv));
       ecount++;
@@ -2090,10 +2098,58 @@ parsexprprec_nanoedit_mom (struct
     {
       for (int ix = 0; ix < (int) ecount; ix++)
         MOM_DEBUGPRINTF (web,
-                         "parsexprprec_nanoedit delitmarr[%d]=%s exparr[%d]=%s",
+                         "parsexprprec_nanoedit delitmarr[%d]=%s posarr[%d]=%d exparr[%d]=%s",
                          ix, mom_item_cstring (delitmarr[ix]),
-                         mom_value_cstring (exparr[ix]));
+                         ix, posarr[ix], ix, mom_value_cstring (exparr[ix]));
     }
+  if (ecount == 0)
+    {
+      MOM_DEBUGPRINTF
+        (web,
+         "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d zero-ecount returning leftexprv=%s",
+         prec, startpos, curpos, mom_value_cstring (leftexprv));
+      *posptr = curpos;
+      return leftexprv;
+    }
+  else if (ecount == 1)
+    {
+      MOM_DEBUGPRINTF
+        (web,
+         "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d single-ecount leftexprv=%s delitmarr[0]=%s posarr[0]=%d exparr[0]=%s",
+         prec, startpos, curpos, mom_value_cstring (leftexprv),
+         mom_item_cstring (delitmarr[0]), posarr[0],
+         mom_value_cstring (exparr[0]));
+      delimitm = delitmarr[0];
+      struct mom_item_st *operitm = NULL;
+      {
+        mom_item_lock (delimitm);
+        const struct mom_hashedvalue_st *operv
+          = mom_unsync_item_get_phys_attr (delimitm,
+                                           MOM_PREDEFITM (operator));
+        operitm = mom_dyncast_item (operv);
+        mom_item_unlock (delimitm);
+      }
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit operitm=%s from delimitm=%s prec=%d",
+                       mom_item_cstring (operitm),
+                       mom_item_cstring (delimitm), prec);
+      if (!operitm)
+        NANOPARSING_FAILURE_MOM (np, -posarr[0],
+                                 "delimiter %s without operator for precedence %d",
+                                 mom_item_cstring (delimitm), prec);
+      struct mom_item_st *metaitm = NULL;
+      int metarank = posarr[0];
+      const struct mom_boxnode_st *nodres =
+        mom_boxnode_meta_make_va (metaitm, metarank, operitm, 2, leftexprv,
+                                  exparr[0]);
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit nodres=%s prec=%d curpos=%d",
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          nodres), prec, curpos);
+      *posptr = curpos;
+      return nodres;
+    }
+
 #warning unimplemented parsexprprec_nanoedit_mom
   NANOPARSING_FAILURE_MOM (np, -startpos,
                            "unimplemented parsexprprec_nanoedit prec%d (curpos %d)",
