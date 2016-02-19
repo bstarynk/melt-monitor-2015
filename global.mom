@@ -673,6 +673,15 @@ comment
 )attrs
 
 
+*type_error
+1455914086
+^mtime
+(
+comment
+"for nanoeval type error"_
+)attrs
+
+
 *verbatim
 1455468628
 ^mtime

@@ -993,11 +993,5 @@ momf_nanoeval_add2 (struct mom_nanoeval_st *nev,
       return mom_boxint_make (ires);
     }
   else
-    NANOEVAL_FAILURE_MOM (nev, expnod, NULL
-                          /*
-                             mom_boxnode_make_va (MOM_PREDEFITM (), 2,
-                             mom_boxint_make
-                             (depth))
-                           */
-      );
+    NANOEVAL_FAILURE_MOM (nev, expnod, MOM_PREDEFITM (type_error));
 }                               /* end momf_nanoeval_add2 */
