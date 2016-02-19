@@ -64,6 +64,15 @@ comment
 )attrs
 
 
+*associativity
+1455871773
+^mtime
+(
+comment
+"for associativity"_
+)attrs
+
+
 *be
 1455623664
 ^mtime
@@ -216,6 +225,15 @@ comment
 )attrs
 
 
+*left_assoc
+1455871773
+^mtime
+(
+comment
+"for left associative delimiters"_
+)attrs
+
+
 *left_brace_delim
 1453199148
 ^mtime
@@ -332,6 +350,15 @@ comment
 )attrs
 
 
+*no_assoc
+1455871773
+^mtime
+(
+comment
+"for non-associative delimiters"_
+)attrs
+
+
 *notice
 1446546422
 ^mtime
@@ -408,6 +435,15 @@ comment
 (
 comment
 "for raw display"_
+)attrs
+
+
+*right_assoc
+1455871773
+^mtime
+(
+comment
+"for right associative delimiters"_
 )attrs
 
 
