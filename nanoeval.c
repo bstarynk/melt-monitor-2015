@@ -551,6 +551,10 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
           opfun = opitm->itm_funptr;
         mom_item_unlock (opitm);
       }
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_othernode connitm %s nanev %s opsigitm %s opfun@%p",
+                       mom_item_cstring (connitm), mom_value_cstring (nanev),
+                       mom_item_cstring (opsigitm), opfun);
       if (opsigitm)
         {
           assert (opfun != NULL);
