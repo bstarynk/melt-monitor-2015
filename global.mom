@@ -395,6 +395,8 @@ comment
 1455805494
 ^mtime
 (
+associativity
+right_assoc
 comment
 "for + delimiter token"_
 precedence
