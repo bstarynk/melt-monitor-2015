@@ -25,6 +25,8 @@
 (
 comment
 "the addition operator"_
+nanoeval
+nanoeval_add2
 )attrs
 
 
@@ -356,6 +358,18 @@ signature_tasklet
 (
 comment
 "for nanoeval"_
+)attrs
+
+
+*nanoeval_add2
+1455914663
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to evaluate add"_
 )attrs
 
 
