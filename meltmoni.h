@@ -2312,12 +2312,14 @@ const void *mom_nanoeval (struct mom_nanoeval_st *nev,
 const void *mom_nanoapply (struct mom_nanoeval_st *nev,
                            struct mom_item_st *envitm,
                            const struct mom_boxnode_st *nodfun,
+                           const struct mom_boxnode_st *nodexp,
                            unsigned nbargs, const void **argv, int depth);
 
 /// for signature_nanoeval0
 typedef const void *mom_nanoeval0_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
                                          int depth,
+                                         const struct mom_boxnode_st *expnod,
                                          const struct mom_boxnode_st
                                          *closnod);
 
@@ -2325,6 +2327,7 @@ typedef const void *mom_nanoeval0_sig_t (struct mom_nanoeval_st *nev,
 typedef const void *mom_nanoeval1_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
                                          int depth,
+                                         const struct mom_boxnode_st *expnod,
                                          const struct mom_boxnode_st *closnod,
                                          const void *arg0);
 
@@ -2332,6 +2335,7 @@ typedef const void *mom_nanoeval1_sig_t (struct mom_nanoeval_st *nev,
 typedef const void *mom_nanoeval2_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
                                          int depth,
+                                         const struct mom_boxnode_st *expnod,
                                          const struct mom_boxnode_st *closnod,
                                          const void *arg0, const void *arg1);
 
@@ -2339,6 +2343,7 @@ typedef const void *mom_nanoeval2_sig_t (struct mom_nanoeval_st *nev,
 typedef const void *mom_nanoeval3_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
                                          int depth,
+                                         const struct mom_boxnode_st *expnod,
                                          const struct mom_boxnode_st *closnod,
                                          const void *arg0, const void *arg1,
                                          const void *arg2);
@@ -2347,6 +2352,7 @@ typedef const void *mom_nanoeval3_sig_t (struct mom_nanoeval_st *nev,
 typedef const void *mom_nanoeval4_sig_t (struct mom_nanoeval_st *nev,
                                          struct mom_item_st *envitm,
                                          int depth,
+                                         const struct mom_boxnode_st *expnod,
                                          const struct mom_boxnode_st *closnod,
                                          const void *arg0, const void *arg1,
                                          const void *arg2, const void *arg3);
@@ -2355,6 +2361,8 @@ typedef const void *mom_nanoeval4_sig_t (struct mom_nanoeval_st *nev,
 typedef const void *mom_nanoevalany_sig_t (struct mom_nanoeval_st *nev,
                                            struct mom_item_st *envitm,
                                            int depth,
+                                           const struct mom_boxnode_st
+                                           *expnod,
                                            const struct mom_boxnode_st
                                            *closnod, unsigned nbval,
                                            const void **valarr);
