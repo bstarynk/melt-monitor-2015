@@ -1502,7 +1502,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
         continue;
       else if (c > 0)
         {
-          for (int j = cnt; j > ix; j++)
+          for (int j = (int)cnt; j > ix; j--)
             asso->ada_ents[j] = asso->ada_ents[j - 1];
           asso->cda_count = cnt + 1;
           return asso;
