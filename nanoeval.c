@@ -432,12 +432,11 @@ nanoeval_itemnode_mom (struct mom_nanoeval_st *nev,
 }                               /* end nanoeval_itemnode_mom */
 
 
-static void *
+static const void *
 nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *envitm,
                        const struct mom_boxnode_st *nod, int depth)
 {                               /// %func(<formals>,<body>....)
-  void *resv = NULL;
   MOM_DEBUGPRINTF (run, "nanoeval_funcnode start envitm=%s nod=%s depth#%d",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
@@ -498,6 +497,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
     }
 }                               /* end nanoeval_funcnode_mom */
 
+
 const void *
 mom_nanoapply (struct mom_nanoeval_st *nev,
                struct mom_item_st *envitm,
@@ -505,12 +505,15 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                const struct mom_boxnode_st *nodexp,
                unsigned nbargs, const void **argv, int depth)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_FATAPRINTF
     ("unimplemented mom_nanoapply nodfun=%s, nodexp=%s, depth#%d",
      mom_value_cstring ((const struct mom_hashedvalue_st *) nodfun),
      mom_value_cstring ((const struct mom_hashedvalue_st *) nodexp), depth);
 #warning mom_nanoapply unimplemented
 }                               /* end of mom_nanoapply */
+
 
 static const void *
 nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
@@ -832,7 +835,8 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                            "nanoeval_othernode before apply connval %s depth#%d",
                            mom_value_cstring (connval), depth);
           const void *resapp =
-            mom_nanoapply (nev, envitm, connvnod, nod, arity, arr, depth + 1);
+            mom_nanoapply (nev, envitm, connvnod, nod, arity,
+                           (const void **) arr, depth + 1);
           MOM_DEBUGPRINTF (run,
                            "nanoeval_othernode after apply connval %s resapp %s depth#%d",
                            mom_value_cstring (connval),
@@ -996,6 +1000,59 @@ momf_nanoeval_add2 (struct mom_nanoeval_st *nev,
                        (long) i1, (long) ires);
       return mom_boxint_make (ires);
     }
+  else if (ty0 == MOMITY_BOXDOUBLE && ty1 == MOMITY_BOXDOUBLE)
+    {
+      double d0 = mom_boxdouble_val_def (arg0, 0.0);
+      double d1 = mom_boxdouble_val_def (arg1, 0.0);
+      double dres = d0 + d1;
+      MOM_DEBUGPRINTF (run, "nanoeval_add2 d0=%g d1=%g dres=%g",
+                       d0, d1, dres);
+      return mom_boxdouble_make (dres);
+    }
+  else if (ty0 == MOMITY_BOXSTRING && ty1 == MOMITY_BOXSTRING)
+    {
+      const char *s0 = mom_boxstring_cstr (arg0);
+      const char *s1 = mom_boxstring_cstr (arg1);
+      const struct mom_boxstring_st *bstres =
+        mom_boxstring_printf ("%s%s", s0, s1);
+      MOM_DEBUGPRINTF (run, "nanoeval_add2 s0=%s d1=%s bstres=%s",
+                       mom_value_cstring ((struct mom_hashedvalue_st *) arg0),
+                       mom_value_cstring ((struct mom_hashedvalue_st *) arg1),
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          bstres));
+      return bstres;
+    }
+  else if (ty0 == MOMITY_TUPLE && ty1 == MOMITY_TUPLE)
+    {
+      const struct mom_boxtuple_st *tu0 = mom_dyncast_tuple (arg0);
+      const struct mom_boxtuple_st *tu1 = mom_dyncast_tuple (arg1);
+      unsigned ln0 = mom_raw_size (tu0);
+      unsigned ln1 = mom_raw_size (tu1);
+      const struct mom_boxtuple_st *tures
+        = mom_boxtuple_make_arr2 (ln0, tu0->seqitem, ln1, tu1->seqitem);
+      MOM_DEBUGPRINTF (run, "nanoeval_add2 tu0=%s tu1=%s tures=%s",
+                       mom_value_cstring ((struct mom_hashedvalue_st *) tu0),
+                       mom_value_cstring ((struct mom_hashedvalue_st *) tu1),
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          tures));
+      return tures;
+    }
+  else if (ty0 == MOMITY_SET && ty1 == MOMITY_SET)
+    {
+      const struct mom_boxset_st *set0 = mom_dyncast_set (arg0);
+      const struct mom_boxset_st *set1 = mom_dyncast_set (arg1);
+      unsigned ln0 = mom_raw_size (set0);
+      unsigned ln1 = mom_raw_size (set1);
+      const struct mom_boxtuple_st *setres = mom_boxset_union (set0, set1);
+      MOM_DEBUGPRINTF (run, "nanoeval_add2 set0=%s set1=%s setres=%s",
+                       mom_value_cstring ((struct mom_hashedvalue_st *) set0),
+                       mom_value_cstring ((struct mom_hashedvalue_st *) set1),
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          setres));
+      return setres;
+    }
   else
-    NANOEVAL_FAILURE_MOM (nev, expnod, MOM_PREDEFITM (type_error));
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                               arg0, arg1));
 }                               /* end momf_nanoeval_add2 */

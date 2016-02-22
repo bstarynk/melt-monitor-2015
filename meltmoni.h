@@ -594,6 +594,14 @@ momhash_t mom_double_hash (double x);
 const struct mom_boxdouble_st *mom_boxdouble_make (double x);
 
 
+static inline double
+mom_boxdouble_val_def (const void *p, double def)
+{
+  const struct mom_boxdouble_st *bd = mom_dyncast_boxdouble (p);
+  if (bd)
+    return bd->boxd_dbl;
+  return def;
+}
 
 
 
@@ -740,13 +748,14 @@ mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
 
 const struct mom_boxtuple_st *mom_boxtuple_make_arr2 (unsigned siz1,
                                                       const struct mom_item_st
-                                                      **arr1, unsigned siz2,
+                                                      *const *arr1,
+                                                      unsigned siz2,
                                                       const struct mom_item_st
-                                                      **arr2);
+                                                      *const *arr2);
 
 const struct mom_boxtuple_st *mom_boxtuple_make_arr (unsigned siz,
                                                      const struct mom_item_st
-                                                     **arr);
+                                                     *const *arr);
 
 const struct mom_boxtuple_st *mom_boxtuple_make_va (unsigned siz, ...);
 

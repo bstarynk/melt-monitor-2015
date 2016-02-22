@@ -242,8 +242,8 @@ seqitem_hash_compute_mom (struct mom_seqitems_st *si)
 }
 
 const struct mom_boxtuple_st *
-mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
-                        unsigned siz2, const struct mom_item_st **arr2)
+mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st *const *arr1,
+                        unsigned siz2, const struct mom_item_st *const *arr2)
 {
   if (!arr1 || arr1 == MOM_EMPTY_SLOT)
     {
@@ -273,8 +273,9 @@ mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
   return tup;
 }                               /* end mom_boxtuple_make_arr2 */
 
+
 const struct mom_boxtuple_st *
-mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st **arr)
+mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st *const *arr)
 {
   if (arr == MOM_EMPTY_SLOT)
     arr = NULL;
