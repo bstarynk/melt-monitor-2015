@@ -29,6 +29,7 @@ volatile atomic_bool mom_should_run;
 unsigned mom_nbjobs = MOM_DEFAULT_NB_JOBS;
 static bool syslogging_mom;
 static bool should_dump_mom;
+static bool skipmadecheck_mom;
 static char *dir_after_load_mom;
 static char *load_state_mom;
 static char *web_service_mom;
@@ -1023,6 +1024,7 @@ enum extraopt_en
   xtraopt_addpredef,
   xtraopt_commentpredef,
   xtraopt_webdir,
+  xtraopt_skipmadecheck,
   xtraopt_info,
   xtraopt_testarg,
   xtraopt_testrun,
@@ -1037,6 +1039,7 @@ static const struct option mom_long_options[] = {
   {"jobs", required_argument, NULL, 'J'},
   {"dump", no_argument, NULL, 'd'},
   {"syslog", no_argument, NULL, 's'},
+  {"skip-made-check", no_argument, NULL, xtraopt_skipmadecheck},
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
@@ -1070,13 +1073,13 @@ usage_mom (const char *argv0)
   putchar ('\n');
   printf ("\t -L | --load statefile" " \t#Load a state \n");
   printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
-  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
   printf ("\t --chdir-after-load dirpath"
           " \t#Change directory after load\n");
-  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
+  printf ("\t --skip-made-check"
+          " \t#Skip the check that the binary is made up to date\n");
   printf ("\t --test-arg <testarg>" " \t#Argument to next test.\n");
   printf ("\t --test-run <testname>" " \t#Name of test to run after load.\n");
   printf ("\t --info" " \t#Give various information\n");
@@ -1181,6 +1184,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
                               optarg);
             dir_after_load_mom = GC_STRDUP (optarg);
           }
+          break;
+        case xtraopt_skipmadecheck:
+          skipmadecheck_mom = true;
           break;
         case xtraopt_commentpredef:
           commentstr = optarg;
@@ -1363,6 +1369,21 @@ main (int argc_main, char **argv_main)
     mom_set_debugging (argv[1] + 2);
   mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
+  if (!skipmadecheck_mom)
+    {
+      MOM_DEBUGPRINTF (run, "before running 'make -q monimelt'");
+      fflush (NULL);
+      int okmaket = system ("make -q monimelt");
+      if (!okmaket)
+        MOM_INFORMPRINTF ("monimelt is made up to date");
+      else
+        {
+          MOM_WARNPRINTF ("pass --skip-made-check to avoid up to date check");
+          MOM_FATAPRINTF
+            ("monimelt is not up to date, 'make -t monimelt' gave %d",
+             okmaket);
+        }
+    }
   if (!load_state_mom && !access (MOM_GLOBAL_STATE, R_OK))
     {
       load_state_mom = MOM_GLOBAL_STATE;
