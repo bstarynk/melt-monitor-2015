@@ -300,6 +300,19 @@ signature_tasklet
 ^funsignature
 
 
+*mult
+1456130464
+^mtime
+(
+comment
+"the multiplication operator"_
+nanoeval
+(
+nanoeval_mult2
+)node
+)attrs
+
+
 *name
 1452697324
 ^mtime
@@ -323,6 +336,8 @@ percent_delim
 left_paren_delim
 ")"_
 right_paren_delim
+"*"_
+star_delim
 "+"_
 plus_delim
 ","_
@@ -372,6 +387,18 @@ signature_nanoeval2
 (
 comment
 "function to evaluate add"_
+)attrs
+
+
+*nanoeval_mult2
+1456130464
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to evaluate mult"_
 )attrs
 
 
@@ -436,7 +463,7 @@ comment
 operator
 add
 precedence
-2_
+4_
 )attrs
 
 
@@ -646,6 +673,21 @@ comment
 *something
 1448027933
 ^mtime
+
+
+*star_delim
+1456130464
+^mtime
+(
+associativity
+right_assoc
+comment
+"for * delimiter token"_
+operator
+mult
+precedence
+3_
+)attrs
 
 
 *step
