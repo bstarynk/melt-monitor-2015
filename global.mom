@@ -503,6 +503,18 @@ comment
 )attrs
 
 
+*nanoeval_setany
+1456152800
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function to evaluate set"_
+)attrs
+
+
 *no_assoc
 1455871773
 ^mtime
@@ -686,6 +698,8 @@ comment
 (
 comment
 "for sets"_
+nanoeval
+nanoeval_setany
 )attrs
 
 

@@ -1306,33 +1306,78 @@ momf_nanoeval_rem2 (struct mom_nanoeval_st *nev,
 
 
 
-
-const char momsig_nanoeval_set[] = "signature_nanoevalany";
-const void *
-momf_nanoeval_set (struct mom_nanoeval_st *nev,
-                   struct mom_item_st *envitm,
-                   int depth,
-                   const struct mom_boxnode_st *expnod,
-                   const struct mom_boxnode_st *closnod,
-                   unsigned nbval, const void **valarr)
+struct mom_hashset_st *
+add2hset_mom (struct mom_hashset_st *hset, const void *val)
 {
-  MOM_FATAPRINTF ("unimplemented nanoeval_set depth=%d", depth);
-#warning unimplemented nanoeval_set
+  switch (mom_itype (val))
+    {
+    case MOMITY_NONE:
+    case MOMITY_BOXINT:
+    case MOMITY_BOXDOUBLE:
+    case MOMITY_BOXSTRING:
+      return hset;
+    case MOMITY_ITEM:
+      return mom_hashset_insert (hset, (struct mom_item_st *) val);
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *seq = (val);
+        unsigned ln = mom_raw_size (seq);
+        for (unsigned ix = 0; ix < ln; ix++)
+          {
+            if (seq->seqitem[ix] == NULL)
+              continue;
+            hset = mom_hashset_insert (hset, seq->seqitem[ix]);
+          }
+        return hset;
+      }
+    }
+}                               /* end of add2hset_mom */
+
+const char momsig_nanoeval_setany[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_setany (struct mom_nanoeval_st *nev,
+                      struct mom_item_st *envitm,
+                      int depth,
+                      const struct mom_boxnode_st *expnod,
+                      const struct mom_boxnode_st *closnod,
+                      unsigned nbval, const void **valarr)
+{
+  struct mom_hashset_st *hset =
+    mom_hashset_reserve (NULL, mom_prime_above (4 * nbval / 3 + 5));
+
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_setany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  for (int ix = 0; ix < (int) nbval; ix++)
+    {
+      MOM_DEBUGPRINTF (run, "nanoeval_setany valarr[%d]=%s", ix,
+                       mom_value_cstring (valarr[ix]));
+      hset = add2hset_mom (hset, valarr[ix]);
+    }
+  const struct mom_boxset_st *setv = mom_hashset_to_boxset (hset);
+  MOM_DEBUGPRINTF (run, "nanoeval_setany depth=%d result setv=%s",
+                   depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) setv));
+  return setv;
 }                               /* end of momf_nanoeval_set */
 
 
 
-const char momsig_nanoeval_tuple[] = "signature_nanoevalany";
+const char momsig_nanoeval_tupleany[] = "signature_nanoevalany";
 const void *
-momf_nanoeval_tuple (struct mom_nanoeval_st *nev,
-                     struct mom_item_st *envitm,
-                     int depth,
-                     const struct mom_boxnode_st *expnod,
-                     const struct mom_boxnode_st *closnod,
-                     unsigned nbval, const void **valarr)
+momf_nanoeval_tupleany (struct mom_nanoeval_st *nev,
+                        struct mom_item_st *envitm,
+                        int depth,
+                        const struct mom_boxnode_st *expnod,
+                        const struct mom_boxnode_st *closnod,
+                        unsigned nbval, const void **valarr)
 {
-  MOM_FATAPRINTF ("unimplemented nanoeval_tuple depth=%d", depth);
+  MOM_FATAPRINTF ("unimplemented nanoeval_tupleany depth=%d", depth);
 #warning unimplemented nanoeval_tuple
-}                               /* end of momf_nanoeval_tuple */
+}                               /* end of momf_nanoeval_tupleany */
 
 //////////////////////////////////////////// eof nanoeval.c

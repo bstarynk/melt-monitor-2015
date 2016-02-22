@@ -1861,6 +1861,14 @@ mom_queue_make (void)
   return qu;
 }                               /* end mom_queue_make */
 
+/// initialize a local queue on the call stack
+static inline void
+mom_queue_init (struct mom_queue_st *qu)
+{
+  memset (qu, 0, sizeof (struct mom_queue_st));
+  qu->va_itype = MOMITY_QUEUE;
+}
+
 /// for MOMITY_JSON payload
 #define MOM_JSON_FIELDS \
   MOM_ANYVALUE_FIELDS;  \
