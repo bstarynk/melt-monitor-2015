@@ -515,6 +515,18 @@ comment
 )attrs
 
 
+*nanoeval_tupleany
+1456154292
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function to evaluate tuple"_
+)attrs
+
+
 *no_assoc
 1455871773
 ^mtime
@@ -922,6 +934,8 @@ comment
 (
 comment
 "for tuples"_
+nanoeval
+nanoeval_tupleany
 )attrs
 
 
