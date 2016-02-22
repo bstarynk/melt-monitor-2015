@@ -1267,4 +1267,36 @@ momf_nanoeval_rem2 (struct mom_nanoeval_st *nev,
                                                arg0, arg1));
 }                               /* end momf_nanoeval_rem2 */
 
+
+
+
+
+const char momsig_nanoeval_set[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_set (struct mom_nanoeval_st *nev,
+                   struct mom_item_st *envitm,
+                   int depth,
+                   const struct mom_boxnode_st *expnod,
+                   const struct mom_boxnode_st *closnod,
+                   unsigned nbval, const void **valarr)
+{
+  MOM_FATAPRINTF ("unimplemented nanoeval_set depth=%d", depth);
+#warning unimplemented nanoeval_set
+}                               /* end of momf_nanoeval_set */
+
+
+
+const char momsig_nanoeval_tuple[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_tuple (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod,
+                     unsigned nbval, const void **valarr)
+{
+  MOM_FATAPRINTF ("unimplemented nanoeval_tuple depth=%d", depth);
+#warning unimplemented nanoeval_tuple
+}                               /* end of momf_nanoeval_tuple */
+
 //////////////////////////////////////////// eof nanoeval.c
