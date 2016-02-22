@@ -911,6 +911,15 @@ comment
 )attrs
 
 
+*type
+1456146499
+^mtime
+(
+comment
+"for type information"_
+)attrs
+
+
 *type_error
 1455914086
 ^mtime
