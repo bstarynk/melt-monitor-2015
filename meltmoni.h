@@ -387,13 +387,13 @@ typedef unsigned __int128 mom_uint128_t;
 enum momitype_en
 {
   MOMITY_NONE,
-  MOMITY_BOXINT,         /// see `int` predefined
-  MOMITY_BOXDOUBLE,      /// see `double` predefined
-  MOMITY_BOXSTRING,      /// see `string` predefined
-  MOMITY_ITEM,           /// see `item` predefined
-  MOMITY_TUPLE,          /// see `tuple` predefined
-  MOMITY_SET,            /// see `set` predefined
-  MOMITY_NODE,           /// see `node` predefined
+  MOMITY_BOXINT,                /// see `int` predefined
+  MOMITY_BOXDOUBLE,             /// see `double` predefined
+  MOMITY_BOXSTRING,             /// see `string` predefined
+  MOMITY_ITEM,                  /// see `item` predefined
+  MOMITY_TUPLE,                 /// see `tuple` predefined
+  MOMITY_SET,                   /// see `set` predefined
+  MOMITY_NODE,                  /// see `node` predefined
   /// the types above are for genuine values
   MOMITY__LASTHASHED,
   /// here are the payload types, they can only appear as item
