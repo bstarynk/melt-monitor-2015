@@ -210,6 +210,15 @@ nanoeval_div2
 )attrs
 
 
+*double
+1456146211
+^mtime
+(
+comment
+"for double & boxed doubles"_
+)attrs
+
+
 *expression
 1453445242
 ^mtime
@@ -252,6 +261,15 @@ comment
 (
 comment
 "hashed set"_
+)attrs
+
+
+*int
+1456146211
+^mtime
+(
+comment
+"for int and boxed integers"_
 )attrs
 
 
@@ -494,6 +512,15 @@ comment
 )attrs
 
 
+*node
+1456146211
+^mtime
+(
+comment
+"for nodes"_
+)attrs
+
+
 *notice
 1446546422
 ^mtime
@@ -650,6 +677,15 @@ comment
 (
 comment
 "for sequences"_
+)attrs
+
+
+*set
+1456146211
+^mtime
+(
+comment
+"for sets"_
 )attrs
 
 
@@ -825,6 +861,15 @@ comment
 )attrs
 
 
+*string
+1456146211
+^mtime
+(
+comment
+"for strings and boxed strings"_
+)attrs
+
+
 *the_agenda
 1455181584
 ^mtime
@@ -854,6 +899,15 @@ nano_displayer
 (
 comment
 "for true value"_
+)attrs
+
+
+*tuple
+1456146211
+^mtime
+(
+comment
+"for tuples"_
 )attrs
 
 
