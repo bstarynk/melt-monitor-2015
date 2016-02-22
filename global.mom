@@ -457,7 +457,7 @@ comment
 ^mtime
 (
 associativity
-right_assoc
+left_assoc
 comment
 "for + delimiter token"_
 operator
@@ -680,7 +680,7 @@ comment
 ^mtime
 (
 associativity
-right_assoc
+left_assoc
 comment
 "for * delimiter token"_
 operator

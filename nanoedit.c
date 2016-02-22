@@ -2039,7 +2039,7 @@ parsexprprec_nanoedit_mom (struct
              prec, startpos, curpos, delimprec);
           break;
         }
-      if (associtm == MOM_PREDEFITM (no_assoc) && ecount > 0)
+      if ((!associtm || associtm == MOM_PREDEFITM (no_assoc)) && ecount > 1)
         NANOPARSING_FAILURE_MOM (np, -startpos,
                                  "non-associative operator %s after %s with more than two operands for precedence %d (curpos %d)",
                                  mom_item_cstring (delimitm),
@@ -2149,8 +2149,114 @@ parsexprprec_nanoedit_mom (struct
       *posptr = curpos;
       return nodres;
     }
+  else
+    {
+      /* ecount > 1 */
+      MOM_DEBUGPRINTF (web,
+                       "parsexprprec_nanoedit prec=%d startpos=%d curpos=%d ecount=%d leftexprv=%s",
+                       prec, startpos, curpos, ecount,
+                       mom_value_cstring (leftexprv));
+      int nbleft = 0, nbright = 0;
+      struct mom_item_st **operarr =
+        mom_gc_alloc (sizeof (struct mom_item_st *) * (ecount + 1));
+      struct mom_item_st *associtm = NULL;
+      for (unsigned ix = 0; ix < ecount; ix++)
+        {
+          struct mom_item_st *operitm = NULL;
+          struct mom_item_st *curassocitm = NULL;
+          delimitm = delitmarr[ix];
+          void *subexpv = exparr[ix];
+          int subpos = posarr[ix];
+          {
+            mom_item_lock (delimitm);
+            const struct mom_hashedvalue_st *operv
+              = mom_unsync_item_get_phys_attr (delimitm,
+                                               MOM_PREDEFITM (operator));
+            operitm = mom_dyncast_item (operv);
+            const struct mom_hashedvalue_st *assocv
+              = mom_unsync_item_get_phys_attr (delimitm,
+                                               MOM_PREDEFITM (associativity));
+            curassocitm = mom_dyncast_item (assocv);
+            if (!curassocitm)
+              curassocitm = MOM_PREDEFITM (no_assoc);
+            mom_item_unlock (delimitm);
+          }
+          MOM_DEBUGPRINTF
+            (web,
+             "parsexprprec_nanoedit prec=%d ix=%d delimitm=%s operitm=%s curassocitm=%s subexpv=%s subpos=%d",
+             prec, ix, mom_item_cstring (delimitm),
+             mom_item_cstring (operitm),
+             mom_item_cstring (curassocitm),
+             mom_value_cstring (subexpv), subpos);
+          if (ix == 0)
+            associtm = curassocitm;
+          else if (associtm != curassocitm)
+            NANOPARSING_FAILURE_MOM (np, -subpos,
+                                     "different associativities for delimiters %s and %s of same precedence %d",
+                                     mom_item_cstring (delitmarr[0]),
+                                     mom_item_cstring (delimitm), prec);
+          else if (!associtm || curassocitm == MOM_PREDEFITM (no_assoc))
+            NANOPARSING_FAILURE_MOM (np, -subpos,
+                                     "non-associative delimiter %s with more than two operands of same precedence %d",
+                                     mom_item_cstring (delimitm), prec);
 
-#warning unimplemented parsexprprec_nanoedit_mom
+          if (!operitm)
+            NANOPARSING_FAILURE_MOM (np, -subpos,
+                                     "missing operator in delimiter %s of precedence %d",
+                                     mom_item_cstring (delimitm), prec);
+          operarr[ix] = operitm;
+        };
+      /// now, build the nodes using the associativity
+      if (associtm == MOM_PREDEFITM (left_assoc))
+        {                       /// the expression is left op1 right1 op2 right2 ... opn rightn
+          /// to be parsed as (left right1 op1) right2 ... ) opn rightn
+          const void *resexprv = leftexprv;
+          for (unsigned ix = 0; ix < ecount; ix++)
+            {
+              int metarank = posarr[ix];
+              struct mom_item_st *metaitm = NULL;
+              struct mom_item_st *operitm = operarr[ix];
+              const struct mom_boxnode_st *nodres =
+                mom_boxnode_meta_make_va (metaitm, metarank, operitm, 2,
+                                          resexprv,
+                                          exparr[ix]);
+              resexprv = nodres;
+            }
+          *posptr = curpos;
+          MOM_DEBUGPRINTF
+            (web,
+             "parsexprprec_nanoedit leftassoc prec=%d ecount=%d curpos=%d resexprv=%s",
+             prec, ecount, curpos, mom_value_cstring (resexprv));
+          return resexprv;
+        }
+      else if (associtm == MOM_PREDEFITM (right_assoc))
+        {
+          const void *resexprv = exparr[ecount - 1];
+          for (int ix = (int)ecount - 2; ix > 0; ix--)
+            {
+              int metarank = posarr[ix];
+              struct mom_item_st *metaitm = NULL;
+              struct mom_item_st *operitm = operarr[ix];
+              const struct mom_boxnode_st *nodres =
+                mom_boxnode_meta_make_va (metaitm, metarank, operitm, 2,
+                                          exparr[ix], resexprv);
+              resexprv = nodres;
+            }
+          *posptr = curpos;
+          MOM_DEBUGPRINTF
+            (web,
+             "parsexprprec_nanoedit rightassoc prec=%d ecount=%d curpos=%d resexprv=%s",
+             prec, ecount, curpos, mom_value_cstring (resexprv));
+          return resexprv;
+        }
+      else                      /// should never happen
+        MOM_FATAPRINTF ("corruption, invalid associtm %s delimitm %s",
+                        mom_item_cstring (associtm),
+                        mom_item_cstring (delimitm));
+
+#warning incomplete parsexprprec_nanoedit_mom
+    }
+
   NANOPARSING_FAILURE_MOM (np, -startpos,
                            "unimplemented parsexprprec_nanoedit prec%d (curpos %d)",
                            prec, curpos);
