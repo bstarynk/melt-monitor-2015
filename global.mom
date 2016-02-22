@@ -197,6 +197,19 @@ comment
 )attrs
 
 
+*div
+1456141884
+^mtime
+(
+comment
+"the division operator"_
+nanoeval
+(
+nanoeval_div2
+)node
+)attrs
+
+
 *expression
 1453445242
 ^mtime
@@ -372,6 +385,10 @@ plus_delim
 comma_delim
 "-"_
 minus_delim
+"/"_
+slash_delim
+"/%"_
+slashpercent_delim
 ";"_
 semicolon_delim
 "["_
@@ -432,6 +449,18 @@ comment
 )attrs
 
 
+*nanoeval_div2
+1456141884
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to evaluate div"_
+)attrs
+
+
 *nanoeval_mult2
 1456130464
 ^mtime
@@ -441,6 +470,18 @@ signature_nanoeval2
 (
 comment
 "function to evaluate mult"_
+)attrs
+
+
+*nanoeval_rem2
+1456141884
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to evaluate rem"_
 )attrs
 
 
@@ -542,6 +583,19 @@ comment
 (
 comment
 "for raw display"_
+)attrs
+
+
+*rem
+1456141884
+^mtime
+(
+comment
+"the remainder or modulus operator"_
+nanoeval
+(
+nanoeval_rem2
+)node
 )attrs
 
 
@@ -709,6 +763,36 @@ comment
 (
 comment
 "signature of tasklet functions"_
+)attrs
+
+
+*slash_delim
+1456141884
+^mtime
+(
+associativity
+left_assoc
+comment
+"for / delimiter token, e.g. for division"_
+operator
+div
+precedence
+3_
+)attrs
+
+
+*slashpercent_delim
+1456141884
+^mtime
+(
+associativity
+left_assoc
+comment
+"for /% delimiter token, e.g. for remainder or modulus"_
+operator
+rem
+precedence
+3_
 )attrs
 
 
