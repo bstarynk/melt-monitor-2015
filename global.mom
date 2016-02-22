@@ -166,6 +166,19 @@ comment
 )attrs
 
 
+*diff
+1456140230
+^mtime
+(
+comment
+"the difference operator"_
+nanoeval
+(
+nanoeval_diff2
+)node
+)attrs
+
+
 *display
 1452095862
 ^mtime
@@ -300,6 +313,21 @@ signature_tasklet
 ^funsignature
 
 
+*minus_delim
+1456140230
+^mtime
+(
+associativity
+left_assoc
+comment
+"for - delimiter token"_
+operator
+diff
+precedence
+4_
+)attrs
+
+
 *mult
 1456130464
 ^mtime
@@ -342,6 +370,8 @@ star_delim
 plus_delim
 ","_
 comma_delim
+"-"_
+minus_delim
 ";"_
 semicolon_delim
 "["_
@@ -387,6 +417,18 @@ signature_nanoeval2
 (
 comment
 "function to evaluate add"_
+)attrs
+
+
+*nanoeval_diff2
+1456140230
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to evaluate diff"_
 )attrs
 
 
@@ -737,6 +779,15 @@ comment
 (
 comment
 "for nanoeval type error"_
+)attrs
+
+
+*undefined_result
+1456139800
+^mtime
+(
+comment
+"for undefined result"_
 )attrs
 
 
