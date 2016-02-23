@@ -2301,6 +2301,11 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
   assert (tknod != NULL && mom_size (tknod) >= mec__last);
   struct mom_item_st *delimitm =
     mom_dyncast_item (tknod->nod_sons[mec_delimiters]);
+  // remove any previous expression
+  MOM_DEBUGPRINTF (web,
+                   "doparsecommand_nanoedit thistatitm=%s forgetexpr",
+                   mom_item_cstring (thistatitm));
+  mom_unsync_item_remove_phys_attr (thistatitm, MOM_PREDEFITM (expression));
   struct nanoparsing_mom_st npars;
   memset (&npars, 0, sizeof (npars));
   npars.nanop_magic = NANOPARSING_MAGIC_MOM;
@@ -2424,6 +2429,9 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
       if (!g_utf8_validate (cmd, -1, &gend))
         NANOPARSING_FAILURE_MOM (&npars, gend - cmd, "invalid UTF8: %s", cmd);
       // remove any previous expression
+      MOM_DEBUGPRINTF (web,
+                       "doparsecommand_nanoedit thistatitm=%s forgetexpr",
+                       mom_item_cstring (thistatitm));
       mom_unsync_item_remove_phys_attr (thistatitm,
                                         MOM_PREDEFITM (expression));
       while (cmd[npars.nanop_pos] != (char) 0)
