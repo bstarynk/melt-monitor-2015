@@ -1858,11 +1858,10 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                 (np, pos + 2, MOM_PREDEFITM (left_paren_delim)))
               NANOPARSING_FAILURE_WITH_MOM (np, off, next2tokv,
                                             "parsprimary_nanoedit expected left parenthesis got %s after connective %s",
-                                            mom_value_cstring
-                                            (next2tokv),
+                                            mom_value_cstring (next2tokv),
                                             mom_item_cstring (connitm));
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit percent-expr pos#%d off@%d connitm %s",
+                             "parsprimary_nanoedit percent-expr pos#%d off@%d connitm %s after leftparen",
                              pos, off, mom_item_cstring (connitm));
             struct mom_vectvaldata_st *vec =
               mom_vectvaldata_reserve (NULL, 5);
@@ -1890,18 +1889,25 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                 vec = mom_vectvaldata_append (vec, subexpv);
                 if (isdelim_nanoedit_mom
                     (np, curpos, MOM_PREDEFITM (comma_delim)))
-                  curpos++;
-                else
-                  if (isdelim_nanoedit_mom (np, curpos,
-                                            MOM_PREDEFITM
-                                            (right_paren_delim)))
                   {
+                    MOM_DEBUGPRINTF (web,
+                                     "parsprimary_nanoedit comma curpos=%d",
+                                     curpos);
+                    curpos++;
+                  }
+                else if (isdelim_nanoedit_mom (np, curpos,
+                                               MOM_PREDEFITM
+                                               (right_paren_delim)))
+                  {
+                    MOM_DEBUGPRINTF (web,
+                                     "parsprimary_nanoedit rightparen curpos=%d",
+                                     curpos);
                     curpos++;
                     break;
                   }
               }
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit percent-expr final curpos=%d connitm=%s",
+                             "parsprimary_nanoedit percent-expr after rightparenfinal   curpos=%d connitm=%s",
                              curpos, mom_item_cstring (connitm));
             // use mom_boxnode_make_meta...
             const struct mom_boxnode_st *nodres =
@@ -1926,9 +1932,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
     default:
       break;
     }
-  NANOPARSING_FAILURE_MOM (np, -pos,
-                           "parsprimary_nanoedit unexpected token %s",
-                           mom_value_cstring (curtokv));
+  NANOPARSING_FAILURE_WITH_MOM (np, -pos, curtokv,
+                                "parsprimary_nanoedit unexpected token %s",
+                                mom_value_cstring (curtokv));
 }                               /* end parsprimary_nanoedit_mom */
 
 
