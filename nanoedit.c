@@ -1093,9 +1093,10 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   int errlin = 0;
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
-      MOM_WARNPRINTF ("nanoedit failure from %s:%d: failure %s with expr %s",
-                      __FILE__, errlin, mom_value_cstring (nev.nanev_fail),
-                      mom_value_cstring (nev.nanev_expr));
+      MOM_WARNPRINTF_AT (__FILE__, errlin,
+                         "nanoedit failure %s with expr %s",
+                         mom_value_cstring (nev.nanev_fail),
+                         mom_value_cstring (nev.nanev_expr));
 #warning should output JSON for error case
       MOM_FATAPRINTF ("unhandled nanoedit eval failure from %d", errlin);
     }
@@ -2331,32 +2332,34 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
       if (npars.nanop_pos >= 0)
         {
           if (npars.nanop_errval)
-            MOM_WARNPRINTF
-              ("doparsecommand_nanoedit parsing error from %s:%d with %s: %s"
-               "\n.. at position %u of:\n%s\n", __FILE__, linerr,
+            MOM_WARNPRINTF_AT
+              (__FILE__, linerr,
+               "doparsecommand_nanoedit parsing error with %s: %s"
+               "\n.. at position %u of:\n%s\n",
                mom_value_cstring (npars.nanop_errval),
-               mom_boxstring_cstr (npars.nanop_errmsgv),
-               npars.nanop_pos, npars.nanop_cmdstr);
+               mom_boxstring_cstr (npars.nanop_errmsgv), npars.nanop_pos,
+               npars.nanop_cmdstr);
           else
-            MOM_WARNPRINTF
-              ("doparsecommand_nanoedit parsing error from %s:%d: %s"
-               "\n.. at position %u of:\n%s\n", __FILE__, linerr,
+            MOM_WARNPRINTF_AT
+              (__FILE__, linerr, "doparsecommand_nanoedit parsing error: %s"
+               "\n.. at position %u of:\n%s\n",
                mom_boxstring_cstr (npars.nanop_errmsgv),
                npars.nanop_pos, npars.nanop_cmdstr);
         }
       else
         {
           if (npars.nanop_errval)
-            MOM_WARNPRINTF
-              ("doparsecommand_nanoedit parsing error from %s:%d with %s: %s"
-               "\n.. at index %d of:\n%s\n", __FILE__, linerr,
+            MOM_WARNPRINTF_AT
+              (__FILE__, linerr,
+               "doparsecommand_nanoedit parsing error with %s: %s"
+               "\n.. at index %d of:\n%s\n",
                mom_value_cstring (npars.nanop_errval),
-               mom_boxstring_cstr (npars.nanop_errmsgv),
-               -npars.nanop_pos, npars.nanop_cmdstr);
+               mom_boxstring_cstr (npars.nanop_errmsgv), -npars.nanop_pos,
+               npars.nanop_cmdstr);
           else
-            MOM_WARNPRINTF
-              ("doparsecommand_nanoedit parsing error from %s:%d: %s"
-               "\n.. at index %d of:\n%s\n", __FILE__, linerr,
+            MOM_WARNPRINTF_AT
+              (__FILE__, linerr, "doparsecommand_nanoedit parsing error: %s"
+               "\n.. at index %d of:\n%s\n",
                mom_boxstring_cstr (npars.nanop_errmsgv),
                -npars.nanop_pos, npars.nanop_cmdstr);
         }
@@ -2390,7 +2393,10 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
         fclose (ferr);
         free (errbuf);
       }
-      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit errhtml=%s", errhtml);
+      MOM_DEBUGPRINTF (web,
+                       "doparsecommand_nanoedit errhtml=%s errval=%s badnamstr=%s",
+                       errhtml, mom_value_cstring (npars.nanop_errval),
+                       mom_value_cstring (badnamstr));
       mom_wexch_puts (wexch, "{ \"html\": \"");
       mom_output_utf8_encoded (wexch->webx_outfil, errhtml, -1);
       mom_wexch_puts (wexch, "\",\n");
