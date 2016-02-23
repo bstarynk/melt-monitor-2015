@@ -928,6 +928,8 @@ nanoeval_item_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
       mom_item_unlock (envitm);
       envitm = prevenvitm;
     }
+  if (!res)
+    res = itm;
   return res;
 }                               /* end nanoeval_item_mom */
 
@@ -1303,6 +1305,58 @@ momf_nanoeval_rem2 (struct mom_nanoeval_st *nev,
 
 
 
+const char momsig_nanoeval_put3[] = "signature_nanoeval3";
+const void *
+momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
+                    struct mom_item_st *envitm,
+                    int depth,
+                    const struct mom_boxnode_st *expnod,
+                    const struct mom_boxnode_st *closnod,
+                    const void *arg0, const void *arg1, const void *arg2)
+{
+  bool ok = false;
+  unsigned ty0 = mom_itype (arg0);
+  unsigned ty1 = mom_itype (arg1);
+  unsigned ty2 = mom_itype (arg2);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_put3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1),
+                   mom_value_cstring (arg2));
+  if (ty0 != MOMITY_ITEM)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 3,
+                                               arg0, arg1, arg2));
+  struct mom_item_st *itm0 = arg0;
+  mom_item_lock (itm0);
+  if (ty1 == MOMITY_ITEM)
+    {
+      struct mom_item_st *itm1 = arg1;
+      mom_unsync_item_put_phys_attr (itm0, itm1, arg2);
+      ok = true;
+    }
+  else if (ty1 == MOMITY_BOXINT && itm0->itm_pcomp != NULL)
+    {
+      int rk = mom_boxint_val_def (arg1, INT_MAX);
+      unsigned ln = mom_vectvaldata_count (itm0->itm_pcomp);
+      if (rk < 0)
+        rk += ln;
+      if (rk >= 0 && rk < ln)
+        {
+          mom_vectvaldata_put_nth (itm0->itm_pcomp, rk, arg2);
+          ok = true;
+        }
+    }
+  mom_item_unlock (itm0);
+  if (!ok)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 3,
+                                               arg0, arg1, arg2));
+
+  return NULL;
+}                               /* end momf_nanoeval_put3 */
 
 struct mom_hashset_st *
 add2hset_mom (struct mom_hashset_st *hset, const void *val)

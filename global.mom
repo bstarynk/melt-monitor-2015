@@ -491,6 +491,18 @@ comment
 )attrs
 
 
+*nanoeval_put3
+1456219019
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"function to evaluate put"_
+)attrs
+
+
 *nanoeval_rem2
 1456141884
 ^mtime
@@ -616,6 +628,10 @@ comment
 (
 comment
 "to put something"_
+nanoeval
+(
+nanoeval_put3
+)node
 )attrs
 
 
@@ -711,7 +727,9 @@ comment
 comment
 "for sets"_
 nanoeval
+(
 nanoeval_setany
+)node
 )attrs
 
 
@@ -935,7 +953,9 @@ comment
 comment
 "for tuples"_
 nanoeval
+(
 nanoeval_tupleany
+)node
 )attrs
 
 
