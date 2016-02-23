@@ -418,12 +418,15 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
                          data: {"do_createitem": itemname,
                                 "comment": itemcomment },
                          dataType: 'html',
-                         success: function (hdata) {
-                             console.log("do_createitem hdata=", hdata);
+                         success: function (hdata,stat,jh) {
+                             console.log("do_createitem hdata=", hdata, " stat=", stat, " jh=", jh);
                              $parsedcmddiv.html(hdata);
                              self.dialog("close");
                              badnamedlg = null;
-                         }
+                         },
+			 error: function (jq, stat, err) {
+			     console.warn("do_createitem error jq=", jq, " stat=", stat, " err=", err);
+			 }
                      });
                  }},
                 {text: "cancel",
