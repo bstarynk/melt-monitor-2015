@@ -2365,6 +2365,9 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
         }
       const char *errhtml = NULL;
       const struct mom_boxstring_st *badnamstr = NULL;
+      MOM_DEBUGPRINTF (web, "doparsecommand_nanoedit  webr#%ld errval=%s",
+                       wexch->webx_count,
+                       mom_value_cstring (npars.nanop_errval));
       {
         const struct mom_boxnode_st *errnod = NULL;
         char *errbuf = NULL;
