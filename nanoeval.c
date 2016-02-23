@@ -662,10 +662,57 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
                    "nanoeval_letrecnode depth#%d arity=%d nbbind=%d newenvitm=%s",
                    depth, arity, nbbind, mom_item_cstring (newenvitm));
   assert (nbbind <= arity);
-#warning nanoeval_letrecnode unimplemented
-  MOM_FATAPRINTF ("nanoeval_letrecnode unimplemented nod=%s depth=%d",
-                  mom_value_cstring ((struct mom_hashedvalue_st *) nod),
-                  depth);
+  // first loop to temporarily bind the variables to themselves
+  for (unsigned ix = 0; ix < nbbind; ix++)
+    {
+      struct mom_boxnode_st *bindnod = mom_dyncast_node (nod->nod_sons[ix]);
+      assert (bindnod != NULL);
+      unsigned bindln = mom_size (bindnod);
+      assert (bindnod->nod_connitm == MOM_PREDEFITM (be) && bindln >= 2);
+      struct mom_item_st *varitm = mom_dyncast_item (bindnod->nod_sons[0]);
+      assert (varitm != NULL && varitm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_letrecnode depth#%d binding#%d first varitm %s",
+                       depth, ix, mom_item_cstring (varitm));
+      nanoeval_bind_mom (newenvitm, varitm, varitm);
+    }
+  for (unsigned ix = 0; ix < nbbind; ix++)
+    {
+      struct mom_boxnode_st *bindnod = mom_dyncast_node (nod->nod_sons[ix]);
+      unsigned bindln = mom_size (bindnod);
+      struct mom_item_st *varitm = mom_dyncast_item (bindnod->nod_sons[0]);
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_letrecnode depth#%d binding#%d varitm %s",
+                       depth, ix, mom_item_cstring (varitm));
+      const void *bvalv = NULL;
+      for (unsigned bnix = 1; bnix < bindln; bnix++)
+        {
+          const void *bexpv = bindnod->nod_sons[bnix];
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_letrecnode depth#%d varitm %s bexpv %s",
+                           depth, mom_item_cstring (varitm),
+                           mom_value_cstring (bexpv));
+          bvalv = mom_nanoeval (nev, newenvitm, bexpv, depth + 1);
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_letrecnode depth#%d varitm %s bvalv %s",
+                           depth, mom_item_cstring (varitm),
+                           mom_value_cstring (bvalv));
+        }
+      nanoeval_bind_mom (newenvitm, varitm, bvalv);
+    }
+  for (unsigned ix = nbbind; ix < arity; ix++)
+    {
+      void *subexpv = nod->nod_sons[ix];
+      MOM_DEBUGPRINTF (run, "nanoeval_letrecnode depth#%d ix#%d subexpv %s",
+                       depth, ix, mom_value_cstring (subexpv));
+      void *subvalv = mom_nanoeval (nev, newenvitm, subexpv, depth + 1);
+      MOM_DEBUGPRINTF (run, "nanoeval_letrecnode depth#%d ix#%d subvalv %s",
+                       depth, ix, mom_value_cstring (subvalv));
+      res = subvalv;
+    }
+  MOM_DEBUGPRINTF (run, "nanoeval_letrecnode depth#%d final res=%s", depth,
+                   mom_value_cstring (res));
+  return res;
 }                               /* end nanoeval_letrecnode_mom */
 
 
