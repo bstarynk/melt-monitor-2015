@@ -432,6 +432,8 @@ left_bracket_delim
 right_bracket_delim
 "{"_
 left_brace_delim
+"}"_
+right_brace_delim
 )payload_hashassoc
 
 
@@ -973,7 +975,7 @@ comment
 
 
 *the_agenda
-1456313107
+1456320156
 ^mtime
 (
 comment
@@ -1107,13 +1109,8 @@ display
 raw
 expression
 (
-parenthesis
-display
+set
 )node
-item
-(
-parenthesis
-)set
 )attrs
 (
 item
