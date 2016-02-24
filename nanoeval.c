@@ -741,6 +741,9 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                    "nanoeval_othernode connitm %s with nanev %s depth#%d",
                    mom_item_cstring (connitm), mom_value_cstring (nanev),
                    depth);
+  if (nanev && mom_itype(nanev) != MOMITY_NODE)
+    MOM_WARNPRINTF("nanoeval_othernode connitm %s with strange `nanoeval` %s -expecting a closure node- depth#%d",
+		   mom_item_cstring(connitm), mom_value_cstring(nanev), depth);
   const struct mom_boxnode_st *nanenod = mom_dyncast_node (nanev);
   if (nanenod)
     {
