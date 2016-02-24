@@ -1843,6 +1843,7 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
         MOM_DEBUGPRINTF (web,
                          "parsprimary_nanoedit composite token %s at position #%d",
                          mom_value_cstring (curtokv), pos);
+	//////////////// %name(comma-seperated-subexpr...)
         if (pos + 3 < (int) nlen
             && isdelim_nanoedit_mom (np, pos, MOM_PREDEFITM (percent_delim)))
           {
@@ -1927,6 +1928,7 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             *posptr = curpos;
             return nodres;
           }
+	/////////////////////// (subexpr)  --- starting with a leftparen
         else if (pos + 2 < (int) nlen
                  && isdelim_nanoedit_mom (np, pos,
                                           MOM_PREDEFITM (left_paren_delim)))
@@ -1934,12 +1936,12 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             int curpos = pos + 1;
             struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit leftparen-expr pos=%d",
-                             pos);
+                             "parsprimary_nanoedit leftparen-expr pos=%d next1tokv=%s",
+                             pos, mom_value_cstring(next1tokv));
             int prevpos = curpos;
             const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit leftparent-expr prevpos#%d curpos#%d"
+                             "parsprimary_nanoedit leftparen-expr prevpos#%d curpos#%d"
                              " subexpv %s", prevpos,
                              curpos, mom_value_cstring (subexpv));
             if (!subexpv && curpos == prevpos)
@@ -1968,23 +1970,87 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 
             *posptr = curpos;
             return nodres;
-          }
+          }  /// end left-paren
+	//////////////// [comp,...] ---- tuple starting with left bracket
         else if (pos + 2 < (int) nlen
                  && isdelim_nanoedit_mom (np, pos,
                                           MOM_PREDEFITM (left_bracket_delim)))
           {
+            int curpos = pos + 1;
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit leftbracket-expr pos=%d",
-                             pos);
-          }
+                             "parsprimary_nanoedit leftbracket-expr pos=%d next1tokv=%s",
+                             pos, mom_value_cstring(next1tokv));
+            struct mom_vectvaldata_st *vec =
+              mom_vectvaldata_reserve (NULL, 5);
+            assert (vec != NULL);
+            while (curpos < (int) nlen
+                   && !isdelim_nanoedit_mom (np, curpos,
+                                             MOM_PREDEFITM
+                                             (right_bracket_delim)))
+              {
+                int prevpos = curpos;
+                const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit bracket-expr prevpos#%d curpos#%d"
+                                 " subexpv %s count %d", prevpos,
+                                 curpos, mom_value_cstring (subexpv),
+                                 mom_vectvaldata_count (vec));
+                if (!subexpv && curpos == prevpos)
+                  NANOPARSING_FAILURE_WITH_MOM (np, off,
+                                                next1tokv,
+                                                "parsprimary_nanoedit bad subexpression#%d in bracket-node",
+                                                mom_vectvaldata_count(vec));
+                vec = mom_vectvaldata_append (vec, subexpv);
+                if (isdelim_nanoedit_mom
+                    (np, curpos, MOM_PREDEFITM (comma_delim)))
+                  {
+                    MOM_DEBUGPRINTF (web,
+                                     "parsprimary_nanoedit comma curpos=%d",
+                                     curpos);
+                    curpos++;
+                  }
+                else if (isdelim_nanoedit_mom (np, curpos,
+                                               MOM_PREDEFITM
+                                               (right_bracket_delim)))
+                  {
+                    MOM_DEBUGPRINTF (web,
+                                     "parsprimary_nanoedit rightbracket curpos=%d",
+                                     curpos);
+                    curpos++;
+                    break;
+                  }
+              }
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit bracket-expr after rightbracketfinal curpos=%d",
+                             curpos);
+            // use mom_boxnode_make_meta...
+            const struct mom_boxnode_st *nodres =
+              mom_boxnode_make_meta (MOM_PREDEFITM(tuple),
+                                     mom_vectvaldata_count (vec),
+                                     ((const struct mom_hashedvalue_st **)
+                                      mom_vectvaldata_valvect (vec)),
+				     np->nanop_wexitm,
+                                     pos);
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit bracket-expr curpos#%d nodres=%s",
+                             curpos,
+                             mom_value_cstring ((const struct mom_hashedvalue_st *) nodres));
+            *posptr = curpos;
+            return nodres;
+          } /// end left-bracket
+	//////////////// {element,...} --- braces are for sets
         else if (pos + 2 < (int) nlen
                  && isdelim_nanoedit_mom (np, pos,
                                           MOM_PREDEFITM (left_brace_delim)))
           {
+            int curpos = pos + 1;
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
             MOM_DEBUGPRINTF (web,
-                             "parsprimary_nanoedit leftbrace-expr pos=%d",
-                             pos);
-          }
+                             "parsprimary_nanoedit leftbrace-expr pos=%d next1tokv=%s",
+                             pos, mom_value_cstring(next1tokv));
+#warning missing parsing of sets
+          } /// end left-brace
 
 #warning incomplete code parsprimary_nanoedit
       }
