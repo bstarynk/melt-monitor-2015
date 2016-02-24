@@ -1927,6 +1927,65 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             *posptr = curpos;
             return nodres;
           }
+        else if (pos + 2 < (int) nlen
+                 && isdelim_nanoedit_mom (np, pos,
+                                          MOM_PREDEFITM (left_paren_delim)))
+          {
+            int curpos = pos + 1;
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit leftparen-expr pos=%d",
+                             pos);
+            int prevpos = curpos;
+            const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit leftparent-expr prevpos#%d curpos#%d"
+                             " subexpv %s", prevpos,
+                             curpos, mom_value_cstring (subexpv));
+            if (!subexpv && curpos == prevpos)
+              NANOPARSING_FAILURE_WITH_MOM (np, off,
+                                            next1tokv,
+                                            "parsprimary_nanoedit missing subexpression in leftparen-node");
+            if (isdelim_nanoedit_mom (np, curpos,
+                                      MOM_PREDEFITM (right_paren_delim)))
+              {
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit rightparen curpos=%d",
+                                 curpos);
+                curpos++;
+              }
+            const struct mom_boxnode_st *nodres =       //
+              mom_boxnode_meta_make_va (np->nanop_wexitm,
+                                        curpos,
+                                        MOM_PREDEFITM (parenthesis), 1,
+                                        subexpv);
+
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit parenexpr %s curpos=%d",
+                             mom_value_cstring ((const struct
+                                                 mom_hashedvalue_st *)
+                                                nodres), curpos);
+
+            *posptr = curpos;
+            return nodres;
+          }
+        else if (pos + 2 < (int) nlen
+                 && isdelim_nanoedit_mom (np, pos,
+                                          MOM_PREDEFITM (left_bracket_delim)))
+          {
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit leftbracket-expr pos=%d",
+                             pos);
+          }
+        else if (pos + 2 < (int) nlen
+                 && isdelim_nanoedit_mom (np, pos,
+                                          MOM_PREDEFITM (left_brace_delim)))
+          {
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit leftbrace-expr pos=%d",
+                             pos);
+          }
+
 #warning incomplete code parsprimary_nanoedit
       }
     default:

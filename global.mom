@@ -589,6 +589,15 @@ comment
 )attrs
 
 
+*parenthesis
+1456309596
+^mtime
+(
+comment
+"for parenthesised expression"_
+)attrs
+
+
 *percent_delim
 1453199017
 ^mtime
