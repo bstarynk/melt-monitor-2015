@@ -234,7 +234,7 @@ function mom_ajaxfill(htmlc) {
     });
     function removeitemmenu(itmen) {
         console.log("removeitemmenu itmen=", itmen, " mom_menuitem=", mom_menuitem,
-		    " mom_itemname=", mom_itemname);
+                    " mom_itemname=", mom_itemname);
         if (itmen) {
             itmen.menu("destroy");
             itmen.remove();
@@ -247,14 +247,14 @@ function mom_ajaxfill(htmlc) {
         }
         itmen = null;
         mom_menuitem = null;
-	mom_itemname= null;
+        mom_itemname= null;
     };
     function hilightitemspan(ix, el) {
         console.log("hilightitemspan ix=", ix, " el=", el);
-	var eltext= $(el).text();
-	if (eltext == mom_itemname) {
-	    $(el).toggleClass("momitemhilight_cl");
-	}
+        var eltext= $(el).text();
+        if (eltext == mom_itemname) {
+            $(el).toggleClass("momitemhilight_cl");
+        }
     };
     function handleitemspan(ix, el) {   
         console.log("handleitemspan ix=", ix, " el=", el);
@@ -300,10 +300,10 @@ function mom_ajaxfill(htmlc) {
             var menuwidth = itemmenu.innerWidth();
             var menutop = 10;
             var menuleft = 20;
-	    mom_itemname = itemname;
+            mom_itemname = itemname;
             console.log (" handleitemspan mouse3 itemmenu=", itemmenu,
                          " menuheight=", menuheight, " menuwidth=", menuwidth,
-			 " mom_itemname=", mom_itemname);
+                         " mom_itemname=", mom_itemname);
             if (ev.pageX + menuwidth + 10 < edivwidth)
                 menuleft = Math.round(ev.pageX + 5);
             else
@@ -334,8 +334,8 @@ function mom_ajaxfill(htmlc) {
                         console.log ("handleitemspan-select before copying itemname=",
                                      itemname);
                         ui.item.select();
-			/// only textarea can be selected, see http://stackoverflow.com/a/35364371/841108
-                        var okcopy = document.execCommand('copy');			
+                        /// only textarea can be selected, see http://stackoverflow.com/a/35364371/841108
+                        var okcopy = document.execCommand('copy');                      
                         console.log ("handleitemspan-select copying itemname=",
                                      itemname, "ui.item=",
                                      ui.item, " okcopy=", okcopy);
@@ -343,8 +343,8 @@ function mom_ajaxfill(htmlc) {
                     case "Hilight":
                         console.log ("handleitemspan-select should hilight itemname=",
                                      itemname, " mom_itemname=", mom_itemname);
-			$editdiv.find(".momitemref_cl").each(hilightitemspan);
-			$editdiv.find(".momitemval_cl").each(hilightitemspan);
+                        $editdiv.find(".momitemref_cl").each(hilightitemspan);
+                        $editdiv.find(".momitemval_cl").each(hilightitemspan);
                         break;
                     default:
                         console.error("handleitemspan-select bad uitext=", uitext);
@@ -381,7 +381,7 @@ function mom_doexit(jsex) {
 }
 
 
-
+var mom_badnamecount=0;
 function mom_ajaxparsecommand(js,rstat,jqxhr) {
     var badnamedlg = null;
     var badnamedid = null;
@@ -392,15 +392,18 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
         $parsedcmddiv.html(js.html);
     console.log("mom_ajaxparsecommand updated $parsedcmddiv=", $parsedcmddiv);
     if (js.bad_name) {
-        console.log("mom_ajaxparsecommand bad_name=", js.bad_name);
-        badnamedid = "mom_badnamed_" + js.bad_name;
-        badcommid = "mom_badcomm_" + js.bad_name;
-        badnamedlg = $parsedcmddiv.append("<div class='mom_asknewname_cl ui-widget' title='create item?'>"
-                                          +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
-                                          +"<label for='"+ badcommid + "'>Comment:</label>"
-                                          +" <input id='" + badcommid + "' name='comment' type='text' size='48'/>"
-                                          +"</div>\n");
+        mom_badnamecount++;
+        console.log("mom_ajaxparsecommand bad_name=", js.bad_name, " #", mom_badnamecount);
+        badnamedid = "mom_badnamed_" + js.bad_name + "_" + mom_badnamecount + "_id";
+        badcommid = "mom_badcomm_" + js.bad_name + "_" + mom_badnamecount + "_id";
+        $parsedcmddiv.append("<div id='"+badnamedid+"' class='mom_asknewname_cl ui-widget' title='create item?'>"
+                             +"<p>Create new item <tt>"+js.bad_name+"</tt> ?</p>"
+                             +"<label for='"+ badcommid + "'>Comment:</label>"
+                             +" <input id='" + badcommid + "' name='comment' type='text' size='48'/>"
+                             +"</div>\n");
+        badnamedlg = $("#"+badnamedid);
         badcomminp = $("#"+badcommid);
+        console.log("mom_ajaxparsecommand badnamedlg=", badnamedlg, " badcomminp=", badcomminp);
         badnamedlg.dialog
         ({
             modal: true,
@@ -411,7 +414,7 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
                      var self=$(this);
                      var itemname = js.bad_name;
                      var itemcomment = badcomminp.val();
-                     console.log("should create item " + itemname + " with comment " + itemcomment);
+                     console.log("should create item " + itemname + " with comment " + itemcomment, " badnamedlg=", badnamedlg, " self=", self);
                      $.ajax({
                          url: "/nanoedit",
                          method: "POST",
@@ -419,21 +422,25 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
                                 "comment": itemcomment },
                          dataType: 'html',
                          success: function (hdata,stat,jh) {
-                             console.log("do_createitem hdata=", hdata, " stat=", stat, " jh=", jh);
+                             console.log("do_createitem hdata=", hdata, " stat=", stat, " jh=", jh, " badnamedlg=", badnamedlg);
                              $parsedcmddiv.html(hdata);
                              self.dialog("close");
+                             badnamedlg.remove();
                              badnamedlg = null;
+                             badcomminp = null;
                          },
-			 error: function (jq, stat, err) {
-			     console.warn("do_createitem error jq=", jq, " stat=", stat, " err=", err);
-			 }
+                         error: function (jq, stat, err) {
+                             console.warn("do_createitem error jq=", jq, " stat=", stat, " err=", err);
+                         }
                      });
                  }},
                 {text: "cancel",
                  click: function() {
                      $( this ).dialog("close");
-                     console.log("cancel new item " + js.bad_name);
+                     console.log("cancel new item " + js.bad_name, " badnamedlg=", badnamedlg);
+                     badnamedlg.remove();
                      badnamedlg = null;
+                     badcomminp = null;
                  }}
             ]
         });
@@ -452,7 +459,7 @@ function mom_ajaxparsecommand(js,rstat,jqxhr) {
         var evalid = "momeval_" + expinside + "_id_" + mom_eval_counter;
         var evalbut;
         console.log ("mom_ajaxparsecommand expinside ", expinside, " evalid=", evalid);
-        $parsedcmddiv.append("<br/><input type='button' name='evalexpr' "
+        $parsedcmddiv.append("<br/><input type='button' name='evalexpr' autofocus='true'"
                              +" id='" + evalid + "'"
                              +" value='evaluate'/>");
         evalbut = $("#" + evalid);
@@ -733,11 +740,11 @@ function mom_cmdkeypress(evt) {
                                            console.log("mom_cmdkeypress-delayedreplmenudestroy curmenu=",
                                                        curmenu);
                                            curmenu.delay(100)
-					       .fadeOut(800+75*dollvalseq.length,
-                                                                      function () {
-                                                                          console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
-                                                                          mom_removecmdmenu();
-                                                                      });
+                                               .fadeOut(800+75*dollvalseq.length,
+                                                        function () {
+                                                            console.log ("momdelayrepl finalfaderemove curmenu=", curmenu);
+                                                            mom_removecmdmenu();
+                                                        });
                                        }, 9500);                                          
                     }
                 }
@@ -777,17 +784,17 @@ $(document).ready(function(){
     $clipboardh = new Clipboard(".momitemref_cl", {
         text: function (tri) {
             console.log ("$clipboardh.text tri=", tri, " $clipboardh=", $clipboardh,
-			 " mom_menuitem=", mom_menuitem,
-			 " mom_itemname=", mom_itemname);
+                         " mom_menuitem=", mom_menuitem,
+                         " mom_itemname=", mom_itemname);
             console.trace();
-	    if (mom_itemname)
-		return mom_itemname;
+            if (mom_itemname)
+                return mom_itemname;
         }
     });
     console.log ("nanoedit $clipboardh=", $clipboardh);
     $clipboardh.on("success", function (ev) {
         console.log("clipboardsuccess ev=", ev, " $clipboardh=", $clipboardh,
-		    " mom_itemname=", mom_itemname);
+                    " mom_itemname=", mom_itemname);
     });
     /***
         $commandtext.autocomplete({

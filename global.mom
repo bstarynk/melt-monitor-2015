@@ -915,7 +915,7 @@ comment
 
 
 *the_agenda
-1455181584
+1456302025
 ^mtime
 (
 comment
@@ -1053,7 +1053,6 @@ display
 )node
 item
 (
-notice
 the_system
 )set
 )attrs
