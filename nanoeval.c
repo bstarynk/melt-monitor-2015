@@ -1181,7 +1181,7 @@ mom_nanoeval (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
 }                               /* end of mom_nanoeval */
 
 
-const char momsig_nanoeval_type2[] = "signature_nanoeval1";
+const char momsig_nanoeval_type1[] = "signature_nanoeval1";
 const void *
 momf_nanoeval_type1 (struct mom_nanoeval_st *nev,
                      struct mom_item_st *envitm,
@@ -1215,6 +1215,25 @@ momf_nanoeval_type1 (struct mom_nanoeval_st *nev,
     }
   MOM_FATAPRINTF ("nanoeval_type1 unexpected ty0#%d", ty0);
 }                               /* end of momf_nanoeval_type1 */
+
+
+
+const char momsig_nanoeval_identity1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_identity1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_identity1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  return arg0;
+}                               /* end of momf_nanoeval_identity1 */
 
 
 const char momsig_nanoeval_add2[] = "signature_nanoeval2";

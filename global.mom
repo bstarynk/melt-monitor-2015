@@ -264,6 +264,21 @@ comment
 )attrs
 
 
+*identity
+1456312882
+^mtime
+(
+comment
+"the identity function"_
+nanoeval
+nanoeval_identity1
+notice
+(
+parenthesis
+)tuple
+)attrs
+
+
 *int
 1456146211
 ^mtime
@@ -479,6 +494,18 @@ comment
 )attrs
 
 
+*nanoeval_identity1
+1456312768
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"function to evaluate identity"_
+)attrs
+
+
 *nanoeval_mult2
 1456130464
 ^mtime
@@ -539,6 +566,18 @@ comment
 )attrs
 
 
+*nanoeval_type1
+1456312768
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"function to evaluate type"_
+)attrs
+
+
 *no_assoc
 1455871773
 ^mtime
@@ -594,7 +633,13 @@ comment
 ^mtime
 (
 comment
-"for parenthesised expression"_
+"for parenthesized expression"_
+nanoeval
+nanoeval_identity1
+notice
+(
+identity
+)tuple
 )attrs
 
 
@@ -974,6 +1019,8 @@ nanoeval_tupleany
 (
 comment
 "for type information"_
+nanoeval
+nanoeval_type1
 )attrs
 
 
