@@ -741,9 +741,10 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                    "nanoeval_othernode connitm %s with nanev %s depth#%d",
                    mom_item_cstring (connitm), mom_value_cstring (nanev),
                    depth);
-  if (nanev && mom_itype(nanev) != MOMITY_NODE)
-    MOM_WARNPRINTF("nanoeval_othernode connitm %s with strange `nanoeval` %s -expecting a closure node- depth#%d",
-		   mom_item_cstring(connitm), mom_value_cstring(nanev), depth);
+  if (nanev && mom_itype (nanev) != MOMITY_NODE)
+    MOM_WARNPRINTF
+      ("nanoeval_othernode connitm %s with strange `nanoeval` %s -expecting a closure node- depth#%d",
+       mom_item_cstring (connitm), mom_value_cstring (nanev), depth);
   const struct mom_boxnode_st *nanenod = mom_dyncast_node (nanev);
   if (nanenod)
     {
@@ -997,9 +998,14 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
               }
             default:
             defaultcase:
-              NANOEVAL_FAILURE_MOM
-                (nev, nod,
-                 mom_boxnode_make_va (MOM_PREDEFITM (signature), 1, opitm));
+              MOM_WARNPRINTF
+                ("nanoeval_othernode connitm %s opitm %s with strange signature %s",
+                 mom_item_cstring (connitm), mom_item_cstring (opitm),
+                 mom_value_cstring (opsigitm));
+              NANOEVAL_FAILURE_MOM (nev, nod,
+                                    mom_boxnode_make_va (MOM_PREDEFITM
+                                                         (signature), 1,
+                                                         opitm));
               ;
             }
         }
@@ -1224,10 +1230,11 @@ momf_nanoeval_type1 (struct mom_nanoeval_st *nev,
 const char momsig_nanoeval_identity1[] = "signature_nanoeval1";
 const void *
 momf_nanoeval_identity1 (struct mom_nanoeval_st *nev,
-                     struct mom_item_st *envitm,
-                     int depth,
-                     const struct mom_boxnode_st *expnod,
-                     const struct mom_boxnode_st *closnod, const void *arg0)
+                         struct mom_item_st *envitm,
+                         int depth,
+                         const struct mom_boxnode_st *expnod,
+                         const struct mom_boxnode_st *closnod,
+                         const void *arg0)
 {
   MOM_DEBUGPRINTF (run,
                    "nanoeval_identity1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
