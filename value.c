@@ -515,6 +515,12 @@ mom_boxset_union (const struct mom_boxset_st *set1,
           i1++, i2++;
         }
     }
+  if (i1 < card1)
+    for (unsigned ix = i1; ix < card1; ix++)
+      arr[nbun++] = set1->seqitem[ix];
+  else if (i2 < card2)
+    for (unsigned ix = i2; ix < card2; ix++)
+      arr[nbun++] = set2->seqitem[ix];
   return mom_boxset_make_arr (nbun, arr);
 }                               /* end of mom_boxset_union */
 
