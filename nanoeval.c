@@ -577,14 +577,15 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                                                nodexp));
   struct mom_item_st *newenvitm =
     nanoeval_freshenv_mom (clenvitm, mom_size (formalsv) + 1, opitm);
-  MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s depth#%d",
-                   mom_item_cstring (newenvitm), depth);
-
+  MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s formalsv=%s depth#%d",
+                   mom_item_cstring (newenvitm),
+		   mom_value_cstring(formalsv),
+		   depth);
   struct mom_boxtuple_st *formtup = mom_dyncast_tuple (formalsv);
-
   if (formtup)
     {
       unsigned nbform = mom_size (formtup);
+      MOM_DEBUGPRINTF(run, "nanoapply nbform=%d", nbform);
     }
   MOM_FATAPRINTF
     ("unimplemented mom_nanoapply nodfun=%s, nodexp=%s, depth#%d",
