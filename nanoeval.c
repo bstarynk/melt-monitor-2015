@@ -551,6 +551,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                const struct mom_boxnode_st *nodexp,
                unsigned nbargs, const void **argv, int depth)
 {
+  const void *resv = NULL;
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   struct mom_item_st *opitm = mom_boxnode_conn (nodexp);
@@ -560,7 +561,8 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) nodfun),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nodexp),
                    nbargs, depth);
-  if (mom_size (nodfun) < 3 || nodfun->nod_connitm != MOM_PREDEFITM (func))
+  unsigned funlen = mom_size (nodfun);
+  if (funlen < 3 || nodfun->nod_connitm != MOM_PREDEFITM (func))
     NANOEVAL_FAILURE_MOM (nev, nodexp,
                           mom_boxnode_make_va (MOM_PREDEFITM (func), 1,
                                                nodfun));
@@ -579,20 +581,75 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
     nanoeval_freshenv_mom (clenvitm, mom_size (formalsv) + 1, opitm);
   MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s formalsv=%s depth#%d",
                    mom_item_cstring (newenvitm),
-		   mom_value_cstring(formalsv),
-		   depth);
-  struct mom_boxtuple_st *formtup = mom_dyncast_tuple (formalsv);
-  if (formtup)
+                   mom_value_cstring (formalsv), depth);
+  struct mom_boxtuple_st *formtup = NULL;
+  struct mom_boxnode_st *formnod = NULL;
+  if ((formtup = mom_dyncast_tuple (formalsv)) != NULL)
     {
       unsigned nbform = mom_size (formtup);
-      MOM_DEBUGPRINTF(run, "nanoapply nbform=%d", nbform);
+      MOM_DEBUGPRINTF (run, "nanoapply fixed nbform=%d nbargs=%d", nbform,
+                       nbargs);
+      if (nbform != nbargs)
+        NANOEVAL_FAILURE_MOM (nev, nodexp,
+                              mom_boxnode_make_va (MOM_PREDEFITM (signature),
+                                                   2, nodexp, formalsv));
+      for (unsigned ix = 0; ix < nbform; ix++)
+        nanoeval_bind_mom (newenvitm, formtup->seqitem[ix], argv[ix]);
     }
-  MOM_FATAPRINTF
-    ("unimplemented mom_nanoapply nodfun=%s, nodexp=%s, depth#%d",
-     mom_value_cstring ((const struct mom_hashedvalue_st *) nodfun),
-     mom_value_cstring ((const struct mom_hashedvalue_st *) nodexp), depth);
-#warning mom_nanoapply unimplemented
+  else if ((formnod = mom_dyncast_node (formalsv)) != NULL)
+    {
+      unsigned nbform = mom_size (formnod);
+      MOM_DEBUGPRINTF (run, "nanoapply variadic nbform=%d nbargs=%d", nbform,
+                       nbargs);
+      if (nbargs < nbform)
+        NANOEVAL_FAILURE_MOM (nev, nodexp,
+                              mom_boxnode_make_va (MOM_PREDEFITM (signature),
+                                                   2, nodexp, formalsv));
+      for (unsigned ix = 0; ix < nbform; ix++)
+        {
+          struct mom_item_st *curformitm =
+            mom_dyncast_item (formnod->nod_sons[ix]);
+          if (!curformitm)
+            NANOEVAL_FAILURE_MOM (nev, nodexp,
+                                  mom_boxnode_make_va (MOM_PREDEFITM (arg),
+                                                       1, formalsv));
+          nanoeval_bind_mom (newenvitm, curformitm, argv[ix]);
+        }
+      struct mom_item_st *connformitm = formnod->nod_connitm;
+      if (nbargs > nbform)
+        {
+          const struct mom_boxnode_st *nodrest =
+            mom_boxnode_make (connformitm, nbargs - nbform, argv + nbform);
+          nanoeval_bind_mom (newenvitm, connformitm, nodrest);
+        }
+      else
+        nanoeval_bind_mom (newenvitm, connformitm, connformitm);
+    }
+  MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s nodfun=%s nodexp=%s depth#%d",
+                   mom_item_cstring (newenvitm),
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      nodfun),
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      nodexp), depth);
+  for (unsigned ix = 2; ix < funlen; ix++)
+    {
+      const void *subexpv = nodfun->nod_sons[ix];
+      MOM_DEBUGPRINTF (run,
+                       "nanoapply newenvitm=%s ix#%d subexpv=%s depth#%d",
+                       mom_item_cstring (newenvitm), ix,
+                       mom_value_cstring (subexpv), depth);
+      resv = mom_nanoeval (nev, newenvitm, subexpv, depth + 1);
+      MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s ix#%d resv=%s",
+                       mom_item_cstring (newenvitm), ix,
+                       mom_value_cstring (resv));
+    }
+  MOM_DEBUGPRINTF (run,
+                   "nanoapply envitm=%s newenvitm=%s depth#%d final resv=%s",
+                   mom_item_cstring (envitm), mom_item_cstring (newenvitm),
+                   depth, mom_value_cstring (resv));
+  return resv;
 }                               /* end of mom_nanoapply */
+
 
 
 
