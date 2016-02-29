@@ -246,6 +246,19 @@ comment
 )attrs
 
 
+*flatten_node
+1456758793
+^mtime
+(
+comment
+"to make a node, but flattening some arguments"_
+nanoeval
+(
+nanoeval_flattennodeany
+)node
+)attrs
+
+
 *func
 1455800324
 ^mtime
@@ -516,6 +529,18 @@ comment
 )attrs
 
 
+*nanoeval_flattennodeany
+1456758793
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function to evaluate flatten node"_
+)attrs
+
+
 *nanoeval_identity1
 1456312768
 ^mtime
@@ -537,6 +562,18 @@ signature_nanoeval2
 (
 comment
 "function to evaluate mult"_
+)attrs
+
+
+*nanoeval_nodeany
+1456758018
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function to evaluate node"_
 )attrs
 
 
@@ -615,6 +652,12 @@ comment
 (
 comment
 "for nodes"_
+nanoeval
+(
+nanoeval_nodeany
+)node
+notice
+flatten_node
 )attrs
 
 

@@ -1792,6 +1792,7 @@ add2hset_mom (struct mom_hashset_st *hset, const void *val)
         return hset;
       }
     }
+  return hset;
 }                               /* end of add2hset_mom */
 
 const char momsig_nanoeval_setany[] = "signature_nanoevalany";
@@ -1823,7 +1824,134 @@ momf_nanoeval_setany (struct mom_nanoeval_st *nev,
                    depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) setv));
   return setv;
-}                               /* end of momf_nanoeval_set */
+}                               /* end of momf_nanoeval_setany */
+
+
+
+const char momsig_nanoeval_nodeany[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_nodeany (struct mom_nanoeval_st *nev,
+                       struct mom_item_st *envitm,
+                       int depth,
+                       const struct mom_boxnode_st *expnod,
+                       const struct mom_boxnode_st *closnod,
+                       unsigned nbval, const void **valarr)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_nodeany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  for (int ix = 0; ix < (int) nbval; ix++)
+    {
+      MOM_DEBUGPRINTF (run, "nanoeval_nodeany valarr[%d]=%s", ix,
+                       mom_value_cstring (valarr[ix]));
+    }
+  if (nbval == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *connitm = mom_dyncast_item (valarr[0]);
+  if (!connitm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  const struct mom_boxnode_st *resnod =
+    mom_boxnode_make (connitm, nbval - 1, valarr + 1);
+  MOM_DEBUGPRINTF (run, "nanoeval_nodeany depth#%d resnod=%s", depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) resnod));
+  return resnod;
+
+}                               /* end of momf_nanoeval_nodeany */
+
+const char momsig_nanoeval_flattennodeany[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_flattennodeany (struct mom_nanoeval_st *nev,
+                              struct mom_item_st *envitm,
+                              int depth,
+                              const struct mom_boxnode_st *expnod,
+                              const struct mom_boxnode_st *closnod,
+                              unsigned nbval, const void **valarr)
+{
+  const struct mom_boxnode_st *resnod = NULL;
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_flattennodeany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  for (int ix = 0; ix < (int) nbval; ix++)
+    {
+      MOM_DEBUGPRINTF (run, "nanoeval_flattennodeany valarr[%d]=%s", ix,
+                       mom_value_cstring (valarr[ix]));
+    }
+  if (nbval < 2)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *connitm = mom_dyncast_item (valarr[0]);
+  if (nbval == 2 && connitm)
+    {                           // special case for two arguments
+      struct mom_seqitems_st *seq = mom_dyncast_seqitems (valarr[1]);
+      if (seq)
+        {
+          MOM_DEBUGPRINTF (run, "nanoeval_flattennodeany seq=%s",
+                           mom_value_cstring (seq));
+          unsigned len = mom_size (seq);
+          resnod =
+            mom_boxnode_make (connitm, len,
+                              ((const struct mom_hashedvalue_st **)
+                               seq->seqitem));
+          goto end;
+        }
+    }
+
+  struct mom_item_st *flatitm = mom_dyncast_item (valarr[1]);
+  if (!connitm || !flatitm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                               valarr[0], valarr[1]));
+  unsigned len = 0;
+  for (unsigned ix = 2; ix < nbval; ix++)
+    {
+      const struct mom_boxnode_st *curnod = mom_dyncast_node (valarr[ix]);
+      if (curnod && curnod->nod_connitm == flatitm)
+        len += mom_size (curnod);
+      else
+        len++;
+    }
+  const void *smallarr[16] = { NULL };
+  const void **arr =
+    (len <
+     sizeof (smallarr) / sizeof (void *))? smallarr : mom_gc_alloc ((len +
+                                                                     1) *
+                                                                    sizeof
+                                                                    (void *));
+  unsigned cnt = 0;
+  for (unsigned ix = 2; ix < nbval; ix++)
+    {
+      assert (cnt < len);
+      const struct mom_boxnode_st *curnod = mom_dyncast_node (valarr[ix]);
+      if (curnod && curnod->nod_connitm == flatitm)
+        {
+          unsigned nodsiz = mom_size (curnod);
+          assert (cnt + nodsiz < len);
+          for (unsigned j = 0; j < nodsiz; j++)
+            arr[cnt++] = curnod->nod_sons[j];
+        }
+      else
+        arr[cnt++] = valarr[ix];
+    }
+  assert (cnt == len);
+  resnod = mom_boxnode_make (connitm, len, arr);
+end:
+  MOM_DEBUGPRINTF (run, "nanoeval_flattennodeany depth#%d resnod=%s",
+                   depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) resnod));
+  return resnod;
+}                               /* end of momf_nanoeval_flattennodeany */
+
 
 
 static void
