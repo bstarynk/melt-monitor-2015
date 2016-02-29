@@ -74,6 +74,8 @@ comment
 (
 comment
 "arity of some node"_
+notice
+size
 )attrs
 
 
@@ -613,6 +615,18 @@ comment
 )attrs
 
 
+*nanoeval_size1
+1456761997
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"function to evaluate size"_
+)attrs
+
+
 *nanoeval_tupleany
 1456154292
 ^mtime
@@ -967,6 +981,19 @@ comment
 )attrs
 
 
+*size
+1456761997
+^mtime
+(
+comment
+"for size information"_
+nanoeval
+(
+nanoeval_size1
+)node
+)attrs
+
+
 *slash_delim
 1456141884
 ^mtime
@@ -1087,7 +1114,9 @@ nanoeval_tupleany
 comment
 "for type information"_
 nanoeval
+(
 nanoeval_type1
+)node
 )attrs
 
 
