@@ -228,6 +228,15 @@ comment
 )attrs
 
 
+*f
+1456728735
+^mtime
+(
+comment
+"varf"_
+)attrs
+
+
 *func
 1455800324
 ^mtime
@@ -975,7 +984,7 @@ comment
 
 
 *the_agenda
-1456320156
+1456728766
 ^mtime
 (
 comment
@@ -1109,7 +1118,40 @@ display
 raw
 expression
 (
-set
+(
+f
+(
+(
+x
+y
+11
+~
+tuple
+)nodemeta
+(
+x
+y
+18
+~
+add
+)nodemeta
+8
+~
+func
+)nodemeta
+3
+~
+be
+)nodemeta
+f
+(
+2_
+26
+~
+parenthesis
+)nodemeta
+3_
+let
 )node
 )attrs
 (
@@ -1162,6 +1204,24 @@ comment
 (
 comment
 "for unknown words"_
+)attrs
+
+
+*x
+1456728663
+^mtime
+(
+comment
+"var"_
+)attrs
+
+
+*y
+1456728670
+^mtime
+(
+comment
+"vary"_
 )attrs
 
 
