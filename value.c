@@ -1569,8 +1569,33 @@ momf_ldp_nodemeta (struct mom_item_st *itm,
                    mom_item_cstring (itm), elemsize);
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
-  assert (elemsize == 0 || elemarr);
-#warning unimplemented momf_ldp_nodemeta
-  MOM_FATAPRINTF ("unimplemented momf_ldp_nodemeta itm=%s",
-                  mom_item_cstring (itm));
+  if (elemsize < 3)
+    MOM_FATAPRINTF ("momf_ldp_nodemeta itm=%s bad elemsize %d",
+                    mom_item_cstring (itm), elemsize);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  struct mom_hashedvalue_st *smallarr[16] = { };
+  const struct mom_hashedvalue_st **arr =
+    (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
+    mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
+  for (unsigned ix = 0; ix < elemsize - 3; ix++)
+    {
+      arr[ix] =
+        (const struct mom_hashedvalue_st *) mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta arr[%d] = %s", ix,
+                       mom_value_cstring (arr[ix]));
+    }
+  struct mom_item_st *connitm = mom_ldstate_dynitem (elemarr[elemsize - 1]);
+  struct mom_item_st *metaitm = mom_ldstate_dynitem (elemarr[elemsize - 2]);;
+  long metark = mom_ldstate_int_def (elemarr[elemsize - 3], -1);
+  MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta connitm=%s metaitm=%s metark=%ld",
+                   mom_item_cstring (connitm), mom_item_cstring (metaitm),
+                   metark);
+  const struct mom_boxnode_st *nod =
+    mom_boxnode_make_meta (connitm, elemsize - 3, arr, metaitm, metark);
+  mom_loader_push (ld, mom_ldstate_make_node (nod));
+  MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta pushed #%d %s",
+                   ld->ld_stacktop,
+                   mom_value_cstring ((const struct mom_hashedvalue_st *)
+                                      nod));
 }                               /* end of momf_ldp_nodemeta */
