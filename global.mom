@@ -579,6 +579,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_assovaldata1
+1456825884
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"nanoaval of payl_assovaldata"_
+)attrs
+
+
 *nanoeval_put3
 1456219019
 ^mtime
@@ -766,6 +778,32 @@ notice
 (
 identity
 )tuple
+)attrs
+
+
+*payl_assovaldata
+1456825884
+^mtime
+(
+comment
+"for association payload maping items to values"_
+nanoeval
+(
+nanoeval_payl_assovaldata1
+)node
+)attrs
+
+
+*payload
+1456825494
+^mtime
+(
+comment
+"item describing various payloads"_
+notice
+(
+payl_assovaldata
+)set
 )attrs
 
 
@@ -1124,6 +1162,10 @@ comment
 (
 comment
 "item describing the entire system"_
+notice
+(
+payload
+)set
 )attrs
 (
 nano_displayer
