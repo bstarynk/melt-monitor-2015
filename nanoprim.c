@@ -1441,15 +1441,12 @@ momf_nanoeval_payl_hashset_reserve2 (struct mom_nanoeval_st *nev,
 
 const char momsig_nanoeval_payl_hashset_insert_content2[] =
   "signature_nanoeval2";
-const void *
-momf_nanoeval_payl_hashset_insert_content2 (struct mom_nanoeval_st *nev,
-                                            struct mom_item_st *envitm,
-                                            int depth,
-                                            const struct mom_boxnode_st
-                                            *expnod,
-                                            const struct mom_boxnode_st
-                                            *closnod, const void *arg0,
-                                            const void *arg1)
+const void *momf_nanoeval_payl_hashset_insert_content2
+  (struct mom_nanoeval_st *nev,
+   struct mom_item_st *envitm,
+   int depth,
+   const struct mom_boxnode_st *expnod,
+   const struct mom_boxnode_st *closnod, const void *arg0, const void *arg1)
 {
   MOM_DEBUGPRINTF (run,
                    "nanoeval_payl_hashset_insert_content2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
@@ -1457,6 +1454,61 @@ momf_nanoeval_payl_hashset_insert_content2 (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0), mom_value_cstring (arg1));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  unsigned ty1 = mom_itype (arg1);
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      switch (ty1)
+        {
+        case MOMITY_SET:
+        case MOMITY_TUPLE:
+          {
+            const struct mom_seqitems_st *seq = arg1;
+            unsigned ln = mom_size (seq);
+            if (ln > 0)
+              hs = mom_hashset_reserve (hs, ln);
+            for (unsigned ix = 0; ix < ln; ix++)
+              hs = mom_hashset_insert (hs, seq->seqitem[ix]);
+            itm->itm_payload = (void *) hs;
+          }
+          break;
+        case MOMITY_ITEM:
+          {
+            struct mom_item_st *secitm = (struct mom_item_st *) arg1;
+            mom_item_lock (secitm);
+            ok = mom_itype (secitm->itm_payload) == MOMITY_HASHSET;
+            if (ok)
+              {
+                const struct mom_boxset_st *set2 =
+                  mom_hashset_to_boxset ((const struct mom_hashset_st *)
+                                         secitm->itm_payload);
+                unsigned ln2 = mom_size (set2);
+                for (unsigned ix = 0; ix < ln2; ix++)
+                  hs = mom_hashset_insert (hs, set2->seqitem[ix]);
+              }
+            mom_item_unlock (secitm);
+          }
+          break;
+        default:
+          ok = false;
+          break;
+        }
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                             arg0, arg1));
+
 }                               /* end of momf_nanoeval_payl_hashset_insert_content2 */
 
 
@@ -1468,8 +1520,62 @@ momf_nanoeval_payl_hashset_insertany (struct mom_nanoeval_st *nev,
                                       int depth,
                                       const struct mom_boxnode_st *expnod,
                                       const struct mom_boxnode_st *closnod,
-                                      const void *arg0, const void *arg1)
+                                      unsigned nbval, const void **valarr)
 {
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_hashset_insertany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  if (nbval == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *itm = mom_dyncast_item (valarr[0]);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      hs = mom_hashset_reserve (hs, 1 + 4 * nbval / 3);
+      for (unsigned ix = 1; ix < nbval; ix++)
+        {
+          const void *curarg = valarr[ix];
+          unsigned curty = mom_itype (curarg);
+          switch (curty)
+            {
+            case MOMITY_SET:
+            case MOMITY_TUPLE:
+              {
+                const struct mom_seqitems_st *seq = curarg;
+                unsigned sz = mom_raw_size (seq);
+                for (unsigned ix = 0; ix < sz; ix++)
+                  hs = mom_hashset_insert (hs, seq->seqitem[ix]);
+              }
+              break;
+            case MOMITY_ITEM:
+              hs = mom_hashset_insert (hs, (struct mom_item_st *) curarg);
+              break;
+            default:
+              continue;
+            }
+        }
+      itm->itm_payload = (void *) hs;
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+
 }                               /* end of momf_nanoeval_payl_hashset_insertany */
 
 
@@ -1480,22 +1586,79 @@ momf_nanoeval_payl_hashset_removeany (struct mom_nanoeval_st *nev,
                                       int depth,
                                       const struct mom_boxnode_st *expnod,
                                       const struct mom_boxnode_st *closnod,
-                                      const void *arg0, const void *arg1)
+                                      unsigned nbval, const void **valarr)
 {
-}                               /* end of momf_nanoeval_payl_hashset_insertany */
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_hashset_insertany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  if (nbval == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *itm = mom_dyncast_item (valarr[0]);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      int nbrm = 0;
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      for (unsigned ix = 1; ix < nbval; ix++)
+        {
+          const void *curarg = valarr[ix];
+          unsigned curty = mom_itype (curarg);
+          switch (curty)
+            {
+            case MOMITY_SET:
+            case MOMITY_TUPLE:
+              {
+                const struct mom_seqitems_st *seq = curarg;
+                unsigned sz = mom_raw_size (seq);
+                for (unsigned ix = 0; ix < sz; ix++)
+                  {
+                    hs = mom_hashset_remove (hs, seq->seqitem[ix]);
+                    nbrm++;
+                  }
+              }
+              break;
+            case MOMITY_ITEM:
+              hs = mom_hashset_remove (hs, (struct mom_item_st *) curarg);
+              nbrm++;
+              break;
+            default:
+              continue;
+            }
+        }
+      if (nbrm > (int) mom_hashset_count (hs) / 5)
+        hs = mom_hashset_reserve (hs, 0);
+      itm->itm_payload = (void *) hs;
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+
+}                               /* end of momf_nanoeval_payl_hashset_removeany */
 
 
 const char momsig_nanoeval_payl_hashset_remove_content2[] =
   "signature_nanoeval2";
-const void *
-momf_nanoeval_payl_hashset_remove_content2 (struct mom_nanoeval_st *nev,
-                                            struct mom_item_st *envitm,
-                                            int depth,
-                                            const struct mom_boxnode_st
-                                            *expnod,
-                                            const struct mom_boxnode_st
-                                            *closnod, const void *arg0,
-                                            const void *arg1)
+const void *momf_nanoeval_payl_hashset_remove_content2
+  (struct mom_nanoeval_st *nev,
+   struct mom_item_st *envitm,
+   int depth,
+   const struct mom_boxnode_st *expnod,
+   const struct mom_boxnode_st *closnod, const void *arg0, const void *arg1)
 {
   MOM_DEBUGPRINTF (run,
                    "nanoeval_payl_hashset_remove_content2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
@@ -1503,6 +1666,66 @@ momf_nanoeval_payl_hashset_remove_content2 (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0), mom_value_cstring (arg1));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      int nbrm = 0;
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      switch (mom_itype (arg1))
+        {
+        case MOMITY_SET:
+        case MOMITY_TUPLE:
+          {
+            const struct mom_seqitems_st *seq = arg1;
+            unsigned sz = mom_raw_size (seq);
+            for (unsigned ix = 0; ix < sz; ix++)
+              {
+                hs = mom_hashset_remove (hs, seq->seqitem[ix]);
+                nbrm++;
+              }
+          }
+          break;
+        case MOMITY_ITEM:
+          {
+            struct mom_item_st *secitm = (struct mom_item_st *) arg1;
+            mom_item_lock (secitm);
+            ok = mom_itype (secitm->itm_payload) == MOMITY_HASHSET;
+            if (ok)
+              {
+                const struct mom_boxset_st *set2 =      //
+                  mom_hashset_to_boxset ((struct mom_hashset_st *)
+                                         secitm->itm_payload);
+                unsigned ln2 = mom_size (set2);
+                for (unsigned ix = 0; ix < ln2; ix++)
+                  {
+                    hs = mom_hashset_remove (hs, set2->seqitem[ix]);
+                    nbrm++;
+                  }
+              }
+            mom_item_unlock (secitm);
+          }
+          break;
+        default:
+          ok = false;
+        }
+      if (nbrm > (int) mom_size (hs) / 4)
+        hs = mom_hashset_reserve (hs, 0);
+      itm->itm_payload = (void *) hs;
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                               arg0, arg1));
 }                               /* end of momf_nanoeval_payl_hashset_remove_content2 */
 
 
@@ -1515,28 +1738,67 @@ momf_nanoeval_payl_hashset_contains2 (struct mom_nanoeval_st *nev,
                                       const struct mom_boxnode_st *closnod,
                                       const void *arg0, const void *arg1)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_payl_hashset_contains2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
                    mom_item_cstring (envitm), depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0), mom_value_cstring (arg1));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  struct mom_item_st *elitm = mom_dyncast_item (arg1);
+  if (!itm || !elitm)
+    return NULL;
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      ok = mom_hashset_contains (hs, elitm);
+    }
+  mom_item_unlock (itm);
+  return ok ? MOM_PREDEFITM (truth) : NULL;
 }                               /* end of momf_nanoeval_payl_hashset_contains2 */
 
 
 const char momsig_nanoeval_payl_hashset_to_set[] = "signature_nanoeval1";
 const void *
-momf_nanoeval_payl_hashset_to_set2 (struct mom_nanoeval_st *nev,
+momf_nanoeval_payl_hashset_to_set1 (struct mom_nanoeval_st *nev,
                                     struct mom_item_st *envitm,
                                     int depth,
                                     const struct mom_boxnode_st *expnod,
                                     const struct mom_boxnode_st *closnod,
                                     const void *arg0)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_payl_hashset_to_set start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
                    mom_item_cstring (envitm), depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0));
+  const void *res = NULL;
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    {
+      struct mom_hashset_st *hs = (struct mom_hashset_st *) itm->itm_payload;
+      res = mom_hashset_to_boxset (hs);
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return res;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
 }                               /* end of momf_nanoeval_payl_hashset_to_set2 */

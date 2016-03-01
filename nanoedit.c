@@ -743,7 +743,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
                   "<input type='checkbox' id='momrawbox_id' name='mode' value='raw'/>"
                   " raw display</p>\n");
   struct mom_hashmap_st *hmap = mom_hashmap_dyncast (thistatitm->itm_payload);
-  struct mom_hashedvalue_st *dispitemv =
+  const struct mom_hashedvalue_st *dispitemv =
     mom_unsync_item_get_phys_attr (thistatitm,
                                    MOM_PREDEFITM (item));
   const struct mom_boxset_st *dispset = mom_dyncast_set (dispitemv);

@@ -1090,6 +1090,13 @@ mom_hashset_contains (const struct mom_hashset_st *hset,
 const struct mom_boxset_st *mom_hashset_to_boxset (const struct mom_hashset_st
                                                    *hset);
 
+static inline unsigned
+mom_hashset_count (const struct mom_hashset_st *hset)
+{
+  if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
+    return 0;
+  return hset->cda_count;
+}
 
 /// for MOMITY_HASHMAP payload
 
