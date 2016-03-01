@@ -387,7 +387,6 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
                          struct mom_item_st *envitm,
                          const struct mom_boxnode_st *nod, int depth)
 {
-  const void *resv = NULL;
   MOM_DEBUGPRINTF (run, "nanoeval_outputnode start envitm=%s nod=%s depth#%d",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
@@ -413,28 +412,65 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
     {
       const void *subexpv = nod->nod_sons[ix];
       unsigned subsiz = mom_size (subexpv);
+      MOM_DEBUGPRINTF (run, "nanoeval_outputnode depth#%d ix#%d subexpv=%s",
+                       depth, ix, mom_value_cstring (subexpv));
+      FILE *fil = NULL;
+      {
+        mom_item_lock (outitm);
+        fil = mom_file (outitm->itm_payload);
+        mom_item_unlock (outitm);
+      }
+      if (!fil)
+        continue;
       const struct mom_boxnode_st *subexpnod = mom_dyncast_node (subexpv);
       if (subexpnod && subsiz == 1)
         {
+          const void *firstv = NULL;
           struct mom_item_st *subconitm = subexpnod->nod_connitm;
+          const void *firstargexpv = subexpnod->nod_sons[0];
           if (subconitm == MOM_PREDEFITM (out_decimal))
             {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_BOXINT)
+                {
+                  intptr_t ival = mom_boxint_val_def (firstv, 0);
+                  fprintf (fil, "%ld", (long) ival);
+                }
+              continue;
             }
           else if (subconitm == MOM_PREDEFITM (out_hexa))
             {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_BOXINT)
+                {
+                  intptr_t ival = mom_boxint_val_def (firstv, 0);
+                  fprintf (fil, "%lx", (long) ival);
+                }
+              continue;
             }
           else if (subconitm == MOM_PREDEFITM (out_html))
             {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_BOXSTRING)
+                mom_output_utf8_html (fil, mom_boxstring_cstr (firstv),
+                                      mom_size (firstv), false);
+              continue;
             }
           else if (subconitm == MOM_PREDEFITM (out_utf8enc))
             {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_BOXSTRING)
+                mom_output_utf8_encoded (fil, mom_boxstring_cstr (firstv),
+                                         mom_size (firstv));
+              continue;
             }
-        }
+        };
+      const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
+      if (subval)
+        mom_output_value (fil, NULL, 0,
+                          (const struct mom_hashedvalue_st *) subval);
     }
-#warning nanoeval_outputnode incomplete
-  MOM_FATAPRINTF ("nanoeval_outputnode incomplete nod=%s depth#%d",
-                  mom_value_cstring ((struct mom_hashedvalue_st *) nod),
-                  depth);
+  return outitm;
 }                               /* end nanoeval_outputnode_mom */
 
 
@@ -1552,8 +1588,20 @@ momf_nanoeval_add2 (struct mom_nanoeval_st *nev,
       const struct mom_boxtuple_st *tu1 = mom_dyncast_tuple (arg1);
       unsigned ln0 = mom_raw_size (tu0);
       unsigned ln1 = mom_raw_size (tu1);
-      const struct mom_boxtuple_st *tures
-        = mom_boxtuple_make_arr2 (ln0, tu0->seqitem, ln1, tu1->seqitem);
+      const struct mom_boxtuple_st *tures = mom_boxtuple_make_arr2 (ln0,
+                                                                    (const
+                                                                     struct
+                                                                     mom_item_st
+                                                                     **)
+                                                                    (tu0->
+                                                                     seqitem),
+                                                                    ln1,
+                                                                    (const
+                                                                     struct
+                                                                     mom_item_st
+                                                                     **)
+                                                                    (tu1->
+                                                                     seqitem));
       MOM_DEBUGPRINTF (run, "nanoeval_add2 tu0=%s tu1=%s tures=%s",
                        mom_value_cstring ((struct mom_hashedvalue_st *) tu0),
                        mom_value_cstring ((struct mom_hashedvalue_st *) tu1),
@@ -1621,10 +1669,7 @@ momf_nanoeval_mult2 (struct mom_nanoeval_st *nev,
     {
       const struct mom_boxset_st *set0 = mom_dyncast_set (arg0);
       const struct mom_boxset_st *set1 = mom_dyncast_set (arg1);
-      unsigned ln0 = mom_raw_size (set0);
-      unsigned ln1 = mom_raw_size (set1);
-      const struct mom_boxtuple_st *sres =
-        mom_boxset_intersection (set0, set1);
+      const struct mom_boxset_st *sres = mom_boxset_intersection (set0, set1);
       MOM_DEBUGPRINTF (run, "nanoeval_mult2 set0=%s set1=%s sres=%s",
                        mom_value_cstring ((struct mom_hashedvalue_st *) set0),
                        mom_value_cstring ((struct mom_hashedvalue_st *) set1),
@@ -1679,9 +1724,7 @@ momf_nanoeval_diff2 (struct mom_nanoeval_st *nev,
     {
       const struct mom_boxset_st *set0 = mom_dyncast_set (arg0);
       const struct mom_boxset_st *set1 = mom_dyncast_set (arg1);
-      unsigned ln0 = mom_raw_size (set0);
-      unsigned ln1 = mom_raw_size (set1);
-      const struct mom_boxtuple_st *sres = mom_boxset_difference (set0, set1);
+      const struct mom_boxset_st *sres = mom_boxset_difference (set0, set1);
       MOM_DEBUGPRINTF (run, "nanoeval_diff2 set0=%s set1=%s sres=%s",
                        mom_value_cstring ((struct mom_hashedvalue_st *) set0),
                        mom_value_cstring ((struct mom_hashedvalue_st *) set1),
@@ -1803,7 +1846,6 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
   bool ok = false;
   unsigned ty0 = mom_itype (arg0);
   unsigned ty1 = mom_itype (arg1);
-  unsigned ty2 = mom_itype (arg2);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_put3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg1=%s",
                    mom_item_cstring (envitm), depth,
@@ -1815,11 +1857,11 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 3,
                                                arg0, arg1, arg2));
-  struct mom_item_st *itm0 = arg0;
+  struct mom_item_st *itm0 = (struct mom_item_st *) arg0;
   mom_item_lock (itm0);
   if (ty1 == MOMITY_ITEM)
     {
-      struct mom_item_st *itm1 = arg1;
+      struct mom_item_st *itm1 = (struct mom_item_st *) arg1;
       mom_unsync_item_put_phys_attr (itm0, itm1, arg2);
       ok = true;
     }
@@ -1829,7 +1871,7 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
       unsigned ln = mom_vectvaldata_count (itm0->itm_pcomp);
       if (rk < 0)
         rk += ln;
-      if (rk >= 0 && rk < ln)
+      if (rk >= 0 && rk < (int) ln)
         {
           mom_vectvaldata_put_nth (itm0->itm_pcomp, rk, arg2);
           ok = true;
@@ -1882,6 +1924,8 @@ momf_nanoeval_setany (struct mom_nanoeval_st *nev,
                       const struct mom_boxnode_st *closnod,
                       unsigned nbval, const void **valarr)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
   struct mom_hashset_st *hset =
     mom_hashset_reserve (NULL, mom_prime_above (4 * nbval / 3 + 5));
 
@@ -1935,8 +1979,10 @@ momf_nanoeval_nodeany (struct mom_nanoeval_st *nev,
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                valarr[0]));
-  const struct mom_boxnode_st *resnod =
-    mom_boxnode_make (connitm, nbval - 1, valarr + 1);
+  const struct mom_boxnode_st *resnod = mom_boxnode_make (connitm, nbval - 1,
+                                                          (const struct
+                                                           mom_hashedvalue_st
+                                                           **) (valarr + 1));
   MOM_DEBUGPRINTF (run, "nanoeval_nodeany depth#%d resnod=%s", depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) resnod));
   return resnod;
@@ -1971,11 +2017,12 @@ momf_nanoeval_flattennodeany (struct mom_nanoeval_st *nev,
   struct mom_item_st *connitm = mom_dyncast_item (valarr[0]);
   if (nbval == 2 && connitm)
     {                           // special case for two arguments
-      struct mom_seqitems_st *seq = mom_dyncast_seqitems (valarr[1]);
+      const struct mom_seqitems_st *seq = mom_dyncast_seqitems (valarr[1]);
       if (seq)
         {
           MOM_DEBUGPRINTF (run, "nanoeval_flattennodeany seq=%s",
-                           mom_value_cstring (seq));
+                           mom_value_cstring ((const struct mom_hashedvalue_st
+                                               *) seq));
           unsigned len = mom_size (seq);
           resnod =
             mom_boxnode_make (connitm, len,
@@ -2022,7 +2069,8 @@ momf_nanoeval_flattennodeany (struct mom_nanoeval_st *nev,
         arr[cnt++] = valarr[ix];
     }
   assert (cnt == len);
-  resnod = mom_boxnode_make (connitm, len, arr);
+  resnod =
+    mom_boxnode_make (connitm, len, (const struct mom_hashedvalue_st **) arr);
 end:
   MOM_DEBUGPRINTF (run, "nanoeval_flattennodeany depth#%d resnod=%s",
                    depth,
@@ -2061,6 +2109,7 @@ add2queue_mom (struct mom_queue_st *qu, const void *val)
     }
 }                               /* end of add2queue_mom */
 
+
 const char momsig_nanoeval_tupleany[] = "signature_nanoevalany";
 const void *
 momf_nanoeval_tupleany (struct mom_nanoeval_st *nev,
@@ -2070,6 +2119,8 @@ momf_nanoeval_tupleany (struct mom_nanoeval_st *nev,
                         const struct mom_boxnode_st *closnod,
                         unsigned nbval, const void **valarr)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
   struct mom_queue_st qu = { 0 };
   mom_queue_init (&qu);
   MOM_DEBUGPRINTF (run,
