@@ -587,7 +587,7 @@ signature_nanoeval1
 ^funsignature
 (
 comment
-"nanoaval of payl_assovaldata"_
+"nanoeval of payl_assovaldata"_
 )attrs
 
 
@@ -636,6 +636,102 @@ signature_nanoeval1
 (
 comment
 "function to compute the set of attributes"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata1
+1456839406
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"nanoaval of payl_vectvaldata"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_appendany
+1456840222
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_appendany"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_count1
+1456840222
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_count"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_node2
+1456840222
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_node"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_nth2
+1456840222
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_nth"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_put_nth3
+1456840222
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_put_nth"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_reserve2
+1456840222
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_reserve"_
+)attrs
+
+
+*nanoeval_payl_vectvaldata_resize2
+1456840222
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_vectvaldata_resize"_
 )attrs
 
 
@@ -893,6 +989,106 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_vectval_append
+1456840222
+^mtime
+(
+comment
+"append into a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_appendany
+)attrs
+
+
+*payl_vectval_count
+1456840222
+^mtime
+(
+comment
+"count in a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_count1
+)attrs
+
+
+*payl_vectval_node
+1456840222
+^mtime
+(
+comment
+"make node from vector of values payload"_
+nanoeval
+nanoeval_payl_vectvaldata_node2
+)attrs
+
+
+*payl_vectval_nth
+1456840222
+^mtime
+(
+comment
+"nth component in a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_nth2
+)attrs
+
+
+*payl_vectval_put_nth
+1456840222
+^mtime
+(
+comment
+"put_nth component in a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_put_nth3
+)attrs
+
+
+*payl_vectval_reserve
+1456840222
+^mtime
+(
+comment
+"reserve in a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_reserve2
+)attrs
+
+
+*payl_vectval_resize
+1456840222
+^mtime
+(
+comment
+"resize in a vector of values"_
+nanoeval
+nanoeval_payl_vectvaldata_resize2
+)attrs
+
+
+*payl_vectvaldata
+1456839406
+^mtime
+(
+comment
+"for vector of values payload in items"_
+nanoeval
+(
+nanoeval_payl_vectvaldata1
+)node
+notice
+(
+payl_vectval_append
+payl_vectval_count
+payl_vectval_node
+payl_vectval_nth
+payl_vectval_put_nth
+payl_vectval_reserve
+payl_vectval_resize
+)set
+)attrs
+
+
 *payload
 1456825494
 ^mtime
@@ -902,6 +1098,7 @@ comment
 notice
 (
 payl_assovaldata
+payl_vectvaldata
 )set
 )attrs
 
