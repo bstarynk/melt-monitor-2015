@@ -663,6 +663,42 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashset_insertany
+1456855856
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function of payl_hashset_insert"_
+)attrs
+
+
+*nanoeval_payl_hashset_remove_content2
+1456855856
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function of payl_hashset_remove"_
+)attrs
+
+
+*nanoeval_payl_hashset_removeany
+1456855856
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function of payl_hashset_remove"_
+)attrs
+
+
 *nanoeval_payl_hashset_reserve2
 1456841817
 ^mtime
@@ -1035,9 +1071,23 @@ nanoeval
 nanoeval_payl_hashset1
 notice
 (
+payl_hashset_insert
 payl_hashset_insert_content
+payl_hashset_remove
+payl_hashset_remove_content
 payl_hashset_reserve
 )set
+)attrs
+
+
+*payl_hashset_insert
+1456855856
+^mtime
+(
+comment
+"insert some content in an hashed set payload"_
+nanoeval
+nanoeval_payl_hashset_insertany
 )attrs
 
 
@@ -1049,6 +1099,28 @@ comment
 "insert some content in an hashed set payload"_
 nanoeval
 nanoeval_payl_hashset_insert_content2
+)attrs
+
+
+*payl_hashset_remove
+1456855856
+^mtime
+(
+comment
+"remove some content in an hashed set payload"_
+nanoeval
+nanoeval_payl_hashset_removeany
+)attrs
+
+
+*payl_hashset_remove_content
+1456855856
+^mtime
+(
+comment
+"remove some content in an hashed set payload"_
+nanoeval
+nanoeval_payl_hashset_remove_content2
 )attrs
 
 
