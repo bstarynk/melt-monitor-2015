@@ -591,6 +591,54 @@ comment
 )attrs
 
 
+*nanoeval_payl_assovaldata_get2
+1456833278
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to get an attribute in an assocvaldata"_
+)attrs
+
+
+*nanoeval_payl_assovaldata_putany
+1456833278
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"function to put attributes in an assocvaldata"_
+)attrs
+
+
+*nanoeval_payl_assovaldata_remove2
+1456833278
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"function to remove an attribute in an assocvaldata"_
+)attrs
+
+
+*nanoeval_payl_assovaldata_set_attrs1
+1456833278
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"function to compute the set of attributes"_
+)attrs
+
+
 *nanoeval_put3
 1456219019
 ^mtime
@@ -786,11 +834,62 @@ identity
 ^mtime
 (
 comment
-"for association payload maping items to values"_
+"for association payload mapping items to values"_
 nanoeval
 (
 nanoeval_payl_assovaldata1
 )node
+notice
+(
+payl_assovaldata_get
+payl_assovaldata_put
+payl_assovaldata_remove
+payl_assovaldata_set_attrs
+)set
+)attrs
+
+
+*payl_assovaldata_get
+1456833278
+^mtime
+(
+comment
+"get an attribute in given item assocvaldata payload"_
+nanoeval
+nanoeval_payl_assovaldata_get2
+)attrs
+
+
+*payl_assovaldata_put
+1456833278
+^mtime
+(
+comment
+"put attributes in given item assocvaldata payload"_
+nanoeval
+nanoeval_payl_assovaldata_putany
+)attrs
+
+
+*payl_assovaldata_remove
+1456833278
+^mtime
+(
+comment
+"remove attributes in given item assocvaldata payload"_
+nanoeval
+nanoeval_payl_assovaldata_remove2
+)attrs
+
+
+*payl_assovaldata_set_attrs
+1456833278
+^mtime
+(
+comment
+"give the set of attributes in given item assocvaldata payload"_
+nanoeval
+nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 

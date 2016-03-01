@@ -872,3 +872,65 @@ momf_nanoeval_payl_assovaldata_remove2 (struct mom_nanoeval_st *nev,
                         mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
                                              arg0, arg1));
 }                               // end of momf_nanoeval_payl_assovaldata_remove2
+
+const char momsig_nanoeval_payl_assovaldata_putany[] =
+  "signature_nanoevalany";
+const void *
+momf_nanoeval_payl_assovaldata_putany (struct mom_nanoeval_st *nev,
+                                       struct mom_item_st *envitm,
+                                       int depth,
+                                       const struct mom_boxnode_st *expnod,
+                                       const struct mom_boxnode_st *closnod,
+                                       unsigned nbval, const void **valarr)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_assovaldata_putany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  if (nbval % 2 == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *itm = mom_dyncast_item (valarr[0]);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  for (unsigned ix = 1; ix < nbval; ix += 2)
+    {
+      struct mom_item_st *itmat = mom_dyncast_item (valarr[ix]);
+      if (!itmat)
+        NANOEVAL_FAILURE_MOM (nev, expnod,
+                              mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                                   2, mom_boxint_make (ix),
+                                                   valarr[ix]));
+    }
+  bool ok = false;
+  void *res = NULL;
+  mom_item_lock (itm);
+  ok = mom_itype (itm->itm_payload) == MOMITY_ASSOVALDATA;
+  if (ok)
+    {
+      struct mom_assovaldata_st *ass = itm->itm_payload;
+      ass = mom_assovaldata_reserve (ass, nbval / 2 + nbval / 8 + 1);
+      for (unsigned ix = 1; ix < nbval; ix += 2)
+        {
+          struct mom_item_st *itmat = mom_dyncast_item (valarr[ix]);
+          assert (ix + 1 < nbval);
+          void *curv = valarr[ix + 1];
+          assert (itmat != NULL);
+          ass = mom_assovaldata_put (ass, itmat, curv);
+        }
+      itm->itm_payload = ass;
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                             valarr[0]));
+}                               /* end of momf_nanoeval_payl_assovaldata_putany  */
