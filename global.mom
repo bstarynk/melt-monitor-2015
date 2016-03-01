@@ -651,6 +651,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashset_insert_content2
+1456845046
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_hashset_insert_content"_
+)attrs
+
+
 *nanoeval_payl_hashset_reserve2
 1456841817
 ^mtime
@@ -1023,8 +1035,20 @@ nanoeval
 nanoeval_payl_hashset1
 notice
 (
+payl_hashset_insert_content
 payl_hashset_reserve
 )set
+)attrs
+
+
+*payl_hashset_insert_content
+1456845046
+^mtime
+(
+comment
+"insert some content in an hashed set payload"_
+nanoeval
+nanoeval_payl_hashset_insert_content2
 )attrs
 
 
