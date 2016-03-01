@@ -639,6 +639,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashset1
+1456841456
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"nanoeval of payl hashset"_
+)attrs
+
+
 *nanoeval_payl_vectvaldata1
 1456839406
 ^mtime
@@ -989,6 +1001,17 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_hashset
+1456841456
+^mtime
+(
+comment
+"for item payload of hashset"_
+nanoeval
+nanoeval_payl_hashset1
+)attrs
+
+
 *payl_vectval_append
 1456840222
 ^mtime
@@ -1098,6 +1121,7 @@ comment
 notice
 (
 payl_assovaldata
+payl_hashset
 payl_vectvaldata
 )set
 )attrs
