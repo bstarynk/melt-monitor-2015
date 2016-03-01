@@ -651,6 +651,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashset_reserve2
+1456841817
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"nanoeval of payl_hashset_reserve"_
+)attrs
+
+
 *nanoeval_payl_vectvaldata1
 1456839406
 ^mtime
@@ -1009,6 +1021,21 @@ comment
 "for item payload of hashset"_
 nanoeval
 nanoeval_payl_hashset1
+notice
+(
+payl_hashset_reserve
+)set
+)attrs
+
+
+*payl_hashset_reserve
+1456841817
+^mtime
+(
+comment
+"reserve in an hashed set payload"_
+nanoeval
+nanoeval_payl_hashset_reserve2
 )attrs
 
 

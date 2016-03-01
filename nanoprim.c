@@ -1416,6 +1416,25 @@ momf_nanoeval_payl_hashset_reserve2 (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0), mom_value_cstring (arg1));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  intptr_t n = mom_boxint_val_def (arg1, -1);
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = n >= 0 && mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  if (ok)
+    itm->itm_payload =          //
+      (void *) mom_hashset_reserve ((struct mom_hashset_st *)
+                                    itm->itm_payload, n);
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                             arg0, arg1));
 }                               /* end of momf_nanoeval_payl_hashset_reserve2 */
 
 
