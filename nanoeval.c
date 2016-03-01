@@ -381,6 +381,63 @@ nanoeval_verbatimnode_mom (struct mom_nanoeval_st *nev,
 }
 
 
+
+static const void *
+nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
+                         struct mom_item_st *envitm,
+                         const struct mom_boxnode_st *nod, int depth)
+{
+  const void *resv = NULL;
+  MOM_DEBUGPRINTF (run, "nanoeval_outputnode start envitm=%s nod=%s depth#%d",
+                   mom_item_cstring (envitm),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) nod),
+                   depth);
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  assert (nod && nod->va_itype == MOMITY_NODE);
+  unsigned arity = mom_size (nod);
+  if (arity < 2)
+    NANOEVAL_FAILURE_MOM (nev, nod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (arity)));
+  void *outexpv = nod->nod_sons[0];
+  const void *outv = mom_nanoeval (nev, envitm, outexpv, depth + 1);
+  MOM_DEBUGPRINTF (run, "nanoeval_outputnode depth#%d outv=%s", depth,
+                   mom_value_cstring (outv));
+  struct mom_item_st *outitm = mom_dyncast_item (outv);
+  if (!outitm)
+    NANOEVAL_FAILURE_MOM (nev, nod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               outv));
+  for (unsigned ix = 1; ix < arity; ix++)
+    {
+      const void *subexpv = nod->nod_sons[ix];
+      unsigned subsiz = mom_size (subexpv);
+      const struct mom_boxnode_st *subexpnod = mom_dyncast_node (subexpv);
+      if (subexpnod && subsiz == 1)
+        {
+          struct mom_item_st *subconitm = subexpnod->nod_connitm;
+          if (subconitm == MOM_PREDEFITM (out_decimal))
+            {
+            }
+          else if (subconitm == MOM_PREDEFITM (out_hexa))
+            {
+            }
+          else if (subconitm == MOM_PREDEFITM (out_html))
+            {
+            }
+          else if (subconitm == MOM_PREDEFITM (out_utf8enc))
+            {
+            }
+        }
+    }
+#warning nanoeval_outputnode incomplete
+  MOM_FATAPRINTF ("nanoeval_outputnode incomplete nod=%s depth#%d",
+                  mom_value_cstring ((struct mom_hashedvalue_st *) nod),
+                  depth);
+}                               /* end nanoeval_outputnode_mom */
+
+
 static const void *
 nanoeval_whilenode_mom (struct mom_nanoeval_st *nev,
                         struct mom_item_st *envitm,
@@ -1267,8 +1324,10 @@ nanoeval_node_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
       case OPITM_NANOEVALNODE_MOM (while)
     :                          ///// %while(<cond>,...)
         return nanoeval_whilenode_mom (nev, envitm, nod, depth);
-    case OPITM_NANOEVALNODE_MOM (func):        ///// %item(it)
+    case OPITM_NANOEVALNODE_MOM (func):        ///// %func(formals,body..)
       return nanoeval_funcnode_mom (nev, envitm, nod, depth);
+    case OPITM_NANOEVALNODE_MOM (output):      //// %output(out,...)
+      return nanoeval_outputnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (let): ///// %let(bindings... exprs...)
       return nanoeval_letnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (letrec):      ///// %letrec(bindings... exprs...)
