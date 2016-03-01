@@ -2404,4 +2404,43 @@ momf_ldp_payload_hashmap (struct mom_item_st *itm,
   itm->itm_payload = (struct mom_anyvalue_st *) hmap;
 }                               /* end of momf_ldp_payload_hashmap */
 
+
+
+bool
+mom_unsync_item_clear_payload (struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return false;
+  if (!itm->itm_payload)
+    return true;
+  unsigned typl = mom_itype (itm->itm_payload);
+  switch (typl)
+    {
+    case MOMITY_WEBEXCH:
+      /// don't even clear, return immediately
+      MOM_WARNPRINTF ("avoid clearing webexch payload in item %s",
+                      mom_item_cstring (itm));
+      return false;
+    case MOMITY_WEBSESSION:
+      MOM_WARNPRINTF ("avoid clearing websession payload in item %s",
+                      mom_item_cstring (itm));
+      return false;
+    case MOMITY_DUMPER:
+      MOM_WARNPRINTF ("avoid clearing dumper payload in item %s",
+                      mom_item_cstring (itm));
+      return false;
+    case MOMITY_LOADER:
+      MOM_WARNPRINTF ("avoid clearing loader payload in item %s",
+                      mom_item_cstring (itm));
+      return false;
+    case MOMITY_FILE:
+    case MOMITY_FILEBUFFER:
+      mom_file_close (itm->itm_payload);
+    default:
+      break;
+    }
+  itm->itm_payload = NULL;
+  return true;
+}                               /* end of mom_unsync_item_clear_payload */
+
 /// eof item.c

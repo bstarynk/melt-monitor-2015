@@ -1369,7 +1369,10 @@ void mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
 void mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
                                        const struct mom_item_st *itmat);
 
+// clear the payload in an item, return true iff cleared
+bool mom_unsync_item_clear_payload (struct mom_item_st *itm);
 
+///
 void mom_initialize_items (void);
 
 static inline void
@@ -2156,11 +2159,19 @@ mom_file (void *mfil)
 {
   if (!mfil || mfil == MOM_EMPTY_SLOT)
     return NULL;
-  struct mom_file_st *mf = (struct mom_file_st *) mfil;
-  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
-    return NULL;
-  FILE *f = atomic_load (&mf->mom_filp);
-  return f;
+  unsigned ty = mom_itype (mfil);
+  if (ty == MOMITY_FILEBUFFER || ty == MOMITY_FILE)
+    {
+      struct mom_file_st *mf = (struct mom_file_st *) mfil;
+      FILE *f = atomic_load (&mf->mom_filp);
+      return f;
+    }
+  else if (ty == MOMITY_WEBEXCH)
+    {
+      struct mom_webexch_st *we = (struct mom_webexch_st *) mfil;
+      return we->webx_outfil;
+    }
+  return NULL;
 }
 
 void mom_file_close (void *mfil);
