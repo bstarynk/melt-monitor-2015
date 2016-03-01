@@ -1123,6 +1123,7 @@ mom_hashmap_dyncast (void *p)
 }                               /* end mom_hashmap_dyncast */
 
 
+
 /// with a 0 gap, will reorganize
 struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hmap,
                                             unsigned gap);
@@ -1142,6 +1143,14 @@ struct mom_hashmap_st *mom_hashmap_remove (struct mom_hashmap_st *hmap,
 const struct mom_boxset_st *mom_hashmap_keyset (const struct mom_hashmap_st
                                                 *hmap);
 
+
+static inline unsigned
+mom_hashmap_count (const struct mom_hashmap_st *hmap)
+{
+  if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
+    return 0;
+  return hmap->cda_count;
+}
 
 /// for MOMITY_HASHASSOC payload
 struct mom_hassocentry_tu
@@ -1206,6 +1215,14 @@ const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_has
                                                             const struct
                                                             mom_item_st
                                                             *connitm);
+
+static inline unsigned
+mom_hashassoc_count (const struct mom_hashassoc_st *ha)
+{
+  if (!ha || ha == MOM_EMPTY_SLOT || ha->va_itype != MOMITY_HASHASSOC)
+    return 0;
+  return ha->cda_count;
+}
 
 ////////////////
 struct mom_itemname_tu
