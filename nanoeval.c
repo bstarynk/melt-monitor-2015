@@ -43,8 +43,8 @@ nanoeval_freshenv_mom (struct mom_item_st *parenvitm, unsigned sizhint,
   return newenvitm;
 }                               /* end of nanoeval_freshenv_mom */
 
-static void
-nanoeval_bind_mom (struct mom_item_st *envitm, struct mom_item_st *varitm,
+void
+mom_bind_nanoev (struct mom_item_st *envitm, struct mom_item_st *varitm,
                    const void *val)
 {
   assert (mom_itype (envitm) == MOMITY_ITEM);
@@ -56,7 +56,7 @@ nanoeval_bind_mom (struct mom_item_st *envitm, struct mom_item_st *varitm,
   MOM_DEBUGPRINTF (run, "nanoeval_bind envitm=%s varitm=%s val=%s",
                    mom_item_cstring (envitm), mom_item_cstring (varitm),
                    mom_value_cstring (val));
-}                               /* end of nanoeval_bind_mom */
+}                               /* end of mom_bind_nanoev */
 
 static void *
 nanoeval_displaynode_mom (struct mom_nanoeval_st *nev,
@@ -630,7 +630,7 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
       envitm = prevenvitm;
     }
   if (!found)
-    nanoeval_bind_mom (envitm, varitm, resv);
+    mom_bind_nanoev (envitm, varitm, resv);
   return resv;
 }                               /* end of nanoeval_assignnode_mom */
 
@@ -807,7 +807,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                               mom_boxnode_make_va (MOM_PREDEFITM (signature),
                                                    2, nodexp, formalsv));
       for (unsigned ix = 0; ix < nbform; ix++)
-        nanoeval_bind_mom (newenvitm, formtup->seqitem[ix], argv[ix]);
+        mom_bind_nanoev (newenvitm, formtup->seqitem[ix], argv[ix]);
     }
   else if ((formnod = mom_dyncast_node (formalsv)) != NULL)
     {
@@ -826,7 +826,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
             NANOEVAL_FAILURE_MOM (nev, nodexp,
                                   mom_boxnode_make_va (MOM_PREDEFITM (arg),
                                                        1, formalsv));
-          nanoeval_bind_mom (newenvitm, curformitm, argv[ix]);
+          mom_bind_nanoev (newenvitm, curformitm, argv[ix]);
         }
       struct mom_item_st *connformitm = formnod->nod_connitm;
       if (nbargs > nbform)
@@ -835,10 +835,10 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
             mom_boxnode_make (connformitm, nbargs - nbform,
                               (const struct mom_hashedvalue_st **) (argv +
                                                                     nbform));
-          nanoeval_bind_mom (newenvitm, connformitm, nodrest);
+          mom_bind_nanoev (newenvitm, connformitm, nodrest);
         }
       else
-        nanoeval_bind_mom (newenvitm, connformitm, connformitm);
+        mom_bind_nanoev (newenvitm, connformitm, connformitm);
     }
   MOM_DEBUGPRINTF (run, "nanoapply newenvitm=%s nodfun=%s nodexp=%s depth#%d",
                    mom_item_cstring (newenvitm),
@@ -937,7 +937,7 @@ nanoeval_letnode_mom (struct mom_nanoeval_st *nev,
                            depth, mom_item_cstring (varitm),
                            mom_value_cstring (bvalv));
         }
-      nanoeval_bind_mom (newenvitm, varitm, bvalv);
+      mom_bind_nanoev (newenvitm, varitm, bvalv);
     }
   for (unsigned ix = nbbind; ix < arity; ix++)
     {
@@ -989,7 +989,7 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
       MOM_DEBUGPRINTF (run,
                        "nanoeval_letrecnode depth#%d binding#%d first varitm %s",
                        depth, ix, mom_item_cstring (varitm));
-      nanoeval_bind_mom (newenvitm, varitm, varitm);
+      mom_bind_nanoev (newenvitm, varitm, varitm);
     }
   for (unsigned ix = 0; ix < nbbind; ix++)
     {
@@ -1014,7 +1014,7 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
                            depth, mom_item_cstring (varitm),
                            mom_value_cstring (bvalv));
         }
-      nanoeval_bind_mom (newenvitm, varitm, bvalv);
+      mom_bind_nanoev (newenvitm, varitm, bvalv);
     }
   for (unsigned ix = nbbind; ix < arity; ix++)
     {
