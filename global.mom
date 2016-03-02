@@ -1144,12 +1144,39 @@ comment
 )attrs
 
 
+*out_apply
+1456930526
+^mtime
+(
+comment
+"apply a function to the output"_
+)attrs
+
+
 *out_decimal
 1456812179
 ^mtime
 (
 comment
 "output decimal"_
+)attrs
+
+
+*out_filebuffer
+1456930526
+^mtime
+(
+comment
+"output a filebuffer"_
+)attrs
+
+
+*out_gplv3_notice
+1456930526
+^mtime
+(
+comment
+"output the GPLv3 notice"_
 )attrs
 
 

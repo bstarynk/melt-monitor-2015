@@ -423,10 +423,11 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
       if (!fil)
         continue;
       const struct mom_boxnode_st *subexpnod = mom_dyncast_node (subexpv);
-      if (subexpnod && subsiz == 1)
+      struct mom_item_st *subconitm = NULL;
+      if (subexpnod && (subconitm = subexpnod->nod_connitm) != NULL
+          && subsiz == 1)
         {
           const void *firstv = NULL;
-          struct mom_item_st *subconitm = subexpnod->nod_connitm;
           const void *firstargexpv = subexpnod->nod_sons[0];
           if (subconitm == MOM_PREDEFITM (out_decimal))
             {
@@ -464,7 +465,54 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
                                          mom_size (firstv));
               continue;
             }
-        };
+          else if (subconitm == MOM_PREDEFITM (out_filebuffer))
+            {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_ITEM)
+                {
+                  struct mom_item_st *firstitm = mom_dyncast_item (firstv);
+                  mom_item_lock (firstitm);
+                  if (mom_itype (firstitm->itm_payload) == MOMITY_FILEBUFFER)
+                    mom_puts_filebuffer (fil,
+                                         (struct mom_filebuffer_st *)
+                                         firstitm->itm_payload,
+                                         MOM_FILEBUFFER_KEEPOPEN);
+                  mom_item_unlock (firstitm);
+                }
+              continue;
+            }
+          else if (subconitm == MOM_PREDEFITM (out_apply))
+            {
+              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+              if (mom_itype (firstv) == MOMITY_NODE)
+                (void) mom_nanoapply (nev, envitm,
+                                      (struct mom_boxnode_st *) firstv,
+                                      subexpnod, 1, (const void **) &outitm,
+                                      depth + 1);
+              continue;
+            }
+        }
+      else if (subexpnod
+               && subsiz == 3
+               && (subconitm =
+                   subexpnod->nod_connitm) ==
+               MOM_PREDEFITM (out_gplv3_notice))
+        {
+          const void *prefixv = NULL;
+          const void *prefixexpv = subexpnod->nod_sons[0];
+          const void *suffixv = NULL;
+          const void *suffixexpv = subexpnod->nod_sons[1];
+          const void *filnamv = NULL;
+          const void *filnamexpv = subexpnod->nod_sons[2];
+          prefixv = mom_nanoeval (nev, envitm, prefixexpv, depth + 1);
+          suffixv = mom_nanoeval (nev, envitm, suffixexpv, depth + 1);
+          filnamv = mom_nanoeval (nev, envitm, filnamexpv, depth + 1);
+          mom_output_gplv3_notice (fil,
+                                   mom_boxstring_cstr (prefixv),
+                                   mom_boxstring_cstr (suffixv),
+                                   mom_boxstring_cstr (filnamv));
+          continue;
+        }
       const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
       if (subval)
         mom_output_value (fil, NULL, 0,
