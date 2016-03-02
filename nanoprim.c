@@ -1999,7 +1999,7 @@ momf_nanoeval_payl_hashmap_keyset1 (struct mom_nanoeval_st *nev,
   bool ok = false;
   const void *res = NULL;
   mom_item_lock (itm);
-  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHMAP;
   if (ok)
     {
       struct mom_hashmap_st *hm = (struct mom_hashmap_st *) itm->itm_payload;
@@ -2039,7 +2039,7 @@ momf_nanoeval_payl_hashmap_count1 (struct mom_nanoeval_st *nev,
   bool ok = false;
   const void *res = NULL;
   mom_item_lock (itm);
-  ok = mom_itype (itm->itm_payload) == MOMITY_HASHSET;
+  ok = mom_itype (itm->itm_payload) == MOMITY_HASHMAP;
   if (ok)
     {
       struct mom_hashmap_st *hm = (struct mom_hashmap_st *) itm->itm_payload;
