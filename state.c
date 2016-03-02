@@ -625,7 +625,7 @@ void
 start_after_load_mom (unsigned nbitems)
 {
   MOM_DEBUGPRINTF (load, "start_after_load nbitems=%u", nbitems);
-  struct mom_hashedvalue_st *closv = NULL;
+  const struct mom_hashedvalue_st *closv = NULL;
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
                                    MOM_PREDEFITM (after_load));
@@ -920,6 +920,65 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
 }
 
 static void
+dump_nanoeval_mom (const struct mom_boxnode_st *nod,
+                   const struct mom_item_st *whatitm)
+{
+  const void *res = NULL;
+  unsigned sz = mom_size (nod);
+  long maxstep = 1024 * 1024 * 4 + sz * 8192;
+  MOM_DEBUGPRINTF (dump, "start dump_nanoeval nod=%s whatitm=%s",
+                   mom_value_cstring ((const void *) nod),
+                   mom_item_cstring (whatitm));
+  assert (nod->nod_connitm == MOM_PREDEFITM (nanoeval));
+  struct mom_item_st *tkitm = NULL;
+  struct mom_item_st *thistatitm = NULL;
+  struct mom_nanoeval_st nev = { 0 };
+  memset (&nev, 0, sizeof (nev));
+  thistatitm = mom_clone_item (whatitm);
+  thistatitm->itm_payload = (void *) mom_hashmap_reserve (NULL, (2 * sz) | 7);
+  mom_bind_nanoev (thistatitm, whatitm, nod);
+  nev.nanev_magic = NANOEVAL_MAGIC_MOM;
+  nev.nanev_tkitm = tkitm;
+  nev.nanev_thistatitm = thistatitm;
+  nev.nanev_count = 0;
+  nev.nanev_maxstep = maxstep;
+  MOM_DEBUGPRINTF (run, "dump nanoeval %s thistatitm %s",
+                   mom_item_cstring (whatitm), mom_item_cstring (thistatitm));
+  int errlin = 0;
+  if ((errlin = setjmp (nev.nanev_jb)) > 0)
+    {
+      MOM_WARNPRINTF_AT (nev.nanev_errfile ? : "??", errlin,
+                         "dump nanoeval %s failed for node %s, failure %s, with expr %s",
+                         mom_item_cstring (whatitm),
+                         mom_value_cstring ((const void *) nod),
+                         mom_value_cstring (nev.nanev_fail),
+                         mom_value_cstring (nev.nanev_expr));
+      return;
+    }
+  else
+    {
+      for (unsigned ix = 0; ix < sz; ix++)
+        {
+          MOM_DEBUGPRINTF (run, "dump nanoeval %s subexpr#%d : %s",
+                           mom_item_cstring (whatitm), ix,
+                           mom_value_cstring (nod->nod_sons[ix]));
+          res = mom_nanoeval (&nev, thistatitm, nod->nod_sons[ix], 0);
+          MOM_DEBUGPRINTF (run, "dump nanoeval %s subexpr#%d result=%s",
+                           mom_item_cstring (whatitm), ix,
+                           mom_value_cstring (res));
+
+        }
+    }
+  MOM_DEBUGPRINTF (dump,
+                   "end dump_nanoeval nod=%s whatitm=%s thistatitm=%s last res=%s",
+                   mom_value_cstring ((const void *) nod),
+                   mom_item_cstring (whatitm), mom_item_cstring (thistatitm),
+                   mom_value_cstring (res));
+}                               /* end dump_nanoeval_mom */
+
+
+
+static void
 before_dump_mom ()
 {
   struct mom_hashedvalue_st *closv = NULL;
@@ -942,6 +1001,13 @@ before_dump_mom ()
   MOM_DEBUGPRINTF (dump, "before_dump clositm=%s",
                    mom_item_cstring (clositm));
   assert (clositm && clositm->va_itype == MOMITY_ITEM);
+  if (clositm == MOM_PREDEFITM (nanoeval))
+    {
+      dump_nanoeval_mom (closnod, MOM_PREDEFITM (before_dump));
+      MOM_INFORMPRINTF ("nanoevaled node of %d sons before dump",
+                        mom_size (closnod));
+      goto end;
+    }
   const void *funptr = clositm->itm_funptr;
   if (!funptr)
     {
@@ -999,6 +1065,13 @@ after_dump_mom ()
   struct mom_item_st *clositm = closnod->nod_connitm;
   MOM_DEBUGPRINTF (dump, "after_dump clositm=%s", mom_item_cstring (clositm));
   assert (clositm && clositm->va_itype == MOMITY_ITEM);
+  if (clositm == MOM_PREDEFITM (nanoeval))
+    {
+      dump_nanoeval_mom (closnod, MOM_PREDEFITM (after_dump));
+      MOM_INFORMPRINTF ("nanoevaled node of %d sons after dump",
+                        mom_size (closnod));
+      goto end;
+    }
   const void *funptr = clositm->itm_funptr;
   if (!funptr)
     {

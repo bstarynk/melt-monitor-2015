@@ -1088,15 +1088,17 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   nev.nanev_thistatitm = thistatitm;
   nev.nanev_count = 0;
   nev.nanev_maxstep = maxstep;
+  nev.nanev_errfile = NULL;
   int errlin = 0;
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
-      MOM_WARNPRINTF_AT (__FILE__, errlin,
+      MOM_WARNPRINTF_AT (nev.nanev_errfile ? : "??", errlin,
                          "nanoedit failure %s with expr %s",
                          mom_value_cstring (nev.nanev_fail),
                          mom_value_cstring (nev.nanev_expr));
 #warning should output JSON for error case
-      MOM_FATAPRINTF ("unhandled nanoedit eval failure from %d", errlin);
+      MOM_FATAPRINTF ("unhandled nanoedit eval failure from %s:%d",
+                      nev.nanev_errfile ? : "??", errlin);
     }
   else
     {
