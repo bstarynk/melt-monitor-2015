@@ -651,6 +651,42 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashassoc_get2
+1456910539
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for payl_hashassoc_get"_
+)attrs
+
+
+*nanoeval_payl_hashassoc_putany
+1456910539
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"routine for payl_hashassoc_put"_
+)attrs
+
+
+*nanoeval_payl_hashassoc_removeany
+1456910539
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"routine for payl_hashassoc_remove"_
+)attrs
+
+
 *nanoeval_payl_hashmap1
 1456897878
 ^mtime
@@ -1155,7 +1191,43 @@ nanoeval
 nanoeval_payl_hashassoc1
 notice
 (
+payl_hashassoc_get
+payl_hashassoc_put
+payl_hashassoc_remove
 )set
+)attrs
+
+
+*payl_hashassoc_get
+1456910539
+^mtime
+(
+comment
+"get in an hashassoc item"_
+nanoeval
+nanoeval_payl_hashassoc_get2
+)attrs
+
+
+*payl_hashassoc_put
+1456910539
+^mtime
+(
+comment
+"put in an hashassoc item"_
+nanoeval
+nanoeval_payl_hashassoc_putany
+)attrs
+
+
+*payl_hashassoc_remove
+1456910539
+^mtime
+(
+comment
+"remove in an hashassoc item"_
+nanoeval
+nanoeval_payl_hashassoc_removeany
 )attrs
 
 
