@@ -639,6 +639,78 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashmap1
+1456897878
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_hashmap"_
+)attrs
+
+
+*nanoeval_payl_hashmap_count1
+1456897878
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_hashmap_count"_
+)attrs
+
+
+*nanoeval_payl_hashmap_get2
+1456897878
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for payl_hashmap_get"_
+)attrs
+
+
+*nanoeval_payl_hashmap_keyset1
+1456897878
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_hashmap_keyset"_
+)attrs
+
+
+*nanoeval_payl_hashmap_put3
+1456897878
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"routine for payl_hashmap_put"_
+)attrs
+
+
+*nanoeval_payl_hashmap_remove2
+1456897878
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for payl_hashmap_remove"_
+)attrs
+
+
 *nanoeval_payl_hashset1
 1456841456
 ^mtime
@@ -1061,6 +1133,80 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_hashmap
+1456897878
+^mtime
+(
+comment
+"for item payload of hashmap"_
+nanoeval
+nanoeval_payl_hashmap1
+notice
+(
+payl_hashmap_count
+payl_hashmap_get
+payl_hashmap_keyset
+payl_hashmap_put
+payl_hashmap_remove
+)set
+)attrs
+
+
+*payl_hashmap_count
+1456897878
+^mtime
+(
+comment
+"operation to obtain the set of keys in an hashmap"_
+nanoeval
+nanoeval_payl_hashmap_count1
+)attrs
+
+
+*payl_hashmap_get
+1456897878
+^mtime
+(
+comment
+"operation to get a key in an hashmap"_
+nanoeval
+nanoeval_payl_hashmap_get2
+)attrs
+
+
+*payl_hashmap_keyset
+1456897878
+^mtime
+(
+comment
+"operation to obtain the set of keys in an hashmap"_
+nanoeval
+nanoeval_payl_hashmap_keyset1
+)attrs
+
+
+*payl_hashmap_put
+1456897878
+^mtime
+(
+comment
+"operation to put a key in an hashmap"_
+nanoeval
+nanoeval_payl_hashmap_put3
+)attrs
+
+
+*payl_hashmap_remove
+1456897878
+^mtime
+(
+comment
+"operation to remove a key in an hashmap"_
+nanoeval
+nanoeval_payl_hashmap_remove2
+)attrs
+
+
 *payl_hashset
 1456841456
 ^mtime
@@ -1244,6 +1390,7 @@ comment
 notice
 (
 payl_assovaldata
+payl_hashmap
 payl_hashset
 payl_vectvaldata
 )set
