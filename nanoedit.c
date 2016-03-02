@@ -2619,7 +2619,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
       MOM_DEBUGPRINTF (web,
                        "doparsecommand_nanoedit errhtml=%s errval=%s badnamstr=%s",
                        errhtml, mom_value_cstring (npars.nanop_errval),
-                       mom_value_cstring (badnamstr));
+                       mom_value_cstring ((void *) badnamstr));
       mom_wexch_puts (wexch, "{ \"html\": \"");
       mom_output_utf8_encoded (wexch->webx_outfil, errhtml, -1);
       mom_wexch_puts (wexch, "\",\n");
