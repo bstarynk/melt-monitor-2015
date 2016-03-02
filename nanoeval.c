@@ -494,9 +494,8 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
         }
       else if (subexpnod
                && subsiz == 3
-               && (subconitm =
-                   subexpnod->nod_connitm) ==
-               MOM_PREDEFITM (out_gplv3_notice))
+               && ((subconitm = subexpnod->nod_connitm) ==
+                   MOM_PREDEFITM (out_gplv3_notice)))
         {
           const void *prefixv = NULL;
           const void *prefixexpv = subexpnod->nod_sons[0];
@@ -511,6 +510,14 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
                                    mom_boxstring_cstr (prefixv),
                                    mom_boxstring_cstr (suffixv),
                                    mom_boxstring_cstr (filnamv));
+          continue;
+        }
+      else if (subexpnod
+               && subsiz == 0
+               && ((subconitm = subexpnod->nod_connitm) ==
+                   MOM_PREDEFITM (out_flush)))
+        {
+          fflush (fil);
           continue;
         }
       const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
