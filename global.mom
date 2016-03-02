@@ -560,6 +560,15 @@ comment
 )attrs
 
 
+*nanoeval_file_close1
+1456929384
+^mtime
+(
+comment
+"routine for payl_file_close"_
+)attrs
+
+
 *nanoeval_flattennodeany
 1456758793
 ^mtime
@@ -665,6 +674,30 @@ signature_nanoeval1
 (
 comment
 "function to compute the set of attributes"_
+)attrs
+
+
+*nanoeval_payl_file_write2
+1456929384
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for payl_file_write"_
+)attrs
+
+
+*nanoeval_payl_filebuffer1
+1456929384
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_filebuffer"_
 )attrs
 
 
@@ -1234,6 +1267,39 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_file_close
+1456929384
+^mtime
+(
+comment
+"file close operation"_
+nanoeval
+nanoeval_file_close1
+)attrs
+
+
+*payl_file_write
+1456929384
+^mtime
+(
+comment
+"for written file payload"_
+nanoeval
+nanoeval_payl_file_write2
+)attrs
+
+
+*payl_filebuffer
+1456929384
+^mtime
+(
+comment
+"for file buffer payload"_
+nanoeval
+nanoeval_payl_filebuffer1
+)attrs
+
+
 *payl_hashassoc
 1456904803
 ^mtime
@@ -1565,6 +1631,9 @@ comment
 notice
 (
 payl_assovaldata
+payl_file_close
+payl_file_write
+payl_filebuffer
 payl_hashassoc
 payl_hashmap
 payl_hashset

@@ -2359,14 +2359,14 @@ momf_nanoeval_payl_hashassoc_count1 (struct mom_nanoeval_st *nev,
 }                               /* end of momf_nanoeval_payl_hashassoc_count1 */
 
 
-
+////////////////
 const char momsig_nanoeval_clone1[] = "signature_nanoeval1";
 const void *
 momf_nanoeval_clone1 (struct mom_nanoeval_st *nev,
-                     struct mom_item_st *envitm,
-                     int depth,
-                     const struct mom_boxnode_st *expnod,
-                     const struct mom_boxnode_st *closnod, const void *arg0)
+                      struct mom_item_st *envitm,
+                      int depth,
+                      const struct mom_boxnode_st *expnod,
+                      const struct mom_boxnode_st *closnod, const void *arg0)
 {
 
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
@@ -2377,10 +2377,170 @@ momf_nanoeval_clone1 (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
                    mom_value_cstring (arg0));
-  struct mom_item_st*itm = mom_dyncast_item(arg0);
-  if (!itm) 
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
-  return mom_clone_item(itm);
+  return mom_clone_item (itm);
 }                               /* end of momf_nanoeval_clone1 */
+
+////////////////
+
+//// filebuffer payload item support
+const char momsig_nanoeval_payl_filebuffer1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_payl_filebuffer1 (struct mom_nanoeval_st *nev,
+                                struct mom_item_st *envitm,
+                                int depth,
+                                const struct mom_boxnode_st *expnod,
+                                const struct mom_boxnode_st *closnod,
+                                const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_filebuffer1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_unsync_item_clear_payload (itm);
+  if (ok)
+    itm->itm_payload = (void *) mom_make_filebuffer ();
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                             arg0));
+}                               // end of nanoeval_payl_filebuffer1 
+
+
+//// file payload item support
+const char momsig_nanoeval_payl_file_write2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_payl_file_write2 (struct mom_nanoeval_st *nev,
+                                struct mom_item_st *envitm,
+                                int depth,
+                                const struct mom_boxnode_st *expnod,
+                                const struct mom_boxnode_st *closnod,
+                                const void *arg0, const void *arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_file_write2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  const char *path = mom_boxstring_cstr (arg1);
+  if (!itm || !path)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                               arg0, arg1));
+  bool backupok = false;
+  char backupath[MOM_PATH_MAX];
+  memset (backupath, 0, sizeof (backupath));
+  if (!access (path, F_OK))
+    {
+      if (snprintf (backupath, sizeof (backupath), "%s~", path) <
+          MOM_PATH_MAX)
+        {
+          if (rename (path, backupath))
+            MOM_WARNPRINTF ("failed to backup %s to %s~ : %s",
+                            path, path, strerror (errno));
+          else
+            backupok = true;
+        }
+    }
+  FILE *fout = fopen (path, "w");
+  if (!fout)
+    {
+      int e = errno;
+      MOM_WARNPRINTF ("failed to open %s for write (%s)", path, strerror (e));
+      if (backupok)
+        {
+          if (rename (backupath, path))
+            MOM_FATAPRINTF ("failed to revert backup %s to %s: %s",
+                            backupath, path, strerror (errno));
+        }
+      NANOEVAL_FAILURE_MOM (nev, expnod,
+                            mom_boxnode_make_va (MOM_PREDEFITM (the_system),
+                                                 2,
+                                                 mom_boxstring_make (strerror
+                                                                     (e)),
+                                                 arg1));
+    }
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_unsync_item_clear_payload (itm);
+  if (ok)
+    itm->itm_payload = (void *) mom_make_file (fout);
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  fclose (fout);
+  if (backupok)
+    {
+      if (rename (backupath, path))
+        MOM_FATAPRINTF ("failed to revert backup %s to %s: %s",
+                        backupath, path, strerror (errno));
+    }
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
+                                             arg0, arg1));
+}                               // end of nanoeval_payl_file_write2 
+
+const char momsig_nanoeval_payl_file_close1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_payl_file_close1 (struct mom_nanoeval_st *nev,
+                                struct mom_item_st *envitm,
+                                int depth,
+                                const struct mom_boxnode_st *expnod,
+                                const struct mom_boxnode_st *closnod,
+                                const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_file_close1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  bool ok = false;
+  const void *res = NULL;
+  mom_item_lock (itm);
+  unsigned pty = mom_itype (itm->itm_payload);
+  ok = (pty == MOMITY_FILE || MOMITY_FILEBUFFER);
+  if (ok)
+    {
+      if (pty == MOMITY_FILEBUFFER)
+        res =
+          mom_filebuffer_boxstring ((struct mom_filebuffer_st *)
+                                    itm->itm_payload, MOM_FILEBUFFER_CLOSE);
+      mom_file_close (itm->itm_payload);
+      itm->itm_payload = NULL;
+    }
+  mom_item_unlock (itm);
+  if (ok)
+    return res;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                             arg0));
+}                               // end of nanoeval_payl_file_close1 
