@@ -2345,7 +2345,8 @@ struct mom_nanoeval_st
   const void *nanev_expr;
   jmp_buf nanev_jb;
 };
-void mom_bind_nanoev(struct mom_item_st*envitm, struct mom_item_st*varitm, const void*val);
+void mom_bind_nanoev (struct mom_item_st *envitm, struct mom_item_st *varitm,
+                      const void *val);
 #define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
     struct mom_nanoeval_st*_ne = (Ne);				\
     assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\

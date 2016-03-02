@@ -45,7 +45,7 @@ nanoeval_freshenv_mom (struct mom_item_st *parenvitm, unsigned sizhint,
 
 void
 mom_bind_nanoev (struct mom_item_st *envitm, struct mom_item_st *varitm,
-                   const void *val)
+                 const void *val)
 {
   assert (mom_itype (envitm) == MOMITY_ITEM);
   assert (mom_itype (varitm) == MOMITY_ITEM);
