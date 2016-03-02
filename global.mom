@@ -123,6 +123,17 @@ signature_tasklet
 ^funsignature
 
 
+*clone
+1456922491
+^mtime
+(
+comment
+"for cloning an item"_
+nanoeval
+nanoeval_clone1
+)attrs
+
+
 *comma_delim
 1453199017
 ^mtime
@@ -329,6 +340,10 @@ comment
 (
 comment
 "for item"_
+notice
+(
+clone
+)set
 )attrs
 
 
@@ -504,6 +519,20 @@ signature_nanoeval2
 (
 comment
 "function to evaluate add"_
+)attrs
+
+
+*nanoeval_clone1
+1456922491
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to clone an item"_
+notice
+clone
 )attrs
 
 

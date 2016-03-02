@@ -2357,3 +2357,30 @@ momf_nanoeval_payl_hashassoc_count1 (struct mom_nanoeval_st *nev,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
 }                               /* end of momf_nanoeval_payl_hashassoc_count1 */
+
+
+
+const char momsig_nanoeval_clone1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_clone1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_type1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  struct mom_item_st*itm = mom_dyncast_item(arg0);
+  if (!itm) 
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  return mom_clone_item(itm);
+}                               /* end of momf_nanoeval_clone1 */
