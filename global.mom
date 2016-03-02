@@ -677,6 +677,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_clear1
+1456930351
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to clear payload"_
+)attrs
+
+
 *nanoeval_payl_file_write2
 1456929384
 ^mtime
@@ -1267,6 +1279,17 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_clear
+1456930351
+^mtime
+(
+comment
+"operation to clear the payload of some item"_
+nanoeval
+nanoeval_payl_clear1
+)attrs
+
+
 *payl_file_close
 1456929384
 ^mtime
@@ -1631,6 +1654,7 @@ comment
 notice
 (
 payl_assovaldata
+payl_clear
 payl_file_close
 payl_file_write
 payl_filebuffer
