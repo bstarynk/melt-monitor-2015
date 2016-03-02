@@ -1888,38 +1888,47 @@ momf_nanoeval_payl_hashmap_get2 (struct mom_nanoeval_st *nev,
 
 
 
-const char momsig_nanoeval_payl_hashmap_put3[] = "signature_nanoeval3";
+const char momsig_nanoeval_payl_hashmap_putany[] = "signature_nanoevalany";
 const void *
-momf_nanoeval_payl_hashmap_put3 (struct mom_nanoeval_st *nev,
-                                 struct mom_item_st *envitm,
-                                 int depth,
-                                 const struct mom_boxnode_st *expnod,
-                                 const struct mom_boxnode_st *closnod,
-                                 const void *arg0, const void *arg1,
-                                 const void *arg2)
+momf_nanoeval_payl_hashmap_putany (struct mom_nanoeval_st *nev,
+                                   struct mom_item_st *envitm,
+                                   int depth,
+                                   const struct mom_boxnode_st *expnod,
+                                   const struct mom_boxnode_st *closnod,
+                                   unsigned nbval, const void **valarr)
 {
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_payl_hashmap_put3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
+                   "nanoeval_payl_hashmap_put3 start envitm=%s depth=%d expnod=%s closnod=%s nbval#%d",
                    mom_item_cstring (envitm), depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
-                   mom_value_cstring (arg0), mom_value_cstring (arg1),
-                   mom_value_cstring (arg2));
-  struct mom_item_st *itm = mom_dyncast_item (arg0);
-  struct mom_item_st *atitm = mom_dyncast_item (arg1);
-  bool ok = itm != NULL && atitm != NULL;
-  if (!ok)
+                   nbval);
+  if (nbval % 2 == 0)
     NANOEVAL_FAILURE_MOM (nev, expnod,
-                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
-                                               arg0, arg1));
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *itm = mom_dyncast_item (valarr[0]);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  bool ok = false;
   mom_item_lock (itm);
   ok = mom_itype (itm->itm_payload) == MOMITY_HASHMAP;
+  for (unsigned ix = 1; ix < nbval && ok; ix += 2)
+    ok = mom_itype (valarr[ix]) == MOMITY_ITEM;
   if (ok)
     {
       struct mom_hashmap_st *hm = (struct mom_hashmap_st *) itm->itm_payload;
-      hm = mom_hashmap_put (hm, atitm, arg2);
+      hm = mom_hashmap_reserve (hm, nbval / 2 + 2);
+      for (unsigned ix = 1; ix < nbval && ok; ix += 2)
+        {
+          struct mom_item_st *atitm = valarr[ix];
+          assert (atitm && atitm->va_itype == MOMITY_ITEM);
+          hm = mom_hashmap_put (hm, atitm, valarr[ix + 1]);
+        }
       itm->itm_payload = (void *) hm;
     }
   mom_item_unlock (itm);
@@ -1927,41 +1936,53 @@ momf_nanoeval_payl_hashmap_put3 (struct mom_nanoeval_st *nev,
     return itm;
   else
     NANOEVAL_FAILURE_MOM (nev, expnod,
-                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
-                                               arg0, arg1));
-}                               /* end of momf_nanoeval_payl_hashmap_put3 */
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+}                               /* end of momf_nanoeval_payl_hashmap_putany */
 
 
-const char momsig_nanoeval_payl_hashmap_remove2[] = "signature_nanoeval2";
+const char momsig_nanoeval_payl_hashmap_removeany[] = "signature_nanoevalany";
 const void *
-momf_nanoeval_payl_hashmap_remove2 (struct mom_nanoeval_st *nev,
-                                    struct mom_item_st *envitm,
-                                    int depth,
-                                    const struct mom_boxnode_st *expnod,
-                                    const struct mom_boxnode_st *closnod,
-                                    const void *arg0, const void *arg1)
+momf_nanoeval_payl_hashmap_removeany (struct mom_nanoeval_st *nev,
+                                      struct mom_item_st *envitm,
+                                      int depth,
+                                      const struct mom_boxnode_st *expnod,
+                                      const struct mom_boxnode_st *closnod,
+                                      unsigned nbval, const void **valarr)
 {
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_payl_hashmap_remove2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   "nanoeval_payl_hashmap_removeany start envitm=%s depth=%d expnod=%s closnod=%s nbval#%d",
                    mom_item_cstring (envitm), depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
-                   mom_value_cstring (arg0), mom_value_cstring (arg1));
-  struct mom_item_st *itm = mom_dyncast_item (arg0);
-  struct mom_item_st *atitm = mom_dyncast_item (arg1);
-  bool ok = itm != NULL && atitm != NULL;
+                   nbval);
+  if (nbval == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  struct mom_item_st *itm = mom_dyncast_item (valarr[0]);
+  bool ok = itm != NULL;
+  for (unsigned ix = 1; ix < nbval && ok; ix++)
+    ok = mom_itype (valarr[ix]) == MOMITY_ITEM;
   if (!ok)
     NANOEVAL_FAILURE_MOM (nev, expnod,
-                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
-                                               arg0, arg1));
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
   mom_item_lock (itm);
   ok = mom_itype (itm->itm_payload) == MOMITY_HASHMAP;
   if (ok)
     {
       struct mom_hashmap_st *hm = (struct mom_hashmap_st *) itm->itm_payload;
-      hm = mom_hashmap_remove (hm, atitm);
+      for (unsigned ix = 1; ix < nbval && ok; ix++)
+        {
+          struct mom_item_st *atitm = valarr[ix];
+          assert (atitm && atitm->va_itype == MOMITY_ITEM);
+          hm = mom_hashmap_remove (hm, atitm);
+        }
+      if (nbval >= mom_hashmap_count (hm) / 3 + 1)
+        hm = mom_hashmap_reserve (hm, 0);
       itm->itm_payload = (void *) hm;
     }
   mom_item_unlock (itm);
@@ -1969,9 +1990,9 @@ momf_nanoeval_payl_hashmap_remove2 (struct mom_nanoeval_st *nev,
     return itm;
   else
     NANOEVAL_FAILURE_MOM (nev, expnod,
-                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
-                                               arg0, arg1));
-}                               /* end of momf_nanoeval_payl_hashmap_remove2 */
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+}                               /* end of momf_nanoeval_payl_hashmap_removeany */
 
 
 const char momsig_nanoeval_payl_hashmap_keyset1[] = "signature_nanoeval1";
@@ -2053,3 +2074,40 @@ momf_nanoeval_payl_hashmap_count1 (struct mom_nanoeval_st *nev,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
 }                               /* end of momf_nanoeval_payl_hashmap_count1 */
+
+////////////////////////////////////////////////////////////////
+//// hashassoc payload item support
+const char momsig_nanoeval_payl_hashassoc1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_payl_hashassoc1 (struct mom_nanoeval_st *nev,
+                               struct mom_item_st *envitm,
+                               int depth,
+                               const struct mom_boxnode_st *expnod,
+                               const struct mom_boxnode_st *closnod,
+                               const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_payl_hashassoc1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *itm = mom_dyncast_item (arg0);
+  if (!itm)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  bool ok = false;
+  mom_item_lock (itm);
+  ok = mom_unsync_item_clear_payload (itm);
+  if (ok)
+    itm->itm_payload = (void *) mom_hashassoc_reserve (NULL, 5);
+  mom_item_unlock (itm);
+  if (ok)
+    return itm;
+  NANOEVAL_FAILURE_MOM (nev, expnod,
+                        mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                             arg0));
+}                               // end of nanoeval_payl_hashassoc1 

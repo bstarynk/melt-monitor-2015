@@ -639,6 +639,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashassoc1
+1456904945
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"for payl_hashassoc"_
+)attrs
+
+
 *nanoeval_payl_hashmap1
 1456897878
 ^mtime
@@ -687,11 +699,11 @@ comment
 )attrs
 
 
-*nanoeval_payl_hashmap_put3
+*nanoeval_payl_hashmap_putany
 1456897878
 ^mtime
 ^func
-signature_nanoeval3
+signature_nanoevalany
 ^funsignature
 (
 comment
@@ -699,11 +711,11 @@ comment
 )attrs
 
 
-*nanoeval_payl_hashmap_remove2
+*nanoeval_payl_hashmap_removeany
 1456897878
 ^mtime
 ^func
-signature_nanoeval2
+signature_nanoevalany
 ^funsignature
 (
 comment
@@ -1133,6 +1145,20 @@ nanoeval_payl_assovaldata_set_attrs1
 )attrs
 
 
+*payl_hashassoc
+1456904803
+^mtime
+(
+comment
+"for associative hash payloads"_
+nanoeval
+nanoeval_payl_hashassoc1
+notice
+(
+)set
+)attrs
+
+
 *payl_hashmap
 1456897878
 ^mtime
@@ -1192,7 +1218,7 @@ nanoeval_payl_hashmap_keyset1
 comment
 "operation to put a key in an hashmap"_
 nanoeval
-nanoeval_payl_hashmap_put3
+nanoeval_payl_hashmap_putany
 )attrs
 
 
@@ -1203,7 +1229,7 @@ nanoeval_payl_hashmap_put3
 comment
 "operation to remove a key in an hashmap"_
 nanoeval
-nanoeval_payl_hashmap_remove2
+nanoeval_payl_hashmap_removeany
 )attrs
 
 
@@ -1390,6 +1416,7 @@ comment
 notice
 (
 payl_assovaldata
+payl_hashassoc
 payl_hashmap
 payl_hashset
 payl_vectvaldata
