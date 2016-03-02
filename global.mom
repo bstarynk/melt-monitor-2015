@@ -651,6 +651,18 @@ comment
 )attrs
 
 
+*nanoeval_payl_hashassoc_count1
+1456921741
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_hashassoc_count"_
+)attrs
+
+
 *nanoeval_payl_hashassoc_get2
 1456910539
 ^mtime
@@ -684,6 +696,18 @@ signature_nanoevalany
 (
 comment
 "routine for payl_hashassoc_remove"_
+)attrs
+
+
+*nanoeval_payl_hashassoc_sorted_key_node2
+1456921741
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for payl_hashassoc_sorted_key_node"_
 )attrs
 
 
@@ -1191,10 +1215,23 @@ nanoeval
 nanoeval_payl_hashassoc1
 notice
 (
+payl_hashassoc_count
 payl_hashassoc_get
 payl_hashassoc_put
 payl_hashassoc_remove
+payl_hashassoc_sorted_key_node
 )set
+)attrs
+
+
+*payl_hashassoc_count
+1456921741
+^mtime
+(
+comment
+"get a node with sorted keys"_
+nanoeval
+nanoeval_payl_hashassoc_count1
 )attrs
 
 
@@ -1228,6 +1265,17 @@ comment
 "remove in an hashassoc item"_
 nanoeval
 nanoeval_payl_hashassoc_removeany
+)attrs
+
+
+*payl_hashassoc_sorted_key_node
+1456921741
+^mtime
+(
+comment
+"get a node with sorted keys"_
+nanoeval
+nanoeval_payl_hashassoc_sorted_key_node2
 )attrs
 
 
