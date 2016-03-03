@@ -1084,7 +1084,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   struct mom_nanoeval_st nev = { 0 };
   memset (&nev, 0, sizeof (nev));
   nev.nanev_magic = NANOEVAL_MAGIC_MOM;
-  nev.nanev_tkitm = tkitm;;
+  nev.nanev_tkitm = tkitm;
   nev.nanev_thistatitm = thistatitm;
   nev.nanev_count = 0;
   nev.nanev_maxstep = maxstep;
@@ -1106,8 +1106,10 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                        "doeval_nanoedit evaluating curexprv=%s in thistatitm.env=%s",
                        mom_value_cstring (curexpv),
                        mom_item_cstring (thistatitm));
-      mom_bind_nanoev (thistatitm, MOM_PREDEFITM (web_session), sessitm);
-      mom_bind_nanoev (thistatitm, MOM_PREDEFITM (web_exchange), wexitm);
+      mom_bind_nanoev (&nev, thistatitm, MOM_PREDEFITM (web_session),
+                       sessitm);
+      mom_bind_nanoev (&nev, thistatitm, MOM_PREDEFITM (web_exchange),
+                       wexitm);
       void *res = mom_nanoeval (&nev, thistatitm, curexpv, 0);
       MOM_DEBUGPRINTF (run,
                        "doeval_nanoedit curexpv=%s evaluated to res=%s in %ld steps",

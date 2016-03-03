@@ -2337,6 +2337,7 @@ typedef void mom_closure_void_to_void_sig_t (const struct mom_boxnode_st
 struct mom_nanoeval_st
 {
   unsigned nanev_magic;         /* always NANOEVAL_MAGIC_MOM */
+  bool nanev_transient;         /* true to create transient items */
   long nanev_count;
   long nanev_maxstep;
   struct mom_item_st *nanev_tkitm;
@@ -2346,7 +2347,8 @@ struct mom_nanoeval_st
   const char *nanev_errfile;
   jmp_buf nanev_jb;
 };
-void mom_bind_nanoev (struct mom_item_st *envitm,
+void mom_bind_nanoev (struct mom_nanoeval_st *nev,
+                      struct mom_item_st *envitm,
                       const struct mom_item_st *varitm, const void *val);
 #define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
     struct mom_nanoeval_st*_ne = (Ne);				\

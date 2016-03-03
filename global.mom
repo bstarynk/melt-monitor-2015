@@ -259,6 +259,15 @@ comment
 )attrs
 
 
+*first
+1456995334
+^mtime
+(
+comment
+"for first of several expressions"_
+)attrs
+
+
 *flatten_node
 1456758793
 ^mtime
@@ -1711,6 +1720,15 @@ comment
 )attrs
 
 
+*persistent
+1456994815
+^mtime
+(
+comment
+"for persistent item-making expressions"_
+)attrs
+
+
 *plus_delim
 1455805494
 ^mtime
@@ -2065,6 +2083,15 @@ payload
 (
 nano_displayer
 )comps
+
+
+*transient
+1456994815
+^mtime
+(
+comment
+"for transient item-making expressions"_
+)attrs
 
 
 *truth

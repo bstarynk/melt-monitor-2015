@@ -2382,7 +2382,10 @@ momf_nanoeval_clone1 (struct mom_nanoeval_st *nev,
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
-  return mom_clone_item (itm);
+  struct mom_item_st *clonitm = mom_clone_item (itm);
+  if (!nev->nanev_transient)
+    mom_item_put_space (clonitm, MOMSPA_GLOBAL);
+  return clonitm;
 }                               /* end of momf_nanoeval_clone1 */
 
 ////////////////

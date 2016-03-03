@@ -923,8 +923,9 @@ static void
 dump_nanoeval_mom (const struct mom_boxnode_st *nod,
                    const struct mom_item_st *whatitm)
 {
-  const void *res = NULL;
-  unsigned sz = mom_size (nod);
+  // volatile needed to be setjmp friendly
+  const void *volatile res = NULL;
+  unsigned volatile sz = mom_size (nod);
   long maxstep = 1024 * 1024 * 4 + sz * 8192;
   MOM_DEBUGPRINTF (dump, "start dump_nanoeval nod=%s whatitm=%s",
                    mom_value_cstring ((const void *) nod),
@@ -936,7 +937,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
   memset (&nev, 0, sizeof (nev));
   thistatitm = mom_clone_item (whatitm);
   thistatitm->itm_payload = (void *) mom_hashmap_reserve (NULL, (2 * sz) | 7);
-  mom_bind_nanoev (thistatitm, whatitm, nod);
+  mom_bind_nanoev (&nev, thistatitm, whatitm, nod);
   nev.nanev_magic = NANOEVAL_MAGIC_MOM;
   nev.nanev_tkitm = tkitm;
   nev.nanev_thistatitm = thistatitm;
@@ -965,7 +966,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
           res = mom_nanoeval (&nev, thistatitm, nod->nod_sons[ix], 0);
           MOM_DEBUGPRINTF (run, "dump nanoeval %s subexpr#%d result=%s",
                            mom_item_cstring (whatitm), ix,
-                           mom_value_cstring (res));
+                           mom_value_cstring ((void *) res));
 
         }
     }
@@ -973,7 +974,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
                    "end dump_nanoeval nod=%s whatitm=%s thistatitm=%s last res=%s",
                    mom_value_cstring ((const void *) nod),
                    mom_item_cstring (whatitm), mom_item_cstring (thistatitm),
-                   mom_value_cstring (res));
+                   mom_value_cstring ((void *) res));
 }                               /* end dump_nanoeval_mom */
 
 
@@ -981,7 +982,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
 static void
 before_dump_mom ()
 {
-  struct mom_hashedvalue_st *closv = NULL;
+  const struct mom_hashedvalue_st *closv = NULL;
   mom_item_lock (MOM_PREDEFITM (the_system));
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
@@ -1046,7 +1047,7 @@ end:
 static void
 after_dump_mom ()
 {
-  struct mom_hashedvalue_st *closv = NULL;
+  const struct mom_hashedvalue_st *closv = NULL;
   mom_item_lock (MOM_PREDEFITM (the_system));
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
