@@ -31,6 +31,7 @@ nanoeval_freshenv_mom (struct mom_item_st *parenvitm, unsigned sizhint,
   assert (mom_itype (parenvitm) == MOMITY_ITEM);
   assert (mom_itype (protoitm) == MOMITY_ITEM);
   struct mom_item_st *newenvitm = mom_clone_item (protoitm);
+  mom_item_put_space (newenvitm, MOMSPA_GLOBAL);
   mom_item_lock (newenvitm);
   mom_unsync_item_put_phys_attr (newenvitm, MOM_PREDEFITM (parent),
                                  parenvitm);
@@ -43,10 +44,14 @@ nanoeval_freshenv_mom (struct mom_item_st *parenvitm, unsigned sizhint,
   return newenvitm;
 }                               /* end of nanoeval_freshenv_mom */
 
+
+
 void
 mom_bind_nanoev (struct mom_item_st *envitm, const struct mom_item_st *varitm,
                  const void *val)
 {
+  MOM_DEBUGPRINTF (run, "nanoeval_bind envitm=%s varitm=%s start",
+                   mom_item_cstring (envitm), mom_item_cstring (varitm));
   assert (mom_itype (envitm) == MOMITY_ITEM);
   assert (mom_itype (varitm) == MOMITY_ITEM);
   mom_item_lock (envitm);
@@ -576,6 +581,7 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
                          const struct mom_boxnode_st *nod, int depth)
 {
   const void *resv = NULL;
+  struct mom_item_st *origenvitm = envitm;
   MOM_DEBUGPRINTF (run, "nanoeval_assignnode start envitm=%s nod=%s depth#%d",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
@@ -599,7 +605,7 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
                        mom_value_cstring ((const struct mom_hashedvalue_st *)
                                           nod), ix,
                        mom_value_cstring (subexpv), depth);
-      resv = mom_nanoeval (nev, envitm, subexpv, depth + 1);;
+      resv = mom_nanoeval (nev, envitm, subexpv, depth + 1);
       MOM_DEBUGPRINTF (run, "nanoeval_assignnode resv=%s depth#%d",
                        mom_value_cstring (resv), depth);
     }
@@ -624,13 +630,21 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
               envitm->itm_payload =
                 (void *) mom_hashmap_put ((void *) envitm->itm_payload,
                                           varitm, resv);
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_assignnode update envitm=%s depth#%d",
+                               mom_item_cstring (envitm), depth);
             }
         }
       mom_item_unlock (envitm);
       envitm = prevenvitm;
     }
   if (!found)
-    mom_bind_nanoev (envitm, varitm, resv);
+    {
+      mom_bind_nanoev (origenvitm, varitm, resv);
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_assignnode update origenvitm=%s depth#%d",
+                       mom_item_cstring (envitm), depth);
+    }
   return resv;
 }                               /* end of nanoeval_assignnode_mom */
 
