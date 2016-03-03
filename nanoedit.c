@@ -1438,13 +1438,21 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
             break;
         };
       endw = pc;
-      if (asciiw && mom_valid_name_radix_len (startw, endw - startw))
+      int wordlen = (int) (endw - startw);
+      MOM_DEBUGPRINTF (web,
+                       "parse_token_nanoedit asciiw %s pos#%u wordlen=%d startw='%.*s'",
+                       asciiw ? "true" : "false", np->nanop_pos, wordlen,
+                       wordlen, startw);
+      int radlen = wordlen;
+      const char *twound = strstr (startw, "__");
+      if (twound && twound - startw < wordlen)
+        radlen = twound - startw;
+      if (asciiw && mom_valid_name_radix_len (startw, radlen))
         {
           const char *endp = NULL;
           struct mom_item_st *itm = mom_find_item_from_string (startw, &endp);
-          if (itm)
+          if (itm && endp == endw)
             {
-              assert (endp == endw);
               mom_queue_append (que, itm);
               np->nanop_pos = endw - cmd;
               MOM_DEBUGPRINTF (web,
