@@ -83,6 +83,38 @@ nanoeval_displaynode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   struct mom_hashset_st *hset = mom_hashset_reserve (NULL, 4 * arity / 3 + 6);
+  struct mom_item_st *thistatitm = nev->nanev_thistatitm;
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_displaynode thistatitm=%s",
+                   mom_item_cstring (thistatitm));
+  assert (thistatitm != NULL);
+  const struct mom_boxset_st *oldispset = NULL;
+  {
+
+    mom_item_lock (thistatitm);
+    const struct mom_hashedvalue_st *dispitemv =
+      mom_unsync_item_get_phys_attr (thistatitm,
+                                     MOM_PREDEFITM (item));
+    oldispset = mom_dyncast_set (dispitemv);
+    mom_item_unlock (thistatitm);
+    MOM_DEBUGPRINTF (run,
+                     "nanoeval_displaynode dispitemv=%s",
+                     mom_value_cstring (dispitemv));
+  }
+  if (oldispset != NULL)
+    {
+      unsigned oldsz = mom_size (oldispset);
+      hset = mom_hashset_reserve (hset, 4 * oldsz / 3 + 3 * arity / 2 + 5);
+      for (unsigned ix = 0; ix < oldsz; ix++)
+        {
+          struct mom_item_st *olditm = oldispset->seqitem[ix];
+          assert (olditm != NULL && olditm->va_itype == MOMITY_ITEM);
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_displaynode ix=%d olditm=%s",
+                           ix, mom_item_cstring (olditm));
+          hset = mom_hashset_insert (hset, olditm);
+        }
+    }
   for (unsigned ix = 0; ix < arity; ix++)
     {
       const struct mom_hashedvalue_st *curexprv = nod->nod_sons[ix];
@@ -133,14 +165,16 @@ nanoeval_displaynode_mom (struct mom_nanoeval_st *nev,
   const struct mom_hashedvalue_st *oldispitemv =
     mom_unsync_item_get_phys_attr (nev->nanev_thistatitm,
                                    MOM_PREDEFITM (item));
-  const struct mom_boxset_st *oldispset = mom_dyncast_set (oldispitemv);
-  MOM_DEBUGPRINTF (run, "nanoeval_displaynode oldispitemv=%s",
-                   mom_value_cstring (oldispitemv));
+  oldispset = mom_dyncast_set (oldispitemv);
   unsigned oldsiz = mom_size (oldispset);
+  MOM_DEBUGPRINTF (run, "nanoeval_displaynode oldispitemv=%s oldsiz=%d",
+                   mom_value_cstring (oldispitemv), oldsiz);
   for (unsigned oix = 0; oix < oldsiz; oix++)
     {
       struct mom_item_st *olditm = oldispset->seqitem[oix];
       assert (olditm && olditm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (run, "nanoeval_displaynode olditm=%s",
+                       mom_item_cstring (olditm));
       hset = mom_hashset_insert (hset, olditm);
     }
   const struct mom_boxset_st *dispset = mom_hashset_to_boxset (hset);
