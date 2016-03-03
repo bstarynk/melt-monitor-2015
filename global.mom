@@ -1335,6 +1335,24 @@ nanoeval_payl_clear1
 )attrs
 
 
+*payl_dumper
+1457031326
+^mtime
+(
+comment
+"dumper payload"_
+)attrs
+
+
+*payl_file
+1457031403
+^mtime
+(
+comment
+"file payload"_
+)attrs
+
+
 *payl_file_close
 1456929384
 ^mtime
@@ -1590,6 +1608,42 @@ nanoeval_payl_hashset_reserve2
 )attrs
 
 
+*payl_json
+1457031335
+^mtime
+(
+comment
+"JSON payload"_
+)attrs
+
+
+*payl_loader
+1457031316
+^mtime
+(
+comment
+"loader payload"_
+)attrs
+
+
+*payl_queue
+1457031308
+^mtime
+(
+comment
+"queue payload"_
+)attrs
+
+
+*payl_tasklet
+1457031395
+^mtime
+(
+comment
+"tasklet payload"_
+)attrs
+
+
 *payl_vectval_append
 1456840222
 ^mtime
@@ -1690,6 +1744,24 @@ payl_vectval_resize
 )attrs
 
 
+*payl_webexch
+1457031348
+^mtime
+(
+comment
+"Web exchange payload"_
+)attrs
+
+
+*payl_websession
+1457031373
+^mtime
+(
+comment
+"web session payload"_
+)attrs
+
+
 *payload
 1456825494
 ^mtime
@@ -1708,6 +1780,23 @@ payl_hashmap
 payl_hashset
 payl_vectvaldata
 )set
+sequence
+(
+payl_assovaldata
+payl_vectvaldata
+payl_queue
+payl_hashset
+payl_hashmap
+payl_hashassoc
+payl_loader
+payl_dumper
+payl_json
+payl_webexch
+payl_websession
+payl_tasklet
+payl_file
+payl_filebuffer
+)tuple
 )attrs
 
 
@@ -2059,7 +2148,7 @@ comment
 
 
 *the_agenda
-1457015283
+1457031419
 ^mtime
 (
 comment
@@ -2229,12 +2318,28 @@ raw
 expression
 (
 payload
-display
-)node
-item
+sequence
 (
-payload
-)set
+payl_assovaldata
+payl_vectvaldata
+payl_queue
+payl_hashset
+payl_hashmap
+payl_hashassoc
+payl_loader
+payl_dumper
+payl_json
+payl_webexch
+payl_websession
+payl_tasklet
+payl_file
+payl_filebuffer
+7
+~
+tuple
+)nodemeta
+put
+)node
 )attrs
 (
 item
