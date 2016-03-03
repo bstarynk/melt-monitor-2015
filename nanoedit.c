@@ -598,6 +598,9 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
         mom_file_puts (fb, "</ul>\n");
       }
     unsigned typayl = mom_itype (curitm->itm_payload);
+    MOM_DEBUGPRINTF (web, "showcontent_nanoedit curitm %s typayl#%d (%s)",
+                     mom_item_cstring (curitm), typayl,
+                     mom_itype_str (curitm->itm_payload));
     if (typayl > 0)
       {
         mom_file_printf (fb,
@@ -1020,7 +1023,7 @@ dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_reply (wexch, HTTP_OK, "text/html");
       return;
     }
-  struct mom_hashedvalue_st *dispitemv =
+  const struct mom_hashedvalue_st *dispitemv =
     mom_unsync_item_get_phys_attr (thistatitm,
                                    MOM_PREDEFITM (item));
   MOM_DEBUGPRINTF (web, "dohideitem dispitemv=%s",
@@ -1046,6 +1049,55 @@ dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end dohideitem_nanoedit_mom */
 
 
+static void
+dodispitem_nanoedit_mom (struct mom_webexch_st *wexch,
+                         struct mom_item_st *tkitm,
+                         struct mom_item_st *wexitm,
+                         struct mom_item_st *thistatitm,
+                         const char *dodispitem)
+{
+  MOM_DEBUGPRINTF (web,
+                   "dodispitem_nanoedit tkitm=%s wexitm=%s thistatitm=%s dodispitem=%s",
+                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                   mom_item_cstring (thistatitm), dodispitem);
+  struct mom_item_st *dispitm = mom_find_item_by_string (dodispitem);
+  MOM_DEBUGPRINTF (web,
+                   "dodispitem_nanoedit tkitm=%s dispitm=%s",
+                   mom_item_cstring (tkitm), mom_item_cstring (dispitm));
+  if (!dispitm)
+    {
+      MOM_WARNPRINTF
+        ("dodispitem_nanoedit tkitm=%s missing item to display %s",
+         mom_item_cstring (tkitm), dodispitem);
+      MOM_WEXCH_PRINTF (wexch, "<b>missing</b> item <tt>%s</tt> to display\n",
+                        dodispitem);
+      mom_wexch_reply (wexch, HTTP_OK, "text/html");
+      return;
+    }
+  const struct mom_hashedvalue_st *dispitemv =
+    mom_unsync_item_get_phys_attr (thistatitm,
+                                   MOM_PREDEFITM (item));
+  MOM_DEBUGPRINTF (web, "dodispitem dispitemv=%s",
+                   mom_value_cstring (dispitemv));
+  const struct mom_boxset_st *dispset = mom_dyncast_set (dispitemv);
+  const struct mom_boxset_st *singleset = mom_boxset_make_va (1, dispitm);
+  const struct mom_boxset_st *newdispset =
+    mom_boxset_union (dispset, singleset);
+  MOM_DEBUGPRINTF (web, "dodispitem dispset=%s singleset=%s newdispset=%s",
+                   mom_value_cstring ((struct mom_hashedvalue_st *) dispset),
+                   mom_value_cstring ((struct mom_hashedvalue_st *)
+                                      singleset),
+                   mom_value_cstring ((struct mom_hashedvalue_st *)
+                                      newdispset));
+  mom_unsync_item_put_phys_attr (thistatitm, MOM_PREDEFITM (item),
+                                 newdispset);
+  struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+  assert (fb && fb->va_itype == MOMITY_FILEBUFFER);
+  mom_file_puts (fb, "<i>now shown:</i> ");
+  showvalue_nanoedit_mom (fb, wexitm, thistatitm, newdispset, 0);
+  mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
+  mom_wexch_reply (wexch, HTTP_OK, "text/html");
+}                               /* end of dodispitem_nanoedit_mom */
 
 
 
@@ -1110,7 +1162,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                        sessitm);
       mom_bind_nanoev (&nev, thistatitm, MOM_PREDEFITM (web_exchange),
                        wexitm);
-      void *res = mom_nanoeval (&nev, thistatitm, curexpv, 0);
+      const void *res = mom_nanoeval (&nev, thistatitm, curexpv, 0);
       MOM_DEBUGPRINTF (run,
                        "doeval_nanoedit curexpv=%s evaluated to res=%s in %ld steps",
                        mom_value_cstring (curexpv), mom_value_cstring (res),
@@ -1221,6 +1273,7 @@ momf_nanoedit (struct mom_item_st *tkitm)
       const char *docreateitem = NULL;
       const char *doeval = NULL;
       const char *dohideitem = NULL;
+      const char *dodispitem = NULL;
       const char *commentstr = NULL;
       MOM_DEBUGPRINTF (web,
                        "momf_nanoedit tkitm=%s POST wexch #%ld",
@@ -1257,9 +1310,8 @@ momf_nanoedit (struct mom_item_st *tkitm)
                              thistatitm, sessitm, doeval);
       else
         if ((docreateitem =
-             onion_request_get_post (wexch->webx_requ,
-                                     "do_createitem")) !=
-            NULL
+             onion_request_get_post (wexch->webx_requ, "do_createitem"))
+            != NULL
             && (commentstr =
                 onion_request_get_post (wexch->webx_requ, "comment")) != NULL)
         docreateitem_nanoedit_mom (wexch, tkitm,
@@ -1267,10 +1319,15 @@ momf_nanoedit (struct mom_item_st *tkitm)
                                    thistatitm,
                                    sessitm, docreateitem, commentstr);
       else if ((dohideitem =
-                onion_request_get_post (wexch->webx_requ,
-                                        "do_hideitem")) != NULL)
+                onion_request_get_post (wexch->webx_requ, "do_hideitem"))
+               != NULL)
         dohideitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
                                  dohideitem);
+      else if ((dodispitem =
+                onion_request_get_post (wexch->webx_requ, "do_displayitem"))
+               != NULL)
+        dodispitem_nanoedit_mom (wexch, tkitm, wexitm, thistatitm,
+                                 dodispitem);
     }
 end:
   if (hsetitm)

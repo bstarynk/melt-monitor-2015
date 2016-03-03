@@ -329,6 +329,30 @@ function mom_ajaxfill(htmlc) {
                     case "Display":
                         console.log ("handleitemspan-select should display itemname=",
                                      itemname);
+			$.ajax({
+			    url: "/nanoedit",
+			    method: "POST",
+			    data: {"do_displayitem": itemname},
+			    dataType: 'html',
+			    success: function (hdata,stat,jh) {
+				var valmode = $rawmodebox.val();
+				var valchecked = $rawmodebox.prop("checked");
+				console.log("do_displayitem succeed got hdata=", hdata, " stat=", stat, " jh=", jh,
+					    " valchecked=", valchecked);
+				$parsedcmddiv.html(hdata);
+				$.ajax
+				({url: "/nanoedit",
+				  method: "POST",
+				  data: {"do_fillpage": true, "rawmode": valchecked},
+				  dataType: "html",
+				  success: mom_ajaxfill
+				 });
+			    },
+			    error: function (jq, stat, err) {
+				console.log("do_displayitem error jq=", jq, " stat=", stat, " err=", err);
+			    }
+			});
+			/// we need some ajax here
                         break;
                     case "Copy":
                         console.log ("handleitemspan-select before copying itemname=",
