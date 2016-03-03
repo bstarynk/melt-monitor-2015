@@ -1136,10 +1136,49 @@ mom_dump_state (void)
   if (rename (du->du_globaltmpath->cstr, "global.mom"))
     MOM_FATAPRINTF ("failed to rename %s to global.mom : %m",
                     du->du_globaltmpath->cstr);
-  (void) rename (MOM_HEADER, MOM_HEADER "%");
-  if (rename (du->du_predefhtmpath->cstr, "_mom_predef.h"))
-    MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER " : %m",
-                    du->du_predefhtmpath->cstr);
+  struct stat statprevpredef = { };
+  struct stat stattmprefedef = { };
+  bool sameheaderfile = false;
+  if (!stat (MOM_HEADER, &statprevpredef)
+      && !stat (du->du_predefhtmpath->cstr, &stattmprefedef)
+      && statprevpredef.st_size == stattmprefedef.st_size)
+    {
+      FILE *prevpf = fopen (MOM_HEADER, "r");
+      FILE *tmpf = fopen (du->du_predefhtmpath->cstr, "r");
+      if (prevpf && tmpf)
+        {
+          sameheaderfile = true;
+          while (sameheaderfile)
+            {
+              int prevc = fgetc (prevpf);
+              int tmpc = fgetc (tmpf);
+              if (prevc == EOF && tmpc == EOF)
+                break;
+              else if (prevc != tmpc)
+                sameheaderfile = false;
+            }
+        }
+      if (prevpf)
+        fclose (prevpf);
+      if (tmpf)
+        fclose (tmpf);
+    }
+  if (!sameheaderfile)
+    {
+      (void) rename (MOM_HEADER, MOM_HEADER "%");
+      if (rename (du->du_predefhtmpath->cstr, MOM_HEADER))
+        MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER " : %m",
+                        du->du_predefhtmpath->cstr);
+    }
+  else
+    {
+      MOM_INFORMPRINTF ("header file %s did not change, sized %ld\n",
+                        MOM_HEADER, statprevpredef.st_size);
+      if (remove (du->du_predefhtmpath->cstr))
+        MOM_FATAPRINTF ("failed to remove temporary %s : %m",
+                        du->du_predefhtmpath->cstr);
+
+    }
   MOM_DEBUGPRINTF (dump, "itemset=%s",
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
                                       mom_hashset_to_boxset
