@@ -653,6 +653,30 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
           }
 #warning showcontentitem_nanoedit incomplete for payload
         mom_file_puts (fb, "</div>\n");
+      }                         // end payload show
+    if (curitm->itm_funptr && curitm->itm_funsig)
+      {
+        Dl_info dli = { };
+        mom_file_printf (fb,
+                         "<div class='mom_showcontent_function_cl' data-contentitem='%s'>\n",
+                         mom_item_cstring (curitm));
+        if (dladdr (curitm->itm_funptr, &dli))
+          {
+            if (dli.dli_saddr == curitm->itm_funptr)
+              mom_file_printf (fb, "function <tt>%s</tt> @%p,",
+                               dli.dli_sname, curitm->itm_funptr);
+            else
+              mom_file_printf (fb, "function <tt>%s</tt><i>+%ld</i> @%p,",
+                               dli.dli_sname,
+                               (long) ((char *) curitm->itm_funptr -
+                                       (char *) dli.dli_saddr),
+                               curitm->itm_funptr);
+          }
+        else
+          mom_file_printf (fb, "function @%p,", curitm->itm_funptr);
+        mom_file_puts (fb, " of signature ");
+        showitem_nanoedit_mom (fb, wexitm, curitm->itm_funsig, false);
+        mom_file_puts (fb, "</div>\n");
       }
   }
   mom_item_unlock ((struct mom_item_st *) curitm);

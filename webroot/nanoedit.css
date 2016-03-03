@@ -310,6 +310,12 @@ div.mom_itemdisplaycontent_cl {
     background-color: #E1F9D7;
 }
 
+div.mom_showcontent_function_cl {
+    font-size: 85%;
+    background-color: #C2EFF0;
+    margin: 2px;
+}
+
 dt.momattitem_cl {
     background-color: #ECBD9E;
 }
