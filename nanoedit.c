@@ -57,6 +57,10 @@ showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
   sessitm = wexch->webx_sessitm;
   assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (web,
+		   "showitem_nanoedit wexitm=%s sessitm=%s hsetitm=%s curitm=%s",
+		   mom_item_cstring (wexitm), mom_item_cstring (sessitm),
+		   mom_item_cstring (hsetitm), mom_item_cstring (curitm));
   if (!curitm || curitm == MOM_EMPTY_SLOT)
     {
       if (isval)
@@ -74,10 +78,6 @@ showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
           ("showitem_nanoedit wexitm %s has sessitm %s without hashset",
            mom_item_cstring (wexitm), mom_item_cstring (sessitm));
       assert (mom_itype (hsetitm->itm_payload) == MOMITY_HASHSET);
-      MOM_DEBUGPRINTF (web,
-                       "showitem_nanoedit wexitm=%s sessitm=%s hsetitm=%s curitm=%s",
-                       mom_item_cstring (wexitm), mom_item_cstring (sessitm),
-                       mom_item_cstring (hsetitm), mom_item_cstring (curitm));
       hsetitm->itm_payload = (struct mom_anyvalue_st *)
         mom_hashset_insert ((struct mom_hashset_st *) hsetitm->itm_payload,
                             (struct mom_item_st *) curitm);
@@ -153,6 +153,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
 {
   assert (fb && fb->va_itype == MOMITY_FILEBUFFER);
   struct mom_file_st *fil = (struct mom_file_st *) fb;
+  MOM_DEBUGPRINTF(web, "showvalue_nanoedit depth#%d pval=%s", depth, mom_value_cstring(pval));
   switch (mom_itype (pval))
     {
     case MOMITY_NONE:
