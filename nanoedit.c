@@ -579,8 +579,9 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
     if (nbcomp > 0)
       {
         mom_file_printf (fb,
-                         "<p class='showcontent_componentslist_cl' data-contentitem='%s'><span class='infocount_cl'>%d components.</span><br/>\n",
-                         mom_item_cstring (curitm), nbattrs);
+                         "<p class='showcontent_componentslist_cl' data-contentitem='%s'>"
+                         "<span class='infocount_cl'>%d components.</span><br/>\n",
+                         mom_item_cstring (curitm), nbcomp);
         mom_file_printf (fb,
                          "<ul class='showcontent_components_cl' data-contentitem='%s'>\n",
                          mom_item_cstring (curitm));
@@ -588,12 +589,13 @@ showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
           {
             const struct mom_hashedvalue_st *curcomp =
               mom_vectvaldata_nth (curitm->itm_pcomp, compix);
-            MOM_DEBUGPRINTF (web, "showcontent_nanoedit compix#%d curcomp=%s",
-                             compix, mom_value_cstring (curcomp));
+            MOM_DEBUGPRINTF (web,
+                             "showcontent_nanoedit curitm=%s compix#%d curcomp=%s",
+                             mom_item_cstring (curitm), compix,
+                             mom_value_cstring (curcomp));
             mom_file_puts (fb, "<li> ");
             showvalue_nanoedit_mom (fb, wexitm, thistatitm, curcomp, 0);
             mom_file_puts (fb, "</li>\n");
-
           }
         mom_file_puts (fb, "</ul>\n");
       }

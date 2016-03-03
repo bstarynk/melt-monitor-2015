@@ -250,15 +250,6 @@ comment
 )attrs
 
 
-*f
-1456728735
-^mtime
-(
-comment
-"varf"_
-)attrs
-
-
 *first
 1456995334
 ^mtime
@@ -1127,6 +1118,15 @@ nanoeval_nodeany
 )node
 notice
 flatten_node
+)attrs
+
+
+*none
+1457014740
+^mtime
+(
+comment
+"pseudo type for nil"_
 )attrs
 
 
@@ -2059,7 +2059,7 @@ comment
 
 
 *the_agenda
-1456728766
+1457014920
 ^mtime
 (
 comment
@@ -2126,6 +2126,17 @@ nanoeval
 (
 nanoeval_type1
 )node
+sequence
+(
+none
+int
+double
+string
+something
+tuple
+set
+node
+)tuple
 )attrs
 
 
@@ -2217,41 +2228,13 @@ display
 raw
 expression
 (
-(
-f
-(
-(
-x
-y
-11
-~
-tuple
-)nodemeta
-(
-x
-y
-18
-~
-add
-)nodemeta
-8
-~
-func
-)nodemeta
-3
-~
-be
-)nodemeta
-f
-(
-2_
-26
-~
-parenthesis
-)nodemeta
-3_
-let
+payload
+display
 )node
+item
+(
+payload
+)set
 )attrs
 (
 item
@@ -2303,24 +2286,6 @@ comment
 (
 comment
 "for unknown words"_
-)attrs
-
-
-*x
-1456728663
-^mtime
-(
-comment
-"var"_
-)attrs
-
-
-*y
-1456728670
-^mtime
-(
-comment
-"vary"_
 )attrs
 
 
