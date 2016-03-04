@@ -3471,7 +3471,7 @@ momf_nanoeval_out_indentation1 (struct mom_nanoeval_st *nev,
       mom_item_unlock (fitm);
     }
   MOM_DEBUGPRINTF (run, "nanoeval_out_last_line_width1 depth#%d resv=%s",
-                   mom_value_cstring (resv));
+                   depth, mom_value_cstring (resv));
   if (ok)
     return resv;
   else
@@ -3554,3 +3554,39 @@ momf_nanoeval_out_puts2 (struct mom_nanoeval_st *nev,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error),
                                                2, arg0, arg1));
 }                               /*end momf_nanoeval_out_puts2 */
+
+
+
+////////////////
+const char momsig_nanoeval_applyany[] = "signature_nanoevalany";
+const void *
+momf_nanoeval_applyany (struct mom_nanoeval_st *nev,
+                        struct mom_item_st *envitm,
+                        int depth,
+                        const struct mom_boxnode_st *expnod,
+                        const struct mom_boxnode_st *closnod,
+                        unsigned nbval, const void **valarr)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_applyany start envitm=%s depth=%d expnod=%s closnod=%s nbval=%d",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   nbval);
+  if (nbval == 0)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (nbval)));
+  const struct mom_boxnode_st *funod = mom_dyncast_node (valarr[0]);
+  if (!funod)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               valarr[0]));
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_applyany depth#%d funod %s", depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) funod));
+  return mom_nanoapply (nev, envitm, funod, expnod, nbval - 1, valarr + 1,
+                        depth + 1);
+}                               /* end of momf_nanoeval_applyany */

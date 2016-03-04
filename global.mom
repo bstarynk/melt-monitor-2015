@@ -59,6 +59,17 @@ comment
 )attrs
 
 
+*apply
+1457097708
+^mtime
+(
+comment
+"apply first arg to other ones"_
+nanoeval
+nanoeval_applyany
+)attrs
+
+
 *arg
 1455801211
 ^mtime
@@ -617,6 +628,14 @@ signature_nanoeval2
 comment
 "function to evaluate add"_
 )attrs
+
+
+*nanoeval_applyany
+1457097708
+^mtime
+^func
+signature_nanoevalany
+^funsignature
 
 
 *nanoeval_clone1
@@ -2583,6 +2602,7 @@ sequence
 )node
 notice
 (
+apply
 fold_left
 fold_right
 foldix_left
