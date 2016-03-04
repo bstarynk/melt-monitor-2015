@@ -445,10 +445,10 @@ showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
   assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (hmap != NULL && hmap != MOM_EMPTY_SLOT
-          && hmap->va_itype == MOMITY_HASHSET);
+          && hmap->va_itype == MOMITY_HASHMAP);
   const struct mom_boxset_st *ks = mom_hashmap_keyset (hmap);
   assert (ks != NULL && ks->va_itype == MOMITY_SET);
-  mom_file_puts (fb, "<dl class='mom_hashset_cl'>\n");
+  mom_file_puts (fb, "<dl class='mom_hashmap_cl'>\n");
   unsigned cnt = mom_size (ks);
   for (unsigned ix = 0; ix < cnt; ix++)
     {
@@ -478,7 +478,7 @@ showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
   assert (thistatitm != NULL && thistatitm != MOM_EMPTY_SLOT
           && thistatitm->va_itype == MOMITY_ITEM);
   assert (hass != NULL && hass != MOM_EMPTY_SLOT
-          && hass->va_itype == MOMITY_HASHSET);
+          && hass->va_itype == MOMITY_HASHASSOC);
   const struct mom_boxnode_st *keynod =
     mom_hashassoc_sorted_key_node (hass, MOM_PREDEFITM (sequence));
   assert (keynod != NULL && keynod->va_itype == MOMITY_NODE);
