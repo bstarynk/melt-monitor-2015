@@ -601,6 +601,8 @@ right_bracket_delim
 left_brace_delim
 "}"_
 right_brace_delim
+"~"_
+tilde_delim
 )payload_hashassoc
 
 
@@ -2642,6 +2644,15 @@ reviter
 (
 nano_displayer
 )comps
+
+
+*tilde_delim
+1457101771
+^mtime
+(
+comment
+"for ~ delimiter, used for nil"_
+)attrs
 
 
 *transient

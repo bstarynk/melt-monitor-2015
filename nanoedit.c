@@ -1940,6 +1940,16 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
         MOM_DEBUGPRINTF (web,
                          "parsprimary_nanoedit composite token %s at position #%d",
                          mom_value_cstring (curtokv), pos);
+	//////////////// ~ is for nil
+	if (pos + 1 < (int) nlen
+	    && isdelim_nanoedit_mom (np, pos, MOM_PREDEFITM (percent_delim)))
+          {
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit tilde-expr for nil pos#%d",
+                             pos);
+            *posptr = pos+1;
+            return NULL;
+	  }
         //////////////// %name(comma-seperated-subexpr...)
         if (pos + 3 < (int) nlen
             && isdelim_nanoedit_mom (np, pos, MOM_PREDEFITM (percent_delim)))
