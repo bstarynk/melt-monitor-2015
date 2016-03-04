@@ -70,6 +70,17 @@ nanoeval_applyany
 )attrs
 
 
+*apply_flatten
+1457100006
+^mtime
+(
+comment
+"apply_flatten closnod flatitm args...: flatten args which are node of flatitm & apply closnod"_
+nanoeval
+nanoeval_apply_flattenany
+)attrs
+
+
 *arg
 1455801211
 ^mtime
@@ -627,6 +638,18 @@ signature_nanoeval2
 (
 comment
 "function to evaluate add"_
+)attrs
+
+
+*nanoeval_apply_flattenany
+1457100006
+^mtime
+^func
+signature_nanoevalany
+^funsignature
+(
+comment
+"nanoeval routine for apply_flatten"_
 )attrs
 
 
@@ -2603,6 +2626,7 @@ sequence
 notice
 (
 apply
+apply_flatten
 fold_left
 fold_right
 foldix_left
