@@ -272,6 +272,50 @@ nanoeval_flattennodeany
 )attrs
 
 
+*fold_left
+1457090580
+^mtime
+(
+comment
+"primitive for fold left (nodefun,inival,compval)"_
+nanoeval
+nanoeval_fold_left3
+)attrs
+
+
+*fold_right
+1457090580
+^mtime
+(
+comment
+"primitive for fold right (nodefun,compval,inival)"_
+nanoeval
+nanoeval_fold_right3
+)attrs
+
+
+*foldix_left
+1457090580
+^mtime
+(
+comment
+"primitive for fold left with index (nodefun,inival,compval)"_
+nanoeval
+nanoeval_foldix_left3
+)attrs
+
+
+*foldix_right
+1457090580
+^mtime
+(
+comment
+"primitive for fold right with index (nodefun,compval,inival)"_
+nanoeval
+nanoeval_foldix_right3
+)attrs
+
+
 *func
 1455800324
 ^mtime
@@ -631,6 +675,54 @@ signature_nanoevalany
 (
 comment
 "function to evaluate flatten node"_
+)attrs
+
+
+*nanoeval_fold_left3
+1457090580
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"nanoeval routine for fold_left"_
+)attrs
+
+
+*nanoeval_fold_right3
+1457090580
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"nanoeval routine for fold_right"_
+)attrs
+
+
+*nanoeval_foldix_left3
+1457090580
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"nanoeval routine for foldix_left"_
+)attrs
+
+
+*nanoeval_foldix_right3
+1457090580
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"nanoeval routine for foldix_right"_
 )attrs
 
 
@@ -2344,6 +2436,10 @@ sequence
 )node
 notice
 (
+fold_left
+fold_right
+foldix_left
+foldix_right
 iter
 iterix
 map
