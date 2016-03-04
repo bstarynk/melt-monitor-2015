@@ -432,6 +432,28 @@ comment
 )attrs
 
 
+*map
+1457082461
+^mtime
+(
+comment
+"primitive to map a function to a value with a connective"_
+nanoeval
+nanoeval_map3
+)attrs
+
+
+*mapix
+1457082461
+^mtime
+(
+comment
+"primitive to map a function to a value and index with a connective"_
+nanoeval
+nanoeval_mapix3
+)attrs
+
+
 *microedit
 1446463595
 ^mtime
@@ -645,6 +667,30 @@ signature_nanoeval2
 (
 comment
 "routine for nanoeval iterix"_
+)attrs
+
+
+*nanoeval_map3
+1457082461
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"routine for nanoeval of map"_
+)attrs
+
+
+*nanoeval_mapix3
+1457082461
+^mtime
+^func
+signature_nanoeval3
+^funsignature
+(
+comment
+"routine for nanoeval of mapix"_
 )attrs
 
 
@@ -2277,6 +2323,8 @@ notice
 (
 iter
 iterix
+map
+mapix
 payload
 )set
 )attrs
