@@ -1150,6 +1150,18 @@ comment
 )attrs
 
 
+*nanoeval_reviter2
+1457086941
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for nanoeval reviter"_
+)attrs
+
+
 *nanoeval_setany
 1456152800
 ^mtime
@@ -1987,6 +1999,17 @@ nanoeval_rem2
 )attrs
 
 
+*reviter
+1457086941
+^mtime
+(
+comment
+"to reverse iterate a function on a composite value"_
+nanoeval
+nanoeval_reviter2
+)attrs
+
+
 *right_assoc
 1455871773
 ^mtime
@@ -2326,6 +2349,7 @@ iterix
 map
 mapix
 payload
+reviter
 )set
 )attrs
 (
