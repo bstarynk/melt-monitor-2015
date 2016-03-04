@@ -356,6 +356,17 @@ clone
 )attrs
 
 
+*iter
+1457079401
+^mtime
+(
+comment
+"to iterate a function on a composite value"_
+nanoeval
+nanoeval_iter2
+)attrs
+
+
 *left_assoc
 1455871773
 ^mtime
@@ -599,6 +610,18 @@ signature_nanoeval1
 (
 comment
 "function to evaluate identity"_
+)attrs
+
+
+*nanoeval_iter2
+1457079401
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for nanoeval iter"_
 )attrs
 
 
@@ -2229,6 +2252,7 @@ sequence
 )node
 notice
 (
+iter
 payload
 )set
 )attrs

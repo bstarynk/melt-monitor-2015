@@ -2632,3 +2632,58 @@ momf_nanoeval_payl_file_close1 (struct mom_nanoeval_st *nev,
                         mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                              arg0));
 }                               // end of nanoeval_payl_file_close1 
+
+const char momsig_nanoeval_iter2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_iter2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod,
+                     const void *arg0, const void *arg1)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_iter2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  if (mom_itype (arg0) != MOMITY_NODE)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  const struct mom_boxnode_st *nodf = arg0;
+  switch (mom_itype (arg1))
+    {
+    case MOMITY_NONE:
+      return NULL;
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *seq = arg1;
+        unsigned sz = mom_raw_size (seq);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const struct mom_item_st *curitm = seq->seqitem[ix];
+            mom_nanoapply (nev, envitm, nodf, expnod, 1,
+                           (const void **) &curitm, depth + 1);
+          }
+      }
+      return arg1;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = arg1;
+        unsigned sz = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const void *curson = nod->nod_sons[ix];
+            mom_nanoapply (nev, envitm, nodf, expnod, 1, &curson, depth + 1);
+          }
+      }
+      return arg1;
+    default:
+      NANOEVAL_FAILURE_MOM (nev, expnod,
+                            mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                                 1, arg1));
+    }
+}                               // end momf_nanoeval_iter2
