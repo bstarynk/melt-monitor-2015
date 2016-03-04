@@ -367,6 +367,17 @@ nanoeval_iter2
 )attrs
 
 
+*iterix
+1457079401
+^mtime
+(
+comment
+"to iterate a function on a composite value and its index"_
+nanoeval
+nanoeval_iterix2
+)attrs
+
+
 *left_assoc
 1455871773
 ^mtime
@@ -622,6 +633,18 @@ signature_nanoeval2
 (
 comment
 "routine for nanoeval iter"_
+)attrs
+
+
+*nanoeval_iterix2
+1457079835
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for nanoeval iterix"_
 )attrs
 
 
@@ -2253,6 +2276,7 @@ sequence
 notice
 (
 iter
+iterix
 payload
 )set
 )attrs
