@@ -433,6 +433,7 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
           ok = true;
         }
     }
+  time (&itm0->itm_mtime);
   mom_item_unlock (itm0);
   if (!ok)
     NANOEVAL_FAILURE_MOM (nev, expnod,
@@ -741,6 +742,7 @@ momf_nanoeval_payl_assovaldata1 (struct mom_nanoeval_st *nev,
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
     itm->itm_payload = (void *) mom_assovaldata_reserve (NULL, 5);
+  time (&itm->itm_mtime);
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -874,6 +876,7 @@ momf_nanoeval_payl_assovaldata_remove2 (struct mom_nanoeval_st *nev,
             ass = mom_assovaldata_remove (ass, setat->seqitem[ix]);
           itm->itm_payload = (void *) ass;
         }
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -936,6 +939,7 @@ momf_nanoeval_payl_assovaldata_putany (struct mom_nanoeval_st *nev,
           ass = mom_assovaldata_put (ass, itmat, curv);
         }
       itm->itm_payload = (void *) ass;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -974,7 +978,10 @@ momf_nanoeval_payl_vectvaldata1 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
-    itm->itm_payload = (void *) mom_vectvaldata_reserve (NULL, 5);
+    {
+      itm->itm_payload = (void *) mom_vectvaldata_reserve (NULL, 5);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1012,9 +1019,12 @@ momf_nanoeval_payl_vectvaldata_reserve2 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = n >= 0 && mom_itype (itm->itm_payload) == MOMITY_VECTVALDATA;
   if (ok)
-    itm->itm_payload =          //
-      (void *) mom_vectvaldata_reserve ((struct mom_vectvaldata_st *)
-                                        itm->itm_payload, n);
+    {
+      itm->itm_payload =        //
+        (void *) mom_vectvaldata_reserve ((struct mom_vectvaldata_st *)
+                                          itm->itm_payload, n);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1094,8 +1104,11 @@ momf_nanoeval_payl_vectvaldata_put_nth3 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_itype (itm->itm_payload) == MOMITY_VECTVALDATA;
   if (ok)
-    mom_vectvaldata_put_nth ((struct mom_vectvaldata_st *) itm->itm_payload,
-                             n, arg2);
+    {
+      mom_vectvaldata_put_nth ((struct mom_vectvaldata_st *) itm->itm_payload,
+                               n, arg2);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1217,9 +1230,12 @@ momf_nanoeval_payl_vectvaldata_resize2 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = n >= 0 && mom_itype (itm->itm_payload) == MOMITY_VECTVALDATA;
   if (ok)
-    itm->itm_payload =          //
-      (void *) mom_vectvaldata_resize ((struct mom_vectvaldata_st *)
-                                       itm->itm_payload, n);
+    {
+      itm->itm_payload =        //
+        (void *) mom_vectvaldata_resize ((struct mom_vectvaldata_st *)
+                                         itm->itm_payload, n);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1267,6 +1283,7 @@ momf_nanoeval_payl_vectvaldata_appendany (struct mom_nanoeval_st *nev,
       vec = mom_vectvaldata_reserve (vec, nbval);
       for (unsigned ix = 1; ix < nbval; ix++)
         vec = mom_vectvaldata_append (vec, valarr[ix]);
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1354,6 +1371,7 @@ momf_nanoeval_payl_vectvaldata_append_content2 (struct mom_nanoeval_st *nev,
           ok = false;
           break;
         }
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1392,7 +1410,10 @@ momf_nanoeval_payl_hashset1 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
-    itm->itm_payload = (void *) mom_hashset_reserve (NULL, 5);
+    {
+      itm->itm_payload = (void *) mom_hashset_reserve (NULL, 5);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1426,9 +1447,12 @@ momf_nanoeval_payl_hashset_reserve2 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = n >= 0 && mom_itype (itm->itm_payload) == MOMITY_HASHSET;
   if (ok)
-    itm->itm_payload =          //
-      (void *) mom_hashset_reserve ((struct mom_hashset_st *)
-                                    itm->itm_payload, n);
+    {
+      itm->itm_payload =        //
+        (void *) mom_hashset_reserve ((struct mom_hashset_st *)
+                                      itm->itm_payload, n);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -1501,6 +1525,7 @@ const void *momf_nanoeval_payl_hashset_insert_content2
           ok = false;
           break;
         }
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1567,6 +1592,7 @@ momf_nanoeval_payl_hashset_insertany (struct mom_nanoeval_st *nev,
             }
         }
       itm->itm_payload = (void *) hs;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1639,6 +1665,7 @@ momf_nanoeval_payl_hashset_removeany (struct mom_nanoeval_st *nev,
       if (nbrm > (int) mom_hashset_count (hs) / 5)
         hs = mom_hashset_reserve (hs, 0);
       itm->itm_payload = (void *) hs;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1718,6 +1745,8 @@ const void *momf_nanoeval_payl_hashset_remove_content2
       if (nbrm > (int) mom_size (hs) / 4)
         hs = mom_hashset_reserve (hs, 0);
       itm->itm_payload = (void *) hs;
+      if (nbrm > 0)
+        time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1930,6 +1959,7 @@ momf_nanoeval_payl_hashmap_putany (struct mom_nanoeval_st *nev,
           hm = mom_hashmap_put (hm, atitm, valarr[ix + 1]);
         }
       itm->itm_payload = (void *) hm;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -1984,6 +2014,7 @@ momf_nanoeval_payl_hashmap_removeany (struct mom_nanoeval_st *nev,
       if (nbval >= mom_hashmap_count (hm) / 3 + 1)
         hm = mom_hashmap_reserve (hm, 0);
       itm->itm_payload = (void *) hm;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -2103,7 +2134,10 @@ momf_nanoeval_payl_hashassoc1 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
-    itm->itm_payload = (void *) mom_hashassoc_reserve (NULL, 5);
+    {
+      itm->itm_payload = (void *) mom_hashassoc_reserve (NULL, 5);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -2201,6 +2235,7 @@ momf_nanoeval_payl_hashassoc_putany (struct mom_nanoeval_st *nev,
           ha = mom_hashassoc_put (ha, at, valarr[ix + 1]);
         }
       itm->itm_payload = (void *) ha;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -2257,6 +2292,7 @@ momf_nanoeval_payl_hashassoc_removeany (struct mom_nanoeval_st *nev,
       if (nbval >= mom_hashassoc_count (ha) / 3 + 1)
         ha = mom_hashassoc_reserve (ha, 0);
       itm->itm_payload = (void *) ha;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
@@ -2383,6 +2419,8 @@ momf_nanoeval_clone1 (struct mom_nanoeval_st *nev,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
   struct mom_item_st *clonitm = mom_clone_item (itm);
+  time (&clonitm->itm_mtime);
+
   if (!nev->nanev_transient)
     mom_item_put_space (clonitm, MOMSPA_GLOBAL);
   return clonitm;
@@ -2416,6 +2454,9 @@ momf_nanoeval_payl_clear1 (struct mom_nanoeval_st *nev,
   bool ok = false;
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
+  if (ok)
+    time (&itm->itm_mtime);
+
   mom_item_unlock (itm);
   if (ok)
     return (itm);
@@ -2454,7 +2495,10 @@ momf_nanoeval_payl_filebuffer1 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
-    itm->itm_payload = (void *) mom_make_filebuffer ();
+    {
+      itm->itm_payload = (void *) mom_make_filebuffer ();
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -2525,7 +2569,10 @@ momf_nanoeval_payl_file_write2 (struct mom_nanoeval_st *nev,
   mom_item_lock (itm);
   ok = mom_unsync_item_clear_payload (itm);
   if (ok)
-    itm->itm_payload = (void *) mom_make_file (fout);
+    {
+      itm->itm_payload = (void *) mom_make_file (fout);
+      time (&itm->itm_mtime);
+    }
   mom_item_unlock (itm);
   if (ok)
     return itm;
@@ -2576,6 +2623,7 @@ momf_nanoeval_payl_file_close1 (struct mom_nanoeval_st *nev,
                                     itm->itm_payload, MOM_FILEBUFFER_CLOSE);
       mom_file_close (itm->itm_payload);
       itm->itm_payload = NULL;
+      time (&itm->itm_mtime);
     }
   mom_item_unlock (itm);
   if (ok)
