@@ -810,6 +810,78 @@ comment
 )attrs
 
 
+*nanoeval_out_indent1
+1457095329
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to nanoeval out_indent"_
+)attrs
+
+
+*nanoeval_out_indentation1
+1457095329
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to nanoeval out_indentation"_
+)attrs
+
+
+*nanoeval_out_last_line_width1
+1457095329
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to nanoeval out_last_line_width"_
+)attrs
+
+
+*nanoeval_out_newline1
+1457095329
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to nanoeval out_newline"_
+)attrs
+
+
+*nanoeval_out_outdent1
+1457095329
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine to nanoeval out_outdent"_
+)attrs
+
+
+*nanoeval_out_puts2
+1457095329
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine to nanoeval out_puts"_
+)attrs
+
+
 *nanoeval_payl_assovaldata1
 1456825884
 ^mtime
@@ -1421,6 +1493,72 @@ comment
 )attrs
 
 
+*out_indent
+1457095329
+^mtime
+(
+comment
+"output with more indentation"_
+nanoeval
+nanoeval_out_indent1
+)attrs
+
+
+*out_indentation
+1457095329
+^mtime
+(
+comment
+"give the indentation of some output"_
+nanoeval
+nanoeval_out_indentation1
+)attrs
+
+
+*out_last_line_width
+1457095329
+^mtime
+(
+comment
+"give the last line width of some output"_
+nanoeval
+nanoeval_out_last_line_width1
+)attrs
+
+
+*out_newline
+1457095329
+^mtime
+(
+comment
+"output an indented newline"_
+nanoeval
+nanoeval_out_newline1
+)attrs
+
+
+*out_outdent
+1457095329
+^mtime
+(
+comment
+"output with less indentation"_
+nanoeval
+nanoeval_out_outdent1
+)attrs
+
+
+*out_puts
+1457095329
+^mtime
+(
+comment
+"put to output arg0 the string arg1"_
+nanoeval
+nanoeval_out_puts2
+)attrs
+
+
 *out_utf8enc
 1456812179
 ^mtime
@@ -1436,6 +1574,15 @@ comment
 (
 comment
 "output operation"_
+notice
+(
+out_indent
+out_indentation
+out_last_line_width
+out_newline
+out_outdent
+out_puts
+)set
 )attrs
 
 

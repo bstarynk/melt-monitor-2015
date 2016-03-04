@@ -3204,6 +3204,7 @@ momf_nanoeval_foldix_left3 (struct mom_nanoeval_st *nev,
                             const void *arg0, const void *arg1,
                             const void *arg2)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_fold_left3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
                    mom_item_cstring (envitm), depth,
@@ -3279,6 +3280,7 @@ momf_nanoeval_foldix_right3 (struct mom_nanoeval_st *nev,
                              const void *arg0, const void *arg1,
                              const void *arg2)
 {
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_foldix_right3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
                    mom_item_cstring (envitm), depth,
@@ -3340,3 +3342,215 @@ momf_nanoeval_foldix_right3 (struct mom_nanoeval_st *nev,
                    mom_value_cstring (resv));
   return resv;
 }                               /* end momf_nanoeval_foldix_right3 */
+
+
+
+const char momsig_nanoeval_out_newline1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_out_newline1 (struct mom_nanoeval_st *nev,
+                            struct mom_item_st *envitm,
+                            int depth,
+                            const struct mom_boxnode_st *expnod,
+                            const struct mom_boxnode_st *closnod,
+                            const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  MOM_DEBUGPRINTF (run, "nanoeval_out_newline1 depth#%d envitm %s arg0=%s",
+                   depth, mom_item_cstring (envitm),
+                   mom_value_cstring (arg0));
+  bool ok = fitm != NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      mom_file_newline (fitm->itm_payload);
+      mom_item_unlock (fitm);
+    }
+  if (ok)
+    return fitm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               1, arg0));
+}                               /* end momf_nanoeval_out_newline1 */
+
+const char momsig_nanoeval_out_indent1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_out_indent1 (struct mom_nanoeval_st *nev,
+                           struct mom_item_st *envitm,
+                           int depth,
+                           const struct mom_boxnode_st *expnod,
+                           const struct mom_boxnode_st *closnod,
+                           const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (run, "nanoeval_out_indent1 depth#%d envitm %s arg0=%s",
+                   depth, mom_item_cstring (envitm),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  bool ok = fitm != NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      mom_file_indent (fitm->itm_payload);
+      mom_item_unlock (fitm);
+    }
+  if (ok)
+    return fitm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               1, arg0));
+}                               /* end momf_nanoeval_out_indent1 */
+
+const char momsig_nanoeval_out_outdent1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_out_outdent1 (struct mom_nanoeval_st *nev,
+                            struct mom_item_st *envitm,
+                            int depth,
+                            const struct mom_boxnode_st *expnod,
+                            const struct mom_boxnode_st *closnod,
+                            const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (run, "nanoeval_out_indent1 depth#%d envitm %s arg0=%s",
+                   depth, mom_item_cstring (envitm),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  bool ok = fitm != NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      mom_file_outdent ((struct mom_file_st *) fitm->itm_payload);
+      mom_item_unlock (fitm);
+    }
+  if (ok)
+    return fitm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               1, arg0));
+}                               /*end momf_nanoeval_out_outdent1 */
+
+const char momsig_nanoeval_out_indentation1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_out_indentation1 (struct mom_nanoeval_st *nev,
+                                struct mom_item_st *envitm,
+                                int depth,
+                                const struct mom_boxnode_st *expnod,
+                                const struct mom_boxnode_st *closnod,
+                                const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_out_indentation1 depth#%d envitm %s arg0=%s",
+                   depth, mom_item_cstring (envitm),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  bool ok = fitm != NULL;
+  const void *resv = NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      if (ok)
+        resv =
+          mom_boxint_make (mom_file_indentation
+                           ((struct mom_file_st *) (fitm->itm_payload)));
+      mom_item_unlock (fitm);
+    }
+  MOM_DEBUGPRINTF (run, "nanoeval_out_last_line_width1 depth#%d resv=%s",
+                   mom_value_cstring (resv));
+  if (ok)
+    return resv;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               1, arg0));
+}                               /*end momf_nanoeval_out_indentation1 */
+
+
+const char momsig_nanoeval_out_last_line_width1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_out_last_line_width1 (struct mom_nanoeval_st *nev,
+                                    struct mom_item_st *envitm,
+                                    int depth,
+                                    const struct mom_boxnode_st *expnod,
+                                    const struct mom_boxnode_st *closnod,
+                                    const void *arg0)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_out_last_line_width1 depth#%d envitm %s arg0=%s",
+                   depth, mom_item_cstring (envitm),
+                   mom_value_cstring (arg0));
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  bool ok = fitm != NULL;
+  const void *resv = NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      if (ok)
+        resv =
+          mom_boxint_make (mom_file_last_line_width
+                           ((struct mom_file_st *) (fitm->itm_payload)));
+      mom_item_unlock (fitm);
+    }
+  if (ok)
+    return resv;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               1, arg0));
+}                               /*end momf_nanoeval_out_last_line_width1 */
+
+
+
+
+const char momsig_nanoeval_out_puts2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_out_puts2 (struct mom_nanoeval_st *nev,
+                         struct mom_item_st *envitm,
+                         int depth,
+                         const struct mom_boxnode_st *expnod,
+                         const struct mom_boxnode_st *closnod,
+                         const void *arg0, const void *arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (closnod != NULL);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_out_puts2 depth#%d envitm %s arg0=%s arg1=%s",
+                   depth, mom_item_cstring (envitm), mom_value_cstring (arg0),
+                   mom_value_cstring (arg1));
+  struct mom_item_st *fitm = mom_dyncast_item (arg0);
+  const struct mom_boxstring_st *strv = mom_dyncast_boxstring (arg1);
+  bool ok = fitm != NULL && strv != NULL;
+  if (ok)
+    {
+      mom_item_lock (fitm);
+      FILE *f = mom_file (fitm->itm_payload);
+      ok = f != NULL;
+      mom_file_puts ((struct mom_file_st *) fitm->itm_payload, strv->cstr);
+      mom_item_unlock (fitm);
+    }
+  if (ok)
+    return fitm;
+  else
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                               2, arg0, arg1));
+}                               /*end momf_nanoeval_out_puts2 */
