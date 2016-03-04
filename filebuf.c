@@ -72,6 +72,57 @@ mom_make_file (FILE *f)
 }                               /* end of mom_make_file */
 
 void
+mom_file_indent (void *mfil)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return;
+  struct mom_filebuffer_st *mf = (struct mom_filebuffer_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return;
+  mf->mom_findent++;
+}                               /* end of mom_file_indent */
+
+void
+mom_file_outdent (void *mfil)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return;
+  struct mom_filebuffer_st *mf = (struct mom_filebuffer_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return;
+  mf->mom_findent--;
+}                               /* end of mom_file_outdent */
+
+void
+mom_file_set_indentation (void *mfil, int ind)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return;
+  struct mom_filebuffer_st *mf = (struct mom_filebuffer_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return;
+  mf->mom_findent = ind;
+}                               /* end of mom_file_set_indentation */
+
+void
+mom_file_newline (void *mfil)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return;
+  struct mom_filebuffer_st *mf = (struct mom_filebuffer_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return;
+  FILE *f = mom_file (mf);
+  if (!f)
+    return;
+  int ind = mf->mom_findent;
+  fputc ('\n', f);
+  mf->mom_flastnloff = ftell (f);
+  for (int i = ind % 16; i >= 0; i--)
+    fputc (' ', f);
+}                               /* end of mom_file_newline */
+
+void
 mom_file_close (void *mfil)
 {
   if (!mfil || mfil == MOM_EMPTY_SLOT)
@@ -82,6 +133,9 @@ mom_file_close (void *mfil)
   FILE *f = atomic_exchange (&mf->mom_filp, NULL);
   if (f)
     {
+      int ind = mf->mom_findent;
+      if (ind > 0 && mf->mom_flastnloff < ftell (f))
+        fputc ('\n', f);
       fclose (f);
       if (mf->va_itype == MOMITY_FILEBUFFER)
         {
@@ -95,12 +149,21 @@ void
 mom_file_printf (void *mfil, const char *fmt, ...)
 {
   FILE *f = mom_file (mfil);
-  if (!f)
+  if (!f || !fmt)
     return;
+  struct mom_file_st *mf = (struct mom_file_st *) mfil;
   va_list args;
+  size_t flen = strlen (fmt);
   va_start (args, fmt);
   vfprintf (f, fmt, args);
   va_end (args);
+  if (flen > 0 && fmt[flen - 1] == '\n')
+    {
+      int ind = mf->mom_findent;
+      mf->mom_flastnloff = ftell (f);
+      for (int i = ind % 16; i >= 0; i--)
+        fputc (' ', f);
+    }
 }                               /* end of mom_file_printf */
 
 

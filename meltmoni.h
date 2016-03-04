@@ -2157,7 +2157,9 @@ typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
 /**** for MOMITY_FILE & MOMITY_FILEBUFFER *****/
 #define MOM_FILE_FIELDS				\
   MOM_ANYVALUE_FIELDS;				\
-   FILE* _Atomic mom_filp
+  FILE* _Atomic mom_filp;			\
+  long mom_flastnloff;				\
+  int mom_findent
 
 //// file payload for MOMITY_FILE
 struct mom_file_st
@@ -2197,8 +2199,38 @@ mom_file (void *mfil)
   return NULL;
 }
 
+void mom_file_indent (void *mfil);
+void mom_file_outdent (void *mfil);
+void mom_file_newline (void *mfil);
+
+static inline int
+mom_file_indentation (const void *mfil)
+{
+  if (!mfil || mfil == MOM_EMPTY_SLOT)
+    return 0;
+  struct mom_file_st *mf = (struct mom_file_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return 0;
+  return mf->mom_findent;
+}
+
+static inline long
+mom_file_last_line_width (const void *mfil)
+{
+  struct mom_file_st *mf = (struct mom_file_st *) mfil;
+  if (mf->va_itype != MOMITY_FILEBUFFER && mf->va_itype != MOMITY_FILE)
+    return 0;
+  FILE *f = atomic_load (&mf->mom_filp);
+  if (!f)
+    return 0;
+  return ftell (f) - mf->mom_flastnloff;
+}                               /* end of mom_file_last_line_width */
+
+void mom_file_set_indentation (void *mfil, int ind);
+
 void mom_file_close (void *mfil);
 
+// put a string, if it is terminated by a newline, with indentation
 static inline void
 mom_file_puts (void *mfil, const char *str)
 {
@@ -2211,9 +2243,19 @@ mom_file_puts (void *mfil, const char *str)
   FILE *f = atomic_load (&mf->mom_filp);
   if (!f)
     return;
+  size_t slen = strlen (str);
   fputs (str, f);
+  if (slen > 0 && str[slen - 1] == '\n' && mf->mom_findent > 0)
+    {
+      mf->mom_flastnloff = ftell (f);
+      for (int i = mf->mom_findent % 16; i >= 0; i--)
+        fputc (' ', f);
+    }
 }
 
+/// a terminating newline in the format is interpreted with
+/// indentation; of course, internal newlines and the newlines in data
+/// string are output verbatim
 void mom_file_printf (void *mfil, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
 

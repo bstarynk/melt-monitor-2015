@@ -459,9 +459,12 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
       MOM_DEBUGPRINTF (run, "nanoeval_outputnode depth#%d ix#%d subexpv=%s",
                        depth, ix, mom_value_cstring (subexpv));
       FILE *fil = NULL;
+      struct mom_file_st *mf = NULL;
       {
         mom_item_lock (outitm);
         fil = mom_file (outitm->itm_payload);
+        if (fil)
+          mf = (struct mom_file_st *) (outitm->itm_payload);
         mom_item_unlock (outitm);
       }
       if (!fil)
@@ -566,7 +569,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
         }
       const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
       if (subval)
-        mom_output_value (fil, NULL, 0,
+        mom_output_value (fil, NULL, mf->mom_findent,
                           (const struct mom_hashedvalue_st *) subval);
     }
   return outitm;
