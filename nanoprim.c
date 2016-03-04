@@ -3596,13 +3596,13 @@ momf_nanoeval_applyany (struct mom_nanoeval_st *nev,
 const char momsig_nanoeval_apply_flattenany[] = "signature_nanoevalany";
 const void *
 momf_nanoeval_apply_flattenany (struct mom_nanoeval_st *nev,
-                        struct mom_item_st *envitm,
-                        int depth,
-                        const struct mom_boxnode_st *expnod,
-                        const struct mom_boxnode_st *closnod,
-                        unsigned nbval, const void **valarr)
+                                struct mom_item_st *envitm,
+                                int depth,
+                                const struct mom_boxnode_st *expnod,
+                                const struct mom_boxnode_st *closnod,
+                                unsigned nbval, const void **valarr)
 {
-  const void* resv = NULL;
+  const void *resv = NULL;
   assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   MOM_DEBUGPRINTF (run,
@@ -3621,43 +3621,47 @@ momf_nanoeval_apply_flattenany (struct mom_nanoeval_st *nev,
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 2,
                                                valarr[0], valarr[1]));
-  unsigned nbarg=0;
-  for (unsigned ix=2; ix<nbval; ix++) {
-    const struct mom_boxnode_st*curnod = mom_dyncast_node(valarr[ix]);
-    if (curnod && curnod->nod_connitm == flatitm)
-      nbarg += mom_raw_size(curnod);
-    else
-      nbarg++;
-  };
-  const void*smallargs[16] = {0};
-  const void**args =
-    (nbarg<sizeof(smallargs)/sizeof(smallargs[0]))
-    ? smallargs : mom_gc_alloc((nbarg+1)*sizeof(void*));
+  unsigned nbarg = 0;
+  for (unsigned ix = 2; ix < nbval; ix++)
+    {
+      const struct mom_boxnode_st *curnod = mom_dyncast_node (valarr[ix]);
+      if (curnod && curnod->nod_connitm == flatitm)
+        nbarg += mom_raw_size (curnod);
+      else
+        nbarg++;
+    };
+  const void *smallargs[16] = { 0 };
+  const void **args =
+    (nbarg < sizeof (smallargs) / sizeof (smallargs[0]))
+    ? smallargs : mom_gc_alloc ((nbarg + 1) * sizeof (void *));
   unsigned argcnt = 0;
-  for (unsigned ix=2; ix<nbval; ix++) {
-    const struct mom_boxnode_st*curnod = mom_dyncast_node(valarr[ix]);
-    if (curnod && curnod->nod_connitm == flatitm)
-      {
-	unsigned cursiz = mom_raw_size(curnod);
-	assert (argcnt + cursiz <= nbarg);
-	for (unsigned ix=0; ix<cursiz; ix++)
-	  args[argcnt++] = curnod->nod_sons[ix];
-      }
-    else {
-      assert (argcnt < nbarg);
-      args[argcnt++] = valarr[ix];
+  for (unsigned ix = 2; ix < nbval; ix++)
+    {
+      const struct mom_boxnode_st *curnod = mom_dyncast_node (valarr[ix]);
+      if (curnod && curnod->nod_connitm == flatitm)
+        {
+          unsigned cursiz = mom_raw_size (curnod);
+          assert (argcnt + cursiz <= nbarg);
+          for (unsigned ix = 0; ix < cursiz; ix++)
+            args[argcnt++] = curnod->nod_sons[ix];
+        }
+      else
+        {
+          assert (argcnt < nbarg);
+          args[argcnt++] = valarr[ix];
+        }
     }
-  }
   assert (argcnt == nbarg);
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_apply_flattenany depth#%d funod %s argcnt=%d", depth,
+                   "nanoeval_apply_flattenany depth#%d funod %s argcnt=%d",
+                   depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) funod),
-		   argcnt);
-  resv = mom_nanoapply (nev, envitm, funod, expnod, argcnt, args,
-                        depth + 1);
-  if (args != smallargs) GC_FREE(args);
+                   argcnt);
+  resv = mom_nanoapply (nev, envitm, funod, expnod, argcnt, args, depth + 1);
+  if (args != smallargs)
+    GC_FREE (args);
   MOM_DEBUGPRINTF (run,
                    "nanoeval_apply_flattenany depth#%d resv=%s", depth,
-		   mom_value_cstring ((struct mom_hashedvalue_st *) resv));
+                   mom_value_cstring ((struct mom_hashedvalue_st *) resv));
   return resv;
 }                               /* end of momf_nanoeval_apply_flattenany */
