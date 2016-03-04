@@ -3025,11 +3025,12 @@ momf_nanoeval_mapix3 (struct mom_nanoeval_st *nev,
 const char momsig_nanoeval_fold_left3[] = "signature_nanoeval3";
 const void *
 momf_nanoeval_fold_left3 (struct mom_nanoeval_st *nev,
-			  struct mom_item_st *envitm,
-			  int depth,
-			  const struct mom_boxnode_st *expnod,
-			  const struct mom_boxnode_st *closnod,
-			  const void *arg0, const void *arg1, const void*arg2)
+                          struct mom_item_st *envitm,
+                          int depth,
+                          const struct mom_boxnode_st *expnod,
+                          const struct mom_boxnode_st *closnod,
+                          const void *arg0, const void *arg1,
+                          const void *arg2)
 {
   MOM_DEBUGPRINTF (run,
                    "nanoeval_fold_left3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
@@ -3043,7 +3044,7 @@ momf_nanoeval_fold_left3 (struct mom_nanoeval_st *nev,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                arg0));
   const struct mom_boxnode_st *nodf = arg0;
-  const void*resv = arg1;
+  const void *resv = arg1;
   switch (mom_itype (arg2))
     {
     case MOMITY_NONE:
@@ -3051,20 +3052,21 @@ momf_nanoeval_fold_left3 (struct mom_nanoeval_st *nev,
     case MOMITY_BOXINT:
       {
         intptr_t hi = mom_boxint_val_def (arg2, -1);
-	for (intptr_t ix=0; ix<hi; ix++) {
+        for (intptr_t ix = 0; ix < hi; ix++)
+          {
             const void *twoargs[2] = { NULL, NULL };
             twoargs[0] = resv;
             twoargs[1] = mom_boxint_make (ix);
             resv =
               mom_nanoapply (nev, envitm, nodf, expnod, 2, twoargs,
                              depth + 1);
-	}
+          }
       }
       break;
     case MOMITY_SET:
     case MOMITY_TUPLE:
       {
-        const struct mom_seqitems_st *seq = arg1;
+        const struct mom_seqitems_st *seq = arg2;
         unsigned sz = mom_raw_size (seq);
         for (unsigned ix = 0; ix < sz; ix++)
           {
@@ -3080,7 +3082,7 @@ momf_nanoeval_fold_left3 (struct mom_nanoeval_st *nev,
       break;
     case MOMITY_NODE:
       {
-        const struct mom_boxnode_st *nod = arg1;
+        const struct mom_boxnode_st *nod = arg2;
         unsigned sz = mom_raw_size (nod);
         for (unsigned ix = 0; ix < sz; ix++)
           {
@@ -3099,6 +3101,242 @@ momf_nanoeval_fold_left3 (struct mom_nanoeval_st *nev,
                                                  1, arg2));
     }
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_fold_left3 depth#%d end resv=%s", depth, mom_value_cstring(resv));
+                   "nanoeval_fold_left3 depth#%d end resv=%s", depth,
+                   mom_value_cstring (resv));
   return resv;
-} /* end momf_nanoeval_fold_left3 */
+}                               /* end momf_nanoeval_fold_left3 */
+
+
+
+// fold_right(nodefun,compval,inival)
+const char momsig_nanoeval_fold_right3[] = "signature_nanoeval3";
+const void *
+momf_nanoeval_fold_right3 (struct mom_nanoeval_st *nev,
+                           struct mom_item_st *envitm,
+                           int depth,
+                           const struct mom_boxnode_st *expnod,
+                           const struct mom_boxnode_st *closnod,
+                           const void *arg0, const void *arg1,
+                           const void *arg2)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_fold_right3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1),
+                   mom_value_cstring (arg2));
+  if (mom_itype (arg0) != MOMITY_NODE)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  const struct mom_boxnode_st *nodf = arg0;
+  const void *resv = arg2;
+  switch (mom_itype (arg1))
+    {
+    case MOMITY_NONE:
+      return NULL;
+    case MOMITY_BOXINT:
+      {
+        intptr_t hi = mom_boxint_val_def (arg1, -1);
+        for (intptr_t ix = hi - 1; ix >= 0; ix--)
+          {
+            const void *twoargs[2] = { NULL, NULL };
+            twoargs[0] = resv;
+            twoargs[1] = mom_boxint_make (ix);
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 2, twoargs,
+                             depth + 1);
+          }
+      }
+      break;
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *seq = arg1;
+        unsigned sz = mom_raw_size (seq);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const struct mom_item_st *curitm = seq->seqitem[ix];
+            const void *twoargs[2] = { NULL, NULL };
+            twoargs[0] = curitm;
+            twoargs[1] = resv;
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 2, twoargs,
+                             depth + 1);
+          }
+      }
+      break;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = arg1;
+        unsigned sz = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const void *twoargs[2] = { NULL, NULL };
+            twoargs[0] = nod->nod_sons[ix];
+            twoargs[1] = resv;
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 2, twoargs,
+                             depth + 1);
+          }
+      }
+      break;
+    default:
+      NANOEVAL_FAILURE_MOM (nev, expnod,
+                            mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                                 1, arg2));
+    }
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_fold_right3 depth#%d end resv=%s", depth,
+                   mom_value_cstring (resv));
+  return resv;
+}                               /* end momf_nanoeval_fold_right3 */
+
+// foldix_left(nodefun,inival,compval)
+const char momsig_nanoeval_foldix_left3[] = "signature_nanoeval3";
+const void *
+momf_nanoeval_foldix_left3 (struct mom_nanoeval_st *nev,
+                            struct mom_item_st *envitm,
+                            int depth,
+                            const struct mom_boxnode_st *expnod,
+                            const struct mom_boxnode_st *closnod,
+                            const void *arg0, const void *arg1,
+                            const void *arg2)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_fold_left3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1),
+                   mom_value_cstring (arg2));
+  if (mom_itype (arg0) != MOMITY_NODE)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  const struct mom_boxnode_st *nodf = arg0;
+  const void *resv = arg1;
+  switch (mom_itype (arg2))
+    {
+    case MOMITY_NONE:
+      return NULL;
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *seq = arg2;
+        unsigned sz = mom_raw_size (seq);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const struct mom_item_st *curitm = seq->seqitem[ix];
+            const void *threeargs[3] = { NULL, NULL, NULL };
+            threeargs[0] = resv;
+            threeargs[1] = curitm;
+            threeargs[2] = mom_boxint_make (ix);
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 3, threeargs,
+                             depth + 1);
+          }
+      }
+      break;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = arg2;
+        unsigned sz = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const void *threeargs[2] = { NULL, NULL, NULL };
+            threeargs[0] = resv;
+            threeargs[1] = nod->nod_sons[ix];
+            threeargs[2] = mom_boxint_make (ix);
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 3, threeargs,
+                             depth + 1);
+          }
+      }
+      break;
+    default:
+      NANOEVAL_FAILURE_MOM (nev, expnod,
+                            mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                                 1, arg2));
+    }
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_foldix_left3 depth#%d end resv=%s", depth,
+                   mom_value_cstring (resv));
+  return resv;
+}                               /* end momf_nanoeval_foldix_left3 */
+
+
+
+// foldix_right(nodefun,compval,inival)
+const char momsig_nanoeval_foldix_right3[] = "signature_nanoeval3";
+const void *
+momf_nanoeval_foldix_right3 (struct mom_nanoeval_st *nev,
+                             struct mom_item_st *envitm,
+                             int depth,
+                             const struct mom_boxnode_st *expnod,
+                             const struct mom_boxnode_st *closnod,
+                             const void *arg0, const void *arg1,
+                             const void *arg2)
+{
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_foldix_right3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg2=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1),
+                   mom_value_cstring (arg2));
+  if (mom_itype (arg0) != MOMITY_NODE)
+    NANOEVAL_FAILURE_MOM (nev, expnod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
+                                               arg0));
+  const struct mom_boxnode_st *nodf = arg0;
+  const void *resv = arg2;
+  switch (mom_itype (arg1))
+    {
+    case MOMITY_NONE:
+      return NULL;
+    case MOMITY_SET:
+    case MOMITY_TUPLE:
+      {
+        const struct mom_seqitems_st *seq = arg1;
+        unsigned sz = mom_raw_size (seq);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const struct mom_item_st *curitm = seq->seqitem[ix];
+            const void *threeargs[3] = { NULL, NULL, NULL };
+            threeargs[0] = curitm;
+            threeargs[1] = resv;
+            threeargs[2] = mom_boxint_make (ix);
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 3, threeargs,
+                             depth + 1);
+          }
+      }
+      break;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = arg1;
+        unsigned sz = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < sz; ix++)
+          {
+            const void *threeargs[3] = { NULL, NULL, NULL };
+            threeargs[0] = nod->nod_sons[ix];
+            threeargs[1] = resv;
+            threeargs[2] = mom_boxint_make (ix);
+            resv =
+              mom_nanoapply (nev, envitm, nodf, expnod, 3, threeargs,
+                             depth + 1);
+          }
+      }
+      break;
+    default:
+      NANOEVAL_FAILURE_MOM (nev, expnod,
+                            mom_boxnode_make_va (MOM_PREDEFITM (type_error),
+                                                 1, arg2));
+    }
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_foldix_right3 depth#%d end resv=%s", depth,
+                   mom_value_cstring (resv));
+  return resv;
+}                               /* end momf_nanoeval_foldix_right3 */
