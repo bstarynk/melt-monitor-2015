@@ -305,6 +305,7 @@ comment
 notice
 (
 is_double
+is_number
 )set
 )attrs
 
@@ -544,6 +545,7 @@ comment
 notice
 (
 is_int
+is_number
 )set
 )attrs
 
@@ -570,6 +572,19 @@ comment
 nanoeval
 (
 nanoeval_is_int1
+)node
+)attrs
+
+
+*is_number
+1457359776
+^mtime
+(
+comment
+"to test if argument is a number"_
+nanoeval
+(
+nanoeval_is_number1
 )node
 )attrs
 
@@ -1034,6 +1049,20 @@ comment
 "routine for is_int"_
 notice
 is_int
+)attrs
+
+
+*nanoeval_is_number1
+1457359776
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_number"_
+notice
+is_number
 )attrs
 
 
