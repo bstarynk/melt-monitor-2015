@@ -593,6 +593,21 @@ nanoeval_is_int1
 )attrs
 
 
+*is_item
+1457360821
+^mtime
+(
+comment
+"to test if argument is an item"_
+nanoeval
+(
+nanoeval_is_item1
+)node
+notice
+item
+)attrs
+
+
 *is_number
 1457359776
 ^mtime
@@ -650,6 +665,8 @@ comment
 notice
 (
 clone
+is_atom
+is_item
 )set
 )attrs
 
@@ -1106,6 +1123,20 @@ comment
 "routine for is_int"_
 notice
 is_int
+)attrs
+
+
+*nanoeval_is_item1
+1457360821
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_item"_
+notice
+is_item
 )attrs
 
 
