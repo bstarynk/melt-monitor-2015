@@ -608,6 +608,19 @@ item
 )attrs
 
 
+*is_node
+1457361540
+^mtime
+(
+comment
+"test if argument is a node"_
+nanoeval
+(
+nanoeval_is_node1
+)node
+)attrs
+
+
 *is_number
 1457359776
 ^mtime
@@ -1185,6 +1198,20 @@ comment
 "routine for is_item"_
 notice
 is_item
+)attrs
+
+
+*nanoeval_is_node1
+1457361540
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_node"_
+notice
+is_node
 )attrs
 
 
@@ -1928,7 +1955,10 @@ nanoeval
 nanoeval_nodeany
 )node
 notice
+(
 flatten_node
+is_node
+)set
 )attrs
 
 
