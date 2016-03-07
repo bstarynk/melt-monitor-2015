@@ -307,7 +307,7 @@ nanoeval_condnode_mom (struct mom_nanoeval_st *nev,
       if (!condnod || condnod->nod_connitm != MOM_PREDEFITM (when))
         {
           resv = mom_nanoeval (nev, envitm, curcondv, depth + 1);
-          break;
+          continue;
         }
       unsigned condarity = mom_size (condnod);
       if (!condarity)
@@ -336,6 +336,89 @@ nanoeval_condnode_mom (struct mom_nanoeval_st *nev,
     }
   return resv;
 }                               /* end of nanoeval_condnode_mom */
+
+
+static const void *
+nanoeval_switchitemnode_mom (struct mom_nanoeval_st *nev,
+                             struct mom_item_st *envitm,
+                             const struct mom_boxnode_st *nod, int depth)
+{
+  const void *resv = NULL;
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_switchitemnode start envitm=%s nod=%s depth#%d",
+                   mom_item_cstring (envitm),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) nod),
+                   depth);
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  assert (nod && nod->va_itype == MOMITY_NODE);
+  unsigned arity = mom_size (nod);
+  if (arity == 0)
+    NANOEVAL_FAILURE_MOM (nev, nod,
+                          mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
+                                               mom_boxint_make (arity)));
+  const struct mom_hashedvalue_st *selexpv = nod->nod_sons[0];
+  MOM_DEBUGPRINTF (run, "nanoeval_switchitemnode depth#%d selexpv=%s",
+                   depth, mom_value_cstring (selexpv));
+  const void *selv = mom_nanoeval (nev, envitm, selexpv, depth + 1);
+  MOM_DEBUGPRINTF (run, "nanoeval_switchitemnode depth#%d selv=%s",
+                   depth, mom_value_cstring (selv));
+  const struct mom_item_st *selitm = mom_dyncast_item (selv);
+  for (int ix = 1; ix < (int) arity; ix++)
+    {
+      const struct mom_hashedvalue_st *curcasev = nod->nod_sons[ix];
+      const struct mom_boxnode_st *casenod = mom_dyncast_node (curcasev);
+      if (!casenod || casenod->nod_connitm != MOM_PREDEFITM (when))
+        {
+          resv = mom_nanoeval (nev, envitm, curcasev, depth + 1);
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_switchitemnode depth#%d ix#%d resv=%s",
+                           depth, ix, mom_value_cstring (resv));
+          continue;
+        }
+      unsigned casearity = mom_size (casenod);
+      if (!casearity)
+        break;
+      const struct mom_hashedvalue_st *curcasexpv = casenod->nod_sons[0];
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_switchitemnode ix#%d curcasexpv %s depth %d",
+                       ix, mom_value_cstring (curcasexpv), depth);
+      const struct mom_item_st *curcasitm = mom_dyncast_item (curcasexpv);
+      if (!curcasitm)
+        {
+          const void *curcasv =
+            mom_nanoeval (nev, envitm, curcasexpv, depth + 1);
+          curcasitm = mom_dyncast_item (curcasv);
+          if (!curcasitm)
+            continue;
+        }
+      if (curcasitm == selitm)
+        {
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_switchitemnode ix#%d found item %s depth %d",
+                           ix, mom_item_cstring (selitm), depth);
+          for (int casix = 1; casix < (int) casearity; casix++)
+            {
+              const struct mom_hashedvalue_st *subexpv =
+                casenod->nod_sons[ix];
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_switchitemnode ix#%d casix#%d depth#%d subexpv %s",
+                               ix, casix, depth, mom_value_cstring (subexpv));
+              resv = mom_nanoeval (nev, envitm, subexpv, depth + 1);
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_switchitemnode ix#%d casix#%d depth#%d resv=%s",
+                               ix, casix, depth, mom_value_cstring (resv));
+            }
+          break;
+        }
+      else
+        continue;
+    }
+  MOM_DEBUGPRINTF (run, "nanoeval_switchitemnode depth#%d final resv=%s",
+                   depth, mom_value_cstring (resv));
+  return resv;
+}                               /* end of nanoeval_switchitemnode_mom */
+
 
 
 static const void *
@@ -1678,6 +1761,8 @@ nanoeval_node_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
       return nanoeval_getnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (cond):        ///// %cond(<when...>)
       return nanoeval_condnode_mom (nev, envitm, nod, depth);
+    case OPITM_NANOEVALNODE_MOM (switch_item): ///// %switch_item(<item-expr>,<when...>)
+      return nanoeval_switchitemnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (assign):      ///// %assign(<var>,<expr>...)
       return nanoeval_assignnode_mom (nev, envitm, nod, depth);
     case OPITM_NANOEVALNODE_MOM (or):  ///// %or()

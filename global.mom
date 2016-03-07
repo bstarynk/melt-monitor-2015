@@ -2770,6 +2770,15 @@ comment
 )attrs
 
 
+*switch_item
+1457337792
+^mtime
+(
+comment
+"to switch on items"_
+)attrs
+
+
 *the_agenda
 1457337286
 ^mtime
