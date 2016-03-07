@@ -304,6 +304,7 @@ comment
 "for double & boxed doubles"_
 notice
 (
+is_atom
 is_double
 is_number
 is_scalar
@@ -545,10 +546,24 @@ comment
 "for int and boxed integers"_
 notice
 (
+is_atom
 is_int
 is_number
 is_scalar
 )set
+)attrs
+
+
+*is_atom
+1457360526
+^mtime
+(
+comment
+"to test atomicity"_
+nanoeval
+(
+nanoeval_is_atom1
+)node
 )attrs
 
 
@@ -1049,6 +1064,20 @@ signature_nanoeval1
 (
 comment
 "function to evaluate identity"_
+)attrs
+
+
+*nanoeval_is_atom1
+1457360526
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_atom"_
+notice
+is_atom
 )attrs
 
 
@@ -3018,6 +3047,7 @@ comment
 "for strings and boxed strings"_
 notice
 (
+is_atom
 is_scalar
 is_string
 )set
