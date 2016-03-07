@@ -652,6 +652,21 @@ tuple
 )attrs
 
 
+*is_set
+1457361412
+^mtime
+(
+comment
+"test if argument is a set"_
+nanoeval
+(
+nanoeval_is_set1
+)node
+notice
+set
+)attrs
+
+
 *is_string
 1457360097
 ^mtime
@@ -1212,6 +1227,20 @@ comment
 "routine for is_sequence"_
 notice
 is_sequence
+)attrs
+
+
+*nanoeval_is_set1
+1457361412
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_set"_
+notice
+is_set
 )attrs
 
 
@@ -2943,6 +2972,11 @@ nanoeval
 (
 nanoeval_setany
 )node
+notice
+(
+is_sequence
+is_set
+)set
 )attrs
 
 
