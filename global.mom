@@ -534,6 +534,15 @@ comment
 )attrs
 
 
+*m
+1457332829
+^mtime
+(
+comment
+"variable"_
+)attrs
+
+
 *main_module
 1457332500
 ^mtime
@@ -585,6 +594,24 @@ operator
 diff
 precedence
 4_
+)attrs
+
+
+*modu
+1457332822
+^mtime
+(
+comment
+"variable for a module"_
+)attrs
+
+
+*module
+1457332845
+^mtime
+(
+comment
+"related to module"_
 )attrs
 
 
@@ -2301,6 +2328,15 @@ comment
 )attrs
 
 
+*prepare_module
+1457332812
+^mtime
+(
+comment
+"function to prepare a module "_
+)attrs
+
+
 *put
 1455358475
 ^mtime
@@ -2618,7 +2654,7 @@ comment
 
 
 *the_agenda
-1457332533
+1457332912
 ^mtime
 (
 comment
@@ -2877,18 +2913,46 @@ display
 raw
 expression
 (
-the_system
-initial_modules
+prepare_module
 (
-value_module
-main_module
-item_module
-payload_module
-7
+(
+dust
+modu
+8
 ~
-set
+tuple
 )nodemeta
+(
+(
+m
+(
+modu
+22
+~
+clone
+)nodemeta
+17
+~
+be
+)nodemeta
+(
+m
+module
+modu
+29
+~
 put
+)nodemeta
+m
+14
+~
+let
+)nodemeta
+5
+~
+func
+)nodemeta
+assign
 )node
 )attrs
 (
@@ -2925,6 +2989,41 @@ header_stuff
 12
 ~
 clone
+)nodemeta
+func
+)node
+prepare_module
+(
+(
+dust
+modu
+)tuple
+web_state__0dmo5BBWK0mbtv
+(
+(
+m
+(
+modu
+22
+~
+clone
+)nodemeta
+17
+~
+be
+)nodemeta
+(
+m
+module
+modu
+29
+~
+put
+)nodemeta
+m
+14
+~
+let
 )nodemeta
 func
 )node
