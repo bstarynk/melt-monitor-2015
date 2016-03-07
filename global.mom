@@ -462,6 +462,32 @@ comment
 )attrs
 
 
+*greater
+1457365666
+^mtime
+(
+comment
+"test for greater of two values"_
+nanoeval
+(
+nanoeval_greater2
+)node
+)attrs
+
+
+*greater_or_equal
+1457365666
+^mtime
+(
+comment
+"test for greater or equal of two values"_
+nanoeval
+(
+nanoeval_greater_or_equal2
+)node
+)attrs
+
+
 *h
 1457336112
 ^mtime
@@ -816,6 +842,32 @@ comment
 )attrs
 
 
+*less
+1457365666
+^mtime
+(
+comment
+"test for less of two values"_
+nanoeval
+(
+nanoeval_less2
+)node
+)attrs
+
+
+*less_or_equal
+1457365666
+^mtime
+(
+comment
+"test for less or equal of two values"_
+nanoeval
+(
+nanoeval_less_or_equal2
+)node
+)attrs
+
+
 *let
 1455623664
 ^mtime
@@ -1160,6 +1212,34 @@ comment
 )attrs
 
 
+*nanoeval_greater2
+1457365666
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for greater than"_
+notice
+greater
+)attrs
+
+
+*nanoeval_greater_or_equal2
+1457365666
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for greater or equal"_
+notice
+greater_or_equal
+)attrs
+
+
 *nanoeval_identity1
 1456312768
 ^mtime
@@ -1347,6 +1427,34 @@ signature_nanoeval2
 (
 comment
 "routine for nanoeval iterix"_
+)attrs
+
+
+*nanoeval_less2
+1457365666
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for less than"_
+notice
+less
+)attrs
+
+
+*nanoeval_less_or_equal2
+1457365666
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for less or equal"_
+notice
+less_or_equal
 )attrs
 
 
@@ -1973,6 +2081,20 @@ signature_nanoeval1
 (
 comment
 "function to evaluate type"_
+)attrs
+
+
+*nanoeval_unequal2
+1457365666
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for nonequality"_
+notice
+unequal
 )attrs
 
 
@@ -3360,13 +3482,18 @@ fold_left
 fold_right
 foldix_left
 foldix_right
+greater
+greater_or_equal
 iter
 iterix
+less
+less_or_equal
 map
 mapix
 payload
 reviter
 same
+unequal
 )set
 )attrs
 (
@@ -3458,6 +3585,19 @@ comment
 (
 comment
 "for undefined result"_
+)attrs
+
+
+*unequal
+1457365666
+^mtime
+(
+comment
+"test for inequality of two values"_
+nanoeval
+(
+nanoeval_unequal2
+)node
 )attrs
 
 

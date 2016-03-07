@@ -3961,3 +3961,112 @@ momf_nanoeval_equal2 (struct mom_nanoeval_st *nev,
 	  || mom_hashedvalue_equal ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1))
     ?MOM_PREDEFITM(truth):NULL;
 } /* end of momf_nanoeval_equal2 */
+
+
+const char momsig_nanoeval_unequal2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_unequal2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0, const void*arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_unequal2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  return (arg0==arg1
+	  || mom_hashedvalue_equal ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1))
+    ?NULL:MOM_PREDEFITM(truth);
+} /* end of momf_nanoeval_unequal2 */
+
+
+
+const char momsig_nanoeval_less2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_less2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0, const void*arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_less2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  return ( mom_hashedvalue_cmp ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1)<0)
+    ?MOM_PREDEFITM(truth):NULL;
+} /* end of momf_nanoeval_less2 */
+
+
+
+const char momsig_nanoeval_less_or_equal2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_less_or_equal2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0, const void*arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_less_or_equal2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  return ( mom_hashedvalue_cmp ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1)<=0)
+    ?MOM_PREDEFITM(truth):NULL;
+} /* end of momf_nanoeval_less_or_equal2 */
+
+
+const char momsig_nanoeval_greater2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_greater2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0, const void*arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_greater2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  return ( mom_hashedvalue_cmp ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1)>0)
+    ?MOM_PREDEFITM(truth):NULL;
+} /* end of momf_nanoeval_greater2 */
+
+
+
+const char momsig_nanoeval_greater_or_equal2[] = "signature_nanoeval2";
+const void *
+momf_nanoeval_greater_or_equal2 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0, const void*arg1)
+{
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_greater_or_equal2 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0), mom_value_cstring (arg1));
+  return ( mom_hashedvalue_cmp ((const struct mom_hashedvalue_st *)arg0, (const struct mom_hashedvalue_st *)arg1)>=0)
+    ?MOM_PREDEFITM(truth):NULL;
+} /* end of momf_nanoeval_greater_or_equal2 */
