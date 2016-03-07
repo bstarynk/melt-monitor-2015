@@ -263,6 +263,15 @@ comment
 )attrs
 
 
+*dust
+1457332208
+^mtime
+(
+comment
+"variable holding the dump state..."_
+)attrs
+
+
 *expression
 1453445242
 ^mtime
@@ -374,6 +383,15 @@ comment
 )attrs
 
 
+*header_stuff
+1457332161
+^mtime
+(
+comment
+"prototype for header stuff"_
+)attrs
+
+
 *identity
 1456312882
 ^mtime
@@ -400,6 +418,15 @@ comment
 )attrs
 
 
+*initial_modules
+1457332482
+^mtime
+(
+comment
+"give the initial modules to be generated"_
+)attrs
+
+
 *int
 1456146211
 ^mtime
@@ -419,6 +446,15 @@ notice
 (
 clone
 )set
+)attrs
+
+
+*item_module
+1457332509
+^mtime
+(
+comment
+"the item module"_
 )attrs
 
 
@@ -495,6 +531,15 @@ comment
 (
 comment
 "letrec keyword"_
+)attrs
+
+
+*main_module
+1457332500
+^mtime
+(
+comment
+"the main module"_
 )attrs
 
 
@@ -2196,6 +2241,15 @@ payl_filebuffer
 )attrs
 
 
+*payload_module
+1457332521
+^mtime
+(
+comment
+"the payload module"_
+)attrs
+
+
 *percent_delim
 1453199017
 ^mtime
@@ -2235,6 +2289,15 @@ precedence
 (
 comment
 "for precedence"_
+)attrs
+
+
+*prepare_header
+1457332149
+^mtime
+(
+comment
+"function to prepare the common header"_
 )attrs
 
 
@@ -2555,7 +2618,7 @@ comment
 
 
 *the_agenda
-1457031984
+1457332533
 ^mtime
 (
 comment
@@ -2566,7 +2629,7 @@ comment
 
 
 *the_system
-1445947163
+1457332525
 ^mtime
 (
 comment
@@ -2625,6 +2688,13 @@ included_files
 "glib.h"_
 sequence
 )node
+initial_modules
+(
+item_module
+main_module
+payload_module
+value_module
+)set
 notice
 (
 apply
@@ -2728,6 +2798,15 @@ comment
 )attrs
 
 
+*value_module
+1457332492
+^mtime
+(
+comment
+"the value module"_
+)attrs
+
+
 *verbatim
 1455468628
 ^mtime
@@ -2799,11 +2878,15 @@ raw
 expression
 (
 the_system
-included_files
+initial_modules
 (
+value_module
+main_module
+item_module
+payload_module
 7
 ~
-sequence
+set
 )nodemeta
 put
 )node
@@ -2830,6 +2913,20 @@ web_session
 the_system
 )tuple
 comment
+)node
+prepare_header
+(
+(
+dust
+)tuple
+web_state__0dmo5BBWK0mbtv
+(
+header_stuff
+12
+~
+clone
+)nodemeta
+func
 )node
 )payload_hashmap
 
