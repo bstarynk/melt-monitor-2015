@@ -388,11 +388,15 @@ nanoeval_switchitemnode_mom (struct mom_nanoeval_st *nev,
         {
           const void *curcasv =
             mom_nanoeval (nev, envitm, curcasexpv, depth + 1);
+          const struct mom_boxset_st *curset = mom_dyncast_set (curcasv);
+          if (curset && mom_set_contains (curset, selitm))
+            goto founditem;
           curcasitm = mom_dyncast_item (curcasv);
           if (!curcasitm)
             continue;
         }
       if (curcasitm == selitm)
+      founditem:
         {
           MOM_DEBUGPRINTF (run,
                            "nanoeval_switchitemnode ix#%d found item %s depth %d",
