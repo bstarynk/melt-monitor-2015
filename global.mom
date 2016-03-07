@@ -348,6 +348,19 @@ comment
 )attrs
 
 
+*equal
+1457364041
+^mtime
+(
+comment
+"test for equality of two values"_
+nanoeval
+(
+nanoeval_equal2
+)node
+)attrs
+
+
 *expression
 1453445242
 ^mtime
@@ -1061,6 +1074,20 @@ signature_nanoeval2
 (
 comment
 "function to evaluate div"_
+)attrs
+
+
+*nanoeval_equal2
+1457364041
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for equality"_
+notice
+equal
 )attrs
 
 
@@ -1884,6 +1911,20 @@ signature_nanoeval2
 (
 comment
 "routine for nanoeval reviter"_
+)attrs
+
+
+*nanoeval_same2
+1457364041
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for same"_
+notice
+same
 )attrs
 
 
@@ -2974,6 +3015,19 @@ comment
 )attrs
 
 
+*same
+1457364041
+^mtime
+(
+comment
+"test for identity of two values"_
+nanoeval
+(
+nanoeval_same2
+)node
+)attrs
+
+
 *semicolon_delim
 1453199107
 ^mtime
@@ -3301,6 +3355,7 @@ notice
 (
 apply
 apply_flatten
+equal
 fold_left
 fold_right
 foldix_left
@@ -3311,6 +3366,7 @@ map
 mapix
 payload
 reviter
+same
 )set
 )attrs
 (
