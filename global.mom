@@ -634,6 +634,24 @@ nanoeval_is_scalar1
 )attrs
 
 
+*is_sequence
+1457361164
+^mtime
+(
+comment
+"test if argument is a sequence"_
+nanoeval
+(
+nanoeval_is_sequence1
+)node
+notice
+(
+set
+tuple
+)set
+)attrs
+
+
 *is_string
 1457360097
 ^mtime
@@ -644,6 +662,21 @@ nanoeval
 (
 nanoeval_is_string1
 )node
+)attrs
+
+
+*is_tuple
+1457361164
+^mtime
+(
+comment
+"test if argument is a tuple"_
+nanoeval
+(
+nanoeval_is_tuple1
+)node
+notice
+tuple
 )attrs
 
 
@@ -1168,6 +1201,20 @@ is_scalar
 )attrs
 
 
+*nanoeval_is_sequence1
+1457361164
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_sequence"_
+notice
+is_sequence
+)attrs
+
+
 *nanoeval_is_string1
 1457360097
 ^mtime
@@ -1179,6 +1226,20 @@ comment
 "routine for is_string"_
 notice
 is_string
+)attrs
+
+
+*nanoeval_is_tuple1
+1457361164
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_tuple"_
+notice
+is_tuple
 )attrs
 
 
@@ -3230,6 +3291,11 @@ nanoeval
 (
 nanoeval_tupleany
 )node
+notice
+(
+is_sequence
+is_tuple
+)set
 )attrs
 
 
