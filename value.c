@@ -469,10 +469,10 @@ mom_boxset_union (const struct mom_boxset_st *set1,
                   const struct mom_boxset_st *set2)
 {
   unsigned card1 = 0, card2 = 0;
-  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+  if (!set1 || set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
       || !(card1 = mom_raw_size (set1)))
     set1 = NULL;
-  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+  if (!set2 || set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
       || !(card2 = mom_raw_size (set2)))
     set2 = NULL;
   if (MOM_UNLIKELY (card1 == 0 && card2 == 0))
@@ -531,10 +531,10 @@ mom_boxset_intersection (const struct mom_boxset_st *set1,
                          const struct mom_boxset_st *set2)
 {
   unsigned card1 = 0, card2 = 0;
-  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+  if (!set1 || set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
       || !(card1 = mom_raw_size (set1)))
     return &empty_boxset_mom;
-  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+  if (!set2 || set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
       || !(card2 = mom_raw_size (set2)))
     return &empty_boxset_mom;
   unsigned siz = ((card1 < card2) ? card1 : card2) + 1;
@@ -572,10 +572,10 @@ mom_boxset_difference (const struct mom_boxset_st *set1,
                        const struct mom_boxset_st *set2)
 {
   unsigned card1 = 0, card2 = 0;
-  if (set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
+  if (!set1 || set1 == MOM_EMPTY_SLOT || set1->va_itype != MOMITY_SET
       || !(card1 = mom_raw_size (set1)))
     return &empty_boxset_mom;
-  if (set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
+  if (!set2 || set2 == MOM_EMPTY_SLOT || set2->va_itype != MOMITY_SET
       || !(card2 = mom_raw_size (set2)))
     return set1;
   unsigned siz = card1 + 1;
