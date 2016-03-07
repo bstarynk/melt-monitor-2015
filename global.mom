@@ -66,7 +66,9 @@ comment
 comment
 "apply first arg to other ones"_
 nanoeval
+(
 nanoeval_applyany
+)node
 )attrs
 
 
@@ -77,7 +79,9 @@ nanoeval_applyany
 comment
 "apply_flatten closnod flatitm args...: flatten args which are node of flatitm & apply closnod"_
 nanoeval
+(
 nanoeval_apply_flattenany
+)node
 )attrs
 
 
@@ -152,7 +156,9 @@ signature_tasklet
 comment
 "for cloning an item"_
 nanoeval
+(
 nanoeval_clone1
+)node
 )attrs
 
 
@@ -296,6 +302,10 @@ nanoeval_div2
 (
 comment
 "for double & boxed doubles"_
+notice
+(
+is_double
+)set
 )attrs
 
 
@@ -373,7 +383,9 @@ nanoeval_flattennodeany
 comment
 "primitive for fold left (nodefun,inival,compval)"_
 nanoeval
+(
 nanoeval_fold_left3
+)node
 )attrs
 
 
@@ -384,7 +396,9 @@ nanoeval_fold_left3
 comment
 "primitive for fold right (nodefun,compval,inival)"_
 nanoeval
+(
 nanoeval_fold_right3
+)node
 )attrs
 
 
@@ -395,7 +409,9 @@ nanoeval_fold_right3
 comment
 "primitive for fold left with index (nodefun,inival,compval)"_
 nanoeval
+(
 nanoeval_foldix_left3
+)node
 )attrs
 
 
@@ -406,7 +422,9 @@ nanoeval_foldix_left3
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 nanoeval
+(
 nanoeval_foldix_right3
+)node
 )attrs
 
 
@@ -523,6 +541,36 @@ comment
 (
 comment
 "for int and boxed integers"_
+notice
+(
+is_int
+)set
+)attrs
+
+
+*is_double
+1457358950
+^mtime
+(
+comment
+"to test if argument is a double"_
+nanoeval
+(
+nanoeval_is_double1
+)node
+)attrs
+
+
+*is_int
+1457358950
+^mtime
+(
+comment
+"to test if argument is an integer"_
+nanoeval
+(
+nanoeval_is_int1
+)node
 )attrs
 
 
@@ -564,7 +612,9 @@ comment
 comment
 "to iterate a function on a composite value"_
 nanoeval
+(
 nanoeval_iter2
+)node
 )attrs
 
 
@@ -575,7 +625,9 @@ nanoeval_iter2
 comment
 "to iterate a function on a composite value and its index"_
 nanoeval
+(
 nanoeval_iterix2
+)node
 )attrs
 
 
@@ -658,7 +710,9 @@ comment
 comment
 "primitive to map a function to a value with a connective"_
 nanoeval
+(
 nanoeval_map3
+)node
 )attrs
 
 
@@ -669,7 +723,9 @@ nanoeval_map3
 comment
 "primitive to map a function to a value and index with a connective"_
 nanoeval
+(
 nanoeval_mapix3
+)node
 )attrs
 
 
@@ -950,6 +1006,34 @@ signature_nanoeval1
 (
 comment
 "function to evaluate identity"_
+)attrs
+
+
+*nanoeval_is_double1
+1457358950
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_double"_
+notice
+is_double
+)attrs
+
+
+*nanoeval_is_int1
+1457358950
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_int"_
+notice
+is_int
 )attrs
 
 
@@ -1715,7 +1799,9 @@ comment
 comment
 "output with more indentation"_
 nanoeval
+(
 nanoeval_out_indent1
+)node
 )attrs
 
 
@@ -1726,7 +1812,9 @@ nanoeval_out_indent1
 comment
 "give the indentation of some output"_
 nanoeval
+(
 nanoeval_out_indentation1
+)node
 )attrs
 
 
@@ -1737,7 +1825,9 @@ nanoeval_out_indentation1
 comment
 "give the last line width of some output"_
 nanoeval
+(
 nanoeval_out_last_line_width1
+)node
 )attrs
 
 
@@ -1748,7 +1838,9 @@ nanoeval_out_last_line_width1
 comment
 "output an indented newline"_
 nanoeval
+(
 nanoeval_out_newline1
+)node
 )attrs
 
 
@@ -1759,7 +1851,9 @@ nanoeval_out_newline1
 comment
 "output with less indentation"_
 nanoeval
+(
 nanoeval_out_outdent1
+)node
 )attrs
 
 
@@ -1770,7 +1864,9 @@ nanoeval_out_outdent1
 comment
 "put to output arg0 the string arg1"_
 nanoeval
+(
 nanoeval_out_puts2
+)node
 )attrs
 
 
@@ -1854,7 +1950,9 @@ payl_assovaldata_set_attrs
 comment
 "get an attribute in given item assocvaldata payload"_
 nanoeval
+(
 nanoeval_payl_assovaldata_get2
+)node
 )attrs
 
 
@@ -1865,7 +1963,9 @@ nanoeval_payl_assovaldata_get2
 comment
 "put attributes in given item assocvaldata payload"_
 nanoeval
+(
 nanoeval_payl_assovaldata_putany
+)node
 )attrs
 
 
@@ -1876,7 +1976,9 @@ nanoeval_payl_assovaldata_putany
 comment
 "remove attributes in given item assocvaldata payload"_
 nanoeval
+(
 nanoeval_payl_assovaldata_remove2
+)node
 )attrs
 
 
@@ -1887,7 +1989,9 @@ nanoeval_payl_assovaldata_remove2
 comment
 "give the set of attributes in given item assocvaldata payload"_
 nanoeval
+(
 nanoeval_payl_assovaldata_set_attrs1
+)node
 )attrs
 
 
@@ -1898,7 +2002,9 @@ nanoeval_payl_assovaldata_set_attrs1
 comment
 "operation to clear the payload of some item"_
 nanoeval
+(
 nanoeval_payl_clear1
+)node
 )attrs
 
 
@@ -1927,7 +2033,9 @@ comment
 comment
 "file close operation"_
 nanoeval
+(
 nanoeval_file_close1
+)node
 )attrs
 
 
@@ -1938,7 +2046,9 @@ nanoeval_file_close1
 comment
 "for written file payload"_
 nanoeval
+(
 nanoeval_payl_file_write2
+)node
 )attrs
 
 
@@ -1949,7 +2059,9 @@ nanoeval_payl_file_write2
 comment
 "for file buffer payload"_
 nanoeval
+(
 nanoeval_payl_filebuffer1
+)node
 )attrs
 
 
@@ -1960,7 +2072,9 @@ nanoeval_payl_filebuffer1
 comment
 "for associative hash payloads"_
 nanoeval
+(
 nanoeval_payl_hashassoc1
+)node
 notice
 (
 payl_hashassoc_count
@@ -1979,7 +2093,9 @@ payl_hashassoc_sorted_key_node
 comment
 "get a node with sorted keys"_
 nanoeval
+(
 nanoeval_payl_hashassoc_count1
+)node
 )attrs
 
 
@@ -1990,7 +2106,9 @@ nanoeval_payl_hashassoc_count1
 comment
 "get in an hashassoc item"_
 nanoeval
+(
 nanoeval_payl_hashassoc_get2
+)node
 )attrs
 
 
@@ -2001,7 +2119,9 @@ nanoeval_payl_hashassoc_get2
 comment
 "put in an hashassoc item"_
 nanoeval
+(
 nanoeval_payl_hashassoc_putany
+)node
 )attrs
 
 
@@ -2012,7 +2132,9 @@ nanoeval_payl_hashassoc_putany
 comment
 "remove in an hashassoc item"_
 nanoeval
+(
 nanoeval_payl_hashassoc_removeany
+)node
 )attrs
 
 
@@ -2023,7 +2145,9 @@ nanoeval_payl_hashassoc_removeany
 comment
 "get a node with sorted keys"_
 nanoeval
+(
 nanoeval_payl_hashassoc_sorted_key_node2
+)node
 )attrs
 
 
@@ -2034,7 +2158,9 @@ nanoeval_payl_hashassoc_sorted_key_node2
 comment
 "for item payload of hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap1
+)node
 notice
 (
 payl_hashmap_count
@@ -2053,7 +2179,9 @@ payl_hashmap_remove
 comment
 "operation to obtain the set of keys in an hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap_count1
+)node
 )attrs
 
 
@@ -2064,7 +2192,9 @@ nanoeval_payl_hashmap_count1
 comment
 "operation to get a key in an hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap_get2
+)node
 )attrs
 
 
@@ -2075,7 +2205,9 @@ nanoeval_payl_hashmap_get2
 comment
 "operation to obtain the set of keys in an hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap_keyset1
+)node
 )attrs
 
 
@@ -2086,7 +2218,9 @@ nanoeval_payl_hashmap_keyset1
 comment
 "operation to put a key in an hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap_putany
+)node
 )attrs
 
 
@@ -2097,7 +2231,9 @@ nanoeval_payl_hashmap_putany
 comment
 "operation to remove a key in an hashmap"_
 nanoeval
+(
 nanoeval_payl_hashmap_removeany
+)node
 )attrs
 
 
@@ -2108,7 +2244,9 @@ nanoeval_payl_hashmap_removeany
 comment
 "for item payload of hashset"_
 nanoeval
+(
 nanoeval_payl_hashset1
+)node
 notice
 (
 payl_hashset_insert
@@ -2127,7 +2265,9 @@ payl_hashset_reserve
 comment
 "insert some content in an hashed set payload"_
 nanoeval
+(
 nanoeval_payl_hashset_insertany
+)node
 )attrs
 
 
@@ -2138,7 +2278,9 @@ nanoeval_payl_hashset_insertany
 comment
 "insert some content in an hashed set payload"_
 nanoeval
+(
 nanoeval_payl_hashset_insert_content2
+)node
 )attrs
 
 
@@ -2149,7 +2291,9 @@ nanoeval_payl_hashset_insert_content2
 comment
 "remove some content in an hashed set payload"_
 nanoeval
+(
 nanoeval_payl_hashset_removeany
+)node
 )attrs
 
 
@@ -2160,7 +2304,9 @@ nanoeval_payl_hashset_removeany
 comment
 "remove some content in an hashed set payload"_
 nanoeval
+(
 nanoeval_payl_hashset_remove_content2
+)node
 )attrs
 
 
@@ -2171,7 +2317,9 @@ nanoeval_payl_hashset_remove_content2
 comment
 "reserve in an hashed set payload"_
 nanoeval
+(
 nanoeval_payl_hashset_reserve2
+)node
 )attrs
 
 
@@ -2218,7 +2366,9 @@ comment
 comment
 "append into a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_appendany
+)node
 )attrs
 
 
@@ -2229,7 +2379,9 @@ nanoeval_payl_vectvaldata_appendany
 comment
 "count in a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_count1
+)node
 )attrs
 
 
@@ -2240,7 +2392,9 @@ nanoeval_payl_vectvaldata_count1
 comment
 "make node from vector of values payload"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_node2
+)node
 )attrs
 
 
@@ -2251,7 +2405,9 @@ nanoeval_payl_vectvaldata_node2
 comment
 "nth component in a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_nth2
+)node
 )attrs
 
 
@@ -2262,7 +2418,9 @@ nanoeval_payl_vectvaldata_nth2
 comment
 "put_nth component in a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_put_nth3
+)node
 )attrs
 
 
@@ -2273,7 +2431,9 @@ nanoeval_payl_vectvaldata_put_nth3
 comment
 "reserve in a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_reserve2
+)node
 )attrs
 
 
@@ -2284,7 +2444,9 @@ nanoeval_payl_vectvaldata_reserve2
 comment
 "resize in a vector of values"_
 nanoeval
+(
 nanoeval_payl_vectvaldata_resize2
+)node
 )attrs
 
 
@@ -2505,7 +2667,9 @@ nanoeval_rem2
 comment
 "to reverse iterate a function on a composite value"_
 nanoeval
+(
 nanoeval_reviter2
+)node
 )attrs
 
 
@@ -2780,7 +2944,7 @@ comment
 
 
 *the_agenda
-1457337286
+1457358541
 ^mtime
 (
 comment
@@ -3034,97 +3198,6 @@ comment
 *web_state__0dmo5BBWK0mbtv
 1446463595
 ^mtime
-(
-display
-raw
-expression
-(
-emit_code_ast
-(
-(
-dust
-it
-8
-~
-tuple
-)nodemeta
-(
-(
-pe
-(
-it
-prepare_ast_emission
-22
-~
-get
-)nodemeta
-17
-~
-be
-)nodemeta
-(
-e
-(
-(
-pe
-(
-pe
-dust
-it
-44
-~
-apply
-)nodemeta
-39
-~
-when
-)nodemeta
-it
-36
-~
-cond
-)nodemeta
-(
-ec
-(
-e
-(
-emit_code_ast
-68
-~
-verbatim
-)nodemeta
-63
-~
-get
-)nodemeta
-(
-ec
-dust
-e
-75
-~
-apply
-)nodemeta
-58
-~
-be
-)nodemeta
-31
-~
-be
-)nodemeta
-14
-~
-let
-)nodemeta
-5
-~
-func
-)nodemeta
-assign
-)node
-)attrs
 (
 digest_header
 (

@@ -3665,3 +3665,255 @@ momf_nanoeval_apply_flattenany (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((struct mom_hashedvalue_st *) resv));
   return resv;
 }                               /* end of momf_nanoeval_apply_flattenany */
+
+
+////////////////////////////////////////////////////////////////
+
+////////////////
+const char momsig_nanoeval_is_int1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_int1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_int1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_BOXINT)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_int1 */
+
+const char momsig_nanoeval_is_double1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_double1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_double1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_BOXDOUBLE)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_double1 */
+
+const char momsig_nanoeval_is_number1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_number1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_number1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  unsigned ty0 = mom_itype(arg0);
+  if (ty0 == MOMITY_BOXINT || ty0 == MOMITY_BOXDOUBLE)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_number1 */
+
+const char momsig_nanoeval_is_string1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_string1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_string1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_BOXSTRING)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_string1 */
+
+const char momsig_nanoeval_is_scalar1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_scalar1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_scalar1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  unsigned ty0 = mom_itype(arg0);
+  if (ty0 == MOMITY_BOXINT || ty0 == MOMITY_BOXDOUBLE || ty0 == MOMITY_BOXSTRING)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_scalar1 */
+
+const char momsig_nanoeval_is_atom1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_atom1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_atom1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  unsigned ty0 = mom_itype(arg0);
+  if (ty0 == MOMITY_BOXINT || ty0 == MOMITY_BOXDOUBLE || ty0 == MOMITY_BOXSTRING || ty0 == MOMITY_ITEM)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_atom1 */
+
+const char momsig_nanoeval_is_item1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_item1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_item1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_ITEM)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_item1 */
+
+
+const char momsig_nanoeval_is_tuple1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_tuple1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_tuple1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_TUPLE)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_tuple1 */
+
+
+const char momsig_nanoeval_is_set1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_set1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_set1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_SET)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_set1 */
+
+const char momsig_nanoeval_is_sequence1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_sequence1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_sequence1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  unsigned ty0 = mom_itype(arg0);
+  if (ty0 == MOMITY_SET || ty0 == MOMITY_TUPLE)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_sequence1 */
+
+const char momsig_nanoeval_is_node1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_node1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_node1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (mom_itype(arg0) == MOMITY_NODE)
+    return MOM_PREDEFITM(truth);
+  return NULL;
+} /* end momf_nanoeval_is_node1 */
