@@ -670,6 +670,8 @@ nanoeval
 (
 nanoeval_is_null1
 )node
+notice
+not
 )attrs
 
 
@@ -2158,6 +2160,21 @@ is_node
 (
 comment
 "pseudo type for nil"_
+)attrs
+
+
+*not
+1457428465
+^mtime
+(
+comment
+"negation, same as is_null"_
+nanoeval
+(
+nanoeval_is_null1
+)node
+notice
+is_null
 )attrs
 
 
