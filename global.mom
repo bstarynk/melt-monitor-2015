@@ -1523,6 +1523,50 @@ comment
 )attrs
 
 
+*nanoeval_node_arity1
+1457430266
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for node_arity"_
+notice
+(
+node_arity
+)node
+)attrs
+
+
+*nanoeval_node_connective1
+1457430266
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for node_connective"_
+notice
+node_connective
+)attrs
+
+
+*nanoeval_node_nth2
+1457430266
+^mtime
+^func
+signature_nanoeval2
+^funsignature
+(
+comment
+"routine for node_nth"_
+notice
+node_nth
+)attrs
+
+
 *nanoeval_nodeany
 1456758018
 ^mtime
@@ -2150,7 +2194,49 @@ notice
 (
 flatten_node
 is_node
+node_arity
+node_connective
+node_nth
 )set
+)attrs
+
+
+*node_arity
+1457430266
+^mtime
+(
+comment
+"get the arity of a node, or else nil"_
+nanoeval
+(
+nanoeval_node_arity1
+)node
+)attrs
+
+
+*node_connective
+1457430266
+^mtime
+(
+comment
+"get the connective of a node, or else nil"_
+nanoeval
+(
+nanoeval_node_connective1
+)node
+)attrs
+
+
+*node_nth
+1457430266
+^mtime
+(
+comment
+"get the nth son of a node, or else nil"_
+nanoeval
+(
+nanoeval_node_nth2
+)node
 )attrs
 
 
