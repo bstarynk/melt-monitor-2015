@@ -931,6 +931,13 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
                    mom_value_cstring ((const void *) nod),
                    mom_item_cstring (whatitm));
   assert (nod->nod_connitm == MOM_PREDEFITM (nanoeval));
+  if (MOM_UNLIKELY (mom_skip_dump_hooks))
+    {
+      MOM_WARNPRINTF ("skipping dump hook %s node %s",
+                      mom_item_cstring (whatitm),
+                      mom_value_cstring ((const void *) nod));
+      return;
+    }
   struct mom_item_st *tkitm = NULL;
   struct mom_item_st *thistatitm = NULL;
   struct mom_nanoeval_st nev = { 0 };

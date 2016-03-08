@@ -2022,6 +2022,8 @@ enum mom_dumpstate_en
   struct mom_queue_st*du_itemque;			\
   FILE*du_emitfile
 
+extern bool mom_skip_dump_hooks;
+
 struct mom_dumper_st
 {
   MOM_DUMPER_FIELDS;

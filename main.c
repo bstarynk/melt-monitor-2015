@@ -20,6 +20,8 @@
 
 #include "meltmoni.h"
 
+bool mom_skip_dump_hooks;
+
 static char hostname_mom[80];
 
 void *mom_prog_dlhandle;
@@ -1025,6 +1027,7 @@ enum extraopt_en
   xtraopt_commentpredef,
   xtraopt_webdir,
   xtraopt_skipmadecheck,
+  xtraopt_skipdumphooks,
   xtraopt_info,
   xtraopt_testarg,
   xtraopt_testrun,
@@ -1040,6 +1043,7 @@ static const struct option mom_long_options[] = {
   {"dump", no_argument, NULL, 'd'},
   {"syslog", no_argument, NULL, 's'},
   {"skip-made-check", no_argument, NULL, xtraopt_skipmadecheck},
+  {"skip-dump-hooks", no_argument, NULL, xtraopt_skipdumphooks},
   {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
@@ -1080,6 +1084,8 @@ usage_mom (const char *argv0)
           " \t#Set comment of next predefined\n");
   printf ("\t --skip-made-check"
           " \t#Skip the check that the binary is made up to date\n");
+  printf ("\t --skip-dump-hooks"
+          " \t#Ignore the `dump_before` and `dump_after` hooks\n");
   printf ("\t --test-arg <testarg>" " \t#Argument to next test.\n");
   printf ("\t --test-run <testname>" " \t#Name of test to run after load.\n");
   printf ("\t --info" " \t#Give various information\n");
@@ -1187,6 +1193,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           break;
         case xtraopt_skipmadecheck:
           skipmadecheck_mom = true;
+          break;
+        case xtraopt_skipdumphooks:
+          mom_skip_dump_hooks = true;
           break;
         case xtraopt_commentpredef:
           commentstr = optarg;
