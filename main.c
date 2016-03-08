@@ -1196,6 +1196,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           break;
         case xtraopt_skipdumphooks:
           mom_skip_dump_hooks = true;
+          MOM_INFORMPRINTF ("dump hooks will be skipped");
           break;
         case xtraopt_commentpredef:
           commentstr = optarg;
