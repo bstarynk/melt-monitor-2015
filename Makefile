@@ -52,6 +52,7 @@ clean:
 	$(RM) modules/*.so modules/*~ modules/*%
 	$(RM) _timestamp*
 	$(RM) core*
+	$(RM) *memo*
 
 
 
