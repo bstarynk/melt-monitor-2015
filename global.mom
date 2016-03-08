@@ -660,6 +660,19 @@ nanoeval_is_node1
 )attrs
 
 
+*is_null
+1457414352
+^mtime
+(
+comment
+"to test if argument is null"_
+nanoeval
+(
+nanoeval_is_null1
+)node
+)attrs
+
+
 *is_number
 1457359776
 ^mtime
@@ -1319,6 +1332,20 @@ comment
 "routine for is_node"_
 notice
 is_node
+)attrs
+
+
+*nanoeval_is_null1
+1457414352
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_null"_
+notice
+is_null
 )attrs
 
 
@@ -3484,6 +3511,7 @@ foldix_left
 foldix_right
 greater
 greater_or_equal
+is_null
 iter
 iterix
 less
