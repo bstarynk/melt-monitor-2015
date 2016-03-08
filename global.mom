@@ -1185,15 +1185,6 @@ equal
 )attrs
 
 
-*nanoeval_file_close1
-1456929384
-^mtime
-(
-comment
-"routine for payl_file_close"_
-)attrs
-
-
 *nanoeval_flattennodeany
 1456758793
 ^mtime
@@ -1747,6 +1738,18 @@ signature_nanoeval1
 (
 comment
 "routine to clear payload"_
+)attrs
+
+
+*nanoeval_payl_file_close1
+1456929384
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for payl_file_close"_
 )attrs
 
 
@@ -2700,7 +2703,7 @@ comment
 "file close operation"_
 nanoeval
 (
-nanoeval_file_close1
+nanoeval_payl_file_close1
 )node
 )attrs
 
