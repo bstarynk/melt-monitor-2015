@@ -1137,7 +1137,7 @@ let
 )nodemeta
 76
 ~
-func
+nano_closure
 )nodemeta
 modtup
 (
@@ -1212,7 +1212,7 @@ let
 )nodemeta
 163
 ~
-func
+nano_closure
 )nodemeta
 nprmod
 (
@@ -1306,7 +1306,7 @@ let
 )nodemeta
 233
 ~
-func
+nano_closure
 )nodemeta
 ndimod
 (
@@ -1385,7 +1385,7 @@ let
 )nodemeta
 309
 ~
-func
+nano_closure
 )nodemeta
 nastmod
 306
@@ -1404,7 +1404,7 @@ let
 ~
 transient
 )nodemeta
-func
+nano_closure
 )node
 )payload_hashmap
 
@@ -1540,6 +1540,15 @@ comment
 (
 comment
 "for unknown names"_
+)attrs
+
+
+*nano_closure
+1457527228
+^mtime
+(
+comment
+"for nanoclosures"_
 )attrs
 
 
@@ -4367,7 +4376,7 @@ let
 )nodemeta
 76
 ~
-func
+nano_closure
 )nodemeta
 modtup
 (
@@ -4442,7 +4451,7 @@ let
 )nodemeta
 163
 ~
-func
+nano_closure
 )nodemeta
 nprmod
 (
@@ -4536,7 +4545,7 @@ let
 )nodemeta
 233
 ~
-func
+nano_closure
 )nodemeta
 ndimod
 (
@@ -4615,7 +4624,7 @@ let
 )nodemeta
 309
 ~
-func
+nano_closure
 )nodemeta
 nastmod
 306
@@ -4634,7 +4643,7 @@ let
 ~
 transient
 )nodemeta
-func
+nano_closure
 )node
 nanoeval
 )node
@@ -4967,7 +4976,7 @@ apply
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 digest_module
 (
@@ -5015,7 +5024,7 @@ apply
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 emit_code_ast
 (
@@ -5094,7 +5103,7 @@ be
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 out_c_code
 (
@@ -5260,7 +5269,7 @@ output
 ~
 cond
 )nodemeta
-func
+nano_closure
 )node
 output_c_module_file
 (
@@ -5363,7 +5372,7 @@ be
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 output_header_file
 (
@@ -5472,7 +5481,7 @@ payl_file_close
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 prepare_dump_state
 (
@@ -5486,7 +5495,7 @@ dust
 ~
 payl_hashassoc
 )nodemeta
-func
+nano_closure
 )node
 prepare_header
 (
@@ -5520,7 +5529,7 @@ hdr
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 prepare_module
 (
@@ -5555,7 +5564,7 @@ m
 ~
 let
 )nodemeta
-func
+nano_closure
 )node
 something
 (

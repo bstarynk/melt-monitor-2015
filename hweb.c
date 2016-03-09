@@ -479,11 +479,9 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
   if (nbelem > 0)
     {
       mom_item_lock (MOM_PREDEFITM (web_handlers));
-      MOM_DEBUGPRINTF (web,
-                       "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d",
-                       reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload,
-                       mom_itype_str (MOM_PREDEFITM
-                                      (web_handlers)->itm_payload), nbelem);
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d", reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload, mom_itype_str (MOM_PREDEFITM (web_handlers)  //
+                                                                                                                                                                  ->itm_payload),
+                       nbelem);
       if (nbelem == 1)
         {
           hdlrval =

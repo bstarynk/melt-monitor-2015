@@ -2908,10 +2908,8 @@ momf_nanoeval_map3 (struct mom_nanoeval_st *nev,
       {
         intptr_t hi = mom_boxint_val_def (arg1, -1);
         if (hi > MOM_SIZE_MAX)
-          NANOEVAL_FAILURE_MOM (nev, expnod,
-                                mom_boxnode_make_va (MOM_PREDEFITM
-                                                     (undefined_result), 1,
-                                                     arg1));
+          NANOEVAL_FAILURE_MOM (nev, expnod, mom_boxnode_make_va (MOM_PREDEFITM (undefined_result),     //
+                                                                  1, arg1));
         arr = (hi < (intptr_t) (sizeof (smallarr) / sizeof (smallarr[0])))      //
           ? smallarr : mom_gc_alloc ((hi + 1) * sizeof (void *));
         for (intptr_t ix = 0; ix < hi; ix++)

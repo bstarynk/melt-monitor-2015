@@ -230,10 +230,10 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
       {
         const struct mom_boxnode_st *nod = pval;
         unsigned siz = mom_size (nod);
-        struct mom_item_st *moditm
-          = mom_dyncast_item (mom_unsync_item_get_phys_attr (thistatitm,
-                                                             MOM_PREDEFITM
-                                                             (display)));
+        struct mom_item_st *moditm =    //
+          mom_dyncast_item (mom_unsync_item_get_phys_attr       //
+                            (thistatitm,
+                             MOM_PREDEFITM (display)));
         MOM_DEBUGPRINTF (web,
                          "showvalue_nanoedit wexitm=%s thistatitm=%s moditm=%s, depth#%d, node %s",
                          mom_item_cstring (wexitm),
@@ -730,19 +730,16 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
   if (rawmode)
     {
       israw = (!strcmp (rawmode, "true") || !strcmp (rawmode, "1"));
-      mom_unsync_item_put_phys_attr (thistatitm,
-                                     MOM_PREDEFITM
-                                     (display),
-                                     israw ?
-                                     MOM_PREDEFITM (raw) :
-                                     MOM_PREDEFITM (cooked));
+      mom_unsync_item_put_phys_attr     //
+        (thistatitm,
+         MOM_PREDEFITM (display),
+         israw ? MOM_PREDEFITM (raw) : MOM_PREDEFITM (cooked));
     }
   else
     {
-      struct mom_item_st *moditm
-        = mom_dyncast_item (mom_unsync_item_get_phys_attr (thistatitm,
-                                                           MOM_PREDEFITM
-                                                           (display)));
+      struct mom_item_st *moditm = mom_dyncast_item     //
+        (mom_unsync_item_get_phys_attr (thistatitm,     //
+                                        MOM_PREDEFITM (display)));
       israw = (moditm == MOM_PREDEFITM (raw));
       MOM_DEBUGPRINTF (web,
                        "dofillpage_nanoedit webr#%ld  thistatitm=%s moditm=%s :: mode %s",
@@ -1975,10 +1972,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
               mom_vectvaldata_reserve (NULL, 5);
             assert (vec != NULL);
             int curpos = pos + 3;
-            while (curpos < (int) nlen
-                   && !isdelim_nanoedit_mom (np, curpos,
-                                             MOM_PREDEFITM
-                                             (right_paren_delim)))
+            while (curpos < (int) nlen //
+		   && !isdelim_nanoedit_mom (np, curpos,    //
+					     MOM_PREDEFITM (right_paren_delim)))
               {
                 int prevpos = curpos;
                 const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
@@ -2003,9 +1999,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                      curpos);
                     curpos++;
                   }
-                else if (isdelim_nanoedit_mom (np, curpos,
-                                               MOM_PREDEFITM
-                                               (right_paren_delim)))
+                else if (isdelim_nanoedit_mom //
+			 (np, curpos,      //
+			  MOM_PREDEFITM (right_paren_delim)))
                   {
                     MOM_DEBUGPRINTF (web,
                                      "parsprimary_nanoedit rightparen curpos=%d",
@@ -2037,9 +2033,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
           }
         /////////////////////// °scalar is same as %verbatim(scalar)
         ////////////////////// °(expr) is same as %verbatim(expr)
-        else if (pos + 1 < (int) nlen && isdelim_nanoedit_mom (np, pos,
-                                                               MOM_PREDEFITM
-                                                               (degree_delim)))
+        else if (pos + 1 < (int) nlen   //
+                 && isdelim_nanoedit_mom (np, pos,      //
+                                          MOM_PREDEFITM (degree_delim)))
           {
             int curpos = pos + 1;
             struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
@@ -2155,9 +2151,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             while (curpos < (int) nlen)
               {
                 int prevpos = curpos;
-                if (isdelim_nanoedit_mom (np, curpos,
-                                          MOM_PREDEFITM
-                                          (right_bracket_delim)))
+                if (isdelim_nanoedit_mom //
+		    (np, curpos,   //
+		     MOM_PREDEFITM (right_bracket_delim)))
                   {
                     curpos++;
                     break;
@@ -2184,9 +2180,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                     continue;
                   }
                 else if (curpos < (int) nlen
-                         && !isdelim_nanoedit_mom (np, curpos,
-                                                   MOM_PREDEFITM
-                                                   (right_bracket_delim)))
+                         && !isdelim_nanoedit_mom //
+			 (np, curpos,
+			  MOM_PREDEFITM (right_bracket_delim)))
                   {
                     struct mom_hashedvalue_st *next1tokv =
                       nodexp->nod_sons[curpos];
@@ -2269,10 +2265,10 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                      curpos);
                     curpos++;
                   }
-                else if (curpos < (int) nlen
-                         && !isdelim_nanoedit_mom (np, curpos,
-                                                   MOM_PREDEFITM
-                                                   (right_brace_delim)))
+                else if (curpos < (int) nlen    //
+                         && !isdelim_nanoedit_mom //
+			 (np, curpos,  //
+			  MOM_PREDEFITM (right_brace_delim)))
                   {
                     struct mom_hashedvalue_st *next1tokv =
                       nodexp->nod_sons[curpos];
@@ -2359,19 +2355,11 @@ parsexprprec_nanoedit_mom (struct
                    prec, curpos, mom_value_cstring (nexttokv));
   if (!nexttokv
       /// this are the terminating delimiters
-      || isdelim_nanoedit_mom (np, curpos,
-                               MOM_PREDEFITM
-                               (comma_delim))
-      || isdelim_nanoedit_mom (np, curpos,
-                               MOM_PREDEFITM
-                               (semicolon_delim))
-      || isdelim_nanoedit_mom (np, curpos,
-                               MOM_PREDEFITM
-                               (right_paren_delim))
-      || isdelim_nanoedit_mom (np, curpos,
-                               MOM_PREDEFITM
-                               (right_bracket_delim))
-      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_brace_delim)))
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (comma_delim)) //
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (semicolon_delim))     //
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_paren_delim))   //
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_bracket_delim)) //
+      || isdelim_nanoedit_mom (np, curpos, MOM_PREDEFITM (right_brace_delim)))  //
     {
       MOM_DEBUGPRINTF
         (web,
