@@ -28,7 +28,7 @@ enum microedit_sessfields_en
 };
 
 
-static void
+MOM_PRIVATE void
 showitem_microedit_mom (struct mom_webexch_st *wexch,
                         struct mom_item_st *wexitm,
                         struct mom_item_st *thistatitm,
@@ -78,7 +78,7 @@ showitem_microedit_mom (struct mom_webexch_st *wexch,
 
 
 
-static void
+MOM_PRIVATE void
 newline_microedit_mom (struct mom_webexch_st *wexch, int depth)
 {
   char buf[24];
@@ -103,7 +103,7 @@ newline_microedit_mom (struct mom_webexch_st *wexch, int depth)
 
 
 
-static void
+MOM_PRIVATE void
 showvalue_microedit_mom (struct mom_webexch_st *wexch,
                          struct mom_item_st *wexitm,
                          struct mom_item_st *thistatitm, const void *pval,
@@ -211,7 +211,7 @@ showvalue_microedit_mom (struct mom_webexch_st *wexch,
 
 
 
-static void
+MOM_PRIVATE void
 dofillpage_microedit_mom (struct mom_webexch_st *wexch,
                           struct mom_item_st *tkitm,
                           struct mom_item_st *wexitm,
@@ -272,7 +272,7 @@ dofillpage_microedit_mom (struct mom_webexch_st *wexch,
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end doloadpage_microedit_mom */
 
-static void
+MOM_PRIVATE void
 doknownitem_microedit_mom (struct mom_webexch_st *wexch,
                            struct mom_item_st *tkitm,
                            struct mom_item_st *wexitm,
@@ -302,7 +302,7 @@ doknownitem_microedit_mom (struct mom_webexch_st *wexch,
 }                               /* end doknownitem_microedit_mom */
 
 
-static void
+MOM_PRIVATE void
 docompletename_microedit_mom (struct mom_webexch_st *wexch,
                               struct mom_item_st *tkitm,
                               struct mom_item_st *wexitm,

@@ -805,7 +805,7 @@ mom_gc_calloc (size_t nmemb, size_t size)
 
 static int randomfd_mom;
 
-static void
+MOM_PRIVATE void
 closerandomfile_mom (void)
 {
   if (randomfd_mom > 2)
@@ -1100,7 +1100,7 @@ print_version_mom (const char *argv0)
 }
 
 
-static void
+MOM_PRIVATE void
 parse_program_arguments_mom (int *pargc, char ***pargv)
 {
   int argc = *pargc;
@@ -1275,7 +1275,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
 
 
 
-static void
+MOM_PRIVATE void
 do_add_predefined_mom (void)
 {
   for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
@@ -1330,7 +1330,7 @@ momtest_comparesig (const char *arg)
 }                               /* end of momtest_comparesig */
 
 
-static void
+MOM_PRIVATE void
 do_run_tests_mom (void)
 {
   MOM_INFORMPRINTF ("should run %d tests.", testcount_mom);

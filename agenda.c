@@ -165,7 +165,7 @@ mom_agenda_tuple_tasklets (void)
 }                               /* end of mom_agenda_tuple_tasklets */
 
 
-static bool
+MOM_PRIVATE bool
 unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
                              struct mom_boxnode_st *tknod)
 {
@@ -199,7 +199,7 @@ unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
 
 
 
-static bool
+MOM_PRIVATE bool
 unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
                               struct mom_tasklet_st *tkstack)
 {
@@ -211,7 +211,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
 
 
 
-static void
+MOM_PRIVATE void
 run_tasklet_mom (struct mom_item_st *tkitm)
 {
   if (!tkitm || tkitm == MOM_EMPTY_SLOT || tkitm->va_itype != MOMITY_ITEM)
@@ -236,7 +236,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
                     mom_item_cstring (tkitm));
 }                               /* end of run_tasklet_mom */
 
-static void *
+MOM_PRIVATE void *
 agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
 {
   intptr_t ix = (intptr_t) data;
@@ -277,7 +277,7 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
   return NULL;
 }                               /* end agenda_thread_worker_mom */
 
-static void *
+MOM_PRIVATE void *
 agenda_thread_wrapper_mom (void *data)
 {
   GC_call_with_stack_base (agenda_thread_worker_mom, data);

@@ -122,6 +122,11 @@ const char *mom_hostname (void);
 #define MOM_UNUSED
 #endif
 
+#ifdef NDEBUG
+#define MOM_PRIVATE static
+#else
+#define MOM_PRIVATE /*nothing*/
+#endif /*NDEBUG*/
 
 // A non nil address which is *never* dereferencable and can be used
 // as an empty placeholder; in practice all Unix & POSIX systems dont

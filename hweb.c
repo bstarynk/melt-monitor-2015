@@ -34,7 +34,7 @@ static onion *onion_mom;
 
 static volatile atomic_long webcount_mom;
 
-static onion_connection_status
+MOM_PRIVATE onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp);
 
 #define MAX_ONIONTHREADS_MOM 4
@@ -675,7 +675,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
 
 ////////////////////////////////////////////////////////////////
 
-static onion_connection_status
+MOM_PRIVATE onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp)
 {
   enum mom_webmethod_en wmeth = MOMWEBM_NONE;

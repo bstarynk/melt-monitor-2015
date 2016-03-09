@@ -198,7 +198,7 @@ mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb, const char *fil,
     }
 }                               /* end mom_loader_pop */
 
-static void
+MOM_PRIVATE void
 initialize_load_state_mom (const char *statepath)
 {
   struct stat st;
@@ -764,7 +764,7 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
                    mom_item_cstring (itm));
 }                               /* end of mom_dumpscan_content_item */
 
-static void
+MOM_PRIVATE void
 dump_scan_pass_mom (struct mom_dumper_st *du)
 {
   assert (du && du->va_itype == MOMITY_DUMPER);
@@ -839,7 +839,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
   fclose (fpred);
 }                               /* end dump_emit_predefined_header_mom  */
 
-static void
+MOM_PRIVATE void
 dump_emit_global_mom (struct mom_dumper_st *du)
 {
   const struct mom_boxset_st *setitems
@@ -892,7 +892,7 @@ dump_emit_global_mom (struct mom_dumper_st *du)
   fclose (fglob);
 }                               /* end of dump_emit_global_mom */
 
-static void
+MOM_PRIVATE void
 dump_emit_pass_mom (struct mom_dumper_st *du)
 {
   assert (du && du->va_itype == MOMITY_DUMPER);
@@ -919,7 +919,7 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
     }
 }
 
-static void
+MOM_PRIVATE void
 dump_nanoeval_mom (const struct mom_boxnode_st *nod,
                    const struct mom_item_st *whatitm)
 {
@@ -986,7 +986,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
 
 
 
-static void
+MOM_PRIVATE void
 before_dump_mom ()
 {
   const struct mom_hashedvalue_st *closv = NULL;
@@ -1051,7 +1051,7 @@ end:
 
 
 
-static void
+MOM_PRIVATE void
 after_dump_mom ()
 {
   const struct mom_hashedvalue_st *closv = NULL;

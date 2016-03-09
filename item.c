@@ -828,7 +828,7 @@ end:
 }                               /* end of mom_find_item_from_radix_id */
 
 
-static int
+MOM_PRIVATE int
 index_item_in_radix_mom (struct radix_mom_st *curad, struct mom_item_st *itm)
 {
   assert (curad);
@@ -1740,7 +1740,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
 static struct mom_hashset_st *predef_hset_mom;
 static pthread_mutex_t predef_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 
-static void
+MOM_PRIVATE void
 initialize_predefined_mom (struct mom_item_st *itm, const char *name,
                            momhash_t hash)
 {
@@ -1922,7 +1922,7 @@ mom_dumpemit_refitem (struct mom_dumper_st *du, const struct mom_item_st *itm)
   return;
 }                               /* end of mom_dumpemit_refitem */
 
-static void
+MOM_PRIVATE void
 dumpemit_assovaldata_mom (struct mom_dumper_st *du,
                           const struct mom_assovaldata_st *asso)
 {

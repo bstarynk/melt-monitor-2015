@@ -20,7 +20,7 @@
 
 #include "meltmoni.h"
 
-static int
+MOM_PRIVATE int
 hashset_index_mom (const struct mom_hashset_st *hset,
                    const struct mom_item_st *itm)
 {
@@ -261,7 +261,7 @@ mom_dumpscan_hashset (struct mom_dumper_st *du, struct mom_hashset_st *hset)
 
 /////// hashmap payload
 
-static int
+MOM_PRIVATE int
 hashmap_index_mom (const struct mom_hashmap_st *hmap,
                    const struct mom_item_st *itm)
 {
@@ -522,7 +522,7 @@ mom_dumpscan_hashmap (struct mom_dumper_st *du, struct mom_hashmap_st *hmap)
 
 
 ////////////////////////////////////////////////////////////////
-static int
+MOM_PRIVATE int
 hashassoc_index_mom (const struct mom_hashassoc_st *hass,
                      const struct mom_hashedvalue_st *key)
 {
@@ -971,7 +971,7 @@ mom_dumpscan_hashassoc (struct mom_dumper_st *du,
 }                               /* end of mom_dumpscan_hashassoc */
 
 
-static int
+MOM_PRIVATE int
 hassocentry_cmpkey_mom (const void *p1, const void *p2)
 {
   const struct mom_hassocentry_tu *e1 =
@@ -1081,7 +1081,7 @@ mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
 }                               /* end mom_dumpemit_hashmap_payload */
 
 
-static int
+MOM_PRIVATE int
 hashedvalueptr_cmp_mom (const void *p1, const void *p2)
 {
   const struct mom_hashedvalue_st *v1 =

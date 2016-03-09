@@ -36,14 +36,14 @@ enum nanoedit_closoff_en
   mec__last
 };
 
-static void
+MOM_PRIVATE void
 showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
                               struct mom_item_st *thistatitm,
                               const struct mom_item_st *curitm);
 
 
-static void
+MOM_PRIVATE void
 showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                        struct mom_item_st *wexitm,
                        const struct mom_item_st *curitm, bool isval)
@@ -93,7 +93,7 @@ showitem_nanoedit_mom (struct mom_filebuffer_st *fb,
 }                               // end showitem_nanoedit_mom
 
 
-static void
+MOM_PRIVATE void
 newline_nanoedit_mom (struct mom_filebuffer_st *fb, int depth)
 {
   char buf[24];
@@ -115,7 +115,7 @@ newline_nanoedit_mom (struct mom_filebuffer_st *fb, int depth)
 }                               /* end of newline_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 utf8escape_nanoedit_mom (FILE *f, gunichar uc, const char *cescstr,
                          void *clientdata)
 {
@@ -145,7 +145,7 @@ utf8escape_nanoedit_mom (FILE *f, gunichar uc, const char *cescstr,
 }
 
 
-static void
+MOM_PRIVATE void
 showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
                         struct mom_item_st *wexitm,
                         struct mom_item_st *thistatitm, const void *pval,
@@ -314,7 +314,7 @@ showvalue_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
                               struct mom_item_st *thistatitm,
@@ -350,7 +350,7 @@ showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
                               struct mom_item_st *thistatitm,
@@ -379,7 +379,7 @@ showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
                         struct mom_item_st *wexitm,
                         struct mom_item_st *thistatitm,
@@ -411,7 +411,7 @@ showqueue_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showhashset_nanoedit_mom (struct mom_filebuffer_st *fb,
                           struct mom_item_st *wexitm,
                           struct mom_item_st *thistatitm,
@@ -432,7 +432,7 @@ showhashset_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
                           struct mom_item_st *wexitm,
                           struct mom_item_st *thistatitm,
@@ -465,7 +465,7 @@ showhashmap_nanoedit_mom (struct mom_filebuffer_st *fb,
 }                               /* end of showhashmap_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
                             struct mom_item_st *wexitm,
                             struct mom_item_st *thistatitm,
@@ -500,7 +500,7 @@ showhashassoc_nanoedit_mom (struct mom_filebuffer_st *fb,
 
 
 
-static void
+MOM_PRIVATE void
 showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
                               struct mom_item_st *thistatitm,
@@ -710,7 +710,7 @@ momf_nano_displayer (const struct mom_boxnode_st
 }                               /* end of momf_nano_displayer */
 
 
-static void
+MOM_PRIVATE void
 dofillpage_nanoedit_mom (struct mom_webexch_st
                          *wexch,
                          struct mom_item_st *tkitm,
@@ -840,7 +840,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
 
 
 
-static void
+MOM_PRIVATE void
 doparsecommand_nanoedit_mom (struct mom_webexch_st
                              *wexch,
                              struct mom_item_st
@@ -849,7 +849,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
                              *wexitm,
                              struct mom_item_st *thistatitm, const char *cmd);
 
-static void
+MOM_PRIVATE void
 doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
                           struct mom_item_st *tkitm,
                           struct mom_item_st *wexitm,
@@ -882,7 +882,7 @@ doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
 
 
 
-static void
+MOM_PRIVATE void
 docompletename_nanoedit_mom (struct mom_webexch_st
                              *wexch,
                              struct mom_item_st
@@ -929,7 +929,7 @@ docompletename_nanoedit_mom (struct mom_webexch_st
 }                               /* end of docompletename_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 doexit_nanoedit_mom (struct mom_webexch_st *wexch,
                      struct mom_item_st *tkitm,
                      struct mom_item_st *wexitm,
@@ -955,7 +955,7 @@ doexit_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end of doexit_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 docreateitem_nanoedit_mom (struct mom_webexch_st
                            *wexch,
                            struct mom_item_st *tkitm,
@@ -1023,7 +1023,7 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
 }                               /* end of docreateitem_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
                          struct mom_item_st *tkitm,
                          struct mom_item_st *wexitm,
@@ -1074,7 +1074,7 @@ dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
 }                               /* end dohideitem_nanoedit_mom */
 
 
-static void
+MOM_PRIVATE void
 dodispitem_nanoedit_mom (struct mom_webexch_st *wexch,
                          struct mom_item_st *tkitm,
                          struct mom_item_st *wexitm,
@@ -1126,7 +1126,7 @@ dodispitem_nanoedit_mom (struct mom_webexch_st *wexch,
 
 
 
-static void
+MOM_PRIVATE void
 doeval_nanoedit_mom (struct mom_webexch_st *wexch,
                      struct mom_item_st *tkitm,
                      struct mom_item_st *wexitm,
@@ -1404,7 +1404,8 @@ struct nanoparsing_mom_st
       mom_boxstring_printf((Fmt),##__VA_ARGS__);                \
     longjmp(_np->nanop_jb,__LINE__);                            \
   } while(0)
-static bool
+
+MOM_PRIVATE bool
 is_utf8_delim_mom (gunichar uc)
 {
   if (!uc)
@@ -1456,7 +1457,7 @@ is_utf8_delim_mom (gunichar uc)
 
 
 
-static void
+MOM_PRIVATE void
 parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 {
   struct mom_queue_st *que = NULL;
@@ -1869,7 +1870,7 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 
-static inline bool
+MOM_PRIVATE inline bool
 isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
                       int pos, struct mom_item_st *delimitm)
 {
@@ -1891,13 +1892,13 @@ isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
 
 
 
-static const void *parsexprprec_nanoedit_mom (struct
+MOM_PRIVATE const void *parsexprprec_nanoedit_mom (struct
                                               nanoparsing_mom_st
                                               *np, int prec, int *posptr);
-static const void *parsexpr_nanoedit_mom (struct
+MOM_PRIVATE const void *parsexpr_nanoedit_mom (struct
                                           nanoparsing_mom_st
                                           *np, int *posptr);
-static const void *
+MOM_PRIVATE const void *
 parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
@@ -2315,7 +2316,7 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 // precedence 1 is the highest, precedence 15 is the lowest
 // e.g. http://en.cppreference.com/w/c/language/operator_precedence 
 #define NANOEDIT_MAX_PRECEDENCE_MOM 16
-static const void *
+MOM_PRIVATE const void *
 parsexprprec_nanoedit_mom (struct
                            nanoparsing_mom_st *np, int prec, int *posptr)
 {
@@ -2637,13 +2638,13 @@ parsexprprec_nanoedit_mom (struct
 
 
 
-static const void *
+MOM_PRIVATE const void *
 parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
   return parsexprprec_nanoedit_mom (np, NANOEDIT_MAX_PRECEDENCE_MOM, posptr);
 }
 
-static void
+MOM_PRIVATE void
 doparsecommand_nanoedit_mom (struct mom_webexch_st
                              *wexch,
                              struct mom_item_st

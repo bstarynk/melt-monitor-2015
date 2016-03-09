@@ -24,7 +24,7 @@
 
 #define NANOEVAL_MAXDEPTH_MOM 256
 
-static struct mom_item_st *
+MOM_PRIVATE struct mom_item_st *
 nanoeval_freshenv_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *parenvitm, unsigned sizhint,
                        struct mom_item_st *protoitm)
@@ -68,7 +68,7 @@ mom_bind_nanoev (struct mom_nanoeval_st *nev,
                    mom_value_cstring (val));
 }                               /* end of mom_bind_nanoev */
 
-static void *
+MOM_PRIVATE const void *
 nanoeval_displaynode_mom (struct mom_nanoeval_st *nev,
                           struct mom_item_st *envitm,
                           const struct mom_boxnode_st *nod, int depth)
@@ -187,7 +187,7 @@ nanoeval_displaynode_mom (struct mom_nanoeval_st *nev,
 }                               /* end of nanoeval_displaynode_mom */
 
 
-static void *
+MOM_PRIVATE const void *
 nanoeval_getnode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                       const struct mom_boxnode_st *nod, int depth)
 {
@@ -283,7 +283,7 @@ nanoeval_getnode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
 }                               /* end of nanoeval_getnode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_condnode_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *envitm,
                        const struct mom_boxnode_st *nod, int depth)
@@ -338,7 +338,7 @@ nanoeval_condnode_mom (struct mom_nanoeval_st *nev,
 }                               /* end of nanoeval_condnode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_switchitemnode_mom (struct mom_nanoeval_st *nev,
                              struct mom_item_st *envitm,
                              const struct mom_boxnode_st *nod, int depth)
@@ -425,7 +425,7 @@ nanoeval_switchitemnode_mom (struct mom_nanoeval_st *nev,
 
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_ornode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                      const struct mom_boxnode_st *nod, int depth)
 {
@@ -457,7 +457,7 @@ nanoeval_ornode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
 }                               /* end of nanoeval_ornode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_andnode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                       const struct mom_boxnode_st *nod, int depth)
 {
@@ -487,7 +487,7 @@ nanoeval_andnode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
   return resv;
 }                               /* end of nanoeval_andnode_mom */
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_verbatimnode_mom (struct mom_nanoeval_st *nev,
                            struct mom_item_st *envitm,
                            const struct mom_boxnode_st *nod, int depth)
@@ -513,7 +513,7 @@ nanoeval_verbatimnode_mom (struct mom_nanoeval_st *nev,
 
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
                          struct mom_item_st *envitm,
                          const struct mom_boxnode_st *nod, int depth)
@@ -702,7 +702,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
 }                               /* end nanoeval_outputnode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_whilenode_mom (struct mom_nanoeval_st *nev,
                         struct mom_item_st *envitm,
                         const struct mom_boxnode_st *nod, int depth)
@@ -743,7 +743,7 @@ nanoeval_whilenode_mom (struct mom_nanoeval_st *nev,
 }                               /* end nanoeval_whilenode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
                          struct mom_item_st *envitm,
                          const struct mom_boxnode_st *nod, int depth)
@@ -818,7 +818,7 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
 
 
 
-static void *
+MOM_PRIVATE void *
 nanoeval_itemnode_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *envitm,
                        const struct mom_boxnode_st *nod, int depth)
@@ -865,7 +865,7 @@ nanoeval_itemnode_mom (struct mom_nanoeval_st *nev,
 }                               /* end nanoeval_itemnode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_transienteval_mom (struct mom_nanoeval_st *nev,
                             bool transient,
                             struct mom_item_st *envitm,
@@ -920,7 +920,7 @@ nanoeval_transienteval_mom (struct mom_nanoeval_st *nev,
     }
 }                               /* end nanoeval_transienteval_mom */
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_transientnode_mom (struct mom_nanoeval_st *nev,
                             struct mom_item_st *envitm,
                             const struct mom_boxnode_st *nod, int depth)
@@ -928,7 +928,7 @@ nanoeval_transientnode_mom (struct mom_nanoeval_st *nev,
   return nanoeval_transienteval_mom (nev, true, envitm, nod, depth);
 }                               // end nanoeval_transientnode_mom
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_persistentnode_mom (struct mom_nanoeval_st *nev,
                              struct mom_item_st *envitm,
                              const struct mom_boxnode_st *nod, int depth)
@@ -938,7 +938,7 @@ nanoeval_persistentnode_mom (struct mom_nanoeval_st *nev,
 
 
 // like progn in Lisp or begin in Scheme
-static const void *
+MOM_PRIVATE const void *
 nanoeval_sequencenode_mom (struct mom_nanoeval_st *nev,
                            struct mom_item_st *envitm,
                            const struct mom_boxnode_st *nod, int depth)
@@ -960,7 +960,7 @@ nanoeval_sequencenode_mom (struct mom_nanoeval_st *nev,
 }                               // end nanoeval_sequencenode_mom
 
 // like prog1 in Lisp; if only one subexpression, take its first component
-static const void *
+MOM_PRIVATE const void *
 nanoeval_firstnode_mom (struct mom_nanoeval_st *nev,
                         struct mom_item_st *envitm,
                         const struct mom_boxnode_st *nod, int depth)
@@ -1004,7 +1004,7 @@ nanoeval_firstnode_mom (struct mom_nanoeval_st *nev,
   return res;
 }                               // end nanoeval_firstnode_mom
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *envitm,
                        const struct mom_boxnode_st *nod, int depth)
@@ -1222,7 +1222,7 @@ nbbindings_nano_mom (const struct mom_boxnode_st *nod)
 
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_letnode_mom (struct mom_nanoeval_st *nev,
                       struct mom_item_st *envitm,
                       const struct mom_boxnode_st *nod, int depth)
@@ -1286,7 +1286,7 @@ nanoeval_letnode_mom (struct mom_nanoeval_st *nev,
 }                               /* end nanoeval_letnode_mom */
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
                          struct mom_item_st *envitm,
                          const struct mom_boxnode_st *nod, int depth)
@@ -1372,7 +1372,7 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
  * With several arguments: %nanoeval(<env>,<expr>...)  evaluate the
  * result of every <expr> in the <env>
  ***/
-static const void *
+MOM_PRIVATE const void *
 nanoeval_nanoevalnode_mom (struct mom_nanoeval_st *nev,
                            struct mom_item_st *envitm,
                            const struct mom_boxnode_st *nod, int depth)
@@ -1439,7 +1439,7 @@ nanoeval_nanoevalnode_mom (struct mom_nanoeval_st *nev,
     }
 }                               /* end nanoeval_nanoevalnode_mom  */
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                         struct mom_item_st *envitm,
                         const struct mom_boxnode_st *nod, int depth)
@@ -1778,7 +1778,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
 
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_node_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                    const struct mom_boxnode_st *nod, int depth)
 {
@@ -1856,7 +1856,7 @@ nanoeval_node_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
 
 
 
-static const void *
+MOM_PRIVATE const void *
 nanoeval_item_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                    struct mom_item_st *itm, int depth)
 {

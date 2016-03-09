@@ -20,7 +20,7 @@
 
 #include "meltmoni.h"
 
-static void
+MOM_PRIVATE void
 file_finalize_mom (void *mfil, void *data)
 {
   if (!mfil || mfil == MOM_EMPTY_SLOT)

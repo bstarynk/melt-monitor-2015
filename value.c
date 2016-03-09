@@ -212,7 +212,7 @@ static const struct mom_boxtuple_st empty_boxtuple_mom = {
   .hva_hash = SEQITEM_EMPTY_HASH_MOM (MOMITY_TUPLE)
 };
 
-static void
+MOM_PRIVATE void
 seqitem_hash_compute_mom (struct mom_seqitems_st *si)
 {
   assert (si);
@@ -349,7 +349,7 @@ mom_boxtuple_make_sentinel_va (struct mom_item_st *itm1, ...)
 }                               /* end of mom_boxtuple_make_sentinel_va */
 
 
-static int
+MOM_PRIVATE int
 compare_item_ptr_mom (const void *p1, const void *p2)
 {
   return mom_item_cmp (*(const struct mom_item_st **) p1,
@@ -621,7 +621,7 @@ mom_boxset_difference (const struct mom_boxset_st *set1,
 
 
 ////////////////
-static void
+MOM_PRIVATE void
 update_node_hash_mom (struct mom_boxnode_st *nod)
 {
   assert (nod);
