@@ -2035,6 +2035,67 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             *posptr = curpos;
             return nodres;
           }
+        /////////////////////// °scalar is same as %verbatim(scalar)
+        ////////////////////// °(expr) is same as %verbatim(expr)
+        else if (pos + 1 < (int) nlen && isdelim_nanoedit_mom (np, pos,
+                                                               MOM_PREDEFITM
+                                                               (degree_delim)))
+          {
+            int curpos = pos + 1;
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
+            const void *verbexpv = NULL;
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit degree-expr pos=%d next1tokv=%s",
+                             pos, mom_value_cstring (next1tokv));
+            if (isdelim_nanoedit_mom
+                (np, pos + 1, MOM_PREDEFITM (left_paren_delim))
+                && pos + 2 < (int) nlen)
+              {                 /// °(expr) case
+                curpos = pos + 2;
+                int prevpos = curpos;
+                const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit degree-expr prevpos#%d curpos#%d"
+                                 " subexpv %s", prevpos,
+                                 curpos, mom_value_cstring (subexpv));
+                if (!subexpv && curpos == prevpos)
+                  NANOPARSING_FAILURE_WITH_MOM (np, off,
+                                                next1tokv,
+                                                "parsprimary_nanoedit missing subexpression in degree-node");
+                verbexpv = subexpv;
+                if (isdelim_nanoedit_mom (np, curpos,
+                                          MOM_PREDEFITM (right_paren_delim)))
+                  {
+                    MOM_DEBUGPRINTF (web,
+                                     "parsprimary_nanoedit rightparen curpos=%d",
+                                     curpos);
+                    curpos++;
+                  }
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit degree-expr curpos=%d subexp verbexpv=%s",
+                                 curpos, mom_value_cstring (verbexpv));
+              }
+            else
+              {                 /// °scalar case
+                verbexpv = next1tokv;
+                curpos = pos + 2;
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit degree-expr curpos=%d scal verbexpv=%s",
+                                 curpos, mom_value_cstring (verbexpv));
+              }
+            const struct mom_boxnode_st *nodres =
+              mom_boxnode_meta_make_va (np->nanop_wexitm, pos,
+                                        MOM_PREDEFITM (verbatim),
+                                        1, verbexpv);
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit degree-expr curpos#%d nodres=%s ",
+                             curpos,
+                             mom_value_cstring ((const struct
+                                                 mom_hashedvalue_st *)
+                                                nodres));
+            *posptr = curpos;
+            return nodres;
+          }
         /////////////////////// (subexpr)  --- starting with a leftparen
         else if (pos + 2 < (int) nlen
                  && isdelim_nanoedit_mom (np, pos,
