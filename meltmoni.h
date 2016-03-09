@@ -199,13 +199,14 @@ __attribute__ ((format (printf, 3, 4), noreturn));
 
 // for debugging:
 #define MOM_DEBUG_LIST_OPTIONS(Dbg)		\
-  Dbg(item)					\
-  Dbg(dump)					\
-  Dbg(load)					\
-  Dbg(run)					\
-  Dbg(gencod)					\
   Dbg(cmd)					\
+  Dbg(dump)					\
+  Dbg(gencod)					\
+  Dbg(item)					\
+  Dbg(load)					\
   Dbg(low)					\
+  Dbg(mutex)					\
+  Dbg(run)					\
   Dbg(web)
 
 #define MOM_DEBUG_DEFINE_OPT(Nam) momdbg_##Nam,
@@ -1399,20 +1400,34 @@ bool mom_unsync_item_clear_payload (struct mom_item_st *itm);
 void mom_initialize_items (void);
 
 static inline void
-mom_item_lock (struct mom_item_st *itm)
+mom_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
 {
-  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
-    MOM_FATAPRINTF ("bad itm@%p to lock", itm);
+  extern void mom_debug_item_lock_at (struct mom_item_st *itm,
+                                      const char *fil, int lin);
+  if (MOM_UNLIKELY
+      (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM))
+    MOM_FATAPRINTF_AT (fil, lin, "bad itm@%p to lock", itm);
+  if (MOM_UNLIKELY (MOM_IS_DEBUGGING (mutex)))
+    mom_debug_item_lock_at (itm, fil, lin);
   pthread_mutex_lock (&itm->itm_mtx);
 }
 
+#define mom_item_lock(Itm) mom_item_lock_at((Itm),__FILE__,__LINE__)
+
 static inline void
-mom_item_unlock (struct mom_item_st *itm)
+mom_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
 {
-  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
-    MOM_FATAPRINTF ("bad itm@%p to unlock", itm);
+  extern void mom_debug_item_unlock_at (struct mom_item_st *itm,
+                                        const char *fil, int lin);
+  if (MOM_UNLIKELY
+      (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM))
+    MOM_FATAPRINTF_AT (fil, lin, "bad itm@%p to unlock", itm);
+  if (MOM_UNLIKELY (MOM_IS_DEBUGGING (mutex)))
+    mom_debug_item_unlock_at (itm, fil, lin);
   pthread_mutex_unlock (&itm->itm_mtx);
 }
+
+#define mom_item_unlock(Itm) mom_item_unlock_at((Itm),__FILE__,__LINE__)
 
 struct mom_item_st *mom_make_item_from_radix_id (const struct mom_itemname_tu
                                                  *radix, uint16_t hid,

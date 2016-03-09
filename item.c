@@ -2443,4 +2443,87 @@ mom_unsync_item_clear_payload (struct mom_item_st *itm)
   return true;
 }                               /* end of mom_unsync_item_clear_payload */
 
+
+// very low level support for debugging mutex...
+void
+mom_debug_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
+{
+  assert (MOM_IS_DEBUGGING (mutex) && itm != NULL);
+  void *backbuf[5] = { };       // add additional cases below when changing the dimension
+  int lev = backtrace (backbuf, sizeof (backbuf) / sizeof (backbuf[0]));
+  char **buf = backtrace_symbols (backbuf, lev);
+  switch (lev)
+    {
+    case 0:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_lock %s",
+                          mom_item_cstring (itm));
+      break;
+    case 1:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_lock %s from %s",
+                          mom_item_cstring (itm), buf[0]);
+      break;
+    case 2:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_lock %s from %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1]);
+      break;
+    case 3:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_lock %s from %s, %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1], buf[2]);
+      break;
+    case 4:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_lock %s from %s, %s, %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1], buf[2],
+                          buf[3]);
+      break;
+    default:
+      if (lev >= 4)
+        MOM_DEBUGPRINTF_AT (fil, lin, mutex,
+                            "item_lock %s from %s, %s, %s, %s, %s",
+                            mom_item_cstring (itm), buf[0], buf[1], buf[2],
+                            buf[3], buf[4]);
+    };
+  free (buf);
+}                               /* end of mom_debug_item_lock_at */
+
+void
+mom_debug_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
+{
+  assert (MOM_IS_DEBUGGING (mutex) && itm != NULL);
+  void *backbuf[5] = { };       // add additional cases below when changing the dimension
+  int lev = backtrace (backbuf, sizeof (backbuf) / sizeof (backbuf[0]));
+  char **buf = backtrace_symbols (backbuf, lev);
+  switch (lev)
+    {
+    case 0:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_unlock %s",
+                          mom_item_cstring (itm));
+      break;
+    case 1:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_unlock %s from %s",
+                          mom_item_cstring (itm), buf[0]);
+      break;
+    case 2:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_unlock %s from %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1]);
+      break;
+    case 3:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex, "item_unlock %s from %s, %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1], buf[2]);
+      break;
+    case 4:
+      MOM_DEBUGPRINTF_AT (fil, lin, mutex,
+                          "item_unlock %s from %s, %s, %s, %s",
+                          mom_item_cstring (itm), buf[0], buf[1], buf[2],
+                          buf[3]);
+      break;
+    default:
+      if (lev >= 4)
+        MOM_DEBUGPRINTF_AT (fil, lin, mutex,
+                            "item_unlock %s from %s, %s, %s, %s, %s",
+                            mom_item_cstring (itm), buf[0], buf[1], buf[2],
+                            buf[3], buf[4]);
+    };
+  free (buf);
+}                               /*end of mom_debug_item_unlock_at */
+
 /// eof item.c
