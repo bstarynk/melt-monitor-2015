@@ -132,6 +132,15 @@ comment
 )attrs
 
 
+*bdu
+1457522442
+^mtime
+(
+comment
+"variable..."_
+)attrs
+
+
 *be
 1455623664
 ^mtime
@@ -578,6 +587,15 @@ comment
 )attrs
 
 
+*i
+1457522500
+^mtime
+(
+comment
+"variable"_
+)attrs
+
+
 *identity
 1456312882
 ^mtime
@@ -1001,6 +1019,15 @@ operator
 diff
 precedence
 4_
+)attrs
+
+
+*modtup
+1457522457
+^mtime
+(
+comment
+"variable (for tuple of modules)"_
 )attrs
 
 
@@ -2317,6 +2344,15 @@ is_null
 ^mtime
 
 
+*nprmod
+1457522491
+^mtime
+(
+comment
+"variable (for node of prepared modules)"_
+)attrs
+
+
 *o
 1457430909
 ^mtime
@@ -3294,6 +3330,15 @@ precedence
 )attrs
 
 
+*pm
+1457522600
+^mtime
+(
+comment
+"variable"_
+)attrs
+
+
 *precedence
 1455805494
 ^mtime
@@ -3336,6 +3381,15 @@ comment
 (
 comment
 "function to prepare a module "_
+)attrs
+
+
+*prhd
+1457522474
+^mtime
+(
+comment
+"variable (for prepared header)"_
 )attrs
 
 
@@ -3637,6 +3691,15 @@ precedence
 )attrs
 
 
+*something
+1457522594
+^mtime
+(
+comment
+"variable ..."_
+)attrs
+
+
 *star_delim
 1456130464
 ^mtime
@@ -3686,7 +3749,7 @@ comment
 
 
 *the_agenda
-1457512763
+1457522607
 ^mtime
 (
 comment
@@ -3974,14 +4037,20 @@ display
 raw
 expression
 (
-web_state__0dmo5BBWK0mbtv
+something
 (
-item
+bdu
+modtup
+prhd
+nprmod
+i
+m
+pm
 5
 ~
-verbatim
+set
 )nodemeta
-payl_hashmap_remove
+assign
 )node
 )attrs
 (
@@ -4621,6 +4690,16 @@ let
 )nodemeta
 func
 )node
+something
+(
+bdu
+i
+m
+modtup
+nprmod
+pm
+prhd
+)set
 )payload_hashmap
 
 
