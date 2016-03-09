@@ -1036,7 +1036,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
       const struct mom_boxnode_st *resnod =
         mom_boxnode_make (MOM_PREDEFITM (func), arity + 1, arr);
       MOM_DEBUGPRINTF (run,
-                       "nanoeval_funcnode fixed arity:%d resnod %s depth#%d",
+                       "nanoeval_funcnode fixed arity:%d resnod %s\n... depth#%d",
                        arity,
                        mom_value_cstring ((struct mom_hashedvalue_st *)
                                           resnod), depth);
@@ -1051,6 +1051,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
             NANOEVAL_FAILURE_MOM (nev, nod,
                                   mom_boxnode_make_va (MOM_PREDEFITM
                                                        (arg), 1, formalsv));
+
         }
       const struct mom_hashedvalue_st **arr =
         mom_gc_alloc ((arity + 3) * sizeof (void *));
@@ -1063,22 +1064,32 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
       else
         arr[0] = (const struct mom_hashedvalue_st *) formalsv;
       arr[1] = (const struct mom_hashedvalue_st *) envitm;
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_funcnode depth#%d arr[0]=%s",
+                       depth,
+                       mom_value_cstring ((struct mom_hashedvalue_st *)
+                                          arr[0]));
       for (unsigned ix = 1; ix < arity; ix++)
         arr[ix + 1] = nod->nod_sons[ix];
       const struct mom_boxnode_st *resnod =
         mom_boxnode_make (MOM_PREDEFITM (func), arity + 1, arr);
       MOM_DEBUGPRINTF (run,
-                       "nanoeval_funcnode arity:%d resnod %s depth#%d",
+                       "nanoeval_funcnode arity:%d resnod %s\n... depth#%d",
                        arity,
                        mom_value_cstring ((struct mom_hashedvalue_st *)
                                           resnod), depth);
       return resnod;
     }
   else
-    NANOEVAL_FAILURE_MOM (nev, nod,
-                          mom_boxnode_make_va (MOM_PREDEFITM
-                                               (undefined_result), 1,
-                                               formalsv));
+    {
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_funcnode depth#%d bad formalsv %s",
+                       depth, mom_value_cstring ((void *) formalsv));
+      NANOEVAL_FAILURE_MOM (nev, nod,
+                            mom_boxnode_make_va (MOM_PREDEFITM
+                                                 (undefined_result), 1,
+                                                 formalsv));
+    }
 }                               /* end nanoeval_funcnode_mom */
 
 

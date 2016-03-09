@@ -403,7 +403,7 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
   unsigned ty0 = mom_itype (arg0);
   unsigned ty1 = mom_itype (arg1);
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_put3 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s arg1=%s arg1=%s",
+                   "nanoeval_put3 start envitm=%s depth=%d expnod=%s closnod=%s\n... arg0=%s arg1=%s arg2=%s",
                    mom_item_cstring (envitm), depth,
                    mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
                    mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
