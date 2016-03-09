@@ -419,6 +419,10 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
     {
       struct mom_item_st *itm1 = (struct mom_item_st *) arg1;
       mom_unsync_item_put_phys_attr (itm0, itm1, arg2);
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_put3 depth#%d put in itm0=%s at.itm1=%s val.arg2=%s",
+                       depth, mom_item_cstring (itm0),
+                       mom_item_cstring (itm1), mom_value_cstring (arg2));
       ok = true;
     }
   else if (ty1 == MOMITY_BOXINT && itm0->itm_pcomp != NULL)
@@ -430,18 +434,24 @@ momf_nanoeval_put3 (struct mom_nanoeval_st *nev,
       if (rk >= 0 && rk < (int) ln)
         {
           mom_vectvaldata_put_nth (itm0->itm_pcomp, rk, arg2);
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_put3 depth#%d put in itm0=%s comp.rk#%d val.arg2=%s",
+                           depth, mom_item_cstring (itm0), rk,
+                           mom_value_cstring (arg2));
           ok = true;
         }
     }
   time (&itm0->itm_mtime);
   mom_item_unlock (itm0);
+  MOM_DEBUGPRINTF (run, "nanoeval_put3 depth#%d itm0=%s ok %s",
+                   depth, mom_item_cstring (itm0), ok ? "true" : "false");
   if (!ok)
     NANOEVAL_FAILURE_MOM (nev, expnod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 3,
                                                arg0, arg1, arg2));
-
-  return NULL;
+  return itm0;
 }                               /* end momf_nanoeval_put3 */
+
 
 struct mom_hashset_st *
 add2hset_mom (struct mom_hashset_st *hset, const void *val)
