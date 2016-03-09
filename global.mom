@@ -2530,6 +2530,15 @@ nanoeval_out_puts2
 )attrs
 
 
+*out_raw
+1457501635
+^mtime
+(
+comment
+"output a raw string or number"_
+)attrs
+
+
 *out_utf8enc
 1456812179
 ^mtime

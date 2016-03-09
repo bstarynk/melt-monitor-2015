@@ -563,68 +563,107 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
         {
           const void *firstv = NULL;
           const void *firstargexpv = subexpnod->nod_sons[0];
-          if (subconitm == MOM_PREDEFITM (out_decimal))
+#define NBMODOUTPUT_MOM 179
+#define CASE_OUTPUT_MOM(Nam) momhashpredef_##Nam % NBMODOUTPUT_MOM:	\
+	  if (subconitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcase; foundcase_##Nam
+          switch (subconitm->hva_hash % NBMODOUTPUT_MOM)
             {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_BOXINT)
-                {
-                  intptr_t ival = mom_boxint_val_def (firstv, 0);
-                  fprintf (fil, "%ld", (long) ival);
-                }
-              continue;
+            case CASE_OUTPUT_MOM (out_decimal):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_BOXINT)
+                  {
+                    intptr_t ival = mom_boxint_val_def (firstv, 0);
+                    fprintf (fil, "%ld", (long) ival);
+                  }
+                continue;
+              }
+            case CASE_OUTPUT_MOM (out_hexa):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_BOXINT)
+                  {
+                    intptr_t ival = mom_boxint_val_def (firstv, 0);
+                    fprintf (fil, "%lx", (long) ival);
+                  }
+                continue;
+              }
+            case CASE_OUTPUT_MOM (out_html):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_BOXSTRING)
+                  mom_output_utf8_html (fil, mom_boxstring_cstr (firstv),
+                                        mom_size (firstv), false);
+                continue;
+              }
+            case CASE_OUTPUT_MOM (out_utf8enc):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_BOXSTRING)
+                  mom_output_utf8_encoded (fil, mom_boxstring_cstr (firstv),
+                                           mom_size (firstv));
+                continue;
+              }
+            case CASE_OUTPUT_MOM (out_filebuffer):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_ITEM)
+                  {
+                    struct mom_item_st *firstitm = mom_dyncast_item (firstv);
+                    mom_item_lock (firstitm);
+                    if (mom_itype (firstitm->itm_payload) ==
+                        MOMITY_FILEBUFFER)
+                      mom_puts_filebuffer (fil,
+                                           (struct mom_filebuffer_st *)
+                                           firstitm->itm_payload,
+                                           MOM_FILEBUFFER_KEEPOPEN);
+                    mom_item_unlock (firstitm);
+                  }
+                continue;
+              }
+            case CASE_OUTPUT_MOM (out_apply):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                if (mom_itype (firstv) == MOMITY_NODE)
+                  (void) mom_nanoapply (nev, envitm,
+                                        (struct mom_boxnode_st *) firstv,
+                                        subexpnod, 1, (const void **) &outitm,
+                                        depth + 1);
+                continue;
+              };
+            case CASE_OUTPUT_MOM (out_raw):
+              {
+                firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                switch (mom_itype (firstv))
+                  {
+                  case MOMITY_BOXINT:
+                    mom_file_printf (fil, "%lld",
+                                     (long long) mom_boxint_val_def (firstv,
+                                                                     0));
+                    break;
+                  case MOMITY_BOXSTRING:
+                    mom_file_puts (fil, mom_boxstring_cstr (firstv));
+                    break;
+                  case MOMITY_BOXDOUBLE:
+                    mom_file_printf (fil, "%g",
+                                     mom_boxdouble_val_def (firstv, 0.0));
+                    break;
+                  case MOMITY_ITEM:
+                    mom_file_puts (fil,
+                                   mom_item_cstring (mom_dyncast_item
+                                                     (firstv)));
+                    break;
+                  default:;
+                  }
+                continue;
+              }
+            default:
+            defaultcase:
+              break;
             }
-          else if (subconitm == MOM_PREDEFITM (out_hexa))
-            {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_BOXINT)
-                {
-                  intptr_t ival = mom_boxint_val_def (firstv, 0);
-                  fprintf (fil, "%lx", (long) ival);
-                }
-              continue;
-            }
-          else if (subconitm == MOM_PREDEFITM (out_html))
-            {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_BOXSTRING)
-                mom_output_utf8_html (fil, mom_boxstring_cstr (firstv),
-                                      mom_size (firstv), false);
-              continue;
-            }
-          else if (subconitm == MOM_PREDEFITM (out_utf8enc))
-            {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_BOXSTRING)
-                mom_output_utf8_encoded (fil, mom_boxstring_cstr (firstv),
-                                         mom_size (firstv));
-              continue;
-            }
-          else if (subconitm == MOM_PREDEFITM (out_filebuffer))
-            {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_ITEM)
-                {
-                  struct mom_item_st *firstitm = mom_dyncast_item (firstv);
-                  mom_item_lock (firstitm);
-                  if (mom_itype (firstitm->itm_payload) == MOMITY_FILEBUFFER)
-                    mom_puts_filebuffer (fil,
-                                         (struct mom_filebuffer_st *)
-                                         firstitm->itm_payload,
-                                         MOM_FILEBUFFER_KEEPOPEN);
-                  mom_item_unlock (firstitm);
-                }
-              continue;
-            }
-          else if (subconitm == MOM_PREDEFITM (out_apply))
-            {
-              firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
-              if (mom_itype (firstv) == MOMITY_NODE)
-                (void) mom_nanoapply (nev, envitm,
-                                      (struct mom_boxnode_st *) firstv,
-                                      subexpnod, 1, (const void **) &outitm,
-                                      depth + 1);
-              continue;
-            }
+#undef NBMODOUTPUT_MOM
+#undef CASE_OUTPUT_MOM
         }
       else if (subexpnod
                && subsiz == 3
@@ -1443,9 +1482,10 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
       if (opsigitm)
         {
           assert (opfun != NULL);
-#define NANOEVALSIG_MOM(Nam) momhashpredef_##Nam % 239: \
+#define MODNANOVALSIG_MOM 239
+#define NANOEVALSIG_MOM(Nam) momhashpredef_##Nam % MODNANOVALSIG_MOM: \
     if (opsigitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; goto defaultcase; foundcase_##Nam
-          switch (opsigitm->hva_hash % 239)
+          switch (opsigitm->hva_hash % MODNANOVALSIG_MOM)
             {
             case NANOEVALSIG_MOM (signature_nanoeval0):
               {
@@ -1683,8 +1723,8 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                                     mom_boxnode_make_va (MOM_PREDEFITM
                                                          (signature), 1,
                                                          opitm));
-              ;
             }
+#undef MODNANOVALSIG_MOM
         }
       else
         {                       // opsigitm is NULL
