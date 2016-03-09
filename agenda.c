@@ -166,8 +166,8 @@ mom_agenda_tuple_tasklets (void)
 
 
 MOM_PRIVATE bool
-unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
-                             struct mom_boxnode_st *tknod)
+unsync_run_node_tasklet_mom (struct mom_item_st * tkitm,
+                             struct mom_boxnode_st * tknod)
 {
   bool run = false;
   struct mom_item_st *connitm = tknod->nod_connitm;
@@ -200,8 +200,8 @@ unsync_run_node_tasklet_mom (struct mom_item_st *tkitm,
 
 
 MOM_PRIVATE bool
-unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
-                              struct mom_tasklet_st *tkstack)
+unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
+                              struct mom_tasklet_st * tkstack)
 {
   MOM_FATAPRINTF
     ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstack@%p",

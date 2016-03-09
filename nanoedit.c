@@ -1871,8 +1871,8 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 MOM_PRIVATE inline bool
-isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
-                      int pos, struct mom_item_st *delimitm)
+isdelim_nanoedit_mom (struct nanoparsing_mom_st * np,
+                      int pos, struct mom_item_st * delimitm)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;
@@ -1893,11 +1893,11 @@ isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
 
 
 MOM_PRIVATE const void *parsexprprec_nanoedit_mom (struct
-                                              nanoparsing_mom_st
-                                              *np, int prec, int *posptr);
-MOM_PRIVATE const void *parsexpr_nanoedit_mom (struct
-                                          nanoparsing_mom_st
-                                          *np, int *posptr);
+                                                   nanoparsing_mom_st
+                                                   *np, int prec,
+                                                   int *posptr);
+MOM_PRIVATE const void *parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np,
+                                               int *posptr);
 MOM_PRIVATE const void *
 parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
@@ -1973,9 +1973,10 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
               mom_vectvaldata_reserve (NULL, 5);
             assert (vec != NULL);
             int curpos = pos + 3;
-            while (curpos < (int) nlen //
-		   && !isdelim_nanoedit_mom (np, curpos,    //
-					     MOM_PREDEFITM (right_paren_delim)))
+            while (curpos < (int) nlen  //
+                   && !isdelim_nanoedit_mom     //
+                   (np, curpos, //
+                    MOM_PREDEFITM (right_paren_delim)))
               {
                 int prevpos = curpos;
                 const void *subexpv = parsexpr_nanoedit_mom (np, &curpos);
@@ -2000,9 +2001,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                      curpos);
                     curpos++;
                   }
-                else if (isdelim_nanoedit_mom //
-			 (np, curpos,      //
-			  MOM_PREDEFITM (right_paren_delim)))
+                else if (isdelim_nanoedit_mom   //
+                         (np, curpos,   //
+                          MOM_PREDEFITM (right_paren_delim)))
                   {
                     MOM_DEBUGPRINTF (web,
                                      "parsprimary_nanoedit rightparen curpos=%d",
@@ -2152,9 +2153,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
             while (curpos < (int) nlen)
               {
                 int prevpos = curpos;
-                if (isdelim_nanoedit_mom //
-		    (np, curpos,   //
-		     MOM_PREDEFITM (right_bracket_delim)))
+                if (isdelim_nanoedit_mom        //
+                    (np, curpos,        //
+                     MOM_PREDEFITM (right_bracket_delim)))
                   {
                     curpos++;
                     break;
@@ -2180,10 +2181,8 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                     curpos++;
                     continue;
                   }
-                else if (curpos < (int) nlen
-                         && !isdelim_nanoedit_mom //
-			 (np, curpos,
-			  MOM_PREDEFITM (right_bracket_delim)))
+                else if (curpos < (int) nlen && !isdelim_nanoedit_mom   //
+                         (np, curpos, MOM_PREDEFITM (right_bracket_delim)))
                   {
                     struct mom_hashedvalue_st *next1tokv =
                       nodexp->nod_sons[curpos];
@@ -2267,9 +2266,9 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                     curpos++;
                   }
                 else if (curpos < (int) nlen    //
-                         && !isdelim_nanoedit_mom //
-			 (np, curpos,  //
-			  MOM_PREDEFITM (right_brace_delim)))
+                         && !isdelim_nanoedit_mom       //
+                         (np, curpos,   //
+                          MOM_PREDEFITM (right_brace_delim)))
                   {
                     struct mom_hashedvalue_st *next1tokv =
                       nodexp->nod_sons[curpos];

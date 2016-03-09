@@ -125,14 +125,12 @@ const char *mom_hostname (void);
 #ifdef NDEBUG
 #define MOM_PRIVATE static
 #else
-#define MOM_PRIVATE /*nothing*/
+#define MOM_PRIVATE             /*nothing */
 #endif /*NDEBUG*/
-
 // A non nil address which is *never* dereferencable and can be used
 // as an empty placeholder; in practice all Unix & POSIX systems dont
 // use that address
 #define MOM_EMPTY_SLOT ((void*)-1)
-
 // maximum number of threads
 #define MOM_JOB_MAX 16
 extern __thread int mom_worker_num;

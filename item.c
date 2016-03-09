@@ -2444,6 +2444,7 @@ mom_unsync_item_clear_payload (struct mom_item_st *itm)
 }                               /* end of mom_unsync_item_clear_payload */
 
 
+
 // very low level support for debugging mutex...
 void
 mom_debug_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
@@ -2451,7 +2452,13 @@ mom_debug_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
   assert (MOM_IS_DEBUGGING (mutex) && itm != NULL);
   void *backbuf[5] = { };       // add additional cases below when changing the dimension
   int lev = backtrace (backbuf, sizeof (backbuf) / sizeof (backbuf[0]));
-  char **buf = backtrace_symbols (backbuf, lev);
+  char **bbuf = backtrace_symbols (backbuf, lev);
+  char **buf = bbuf;
+  if (lev > 0 && strstr (buf[0], "mom_debug"))  // don't show the mom_debug_item_unlock_at itself
+    {
+      lev--;
+      buf++;
+    };
   switch (lev)
     {
     case 0:
@@ -2482,8 +2489,9 @@ mom_debug_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
                             mom_item_cstring (itm), buf[0], buf[1], buf[2],
                             buf[3], buf[4]);
     };
-  free (buf);
+  free (bbuf);
 }                               /* end of mom_debug_item_lock_at */
+
 
 void
 mom_debug_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
@@ -2491,7 +2499,13 @@ mom_debug_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
   assert (MOM_IS_DEBUGGING (mutex) && itm != NULL);
   void *backbuf[5] = { };       // add additional cases below when changing the dimension
   int lev = backtrace (backbuf, sizeof (backbuf) / sizeof (backbuf[0]));
-  char **buf = backtrace_symbols (backbuf, lev);
+  char **bbuf = backtrace_symbols (backbuf, lev);
+  char **buf = bbuf;
+  if (lev > 0 && strstr (buf[0], "mom_debug"))  // don't show the mom_debug_item_unlock_at itself
+    {
+      lev--;
+      buf++;
+    };
   switch (lev)
     {
     case 0:
@@ -2523,7 +2537,7 @@ mom_debug_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
                             mom_item_cstring (itm), buf[0], buf[1], buf[2],
                             buf[3], buf[4]);
     };
-  free (buf);
+  free (bbuf);
 }                               /*end of mom_debug_item_unlock_at */
 
 /// eof item.c

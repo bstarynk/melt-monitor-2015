@@ -994,6 +994,7 @@ before_dump_mom ()
   closv =
     mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
                                    MOM_PREDEFITM (before_dump));
+  mom_item_unlock (MOM_PREDEFITM (the_system));
   MOM_DEBUGPRINTF (dump, "before_dump closv=%s", mom_value_cstring (closv));
   if (!closv)
     goto end;
@@ -1037,7 +1038,6 @@ before_dump_mom ()
   {
     mom_closure_void_to_void_sig_t *fun =
       (mom_closure_void_to_void_sig_t *) funptr;
-    mom_item_unlock (MOM_PREDEFITM (the_system));
     MOM_DEBUGPRINTF (dump, "before_dump before applying %s",
                      mom_value_cstring (closv));
     (*fun) (closnod);
@@ -1045,8 +1045,8 @@ before_dump_mom ()
                      mom_value_cstring (closv));
     return;
   }
-end:
-  mom_item_unlock (MOM_PREDEFITM (the_system));
+end:                           // this is only reached on failure
+  return;
 }                               /* end of before_dump_mom */
 
 
@@ -1055,10 +1055,13 @@ MOM_PRIVATE void
 after_dump_mom ()
 {
   const struct mom_hashedvalue_st *closv = NULL;
-  mom_item_lock (MOM_PREDEFITM (the_system));
-  closv =
-    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
-                                   MOM_PREDEFITM (after_dump));
+  {
+    mom_item_lock (MOM_PREDEFITM (the_system));
+    closv =
+      mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
+                                     MOM_PREDEFITM (after_dump));
+    mom_item_unlock (MOM_PREDEFITM (the_system));
+  }
   MOM_DEBUGPRINTF (dump, "after_dump closv=%s", mom_value_cstring (closv));
   if (!closv)
     goto end;
@@ -1101,7 +1104,6 @@ after_dump_mom ()
   {
     mom_closure_void_to_void_sig_t *fun =
       (mom_closure_void_to_void_sig_t *) funptr;
-    mom_item_unlock (MOM_PREDEFITM (the_system));
     MOM_DEBUGPRINTF (dump, "after_dump before applying %s",
                      mom_value_cstring (closv));
     (*fun) (closnod);
@@ -1110,7 +1112,7 @@ after_dump_mom ()
     return;
   }
 end:
-  mom_item_unlock (MOM_PREDEFITM (the_system));
+  return;
 }                               /* end of after_dump_mom */
 
 
