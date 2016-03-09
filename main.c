@@ -840,7 +840,7 @@ static struct timespec start_realtime_ts_mom;
 double
 mom_elapsed_real_time (void)
 {
-  struct timespec curts;
+  struct timespec curts = { 0, 0 };
   clock_gettime (CLOCK_REALTIME, &curts);
   return 1.0 * (curts.tv_sec - start_realtime_ts_mom.tv_sec)
     + 1.0e-9 * (curts.tv_nsec - start_realtime_ts_mom.tv_nsec);
@@ -859,8 +859,7 @@ mom_thread_cpu_time (void)
 {
   struct timespec curts = { 0, 0 };
   clock_gettime (CLOCK_THREAD_CPUTIME_ID, &curts);
-  return 1.0 * (curts.tv_sec - start_realtime_ts_mom.tv_sec)
-    + 1.0e-9 * (curts.tv_nsec - start_realtime_ts_mom.tv_nsec);
+  return 1.0 * (curts.tv_sec) + 1.0e-9 * (curts.tv_nsec);
 }
 
 
