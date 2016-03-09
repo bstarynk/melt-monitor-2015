@@ -234,6 +234,15 @@ comment
 )attrs
 
 
+*degree_delim
+1457522889
+^mtime
+(
+comment
+"for \u00b0, useful for verbatim"_
+)attrs
+
+
 *delimiter
 1452808377
 ^mtime
@@ -1118,6 +1127,8 @@ left_brace_delim
 right_brace_delim
 "~"_
 tilde_delim
+"\u00b0"_
+degree_delim
 )payload_hashassoc
 
 
@@ -3749,7 +3760,7 @@ comment
 
 
 *the_agenda
-1457522607
+1457522789
 ^mtime
 (
 comment
@@ -4032,27 +4043,6 @@ comment
 *web_state__0dmo5BBWK0mbtv
 1457512756
 ^mtime
-(
-display
-raw
-expression
-(
-something
-(
-bdu
-modtup
-prhd
-nprmod
-i
-m
-pm
-5
-~
-set
-)nodemeta
-assign
-)node
-)attrs
 (
 digest_header
 (

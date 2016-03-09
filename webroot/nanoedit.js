@@ -44,6 +44,7 @@ var mom_escape_encoding_dict = {
     "asterism": "⁂",
     "beta": "β",
     "bullet": "•",
+    "degree": "°",
     "equiv": "⇔",
     "exists" : "∃",
     "forall": "∀",
