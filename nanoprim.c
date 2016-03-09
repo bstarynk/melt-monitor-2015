@@ -466,8 +466,21 @@ add2hset_mom (struct mom_hashset_st *hset, const void *val)
               continue;
             hset = mom_hashset_insert (hset, seq->seqitem[ix]);
           }
-        return hset;
       }
+      return hset;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = (val);
+        unsigned ln = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < ln; ix++)
+          {
+            struct mom_item_st *curitm = mom_dyncast_item (nod->nod_sons[ix]);
+            if (!curitm)
+              continue;
+            hset = mom_hashset_insert (hset, curitm);
+          }
+      }
+      return hset;
     }
   return hset;
 }                               /* end of add2hset_mom */
@@ -646,7 +659,6 @@ add2queue_mom (struct mom_queue_st *qu, const void *val)
     case MOMITY_BOXINT:
     case MOMITY_BOXDOUBLE:
     case MOMITY_BOXSTRING:
-    case MOMITY_NODE:
       return;
     case MOMITY_ITEM:
       mom_queue_append (qu, val);
@@ -663,6 +675,20 @@ add2queue_mom (struct mom_queue_st *qu, const void *val)
             mom_queue_append (qu, seq->seqitem[ix]);
           }
       }
+      return;
+    case MOMITY_NODE:
+      {
+        const struct mom_boxnode_st *nod = (val);
+        unsigned ln = mom_raw_size (nod);
+        for (unsigned ix = 0; ix < ln; ix++)
+          {
+            struct mom_item_st *curitm = mom_dyncast_item (nod->nod_sons[ix]);
+            if (!curitm)
+              continue;
+            mom_queue_append (qu, curitm);
+          }
+      }
+      return;
     }
 }                               /* end of add2queue_mom */
 
