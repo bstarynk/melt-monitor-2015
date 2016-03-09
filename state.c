@@ -944,7 +944,6 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
   memset (&nev, 0, sizeof (nev));
   thistatitm = mom_clone_item (whatitm);
   thistatitm->itm_payload = (void *) mom_hashmap_reserve (NULL, (2 * sz) | 7);
-  mom_bind_nanoev (&nev, thistatitm, whatitm, nod);
   nev.nanev_magic = NANOEVAL_MAGIC_MOM;
   nev.nanev_tkitm = tkitm;
   nev.nanev_thistatitm = thistatitm;
@@ -952,6 +951,7 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
   nev.nanev_maxstep = maxstep;
   MOM_DEBUGPRINTF (run, "dump nanoeval %s thistatitm %s",
                    mom_item_cstring (whatitm), mom_item_cstring (thistatitm));
+  mom_bind_nanoev (&nev, thistatitm, whatitm, nod);
   int errlin = 0;
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
