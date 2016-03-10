@@ -764,6 +764,15 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
           fflush (fil);
           continue;
         }
+      else if (subexpnod
+               && subsiz == 0
+               && ((subconitm = subexpnod->nod_connitm) ==
+                   MOM_PREDEFITM (out_newline)))
+        {
+	  fputc('\n', fil);
+          fflush (fil);
+          continue;
+        }
       const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
       if (subval)
         mom_output_value (fil, NULL, mf ? mf->mom_findent : 0,
