@@ -569,6 +569,8 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
 #undef CASE_DBGOUTPUT_MOM
 #undef NBDBGOUTPUT_MOM
   };
+  MOM_DEBUGPRINTF (run, "nanoeval_outputnode depth#%d userdebug=%#x", depth,
+                   userdebug);
   FILE *fil = NULL;
   char *bufdbg = NULL;
   size_t sizdbg = 0;
@@ -583,6 +585,9 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
           return NULL;
         }
       fil = open_memstream (&bufdbg, &sizdbg);
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_outputnode depth#%d for debug fil@%p",
+                       depth, (void *) fil);
       if (!fil)
         MOM_FATAPRINTF ("nanoeval_outputnode failed to open debug for %s",
                         mom_item_cstring (outitm));
@@ -612,6 +617,9 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
             mf = (struct mom_file_st *) (outitm->itm_payload);
           mom_item_unlock (outitm);
         }
+      MOM_DEBUGPRINTF (run,
+                       "nanoeval_outputnode depth#%d  userdebug#%#x fil@%p ix#%d",
+                       depth, userdebug, (void *) fil, ix);
       if (!fil)
         break;
       const struct mom_boxnode_st *subexpnod = mom_dyncast_node (subexpv);
