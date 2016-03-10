@@ -78,7 +78,7 @@ momf_nanoeval_fail1 (struct mom_nanoeval_st *nev,
                    mom_value_cstring (arg0));
   if (MOM_IS_DEBUGGING (run))
     {
-      void *backad[6] = { };
+      void *backad[7] = { };
       Dl_info backdi[sizeof (backad) / sizeof (backad[0])] = { };
       int lev = backtrace (backad, sizeof (backad) / sizeof (backad[0]));
       for (int i = 0; i < lev; i++)
@@ -118,9 +118,25 @@ momf_nanoeval_fail1 (struct mom_nanoeval_st *nev,
                            (int) ((char *) backad[3] -
                                   (char *) backdi[3].dli_saddr));
         case 5:
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_fail1 from %s+%#x, %s+%#x, %s+%#x, %s+%#x",
+                           backdi[1].dli_sname,
+                           (int) ((char *) backad[1] -
+                                  (char *) backdi[1].dli_saddr),
+                           backdi[2].dli_sname,
+                           (int) ((char *) backad[2] -
+                                  (char *) backdi[2].dli_saddr),
+                           backdi[3].dli_sname,
+                           (int) ((char *) backad[3] -
+                                  (char *) backdi[3].dli_saddr),
+                           backdi[4].dli_sname,
+                           (int) ((char *) backad[4] -
+                                  (char *) backdi[4].dli_saddr));
+          break;
+        case 6:
         default:
           MOM_DEBUGPRINTF (run,
-                           "nanoeval_fail1 from %s+%#x, %s+%#x, %s+%#x, %s+%#x %s",
+                           "nanoeval_fail1 from %s+%#x, %s+%#x, %s+%#x, %s+%#x, %s+%#x %s",
                            backdi[1].dli_sname,
                            (int) ((char *) backad[1] -
                                   (char *) backdi[1].dli_saddr),
@@ -133,8 +149,10 @@ momf_nanoeval_fail1 (struct mom_nanoeval_st *nev,
                            backdi[4].dli_sname,
                            (int) ((char *) backad[4] -
                                   (char *) backdi[4].dli_saddr),
-                           (lev > 5) ? "..." : "!");
-          break;
+                           backdi[5].dli_sname,
+                           (int) ((char *) backad[4] -
+                                  (char *) backdi[4].dli_saddr),
+                           (lev > 6) ? "..." : "!");
         }
     }
   NANOEVAL_FAILURE_MOM (nev, expnod, arg0);
