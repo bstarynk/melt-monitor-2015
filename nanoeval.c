@@ -618,7 +618,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
           mom_item_unlock (outitm);
         }
       MOM_DEBUGPRINTF (run,
-                       "nanoeval_outputnode depth#%d  userdebug#%#x fil@%p ix#%d",
+                       "nanoeval_outputnode depth#%d userdebug#%#x fil@%p ix#%d",
                        depth, userdebug, (void *) fil, ix);
       if (!fil)
         break;
@@ -701,24 +701,29 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
             case CASE_OUTPUT_MOM (out_raw):
               {
                 firstv = mom_nanoeval (nev, envitm, firstargexpv, depth + 1);
+                MOM_DEBUGPRINTF (run,
+                                 "nanoeval_outputnode depth#%d raw firstv=%s",
+                                 depth, mom_value_cstring (firstv));
                 switch (mom_itype (firstv))
                   {
                   case MOMITY_BOXINT:
-                    mom_file_printf (fil, "%lld",
-                                     (long long) mom_boxint_val_def (firstv,
-                                                                     0));
+                    if (fil)
+                      fprintf (fil, "%lld",
+                               (long long) mom_boxint_val_def (firstv, 0));
                     break;
                   case MOMITY_BOXSTRING:
-                    mom_file_puts (fil, mom_boxstring_cstr (firstv));
+                    if (fil)
+                      fputs (mom_boxstring_cstr (firstv), fil);
                     break;
                   case MOMITY_BOXDOUBLE:
-                    mom_file_printf (fil, "%g",
-                                     mom_boxdouble_val_def (firstv, 0.0));
+                    if (fil)
+                      fprintf (fil, "%g",
+                               mom_boxdouble_val_def (firstv, 0.0));
                     break;
                   case MOMITY_ITEM:
-                    mom_file_puts (fil,
-                                   mom_item_cstring (mom_dyncast_item
-                                                     (firstv)));
+                    if (fil)
+                      fputs (mom_item_cstring (mom_dyncast_item
+                                               (firstv)), fil);
                     break;
                   default:;
                   }
