@@ -200,7 +200,7 @@ __attribute__ ((format (printf, 3, 4), noreturn));
   MOM_FATAPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
 			##__VA_ARGS__)
 
-// for debugging:
+// for debugging; the color level are user-definable:
 #define MOM_DEBUG_LIST_OPTIONS(Dbg)		\
   Dbg(cmd)					\
   Dbg(dump)					\
@@ -210,6 +210,10 @@ __attribute__ ((format (printf, 3, 4), noreturn));
   Dbg(low)					\
   Dbg(mutex)					\
   Dbg(run)					\
+  Dbg(blue)					\
+  Dbg(green)					\
+  Dbg(red)					\
+  Dbg(yellow)					\
   Dbg(web)
 
 #define MOM_DEBUG_DEFINE_OPT(Nam) momdbg_##Nam,
@@ -2413,7 +2417,7 @@ void mom_bind_nanoev (struct mom_nanoeval_st *nev,
                       struct mom_item_st *envitm,
                       const struct mom_item_st *varitm, const void *val);
 #define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
-    struct mom_nanoeval_st*_ne = (Ne);				\
+    struct mom_nanoeval_st*_ne = (struct mom_nanoeval_st*)(Ne);	\
     assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
     _ne->nanev_fail = (Fail);					\
     _ne->nanev_errfile = __FILE__;				\

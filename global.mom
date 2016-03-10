@@ -252,6 +252,42 @@ comment
 )attrs
 
 
+*dbg_blue
+1457617248
+^mtime
+(
+comment
+"for debug blue"_
+)attrs
+
+
+*dbg_green
+1457617248
+^mtime
+(
+comment
+"for debug green"_
+)attrs
+
+
+*dbg_red
+1457617248
+^mtime
+(
+comment
+"for debug red"_
+)attrs
+
+
+*dbg_yellow
+1457617248
+^mtime
+(
+comment
+"for debug yellow"_
+)attrs
+
+
 *degree_delim
 1457522889
 ^mtime

@@ -539,23 +539,81 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
     NANOEVAL_FAILURE_MOM (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                outv));
+  /// special debug output
+  enum mom_debug_en userdebug = momdbg__none;
+  struct mom_nanoeval_st dbgnev = *nev;
+  struct mom_nanoeval_st *orignev = nev;
+  {
+#define NBDBGOUTPUT_MOM 31
+#define CASE_DBGOUTPUT_MOM(Nam) momhashpredef_##Nam % NBDBGOUTPUT_MOM:	\
+	  if (outitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasedbg; foundcase_##Nam
+    switch (outitm->hva_hash % NBDBGOUTPUT_MOM)
+      {
+      case CASE_DBGOUTPUT_MOM (dbg_blue):
+        userdebug = momdbg_blue;
+        break;
+      case CASE_DBGOUTPUT_MOM (dbg_green):
+        userdebug = momdbg_green;
+        break;
+      case CASE_DBGOUTPUT_MOM (dbg_red):
+        userdebug = momdbg_red;
+        break;
+      case CASE_DBGOUTPUT_MOM (dbg_yellow):
+        userdebug = momdbg_yellow;
+        break;
+      defaultcasedbg:
+      default:
+        break;
+      }
+#undef CASE_DBGOUTPUT_MOM
+#undef NBDBGOUTPUT_MOM
+  };
+  FILE *fil = NULL;
+  char *bufdbg = NULL;
+  size_t sizdbg = 0;
+  volatile int dbgfailine = 0;
+  if ((int) userdebug > 0)
+    {
+      if (!(mom_debugflags & (1 << userdebug)))
+        {
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_outputnode depth#%d no userdebug#%#x for %s",
+                           depth, (int) userdebug, mom_item_cstring (outitm));
+          return NULL;
+        }
+      fil = open_memstream (&bufdbg, &sizdbg);
+      if (!fil)
+        MOM_FATAPRINTF ("nanoeval_outputnode failed to open debug for %s",
+                        mom_item_cstring (outitm));
+      nev = &dbgnev;
+      dbgfailine = setjmp (dbgnev.nanev_jb);
+      if (dbgfailine)
+        {
+          MOM_DEBUGPRINTF (run,
+                           "nanoeval_outputnode failed at dbgfailine#%d",
+                           dbgfailine);
+          goto failed_debug;
+        }
+    }
+  ////
   for (unsigned ix = 1; ix < arity; ix++)
     {
       const void *subexpv = nod->nod_sons[ix];
       unsigned subsiz = mom_size (subexpv);
       MOM_DEBUGPRINTF (run, "nanoeval_outputnode depth#%d ix#%d subexpv=%s",
                        depth, ix, mom_value_cstring (subexpv));
-      FILE *fil = NULL;
       struct mom_file_st *mf = NULL;
-      {
-        mom_item_lock (outitm);
-        fil = mom_file (outitm->itm_payload);
-        if (fil)
-          mf = (struct mom_file_st *) (outitm->itm_payload);
-        mom_item_unlock (outitm);
-      }
+      if ((int) userdebug == 0)
+        {
+          mom_item_lock (outitm);
+          fil = mom_file (outitm->itm_payload);
+          if (fil)
+            mf = (struct mom_file_st *) (outitm->itm_payload);
+          mom_item_unlock (outitm);
+        }
       if (!fil)
-        continue;
+        break;
       const struct mom_boxnode_st *subexpnod = mom_dyncast_node (subexpv);
       struct mom_item_st *subconitm = NULL;
       if (subexpnod && (subconitm = subexpnod->nod_connitm) != NULL
@@ -695,8 +753,43 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
         }
       const void *subval = mom_nanoeval (nev, envitm, subexpv, depth + 1);
       if (subval)
-        mom_output_value (fil, NULL, mf->mom_findent,
+        mom_output_value (fil, NULL, mf ? mf->mom_findent : 0,
                           (const struct mom_hashedvalue_st *) subval);
+    }                           /* end for */
+  if (userdebug > 0)
+  failed_debug:
+    {
+      fflush (fil);
+      if (dbgfailine)
+        {
+          mom_debugprintf_at ("*nanoeval*!!", nod->nod_metarank,
+                              userdebug,
+                              " (failed from %s line %d failure %s expr %s) %s",
+                              dbgnev.nanev_errfile,
+                              dbgfailine,
+                              mom_value_cstring (dbgnev.nanev_fail),
+                              mom_value_cstring (dbgnev.nanev_expr), bufdbg);
+        }
+      else
+        {
+          mom_debugprintf_at ("*nanoeval*", nod->nod_metarank,
+                              userdebug, "%s", bufdbg);
+        }
+      fclose (fil);
+      free (bufdbg);
+      if (dbgfailine)
+        {
+          MOM_DEBUGPRINTF (run,
+                           "reraising debug output error from %s line %d failure %s expr %s",
+                           dbgnev.nanev_errfile, dbgfailine,
+                           mom_value_cstring (dbgnev.nanev_fail),
+                           mom_value_cstring (dbgnev.nanev_expr));
+
+          orignev->nanev_fail = dbgnev.nanev_fail;
+          orignev->nanev_errfile = dbgnev.nanev_errfile;
+          orignev->nanev_expr = dbgnev.nanev_expr;
+          longjmp (orignev->nanev_jb, dbgfailine);
+        }
     }
   return outitm;
 }                               /* end nanoeval_outputnode_mom */
