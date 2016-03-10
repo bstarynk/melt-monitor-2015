@@ -736,6 +736,19 @@ nanoeval_is_atom1
 )attrs
 
 
+*is_closure
+1457598341
+^mtime
+(
+comment
+"test if argument is a nano-closure"_
+nanoeval
+(
+nanoeval_is_closure1
+)node
+)attrs
+
+
 *is_double
 1457358950
 ^mtime
@@ -1836,6 +1849,20 @@ comment
 "routine for is_atom"_
 notice
 is_atom
+)attrs
+
+
+*nanoeval_is_closure1
+1457598341
+^mtime
+^func
+signature_nanoeval1
+^funsignature
+(
+comment
+"routine for is_closure"_
+notice
+is_closure
 )attrs
 
 
@@ -4743,9 +4770,9 @@ foldix_left
 foldix_right
 greater
 greater_or_equal
-is_null
-is_node
 is_closure
+is_node
+is_null
 iter
 iterix
 less
@@ -4768,24 +4795,6 @@ value_module
 nano_displayer
 )comps
 
-*is_closure
-(
-comment
-"test if argument is a nano-closure"_
-nanoeval
-(
-nanoeval_is_closure1
-)node
-)attrs
-
-*nanoeval_is_closure1
-^func
-(
-comment
-"routine for is_closure"_
-notice
-is_closure
-)attrs
 
 *tilde_delim
 1457101771
