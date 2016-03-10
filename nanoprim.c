@@ -79,14 +79,14 @@ momf_nanoeval_fail1 (struct mom_nanoeval_st *nev,
   if (MOM_IS_DEBUGGING(run)) {
     void*backad[6] = {};
     Dl_info backdi[sizeof(backad)/sizeof(backad[0])] = {};
-    int lev = backtrace(&backad,sizeof(backad)/sizeof(backad[0]));
+    int lev = backtrace(backad,sizeof(backad)/sizeof(backad[0]));
     for (int i=0; i<lev; i++) dladdr(backad[i],backdi+i);
     switch (lev) {
     case 0: case 1: break;
     case 2:
       MOM_DEBUGPRINTF (run,
 		       "nanoeval_fail1 from %s+%#x",
-		       backdi[1].dli_sname, (char*)backad[1] - (char*)backdi[1].dli_saddr);
+		       backdi[1].dli_sname, (int)((char*)backad[1] - (char*)backdi[1].dli_saddr));
       break;
     case 3:
       MOM_DEBUGPRINTF (run,
@@ -4058,6 +4058,33 @@ momf_nanoeval_is_node1 (struct mom_nanoeval_st *nev,
     return MOM_PREDEFITM (truth);
   return NULL;
 }                               /* end momf_nanoeval_is_node1 */
+
+const char momsig_nanoeval_is_closure1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_is_closure1 (struct mom_nanoeval_st *nev,
+                        struct mom_item_st *envitm,
+                        int depth,
+                        const struct mom_boxnode_st *expnod,
+                        const struct mom_boxnode_st *closnod,
+                        const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_is_closure1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  const struct mom_boxnode_st*nod = mom_dyncast_node(arg0);
+  if (nod != NULL //
+      && nod->nod_connitm == MOM_PREDEFITM(nano_closure) //
+      && mom_raw_size(nod)>=3 //
+      && mom_dyncast_item(nod->nod_sons[1]))
+    return MOM_PREDEFITM (truth);
+  return NULL;
+}                               /* end momf_nanoeval_is_closure1 */
 
 
 const char momsig_nanoeval_node_connective1[] = "signature_nanoeval1";
