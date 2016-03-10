@@ -2416,8 +2416,12 @@ void mom_bind_nanoev (struct mom_nanoeval_st *nev,
     struct mom_nanoeval_st*_ne = (Ne);				\
     assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
     _ne->nanev_fail = (Fail);					\
-    _ne->nanev_errfile = __FILE__;	       			\
+    _ne->nanev_errfile = __FILE__;				\
     _ne->nanev_expr = (Expr);					\
+    MOM_DEBUGPRINTF						\
+      (run,"nanoeval failure %s expr %s",			\
+       mom_value_cstring((void*)(_ne->nanev_fail)),		\
+       mom_value_cstring((void*)(_ne->nanev_expr)));		\
     longjmp(_ne->nanev_jb,__LINE__);				\
   } while(0)
 
