@@ -460,6 +460,19 @@ comment
 )attrs
 
 
+*fail
+1457596906
+^mtime
+(
+comment
+"throw a failure"_
+nanoeval
+(
+nanoeval_fail1
+)node
+)attrs
+
+
 *file_name
 1457524589
 ^mtime
@@ -1702,6 +1715,14 @@ comment
 notice
 equal
 )attrs
+
+
+*nanoeval_fail1
+1457596906
+^mtime
+^func
+signature_nanoeval1
+^funsignature
 
 
 *nanoeval_flattennodeany
@@ -4715,6 +4736,7 @@ notice
 apply
 apply_flatten
 equal
+fail
 fold_left
 fold_right
 foldix_left

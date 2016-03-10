@@ -58,6 +58,75 @@ momf_nanoeval_type1 (struct mom_nanoeval_st *nev,
   MOM_FATAPRINTF ("nanoeval_type1 unexpected ty0#%d", ty0);
 }                               /* end of momf_nanoeval_type1 */
 
+
+const char momsig_nanoeval_fail1[] = "signature_nanoeval1";
+const void *
+momf_nanoeval_fail1 (struct mom_nanoeval_st *nev,
+                     struct mom_item_st *envitm,
+                     int depth,
+                     const struct mom_boxnode_st *expnod,
+                     const struct mom_boxnode_st *closnod, const void *arg0)
+{
+
+  assert (nev && nev->nanev_magic == NANOEVAL_MAGIC_MOM);
+  assert (envitm && envitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (run,
+                   "nanoeval_fail1 start envitm=%s depth=%d expnod=%s closnod=%s arg0=%s",
+                   mom_item_cstring (envitm), depth,
+                   mom_value_cstring ((struct mom_hashedvalue_st *) expnod),
+                   mom_value_cstring ((struct mom_hashedvalue_st *) closnod),
+                   mom_value_cstring (arg0));
+  if (MOM_IS_DEBUGGING(run)) {
+    void*backad[6] = {};
+    Dl_info backdi[sizeof(backad)/sizeof(backad[0])] = {};
+    int lev = backtrace(&backad,sizeof(backad)/sizeof(backad[0]));
+    for (int i=0; i<lev; i++) dladdr(backad[i],backdi+i);
+    switch (lev) {
+    case 0: case 1: break;
+    case 2:
+      MOM_DEBUGPRINTF (run,
+		       "nanoeval_fail1 from %s+%#x",
+		       backdi[1].dli_sname, (char*)backad[1] - (char*)backdi[1].dli_saddr);
+      break;
+    case 3:
+      MOM_DEBUGPRINTF (run,
+		       "nanoeval_fail1 from %s+%#x, %s+%#x",
+		       backdi[1].dli_sname,
+		       (int)((char*)backad[1] - (char*)backdi[1].dli_saddr),
+		       backdi[2].dli_sname,
+		       (int)((char*)backad[2] - (char*)backdi[2].dli_saddr));
+      break;
+    case 4:
+      MOM_DEBUGPRINTF (run,
+		       "nanoeval_fail1 from %s+%#x, %s+%#x, %s+%#x",
+		       backdi[1].dli_sname,
+		       (int)((char*)backad[1] - (char*)backdi[1].dli_saddr),
+		       backdi[2].dli_sname,
+		       (int)((char*)backad[2] - (char*)backdi[2].dli_saddr),
+		       backdi[3].dli_sname,
+		       (int)((char*)backad[3] - (char*)backdi[3].dli_saddr));
+    case 5:
+    default:
+      MOM_DEBUGPRINTF (run,
+		       "nanoeval_fail1 from %s+%#x, %s+%#x, %s+%#x, %s+%#x %s",
+		       backdi[1].dli_sname,
+		       (int)((char*)backad[1] - (char*)backdi[1].dli_saddr),
+		       backdi[2].dli_sname,
+		       (int)((char*)backad[2] - (char*)backdi[2].dli_saddr),
+		       backdi[3].dli_sname,
+		       (int)((char*)backad[3] - (char*)backdi[3].dli_saddr),
+		       backdi[4].dli_sname,
+		       (int)((char*)backad[4] - (char*)backdi[4].dli_saddr),
+		       (lev>5)?"...":"!");
+      break;
+    }
+  }
+  NANOEVAL_FAILURE_MOM(nev,expnod,arg0);
+} /* end of momf_nanoeval_fail1 */
+
+
+
+
 const char momsig_nanoeval_size1[] = "signature_nanoeval1";
 const void *
 momf_nanoeval_size1 (struct mom_nanoeval_st *nev,
