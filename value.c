@@ -1,6 +1,6 @@
 // file value.c - managing values
 
-/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -1168,9 +1168,9 @@ mom_output_value (FILE *fout, long *plastnl,
               {
                 INDENTED_NEWLINE_MOM ();
               }
-            if (ix > 0 && ix % 5 == 0)
-              fputc (' ', fout);
             if (ix > 0)
+              fputs (", ", fout);
+            if (ix > 0 && ix % 5 == 0)
               fputc (' ', fout);
             fputs (mom_item_cstring (seq->seqitem[ix]), fout);
           }
@@ -1202,9 +1202,9 @@ mom_output_value (FILE *fout, long *plastnl,
                     {
                       INDENTED_NEWLINE_MOM ();
                     }
-                  if (ix > 0 && ix % 5 == 0)
-                    fputc (' ', fout);
                   if (ix > 0)
+                    fputs (", ", fout);
+                  if (ix > 0 && ix % 5 == 0)
                     fputc (' ', fout);
                   mom_output_value (fout, &lastnl, depth + 1,
                                     nod->nod_sons[ix]);
