@@ -2423,7 +2423,7 @@ void mom_bind_nanoev (struct mom_nanoeval_st *nev,
     _ne->nanev_errfile = __FILE__;				\
     _ne->nanev_expr = (Expr);					\
     MOM_DEBUGPRINTF						\
-      (run,"nanoeval failure %s expr %s",			\
+      (run,"nanoeval failing %s\n.. expr %s",			\
        mom_value_cstring((void*)(_ne->nanev_fail)),		\
        mom_value_cstring((void*)(_ne->nanev_expr)));		\
     longjmp(_ne->nanev_jb,__LINE__);				\

@@ -956,7 +956,10 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
       MOM_WARNPRINTF_AT (nev.nanev_errfile ? : "??", errlin,
-                         "dump nanoeval %s failed for node %s, failure %s, with expr %s",
+                         "dump-nanoeval %s\n"
+                         ".. failed for node %s,\n"
+                         ".. failure %s,\n"
+                         ".. with expr %s\n",
                          mom_item_cstring (whatitm),
                          mom_value_cstring ((const void *) nod),
                          mom_value_cstring (nev.nanev_fail),

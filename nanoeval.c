@@ -769,7 +769,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nev,
                && ((subconitm = subexpnod->nod_connitm) ==
                    MOM_PREDEFITM (out_newline)))
         {
-	  fputc('\n', fil);
+          fputc ('\n', fil);
           fflush (fil);
           continue;
         }
@@ -988,7 +988,8 @@ nanoeval_transienteval_mom (struct mom_nanoeval_st *nev,
 {
   struct mom_nanoeval_st newnev = { };
   MOM_DEBUGPRINTF (run,
-                   "nanoeval_transienteval start %s envitm=%s nod=%s depth#%d",
+                   "nanoeval_transienteval start %s envitm=%s\n"
+                   ".. nod=%s depth#%d",
                    transient ? "transient" : "persistent",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
@@ -1001,7 +1002,8 @@ nanoeval_transienteval_mom (struct mom_nanoeval_st *nev,
   if ((errlin = setjmp (newnev.nanev_jb)) > 0)
     {
       MOM_DEBUGPRINTF_AT (newnev.nanev_errfile, errlin, run,
-                          "nanoeval_transienteval %s failure %s with %s rethrown",
+                          "nanoeval_transienteval %s failure %s\n"
+                          ".. with %s\n" ".. rethrown",
                           transient ? "transient" : "persistent",
                           mom_value_cstring (newnev.nanev_fail),
                           mom_value_cstring (newnev.nanev_expr));
@@ -1218,7 +1220,9 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
   assert (envitm && envitm->va_itype == MOMITY_ITEM);
   struct mom_item_st *opitm = mom_boxnode_conn (nodexp);
   MOM_DEBUGPRINTF (run,
-                   "nanoapply envitm=%s nodfun=%s nodexp=%s nbargs#%d depth#%d",
+                   "nanoapply envitm=%s nodfun=%s\n"
+                   ".. nodexp=%s\n"
+                   ".. nbargs#%d depth#%d",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nodfun),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nodexp),
