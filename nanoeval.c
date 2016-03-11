@@ -927,7 +927,7 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
       mom_bind_nanoev (nev, origenvitm, varitm, resv);
       MOM_DEBUGPRINTF (run,
                        "nanoeval_assignnode update origenvitm=%s depth#%d",
-                       mom_item_cstring (envitm), depth);
+                       mom_item_cstring (origenvitm), depth);
     }
   MOM_DEBUGPRINTF (run, "nanoeval_assignnode depth#%d final resv=%s",
                    depth, mom_value_cstring (resv));
