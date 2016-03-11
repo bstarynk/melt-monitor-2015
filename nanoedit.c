@@ -1170,12 +1170,30 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   if ((errlin = setjmp (nev.nanev_jb)) > 0)
     {
       MOM_WARNPRINTF_AT (nev.nanev_errfile ? : "??", errlin,
-                         "nanoedit failure %s with expr %s",
+                         "nanoedit failure %s\n"
+                         "... with expr %s",
                          mom_value_cstring (nev.nanev_fail),
                          mom_value_cstring (nev.nanev_expr));
-#warning should output JSON for error case
-      MOM_FATAPRINTF ("unhandled nanoedit eval failure from %s:%d",
-                      nev.nanev_errfile ? : "??", errlin);
+      struct mom_filebuffer_st *fb = mom_make_filebuffer ();
+      assert (fb && fb->va_itype == MOMITY_FILEBUFFER);
+      mom_file_puts (fb, "<b>failure:</b> ");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, nev.nanev_fail, 0);
+      mom_file_newline (fb);
+      mom_file_puts (fb, "<br/> <b>from:</b> ");
+      showvalue_nanoedit_mom (fb, wexitm, thistatitm, nev.nanev_expr, 0);
+      mom_file_newline (fb);
+      const char *reshtml = mom_filebuffer_strdup (fb, MOM_FILEBUFFER_CLOSE);
+      MOM_DEBUGPRINTF (run,
+                       "doeval_nanoedit failed curexpv=%s\n.. reshtml=%s",
+                       mom_value_cstring (curexpv), reshtml);
+      // we output some JSON { "html": result, "resultcount", counter }  to the webrequest      
+      mom_wexch_puts (wexch, "{ \"html\": \"");
+      mom_output_utf8_encoded (wexch->webx_outfil, reshtml, -1);
+      mom_wexch_puts (wexch, "\",\n");
+      MOM_WEXCH_PRINTF (wexch, " \"resultcount\": %ld }\n", nev.nanev_count);
+      GC_FREE ((void *) reshtml), reshtml = NULL;
+      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      return;
     }
   else
     {
