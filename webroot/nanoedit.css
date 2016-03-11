@@ -240,13 +240,13 @@ dt.momlocvaritem_cl:hover {
 }
 
 dd.momlocvalue_cl {
-    font-size: 105%;
+    font-size: 95%;
     background-color: #F3F9A7;
     margin: 5px;
     padding: 4px;
 }
 dd.momlocvalue_cl:hover {
-    font-size: 105%;
+    font-size: 95%;
     background-color: #F3FD7E;
     border: 1px dashed #010343;
     margin: 5px;

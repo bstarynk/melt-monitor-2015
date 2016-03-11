@@ -889,8 +889,9 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
                                           nod), ix,
                        mom_value_cstring (subexpv), depth);
       resv = mom_nanoeval (nev, envitm, subexpv, depth + 1);
-      MOM_DEBUGPRINTF (run, "nanoeval_assignnode resv=%s depth#%d",
-                       mom_value_cstring (resv), depth);
+      MOM_DEBUGPRINTF (run, "nanoeval_assignnode resv=%s"
+                       "\n.. depth#%d ix#%d",
+                       mom_value_cstring (resv), depth, ix);
     }
   bool found = false;
   while (envitm != NULL)
@@ -928,6 +929,8 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
                        "nanoeval_assignnode update origenvitm=%s depth#%d",
                        mom_item_cstring (envitm), depth);
     }
+  MOM_DEBUGPRINTF (run, "nanoeval_assignnode depth#%d final resv=%s",
+                   depth, mom_value_cstring (resv));
   return resv;
 }                               /* end of nanoeval_assignnode_mom */
 
@@ -1126,7 +1129,9 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
                        struct mom_item_st *envitm,
                        const struct mom_boxnode_st *nod, int depth)
 {                               /// %func(<formals>,<body>....)
-  MOM_DEBUGPRINTF (run, "nanoeval_funcnode start envitm=%s nod=%s depth#%d",
+  MOM_DEBUGPRINTF (run, "nanoeval_funcnode start envitm=%s\n"
+                   ".. nod=%s\n"
+                   ".. depth#%d\n",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
                    depth);
@@ -1901,7 +1906,9 @@ MOM_PRIVATE const void *
 nanoeval_node_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                    const struct mom_boxnode_st *nod, int depth)
 {
-  MOM_DEBUGPRINTF (run, "nanoeval_node start envitm=%s nod=%s depth#%d",
+  MOM_DEBUGPRINTF (run, "nanoeval_node start envitm=%s\n"
+                   "... nod=%s\n"
+                   "... depth#%d\n",
                    mom_item_cstring (envitm),
                    mom_value_cstring ((struct mom_hashedvalue_st *) nod),
                    depth);
