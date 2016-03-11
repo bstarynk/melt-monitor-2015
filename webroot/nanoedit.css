@@ -171,6 +171,9 @@ span.momcharesc_cl {
 span.momtup_cl {
     font-family: times;
     font-size: 105%;
+    border-spacing: 3px;
+    margin: 2px;
+    padding: 2px;
 }
 
 span.momtup_cl:hover {
@@ -178,11 +181,16 @@ span.momtup_cl:hover {
     font-size: 105%;
     border: 1px dashed #954D2A;
     border-spacing: 3px;
+    margin: 2px;
+    padding: 2px;
 }
 
 span.momset_cl {
     font-family: times;
     font-size: 105%;
+    border-spacing: 3px;
+    margin: 2px;
+    padding: 2px;
 }
 
 span.momset_cl:hover {
@@ -190,24 +198,26 @@ span.momset_cl:hover {
     font-size: 105%;
     border: 1px dashed #954D2A;
     border-spacing: 3px;
+    margin: 2px;
+    padding: 2px;
 }
 
 span.momnode_cl {
     font-family: serif;
     color: #153027;
-    border-spacing: 2px;
+    border-spacing: 4px;
     padding: 5px;
-    margin: 6px;
+    margin: 3.5px;
 }
 
 span.momnode_cl:hover {
     font-family: serif;
     color: #2d6351;
-    border: 1px dashed #954D2A;
-    border-spacing: 3px;
+    border: 1.5px solid #954D2A;
+    border-spacing: 4px;
     background-color: rgba(187,245,170,0.7);
     padding: 5px;
-    margin: 6px;
+    margin: 3.5px;
 }
 
 dl.momlocbind_cl {
@@ -220,7 +230,7 @@ dl.momlocbind_cl {
 
 dt.momlocvaritem_cl {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 110%;
+    font-size: 101%;
     font-weight: bold;
     color: #361753;
     border-spacing: 2px;
@@ -230,7 +240,7 @@ dt.momlocvaritem_cl {
 
 dt.momlocvaritem_cl:hover {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 110%;
+    font-size: 101%;
     font-weight: bold;
     color: #561753;
     border: 1px dashed #362047;
@@ -240,17 +250,22 @@ dt.momlocvaritem_cl:hover {
 }
 
 dd.momlocvalue_cl {
-    font-size: 95%;
+    font-size: 85%;
     background-color: #F3F9A7;
     margin: 5px;
     padding: 4px;
+    border-spacing: 2px;
+    line-height: 1.5;
 }
+
 dd.momlocvalue_cl:hover {
-    font-size: 95%;
+    font-size: 85%;
     background-color: #F3FD7E;
+    border-spacing: 2px;
     border: 1px dashed #010343;
     margin: 5px;
     padding: 4px;
+    line-height: 1.5;
 }
 
 label#commandlab_id {
@@ -294,6 +309,16 @@ input#commandsend_id {
     font-size: 108%;
     font-weight: bold;
     background-color: #F0CF91;
+}
+
+div#parsedcommand_id {
+    font-size: 90%;
+    background-color: #D3F2E0;
+    margin: 5px;
+    border: 1px dotted #517120;
+    border-spacing: 3px;
+    padding: 5px;
+    line-height: 1.6;
 }
 
 button#commandclear_id {
