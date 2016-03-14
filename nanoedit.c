@@ -1916,6 +1916,10 @@ MOM_PRIVATE const void *parsexprprec_nanoedit_mom (struct
                                                    int *posptr);
 MOM_PRIVATE const void *parsexpr_nanoedit_mom (struct nanoparsing_mom_st *np,
                                                int *posptr);
+MOM_PRIVATE const void *dollar_parse_mom (struct nanoparsing_mom_st *np,
+                                          struct mom_item_st *dollitm,
+                                          int curpos);
+
 MOM_PRIVATE const void *
 parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
 {
@@ -2111,6 +2115,32 @@ parsprimary_nanoedit_mom (struct nanoparsing_mom_st *np, int *posptr)
                                                 nodres));
             *posptr = curpos;
             return nodres;
+          }
+        /////////////////////// $item is same evaluating item at parse time
+        else if (pos + 1 < (int) nlen   //
+                 && isdelim_nanoedit_mom (np, pos,      //
+                                          MOM_PREDEFITM (dollar_delim)))
+          {
+            int curpos = pos + 1;
+            struct mom_hashedvalue_st *next1tokv = nodexp->nod_sons[pos + 1];
+            MOM_DEBUGPRINTF (web,
+                             "parsprimary_nanoedit dollar-expr pos=%d next1tokv=%s",
+                             pos, mom_value_cstring (next1tokv));
+            struct mom_item_st *nextitm = mom_dyncast_item (next1tokv);
+            if (nextitm)
+              {
+                const void *dolv = dollar_parse_mom (np, nextitm, curpos);
+                MOM_DEBUGPRINTF (web,
+                                 "parsprimary_nanoedit dollar-expr curpos=%d nextitm=%s dolv=%s",
+                                 curpos, mom_item_cstring (nextitm),
+                                 mom_value_cstring (dolv));
+                *posptr = curpos + 2;
+                return dolv;
+              }
+            else
+              NANOPARSING_FAILURE_WITH_MOM (np, off,
+                                            next1tokv,
+                                            "parsprimary_nanoedit bad dollar");
           }
         /////////////////////// (subexpr)  --- starting with a leftparen
         else if (pos + 2 < (int) nlen
@@ -2861,5 +2891,41 @@ end:
 }                               /* end of doparsecommand_nanoedit_mom */
 
 
+
+MOM_PRIVATE const void *
+dollar_parse_mom (struct nanoparsing_mom_st *np, struct mom_item_st *dollitm,
+                  int curpos)
+{
+  assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
+  assert (dollitm != NULL && dollitm->va_itype == MOMITY_ITEM);
+  MOM_DEBUGPRINTF (web, "dollar_parse_mom dollitm=%s curpos=%d start",
+                   mom_item_cstring (dollitm), curpos);
+  struct mom_nanoeval_st nanev = { };
+  const int maxstep = 1000;
+  memset (&nanev, 0, sizeof (nanev));
+  nanev.nanev_magic = NANOEVAL_MAGIC_MOM;
+  nanev.nanev_tkitm = np->nanop_tkitm;
+  nanev.nanev_thistatitm = np->nanop_thistatitm;
+  nanev.nanev_count = 0;
+  nanev.nanev_maxstep = maxstep;
+  nanev.nanev_errfile = NULL;
+  int errlin = 0;
+  if ((errlin = setjmp (nanev.nanev_jb)) > 0)
+    {
+      NANOPARSING_FAILURE_WITH_MOM (np, curpos,
+                                    nanev.nanev_fail,
+                                    "dollar_parse_mom failed for $%s",
+                                    mom_item_cstring (dollitm));
+    }
+  else
+    {
+      const void *resv =
+        mom_nanoeval (&nanev, np->nanop_thistatitm, dollitm, 0);
+      MOM_DEBUGPRINTF (web, "dollar_parse_mom dollitm=%s resv=%s",
+                       mom_item_cstring (dollitm), mom_value_cstring (resv));
+      return resv;
+    };
+
+}                               /* end dollar_parse_mom */
 
 /********************* end of file nanoedit.c **********************/
