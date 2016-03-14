@@ -404,6 +404,15 @@ nanoeval_div2
 )attrs
 
 
+*dollar_delim
+1457958342
+^mtime
+(
+comment
+"for dollar sign"_
+)attrs
+
+
 *double
 1456146211
 ^mtime
@@ -1622,6 +1631,8 @@ comment
 "dictionnary of delimiters for nanoedit"_
 )attrs
 (
+"$"_
+dollar_delim
 "%"_
 percent_delim
 "("_
