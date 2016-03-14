@@ -4336,7 +4336,7 @@ comment
 
 
 *the_agenda
-1457688004
+1457963741
 ^mtime
 (
 comment
@@ -4347,7 +4347,7 @@ comment
 
 
 *the_system
-1457687984
+1457963738
 ^mtime
 (
 before_dump
@@ -4944,6 +4944,16 @@ item_module
 payload_module
 value_module
 )set
+value_types
+(
+int
+double
+string
+item
+tuple
+set
+node
+)tuple
 )attrs
 (
 nano_displayer
@@ -5059,6 +5069,15 @@ comment
 )attrs
 
 
+*value_types
+1457963722
+^mtime
+(
+comment
+"hold the types of values"_
+)attrs
+
+
 *verbatim
 1455468628
 ^mtime
@@ -5129,13 +5148,67 @@ display
 raw
 expression
 (
-the_system
-display
-)node
-item
 (
 the_system
-)set
+3
+~
+verbatim
+)nodemeta
+(
+value_types
+6
+~
+verbatim
+)nodemeta
+(
+(
+int
+12
+~
+verbatim
+)nodemeta
+(
+double
+15
+~
+verbatim
+)nodemeta
+(
+string
+18
+~
+verbatim
+)nodemeta
+(
+item
+21
+~
+verbatim
+)nodemeta
+(
+tuple
+24
+~
+verbatim
+)nodemeta
+(
+set
+27
+~
+verbatim
+)nodemeta
+(
+node
+30
+~
+verbatim
+)nodemeta
+9
+~
+tuple
+)nodemeta
+put
+)node
 )attrs
 (
 digest_header
