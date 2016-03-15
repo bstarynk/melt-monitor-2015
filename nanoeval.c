@@ -1561,29 +1561,51 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
     }
   for (unsigned ix = 0; ix < nbprefix; ix++)
     {
-      const struct mom_boxnode_st *bindnod =
+      const struct mom_boxnode_st *bsnod =
         mom_dyncast_node (nod->nod_sons[ix]);
-      unsigned bindln = mom_size (bindnod);
-      struct mom_item_st *varitm = mom_dyncast_item (bindnod->nod_sons[0]);
-      MOM_DEBUGPRINTF (run,
-                       "nanoeval_letrecnode depth#%d binding#%d varitm %s",
-                       depth, ix, mom_item_cstring (varitm));
-#warning should handle step in letrec
-      const void *bvalv = NULL;
-      for (unsigned bnix = 1; bnix < bindln; bnix++)
+      assert (bsnod != NULL);
+      unsigned bsln = mom_size (bsnod);
+      if (bsnod->nod_connitm == MOM_PREDEFITM (be))
         {
-          const void *bexpv = bindnod->nod_sons[bnix];
+          struct mom_item_st *varitm = mom_dyncast_item (bsnod->nod_sons[0]);
           MOM_DEBUGPRINTF (run,
-                           "nanoeval_letrecnode depth#%d varitm %s bexpv %s",
-                           depth, mom_item_cstring (varitm),
-                           mom_value_cstring (bexpv));
-          bvalv = mom_nanoeval (nev, newenvitm, bexpv, depth + 1);
-          MOM_DEBUGPRINTF (run,
-                           "nanoeval_letrecnode depth#%d varitm %s bvalv %s",
-                           depth, mom_item_cstring (varitm),
-                           mom_value_cstring (bvalv));
+                           "nanoeval_letrecnode depth#%d binding#%d varitm %s",
+                           depth, ix, mom_item_cstring (varitm));
+          const void *bvalv = NULL;
+          for (unsigned bnix = 1; bnix < bsln; bnix++)
+            {
+              const void *bexpv = bsnod->nod_sons[bnix];
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_letrecnode depth#%d varitm %s bexpv %s",
+                               depth, mom_item_cstring (varitm),
+                               mom_value_cstring (bexpv));
+              bvalv = mom_nanoeval (nev, newenvitm, bexpv, depth + 1);
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_letrecnode depth#%d varitm %s bvalv %s",
+                               depth, mom_item_cstring (varitm),
+                               mom_value_cstring (bvalv));
+            }
+          mom_bind_nanoev (nev, newenvitm, varitm, bvalv);
         }
-      mom_bind_nanoev (nev, newenvitm, varitm, bvalv);
+      else if (bsnod->nod_connitm == MOM_PREDEFITM (step))
+        {
+          for (unsigned six = 0; six < bsln; six++)
+            {
+              const void *sexpv = bsnod->nod_sons[six];
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_letrecnode depth#%d six#%d sexpv %s",
+                               depth, six, mom_value_cstring (sexpv));
+              const void *svalv =
+                mom_nanoeval (nev, newenvitm, sexpv, depth + 1);
+              MOM_DEBUGPRINTF (run,
+                               "nanoeval_letrecnode depth#%d six#%d svalv %s",
+                               depth, six, mom_value_cstring (svalv));
+            }
+        }
+      else                      // should never happen
+        MOM_FATAPRINTF ("inconsistent bsnod %s ix#%d in letrec %s",
+                        mom_value_cstring ((void *) bsnod), ix,
+                        mom_value_cstring ((void *) nod));
     }
   for (unsigned ix = nbbind; ix < arity; ix++)
     {
