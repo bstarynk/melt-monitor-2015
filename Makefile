@@ -56,7 +56,7 @@ clean:
 
 
 
-_timestamp.c:
+_timestamp.c: global.mom
 	@date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
 	@(echo -n 'const char monimelt_lastgitcommit[]="' ; \
 	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
