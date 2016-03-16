@@ -56,6 +56,10 @@ struct test_mom_st
 static struct test_mom_st testarr_mom[MAX_TEST_MOM];
 static unsigned testcount_mom;
 
+#define MAX_OUTPUTCONTENT_MOM 24
+static const char *outcont_name_mom[MAX_OUTPUTCONTENT_MOM];
+unsigned outcont_count_mom;
+
 const char *
 mom_hostname (void)
 {
@@ -1030,6 +1034,7 @@ enum extraopt_en
   xtraopt_info,
   xtraopt_testarg,
   xtraopt_testrun,
+  xtraopt_outputcontent,
 };
 
 static const struct option mom_long_options[] = {
@@ -1047,6 +1052,7 @@ static const struct option mom_long_options[] = {
   {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
   {"comment-predefined", required_argument, NULL, xtraopt_commentpredef},
+  {"output-content", required_argument, NULL, xtraopt_outputcontent},
   {"test-arg", required_argument, NULL, xtraopt_testarg},
   {"test-run", required_argument, NULL, xtraopt_testrun},
   {"webdir", required_argument, NULL, xtraopt_webdir},
@@ -1081,6 +1087,8 @@ usage_mom (const char *argv0)
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
+  printf ("\t --output-content <item>"
+          " \t#output the content of given <item>\n");
   printf ("\t --skip-made-check"
           " \t#Skip the check that the binary is made up to date\n");
   printf ("\t --skip-dump-hooks"
@@ -1108,6 +1116,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   int opt = -1;
   char *commentstr = NULL;
   char *testargstr = NULL;
+  char *suffix = NULL;
   while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:",
                              mom_long_options, NULL)) >= 0)
     {
@@ -1214,6 +1223,19 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           commentstr = NULL;
           should_dump_mom = true;
           count_added_predef_mom++;
+          break;
+        case xtraopt_outputcontent:
+	  if (optarg) suffix = strstr(optarg, "__");
+	  if (!suffix && optarg) suffix = optarg + strlen(optarg);
+          if (!optarg || !isalpha (optarg[0])
+              || !mom_valid_name_radix_len (optarg, suffix - optarg))
+            MOM_FATAPRINTF ("missing or invalid name %s for --output-content",
+                            optarg ? optarg : "??");
+          if (outcont_count_mom >= MAX_OUTPUTCONTENT_MOM)
+            MOM_FATAPRINTF
+              ("too many %d items for --output-content (last is %s)",
+               outcont_count_mom, optarg);
+          outcont_name_mom[outcont_count_mom++] = optarg;
           break;
         case xtraopt_testarg:
           testargstr = optarg;
@@ -1441,6 +1463,21 @@ main (int argc_main, char **argv_main)
     }
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
+  if (outcont_count_mom > 0)
+    {
+      MOM_INFORMPRINTF ("will output content of %d items", outcont_count_mom);
+      for (unsigned ix = 0; ix < outcont_count_mom; ix++)
+        {
+          const char *outname = outcont_name_mom[ix];
+          struct mom_item_st *outitm = mom_find_item_by_string (outname);
+          if (!outitm)
+            MOM_FATAPRINTF ("cannot find item '%s' to be output", outname);
+          MOM_INFORMPRINTF ("output #%d content of %s ::", ix, outname);
+          mom_output_item_content (stdout, NULL, outitm);
+          fputc ('\n', stdout);
+          fflush (stdout);
+        }
+    }
   if (testcount_mom > 0)
     do_run_tests_mom ();
   if (dir_after_load_mom)

@@ -847,13 +847,13 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nevarg,
                                  "nanoeval_outputnode depth#%d itemcontent firstv=%s",
                                  depth, mom_value_cstring (firstv));
                 struct mom_item_st *firstitm = mom_dyncast_item (firstv);
-                    long lastnl = ftell (fil);
+                long lastnl = ftell (fil);
                 if (firstitm && fil)
                   {
                     mom_output_item_content (fil, &lastnl, firstitm);
                   }
-		else if (fil)
-		  mom_output_value(fil, &lastnl, 1, firstv);
+                else if (fil)
+                  mom_output_value (fil, &lastnl, 1, firstv);
               }
               continue;
             default:
