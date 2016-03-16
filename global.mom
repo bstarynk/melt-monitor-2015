@@ -4027,8 +4027,30 @@ comment
 
 
 *process_hdr_in_prepare_header
-1458149088
+1458151264
 ^mtime
+(
+comment
+"dived code to process hdr in prepare_header function"_
+dive
+(
+(
+dbg_blue
+(
+"process_hdr_in_prepare_header incomplete"_
+18
+~
+out_raw
+)nodemeta
+13
+~
+output
+)nodemeta
+10
+~
+sequence
+)nodemeta
+)attrs
 
 
 *put
@@ -4387,7 +4409,7 @@ comment
 
 
 *the_agenda
-1458149093
+1458151271
 ^mtime
 (
 comment
@@ -5209,24 +5231,8 @@ raw
 expression
 (
 process_hdr_in_prepare_header
-dive
-(
-(
-dbg_blue
-(
-"process_hdr_in_prepare_header incomplete"_
-15
-~
-out_raw
-)nodemeta
-10
-~
-output
-)nodemeta
-7
-~
-sequence
-)nodemeta
+comment
+"dived code to process hdr in prepare_header function"_
 put
 )node
 )attrs
