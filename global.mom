@@ -3067,6 +3067,15 @@ comment
 )attrs
 
 
+*out_content
+1458122116
+^mtime
+(
+comment
+"for output of item content"_
+)attrs
+
+
 *out_decimal
 1456812179
 ^mtime

@@ -838,6 +838,22 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nevarg,
                   }
                 continue;
               }
+            case CASE_OUTPUT_MOM (out_content):
+              {
+                firstv =
+                  mom_nanoeval ((struct mom_nanoeval_st *) nev, envitm,
+                                firstargexpv, depth + 1);
+                MOM_DEBUGPRINTF (run,
+                                 "nanoeval_outputnode depth#%d itemcontent firstv=%s",
+                                 depth, mom_value_cstring (firstv));
+                struct mom_item_st *firstitm = mom_dyncast_item (firstv);
+                if (firstitm && fil)
+                  {
+                    long lastnl = ftell (fil);
+                    mom_output_item_content (fil, &lastnl, firstitm);
+                  }
+              }
+              continue;
             default:
             defaultcase:
               break;
