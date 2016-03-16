@@ -150,6 +150,15 @@ comment
 )attrs
 
 
+*backslash_delim
+1458115026
+^mtime
+(
+comment
+"for backslash delimiter, e.g. for dive"_
+)attrs
+
+
 *bdu
 1457522442
 ^mtime
@@ -435,6 +444,21 @@ is_double
 is_number
 is_scalar
 )set
+)attrs
+
+
+*double_backslash_delim
+1458115372
+^mtime
+(
+associativity
+left_assoc
+comment
+"for \\ delimiter token"_
+operator
+dive
+precedence
+1_
 )attrs
 
 
@@ -1664,6 +1688,10 @@ slashpercent_delim
 semicolon_delim
 "["_
 left_bracket_delim
+"\\"_
+backslash_delim
+"\\\\"_
+double_backslash_delim
 "]"_
 right_bracket_delim
 "{"_
