@@ -2450,7 +2450,7 @@ output_assovaldata_mom (FILE *fout, const struct mom_assovaldata_st *ass)
   const struct mom_boxset_st *setat = mom_assovaldata_set_attrs (ass);
   assert (setat != NULL && setat->va_itype == MOMITY_SET);
   unsigned nbat = mom_size (setat);
-  fprintf ("#assovaldata of %d\n", nbat);
+  fprintf (fout, "#assovaldata of %d\n", nbat);
   for (unsigned ix = 0; ix < nbat; ix++)
     {
       const struct mom_item_st *atitm = setat->seqitem[ix];
@@ -2458,11 +2458,146 @@ output_assovaldata_mom (FILE *fout, const struct mom_assovaldata_st *ass)
       const struct mom_hashedvalue_st *curval =
         mom_assovaldata_get (ass, atitm);
       long lastnl = ftell (fout);
-      fprintf ("+%s: ", mom_item_cstring (atitm));
+      fprintf (fout, "+%s: ", mom_item_cstring (atitm));
       mom_output_value (fout, &lastnl, 1, curval);
       fputc ('\n', fout);
     }
 }                               /* end of output_assovaldata_mom */
+
+MOM_PRIVATE void
+output_vectvaldata_mom (FILE *fout, const struct mom_vectvaldata_st *vec)
+{
+  unsigned cnt = mom_vectvaldata_count (vec);
+  fprintf (fout, "#vectvaldata of %d\n", cnt);
+  for (unsigned ix = 0; ix < cnt; ix++)
+    {
+      long lastnl = ftell (fout);
+      if (cnt < 10)
+        fprintf (fout, "[%d] ", ix);
+      else if (cnt < 100)
+        fprintf (fout, "[%2d] ", ix);
+      else
+        fprintf (fout, "[%3d] ", ix);
+      const struct mom_hashedvalue_st *curv = mom_vectvaldata_nth (vec, ix);
+      mom_output_value (fout, &lastnl, 1, curv);
+      fputc ('\n', fout);
+    }
+}                               /* end of output_vectvaldata_mom */
+
+MOM_PRIVATE void
+output_queue_mom (FILE *fout, const struct mom_queue_st *qu)
+{
+  const struct mom_boxnode_st *qnod =
+    mom_queue_node (qu, MOM_PREDEFITM (queue));
+  unsigned qsz = mom_size (qnod);
+  fprintf (fout, "#queue of %d\n", qsz);
+  for (unsigned ix = 0; ix < qsz; ix++)
+    {
+      long lastnl = ftell (fout);
+      if (qsz < 10)
+        fprintf (fout, "[q%d] ", ix);
+      else if (qsz < 100)
+        fprintf (fout, "[q%2d] ", ix);
+      else
+        fprintf (fout, "[q%3d] ", ix);
+      const struct mom_hashedvalue_st *curv = qnod->nod_sons[ix];
+      mom_output_value (fout, &lastnl, 1, curv);
+      fputc ('\n', fout);
+    }
+}                               /* end of output_queue_mom */
+
+MOM_PRIVATE void
+output_hashset_mom (FILE *fout, const struct mom_hashset_st *hset)
+{
+  const struct mom_boxset_st *set = mom_hashset_to_boxset (hset);
+  unsigned sz = mom_size (set);
+  fprintf (fout, "#hashset of %d\n", sz);
+  long lastnl = ftell (fout);
+  mom_output_value (fout, &lastnl, 1, (const void *) set);
+}                               /* end of output_hashset_mom */
+
+
+MOM_PRIVATE void
+output_hashmap_mom (FILE *fout, const struct mom_hashmap_st *hmap)
+{
+  const struct mom_boxset_st *keyset = mom_hashmap_keyset (hmap);
+  unsigned sz = mom_size (keyset);
+  fprintf (fout, "#hashmap of %d\n", sz);
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      const struct mom_item_st *keyitm = keyset->seqitem[ix];
+      const struct mom_hashedvalue_st *curval =
+        mom_hashmap_get (hmap, keyitm);
+      long lastnl = ftell (fout);
+      fprintf (fout, "*[%s]: ", mom_item_cstring (keyitm));
+      mom_output_value (fout, &lastnl, 1, curval);
+      fputc ('\n', fout);
+    }
+}                               /* end of output_hashmap_mom */
+
+
+MOM_PRIVATE void
+output_hashassoc_mom (FILE *fout, const struct mom_hashassoc_st *hass)
+{
+  const struct mom_boxnode_st *keynod =
+    mom_hashassoc_sorted_key_node (hass, MOM_PREDEFITM (node));
+  unsigned sz = mom_size (keynod);
+  fprintf (fout, "#hashassoc of %d\n", sz);
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      const struct mom_hashedvalue_st *curkeyv = keynod->nod_sons[ix];
+      const struct mom_hashedvalue_st *curval =
+        mom_hashassoc_get (hass, curkeyv);
+      long lastnl = ftell (fout);
+      fputs ("*(", fout);
+      mom_output_value (fout, &lastnl, 1, curkeyv);
+      fputs ("):: ", fout);
+      mom_output_value (fout, &lastnl, 1, curval);
+      fputc ('\n', fout);
+    }
+}                               /* end of output_hashmap_mom */
+
+MOM_PRIVATE void
+output_webexch_mom (FILE *fout, const struct mom_webexch_st *wex)
+{
+  fprintf (fout, "#webexch#%ld\n", wex->webx_count);
+}                               /* end of output_webexch_mom */
+
+
+MOM_PRIVATE void
+output_filebuffer_mom (FILE *fout, const struct mom_filebuffer_st *fb)
+{
+  FILE *f = mom_file (fout);
+  if (!f)
+    {
+      fprintf (fout, "#closed-filebuffer\n");
+      return;
+    }
+  long bsz = ftell (f);
+  fprintf (fout, "#filebuffer of %ld bytes\n", bsz);
+  const char *sb = mom_filebuffer_strdup (fb, MOM_FILEBUFFER_KEEPOPEN);
+  const char *nexl = NULL;
+  for (const char *pc = sb; pc != NULL && *pc != 0; pc = nexl)
+    {
+      const char *eol = strchr (pc, '\n');
+      fputs (" \"", fout);
+      if (!eol)
+        {
+          mom_output_utf8_encoded (fout, pc, -1);
+          fputs ("\"\n", fout);
+          break;
+        }
+      else
+        {
+          nexl = eol + 1;
+          mom_output_utf8_encoded (fout, pc, eol - pc);
+          if (*nexl)
+            fputs ("\"..\n", fout);
+          else
+            fputs ("\".\n", fout);
+        }
+    }
+}                               /* end of output_filebuffer_mom */
 
 void
 mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
@@ -2496,10 +2631,37 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
                               itm->itm_payload);
       return;
     case MOMITY_VECTVALDATA:
+      output_vectvaldata_mom (fout,
+                              (const struct mom_vectvaldata_st *)
+                              itm->itm_payload);
+      return;
     case MOMITY_QUEUE:
+      output_queue_mom (fout, (const struct mom_queue_st *) itm->itm_payload);
+      return;
     case MOMITY_HASHSET:
+      output_hashset_mom (fout,
+                          (const struct mom_hashset_st *) itm->itm_payload);
+      return;
     case MOMITY_HASHMAP:
+      output_hashmap_mom (fout,
+                          (const struct mom_hashmap_st *) itm->itm_payload);
+      return;
     case MOMITY_HASHASSOC:
+      output_hashassoc_mom (fout,
+                            (const struct mom_hashassoc_st *)
+                            itm->itm_payload);
+      return;
+    case MOMITY_WEBEXCH:
+      output_webexch_mom (fout,
+                          (const struct mom_webexch_st *) itm->itm_payload);
+      return;
+    case MOMITY_FILEBUFFER:
+      output_filebuffer_mom (fout,
+                             (const struct mom_filebuffer_st *)
+                             itm->itm_payload);
+      return;
+    default:
+      fprintf (fout, "...\n");
       break;
     }
 }                               /* end of mom_unsync_item_output_payload */
