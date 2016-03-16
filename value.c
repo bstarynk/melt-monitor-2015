@@ -1220,8 +1220,95 @@ mom_output_value (FILE *fout, long *plastnl,
     }
   if (plastnl)
     *plastnl = lastnl;
+}                               /* end mom_output_value */
+
+void
+mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
+{
+
+  if (!fout || fout == MOM_EMPTY_SLOT)
+    return;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    {
+      fputs ("**??**\n", fout);
+      if (plastnl)
+        *plastnl = ftell (fout);
+      return;
+    }
+  fprintf (fout, "*** %s ***\n", mom_item_cstring (itm));
+  mom_item_lock (itm);
+  char timbuf[80];
+  memset (timbuf, 0, sizeof (timbuf));
+  struct tm tm = { };
+  strftime (timbuf, sizeof (timbuf), "%c %Z",
+            localtime_r (&itm->itm_mtime, &tm));
+  fprintf (fout, "#mtim: %s\n", timbuf);
+  if (itm->itm_funptr)
+    {
+      Dl_info di = { };
+      if (dladdr (itm->itm_funptr, &di))
+        {
+          if (di.dli_saddr != itm->itm_funptr)
+            fprintf (fout, "#fun:%s+%#x", di.dli_sname,
+                     (int) ((const char *) (itm->itm_funptr) -
+                            (const char *) di.dli_saddr));
+          else
+            fprintf (fout, "#fun:%s", di.dli_sname);
+        }
+      else
+        fprintf (fout, "#fun@%p", itm->itm_funptr);
+      fprintf (fout, "/%s\n", mom_item_cstring (itm->itm_funsig));
+    };
+  // output attributes
+  struct mom_assovaldata_st *attrs = itm->itm_pattr;
+  if (attrs && attrs != MOM_EMPTY_SLOT
+      && attrs->va_itype == MOMITY_ASSOVALDATA)
+    {
+      const struct mom_boxset_st *attset = mom_assovaldata_set_attrs (attrs);
+      unsigned nbattrs = mom_size (attset);
+      assert (nbattrs == 0 || attset->va_itype == MOMITY_SET);
+      fprintf (fout, "#%d attributes:\n", nbattrs);
+      for (unsigned aix = 0; aix < nbattrs; aix++)
+        {
+          long curlastnl = ftell (fout);
+          const struct mom_item_st *curatitm = attset->seqitem[aix];
+          assert (curatitm && curatitm->va_itype == MOMITY_ITEM);
+          const void *curatval = mom_assovaldata_get (attrs, curatitm);
+          fprintf (fout, "*%s: ", mom_item_cstring (curatitm));
+          mom_output_value (fout, &curlastnl, 1, curatval);
+          fputc ('\n', fout);
+        }
+    }
+  // output components
+  struct mom_vectvaldata_st *comps = itm->itm_pcomp;
+  if (comps && comps != MOM_EMPTY_SLOT
+      && comps->va_itype == MOMITY_VECTVALDATA)
+    {
+      unsigned nbcomps = mom_vectvaldata_count (comps);
+      fprintf (fout, "#%d components:\n", nbcomps);
+      for (unsigned cix = 0; cix < nbcomps; cix++)
+        {
+          long curlastnl = ftell (fout);
+          const struct mom_hashedvalue_st *curcomp =
+            mom_vectvaldata_nth (comps, cix);
+          if (nbcomps >= 10)
+            fprintf (fout, "[%2d] ", cix);
+          else
+            fprintf (fout, "[%d] ", cix);
+          mom_output_value (fout, &curlastnl, 1, curcomp);
+          fputc ('\n', fout);
+        }
+    }
+  // output payload
+  if (itm->itm_payload)
+    mom_unsync_item_output_payload (fout, itm);
+  mom_item_unlock (itm);
+  fprintf (fout, "--%s--\n", mom_item_cstring (itm));
+  if (plastnl)
+    *plastnl = ftell (fout);
+}                               /* end mom_output_item_content */
+
 #undef INDENTED_NEWLINE_MOM
-}
 
 
 const char *

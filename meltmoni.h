@@ -950,6 +950,16 @@ mom_assovaldata_dyncast (const void *p)
   return NULL;
 }                               /* end mom_assovaldata_dyncast */
 
+static inline unsigned
+mom_assovaldata_count (const struct mom_assovaldata_st *ass)
+{
+  if (!ass || ass == MOM_EMPTY_SLOT || ass->va_itype != MOMITY_ASSOVALDATA)
+    return 0;
+  unsigned cnt = ass->cda_count;
+  assert (cnt <= mom_raw_size (ass));
+  return cnt;
+}                               /* end of mom_assovaldata_count */
+
 const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
                                                        mom_assovaldata_st
                                                        *ass);
@@ -999,7 +1009,7 @@ mom_vectvaldata_dyncast (void *p)
 struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct mom_vectvaldata_st
                                                     *vec, unsigned gap);
 
-static inline struct mom_hashedvalue_st *
+static inline const struct mom_hashedvalue_st *
 mom_vectvaldata_nth (const struct mom_vectvaldata_st *vec, int rk)
 {
   if (!vec || vec == MOM_EMPTY_SLOT || vec->va_itype != MOMITY_VECTVALDATA)
@@ -1377,6 +1387,8 @@ mom_unsync_item_get_phys_attr (const struct mom_item_st *itm,
   return mom_assovaldata_get (attrs, itmat);
 }                               /* end of mom_unsync_item_get_phys_attr */
 
+void
+mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm);
 
 static inline const struct mom_boxset_st *
 mom_unsync_item_phys_set_attrs (const struct mom_item_st *itm)
@@ -2148,6 +2160,8 @@ void
 mom_output_value (FILE *f, long *plastnl, int depth,
                   const struct mom_hashedvalue_st *val);
 
+void
+mom_output_item_content (FILE *f, long *plastnl, struct mom_item_st *itm);
 
 #define MOM_LOAD_WEBDIR "webroot"
 #define MOM_MAX_WEBDIR 8

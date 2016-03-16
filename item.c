@@ -2444,7 +2444,68 @@ mom_unsync_item_clear_payload (struct mom_item_st *itm)
 }                               /* end of mom_unsync_item_clear_payload */
 
 
+MOM_PRIVATE void
+output_assovaldata_mom (FILE *fout, const struct mom_assovaldata_st *ass)
+{
+  const struct mom_boxset_st *setat = mom_assovaldata_set_attrs (ass);
+  assert (setat != NULL && setat->va_itype == MOMITY_SET);
+  unsigned nbat = mom_size (setat);
+  fprintf ("#assovaldata of %d\n", nbat);
+  for (unsigned ix = 0; ix < nbat; ix++)
+    {
+      const struct mom_item_st *atitm = setat->seqitem[ix];
+      assert (atitm && atitm->va_itype == MOMITY_ITEM);
+      const struct mom_hashedvalue_st *curval =
+        mom_assovaldata_get (ass, atitm);
+      long lastnl = ftell (fout);
+      fprintf ("+%s: ", mom_item_cstring (atitm));
+      mom_output_value (fout, &lastnl, 1, curval);
+      fputc ('\n', fout);
+    }
+}                               /* end of output_assovaldata_mom */
 
+void
+mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
+{
+  if (!fout)
+    return;
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return;
+  if (!itm->itm_payload || itm->itm_payload == MOM_EMPTY_SLOT)
+    return;
+  unsigned typayl = mom_itype (itm->itm_payload);
+  fprintf (fout, "#item %s payload %s\n", mom_item_cstring (itm),
+           mom_itype_str (itm->itm_payload));
+  switch (typayl)
+    {
+    case MOMITY_BOXINT:
+    case MOMITY_BOXDOUBLE:
+    case MOMITY_BOXSTRING:
+    case MOMITY_ITEM:
+    case MOMITY_TUPLE:
+    case MOMITY_SET:
+    case MOMITY_NODE:
+      {
+        long lastnl = ftell (fout);
+        mom_output_value (fout, &lastnl, 1, itm->itm_payload);
+      }
+      return;
+    case MOMITY_ASSOVALDATA:
+      output_assovaldata_mom (fout,
+                              (const struct mom_assovaldata_st *)
+                              itm->itm_payload);
+      return;
+    case MOMITY_VECTVALDATA:
+    case MOMITY_QUEUE:
+    case MOMITY_HASHSET:
+    case MOMITY_HASHMAP:
+    case MOMITY_HASHASSOC:
+      break;
+    }
+}                               /* end of mom_unsync_item_output_payload */
+
+
+////////////////
 // very low level support for debugging mutex...
 void
 mom_debug_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)

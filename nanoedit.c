@@ -335,7 +335,7 @@ showassovaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
   for (unsigned ix = 0; ix < nbat; ix++)
     {
       const struct mom_item_st *atitm = setat->seqitem[ix];
-      assert (atitm && atitm->va_itype == MOMITY_SET);
+      assert (atitm && atitm->va_itype == MOMITY_ITEM);
       const struct mom_hashedvalue_st *curval =
         mom_assovaldata_get (ass, atitm);
       mom_file_puts (fb, "<dt class='mom_assocattr_cl'>");
