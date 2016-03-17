@@ -356,11 +356,37 @@ comment
 
 
 *digest_header_stuff_body
-1458200752
+1458202600
 ^mtime
 (
 comment
 "body of digest of header_stuff"_
+dive
+(
+(
+dbg_blue
+(
+"digest_header_stuff_body dust="_
+18
+~
+out_raw
+)nodemeta
+dust
+(
+" hdr="_
+26
+~
+out_raw
+)nodemeta
+hdr
+13
+~
+output
+)nodemeta
+10
+~
+sequence
+)nodemeta
 )attrs
 
 
@@ -4433,7 +4459,7 @@ comment
 
 
 *the_agenda
-1458201188
+1458202631
 ^mtime
 (
 comment
@@ -5254,38 +5280,15 @@ display
 raw
 expression
 (
-(
 header_stuff
-3
-~
-verbatim
-)nodemeta
-(
-digest
-6
-~
-verbatim
-)nodemeta
-(
-(
-dust
-hdr
-12
-~
-tuple
-)nodemeta
+digest_header_stuff_body
+display
+)node
+item
 (
 digest_header_stuff_body
-18
-~
-dive
-)nodemeta
-9
-~
-func
-)nodemeta
-put
-)node
+header_stuff
+)set
 )attrs
 (
 digest_header
