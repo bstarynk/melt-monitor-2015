@@ -71,10 +71,10 @@ _timestamp.c: global.mom
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS)
+monimelt: $(OBJECTS) global.mom
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
-	$(MAKE) _timestamp.o
-	$(LINK.c)  $(LINKFLAGS) -rdynamic $^ $(LIBES) -o $@  _timestamp.o
+	$(MAKE) _timestamp.c _timestamp.o
+	$(LINK.c)  $(LINKFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
 	rm _timestamp.*
 
 indent: .indent.pro
