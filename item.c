@@ -2327,9 +2327,16 @@ momf_ldp_payload_vect (struct mom_item_st *itm,
   assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
   MOM_DEBUGPRINTF (load, "momf_ldp_payload_vect itm=%s elemsize=%d",
                    mom_item_cstring (itm), elemsize);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_vect itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_vect
+  struct mom_vectvaldata_st *vec =      //
+    mom_vectvaldata_reserve (NULL, (17 * elemsize + 40) / 16);
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      const struct mom_hashedvalue_st *val = mom_ldstate_val (elemarr[ix]);
+      MOM_DEBUGPRINTF (load, "momf_ldp_payload_vector [%d] %s",
+                       ix, mom_value_cstring (val));
+      vec = mom_vectvaldata_append (vec, val);
+    }
+  itm->itm_payload = (struct mom_anyvalue_st *) vec;
 }                               /* end of momf_ldp_payload_vect */
 
 
@@ -2368,9 +2375,16 @@ momf_ldp_payload_hashset (struct mom_item_st *itm,
   assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
   MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashset itm=%s elemsize=%d",
                    mom_item_cstring (itm), elemsize);
-  MOM_FATAPRINTF ("unimplemented momf_ldp_payload_hashset itm=%s",
-                  mom_item_cstring (itm));
-#warning unimplemented momf_ldp_payload_hashset
+  struct mom_hashset_st *hset = //
+    mom_hashset_reserve (NULL, (9 * elemsize) / 8 + 10);
+  for (unsigned ix = 0; ix < elemsize; ix++)
+    {
+      struct mom_item_st *elitm = mom_ldstate_dynitem (elemarr[ix]);
+      if (!elitm)
+        continue;
+      hset = mom_hashset_insert (hset, elitm);
+    }
+  itm->itm_payload = (struct mom_anyvalue_st *) hset;
 }                               /* end of momf_ldp_payload_hashset */
 
 
@@ -2575,7 +2589,8 @@ output_filebuffer_mom (FILE *fout, const struct mom_filebuffer_st *fb)
     }
   long bsz = ftell (f);
   fprintf (fout, "#filebuffer of %ld bytes\n", bsz);
-  const char *sb = mom_filebuffer_strdup (fb, MOM_FILEBUFFER_KEEPOPEN);
+  const char *sb = mom_filebuffer_strdup ((struct mom_filebuffer_st *) fb,
+                                          MOM_FILEBUFFER_KEEPOPEN);
   const char *nexl = NULL;
   for (const char *pc = sb; pc != NULL && *pc != 0; pc = nexl)
     {
@@ -2622,7 +2637,9 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
     case MOMITY_NODE:
       {
         long lastnl = ftell (fout);
-        mom_output_value (fout, &lastnl, 1, itm->itm_payload);
+        mom_output_value (fout, &lastnl, 1,
+                          (const struct mom_hashedvalue_st *)
+                          itm->itm_payload);
       }
       return;
     case MOMITY_ASSOVALDATA:
