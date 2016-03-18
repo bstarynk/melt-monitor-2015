@@ -2488,6 +2488,29 @@ typedef const void *mom_nanoevalany_sig_t (struct mom_nanoeval_st *nev,
                                            *closnod, unsigned nbval,
                                            const void **valarr);
 
+#warning should think again, how is the call frame size of the caller computed...
+enum mom_taskstep_en
+{
+  MOMTKS_NOP,
+  MOMTKS_POPONE_VOID,           /* pop one frame, no return */
+  MOMTKS_POPONE_VAL,            /* pop one frame, return a single value */
+  MOMTKS_POPONE_2VALS,          /* pop one frame, return a primary & secondary values */
+  MOMTKS_POPONE_INT,            /* pop one frame, return a single integer */
+  MOMTKS_POPONE_VALINT,         /* pop one frame, return a primary value & a secondary integer */
+  MOMTKS_POPONE_DBL,            /* pop one frame, return a single double */
+  MOMTKS_POPONE_VALDBL,         /* pop one frame, return a primary value & single double */
+  MOMTKS_POPONE_2INTS,          /* pop one frame, return a primary & secondary integers */
+  MOMTKS_POPONE_2DBLS,          /* pop one frame, return a primary & secondary doubles */
+  MOMTKS_POPMANY,
+  MOMTKS_PUSHONE_VOID,		/* push called frame, no arguments */
+  MOMTKS_PUSHONE_VAL,           /* push called frame, one value argument */
+  MOMTKS_PUSHONE_2VALS,         /* push called frame, two value arguments */
+  MOMTKS_PUSHONE_3VALS,         /* push called frame, three value arguments */
+  MOMTKS_PUSHONE_4VALS,         /* push called frame, four value arguments */
+  MOMTKS_PUSHONE_5VALS,
+  MOMTKS_PUSHSLICE
+};
+
 
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);
