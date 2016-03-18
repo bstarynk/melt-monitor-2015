@@ -1,6 +1,6 @@
 // file agenda.c
 
-/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -299,3 +299,91 @@ mom_start_agenda (void)
                     (void *) (intptr_t) ix);
   MOM_INFORMPRINTF ("started agenda with %d workers", nbjobs);
 }
+
+
+////////////////////////////////////////////////////////////////
+//// TASKLET SUPPORT
+
+void
+mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
+                     unsigned nbscalars, unsigned nbpointers)
+{
+  if (MOM_UNLIKELY
+      (!tkl || tkl == MOM_EMPTY_SLOT || tkl->va_itype != MOMITY_TASKLET))
+    return;
+  if (nbframes > 0)
+    {
+      if (MOM_UNLIKELY (nbframes > MOM_SIZE_MAX / 2))
+        MOM_FATAPRINTF ("too many %u additional frames", nbframes);
+      unsigned frsiz = mom_raw_size (tkl);
+      unsigned frtop = tkl->tlk_frametop;
+      assert (frtop <= frsiz);
+      if (MOM_UNLIKELY (frtop + nbframes >= frsiz))
+        {
+          unsigned newfrsiz =
+            mom_prime_above (((9 * frtop / 8 + nbframes + 30) | 0xf) + 1);
+          if (MOM_UNLIKELY (newfrsiz == 0 || newfrsiz >= MOM_SIZE_MAX))
+            MOM_FATAPRINTF
+              ("too big frame size %u (for %u additional frames)",
+               newfrsiz, nbframes);
+          struct mom_frameoffsets_st *oldfroptr = tkl->tkl_froffsets;
+          assert (oldfroptr != NULL);
+          struct mom_frameoffsets_st *newfroptr =       //
+            mom_gc_alloc_atomic (sizeof (struct mom_frameoffsets_st) *
+                                 newfrsiz);
+          memcpy (newfroptr, oldfroptr,
+                  frtop * sizeof (struct mom_frameoffsets_st));
+          tkl->tkl_froffsets = newfroptr;
+          mom_put_size (tkl, newfrsiz);
+        }
+    }
+  if (nbscalars > 0)
+    {
+      if (MOM_UNLIKELY (nbscalars > MOM_SIZE_MAX / 2))
+        MOM_FATAPRINTF ("too many %u additional scalars", nbscalars);
+      unsigned scatop = tkl->tkl_scatop;
+      unsigned scasiz = tkl->tkl_scasiz;
+      assert (scatop <= scasiz);
+      if (MOM_UNLIKELY (scatop + nbscalars >= scasiz))
+        {
+          unsigned newscasiz =
+            mom_prime_above (((9 * scatop / 8 + nbscalars + 15) | 7) + 1);
+          if (MOM_UNLIKELY (newscasiz == 0 || newscasiz >= MOM_SIZE_MAX))
+            MOM_FATAPRINTF
+              ("too big scalar size %u (for %u additional scalars)",
+               newscasiz, nbscalars);
+          intptr_t *oldscaptr = tkl->tkl_scalars;
+          assert (oldscaptr != NULL);
+          intptr_t *newscaptr =
+            mom_gc_alloc_atomic (sizeof (intptr_t) * newscasiz);
+          memcpy (newscaptr, oldscaptr, scatop * sizeof (intptr_t));
+          tkl->tkl_scalars = newscaptr;
+          tkl->tkl_scasiz = newscasiz;
+          GC_FREE (oldscaptr);
+        }
+    }
+  if (nbpointers > 0)
+    {
+      if (MOM_UNLIKELY (nbpointers > MOM_SIZE_MAX / 2))
+        MOM_FATAPRINTF ("too many %u additional pointers", nbpointers);
+      unsigned ptrtop = tkl->tkl_ptrtop;
+      unsigned ptrsiz = tkl->tkl_ptrsiz;
+      assert (ptrtop <= ptrsiz);
+      if (MOM_UNLIKELY (ptrtop + nbpointers >= ptrsiz))
+        {
+          unsigned newptrsiz =
+            mom_prime_above (((9 * ptrtop / 8 + nbpointers + 15) | 7) + 1);
+          if (MOM_UNLIKELY (newptrsiz == 0 || newptrsiz >= MOM_SIZE_MAX))
+            MOM_FATAPRINTF
+              ("too big pointer size %u (for %u additional pointers)",
+               newptrsiz, nbpointers);
+          void **oldptrptr = tkl->tkl_pointers;
+          assert (oldptrptr != NULL);
+          void **newptrptr = mom_gc_alloc (sizeof (void *) * newptrsiz);
+          memcpy (newptrptr, oldptrptr, ptrtop * sizeof (void *));
+          tkl->tkl_pointers = newptrptr;
+          tkl->tkl_ptrsiz = newptrsiz;
+          GC_FREE (oldptrptr);
+        }
+    }
+}                               /* end mom_tasklet_reserve */

@@ -489,7 +489,7 @@ mom_size (const void *p)
 }
 
 static inline void
-mom_put_size (const void *p, unsigned sz)
+mom_put_size (void *p, unsigned sz)
 {
   if (!p || p == MOM_EMPTY_SLOT
       || ((const struct mom_anyvalue_st *) p)->va_itype == 0)
@@ -2321,14 +2321,26 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
 /* a tasklet contains mini-call-frames, we have one scalar zone for
    scalar data (integers, doubles) and one "pointer" zone for GC-ed
    data to be Boehm-GC friendly */
-#define MOM_TASKLET_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
-  unsigned tkl_scasiz; /* scalar zone size */	\
-  unsigned tkl_scatop; /* scalar zone top */	\
-  intptr_t *tkl_scalars; /* scalar zone  */	\
-  unsigned tkl_ptrsiz; /* pointer zone size */	\
-  unsigned tkl_ptrtop; /* pointer zone top */	\
-  void **tkl_pointers;          /* pointer zone */
+
+struct mom_frameoffsets_st
+{
+  unsigned fo_ptroff;           /* offset in pointer zone */
+  unsigned fo_scaoff;           /* offset in scalar zone */
+};
+
+#define MOM_TASKLET_FIELDS						\
+  /* the mom_size is the allocated size in				\
+     #elements of tlk_froffsets */					\
+  MOM_ANYVALUE_FIELDS;							\
+  unsigned tkl_scasiz; /* scalar zone size */				\
+  unsigned tkl_scatop; /* scalar zone top */				\
+  intptr_t *tkl_scalars; /* scalar zone  */				\
+  unsigned tkl_ptrsiz; /* pointer zone size */				\
+  unsigned tkl_ptrtop; /* pointer zone top */				\
+  void **tkl_pointers; /* pointer zone */				\
+  struct mom_frameoffsets_st*tkl_froffsets; /* array of offset pairs */ \
+  unsigned tlk_frametop         /* top frame index */
+
 
 struct mom_tasklet_st
 {
@@ -2336,57 +2348,27 @@ struct mom_tasklet_st
 };
 
 
-static inline void
-mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbscalars,
-                     unsigned nbpointers)
+struct mom_framescalar_st
 {
-  if (!tkl || tkl == MOM_EMPTY_SLOT || tkl->va_itype != MOMITY_TASKLET)
-    return;
-  if (nbscalars > 0)
-    {
-      unsigned scatop = tkl->tkl_scatop;
-      unsigned scasiz = tkl->tkl_scasiz;
-      assert (scatop <= scasiz);
-      if (MOM_UNLIKELY (scatop + nbscalars >= scasiz))
-        {
-          unsigned newscasiz =
-            ((9 * tkl->tkl_scatop / 8 + nbscalars + 15) | 7) + 1;
-          if (MOM_UNLIKELY (newscasiz > MOM_SIZE_MAX))
-            MOM_FATAPRINTF
-              ("too big scalar size %u (for %u additional scalars)",
-               newscasiz, nbscalars);
-          intptr_t *oldscaptr = tkl->tkl_scalars;
-          assert (oldscaptr != NULL);
-          intptr_t *newscaptr = mom_gc_alloc (sizeof (intptr_t) * newscasiz);
-          memcpy (newscaptr, oldscaptr, scatop * sizeof (intptr_t));
-          tkl->tkl_scalars = newscaptr;
-          tkl->tkl_scasiz = newscasiz;
-          GC_FREE (oldscaptr);
-        }
-    }
-  if (nbpointers > 0)
-    {
-      unsigned ptrtop = tkl->tkl_ptrtop;
-      unsigned ptrsiz = tkl->tkl_ptrsiz;
-      assert (ptrtop <= ptrsiz);
-      if (MOM_UNLIKELY (ptrtop + nbpointers >= ptrsiz))
-        {
-          unsigned newptrsiz =
-            ((9 * tkl->tkl_ptrtop / 8 + nbpointers + 15) | 7) + 1;
-          if (MOM_UNLIKELY (newptrsiz > MOM_SIZE_MAX))
-            MOM_FATAPRINTF
-              ("too big pointer size %u (for %u additional pointers)",
-               newptrsiz, nbpointers);
-          void **oldptrptr = tkl->tkl_pointers;
-          assert (oldptrptr != NULL);
-          void **newptrptr = mom_gc_alloc (sizeof (void *) * newptrsiz);
-          memcpy (newptrptr, oldptrptr, ptrtop * sizeof (void *));
-          tkl->tkl_pointers = newptrptr;
-          tkl->tkl_ptrsiz = newptrsiz;
-          GC_FREE (oldptrptr);
-        }
-    }
-}                               /* end mom_tasklet_reserve */
+  intptr_t tfs_state;
+  intptr_t tfs_scalars[];
+};
+
+struct mom_framepointer_st
+{
+  struct mom_boxnode_st *tfp_node;
+  void *tfp_pointers[];
+};
+
+struct mom_frame_st
+{
+  struct mom_framescalar_st *fr_sca;
+  struct mom_framepointer_st *fr_ptr;
+};
+
+void
+mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
+                     unsigned nbscalars, unsigned nbpointers);
 
 #warning tasklets are incomplete...
 

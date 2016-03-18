@@ -1225,8 +1225,10 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           count_added_predef_mom++;
           break;
         case xtraopt_outputcontent:
-	  if (optarg) suffix = strstr(optarg, "__");
-	  if (!suffix && optarg) suffix = optarg + strlen(optarg);
+          if (optarg)
+            suffix = strstr (optarg, "__");
+          if (!suffix && optarg)
+            suffix = optarg + strlen (optarg);
           if (!optarg || !isalpha (optarg[0])
               || !mom_valid_name_radix_len (optarg, suffix - optarg))
             MOM_FATAPRINTF ("missing or invalid name %s for --output-content",
