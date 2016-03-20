@@ -2407,6 +2407,41 @@ struct mom_nanoeval_st
   const void *nanev_fail;
   const void *nanev_expr;
   const char *nanev_errfile;
+  union
+  {
+    const void *nanev_ptr0;
+    struct mom_hashedvalue_st *nanev_hva0;
+    intptr_t nanev_int0;
+    double nanev_dbl0;
+  };
+  union
+  {
+    const void *nanev_ptr1;
+    struct mom_hashedvalue_st *nanev_hva1;
+    intptr_t nanev_int1;
+    double nanev_dbl1;
+  };
+  union
+  {
+    const void *nanev_ptr2;
+    struct mom_hashedvalue_st *nanev_hva2;
+    intptr_t nanev_int2;
+    double nanev_dbl2;
+  };
+  union
+  {
+    const void *nanev_ptr3;
+    struct mom_hashedvalue_st *nanev_hva3;
+    intptr_t nanev_int3;
+    double nanev_dbl3;
+  };
+  union
+  {
+    const void *nanev_ptr4;
+    struct mom_hashedvalue_st *nanev_hva4;
+    intptr_t nanev_int4;
+    double nanev_dbl4;
+  };
   jmp_buf nanev_jb;
 };
 void mom_bind_nanoev (struct mom_nanoeval_st *nev,
@@ -2488,29 +2523,61 @@ typedef const void *mom_nanoevalany_sig_t (struct mom_nanoeval_st *nev,
                                            *closnod, unsigned nbval,
                                            const void **valarr);
 
-#warning should think again, how is the call frame size of the caller computed...
 enum mom_taskstep_en
 {
-  MOMTKS_NOP,
-  MOMTKS_POPONE_VOID,           /* pop one frame, no return */
-  MOMTKS_POPONE_VAL,            /* pop one frame, return a single value */
-  MOMTKS_POPONE_2VALS,          /* pop one frame, return a primary & secondary values */
-  MOMTKS_POPONE_INT,            /* pop one frame, return a single integer */
-  MOMTKS_POPONE_VALINT,         /* pop one frame, return a primary value & a secondary integer */
-  MOMTKS_POPONE_DBL,            /* pop one frame, return a single double */
-  MOMTKS_POPONE_VALDBL,         /* pop one frame, return a primary value & single double */
-  MOMTKS_POPONE_2INTS,          /* pop one frame, return a primary & secondary integers */
-  MOMTKS_POPONE_2DBLS,          /* pop one frame, return a primary & secondary doubles */
-  MOMTKS_POPMANY,
-  MOMTKS_PUSHONE_VOID,		/* push called frame, no arguments */
-  MOMTKS_PUSHONE_VAL,           /* push called frame, one value argument */
-  MOMTKS_PUSHONE_2VALS,         /* push called frame, two value arguments */
-  MOMTKS_PUSHONE_3VALS,         /* push called frame, three value arguments */
-  MOMTKS_PUSHONE_4VALS,         /* push called frame, four value arguments */
-  MOMTKS_PUSHONE_5VALS,
-  MOMTKS_PUSHSLICE
+  MOMTKS_NOP,                   /* no effect on tasklet stack */
+  MOMTKS_POP_ONE,               /* pop one frame, so "return" */
+  MOMTKS_POP_MANY,              /* pop several frames */
+  MOMTKS_PUSH_ONE,              /* push one frame, so "call" */
+  MOMTKS_PUSH_SLICE,            /* push several frames from another tasklet */
 };
 
+static inline uint32_t
+mom_tasklet_what (enum mom_taskstep_en ts, unsigned char nbval,
+                 unsigned char nbint, unsigned char nbdbl)
+{
+  assert (nbval + nbint + nbdbl <= 6);
+  return (uint32_t) ((nbdbl & 0xf) << 24) | (uint32_t) ((nbint & 0xf) << 16) |
+    (uint32_t) ((nbval & 0xf) << 8) | (uint32_t) ts;
+}                               /* end of mom_tasklet_what */
+
+static inline unsigned char
+mom_what_nbdbl (uint32_t w)
+{
+  return (w & 0xff000000U) >> 24;
+}
+
+static inline unsigned char
+mom_what_nbint (uint32_t w)
+{
+  return (w & 0xff0000U) >> 16;
+}
+
+static inline unsigned char
+mom_what_nbval (uint32_t w)
+{
+  return (w & 0xff00U) >> 8;
+}
+
+static inline enum mom_taskstep_en
+mom_what_taskstep (uint32_t w)
+{
+  return (enum mom_taskstep_en) (w & 0xff);
+};
+
+struct mom_result_tasklet_st
+{
+  uint32_t r_what;
+  /* when r_what's taskstep is MOMTKS_POP_ONE, r_val is the "returned"
+     primary value; when the taskstep is MOMTKS_PUSH_ONE, r_val is the
+     "called" node. */
+  const void *r_val; 
+};
+// for signature_nanotaskstep
+typedef struct mom_result_tasklet_st
+mom_nanotaskstep_sig_t(struct mom_nanoeval_st*nev,struct mom_item_st*taskletitm,
+		       const struct mom_boxnode_st*clos, struct mom_framescalar_st *fscal,
+		       struct mom_framepointer_st*fptr);
 
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);
