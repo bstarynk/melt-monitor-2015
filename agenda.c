@@ -243,9 +243,9 @@ pop_top_frame_tasklet_mom (struct mom_tasklet_st *tkstk)
       unsigned newptrsiz = ((3 * ptrtop / 2 + 20) | 0x1f) + 1;
       if (newptrsiz < ptrsiz)
         {
-          intptr_t *newptr = mom_gc_alloc (newptrsiz * sizeof (intptr_t));
-          intptr_t *oldptr = tkstk->tkl_pointers;
-          memcpy (newptr, oldptr, ptrtop * sizeof (intptr_t));
+          void **newptr = mom_gc_alloc (newptrsiz * sizeof (void *));
+          void **oldptr = tkstk->tkl_pointers;
+          memcpy (newptr, oldptr, ptrtop * sizeof (void *));
           tkstk->tkl_ptrsiz = newptrsiz;
           tkstk->tkl_pointers = newptr;
           GC_FREE (oldptr);
@@ -350,8 +350,9 @@ unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
                           mom_item_cstring (nodsigitm));
           pop_top_frame_tasklet_mom (tkstk);
           return false;
-        }
-#warning should make a taskstep
+        };
+      mom_nanotaskstep_sig_t *stepfun = nodfunptr;
+#warning should make a taskstep, but what mom_nanoeval_st?
     };
   MOM_FATAPRINTF
     ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstk@%p",
