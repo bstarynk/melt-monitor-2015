@@ -199,13 +199,163 @@ unsync_run_node_tasklet_mom (struct mom_item_st * tkitm,
 
 
 
-MOM_PRIVATE bool
-unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
-                              struct mom_tasklet_st * tkstack)
+static void
+pop_top_frame_tasklet_mom (struct mom_tasklet_st *tkstk)
 {
+  assert (tkstk && tkstk->va_itype == MOMITY_TASKLET);
+  unsigned frtop = tkstk->tlk_frametop;
+  assert (frtop > 0);
+  struct mom_frameoffsets_st topfo = tkstk->tkl_froffsets[frtop - 1];
+  unsigned scaoff = topfo.fo_scaoff;
+  unsigned ptroff = topfo.fo_ptroff;
+  unsigned scatop = tkstk->tkl_scatop;
+  unsigned ptrtop = tkstk->tkl_ptrtop;
+  unsigned scasiz = tkstk->tkl_scasiz;
+  unsigned ptrsiz = tkstk->tkl_ptrsiz;
+  unsigned frsiz = mom_raw_size (tkstk);
+  assert (scaoff <= scatop && scatop <= scasiz);
+  assert (ptroff <= ptrtop && ptrtop <= ptrsiz);
+  if (scatop > scaoff)
+    memset (tkstk->tkl_scalars + scaoff, 0,
+            (scatop - scaoff) * sizeof (intptr_t));
+  if (ptrtop > ptroff)
+    memset (tkstk->tkl_pointers + ptroff, 0,
+            (ptrtop - ptroff) * sizeof (void *));
+  tkstk->tkl_scatop = scatop = scaoff;
+  tkstk->tkl_ptrtop = ptrtop = ptroff;
+  tkstk->tlk_frametop = frtop = frtop - 1;
+  if (MOM_UNLIKELY (scasiz > 50 && (4 * scatop < scasiz)))
+    {
+      unsigned newscasiz = ((3 * scatop / 2 + 20) | 0x1f) + 1;
+      if (newscasiz < scasiz)
+        {
+          intptr_t *newsca =
+            mom_gc_alloc_atomic (newscasiz * sizeof (intptr_t));
+          intptr_t *oldsca = tkstk->tkl_scalars;
+          memcpy (newsca, oldsca, scatop * sizeof (intptr_t));
+          tkstk->tkl_scasiz = newscasiz;
+          tkstk->tkl_scalars = newsca;
+          GC_FREE (oldsca);
+        }
+    }
+  if (MOM_UNLIKELY (ptrsiz > 50 && (4 * ptrtop < ptrsiz)))
+    {
+      unsigned newptrsiz = ((3 * ptrtop / 2 + 20) | 0x1f) + 1;
+      if (newptrsiz < ptrsiz)
+        {
+          intptr_t *newptr = mom_gc_alloc (newptrsiz * sizeof (intptr_t));
+          intptr_t *oldptr = tkstk->tkl_pointers;
+          memcpy (newptr, oldptr, ptrtop * sizeof (intptr_t));
+          tkstk->tkl_ptrsiz = newptrsiz;
+          tkstk->tkl_pointers = newptr;
+          GC_FREE (oldptr);
+        }
+    }
+  if (MOM_UNLIKELY (frsiz > 50 && (4 * frtop < frsiz)))
+    {
+      unsigned newfrsiz = ((3 * frtop / 2 + 20) | 0x1f) + 1;
+      if (newfrsiz < frsiz)
+        {
+          struct mom_frameoffsets_st *newfro =
+            mom_gc_alloc_atomic (newfrsiz * sizeof (intptr_t));
+          struct mom_frameoffsets_st *oldfro = tkstk->tkl_froffsets;
+          memcpy (newfro, oldfro,
+                  frtop * sizeof (struct mom_frameoffsets_st));
+          tkstk->tkl_froffsets = newfro;
+          mom_put_size (tkstk, newfrsiz);
+          GC_FREE (oldfro);
+        }
+    }
+}                               /* end of pop_top_frame_tasklet_mom */
+
+
+#define MOM_TASKLET_DELAY 0.005
+#define MOM_TASKLET_STEPMAX 4096
+MOM_PRIVATE bool
+unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
+                              struct mom_tasklet_st *tkstk)
+{
+  double tstart = mom_clock_time (CLOCK_MONOTONIC);
+  int nbsteps = 0;
+  assert (tkitm != NULL && tkitm->va_itype == MOMITY_ITEM);
+  for (;;)
+    {
+      assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
+      double tcur = mom_clock_time (CLOCK_MONOTONIC);
+      if (tcur - tstart > MOM_TASKLET_DELAY)
+        break;
+      nbsteps++;
+      if (nbsteps >= MOM_TASKLET_STEPMAX)
+        break;
+      unsigned frsiz = mom_raw_size (tkstk);
+      unsigned frtop = tkstk->tlk_frametop;
+      if (frtop == 0)
+        return false;
+      if (MOM_UNLIKELY (frtop >= frsiz))
+        MOM_FATAPRINTF ("corrupted tasklet item %s (top=%u >= siz=%u)",
+                        mom_item_cstring (tkitm), frtop, frsiz);
+      struct mom_frameoffsets_st topfo = tkstk->tkl_froffsets[frtop - 1];
+      unsigned scaoff = topfo.fo_scaoff;
+      unsigned ptroff = topfo.fo_ptroff;
+      unsigned scasiz = tkstk->tkl_scasiz;
+      unsigned scatop = tkstk->tkl_scatop;
+      unsigned ptrsiz = tkstk->tkl_ptrsiz;
+      unsigned ptrtop = tkstk->tkl_ptrtop;
+      if (MOM_UNLIKELY (scatop >= scasiz))
+        MOM_FATAPRINTF ("corrupted tasklet item %s (scatop=%u >= scasiz=%u)",
+                        mom_item_cstring (tkitm), scatop, scasiz);
+      if (MOM_UNLIKELY (ptrtop >= ptrsiz))
+        MOM_FATAPRINTF ("corrupted tasklet item %s (ptrtop=%u >= ptrsiz=%u)",
+                        mom_item_cstring (tkitm), ptrtop, ptrsiz);
+      if (MOM_UNLIKELY (ptroff >= ptrtop))
+        MOM_FATAPRINTF ("corrupted tasklet item %s (ptroff=%u >= ptrtop=%u)",
+                        mom_item_cstring (tkitm), ptroff, ptrtop);
+      if (MOM_UNLIKELY (scaoff >= scatop))
+        MOM_FATAPRINTF ("corrupted tasklet item %s (scaoff=%u >= scatop=%u)",
+                        mom_item_cstring (tkitm), scaoff, scatop);
+      struct mom_framescalar_st *frsca =        //
+        (struct mom_framescalar_st *) tkstk->tkl_scalars + scaoff;
+      struct mom_framepointer_st *frptr =       //
+        (struct mom_framepointer_st *) tkstk->tkl_pointers + ptroff;
+      const struct mom_boxnode_st *frnod = frptr->tfp_node;
+      if (MOM_UNLIKELY
+          (!frnod || frnod == MOM_EMPTY_SLOT
+           || frnod->va_itype != MOMITY_NODE))
+        MOM_FATAPRINTF
+          ("corrupted tasklet item %s (bad frnod %s at frame level#%d)",
+           mom_item_cstring (tkitm), mom_value_cstring ((const void *) frnod),
+           frtop);
+      struct mom_item_st *noditm = frnod->nod_connitm;
+      assert (noditm && noditm->va_itype == MOMITY_ITEM);
+      struct mom_item_st *nodsigitm = NULL;
+      const struct mom_taskstepper_st *nodstepper = NULL;
+      void *nodfunptr = NULL;
+      {
+        mom_item_lock (noditm);
+        nodsigitm = noditm->itm_funsig;
+        nodstepper = (const void *) noditm->itm_payload;
+        nodfunptr = noditm->itm_funptr;
+        mom_item_unlock (noditm);
+      }
+      if (MOM_UNLIKELY (nodsigitm != MOM_PREDEFITM (signature_tasklet)
+                        || nodstepper == NULL
+                        || nodstepper->va_itype != MOMITY_TASKSTEPPER
+                        || !nodfunptr))
+        {
+          MOM_WARNPRINTF ("bad tasklet item %s (bad frnod %s"
+                          " at frame level#%d, noditm=%s, nodsigitm=%s)",
+                          mom_item_cstring (tkitm),
+                          mom_value_cstring ((const void *) frnod), frtop,
+                          mom_item_cstring (noditm),
+                          mom_item_cstring (nodsigitm));
+          pop_top_frame_tasklet_mom (tkstk);
+          return false;
+        }
+#warning should make a taskstep
+    };
   MOM_FATAPRINTF
-    ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstack@%p",
-     mom_item_cstring (tkitm), tkstack);
+    ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstk@%p",
+     mom_item_cstring (tkitm), tkstk);
 #warning unsync_run_stack_tasklet_mom unimplemented see mom_tasklet_st
 }                               /* end of unsync_run_stack_tasklet_mom */
 

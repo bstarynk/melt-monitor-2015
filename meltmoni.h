@@ -419,6 +419,7 @@ enum momitype_en
   MOMITY_WEBEXCH,
   MOMITY_WEBSESSION,
   MOMITY_TASKLET,
+  MOMITY_TASKSTEPPER,
   MOMITY_FILE,
   MOMITY_FILEBUFFER,
 };
@@ -2317,6 +2318,20 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
 
 
 ////////////////
+/// for MOMITY_TASKSTEPPER payload, sitting in the code segment
+#define MOM_TASKSTEPPER_FIELDS					\
+  /* the mom_size is the number of values in the frame */	\
+  MOM_ANYVALUE_FIELDS;						\
+  /* number of integers and doubles in the frame */		\
+  unsigned short tksp_nbint, tksp_nbdbl
+struct mom_taskstepper_st
+{
+  MOM_TASKSTEPPER_FIELDS;
+};
+
+#define MOM_TASKSTEPPER_PREFIX "momtaskstepper_"
+
+////////////////
 /// for MOMITY_TASKLET payload
 /* a tasklet contains mini-call-frames, we have one scalar zone for
    scalar data (integers, doubles) and one "pointer" zone for GC-ed
@@ -2356,7 +2371,7 @@ struct mom_framescalar_st
 
 struct mom_framepointer_st
 {
-  struct mom_boxnode_st *tfp_node;
+  const struct mom_boxnode_st *tfp_node;
   void *tfp_pointers[];
 };
 
@@ -2534,7 +2549,7 @@ enum mom_taskstep_en
 
 static inline uint32_t
 mom_tasklet_what (enum mom_taskstep_en ts, unsigned char nbval,
-                 unsigned char nbint, unsigned char nbdbl)
+                  unsigned char nbint, unsigned char nbdbl)
 {
   assert (nbval + nbint + nbdbl <= 6);
   return (uint32_t) ((nbdbl & 0xf) << 24) | (uint32_t) ((nbint & 0xf) << 16) |
@@ -2571,13 +2586,15 @@ struct mom_result_tasklet_st
   /* when r_what's taskstep is MOMTKS_POP_ONE, r_val is the "returned"
      primary value; when the taskstep is MOMTKS_PUSH_ONE, r_val is the
      "called" node. */
-  const void *r_val; 
+  const void *r_val;
 };
 // for signature_nanotaskstep
 typedef struct mom_result_tasklet_st
-mom_nanotaskstep_sig_t(struct mom_nanoeval_st*nev,struct mom_item_st*taskletitm,
-		       const struct mom_boxnode_st*clos, struct mom_framescalar_st *fscal,
-		       struct mom_framepointer_st*fptr);
+mom_nanotaskstep_sig_t (struct mom_nanoeval_st *nev,
+                        struct mom_item_st *taskletitm,
+                        const struct mom_boxnode_st *clos,
+                        struct mom_framescalar_st *fscal,
+                        struct mom_framepointer_st *fptr);
 
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);

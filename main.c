@@ -968,6 +968,7 @@ mom_print_sizes (void)
   PRINT_SIZEOF (struct mom_assovaldata_st);
   PRINT_SIZEOF (struct mom_vectvaldata_st);
   PRINT_SIZEOF (struct mom_tasklet_st);
+  PRINT_SIZEOF (struct mom_taskstepper_st);
   PRINT_SIZEOF (struct mom_item_st);
   PRINT_SIZEOF (struct mom_nanoeval_st);
 }
@@ -1260,9 +1261,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           }
           break;
         case xtraopt_info:
-#warning unhandled xtraopt_info
           mom_print_sizes ();
-          MOM_FATAPRINTF ("unimplemented --info");
           break;
         case xtraopt_webdir:
           {
