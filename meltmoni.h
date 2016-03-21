@@ -109,6 +109,10 @@ extern const unsigned mom_primes_num;
 int64_t mom_prime_above (int64_t n);
 int64_t mom_prime_below (int64_t n);
 
+static_assert (sizeof (intptr_t) == sizeof (double)
+               || 2 * sizeof (intptr_t) == sizeof (double),
+               "double-s should be the same size or twice as intptr_t");
+
 const char *mom_hostname (void);
 
 // mark unlikely conditions to help optimization
@@ -2331,6 +2335,17 @@ struct mom_taskstepper_st
 
 #define MOM_TASKSTEPPER_PREFIX "momtaskstepper_"
 
+static inline const struct mom_taskstepper_st *
+mom_taskstepper_dyncast (const void *p)
+{
+  if (!p || p == MOM_EMPTY_SLOT)
+    return NULL;
+  const struct mom_taskstepper_st *tstep = p;
+  if (tstep->va_itype == MOMITY_TASKSTEPPER)
+    return tstep;
+  return NULL;
+}                               /* end of mom_taskstepper_dyncast */
+
 ////////////////
 /// for MOMITY_TASKLET payload
 /* a tasklet contains mini-call-frames, we have one scalar zone for
@@ -2354,7 +2369,9 @@ struct mom_frameoffsets_st
   unsigned tkl_ptrtop; /* pointer zone top */				\
   void **tkl_pointers; /* pointer zone */				\
   struct mom_frameoffsets_st*tkl_froffsets; /* array of offset pairs */ \
-  unsigned tlk_frametop         /* top frame index */
+  unsigned tlk_frametop;        /* top frame index */			\
+  struct mom_item_st*tkl_statitm; /* state item for nanev_thistatitm */ \
+  const struct mom_boxnode_st*tkl_excnod        /*node to handle nanoexceptions */
 
 
 struct mom_tasklet_st
@@ -2398,7 +2415,7 @@ void mom_agenda_changing (void);
 void mom_start_agenda (void);
 extern unsigned mom_nbjobs;
 // a tasklet item has a node payload, whose connective should have a function of signature_tasklet;
-// we run the tasket function with the tkitm locked
+// we run the tasklet function with the tkitm locked
 typedef void mom_tasklet_sig_t (struct mom_item_st *tkitm);
 
 

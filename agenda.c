@@ -268,12 +268,63 @@ pop_top_frame_tasklet_mom (struct mom_tasklet_st *tkstk)
     }
 }                               /* end of pop_top_frame_tasklet_mom */
 
+// return true if pushed a frame
+static bool
+push_frame_tasklet_mom (struct mom_item_st *tskitm,
+                        struct mom_tasklet_st *tkstk,
+                        const struct mom_boxnode_st *nod)
+{
+  assert (tskitm != NULL && tskitm->va_itype == MOMITY_ITEM
+          && tskitm->itm_payload == tkstk);
+  assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
+  if (!nod || nod == MOM_EMPTY_SLOT || nod->va_itype != MOMITY_NODE)
+    {
+      MOM_WARNPRINTF ("for tasklet item %s invalid node %s to push",
+                      mom_item_cstring (tskitm), mom_value_cstring (nod));
+      return false;
+    };
+  struct mom_item_st *connitm = nod->nod_connitm;
+  struct mom_item_st *sigitm = NULL;
+  const struct mom_taskstepper_st *tstep = NULL;
+  void *funptr = NULL;
+  assert (connitm != NULL && connitm->va_itype == MOMITY_ITEM);
+  mom_item_lock (connitm);
+  funptr = connitm->itm_funptr;
+  if (funptr)
+    {
+      sigitm = connitm->itm_funsig;
+      if (sigitm != MOM_PREDEFITM (signature_nanotaskstep))
+        funptr = NULL;
+      else
+        tstep = mom_taskstepper_dyncast (connitm->itm_payload);
+    }
+  mom_item_unlock (connitm);
+  if (tstep && funptr)
+    {
+      assert (tstep->va_itype == MOMITY_TASKSTEPPER);
+      unsigned nbval = mom_raw_size (tstep);
+      unsigned short nbint = tstep->tksp_nbint;
+      unsigned short nbdbl = tstep->tksp_nbdbl;
+      mom_tasklet_reserve (tkstk, 1,
+                           ((nbint + 1) | 3) + 1 +
+                           nbdbl * sizeof (double) / sizeof (intptr_t),
+                           nbval);
+    }
+  else
+    {
+      MOM_WARNPRINTF
+        ("for tasklet item %s bad node %s (of signature %s) to push",
+         mom_item_cstring (tskitm), mom_value_cstring (nod),
+         mom_item_cstring (sigitm));
+      return false;
+    }
+}                               /* end of push_frame_tasklet_mom */
 
 #define MOM_TASKLET_DELAY 0.005
 #define MOM_TASKLET_STEPMAX 4096
 MOM_PRIVATE bool
-unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
-                              struct mom_tasklet_st *tkstk)
+unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
+                              struct mom_tasklet_st * tkstk)
 {
   double tstart = mom_clock_time (CLOCK_MONOTONIC);
   int nbsteps = 0;
@@ -337,7 +388,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st *tkitm,
         nodfunptr = noditm->itm_funptr;
         mom_item_unlock (noditm);
       }
-      if (MOM_UNLIKELY (nodsigitm != MOM_PREDEFITM (signature_tasklet)
+      if (MOM_UNLIKELY (nodsigitm != MOM_PREDEFITM (signature_nanotaskstep)
                         || nodstepper == NULL
                         || nodstepper->va_itype != MOMITY_TASKSTEPPER
                         || !nodfunptr))
