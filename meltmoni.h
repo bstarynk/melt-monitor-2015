@@ -2431,50 +2431,14 @@ typedef void mom_closure_void_to_void_sig_t (const struct mom_boxnode_st
 struct mom_nanoeval_st
 {
   unsigned nanev_magic;         /* always NANOEVAL_MAGIC_MOM */
+  jmp_buf nanev_jb;
   bool nanev_transient;         /* true to create transient items */
   long nanev_count;
   long nanev_maxstep;
   struct mom_item_st *nanev_tkitm;
-  struct mom_item_st *nanev_thistatitm;
   const void *nanev_fail;
   const void *nanev_expr;
   const char *nanev_errfile;
-  union
-  {
-    const void *nanev_ptr0;
-    struct mom_hashedvalue_st *nanev_hva0;
-    intptr_t nanev_int0;
-    double nanev_dbl0;
-  };
-  union
-  {
-    const void *nanev_ptr1;
-    struct mom_hashedvalue_st *nanev_hva1;
-    intptr_t nanev_int1;
-    double nanev_dbl1;
-  };
-  union
-  {
-    const void *nanev_ptr2;
-    struct mom_hashedvalue_st *nanev_hva2;
-    intptr_t nanev_int2;
-    double nanev_dbl2;
-  };
-  union
-  {
-    const void *nanev_ptr3;
-    struct mom_hashedvalue_st *nanev_hva3;
-    intptr_t nanev_int3;
-    double nanev_dbl3;
-  };
-  union
-  {
-    const void *nanev_ptr4;
-    struct mom_hashedvalue_st *nanev_hva4;
-    intptr_t nanev_int4;
-    double nanev_dbl4;
-  };
-  jmp_buf nanev_jb;
 };
 void mom_bind_nanoev (struct mom_nanoeval_st *nev,
                       struct mom_item_st *envitm,

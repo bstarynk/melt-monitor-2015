@@ -946,7 +946,6 @@ dump_nanoeval_mom (const struct mom_boxnode_st *nod,
   thistatitm->itm_payload = (void *) mom_hashmap_reserve (NULL, (2 * sz) | 7);
   nev.nanev_magic = NANOEVAL_MAGIC_MOM;
   nev.nanev_tkitm = tkitm;
-  nev.nanev_thistatitm = thistatitm;
   nev.nanev_count = 0;
   nev.nanev_maxstep = maxstep;
   MOM_DEBUGPRINTF (run, "dump nanoeval %s thistatitm %s",

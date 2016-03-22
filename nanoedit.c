@@ -1248,7 +1248,6 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
   memset (&nev, 0, sizeof (nev));
   nev.nanev_magic = NANOEVAL_MAGIC_MOM;
   nev.nanev_tkitm = tkitm;
-  nev.nanev_thistatitm = thistatitm;
   nev.nanev_count = 0;
   nev.nanev_maxstep = maxstep;
   nev.nanev_errfile = NULL;
@@ -3052,7 +3051,6 @@ dollar_parse_mom (struct nanoparsing_mom_st *np, struct mom_item_st *dollitm,
   memset (&nanev, 0, sizeof (nanev));
   nanev.nanev_magic = NANOEVAL_MAGIC_MOM;
   nanev.nanev_tkitm = np->nanop_tkitm;
-  nanev.nanev_thistatitm = np->nanop_thistatitm;
   nanev.nanev_count = 0;
   nanev.nanev_maxstep = maxstep;
   nanev.nanev_errfile = NULL;
