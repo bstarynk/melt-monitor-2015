@@ -2094,11 +2094,15 @@ signature_displayer
 
 
 *nanoedit
-1452006207
+1458633901
 ^mtime
 ^func
 signature_tasklet
 ^funsignature
+(
+comment
+"for nanoedit"_
+)attrs
 
 
 *nanoeval

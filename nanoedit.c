@@ -36,6 +36,92 @@ enum nanoedit_closoff_en
   mec__last
 };
 
+struct mom_item_st *
+mom_nanoedit_wexitm (struct mom_item_st *taskitm)
+{
+  struct mom_item_st *wexitm = NULL;
+  struct mom_boxnode_st *nod = NULL;
+  if (!taskitm || taskitm == MOM_EMPTY_SLOT
+      || taskitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  mom_item_lock (taskitm);
+  nod = mom_dyncast_node (taskitm->itm_payload);
+  mom_item_unlock (taskitm);
+  if (nod && nod->va_itype == MOMITY_NODE
+      && nod->nod_connitm == MOM_PREDEFITM (nanoedit)
+      && mom_raw_size (nod) >= mec__last)
+    wexitm = mom_dyncast_item (nod->nod_sons[mec_wexitm]);
+  MOM_DEBUGPRINTF (web, "nanoedit_wexitm taskitm %s result wexitm %s",
+                   mom_item_cstring (taskitm), mom_item_cstring (wexitm));
+  return wexitm;
+}                               /* end of mom_nanoedit_wexitm */
+
+
+
+struct mom_item_st *
+mom_nanoedit_protowebstate (struct mom_item_st *taskitm)
+{
+  struct mom_item_st *protitm = NULL;
+  struct mom_boxnode_st *nod = NULL;
+  if (!taskitm || taskitm == MOM_EMPTY_SLOT
+      || taskitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  mom_item_lock (taskitm);
+  nod = mom_dyncast_node (taskitm->itm_payload);
+  mom_item_unlock (taskitm);
+  if (nod && nod->va_itype == MOMITY_NODE
+      && nod->nod_connitm == MOM_PREDEFITM (nanoedit)
+      && mom_raw_size (nod) >= mec__last)
+    protitm = mom_dyncast_item (nod->nod_sons[mec_protowebstate]);
+  MOM_DEBUGPRINTF (web, "nanoedit_protowebstate taskitm %s result protitm %s",
+                   mom_item_cstring (taskitm), mom_item_cstring (protitm));
+  return protitm;
+}                               /* end of mom_nanoedit_protowebstate */
+
+
+struct mom_item_st *
+mom_nanoedit_thistate (struct mom_item_st *taskitm)
+{
+  struct mom_item_st *thisitm = NULL;
+  struct mom_boxnode_st *nod = NULL;
+  if (!taskitm || taskitm == MOM_EMPTY_SLOT
+      || taskitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  mom_item_lock (taskitm);
+  nod = mom_dyncast_node (taskitm->itm_payload);
+  mom_item_unlock (taskitm);
+  if (nod && nod->va_itype == MOMITY_NODE
+      && nod->nod_connitm == MOM_PREDEFITM (nanoedit)
+      && mom_raw_size (nod) >= mec__last)
+    thisitm = mom_dyncast_item (nod->nod_sons[mec_thiswebstate]);
+  MOM_DEBUGPRINTF (web, "nanoedit_thistate taskitm %s result thisitm %s",
+                   mom_item_cstring (taskitm), mom_item_cstring (thisitm));
+  return thisitm;
+}                               /* end of mom_nanoedit_thistate */
+
+
+struct mom_item_st *
+mom_nanoedit_delimiters (struct mom_item_st *taskitm)
+{
+  struct mom_item_st *delitm = NULL;
+  struct mom_boxnode_st *nod = NULL;
+  if (!taskitm || taskitm == MOM_EMPTY_SLOT
+      || taskitm->va_itype != MOMITY_ITEM)
+    return NULL;
+  mom_item_lock (taskitm);
+  nod = mom_dyncast_node (taskitm->itm_payload);
+  mom_item_unlock (taskitm);
+  if (nod && nod->va_itype == MOMITY_NODE
+      && nod->nod_connitm == MOM_PREDEFITM (nanoedit)
+      && mom_raw_size (nod) >= mec__last)
+    delitm = mom_dyncast_item (nod->nod_sons[mec_delimiters]);
+  MOM_DEBUGPRINTF (web, "nanoedit_delimiters taskitm %s result delitm %s",
+                   mom_item_cstring (taskitm), mom_item_cstring (delitm));
+  return delitm;
+}                               /* end of mom_nanoedit_delimiters */
+
+
+
 MOM_PRIVATE void
 showcontentitem_nanoedit_mom (struct mom_filebuffer_st *fb,
                               struct mom_item_st *wexitm,
@@ -1888,9 +1974,9 @@ parse_token_nanoedit_mom (struct nanoparsing_mom_st *np)
 
 
 
-MOM_PRIVATE inline bool
-isdelim_nanoedit_mom (struct nanoparsing_mom_st * np,
-                      int pos, struct mom_item_st * delimitm)
+static inline bool
+isdelim_nanoedit_mom (struct nanoparsing_mom_st *np,
+                      int pos, struct mom_item_st *delimitm)
 {
   assert (np && np->nanop_magic == NANOPARSING_MAGIC_MOM);
   const struct mom_boxnode_st *nodexp = np->nanop_nodexpr;

@@ -2615,4 +2615,12 @@ mom_nanotaskstep_sig_t (struct mom_nanoeval_st *nev,
 
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);
+
+// nanoedit related things
+struct mom_item_st *mom_nanoedit_wexitm (struct mom_item_st *taskitm);
+struct mom_item_st *mom_nanoedit_protowebstate (struct mom_item_st *taskitm);
+struct mom_item_st *mom_nanoedit_thistate (struct mom_item_st *taskitm);
+
+struct mom_item_st *mom_nanoedit_delimiters (struct mom_item_st *taskitm);
+
 #endif /*MONIMELT_INCLUDED_ */
