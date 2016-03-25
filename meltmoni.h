@@ -2398,7 +2398,7 @@ struct mom_frameoffsets_st
   unsigned tkl_ptrtop; /* pointer zone top */				\
   void **tkl_pointers; /* pointer zone */				\
   struct mom_frameoffsets_st*tkl_froffsets; /* array of offset pairs */ \
-  unsigned tlk_frametop;        /* top frame index */			\
+  unsigned tkl_frametop;        /* top frame index */			\
   struct mom_item_st*tkl_statitm; /* state item for nanev_thistatitm */ \
   const struct mom_boxnode_st*tkl_excnod        /*node to handle nanoexceptions */
 
@@ -2430,6 +2430,37 @@ struct mom_frame_st
 void
 mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
                      unsigned nbscalars, unsigned nbpointers);
+
+static inline struct mom_frame_st
+mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)
+{
+  if (!tkl || tkl == MOM_EMPTY_SLOT || tkl->va_itype != MOMITY_TASKLET)
+    return (struct mom_frame_st)
+    {
+    NULL, NULL};
+  unsigned frsiz = mom_raw_size (tkl);
+  unsigned frtop = tkl->tkl_frametop;
+  assert (frtop <= frsiz);
+  if (rk < 0)
+    rk += (int) frtop;
+  if (rk >= 0 && rk < (int) frtop)
+    {
+      struct mom_frameoffsets_st fo = tkl->tkl_froffsets[rk];
+      assert (fo.fo_ptroff <= tkl->tkl_ptrtop);
+      assert (tkl->tkl_ptrtop <= tkl->tkl_ptrsiz);
+      assert (fo.fo_scaoff <= tkl->tkl_scatop);
+      assert (tkl->tkl_scatop <= tkl->tkl_scasiz);
+      return ((struct mom_frame_st)
+              {
+              .fr_sca =         //
+              (struct mom_framescalar_st *) (tkl->tkl_scalars + fo.fo_scaoff),.fr_ptr = //
+              (struct mom_framepointer_st *) (tkl->tkl_pointers +
+                                              fo.fo_ptroff)});
+    }
+  return (struct mom_frame_st)
+  {
+  NULL, NULL};
+}                               /* end of mom_tasklet_nth_frame */
 
 #warning tasklets are incomplete...
 

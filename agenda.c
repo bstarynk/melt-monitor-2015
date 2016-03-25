@@ -203,7 +203,7 @@ static void
 pop_top_frame_tasklet_mom (struct mom_tasklet_st *tkstk)
 {
   assert (tkstk && tkstk->va_itype == MOMITY_TASKLET);
-  unsigned frtop = tkstk->tlk_frametop;
+  unsigned frtop = tkstk->tkl_frametop;
   assert (frtop > 0);
   struct mom_frameoffsets_st topfo = tkstk->tkl_froffsets[frtop - 1];
   unsigned scaoff = topfo.fo_scaoff;
@@ -223,7 +223,7 @@ pop_top_frame_tasklet_mom (struct mom_tasklet_st *tkstk)
             (ptrtop - ptroff) * sizeof (void *));
   tkstk->tkl_scatop = scatop = scaoff;
   tkstk->tkl_ptrtop = ptrtop = ptroff;
-  tkstk->tlk_frametop = frtop = frtop - 1;
+  tkstk->tkl_frametop = frtop = frtop - 1;
   if (MOM_UNLIKELY (scasiz > 50 && (4 * scatop < scasiz)))
     {
       unsigned newscasiz = ((3 * scatop / 2 + 20) | 0x1f) + 1;
@@ -350,7 +350,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
       if (znats.nats_nanev.nanev_count >= znats.nats_nanev.nanev_maxstep)
         break;
       unsigned frsiz = mom_raw_size (tkstk);
-      unsigned frtop = tkstk->tlk_frametop;
+      unsigned frtop = tkstk->tkl_frametop;
       if (frtop == 0)
         return false;
       if (MOM_UNLIKELY (frtop >= frsiz))
@@ -517,7 +517,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
           unsigned wnbint = mom_what_nbint (res.r_what);
           unsigned wnbval = mom_what_nbval (res.r_what);
           unsigned frsiz = mom_raw_size (tkstk);
-          unsigned frtop = tkstk->tlk_frametop;
+          unsigned frtop = tkstk->tkl_frametop;
           if (frtop == 0)
             return false;
           if (MOM_UNLIKELY (frtop >= frsiz))
@@ -760,7 +760,7 @@ mom_tasklet_reserve (struct mom_tasklet_st *tkl,
       if (MOM_UNLIKELY (nbframes > MOM_SIZE_MAX / 2))
         MOM_FATAPRINTF ("too many %u additional frames", nbframes);
       unsigned frsiz = mom_raw_size (tkl);
-      unsigned frtop = tkl->tlk_frametop;
+      unsigned frtop = tkl->tkl_frametop;
       assert (frtop <= frsiz);
       if (MOM_UNLIKELY (frtop + nbframes >= frsiz))
         {
@@ -840,6 +840,8 @@ mom_dumpscan_tasklet (struct mom_dumper_st *du, struct mom_tasklet_st *tklet)
 {
   assert (du && du->du_state == MOMDUMP_SCAN);
   assert (tklet && tklet->va_itype == MOMITY_TASKLET);
+  mom_dumpscan_value (du, (const void *) tklet->tkl_excnod);
+  mom_dumpscan_item (du, tklet->tkl_statitm);
 }                               /* end of mom_dumpscan_tasklet */
 
 void

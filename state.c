@@ -704,7 +704,7 @@ mom_load_state (const char *statepath)
     ("completed load of state from %s with %u items;\n"
      ".. %s loaded in %.3f real, %.4f cpu seconds (%.3f real, %.3f cpu µs/item)",
      statepath, nbitems,
-     basename(statepath), endrealtime - startrealtime,
+     basename (statepath), endrealtime - startrealtime,
      endcputime - startcputime,
      (endrealtime - startrealtime) * (1.0e6 / nbitems),
      (endcputime - startcputime) * (1.0e6 / nbitems));
