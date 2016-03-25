@@ -310,6 +310,7 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
                            ((nbint + 1) | 3) + 1 +
                            nbdbl * sizeof (double) / sizeof (intptr_t),
                            nbval);
+      return true;
     }
   else
     {
@@ -325,7 +326,7 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
 #define MOM_TASKLET_STEPMAX 16384
 MOM_PRIVATE bool
 unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
-                              struct mom_tasklet_st * tkstk)
+                              struct mom_tasklet_st * volatile tkstk)
 {
   struct mom_nanotaskstep_st znats;
   memset (&znats, 0, sizeof (znats));
@@ -334,11 +335,12 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
   znats.nats_startim = mom_clock_time (CLOCK_MONOTONIC);
   znats.nats_tasklet = tkstk;
   znats.nats_nanev.nanev_magic = NANOEVAL_MAGIC_MOM;
-  znats.nats_nanev.nanev_tkitm = tkitm;
   znats.nats_nanev.nanev_maxstep = MOM_TASKLET_STEPMAX;
   assert (tkitm != NULL && tkitm->va_itype == MOMITY_ITEM);
   for (;;)
     {
+      znats.nats_nanev.nanev_tkitm = tkitm;
+      znats.nats_tasklet = tkstk;
       assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
       double tcur = mom_clock_time (CLOCK_MONOTONIC);
       if (tcur - znats.nats_startim > MOM_TASKLET_DELAY)
@@ -373,11 +375,11 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
       if (MOM_UNLIKELY (scaoff >= scatop))
         MOM_FATAPRINTF ("corrupted tasklet item %s (scaoff=%u >= scatop=%u)",
                         mom_item_cstring (tkitm), scaoff, scatop);
-      struct mom_framescalar_st *frsca =        //
+      struct mom_framescalar_st *volatile frsca =       //
         (struct mom_framescalar_st *) tkstk->tkl_scalars + scaoff;
-      struct mom_framepointer_st *frptr =       //
+      struct mom_framepointer_st *volatile frptr =      //
         (struct mom_framepointer_st *) tkstk->tkl_pointers + ptroff;
-      const struct mom_boxnode_st *frnod = frptr->tfp_node;
+      const struct mom_boxnode_st *volatile frnod = frptr->tfp_node;
       if (MOM_UNLIKELY
           (!frnod || frnod == MOM_EMPTY_SLOT
            || frnod->va_itype != MOMITY_NODE))
@@ -422,8 +424,49 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
                              mom_value_cstring ((const void *) frnod),
                              mom_value_cstring (znats.nats_nanev.nanev_fail),
                              mom_value_cstring (znats.nats_nanev.nanev_expr));
+          tkstk = znats.nats_tasklet;
+          const struct mom_boxnode_st *excnod = NULL;
+          struct mom_item_st *excitm = NULL;
+          struct mom_item_st *excsigitm = NULL;
+          void *excfun = NULL;
+          if (tkstk && tkstk != MOM_EMPTY_SLOT
+              && tkstk->va_itype == MOMITY_TASKLET
+              && (excnod = tkstk->tkl_excnod) != NULL
+              && excnod != MOM_EMPTY_SLOT && excnod->va_itype == MOMITY_NODE)
+            {
+              excitm = excnod->nod_connitm;
+              assert (excitm && excitm->va_itype == MOMITY_ITEM);
+              {
+                mom_item_lock (excitm);
+                excsigitm = excitm->itm_funsig;
+                if (excsigitm == MOM_PREDEFITM (signature_nanotaskexception))
+                  excfun = excitm->itm_funptr;
+                mom_item_unlock (excitm);
+              }
+              if (excfun != NULL)
+                {
+                  mom_nanotaskexception_sig_t *funexcptr = excfun;
+                  (*funexcptr) (excnod, tskitm, znats.nats_nanev.nanev_fail,
+                                znats.nats_nanev.nanev_expr,
+                                znats.nats_nanev.nanev_errfile, errlin);
+                  continue;
+                }
+              else
+                {
+                  MOM_WARNPRINTF_AT (znats.nats_nanev.nanev_errfile ? : "??",
+                                     errlin,
+                                     "tasklet item %s frame level#%d (%s) got unhandled exception failure %s expr %s",
+                                     mom_item_cstring (tkitm), frtop,
+                                     mom_value_cstring ((const void *) frnod),
+                                     mom_value_cstring (znats.
+                                                        nats_nanev.nanev_fail),
+                                     mom_value_cstring (znats.
+                                                        nats_nanev.nanev_expr));
+                  return false;
+                }
+            }
         }
-      else
+      else                      // no errlin
         {
           znats.nats_nanev.nanev_fail = NULL;
           znats.nats_nanev.nanev_expr = NULL;
@@ -437,7 +480,9 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
                            stepfun, mom_value_cstring ((const void *) frnod),
                            frtop, mom_item_cstring (tkitm));
           struct mom_result_tasklet_st res =
-            (*stepfun) (&znats, frnod, frsca, frptr);
+            (*stepfun) (&znats, (const struct mom_boxnode_st *) frnod,
+                        (struct mom_framescalar_st *) frsca,
+                        (struct mom_framepointer_st *) frptr);
           switch (mom_what_taskstep (res.r_what))
             {
             case MOMTKS_NOP:
@@ -560,18 +605,48 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
             };
           if (wnbint > 0)
             {
-#warning unsync_run_stack_tasklet_mom incomplete for transmission of integers
+              if (wnbint < nodstepper->tksp_nbint
+                  && wnbint < MOM_TASKSTEP_MAX_DATA
+                  && scaoff + wnbint < scatop)
+                {
+                  for (unsigned ix = 0; ix < wnbint; ix++)
+                    frsca->tfs_scalars[ix] = znats.nats_nums[ix];
+                }
+              else
+                MOM_WARNPRINTF
+                  ("bad number of integers %d to transmit in tasklet item %s "
+                   "(bad frnod %s at frame level#%d, noditm=%s)",
+                   wnbint,
+                   mom_item_cstring (tkitm),
+                   mom_value_cstring ((const void *) frnod), frtop,
+                   mom_item_cstring (noditm));
             };
-          if (wnbdbl > 0)
+          if (MOM_UNLIKELY (wnbdbl > 0))
             {
-#warning unsync_run_stack_tasklet_mom incomplete for transmission of doubles
+              unsigned fnbint = nodstepper->tksp_nbint;
+              assert (fnbint % 2 != 0);
+              if (wnbdbl < nodstepper->tksp_nbdbl
+                  && wnbdbl < MOM_TASKSTEP_MAX_DATA
+                  && scaoff + fnbint +
+                  (wnbdbl * sizeof (double)) / sizeof (intptr_t) < scatop)
+                {
+                  double *dptr = (double *) (frsca->tfs_scalars + fnbint);
+                  for (unsigned ix = 0; ix < wnbdbl; ix++)
+                    dptr[ix] = znats.nats_dbls[ix];
+                }
+              else
+                MOM_WARNPRINTF
+                  ("bad number of doubles %d to transmit in tasklet item %s "
+                   "(bad frnod %s at frame level#%d, noditm=%s)",
+                   wnbint,
+                   mom_item_cstring (tkitm),
+                   mom_value_cstring ((const void *) frnod), frtop,
+                   mom_item_cstring (noditm));
             };
+          continue;
         };
     };
-  MOM_FATAPRINTF
-    ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstk@%p",
-     mom_item_cstring (tkitm), tkstk);
-#warning unsync_run_stack_tasklet_mom unimplemented see mom_tasklet_st
+  return true;
 }                               /* end of unsync_run_stack_tasklet_mom */
 
 
@@ -597,7 +672,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
     }
   mom_item_unlock (tkitm);
   if (!run)
-    MOM_WARNPRINTF ("run_tasklet did not run tkitm %s",
+    MOM_WARNPRINTF ("run_tasklet did not run tkitm %s successfully",
                     mom_item_cstring (tkitm));
 }                               /* end of run_tasklet_mom */
 

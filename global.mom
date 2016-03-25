@@ -4692,6 +4692,15 @@ comment
 )attrs
 
 
+*signature_nanotaskexception
+1458906692
+^mtime
+(
+comment
+"signature for task exceptions"_
+)attrs
+
+
 *signature_nanotaskstep
 1458465979
 ^mtime

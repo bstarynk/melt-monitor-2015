@@ -2594,6 +2594,14 @@ mom_nanotaskstep_sig_t (struct mom_nanotaskstep_st *nats,
                         struct mom_framescalar_st *fscal,
                         struct mom_framepointer_st *fptr);
 
+// for signature_nanotaskexception
+typedef void
+mom_nanotaskexception_sig_t (const struct mom_boxnode_st *clos,
+                             struct mom_item_st *tskitm,
+                             const void *failv,
+                             const void *exprv,
+                             const char *errfil, int errlin);
+
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);
 
