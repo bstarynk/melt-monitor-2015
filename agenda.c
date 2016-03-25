@@ -26,7 +26,7 @@
 __thread int mom_worker_num;
 static pthread_cond_t cond_agendachanged_mom = PTHREAD_COND_INITIALIZER;
 
-static __thread struct mom_item_st *current_tasklet_item_mom;
+static __thread struct mom_item_st *current_taskitem_mom;
 static __thread struct mom_tasklet_st *current_tasklet_mom;
 
 
@@ -668,7 +668,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
   struct mom_anyvalue_st *tkpayl = tkitm->itm_payload;
   if (tkpayl && tkpayl != MOM_EMPTY_SLOT)
     {
-      current_tasklet_item_mom = tkitm;
+      current_taskitem_mom = tkitm;
       if (tkpayl->va_itype == MOMITY_NODE)
         run =
           unsync_run_node_tasklet_mom (tkitm,
@@ -677,7 +677,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
         run =
           unsync_run_stack_tasklet_mom (tkitm,
                                         (struct mom_tasklet_st *) tkpayl);
-      current_tasklet_item_mom = NULL;
+      current_taskitem_mom = NULL;
     }
   mom_item_unlock (tkitm);
   if (!run)
