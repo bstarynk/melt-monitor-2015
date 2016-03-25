@@ -446,7 +446,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
               if (excfun != NULL)
                 {
                   mom_nanotaskexception_sig_t *funexcptr = excfun;
-                  (*funexcptr) (excnod, tskitm, znats.nats_nanev.nanev_fail,
+                  (*funexcptr) (excnod, tkitm, znats.nats_nanev.nanev_fail,
                                 znats.nats_nanev.nanev_expr,
                                 znats.nats_nanev.nanev_errfile, errlin);
                   continue;
