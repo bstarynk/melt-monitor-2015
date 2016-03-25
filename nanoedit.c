@@ -40,7 +40,7 @@ struct mom_item_st *
 mom_nanoedit_wexitm (struct mom_item_st *taskitm)
 {
   struct mom_item_st *wexitm = NULL;
-  struct mom_boxnode_st *nod = NULL;
+  const struct mom_boxnode_st *nod = NULL;
   if (!taskitm || taskitm == MOM_EMPTY_SLOT
       || taskitm->va_itype != MOMITY_ITEM)
     return NULL;
@@ -62,7 +62,7 @@ struct mom_item_st *
 mom_nanoedit_protowebstate (struct mom_item_st *taskitm)
 {
   struct mom_item_st *protitm = NULL;
-  struct mom_boxnode_st *nod = NULL;
+  const struct mom_boxnode_st *nod = NULL;
   if (!taskitm || taskitm == MOM_EMPTY_SLOT
       || taskitm->va_itype != MOMITY_ITEM)
     return NULL;
@@ -83,7 +83,7 @@ struct mom_item_st *
 mom_nanoedit_thistate (struct mom_item_st *taskitm)
 {
   struct mom_item_st *thisitm = NULL;
-  struct mom_boxnode_st *nod = NULL;
+  const struct mom_boxnode_st *nod = NULL;
   if (!taskitm || taskitm == MOM_EMPTY_SLOT
       || taskitm->va_itype != MOMITY_ITEM)
     return NULL;
@@ -104,7 +104,7 @@ struct mom_item_st *
 mom_nanoedit_delimiters (struct mom_item_st *taskitm)
 {
   struct mom_item_st *delitm = NULL;
-  struct mom_boxnode_st *nod = NULL;
+  const struct mom_boxnode_st *nod = NULL;
   if (!taskitm || taskitm == MOM_EMPTY_SLOT
       || taskitm->va_itype != MOMITY_ITEM)
     return NULL;
@@ -455,7 +455,7 @@ showvectvaldata_nanoedit_mom (struct mom_filebuffer_st *fb,
   mom_file_puts (fb, "<ol class='mom_vectorval_cl'>\n");
   for (unsigned ix = 0; ix < cnt; ix++)
     {
-      struct mom_hashedvalue_st *compv = mom_vectvaldata_nth (vec, ix);
+      const struct mom_hashedvalue_st *compv = mom_vectvaldata_nth (vec, ix);
       mom_file_puts (fb, "<li>");
       showvalue_nanoedit_mom (fb, wexitm, thistatitm, compv, 0);
       mom_file_puts (fb, "</li>\n");

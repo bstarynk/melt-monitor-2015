@@ -1133,7 +1133,7 @@ run_make_after_dump_mom (void)
                 monimelt_makefile);
   else
     cmdlen = snprintf (cmdbuf, sizeof (cmdbuf), "nice make -j");
-  if (MOM_UNLIKELY (cmdlen >= (int)sizeof (cmdbuf) - 1))
+  if (MOM_UNLIKELY (cmdlen >= (int) sizeof (cmdbuf) - 1))
     MOM_FATAPRINTF ("failed to build make command %s (%d bytes needed)",
                     cmdbuf, cmdlen);
   MOM_INFORMPRINTF ("building after dump in %s with %s", cwdbuf, cmdbuf);

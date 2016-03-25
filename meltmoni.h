@@ -2459,6 +2459,20 @@ void mom_bind_nanoev (struct mom_nanoeval_st *nev,
     longjmp(_ne->nanev_jb,__LINE__);				\
   } while(0)
 
+#define MOM_NANOTASKSTEP_MAGIC 421788551        /*0x1923fb87 */
+#define MOM_TASKSTEP_MAX_DATA 8
+
+struct mom_nanotaskstep_st
+{
+  unsigned nats_magic;          /* always MOM_NANOTASKSTEP_MAGIC */
+  unsigned nats_nblevels;       // number of frame levels to push or pop
+  struct mom_nanoeval_st nats_nanev;
+  double nats_startim;
+  struct mom_tasklet_st *nats_tasklet;
+  void *nats_ptrs[MOM_TASKSTEP_MAX_DATA];
+  intptr_t nats_nums[MOM_TASKSTEP_MAX_DATA];
+  double nats_dbls[MOM_TASKSTEP_MAX_DATA];
+};
 
 const void *mom_nanoeval (struct mom_nanoeval_st *nev,
                           struct mom_item_st *envitm, const void *exprv,
@@ -2526,9 +2540,10 @@ enum mom_taskstep_en
 {
   MOMTKS_NOP,                   /* no effect on tasklet stack */
   MOMTKS_POP_ONE,               /* pop one frame, so "return" */
+  MOMTKS_REPLACE,               /* replace top frame, à la tail-call */
   MOMTKS_POP_MANY,              /* pop several frames */
   MOMTKS_PUSH_ONE,              /* push one frame, so "call" */
-  MOMTKS_PUSH_SLICE,            /* push several frames from another tasklet */
+  // perhaps we need a push-slice and a replace-slice
 };
 
 static inline uint32_t
@@ -2567,15 +2582,14 @@ mom_what_taskstep (uint32_t w)
 struct mom_result_tasklet_st
 {
   uint32_t r_what;
-  /* when r_what's taskstep is MOMTKS_POP_ONE, r_val is the "returned"
-     primary value; when the taskstep is MOMTKS_PUSH_ONE, r_val is the
+  /* when r_what's taskstep is MOMTKS_REPLACE, r_val is the "tail-called"
+     node; when the taskstep is MOMTKS_PUSH_ONE, r_val is the
      "called" node. */
   const void *r_val;
 };
 // for signature_nanotaskstep
 typedef struct mom_result_tasklet_st
-mom_nanotaskstep_sig_t (struct mom_nanoeval_st *nev,
-                        struct mom_item_st *taskletitm,
+mom_nanotaskstep_sig_t (struct mom_nanotaskstep_st *nats,
                         const struct mom_boxnode_st *clos,
                         struct mom_framescalar_st *fscal,
                         struct mom_framepointer_st *fptr);

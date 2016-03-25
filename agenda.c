@@ -275,12 +275,13 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
                         const struct mom_boxnode_st *nod)
 {
   assert (tskitm != NULL && tskitm->va_itype == MOMITY_ITEM
-          && tskitm->itm_payload == tkstk);
+          && tskitm->itm_payload == (void *) tkstk);
   assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
   if (!nod || nod == MOM_EMPTY_SLOT || nod->va_itype != MOMITY_NODE)
     {
       MOM_WARNPRINTF ("for tasklet item %s invalid node %s to push",
-                      mom_item_cstring (tskitm), mom_value_cstring (nod));
+                      mom_item_cstring (tskitm),
+                      mom_value_cstring ((void *) nod));
       return false;
     };
   struct mom_item_st *connitm = nod->nod_connitm;
@@ -314,29 +315,37 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
     {
       MOM_WARNPRINTF
         ("for tasklet item %s bad node %s (of signature %s) to push",
-         mom_item_cstring (tskitm), mom_value_cstring (nod),
+         mom_item_cstring (tskitm), mom_value_cstring ((void *) nod),
          mom_item_cstring (sigitm));
       return false;
     }
 }                               /* end of push_frame_tasklet_mom */
 
 #define MOM_TASKLET_DELAY 0.005
-#define MOM_TASKLET_STEPMAX 4096
+#define MOM_TASKLET_STEPMAX 16384
 MOM_PRIVATE bool
 unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
                               struct mom_tasklet_st * tkstk)
 {
-  double tstart = mom_clock_time (CLOCK_MONOTONIC);
-  int nbsteps = 0;
+  struct mom_nanotaskstep_st znats;
+  memset (&znats, 0, sizeof (znats));
+  assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
+  znats.nats_magic = MOM_NANOTASKSTEP_MAGIC;
+  znats.nats_startim = mom_clock_time (CLOCK_MONOTONIC);
+  znats.nats_tasklet = tkstk;
+  znats.nats_nanev.nanev_magic = NANOEVAL_MAGIC_MOM;
+  znats.nats_nanev.nanev_tkitm = tkitm;
+  znats.nats_nanev.nanev_maxstep = MOM_TASKLET_STEPMAX;
   assert (tkitm != NULL && tkitm->va_itype == MOMITY_ITEM);
   for (;;)
     {
       assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
       double tcur = mom_clock_time (CLOCK_MONOTONIC);
-      if (tcur - tstart > MOM_TASKLET_DELAY)
+      if (tcur - znats.nats_startim > MOM_TASKLET_DELAY)
         break;
-      nbsteps++;
-      if (nbsteps >= MOM_TASKLET_STEPMAX)
+      memset (&znats.nats_nanev.nanev_jb, 0, sizeof (jmp_buf));
+      znats.nats_nanev.nanev_count++;
+      if (znats.nats_nanev.nanev_count >= znats.nats_nanev.nanev_maxstep)
         break;
       unsigned frsiz = mom_raw_size (tkstk);
       unsigned frtop = tkstk->tlk_frametop;
@@ -403,7 +412,161 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
           return false;
         };
       mom_nanotaskstep_sig_t *stepfun = nodfunptr;
-#warning should make a taskstep, but what mom_nanoeval_st?
+      int errlin = setjmp (znats.nats_nanev.nanev_jb);
+      if (errlin)
+        {
+          MOM_WARNPRINTF_AT (znats.nats_nanev.nanev_errfile ? : "??",
+                             errlin,
+                             "tasklet item %s frame level#%d (%s) got exception failure %s expr %s",
+                             mom_item_cstring (tkitm), frtop,
+                             mom_value_cstring ((const void *) frnod),
+                             mom_value_cstring (znats.nats_nanev.nanev_fail),
+                             mom_value_cstring (znats.nats_nanev.nanev_expr));
+        }
+      else
+        {
+          znats.nats_nanev.nanev_fail = NULL;
+          znats.nats_nanev.nanev_expr = NULL;
+          znats.nats_nanev.nanev_errfile = NULL;
+          znats.nats_nblevels = 0;
+          memset (znats.nats_ptrs, 0, sizeof (znats.nats_ptrs));
+          memset (znats.nats_nums, 0, sizeof (znats.nats_nums));
+          memset (znats.nats_dbls, 0, sizeof (znats.nats_dbls));
+          MOM_DEBUGPRINTF (run,
+                           "before running stepfun@%p node %s level#%d taskitm %s",
+                           stepfun, mom_value_cstring ((const void *) frnod),
+                           frtop, mom_item_cstring (tkitm));
+          struct mom_result_tasklet_st res =
+            (*stepfun) (&znats, frnod, frsca, frptr);
+          switch (mom_what_taskstep (res.r_what))
+            {
+            case MOMTKS_NOP:
+              continue;
+            case MOMTKS_POP_ONE:
+              {
+                pop_top_frame_tasklet_mom (tkstk);
+              }
+              break;
+            case MOMTKS_PUSH_ONE:
+              {
+                push_frame_tasklet_mom (tkitm, tkstk, res.r_val);
+              }
+              break;
+            case MOMTKS_REPLACE:
+              {
+                pop_top_frame_tasklet_mom (tkstk);
+                push_frame_tasklet_mom (tkitm, tkstk, res.r_val);
+              }
+              break;
+            case MOMTKS_POP_MANY:
+              {
+                unsigned nblev = znats.nats_nblevels;
+                for (unsigned ix = 0; ix < nblev; ix++)
+                  pop_top_frame_tasklet_mom (tkstk);
+
+              }
+              break;
+            }
+          /// now, transmit the data into the frame
+          unsigned wnbdbl = mom_what_nbdbl (res.r_what);
+          unsigned wnbint = mom_what_nbint (res.r_what);
+          unsigned wnbval = mom_what_nbval (res.r_what);
+          unsigned frsiz = mom_raw_size (tkstk);
+          unsigned frtop = tkstk->tlk_frametop;
+          if (frtop == 0)
+            return false;
+          if (MOM_UNLIKELY (frtop >= frsiz))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (top=%u >= siz=%u)",
+               mom_item_cstring (tkitm), frtop, frsiz);
+          {
+            struct mom_frameoffsets_st poptopfo =
+              tkstk->tkl_froffsets[frtop - 1];
+            scaoff = poptopfo.fo_scaoff;
+            ptroff = poptopfo.fo_ptroff;
+          }
+          scasiz = tkstk->tkl_scasiz;
+          scatop = tkstk->tkl_scatop;
+          ptrsiz = tkstk->tkl_ptrsiz;
+          ptrtop = tkstk->tkl_ptrtop;
+          if (MOM_UNLIKELY (scatop >= scasiz))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (scatop=%u >= scasiz=%u)",
+               mom_item_cstring (tkitm), scatop, scasiz);
+          if (MOM_UNLIKELY (ptrtop >= ptrsiz))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (ptrtop=%u >= ptrsiz=%u)",
+               mom_item_cstring (tkitm), ptrtop, ptrsiz);
+          if (MOM_UNLIKELY (ptroff >= ptrtop))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (ptroff=%u >= ptrtop=%u)",
+               mom_item_cstring (tkitm), ptroff, ptrtop);
+          if (MOM_UNLIKELY (scaoff >= scatop))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (scaoff=%u >= scatop=%u)",
+               mom_item_cstring (tkitm), scaoff, scatop);
+          frsca =               //
+            (struct mom_framescalar_st *) tkstk->tkl_scalars + scaoff;
+          frptr =               //
+            (struct mom_framepointer_st *) tkstk->tkl_pointers + ptroff;
+          frnod = frptr->tfp_node;
+          if (MOM_UNLIKELY
+              (!frnod || frnod == MOM_EMPTY_SLOT
+               || frnod->va_itype != MOMITY_NODE))
+            MOM_FATAPRINTF
+              ("corrupted tasklet item %s (bad frnod %s at frame level#%d)",
+               mom_item_cstring (tkitm),
+               mom_value_cstring ((const void *) frnod), frtop);
+          noditm = frnod->nod_connitm;
+          assert (noditm && noditm->va_itype == MOMITY_ITEM);
+          {
+            mom_item_lock (noditm);
+            nodsigitm = noditm->itm_funsig;
+            nodstepper = (const void *) noditm->itm_payload;
+            nodfunptr = noditm->itm_funptr;
+            mom_item_unlock (noditm);
+          }
+          if (MOM_UNLIKELY
+              (nodsigitm != MOM_PREDEFITM (signature_nanotaskstep)
+               || nodstepper == NULL
+               || nodstepper->va_itype != MOMITY_TASKSTEPPER || !nodfunptr))
+            {
+              MOM_WARNPRINTF ("bad tasklet item %s (bad frnod %s"
+                              " at frame level#%d, noditm=%s, nodsigitm=%s)",
+                              mom_item_cstring (tkitm),
+                              mom_value_cstring ((const void *) frnod), frtop,
+                              mom_item_cstring (noditm),
+                              mom_item_cstring (nodsigitm));
+              pop_top_frame_tasklet_mom (tkstk);
+              return false;
+            };
+          if (wnbval > 0)
+            {
+              if (wnbval < mom_raw_size (nodstepper)
+                  && wnbval < MOM_TASKSTEP_MAX_DATA
+                  && ptroff + wnbval < ptrtop)
+                {
+                  for (unsigned ix = 0; ix < wnbval; ix++)
+                    frptr->tfp_pointers[ix] = znats.nats_ptrs[ix];
+                }
+              else
+                MOM_WARNPRINTF
+                  ("bad number of values %d to transmit in tasklet item %s "
+                   "(bad frnod %s at frame level#%d, noditm=%s)",
+                   wnbval,
+                   mom_item_cstring (tkitm),
+                   mom_value_cstring ((const void *) frnod), frtop,
+                   mom_item_cstring (noditm));
+            };
+          if (wnbint > 0)
+            {
+#warning unsync_run_stack_tasklet_mom incomplete for transmission of integers
+            };
+          if (wnbdbl > 0)
+            {
+#warning unsync_run_stack_tasklet_mom incomplete for transmission of doubles
+            };
+        };
     };
   MOM_FATAPRINTF
     ("unimplemented unsync_run_stack_tasklet_mom tkitm=%s tkstk@%p",
@@ -461,7 +624,9 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
         }
       else
         {
-          struct timespec ts = { 0, 0 };
+          struct timespec ts = {
+            0, 0
+          };
           clock_gettime (CLOCK_REALTIME, &ts);
           ts.tv_nsec += 150 * 1000 * 1000;      // 150 milliseconds
           while (ts.tv_nsec > 1000 * 1000 * 1000)
@@ -493,12 +658,13 @@ mom_start_agenda (void)
   unsigned nbjobs = mom_nbjobs;
   if (nbjobs < 2 || nbjobs > MOM_JOB_MAX)
     MOM_FATAPRINTF ("start_agenda bad nbjobs %d", nbjobs);
-  pthread_attr_t at = { };
+  pthread_attr_t at = {
+  };
   pthread_attr_init (&at);
   pthread_attr_setdetachstate (&at, PTHREAD_CREATE_DETACHED);
   for (int ix = 1; ix <= (int) nbjobs; ix++)
-    pthread_create (&workthread_mom[ix], &at, agenda_thread_wrapper_mom,
-                    (void *) (intptr_t) ix);
+    pthread_create (&workthread_mom[ix],
+                    &at, agenda_thread_wrapper_mom, (void *) (intptr_t) ix);
   MOM_INFORMPRINTF ("started agenda with %d workers", nbjobs);
 }
 
@@ -507,7 +673,8 @@ mom_start_agenda (void)
 //// TASKLET SUPPORT
 
 void
-mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
+mom_tasklet_reserve (struct mom_tasklet_st *tkl,
+                     unsigned nbframes,
                      unsigned nbscalars, unsigned nbpointers)
 {
   if (MOM_UNLIKELY
@@ -526,13 +693,13 @@ mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
             mom_prime_above (((9 * frtop / 8 + nbframes + 30) | 0xf) + 1);
           if (MOM_UNLIKELY (newfrsiz == 0 || newfrsiz >= MOM_SIZE_MAX))
             MOM_FATAPRINTF
-              ("too big frame size %u (for %u additional frames)",
-               newfrsiz, nbframes);
+              ("too big frame size %u (for %u additional frames)", newfrsiz,
+               nbframes);
           struct mom_frameoffsets_st *oldfroptr = tkl->tkl_froffsets;
           assert (oldfroptr != NULL);
           struct mom_frameoffsets_st *newfroptr =       //
-            mom_gc_alloc_atomic (sizeof (struct mom_frameoffsets_st) *
-                                 newfrsiz);
+            mom_gc_alloc_atomic (sizeof
+                                 (struct mom_frameoffsets_st) * newfrsiz);
           memcpy (newfroptr, oldfroptr,
                   frtop * sizeof (struct mom_frameoffsets_st));
           tkl->tkl_froffsets = newfroptr;
@@ -589,3 +756,5 @@ mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
         }
     }
 }                               /* end mom_tasklet_reserve */
+
+// eof agenda.c

@@ -972,6 +972,7 @@ mom_print_sizes (void)
   PRINT_SIZEOF (struct mom_taskstepper_st);
   PRINT_SIZEOF (struct mom_item_st);
   PRINT_SIZEOF (struct mom_nanoeval_st);
+  PRINT_SIZEOF (struct mom_nanotaskstep_st);
 }
 
 void
@@ -1399,10 +1400,10 @@ int
 main (int argc_main, char **argv_main)
 {
   clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
+  gethostname (hostname_mom, sizeof (hostname_mom) - 1);
   GC_INIT ();
   GC_set_handle_fork (1);
   GC_register_displacement (offsetof (struct mom_itemname_tu, itname_string));
-  gethostname (hostname_mom, sizeof (hostname_mom) - 1);
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
