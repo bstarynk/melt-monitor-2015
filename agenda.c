@@ -885,6 +885,23 @@ mom_dumpscan_tasklet (struct mom_dumper_st *du, struct mom_tasklet_st *tklet)
 
 
 void
+mom_dumpemit_tasklet_frame (struct mom_dumper_st *du,
+                            struct mom_tasklet_st *tklet,
+                            struct mom_item_st *noditm,
+                            struct mom_taskstepper_st *tstep,
+                            struct mom_frame_st fr)
+{
+  assert (du && du->du_state == MOMDUMP_EMIT);
+  assert (tklet && tklet->va_itype == MOMITY_TASKLET);
+  assert (noditm && noditm->va_itype == MOMITY_ITEM);
+  assert (tstep && tstep->va_itype == MOMITY_TASKSTEPPER);
+  assert (fr.fr_sca && fr.fr_ptr);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+#warning mom_dumpemit_tasklet_frame incomplete
+}                               /* end mom_dumpemit_tasklet_frame */
+
+void
 mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
                               struct mom_tasklet_st *tklet)
 {
@@ -896,10 +913,45 @@ mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
            tklet->tkl_frametop, tklet->tkl_scatop, tklet->tkl_ptrtop);
   if (mom_dumped_value (du, (const void *) tklet->tkl_excnod))
     {
-      mom_dumpemit_value (du, tklet->tkl_excnod);
+      mom_dumpemit_value (du, (const void *) tklet->tkl_excnod);
       fputs ("^tasklet_excnod\n", femit);
     }
+  if (mom_dumped_item (du, tklet->tkl_statitm))
+    {
+      mom_dumpemit_refitem (du, tklet->tkl_statitm);
+      fputs ("^tasklet_statitm\n", femit);
+    }
+  for (unsigned lev = 0; lev < tklet->tkl_frametop; lev++)
+    {
+      struct mom_frame_st fr = mom_tasklet_nth_frame (tklet, lev);
+      if (!fr.fr_sca || !fr.fr_ptr)
+        break;
+      const struct mom_boxnode_st *frnod = fr.fr_ptr->tfp_node;
+      mom_dumpscan_value (du, (const void *) frnod);
+      if (!frnod || frnod == MOM_EMPTY_SLOT || frnod->va_itype != MOMITY_NODE)
+        break;
+      struct mom_item_st *noditm = frnod->nod_connitm;
+      if (!mom_dumped_item (du, noditm))
+        break;
+      void *funptr = NULL;
+      struct mom_taskstepper_st *tstep = NULL;
+      struct mom_item_st *sigitm = NULL;
+      {
+        mom_item_lock (noditm);
+        sigitm = noditm->itm_funsig;
+        if (sigitm == MOM_PREDEFITM (signature_nanotaskstep))
+          funptr = noditm->itm_funptr;
+        if (mom_itype (noditm->itm_payload) == MOMITY_TASKSTEPPER)
+          tstep = (struct mom_taskstepper_st *) noditm->itm_payload;
+        mom_item_unlock (noditm);
+      }
+      if (!funptr || !tstep)
+        break;
+      mom_dumpemit_tasklet_frame (du, tklet, noditm, tstep, fr);
+    }
 }                               /* end of mom_dumpemit_tasklet_payload */
+
+
 
 const char momsig_ldc_payload_tasklet[] = "signature_loader_caret";
 void
@@ -920,6 +972,35 @@ momf_ldc_payload_tasklet (struct mom_item_st *itm, struct mom_loader_st *ld)
                                              9 * nbptr / 8 + 30);
 }                               /* end of momf_ldc_payload_tasklet */
 
+
+void
+mom_tasklet_put_excnode (struct mom_tasklet_st *tklet,
+                         const struct mom_boxnode_st *nod)
+{
+  if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
+    return;
+  if (nod == MOM_EMPTY_SLOT)
+    nod = NULL;
+  if (nod && nod->va_itype != MOMITY_NODE)
+    return;
+  tklet->tkl_excnod = nod;
+}                               /* end mom_tasklet_put_excnode */
+
+
+
+void
+mom_tasklet_put_statitm (struct mom_tasklet_st *tklet,
+                         struct mom_item_st *itm)
+{
+  if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
+    return;
+  if (itm == MOM_EMPTY_SLOT)
+    itm = NULL;
+  if (itm && itm->va_itype != MOMITY_ITEM)
+    return;
+  tklet->tkl_statitm = itm;
+}                               /* end mom_tasklet_put_statitm */
+
 const char momsig_ldc_tasklet_excnod[] = "signature_loader_caret";
 void
 momf_ldc_tasklet_excnod (struct mom_item_st *itm, struct mom_loader_st *ld)
@@ -928,10 +1009,30 @@ momf_ldc_tasklet_excnod (struct mom_item_st *itm, struct mom_loader_st *ld)
   assert (ld && ld->va_itype == MOMITY_LOADER);
   MOM_DEBUGPRINTF (load, "momf_ldc_tasklet_excnod itm=%s",
                    mom_item_cstring (itm));
-  MOM_FATAPRINTF ("momf_ldc_tasklet_excnod itm %s unimplemented",
-                  mom_item_cstring (itm));
-#warning momf_ldc_tasklet_excnod unimplemented
+  const struct mom_boxnode_st *nod =
+    mom_ldstate_dynnode (mom_loader_top (ld, 0));
+  if (itm->itm_payload && nod)
+    mom_tasklet_put_excnode ((void *) itm->itm_payload, nod);
+  mom_loader_pop (ld, 1);
 }                               /* end of momf_ldc_tasklet_excnod */
+
+
+const char momsig_ldc_tasklet_statitm[] = "signature_loader_caret";
+void
+momf_ldc_tasklet_statitm (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldc_tasklet_statitm itm=%s",
+                   mom_item_cstring (itm));
+  struct mom_item_st *stitm = mom_ldstate_dynitem (mom_loader_top (ld, 0));
+  if (itm->itm_payload && stitm)
+    mom_tasklet_put_statitm ((void *) itm->itm_payload, stitm);
+  mom_loader_pop (ld, 1);
+}                               /* end of momf_ldc_tasklet_statitm */
+
+
+
 
 struct mom_tasklet_st *
 mom_unsync_item_initialize_tasklet (struct mom_item_st *itm,
@@ -967,6 +1068,7 @@ mom_unsync_item_initialize_tasklet (struct mom_item_st *itm,
   return tkl;
 }                               /* end of mom_unsync_item_initialize_tasklet */
 
+
 void
 mom_dumpemit_taskstepper (struct mom_dumper_st *du,
                           struct mom_item_st *itm,
@@ -985,8 +1087,9 @@ mom_dumpemit_taskstepper (struct mom_dumper_st *du,
     fputs ("^taskstepper\n", femit);
 }                               /* end of mom_dumpemit_taskstepper */
 
-const char momsig_ldc_taskstepper[] = "signature_loader_caret";
 
+
+const char momsig_ldc_taskstepper[] = "signature_loader_caret";
 void
 momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld)
 {
@@ -1007,9 +1110,11 @@ momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld)
                     mom_item_cstring (itm), dlerror ());
 }                               /* end of momf_ldc_taskstepper */
 
-extern mom_nanotaskstep_sig_t momf_failure_nanostep;
 
+
+extern mom_nanotaskstep_sig_t momf_failure_nanostep;
 MOM_TASKSTEPPER_DEFINE (failure_nanostep, 2, 0, 0);
+const char momsig_failure_nanostep[] = "signature_nanotaskstep";
 struct mom_result_tasklet_st
 momf_failure_nanostep (struct mom_nanotaskstep_st *nats,
                        const struct mom_boxnode_st *clos,

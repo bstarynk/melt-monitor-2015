@@ -2413,6 +2413,7 @@ struct mom_tasklet_st
 };
 
 
+
 struct mom_framescalar_st
 {
   intptr_t tfs_state;
@@ -2471,7 +2472,35 @@ mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)
   NULL, NULL};
 }                               /* end of mom_tasklet_nth_frame */
 
-#warning tasklets are incomplete...
+static inline struct mom_item_st *
+mom_tasklet_statitm (const struct mom_tasklet_st *tklet)
+{
+  if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
+    return NULL;
+  return tklet->tkl_statitm;
+}                               /* end mom_tasklet_statitm */
+
+void mom_tasklet_put_statitm (struct mom_tasklet_st *tklet,
+                              struct mom_item_st *itm);
+
+static inline const struct mom_boxnode_st *
+mom_tasklet_excnode (const struct mom_tasklet_st *tklet)
+{
+  if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
+    return NULL;
+  return tklet->tkl_excnod;
+}                               /* end mom_tasklet_excnode */
+
+void mom_tasklet_put_excnode (struct mom_tasklet_st *tklet,
+                              const struct mom_boxnode_st *nod);
+
+static inline unsigned
+mom_tasklet_frame_depth (const struct mom_tasklet_st *tklet)
+{
+  if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
+    return 0;
+  return tklet->tkl_frametop;
+}                               /* end mom_tasklet_frame_depth */
 
 ////////////////
 
