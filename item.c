@@ -2131,6 +2131,17 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           mom_dumpemit_filebuffer_payload (du,
                                            (struct mom_filebuffer_st *) payl);
           break;
+        case MOMITY_TASKLET:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s tasklet",
+                           mom_item_cstring (itm));
+          mom_dumpemit_tasklet_payload (du, (struct mom_tasklet_st *) payl);
+          break;
+        case MOMITY_TASKSTEPPER:
+          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s taskstepper",
+                           mom_item_cstring (itm));
+          mom_dumpemit_taskstepper (du, itm,
+                                    (struct mom_taskstepper_st *) payl);
+          break;
         default:
           MOM_DEBUGPRINTF (dump,
                            "dumpemit_item_content itm %s other payload %s @%p",

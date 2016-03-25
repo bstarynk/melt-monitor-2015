@@ -832,4 +832,79 @@ mom_tasklet_reserve (struct mom_tasklet_st *tkl,
     }
 }                               /* end mom_tasklet_reserve */
 
+
+
+
+void
+mom_dumpscan_tasklet (struct mom_dumper_st *du, struct mom_tasklet_st *tklet)
+{
+  assert (du && du->du_state == MOMDUMP_SCAN);
+  assert (tklet && tklet->va_itype == MOMITY_TASKLET);
+}                               /* end of mom_dumpscan_tasklet */
+
+void
+mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
+                              struct mom_tasklet_st *tklet)
+{
+  assert (du && du->du_state == MOMDUMP_EMIT);
+  assert (tklet && tklet->va_itype == MOMITY_TASKLET);
+}                               /* end of mom_dumpemit_tasklet_payload */
+
+void
+mom_dumpemit_taskstepper (struct mom_dumper_st *du,
+                          struct mom_item_st *itm,
+                          struct mom_taskstepper_st *tstep)
+{
+  assert (du && du->du_state == MOMDUMP_EMIT);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (tstep && tstep->va_itype == MOMITY_TASKSTEPPER);
+  Dl_info dinf = { };
+  FILE *femit = du->du_emitfile;
+  if (dladdr (tstep, &dinf) && dinf.dli_saddr == tstep
+      && !strncmp (dinf.dli_sname, MOM_TASKSTEPPER_PREFIX,
+                   strlen (MOM_TASKSTEPPER_PREFIX))
+      && !strcmp (dinf.dli_sname + strlen (MOM_TASKSTEPPER_PREFIX),
+                  mom_item_cstring (itm)) && femit != NULL)
+    fputs ("^taskstepper\n", femit);
+}                               /* end of mom_dumpemit_taskstepper */
+
+const char momsig_ldc_taskstepper[] = "signature_loader_caret";
+
+void
+momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldc_taskstepper itm=%s",
+                   mom_item_cstring (itm));
+  char nambuf[MOM_PATH_MAX];
+  const struct mom_taskstepper_st *tstep = NULL;
+  memset (nambuf, 0, sizeof (nambuf));
+  if (snprintf (nambuf, sizeof (nambuf), MOM_TASKSTEPPER_PREFIX "%s",
+                mom_item_cstring (itm)) < (int) sizeof (nambuf)
+      && (tstep = dlsym (mom_prog_dlhandle, nambuf)) != NULL
+      && tstep->va_itype == MOMITY_TASKSTEPPER)
+    itm->itm_payload = (void *) tstep;
+  else
+    MOM_WARNPRINTF ("failed to find tasktepper for %s : %s",
+                    mom_item_cstring (itm), dlerror ());
+}                               /* end of momf_ldc_taskstepper */
+
+extern mom_nanotaskstep_sig_t momf_failure_nanostep;
+
+MOM_TASKSTEPPER_DEFINE (failure_nanostep, 2, 0, 0);
+struct mom_result_tasklet_st
+momf_failure_nanostep (struct mom_nanotaskstep_st *nats,
+                       const struct mom_boxnode_st *clos,
+                       struct mom_framescalar_st *fscal,
+                       struct mom_framepointer_st *fptr)
+{
+  assert (nats && nats->nats_magic == MOM_NANOTASKSTEP_MAGIC);
+  assert (clos && clos->va_itype == MOMITY_NODE);
+  assert (fscal != NULL);
+  assert (fptr != NULL);
+  MOM_NANOEVAL_FAILURE (&nats->nats_nanev,
+                        fptr->tfp_pointers[0], fptr->tfp_pointers[1]);
+}                               /* end of momf_failure_nanostep */
+
 // eof agenda.c

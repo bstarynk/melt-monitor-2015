@@ -701,13 +701,16 @@ mom_load_state (const char *statepath)
   double endrealtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   MOM_INFORMPRINTF
-    ("completed load of state from %s with %u items; "
-     "in %.3f real, %.4f cpu seconds (%.3f real, %.3f cpu µs/item)",
-     statepath, nbitems, endrealtime - startrealtime,
+    ("completed load of state from %s with %u items;\n"
+     ".. %s loaded in %.3f real, %.4f cpu seconds (%.3f real, %.3f cpu µs/item)",
+     statepath, nbitems,
+     basename(statepath), endrealtime - startrealtime,
      endcputime - startcputime,
      (endrealtime - startrealtime) * (1.0e6 / nbitems),
      (endcputime - startcputime) * (1.0e6 / nbitems));
 }                               /* end mom_load_state */
+
+
 
 void
 mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
@@ -737,6 +740,11 @@ mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
         return;
       case MOMITY_HASHASSOC:
         mom_dumpscan_hashassoc (du, (struct mom_hashassoc_st *) payl);
+        return;
+      case MOMITY_TASKLET:
+        mom_dumpscan_tasklet (du, (struct mom_tasklet_st *) payl);
+        return;
+      case MOMITY_TASKSTEPPER:
         return;
       default:
         MOM_DEBUGPRINTF (dump, "dumpscan_payload@%p type=%s not scanned",

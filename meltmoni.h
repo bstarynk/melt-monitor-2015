@@ -2126,6 +2126,8 @@ void
 mom_dumpscan_hashassoc (struct mom_dumper_st *du,
                         struct mom_hashassoc_st *hass);
 
+void
+mom_dumpscan_tasklet (struct mom_dumper_st *du, struct mom_tasklet_st *tklet);
 /////
 
 void mom_dumpemit_refitem (struct mom_dumper_st *du,
@@ -2159,6 +2161,10 @@ mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
 
 void mom_dumpemit_hashmap_payload (struct mom_dumper_st *du,
                                    struct mom_hashmap_st *hmap);
+
+void mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
+                                   struct mom_tasklet_st *tsklet);
+
 
 void mom_load_state (const char *statepath);
 void mom_dump_state (void);
@@ -2330,13 +2336,33 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
   /* the mom_size is the number of values in the frame */	\
   MOM_ANYVALUE_FIELDS;						\
   /* number of integers and doubles in the frame */		\
-  unsigned short tksp_nbint, tksp_nbdbl
+  uint16_t tksp_nbint, tksp_nbdbl
 struct mom_taskstepper_st
 {
   MOM_TASKSTEPPER_FIELDS;
 };
 
+void mom_dumpemit_taskstepper (struct mom_dumper_st *du,
+                               struct mom_item_st *itm,
+                               struct mom_taskstepper_st *tstep);
+
 #define MOM_TASKSTEPPER_PREFIX "momtaskstepper_"
+
+#define MOM_TASKSTEPPER_DEFINE(Itm,NbVal,NbInt,NbDbl)	\
+  static_assert ((NbVal)>=0 && (NbVal)<UINT16_MAX,	\
+                 "too many values " #NbVal		\
+		 " for taskstepper " #Itm);		\
+  static_assert ((NbInt)>=0 && (NbInt)<UINT16_MAX,	\
+		 "too many integers " #NbInt		\
+		 " for taskstepper " #Itm);		\
+  static_assert ((NbDbl)>=0 && (NbDbl)<UINT16_MAX,	\
+		 "too many doubles " #NbDbl		\
+		 " for taskstepper " #Itm);		\
+  const struct mom_taskstepper_st			\
+  momtaskstepper_##Itm =				\
+    { .va_itype= MOMITY_TASKSTEPPER,			\
+      .va_hsiz=0, .va_lsiz= (NbVal),			\
+      .tksp_nbint=(NbInt), .tksp_nbdbl=(NbDbl) }
 
 static inline const struct mom_taskstepper_st *
 mom_taskstepper_dyncast (const void *p)
@@ -2446,7 +2472,7 @@ struct mom_nanoeval_st
 void mom_bind_nanoev (struct mom_nanoeval_st *nev,
                       struct mom_item_st *envitm,
                       const struct mom_item_st *varitm, const void *val);
-#define NANOEVAL_FAILURE_MOM(Ne,Expr,Fail) do {			\
+#define MOM_NANOEVAL_FAILURE(Ne,Expr,Fail) do {			\
     struct mom_nanoeval_st*_ne = (struct mom_nanoeval_st*)(Ne);	\
     assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
     _ne->nanev_fail = (Fail);					\

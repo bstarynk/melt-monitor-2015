@@ -207,7 +207,7 @@ nanoeval_divenode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   if (arity != 1 && arity != 2)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *firstexpv = nod->nod_sons[0];
@@ -225,7 +225,7 @@ nanoeval_divenode_mom (struct mom_nanoeval_st *nev,
                        depth, mom_value_cstring (firstvalv));
       firstitm = mom_dyncast_item (firstvalv);
       if (!firstitm)
-        NANOEVAL_FAILURE_MOM (nev, nod,
+        MOM_NANOEVAL_FAILURE (nev, nod,
                               mom_boxnode_make_va (MOM_PREDEFITM
                                                    (undefined_result), 1,
                                                    firstvalv));
@@ -265,7 +265,7 @@ nanoeval_divenode_mom (struct mom_nanoeval_st *nev,
                        depth, mom_value_cstring (followexpv));
     }
   else
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM
                                                (undefined_result), 2,
                                                firstitm, secondvalv));
@@ -297,7 +297,7 @@ nanoeval_getnode_mom (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
                    mom_value_cstring ((const void *) nod),
                    mom_item_cstring (envitm));
   if (arity != 2 && arity != 3)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *firstexpv = nod->nod_sons[0];
@@ -450,7 +450,7 @@ nanoeval_switchitemnode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   if (arity == 0)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *selexpv = nod->nod_sons[0];
@@ -601,7 +601,7 @@ nanoeval_verbatimnode_mom (struct mom_nanoeval_st *nev,
                    mom_value_cstring ((const struct mom_hashedvalue_st
                                        *) nod), mom_item_cstring (envitm));
   if (arity != 1)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   return nod->nod_sons[0];
@@ -624,7 +624,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nevarg,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   if (arity < 2)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   void *outexpv = nod->nod_sons[0];
@@ -634,7 +634,7 @@ nanoeval_outputnode_mom (struct mom_nanoeval_st *nevarg,
                    mom_value_cstring (outv));
   struct mom_item_st *outitm = mom_dyncast_item (outv);
   if (!outitm)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (type_error), 1,
                                                outv));
   /// special debug output
@@ -970,7 +970,7 @@ nanoeval_whilenode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);;
   if (arity == 0)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *testexpv = nod->nod_sons[0];
@@ -1014,14 +1014,14 @@ nanoeval_assignnode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   if (arity < 2)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   struct mom_item_st *varitm = mom_dyncast_item (nod->nod_sons[0]);;
   MOM_DEBUGPRINTF (run, "nanoeval_assignnode depth#%d varitm=%s", depth,
                    mom_item_cstring (varitm));
   if (!varitm)
-    NANOEVAL_FAILURE_MOM (nev, nod, MOM_PREDEFITM (undefined_result));
+    MOM_NANOEVAL_FAILURE (nev, nod, MOM_PREDEFITM (undefined_result));
   for (unsigned ix = 1; ix < arity; ix++)
     {
       const void *subexpv = nod->nod_sons[ix];
@@ -1102,7 +1102,7 @@ nanoeval_itemnode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);;
   if (arity != 1)
-    NANOEVAL_FAILURE_MOM (nev, nod,
+    MOM_NANOEVAL_FAILURE (nev, nod,
                           mom_boxnode_make_va (MOM_PREDEFITM (arity), 1,
                                                mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *argitv = nod->nod_sons[0];
@@ -1121,7 +1121,7 @@ nanoeval_itemnode_mom (struct mom_nanoeval_st *nev,
         mom_nanoeval (nev, envitm, argitv, depth + 1);
       argitm = mom_dyncast_item (val);
       if (!argitm)
-        NANOEVAL_FAILURE_MOM (nev, nod,
+        MOM_NANOEVAL_FAILURE (nev, nod,
                               mom_boxnode_make_va (MOM_PREDEFITM (item), 1,
                                                    val));
       resv = mom_clone_item (argitm);
@@ -1292,7 +1292,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
   assert (nod && nod->va_itype == MOMITY_NODE);
   unsigned arity = mom_size (nod);
   if (arity < 2)
-    NANOEVAL_FAILURE_MOM (nev, nod,     //
+    MOM_NANOEVAL_FAILURE (nev, nod,     //
                           mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                1, mom_boxint_make (arity)));
   const struct mom_hashedvalue_st *formalsv = nod->nod_sons[0];
@@ -1328,7 +1328,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
       for (unsigned j = 0; j < formalnb; j++)
         {
           if (mom_dyncast_item (formalnod->nod_sons[j]) == NULL)
-            NANOEVAL_FAILURE_MOM        //
+            MOM_NANOEVAL_FAILURE        //
               (nev, nod,        //
                mom_boxnode_make_va (MOM_PREDEFITM (arg),        //
                                     2, formalsv, mom_boxint_make (j)));
@@ -1365,7 +1365,7 @@ nanoeval_funcnode_mom (struct mom_nanoeval_st *nev,
       MOM_DEBUGPRINTF (run,
                        "nanoeval_funcnode depth#%d bad formalsv %s",
                        depth, mom_value_cstring ((void *) formalsv));
-      NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (undefined_result),    //
+      MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (undefined_result),    //
                                                            1, formalsv));
     }
 }                               /* end nanoeval_funcnode_mom */
@@ -1394,16 +1394,16 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
                    nbargs, depth, nev->nanev_count);
   unsigned funlen = mom_size (nodfun);
   if (funlen < 3 || nodfun->nod_connitm != MOM_PREDEFITM (nano_closure))
-    NANOEVAL_FAILURE_MOM (nev, nodexp,
+    MOM_NANOEVAL_FAILURE (nev, nodexp,
                           mom_boxnode_make_va (MOM_PREDEFITM (func), 1,
                                                nodfun));
   void *formalsv = nodfun->nod_sons[0];
   struct mom_item_st *clenvitm = mom_dyncast_item (nodfun->nod_sons[1]);
   if (!clenvitm)
-    NANOEVAL_FAILURE_MOM (nev, nodexp, mom_boxnode_make_va (MOM_PREDEFITM (undefined_result),   //
+    MOM_NANOEVAL_FAILURE (nev, nodexp, mom_boxnode_make_va (MOM_PREDEFITM (undefined_result),   //
                                                             1, nodfun));
   if (!opitm)
-    NANOEVAL_FAILURE_MOM (nev, nodexp, mom_boxnode_make_va (MOM_PREDEFITM (expression), //
+    MOM_NANOEVAL_FAILURE (nev, nodexp, mom_boxnode_make_va (MOM_PREDEFITM (expression), //
                                                             1, nodexp));
   struct mom_item_st *newenvitm =
     nanoeval_freshenv_mom (nev, clenvitm, mom_size (formalsv) + 1, opitm);
@@ -1418,7 +1418,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
       MOM_DEBUGPRINTF (run, "nanoapply fixed nbform=%d nbargs=%d", nbform,
                        nbargs);
       if (nbform != nbargs)
-        NANOEVAL_FAILURE_MOM (nev, nodexp,
+        MOM_NANOEVAL_FAILURE (nev, nodexp,
                               mom_boxnode_make_va (MOM_PREDEFITM (signature),
                                                    2, nodexp, formalsv));
       for (unsigned ix = 0; ix < nbform; ix++)
@@ -1430,7 +1430,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
       MOM_DEBUGPRINTF (run, "nanoapply variadic nbform=%d nbargs=%d", nbform,
                        nbargs);
       if (nbargs < nbform)
-        NANOEVAL_FAILURE_MOM (nev, nodexp,
+        MOM_NANOEVAL_FAILURE (nev, nodexp,
                               mom_boxnode_make_va (MOM_PREDEFITM (signature),
                                                    2, nodexp, formalsv));
       for (unsigned ix = 0; ix < nbform; ix++)
@@ -1438,7 +1438,7 @@ mom_nanoapply (struct mom_nanoeval_st *nev,
           struct mom_item_st *curformitm =
             mom_dyncast_item (formnod->nod_sons[ix]);
           if (!curformitm)
-            NANOEVAL_FAILURE_MOM (nev, nodexp,
+            MOM_NANOEVAL_FAILURE (nev, nodexp,
                                   mom_boxnode_make_va (MOM_PREDEFITM (arg),
                                                        1, formalsv));
           mom_bind_nanoev (nev, newenvitm, curformitm, argv[ix]);
@@ -1593,7 +1593,7 @@ nanoeval_letnode_mom (struct mom_nanoeval_st *nev,
             }
         }
       else
-        NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (step),      //
+        MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (step),      //
                                                              1, bsnod));
 
     }
@@ -1664,7 +1664,7 @@ nanoeval_letrecnode_mom (struct mom_nanoeval_st *nev,
       else if (bsnod->nod_connitm == MOM_PREDEFITM (step))
         continue;
       else
-        NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (letrec),    //
+        MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (letrec),    //
                                                              1, bsnod));
     }
   for (unsigned ix = 0; ix < nbprefix; ix++)
@@ -1781,7 +1781,7 @@ nanoeval_nanoevalnode_mom (struct mom_nanoeval_st *nev,
         envalv = envitm;
       struct mom_item_st *newenvitm = mom_dyncast_item (envalv);
       if (!newenvitm)
-        NANOEVAL_FAILURE_MOM (nev, nod,
+        MOM_NANOEVAL_FAILURE (nev, nod,
                               mom_boxnode_make_va (MOM_PREDEFITM (type_error),
                                                    1, envalv));
       for (unsigned ix = 1; ix < arity; ix++)
@@ -1864,7 +1864,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoeval0):
               {
                 if (arity != 0)
-                  NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
+                  MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                                        1,
                                                                        mom_boxint_make
                                                                        (arity)));
@@ -1879,7 +1879,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoeval1):
               {
                 if (arity != 1)
-                  NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
+                  MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                                        1,
                                                                        mom_boxint_make
                                                                        (arity)));
@@ -1902,7 +1902,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoeval2):
               {
                 if (arity != 2)
-                  NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
+                  MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                                        1,
                                                                        mom_boxint_make
                                                                        (arity)));
@@ -1938,7 +1938,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoeval3):
               {
                 if (arity != 3)
-                  NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
+                  MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                                        1,
                                                                        mom_boxint_make
                                                                        (arity)));
@@ -1988,7 +1988,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoeval4):
               {
                 if (arity != 4)
-                  NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
+                  MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (arity),   //
                                                                        1,
                                                                        mom_boxint_make
                                                                        (arity)));
@@ -2088,14 +2088,14 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
                 ("nanoeval_othernode connitm %s opitm %s with strange signature %s",
                  mom_item_cstring (connitm), mom_item_cstring (opitm),
                  mom_item_cstring (opsigitm));
-              NANOEVAL_FAILURE_MOM (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (signature),   //
+              MOM_NANOEVAL_FAILURE (nev, nod, mom_boxnode_make_va (MOM_PREDEFITM (signature),   //
                                                                    1, opitm));
             }
 #undef MODNANOVALSIG_MOM
         }
       else
         {                       // opsigitm is NULL
-          NANOEVAL_FAILURE_MOM
+          MOM_NANOEVAL_FAILURE
             (nev, nod,
              mom_boxnode_make_va (MOM_PREDEFITM (signature), 1, opitm));
         }
@@ -2138,7 +2138,7 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
           return resapp;
         };
     }
-  NANOEVAL_FAILURE_MOM (nev, nod,
+  MOM_NANOEVAL_FAILURE (nev, nod,
                         mom_boxnode_make_va (MOM_PREDEFITM (nanoeval), 1,
                                              connitm));
 }                               /* end of nanoeval_othernode_mom */
@@ -2280,13 +2280,13 @@ mom_nanoeval (struct mom_nanoeval_st *nev, struct mom_item_st *envitm,
     case MOMITY_NODE:
       {
         if (stepcount >= nev->nanev_maxstep)
-          NANOEVAL_FAILURE_MOM (nev, exprv,
+          MOM_NANOEVAL_FAILURE (nev, exprv,
                                 mom_boxnode_make_va (MOM_PREDEFITM (step), 1,
                                                      mom_boxint_make
                                                      (stepcount)));
         nev->nanev_count = stepcount + 1;
         if (depth >= NANOEVAL_MAGIC_MOM)
-          NANOEVAL_FAILURE_MOM (nev, exprv,
+          MOM_NANOEVAL_FAILURE (nev, exprv,
                                 mom_boxnode_make_va (MOM_PREDEFITM (depth), 1,
                                                      mom_boxint_make
                                                      (depth)));

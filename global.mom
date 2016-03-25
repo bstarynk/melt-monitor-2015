@@ -640,6 +640,17 @@ nanoeval_fail1
 )attrs
 
 
+*failure_nanostep
+1458912739
+^mtime
+^func
+(
+comment
+"a nanostep routine for failure"_
+)attrs
+^taskstepper
+
+
 *file_name
 1457524589
 ^mtime
@@ -4900,6 +4911,7 @@ apply
 apply_flatten
 equal
 fail
+failure_nanostep
 fold_left
 fold_right
 foldix_left
