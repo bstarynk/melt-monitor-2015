@@ -1054,7 +1054,7 @@ end:                           // this is only reached on failure
 
 
 MOM_PRIVATE void
-after_dump_mom ()
+after_dump_mom (void)
 {
   const struct mom_hashedvalue_st *closv = NULL;
   {
@@ -1117,6 +1117,35 @@ end:
   return;
 }                               /* end of after_dump_mom */
 
+MOM_PRIVATE void
+run_make_after_dump_mom (void)
+{
+  char cwdbuf[128];
+  memset (cwdbuf, 0, sizeof (cwdbuf));
+  if (getcwd (cwdbuf, sizeof (cwdbuf) - 1) == NULL)
+    strcpy (cwdbuf, "./");
+  char cmdbuf[MOM_PATH_MAX];
+  memset (cmdbuf, 0, sizeof (cmdbuf));
+  int cmdlen = 0;
+  if (access ("Makefile", R_OK))
+    cmdlen =
+      snprintf (cmdbuf, sizeof (cmdbuf), "nice make -f '%s' -j",
+                monimelt_makefile);
+  else
+    cmdlen = snprintf (cmdbuf, sizeof (cmdbuf), "nice make -j");
+  if (MOM_UNLIKELY (cmdlen >= (int)sizeof (cmdbuf) - 1))
+    MOM_FATAPRINTF ("failed to build make command %s (%d bytes needed)",
+                    cmdbuf, cmdlen);
+  MOM_INFORMPRINTF ("building after dump in %s with %s", cwdbuf, cmdbuf);
+  fflush (NULL);
+  int errcod = system (cmdbuf);
+  if (errcod)
+    MOM_FATAPRINTF ("build after dump (%s) failed #%d in %s", cmdbuf, errcod,
+                    cwdbuf);
+  else
+    MOM_INFORMPRINTF ("build after dump (%s) successful in %s", cmdbuf,
+                      cwdbuf);
+}                               /* end of run_make_after_dump_mom */
 
 
 void
@@ -1195,6 +1224,10 @@ mom_dump_state (void)
                                       mom_hashset_to_boxset
                                       (du->du_itemset)));
   after_dump_mom ();
+  if (mom_dont_make_after_dump)
+    MOM_INFORMPRINTF ("don't run make after dump");
+  else
+    run_make_after_dump_mom ();
   {
     char cwdbuf[MOM_PATH_MAX];
     memset (cwdbuf, 0, sizeof (cwdbuf));

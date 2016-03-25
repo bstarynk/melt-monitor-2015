@@ -100,6 +100,8 @@ extern const char monimelt_compilercommand[];
 extern const char monimelt_compilerflags[];
 extern const char monimelt_optimflags[];
 extern const char monimelt_checksum[];
+extern const char monimelt_directory[];
+extern const char monimelt_makefile[];
 
 
 // increasing array of primes and its size
@@ -2062,6 +2064,7 @@ enum mom_dumpstate_en
   FILE*du_emitfile
 
 extern bool mom_skip_dump_hooks;
+extern bool mom_dont_make_after_dump;
 
 struct mom_dumper_st
 {
