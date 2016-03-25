@@ -2097,6 +2097,10 @@ mom_dumped_value (struct mom_dumper_st *du,
     return true;
   if (val->va_itype == MOMITY_ITEM)
     return mom_dumped_item (du, ((const struct mom_item_st *) val));
+  else if (val->va_itype == MOMITY_NODE)
+    return mom_dumped_item (du,
+                            ((const struct mom_boxnode_st *)
+                             val)->nod_connitm);
   return true;
 }
 
@@ -2427,9 +2431,14 @@ struct mom_frame_st
   struct mom_framepointer_st *fr_ptr;
 };
 
-void
-mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
-                     unsigned nbscalars, unsigned nbpointers);
+
+struct mom_tasklet_st *mom_unsync_item_initialize_tasklet (struct mom_item_st
+                                                           *itm,
+                                                           unsigned frasiz,
+                                                           unsigned scasiz,
+                                                           unsigned ptrsiz);
+void mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
+                          unsigned nbscalars, unsigned nbpointers);
 
 static inline struct mom_frame_st
 mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)

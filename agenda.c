@@ -26,6 +26,10 @@
 __thread int mom_worker_num;
 static pthread_cond_t cond_agendachanged_mom = PTHREAD_COND_INITIALIZER;
 
+static __thread struct mom_item_st *current_tasklet_item_mom;
+static __thread struct mom_tasklet_st *current_tasklet_mom;
+
+
 static inline struct mom_queue_st *
 agenda_queue_unsync_mom (void)
 {
@@ -339,6 +343,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
   assert (tkitm != NULL && tkitm->va_itype == MOMITY_ITEM);
   for (;;)
     {
+      current_tasklet_mom = NULL;
       znats.nats_nanev.nanev_tkitm = tkitm;
       znats.nats_tasklet = tkstk;
       assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
@@ -429,6 +434,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
           struct mom_item_st *excitm = NULL;
           struct mom_item_st *excsigitm = NULL;
           void *excfun = NULL;
+          current_tasklet_mom = NULL;
           if (tkstk && tkstk != MOM_EMPTY_SLOT
               && tkstk->va_itype == MOMITY_TASKLET
               && (excnod = tkstk->tkl_excnod) != NULL
@@ -475,6 +481,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
           memset (znats.nats_ptrs, 0, sizeof (znats.nats_ptrs));
           memset (znats.nats_nums, 0, sizeof (znats.nats_nums));
           memset (znats.nats_dbls, 0, sizeof (znats.nats_dbls));
+          current_tasklet_mom = tkstk;
           MOM_DEBUGPRINTF (run,
                            "before running stepfun@%p node %s level#%d taskitm %s",
                            stepfun, mom_value_cstring ((const void *) frnod),
@@ -661,6 +668,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
   struct mom_anyvalue_st *tkpayl = tkitm->itm_payload;
   if (tkpayl && tkpayl != MOM_EMPTY_SLOT)
     {
+      current_tasklet_item_mom = tkitm;
       if (tkpayl->va_itype == MOMITY_NODE)
         run =
           unsync_run_node_tasklet_mom (tkitm,
@@ -669,6 +677,7 @@ run_tasklet_mom (struct mom_item_st *tkitm)
         run =
           unsync_run_stack_tasklet_mom (tkitm,
                                         (struct mom_tasklet_st *) tkpayl);
+      current_tasklet_item_mom = NULL;
     }
   mom_item_unlock (tkitm);
   if (!run)
@@ -842,7 +851,38 @@ mom_dumpscan_tasklet (struct mom_dumper_st *du, struct mom_tasklet_st *tklet)
   assert (tklet && tklet->va_itype == MOMITY_TASKLET);
   mom_dumpscan_value (du, (const void *) tklet->tkl_excnod);
   mom_dumpscan_item (du, tklet->tkl_statitm);
+  for (unsigned lev = 0; lev < tklet->tkl_frametop; lev++)
+    {
+      struct mom_frame_st fr = mom_tasklet_nth_frame (tklet, lev);
+      if (!fr.fr_sca || !fr.fr_ptr)
+        break;
+      const struct mom_boxnode_st *frnod = fr.fr_ptr->tfp_node;
+      mom_dumpscan_value (du, (const void *) frnod);
+      if (!frnod || frnod == MOM_EMPTY_SLOT || frnod->va_itype != MOMITY_NODE)
+        break;
+      struct mom_item_st *noditm = frnod->nod_connitm;
+      if (!mom_dumped_item (du, noditm))
+        break;
+      void *funptr = NULL;
+      struct mom_taskstepper_st *tstep = NULL;
+      struct mom_item_st *sigitm = NULL;
+      {
+        mom_item_lock (noditm);
+        sigitm = noditm->itm_funsig;
+        if (sigitm == MOM_PREDEFITM (signature_nanotaskstep))
+          funptr = noditm->itm_funptr;
+        if (mom_itype (noditm->itm_payload) == MOMITY_TASKSTEPPER)
+          tstep = (struct mom_taskstepper_st *) noditm->itm_payload;
+        mom_item_unlock (noditm);
+      }
+      if (!funptr || !tstep)
+        break;
+      unsigned nbval = mom_raw_size (tstep);
+      for (unsigned ix = 0; ix < nbval; ix++)
+        mom_dumpscan_value (du, fr.fr_ptr->tfp_pointers[ix]);
+    }
 }                               /* end of mom_dumpscan_tasklet */
+
 
 void
 mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
@@ -850,7 +890,82 @@ mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
 {
   assert (du && du->du_state == MOMDUMP_EMIT);
   assert (tklet && tklet->va_itype == MOMITY_TASKLET);
+  FILE *femit = du->du_emitfile;
+  assert (tklet->tkl_frametop < mom_raw_size (tklet));
+  fprintf (femit, "%d\n%d\n%d\n^payload_tasklet\n",
+           tklet->tkl_frametop, tklet->tkl_scatop, tklet->tkl_ptrtop);
+  if (mom_dumped_value (du, (const void *) tklet->tkl_excnod))
+    {
+      mom_dumpemit_value (du, tklet->tkl_excnod);
+      fputs ("^tasklet_excnod\n", femit);
+    }
 }                               /* end of mom_dumpemit_tasklet_payload */
+
+const char momsig_ldc_payload_tasklet[] = "signature_loader_caret";
+void
+momf_ldc_payload_tasklet (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldc_payload_tasklet itm=%s",
+                   mom_item_cstring (itm));
+  int nbfra = mom_ldstate_int_def (mom_loader_top (ld, -2), -3);
+  int nbsca = mom_ldstate_int_def (mom_loader_top (ld, -1), -2);
+  int nbptr = mom_ldstate_int_def (mom_loader_top (ld, 0), -1);
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldc_payload_tasklet itm=%s nbfra=%d nbsca=%d nbptr=%d",
+                   mom_item_cstring (itm), nbfra, nbsca, nbptr);
+  (void) mom_unsync_item_initialize_tasklet (itm, 9 * nbfra / 8 + 10,
+                                             9 * nbsca / 8 + 20,
+                                             9 * nbptr / 8 + 30);
+}                               /* end of momf_ldc_payload_tasklet */
+
+const char momsig_ldc_tasklet_excnod[] = "signature_loader_caret";
+void
+momf_ldc_tasklet_excnod (struct mom_item_st *itm, struct mom_loader_st *ld)
+{
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  assert (ld && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldc_tasklet_excnod itm=%s",
+                   mom_item_cstring (itm));
+  MOM_FATAPRINTF ("momf_ldc_tasklet_excnod itm %s unimplemented",
+                  mom_item_cstring (itm));
+#warning momf_ldc_tasklet_excnod unimplemented
+}                               /* end of momf_ldc_tasklet_excnod */
+
+struct mom_tasklet_st *
+mom_unsync_item_initialize_tasklet (struct mom_item_st *itm,
+                                    unsigned frasiz,
+                                    unsigned scasiz, unsigned ptrsiz)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    return NULL;
+  if (MOM_UNLIKELY
+      (frasiz >= MOM_SIZE_MAX || scasiz >= MOM_SIZE_MAX
+       || ptrsiz >= MOM_SIZE_MAX))
+    {
+      MOM_WARNPRINTF ("item %s failed to initialize to huge tasklet of"
+                      " frasiz=%d scasiz=%d ptrsiz=%d",
+                      mom_item_cstring (itm), frasiz, scasiz, ptrsiz);
+      return NULL;
+    }
+  frasiz = mom_prime_above (frasiz);
+  scasiz = mom_prime_above (scasiz);
+  ptrsiz = mom_prime_above (ptrsiz);
+  if (!mom_unsync_item_clear_payload (itm))
+    return NULL;
+  struct mom_tasklet_st *tkl = mom_gc_alloc (sizeof (struct mom_tasklet_st));
+  tkl->va_itype = MOMITY_TASKLET;
+  tkl->tkl_froffsets =
+    mom_gc_alloc_atomic (frasiz * sizeof (struct mom_frameoffsets_st));
+  tkl->tkl_scalars = mom_gc_alloc_atomic (scasiz * sizeof (intptr_t));
+  tkl->tkl_pointers = mom_gc_alloc (ptrsiz * sizeof (void *));
+  mom_put_size (tkl, frasiz);
+  tkl->tkl_ptrsiz = ptrsiz;
+  tkl->tkl_scasiz = scasiz;
+  itm->itm_payload = (void *) tkl;
+  return tkl;
+}                               /* end of mom_unsync_item_initialize_tasklet */
 
 void
 mom_dumpemit_taskstepper (struct mom_dumper_st *du,
