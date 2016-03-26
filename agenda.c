@@ -301,7 +301,7 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
       if (sigitm != MOM_PREDEFITM (signature_nanotaskstep))
         funptr = NULL;
       else
-        tstep = mom_taskstepper_dyncast (connitm->itm_payload);
+        tstep = mom_dyncast_taskstepper (connitm->itm_payload);
     }
   mom_item_unlock (connitm);
   if (tstep && funptr)
@@ -936,6 +936,8 @@ mom_dumpemit_tasklet_frame (struct mom_dumper_st *du,
 }                               /* end mom_dumpemit_tasklet_frame */
 
 
+void momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld);
+
 extern mom_loader_paren_sig_t momf_ldp_tasklet_add_frame;
 const char momsig_ldp_tasklet_add_frame[] = "signature_loader_paren";
 void
@@ -961,15 +963,60 @@ momf_ldp_tasklet_add_frame (struct mom_item_st *itm,
       return;
     }
   struct mom_tasklet_st *tklet = mom_dyncast_tasklet (itm->itm_payload);
-  assert (tklet != NULL);
-  int nbint = mom_ldstate_int_def (elemarr[0], -1);
-  int nbdbl = mom_ldstate_int_def (elemarr[1], -2);
-  int nbval = mom_ldstate_int_def (elemarr[2], -3);
+  int nbint = mom_ldstate_int_def (elemarr[elemsize - 1], -1);
+  int nbdbl = mom_ldstate_int_def (elemarr[elemsize - 2], -2);
+  int nbval = mom_ldstate_int_def (elemarr[elemsize - 3], -3);
   const struct mom_boxnode_st *nod = mom_ldstate_dynnode (elemarr[3]);
   MOM_DEBUGPRINTF (load,
                    "momf_ldp_tasklet_add_frame nbint=%d nbdbl=%d nbval=%d nod=%s",
                    nbint, nbdbl, nbval,
                    mom_value_cstring ((const void *) nod));
+  if (!nod)
+    MOM_FATAPRINTF ("momf_ldp_tasklet_add_frame item %s lacking node",
+                    mom_item_cstring (itm));
+  if (!tklet)
+    MOM_FATAPRINTF ("momf_ldp_tasklet_add_frame item %s not tasklet",
+                    mom_item_cstring (itm));
+  struct mom_item_st *connitm = nod->nod_connitm;
+  assert (connitm && connitm->va_itype == MOMITY_ITEM);
+  if (!connitm->itm_payload)
+    momf_ldc_taskstepper (connitm, ld);
+  const struct mom_taskstepper_st *tstep =
+    mom_dyncast_taskstepper (connitm->itm_payload);
+  if (!tstep)
+    MOM_FATAPRINTF
+      ("momf_ldp_tasklet_add_frame item %s connitm %s has no taskstepper",
+       mom_item_cstring (itm), mom_item_cstring (connitm));
+  int tsnbval = mom_taskstepper_nbval (tstep);
+  int tsnbint = mom_taskstepper_nbint (tstep);
+  int tsnbdbl = mom_taskstepper_nbdbl (tstep);
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldp_tasklet_add_frame itm %s connitm %s tsnbval=%d tsnbint=%d tsnbdbl=%d",
+                   mom_item_cstring (itm), mom_item_cstring (connitm),
+                   tsnbval, tsnbint, tsnbdbl);
+  if (nbval != tsnbval || nbint != tsnbint || nbdbl != tsnbdbl)
+    {
+      MOM_WARNPRINTF
+        ("momf_ldp_tasklet_add_frame item %s connitm %s mismatched taskstepper"
+         " nbval=%d tsnbval=%d nbint=%d tsnbint=%d nbdbl=%d tsnbdbl=%d",
+         mom_item_cstring (itm), mom_item_cstring (connitm),
+         nbval, tsnbval, nbint, tsnbint, nbdbl, tsnbdbl);
+    }
+  if (!push_frame_tasklet_mom (itm, tklet, nod))
+    MOM_FATAPRINTF
+      ("momf_ldp_tasklet_add_frame item %s failed to push frame for node %s",
+       mom_item_cstring (connitm), mom_value_cstring ((const void *) nod));
+  int punbval = (nbval > tsnbval) ? tsnbval : nbval;
+  int punbint = (nbint > tsnbint) ? tsnbint : nbint;
+  int punbdbl = (nbdbl > tsnbdbl) ? tsnbdbl : nbdbl;
+  if (nbval + nbint + nbdbl + 5 > (int) elemsize)
+    MOM_FATAPRINTF
+      ("momf_ldp_tasklet_add_frame item %s connitm %s elemsize %d"
+       " too small for nbval=%d nbint=%d nbdbl=%d",
+       mom_item_cstring (itm), mom_item_cstring (connitm), elemsize, nbval,
+       nbint, nbdbl);
+  struct mom_frame_st fr = mom_tasklet_nth_frame (tklet, -1);
+  assert (fr.fr_sca != NULL && fr.fr_ptr != NULL);
 #warning momf_ldp_tasklet_add_frame unimplemented
 }                               /* end of momf_ldp_tasklet_add_frame */
 

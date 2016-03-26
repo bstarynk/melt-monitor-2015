@@ -2369,7 +2369,7 @@ void mom_dumpemit_taskstepper (struct mom_dumper_st *du,
       .tksp_nbint=(NbInt), .tksp_nbdbl=(NbDbl) }
 
 static inline const struct mom_taskstepper_st *
-mom_taskstepper_dyncast (const void *p)
+mom_dyncast_taskstepper (const void *p)
 {
   if (!p || p == MOM_EMPTY_SLOT)
     return NULL;
