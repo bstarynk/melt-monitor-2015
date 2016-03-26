@@ -898,8 +898,83 @@ mom_dumpemit_tasklet_frame (struct mom_dumper_st *du,
   assert (fr.fr_sca && fr.fr_ptr);
   FILE *femit = du->du_emitfile;
   assert (femit != NULL);
-#warning mom_dumpemit_tasklet_frame incomplete
+  MOM_DEBUGPRINTF (dump, "mom_dumpemit_tasklet_frame noditm %s frnod %s",
+                   mom_item_cstring (noditm),
+                   mom_value_cstring ((const void *) fr.fr_ptr->tfp_node));
+  assert (fr.fr_ptr->tfp_node && fr.fr_ptr->tfp_node->nod_connitm == noditm);
+  unsigned nbval = mom_taskstepper_nbval (tstep);
+  unsigned nbint = mom_taskstepper_nbint (tstep);
+  unsigned nbdbl = mom_taskstepper_nbdbl (tstep);
+  MOM_DEBUGPRINTF (dump,
+                   "mom_dumpemit_tasklet_frame nbval#%d nbint#%d nbdbl#%d",
+                   nbval, nbint, nbdbl);
+  fprintf (femit, "(\n");
+  fprintf (femit, "%lld\n", (long long) fr.fr_sca->tfs_state);
+  for (unsigned ix = 0; ix < nbint; ix++)
+    fprintf (femit, "%lld\n", (long long) fr.fr_sca->tfs_scalars[ix]);
+  if (nbdbl > 0)
+    {
+      double *dptr = (double *) fr.fr_sca->tfs_scalars + nbint;
+      char dbuf[40];
+      memset (dbuf, 0, sizeof (dbuf));
+      for (unsigned ix = 0; ix < nbdbl; ix++)
+        {
+          fprintf (femit, "%s\n",
+                   mom_double_to_cstr (dptr[ix], dbuf, sizeof (dbuf)));
+          memset (dbuf, 0, sizeof (dbuf));
+        }
+    }
+  for (unsigned ix = 0; ix < nbval; ix++)
+    {
+      mom_dumpemit_value (du, (const void *) fr.fr_ptr->tfp_pointers[ix]);
+    }
+  mom_dumpemit_value (du, (const void *) fr.fr_ptr->tfp_node);
+  fprintf (femit, "%d\n", nbval);
+  fprintf (femit, "%d\n", nbdbl);
+  fprintf (femit, "%d\n", nbint);
+  fprintf (femit, ")tasklet_add_frame\n");
 }                               /* end mom_dumpemit_tasklet_frame */
+
+
+extern mom_loader_paren_sig_t momf_ldp_tasklet_add_frame;
+const char momsig_ldp_tasklet_add_frame[] = "signature_loader_paren";
+void
+momf_ldp_tasklet_add_frame (struct mom_item_st *itm,
+                            struct mom_loader_st *ld,
+                            struct mom_statelem_st *elemarr,
+                            unsigned elemsize)
+{
+  assert (ld != NULL && ld->va_itype == MOMITY_LOADER);
+  MOM_DEBUGPRINTF (load, "momf_ldp_tasklet_add_frame itm=%s",
+                   mom_item_cstring (itm));
+  if (mom_itype (itm->itm_payload) != MOMITY_TASKLET)
+    {
+      MOM_WARNPRINTF
+        ("tasklet_add_frame for non-tasklet item %s (%d elemsize)",
+         mom_item_cstring (itm), elemsize);
+      return;
+    }
+  if (elemsize < 5)
+    {
+      MOM_WARNPRINTF ("tasklet_add_frame for item %s not enough elemsize %d",
+                      mom_item_cstring (itm), elemsize);
+      return;
+    }
+  struct mom_tasklet_st *tklet = mom_dyncast_tasklet (itm->itm_payload);
+  assert (tklet != NULL);
+  int nbint = mom_ldstate_int_def (elemarr[0], -1);
+  int nbdbl = mom_ldstate_int_def (elemarr[1], -2);
+  int nbval = mom_ldstate_int_def (elemarr[2], -3);
+  const struct mom_boxnode_st *nod = mom_ldstate_dynnode (elemarr[3]);
+  MOM_DEBUGPRINTF (load,
+                   "momf_ldp_tasklet_add_frame nbint=%d nbdbl=%d nbval=%d nod=%s",
+                   nbint, nbdbl, nbval,
+                   mom_value_cstring ((const void *) nod));
+#warning momf_ldp_tasklet_add_frame unimplemented
+}                               /* end of momf_ldp_tasklet_add_frame */
+
+
+
 
 void
 mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
@@ -950,7 +1025,6 @@ mom_dumpemit_tasklet_payload (struct mom_dumper_st *du,
       mom_dumpemit_tasklet_frame (du, tklet, noditm, tstep, fr);
     }
 }                               /* end of mom_dumpemit_tasklet_payload */
-
 
 
 const char momsig_ldc_payload_tasklet[] = "signature_loader_caret";

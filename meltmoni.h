@@ -2379,6 +2379,33 @@ mom_taskstepper_dyncast (const void *p)
   return NULL;
 }                               /* end of mom_taskstepper_dyncast */
 
+static inline unsigned
+mom_taskstepper_nbval (const struct mom_taskstepper_st *tstep)
+{
+  if (tstep && tstep != MOM_EMPTY_SLOT
+      && tstep->va_itype == MOMITY_TASKSTEPPER)
+    return mom_raw_size (tstep);
+  return 0;
+}
+
+static inline unsigned
+mom_taskstepper_nbint (const struct mom_taskstepper_st *tstep)
+{
+  if (tstep && tstep != MOM_EMPTY_SLOT
+      && tstep->va_itype == MOMITY_TASKSTEPPER)
+    return tstep->tksp_nbint;
+  return 0;
+}
+
+static inline unsigned
+mom_taskstepper_nbdbl (const struct mom_taskstepper_st *tstep)
+{
+  if (tstep && tstep != MOM_EMPTY_SLOT
+      && tstep->va_itype == MOMITY_TASKSTEPPER)
+    return tstep->tksp_nbdbl;
+  return 0;
+}
+
 ////////////////
 /// for MOMITY_TASKLET payload
 /* a tasklet contains mini-call-frames, we have one scalar zone for
@@ -2440,6 +2467,18 @@ struct mom_tasklet_st *mom_unsync_item_initialize_tasklet (struct mom_item_st
                                                            unsigned ptrsiz);
 void mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
                           unsigned nbscalars, unsigned nbpointers);
+
+static inline struct mom_tasklet_st *
+mom_dyncast_tasklet (const void *p)
+{
+  if (!p || p == MOM_EMPTY_SLOT)
+    return NULL;
+  struct mom_tasklet_st *tkl = (struct mom_tasklet_st *) p;
+  if (tkl->va_itype != MOMITY_TASKLET)
+    return tkl;
+  return NULL;
+}                               /* mom_dyncast_tasklet */
+
 
 static inline struct mom_frame_st
 mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)
