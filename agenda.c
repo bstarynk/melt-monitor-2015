@@ -909,6 +909,9 @@ mom_dumpemit_tasklet_frame (struct mom_dumper_st *du,
                    "mom_dumpemit_tasklet_frame nbval#%d nbint#%d nbdbl#%d",
                    nbval, nbint, nbdbl);
   fprintf (femit, "(\n");
+  mom_dumpemit_value (du, (const void *) fr.fr_ptr->tfp_node);
+  if (MOM_IS_DEBUGGING (dump))
+    fprintf (femit, "#nbval=%d, nbint=%d, nbdbl=%d\n", nbval, nbint, nbdbl);
   fprintf (femit, "%lld\n", (long long) fr.fr_sca->tfs_state);
   for (unsigned ix = 0; ix < nbint; ix++)
     fprintf (femit, "%lld\n", (long long) fr.fr_sca->tfs_scalars[ix]);
@@ -928,10 +931,6 @@ mom_dumpemit_tasklet_frame (struct mom_dumper_st *du,
     {
       mom_dumpemit_value (du, (const void *) fr.fr_ptr->tfp_pointers[ix]);
     }
-  mom_dumpemit_value (du, (const void *) fr.fr_ptr->tfp_node);
-  fprintf (femit, "%d\n", nbval);
-  fprintf (femit, "%d\n", nbdbl);
-  fprintf (femit, "%d\n", nbint);
   fprintf (femit, ")tasklet_add_frame\n");
 }                               /* end mom_dumpemit_tasklet_frame */
 
@@ -956,20 +955,16 @@ momf_ldp_tasklet_add_frame (struct mom_item_st *itm,
          mom_item_cstring (itm), elemsize);
       return;
     }
-  if (elemsize < 5)
+  if (elemsize < 2)
     {
       MOM_WARNPRINTF ("tasklet_add_frame for item %s not enough elemsize %d",
                       mom_item_cstring (itm), elemsize);
       return;
     }
   struct mom_tasklet_st *tklet = mom_dyncast_tasklet (itm->itm_payload);
-  int nbint = mom_ldstate_int_def (elemarr[elemsize - 1], -1);
-  int nbdbl = mom_ldstate_int_def (elemarr[elemsize - 2], -2);
-  int nbval = mom_ldstate_int_def (elemarr[elemsize - 3], -3);
-  const struct mom_boxnode_st *nod = mom_ldstate_dynnode (elemarr[3]);
+  const struct mom_boxnode_st *nod = mom_ldstate_dynnode (elemarr[0]);
   MOM_DEBUGPRINTF (load,
-                   "momf_ldp_tasklet_add_frame nbint=%d nbdbl=%d nbval=%d nod=%s",
-                   nbint, nbdbl, nbval,
+                   "momf_ldp_tasklet_add_frame nod=%s",
                    mom_value_cstring ((const void *) nod));
   if (!nod)
     MOM_FATAPRINTF ("momf_ldp_tasklet_add_frame item %s lacking node",
@@ -994,30 +989,40 @@ momf_ldp_tasklet_add_frame (struct mom_item_st *itm,
                    "momf_ldp_tasklet_add_frame itm %s connitm %s tsnbval=%d tsnbint=%d tsnbdbl=%d",
                    mom_item_cstring (itm), mom_item_cstring (connitm),
                    tsnbval, tsnbint, tsnbdbl);
-  if (nbval != tsnbval || nbint != tsnbint || nbdbl != tsnbdbl)
-    {
-      MOM_WARNPRINTF
-        ("momf_ldp_tasklet_add_frame item %s connitm %s mismatched taskstepper"
-         " nbval=%d tsnbval=%d nbint=%d tsnbint=%d nbdbl=%d tsnbdbl=%d",
-         mom_item_cstring (itm), mom_item_cstring (connitm),
-         nbval, tsnbval, nbint, tsnbint, nbdbl, tsnbdbl);
-    }
   if (!push_frame_tasklet_mom (itm, tklet, nod))
     MOM_FATAPRINTF
       ("momf_ldp_tasklet_add_frame item %s failed to push frame for node %s",
        mom_item_cstring (connitm), mom_value_cstring ((const void *) nod));
-  int punbval = (nbval > tsnbval) ? tsnbval : nbval;
-  int punbint = (nbint > tsnbint) ? tsnbint : nbint;
-  int punbdbl = (nbdbl > tsnbdbl) ? tsnbdbl : nbdbl;
-  if (nbval + nbint + nbdbl + 5 > (int) elemsize)
+  if (tsnbval + tsnbint + tsnbdbl + 2 > (int) elemsize)
     MOM_FATAPRINTF
       ("momf_ldp_tasklet_add_frame item %s connitm %s elemsize %d"
-       " too small for nbval=%d nbint=%d nbdbl=%d",
-       mom_item_cstring (itm), mom_item_cstring (connitm), elemsize, nbval,
-       nbint, nbdbl);
+       " too small for tsnbval=%d tsnbint=%d tsnbdbl=%d",
+       mom_item_cstring (itm), mom_item_cstring (connitm), elemsize,
+       tsnbval, tsnbint, tsnbdbl);
   struct mom_frame_st fr = mom_tasklet_nth_frame (tklet, -1);
   assert (fr.fr_sca != NULL && fr.fr_ptr != NULL);
-#warning momf_ldp_tasklet_add_frame unimplemented
+  fr.fr_sca->tfs_state = mom_ldstate_int_def (elemarr[1], -1);
+  if (tsnbint > 0)
+    {
+      unsigned intoff = 2;
+      for (int ix = 0; ix < tsnbint; ix++)
+        fr.fr_sca->tfs_scalars[ix] =
+          mom_ldstate_int_def (elemarr[intoff + ix], 0);
+    }
+  if (tsnbdbl > 0)
+    {
+      unsigned dbloff = 2 + tsnbint;
+      double *dptr = (double *) (fr.fr_sca->tfs_scalars + tsnbint);
+      for (int ix = 0; ix < tsnbdbl; ix++)
+        dptr[ix] = mom_ldstate_dbl (elemarr[dbloff + ix]);
+    }
+  if (tsnbval > 0)
+    {
+      unsigned valoff = 2 + tsnbint + tsnbdbl;
+      for (int ix = 0; ix < tsnbval; ix++)
+        fr.fr_ptr->tfp_pointers[ix] =
+          (void *) mom_ldstate_val (elemarr[valoff + ix]);
+    }
 }                               /* end of momf_ldp_tasklet_add_frame */
 
 
