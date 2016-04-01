@@ -204,14 +204,6 @@ comment
 )attrs
 
 
-*canvasedit
-1446753296
-^mtime
-^func
-signature_tasklet
-^funsignature
-
-
 *clone
 1456922491
 ^mtime
@@ -644,6 +636,8 @@ nanoeval_fail1
 1458912739
 ^mtime
 ^func
+signature_nanotaskstep
+^funsignature
 (
 comment
 "a nanostep routine for failure"_
@@ -1955,14 +1949,6 @@ nanoeval
 nanoeval_mapix3
 )node
 )attrs
-
-
-*microedit
-1446463595
-^mtime
-^func
-signature_tasklet
-^funsignature
 
 
 *minus_delim
@@ -5763,18 +5749,6 @@ comment
 "hashassoc for web handlers"_
 )attrs
 (
-canvasedit
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-canvasedit
-)node
-microedit
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-microedit
-)node
 nanoedit
 (
 web_state
