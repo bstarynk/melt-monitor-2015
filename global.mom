@@ -1951,6 +1951,31 @@ nanoeval_mapix3
 )attrs
 
 
+*miniedit
+1460370485
+^mtime
+^func
+signature_tasklet
+^funsignature
+(
+comment
+"for miniedit"_
+)attrs
+
+*miniedit_genstyle
+^func
+(
+comment
+"for miniedit style generation"_
+)attrs
+
+*miniedit_genscript
+^func
+(
+comment
+"for miniedit script generation"_
+)attrs
+
 *minus_delim
 1456140230
 ^mtime
@@ -5749,6 +5774,25 @@ comment
 "hashassoc for web handlers"_
 )attrs
 (
+miniedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit
+)node
+miniedit_genstyle
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_genstyle
+)node
+miniedit_genscript
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_genscript
+)node
+
 nanoedit
 (
 web_state

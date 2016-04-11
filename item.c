@@ -2140,7 +2140,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s taskstepper",
                            mom_item_cstring (itm));
           mom_dumpemit_taskstepper (du, itm,
-                                    (struct mom_taskstepper_st *) payl);
+                                    (const struct mom_taskstepper_st *) payl);
           break;
         default:
           MOM_DEBUGPRINTF (dump,

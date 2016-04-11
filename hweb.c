@@ -457,8 +457,8 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
         {
           const char *end = NULL;
           struct mom_item_st *lastitm = mom_find_item_from_string (pc, &end);
-          MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld lastitm=%s",
-                           reqcnt, mom_item_cstring (lastitm));
+          MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld lastitm=%s pc=%s",
+                           reqcnt, mom_item_cstring (lastitm), pc);
           if (lastitm)
             elemarr[nbelem++] = lastitm;
           else
