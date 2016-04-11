@@ -1962,19 +1962,30 @@ comment
 "for miniedit"_
 )attrs
 
-*miniedit_genstyle
+
+*miniedit_genscript
+1460384005
+^mtime
 ^func
+signature_tasklet
+^funsignature
+(
+comment
+"for miniedit script generation"_
+)attrs
+
+
+*miniedit_genstyle
+1460384005
+^mtime
+^func
+signature_tasklet
+^funsignature
 (
 comment
 "for miniedit style generation"_
 )attrs
 
-*miniedit_genscript
-^func
-(
-comment
-"for miniedit script generation"_
-)attrs
 
 *minus_delim
 1456140230
@@ -5780,19 +5791,20 @@ web_state
 web_state__0dmo5BBWK0mbtv
 miniedit
 )node
-miniedit_genstyle
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_genstyle
-)node
 miniedit_genscript
 (
 web_state
 web_state__0dmo5BBWK0mbtv
 miniedit_genscript
 )node
-
+miniedit_genstyle
+(
+(
+)tuple
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_genstyle
+)node
 nanoedit
 (
 web_state

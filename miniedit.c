@@ -110,6 +110,7 @@ end:
 enum minieditgenstyle_closoff_en
 {
   miedgsty_wexitm,
+  miedgsty_stytup,
   miedgsty__last
 };
 
@@ -135,6 +136,32 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
                    mom_item_cstring (tkitm),
                    mom_value_cstring ((const struct
                                        mom_hashedvalue_st *) tknod));
+  wexitm = mom_dyncast_item(tknod->nod_sons[miedgsty_wexitm]);
+  mom_item_lock(wexitm);
+  MOM_DEBUGPRINTF (web,
+                   "minedit_genstyle wexitm=%s", mom_item_cstring(wexitm));
+  if (!wexitm) goto end;
+  mom_item_lock (wexitm);
+  struct mom_webexch_st *wexch =
+    (struct mom_webexch_st *) wexitm->itm_payload;
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_genstyle sessitm=%s wexch #%ld meth %s fupath %s path %s",
+		   mom_item_cstring(sessitm), 
+                   wexch->webx_count,
+                   mom_webmethod_name (wexch->webx_meth),
+		   onion_request_get_fullpath(wexch->webx_requ),
+		   onion_request_get_path(wexch->webx_requ));
+  mom_item_lock (sessitm);
+  struct mom_tuple_st*tupsty = mom_dyncast_tuple(tknod->nod_sons[miedgsty_stytup]);
+  if (!tupsty)
+    MOM_FATAPRINTF("minedit_genstyle tkitm %s has bad tuple of styles@#%d in tknod %s",
+		   mom_item_cstring (tkitm),
+                   (int)miedgsty_stytup,
+		   mom_value_cstring ((const struct mom_hashedvalue_st *) tknod));
+  mom_output_gplv3_notice (wexch->webx_outfil, "/*", "*/", "miniedit/_genstyle.css");
+#warning should output each individual style
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
@@ -173,6 +200,8 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                    mom_item_cstring (tkitm),
                    mom_value_cstring ((const struct
                                        mom_hashedvalue_st *) tknod));
+  wexitm = mom_dyncast_item(tknod->nod_sons[miedgsty_wexitm]);
+  mom_item_lock(wexitm);
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
