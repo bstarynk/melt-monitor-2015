@@ -31,7 +31,7 @@ PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))
 OPTIMFLAGS= -Og -g3
 
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
-        -lgccjit -lonion -lpthread -lcrypt -lm -ldl
+        -lhiredis -lgccjit -lonion -lpthread -lcrypt -lm -ldl
 
 PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c))
 PLUGINS=  $(patsubst %.c,%.so,$(PLUGIN_SOURCES))

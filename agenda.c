@@ -1239,7 +1239,8 @@ momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld)
 
 
 extern mom_nanotaskstep_sig_t momf_failure_nanostep;
-MOM_TASKSTEPPER_DEFINE (failure_nanostep, 2, 0, 0);
+MOM_TASKSTEPPER_DEFINE (failure_nanostep,
+                        /*nbval: */ 2, /*nbint: */ 0, /*nbdbl: */ 0);
 const char momsig_failure_nanostep[] = "signature_nanotaskstep";
 struct mom_result_tasklet_st
 momf_failure_nanostep (struct mom_nanotaskstep_st *nats,
