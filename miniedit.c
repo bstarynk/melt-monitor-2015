@@ -190,10 +190,10 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
         continue;
       MOM_WEXCH_PRINTF (wexch, "\n/* style #%d: %s */\n", ix,
                         mom_item_cstring (curstyitm));
-      mom_mini_genstyle(tkitm, wexitm, wexch, curstyitm);
+      mom_mini_genstyle (tkitm, wexitm, wexch, curstyitm);
     }
   MOM_WEXCH_PRINTF (wexch, "\n/* generated %d styles */\n", nbsty);
-  mom_wexch_reply(wexch, HTTP_OK, "text/css");
+  mom_wexch_reply (wexch, HTTP_OK, "text/css");
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
@@ -211,6 +211,20 @@ enum minieditgenscript_closoff_en
   miedgscr__last
 };
 
+#warning the signature is wrong, should pack the items in some stack structure
+void
+mom_emit_javascript (struct mom_item_st *tkitm, struct mom_item_st *wexitm,
+                     struct mom_webexch_st *wexch, const void *val)
+{
+  assert (tkitm != NULL);
+  assert (wexitm != NULL);
+  assert (wexch != NULL);
+  unsigned vty = mom_itype (val);
+  switch (vty)
+    {
+    }
+}                               /* end of mom_emit_javascript */
+
 extern mom_tasklet_sig_t momf_miniedit_genscript;
 const char momsig_miniedit_genscript[] = "signature_tasklet";
 void
@@ -219,8 +233,7 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
   struct mom_item_st *wexitm = NULL;
   struct mom_item_st *thistatitm = NULL;
   struct mom_item_st *sessitm = NULL;
-  struct mom_item_st *hsetitm = NULL;
-  struct mom_boxnode_st*scrnod = NULL;
+  struct mom_boxnode_st *scrnod = NULL;
   mom_item_lock (tkitm);
   const struct mom_boxnode_st *tknod =
     (struct mom_boxnode_st *) tkitm->itm_payload;
@@ -237,14 +250,28 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                                        tknod));
   wexitm = mom_dyncast_item (tknod->nod_sons[miedgscr_wexitm]);
   mom_item_lock (wexitm);
-  scrnod = mom_dyncast_node(tknod->nod_sons[miedgscr_scrnod]);
+  scrnod = mom_dyncast_node (tknod->nod_sons[miedgscr_scrnod]);
   MOM_DEBUGPRINTF (web,
-                   "momf_miniedit_genscript wexitm %s scrnod %s", mom_item_cstring(wexitm),
-		   mom_value_cstring((void*)scrnod));
+                   "momf_miniedit_genscript wexitm %s scrnod %s",
+                   mom_item_cstring (wexitm),
+                   mom_value_cstring ((void *) scrnod));
   if (!scrnod || scrnod->va_itype != MOMITY_NODE)
     MOM_FATAPRINTF ("minedit_genscript tkitm %s has bad scrnod %s",
-                    mom_item_cstring (tkitm), 
-		    mom_value_cstring((void*)scrnod));    
+                    mom_item_cstring (tkitm),
+                    mom_value_cstring ((void *) scrnod));
+  mom_item_lock (wexitm);
+  struct mom_webexch_st *wexch =
+    (struct mom_webexch_st *) wexitm->itm_payload;
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_genscript sessitm=%s wexch #%ld meth %s fupath %s path %s",
+                   mom_item_cstring (sessitm),
+                   wexch->webx_count,
+                   mom_webmethod_name (wexch->webx_meth),
+                   onion_request_get_fullpath (wexch->webx_requ),
+                   onion_request_get_path (wexch->webx_requ));
+  mom_item_lock (sessitm);
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
