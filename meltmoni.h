@@ -2756,7 +2756,7 @@ struct mom_minedjs_st
 };
 #define MOM_MINEDJS_FAILURE(Mj,Expr,Fail) do {			\
     struct mom_minedjs_st*_mj = (Mj);				\
-    assert (_mj && _mj-miejs_magic==MOM_MINEDJS_MAGIC);		\
+    assert (_mj && _mj->miejs_magic==MOM_MINEDJS_MAGIC);       	\
     _mj->miejs_fail = (Fail);					\
     _mj->miejs_expr = (Expr);					\
     _mj->miejs_errfile = __FILE__;				\
