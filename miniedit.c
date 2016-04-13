@@ -225,6 +225,8 @@ mom_emit_javascript (struct mom_minedjs_st *mj, const void *val, int depth)
     MOM_MINEDJS_FAILURE (mj, val, MOM_PREDEFITM (output));
   if (depth > MAXDEPTH_JAVASCRIPT_MOM)
     MOM_MINEDJS_FAILURE (mj, val, MOM_PREDEFITM (depth));
+  MOM_DEBUGPRINTF (run, "emit_javascript start req#%ld depth#%d val=%s",
+                   wexch->webx_count, depth, mom_value_cstring (val));
   unsigned vty = mom_itype (val);
   switch (vty)
     {
@@ -243,6 +245,8 @@ mom_emit_javascript (struct mom_minedjs_st *mj, const void *val, int depth)
       }
 #warning mom_emit_javascript incomplete
     }
+  MOM_DEBUGPRINTF (run, "emit_javascript end req#%ld depth#%d val=%s",
+                   wexch->webx_count, depth, mom_value_cstring (val));
 }                               /* end of mom_emit_javascript */
 
 
