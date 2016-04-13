@@ -2739,6 +2739,33 @@ mom_nanotaskexception_sig_t (const struct mom_boxnode_st *clos,
 /// tests could be run after load
 typedef void mom_test_sig_t (const char *);
 
+// miniedit related
+
+#define MOM_MINEDJS_MAGIC 506568011     /*0x1e319d4b */
+struct mom_minedjs_st
+{
+  unsigned miejs_magic;         /* always MOM_MINEDJS_MAGIC */
+  jmp_buf miejs_jb;
+  long miejs_lastnl;
+  const char *miejs_errfile;
+  const void *miejs_fail;
+  const void *miejs_expr;
+  struct mom_item_st *miejs_taskitm;
+  struct mom_item_st *miejs_wexitm;
+  struct mom_webexch_st *miejs_wexch;
+};
+#define MOM_MINEDJS_FAILURE(Mj,Expr,Fail) do {			\
+    struct mom_minedjs_st*_mj = (Mj);				\
+    assert (_mj && _mj-miejs_magic==MOM_MINEDJS_MAGIC);		\
+    _mj->miejs_fail = (Fail);					\
+    _mj->miejs_expr = (Expr);					\
+    _mj->miejs_errfile = __FILE__;				\
+    MOM_DEBUGPRINTF(run,"minedjs failing %s\n.. expr %s",	\
+		    mom_value_cstring((void*) _mj->miejs_fail),	\
+		    mom_value_cstring((void*) _mj->miejs_expr));\
+    longjmp(_mj->miejs_jb,__LINE__);				\
+  } while(0)
+
 // nanoedit related things
 struct mom_item_st *mom_nanoedit_wexitm (struct mom_item_st *taskitm);
 struct mom_item_st *mom_nanoedit_protowebstate (struct mom_item_st *taskitm);

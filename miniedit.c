@@ -204,6 +204,8 @@ end:
 
 
 
+#define MAXLEN_JAVASCRIPT_MOM (2<<20)
+#define MAXDEPTH_JAVASCRIPT_MOM 384
 enum minieditgenscript_closoff_en
 {
   miedgscr_wexitm,
@@ -211,19 +213,38 @@ enum minieditgenscript_closoff_en
   miedgscr__last
 };
 
-#warning the signature is wrong, should pack the items in some stack structure
+
 void
-mom_emit_javascript (struct mom_item_st *tkitm, struct mom_item_st *wexitm,
-                     struct mom_webexch_st *wexch, const void *val)
+mom_emit_javascript (struct mom_minedjs_st *mj, const void *val, int depth)
 {
-  assert (tkitm != NULL);
-  assert (wexitm != NULL);
-  assert (wexch != NULL);
+  assert (mj != NULL && mj->miejs_magic == MOM_MINEDJS_MAGIC);
+  struct mom_webexch_st *wexch = mj->miejs_wexch;
+  assert (wexch != NULL && wexch->va_itype == MOMITY_WEBEXCH);
+  assert (wexch->webx_outfil != NULL);
+  if (ftell (wexch->webx_outfil) > MAXLEN_JAVASCRIPT_MOM)
+    MOM_MINEDJS_FAILURE (mj, val, MOM_PREDEFITM (output));
+  if (depth > MAXDEPTH_JAVASCRIPT_MOM)
+    MOM_MINEDJS_FAILURE (mj, val, MOM_PREDEFITM (depth));
   unsigned vty = mom_itype (val);
   switch (vty)
     {
+    case MOMITY_NONE:
+      MOM_WEXCH_PRINTF (wexch, " null");
+      break;
+    case MOMITY_BOXINT:
+    case MOMITY_BOXDOUBLE:
+    case MOMITY_BOXSTRING:
+      mom_output_value (wexch->webx_outfil, &mj->miejs_lastnl, depth, val);
+      break;
+    case MOMITY_ITEM:
+      {
+        mom_wexch_puts (wexch, mom_item_cstring (val));
+        break;
+      }
+#warning mom_emit_javascript incomplete
     }
 }                               /* end of mom_emit_javascript */
+
 
 extern mom_tasklet_sig_t momf_miniedit_genscript;
 const char momsig_miniedit_genscript[] = "signature_tasklet";
@@ -231,7 +252,6 @@ void
 momf_miniedit_genscript (struct mom_item_st *tkitm)
 {
   struct mom_item_st *wexitm = NULL;
-  struct mom_item_st *thistatitm = NULL;
   struct mom_item_st *sessitm = NULL;
   struct mom_boxnode_st *scrnod = NULL;
   mom_item_lock (tkitm);
@@ -272,6 +292,53 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                    onion_request_get_fullpath (wexch->webx_requ),
                    onion_request_get_path (wexch->webx_requ));
   mom_item_lock (sessitm);
+  struct mom_minedjs_st mjst = { };
+  memset (&mjst, 0, sizeof (mjst));
+  mjst.miejs_taskitm = tkitm;
+  mjst.miejs_wexitm = wexitm;
+  mjst.miejs_wexch = wexch;
+  mjst.miejs_magic = MOM_MINEDJS_MAGIC;
+  int errlin = setjmp (&mjst.miejs_jb);
+  if (errlin > 0)
+    {
+      MOM_WARNPRINTF_AT (mjst.miejs_errfile ? : "??", errlin,
+                         "miniedit_genscript failure %s\n"
+                         "... with expr %s",
+                         mom_value_cstring (mjst.miejs_fail),
+                         mom_value_cstring (mjst.miejs_expr));
+      if (wexch->webx_outbuf)
+        {
+          fclose (wexch->webx_outfil), wexch->webx_outfil = NULL;;
+          free (wexch->webx_outbuf);
+          wexch->webx_outbuf = NULL;
+          wexch->webx_outsiz = 0;
+          wexch->webx_outfil =
+            open_memstream (&wexch->webx_outbuf, &wexch->webx_outsiz);
+          if (MOM_UNLIKELY (!wexch->webx_outfil))
+            MOM_FATAPRINTF
+              ("miniedit_genscript taskitm %s webrequest #%ld failed to reopen outfile (%m)",
+               mom_item_cstring (tkitm), wexch->webx_count);
+        };
+      MOM_WEXCH_PRINTF (wexch, "//failure from %s:%d\n",
+                        mjst.miejs_errfile ? : "??", errlin);
+      mom_wexch_reply (wexch, HTTP_INTERNAL_ERROR, "application/javascript");
+      goto end;
+    };
+  assert (errlin == 0);
+  MOM_DEBUGPRINTF (run,
+                   "miniedit_genscript taskitm %s wexitm %s webrequest #%ld"
+                   "\n... emitting javascript for srcnod=%s\n",
+                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                   wexch->webx_count, mom_value_cstring (scrnod));
+  mom_emit_javascript (&mjst, scrnod, 0);
+  MOM_DEBUGPRINTF (run,
+                   "miniedit_genscript taskitm %s wexitm %s webrequest #%ld end emitting javascript",
+                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
+                   wexch->webx_count);
+  MOM_WEXCH_PRINTF (wexch,
+                    "\n// end of generated javascript for wexitm %s tkitm %s\n",
+                    mom_item_cstring (wexitm), mom_item_cstring (tkitm));
+  mom_wexch_reply (wexch, HTTP_OK, "application/javascript");
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
