@@ -837,8 +837,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                         reqcnt, mom_item_cstring (wexitm), reqfupath);
       assert (wexch->webx_resp == resp);
       pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
-      MOM_DEBUGPRINTF (web, "webrequest#%ld code %d", reqcnt,
-                       wexch->webx_code);
+      MOM_DEBUGPRINTF (web, "webrequest#%ld code %d mimetype %s", reqcnt,
+                       wexch->webx_code, wexch->webx_mimetype);
       if (wexch->webx_code > 0 && isalpha (wexch->webx_mimetype[0]))
         {
           assert (wexch->webx_outfil);
@@ -930,6 +930,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         {
           usleep (5 * 1000);
           waitreply = true;
+          MOM_DEBUGPRINTF (web, "webrequest#%ld waiting again", reqcnt);
         }
       mom_item_unlock (wexitm);
     }
@@ -1014,9 +1015,12 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   if (wex->webx_code)
     return;
   fflush (wex->webx_outfil);
+  MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld httpcode=%d mimetype=%s",
+                   wex->webx_count, httpcode, mimetype);
   wex->webx_code = httpcode;
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   pthread_cond_broadcast (&wex->webx_donecond);
+  MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld done", wex->webx_count);
 }                               /* end mom_wexch_reply */
 
 
