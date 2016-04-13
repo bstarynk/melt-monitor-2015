@@ -822,11 +822,13 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
   MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,
                    elapstim, mom_item_cstring (wexitm));
-  struct timespec ts = mom_timespec (elapstim);
   bool waitreply = false;
   do
     {
+      struct timespec ts = mom_timespec (elapstim);
       struct mom_webexch_st *wexch = NULL;
+      MOM_DEBUGPRINTF (web, "webrequest#%ld wexitm %s loop reqfupath %s",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath);
       assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
       mom_item_lock (wexitm);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
@@ -836,9 +838,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         MOM_FATAPRINTF ("webrequest#%ld bad wexitm %s for reqfupath %s",
                         reqcnt, mom_item_cstring (wexitm), reqfupath);
       assert (wexch->webx_resp == resp);
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld wexitm %s waiting for reqfupath %s...",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath);
       pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
-      MOM_DEBUGPRINTF (web, "webrequest#%ld code %d mimetype %s", reqcnt,
-                       wexch->webx_code, wexch->webx_mimetype);
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld afterwait reqfupath %s code %d mimetype %s",
+                       reqcnt, reqfupath, wexch->webx_code,
+                       wexch->webx_mimetype);
       if (wexch->webx_code > 0 && isalpha (wexch->webx_mimetype[0]))
         {
           assert (wexch->webx_outfil);
@@ -888,6 +895,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         }
       else if (mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
         {
+          MOM_DEBUGPRINTF (web, "webrequest#%ld timedout", reqcnt);
           MOM_WARNPRINTF ("webrequest#%ld timeout %s fullpath %s", reqcnt,
                           mom_webmethod_name (wmeth), reqfupath);
           onion_response_set_code (resp, HTTP_INTERNAL_ERROR);
