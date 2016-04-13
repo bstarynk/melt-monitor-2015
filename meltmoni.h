@@ -2020,6 +2020,14 @@ mom_wexch_puts (struct mom_webexch_st *wex, const char *buf)
     fputs (buf, wex->webx_outfil);
 }
 
+static inline void
+mom_wexch_flush (struct mom_webexch_st *wex)
+{
+  if (wex && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH
+      && wex->webx_outfil)
+    fflush (wex->webx_outfil);
+}
+
 
 // mom_wexch_reply should be used with the owning webexchange item locked
 void

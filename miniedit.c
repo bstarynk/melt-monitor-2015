@@ -193,6 +193,11 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
       mom_mini_genstyle (tkitm, wexitm, wexch, curstyitm);
     }
   MOM_WEXCH_PRINTF (wexch, "\n/* generated %d styles */\n", nbsty);
+  mom_wexch_flush (wexch);
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_genstyle  wexch #%ld outputting %ld bytes:\n%.*s\n",
+                   wexch->webx_count, ftell (wexch->webx_outfil),
+                   (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
   mom_wexch_reply (wexch, HTTP_OK, "text/css");
 end:
   if (sessitm)
@@ -342,7 +347,14 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
   MOM_WEXCH_PRINTF (wexch,
                     "\n// end of generated javascript for wexitm %s tkitm %s\n",
                     mom_item_cstring (wexitm), mom_item_cstring (tkitm));
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_genscript wexch #%ld outputting %ld bytes:\n%.*s\n",
+                   wexch->webx_count, ftell (wexch->webx_outfil),
+                   (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
   mom_wexch_reply (wexch, HTTP_OK, "application/javascript");
+  MOM_DEBUGPRINTF (run,
+                   "miniedit_genscript replied wexitm %s",
+                   mom_item_cstring (wexitm));
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
