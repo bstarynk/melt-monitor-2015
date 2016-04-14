@@ -894,15 +894,16 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        reqcnt, waitim, reqfupath,
                        atomic_load (&wexch->webx_code),
                        wexch->webx_mimetype, waiterr, strerror (waiterr));
-      if (waiterr == 0 && atomic_load (&wexch->webx_code) > 0
+      int hcod = atomic_load (&wexch->webx_code);
+      if (hcod > 0
           && isalpha (wexch->webx_mimetype[0]))
         {
           assert (wexch->webx_outfil);
           fflush (wexch->webx_outfil);
-          MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s",
-                           reqcnt, atomic_load (&wexch->webx_code),
-                           wexch->webx_mimetype);
-          onion_response_set_code (resp, atomic_load (&wexch->webx_code));
+          MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s reqfupath %s",
+                           reqcnt, hcod,
+                           wexch->webx_mimetype, reqfupath);
+          onion_response_set_code (resp, hcod);
           if ((!strncmp (wexch->webx_mimetype, "text/", 5)
                || strstr (wexch->webx_mimetype, "json") != NULL
                || strstr (wexch->webx_mimetype, "xml") != NULL
