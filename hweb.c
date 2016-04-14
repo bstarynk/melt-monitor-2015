@@ -895,59 +895,18 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        atomic_load (&wexch->webx_code),
                        wexch->webx_mimetype, waiterr, strerror (waiterr));
       int hcod = atomic_load (&wexch->webx_code);
-      if (hcod > 0
-          && isalpha (wexch->webx_mimetype[0]))
+      MOM_DEBUGPRINTF (web, "webrequest#%ld hcod %d reqfupath %s", reqcnt,
+                       hcod, reqfupath);
+      if (hcod > 0)
         {
-          assert (wexch->webx_outfil);
-          fflush (wexch->webx_outfil);
-          MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s reqfupath %s",
-                           reqcnt, hcod,
-                           wexch->webx_mimetype, reqfupath);
-          onion_response_set_code (resp, hcod);
-          if ((!strncmp (wexch->webx_mimetype, "text/", 5)
-               || strstr (wexch->webx_mimetype, "json") != NULL
-               || strstr (wexch->webx_mimetype, "xml") != NULL
-               || strstr (wexch->webx_mimetype, "javascript") != NULL)
-              && !strstr (wexch->webx_mimetype, "charset"))
-            {
-              char fullmime[sizeof (wexch->webx_mimetype) + 16];
-              snprintf (fullmime, sizeof (fullmime), "%s; charset=UTF-8",
-                        wexch->webx_mimetype);
-              onion_response_set_header (resp, "Content-Type", fullmime);
-            }
-          else
-            onion_response_set_header (resp, "Content-Type",
-                                       wexch->webx_mimetype);
-          {
-            char servbuf[80];
-            memset (servbuf, 0, sizeof (servbuf));
-            snprintf (servbuf, sizeof (servbuf), "Monimelt/%.12s %s",
-                      monimelt_lastgitcommit, monimelt_timestamp);
-            onion_response_set_header (resp, "Server", servbuf);
-            MOM_DEBUGPRINTF (web, "webrequest#%ld servbuf %s", reqcnt,
-                             servbuf);
-          }
-          long off = ftell (wexch->webx_outfil);
-          MOM_DEBUGPRINTF (web, "webrequest#%ld off %ld", reqcnt, off);
-          if (MOM_IS_DEBUGGING (web)
-              && ((!strncmp (wexch->webx_mimetype, "text/", 5)
-                   || strstr (wexch->webx_mimetype, "json")
-                   || strstr (wexch->webx_mimetype, "javascript")
-                   || strstr (wexch->webx_mimetype, "xml"))))
-            MOM_DEBUGPRINTF (web,
-                             "webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
-                             reqcnt, wexch->webx_outbuf, off, reqcnt);
-          onion_response_set_length (resp, off);
-          onion_response_write (resp, wexch->webx_outbuf, off);
-          onion_response_flush (resp);
-          MOM_DEBUGPRINTF (web, "webrequest#%ld responded", reqcnt);
+          waitreply = false;
           wexch->webx_resp = NULL;
           wexch->webx_requ = NULL;
-          waitreply = false;
         }
       else if (waiterr == ETIMEDOUT
                && mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
         {
+          atomic_store (&wexch->webx_code, -1);
           MOM_DEBUGPRINTF (web, "webrequest#%ld timedout", reqcnt);
           MOM_WARNPRINTF ("webrequest#%ld timeout %s fullpath %s", reqcnt,
                           mom_webmethod_name (wmeth), reqfupath);
@@ -1069,29 +1028,105 @@ mom_websession_payload_cleanup (struct mom_item_st *itm,        //
 }                               /* end of mom_websession_payload_cleanup */
 
 
+
+////////////////
+// the wexitm should have been locked when calling this
 void
 mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
                  const char *mimetype)
 {
   if (!wex || wex == MOM_EMPTY_SLOT || wex->va_itype != MOMITY_WEBEXCH)
-    return;
+    {
+      MOM_WARNPRINTF ("wexch_reply bad wex@%p", wex);
+      return;
+    }
   if (!mimetype || !isalpha (mimetype[0]))
-    return;
+    {
+      MOM_WARNPRINTF ("wexch_reply request#%ld bad mimetype %s",
+                      wex->webx_count, mimetype);
+      return;
+    }
   if (!wex->webx_outfil)
-    return;
-  if (MOM_UNLIKELY (atomic_load (&wex->webx_code) != 0))
-    return;
-  assert (wex->webx_requ != NULL);
+    {
+      MOM_WARNPRINTF ("wexch_reply request#%ld no output file",
+                      wex->webx_count);
+      return;
+    }
+  if (!wex->webx_resp)
+    {
+      MOM_WARNPRINTF ("wexch_reply request#%ld no response", wex->webx_count);
+      return;
+    }
+  onion_request *requ = wex->webx_requ;
+  onion_response *resp = wex->webx_resp;
+  assert (httpcode > 0);
+  assert (requ != NULL);
+  fflush (wex->webx_outfil);
+  int oldhcod = atomic_exchange (&wex->webx_code, httpcode);
+  if (MOM_UNLIKELY (oldhcod != 0))
+    {
+      MOM_WARNPRINTF
+        ("web request#%ld of full path %s had old httpcode %d when replying %d",
+         wex->webx_count, requ ? onion_request_get_fullpath (requ) : "??",
+         oldhcod, httpcode);
+      return;
+    }
+  if (MOM_UNLIKELY (!requ || !resp))
+    MOM_FATAPRINTF ("web request#%ld is corrupted", wex->webx_count);
+  MOM_DEBUGPRINTF (web,
+                   "wexch_reply req#%ld fullpath %s httpcode=%d mimetype=%s",
+                   wex->webx_count,
+                   onion_request_get_fullpath (requ), httpcode, mimetype);
+  strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
+  assert (wex->webx_outfil);
   fflush (wex->webx_outfil);
   MOM_DEBUGPRINTF (web,
-                   "mom_wexch_reply req#%ld fullpath %s httpcode=%d mimetype=%s",
-                   wex->webx_count,
-                   onion_request_get_fullpath (wex->webx_requ), httpcode,
-                   mimetype);
-  atomic_store (&wex->webx_code, httpcode);
-  strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
+                   "wexch_reply webrequest#%ld got code %d mimetype %s reqfupath %s",
+                   wex->webx_count, httpcode, wex->webx_mimetype,
+                   onion_request_get_fullpath (requ));
+  onion_response_set_code (resp, httpcode);
+  if ((!strncmp (wex->webx_mimetype, "text/", 5)
+       || strstr (wex->webx_mimetype, "json") != NULL
+       || strstr (wex->webx_mimetype, "xml") != NULL
+       || strstr (wex->webx_mimetype, "javascript") != NULL)
+      && !strstr (wex->webx_mimetype, "charset"))
+    {
+      char fullmime[sizeof (wex->webx_mimetype) + 16];
+      snprintf (fullmime, sizeof (fullmime), "%s; charset=UTF-8",
+                wex->webx_mimetype);
+      onion_response_set_header (resp, "Content-Type", fullmime);
+    }
+  else
+    onion_response_set_header (resp, "Content-Type", wex->webx_mimetype);
+  {
+    char servbuf[80];
+    memset (servbuf, 0, sizeof (servbuf));
+    snprintf (servbuf, sizeof (servbuf), "Monimelt/%.12s %s",
+              monimelt_lastgitcommit, monimelt_timestamp);
+    onion_response_set_header (resp, "Server", servbuf);
+    MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld servbuf %s",
+                     wex->webx_count, servbuf);
+  }
+  long off = ftell (wex->webx_outfil);
+  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld off %ld", wex->webx_count,
+                   off);
+  if (MOM_IS_DEBUGGING (web)
+      &&
+      ((!strncmp (wex->webx_mimetype, "text/", 5)
+        || strstr (wex->webx_mimetype, "json")
+        || strstr (wex->webx_mimetype, "javascript")
+        || strstr (wex->webx_mimetype, "xml"))))
+    MOM_DEBUGPRINTF (web,
+                     "wexch_reply webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
+                     wex->webx_count, wex->webx_outbuf, off, wex->webx_count);
+  onion_response_set_length (resp, off);
+  onion_response_write (resp, wex->webx_outbuf, off);
+  onion_response_flush (resp);
+  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld responded",
+                   wex->webx_count);
   pthread_cond_broadcast (&wex->webx_donecond);
-  MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld done", wex->webx_count);
+  MOM_DEBUGPRINTF (web, "wexch_reply mom_wexch_reply req#%ld done",
+                   wex->webx_count);
   usleep (1000);
 }                               /* end mom_wexch_reply */
 
