@@ -950,8 +950,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           MOM_DEBUGPRINTF (web, "webrequest#%ld waiting again", reqcnt);
         }
       mom_item_unlock (wexitm);
-      MOM_DEBUGPRINTF (web, "webrequest#%ld wexitm %s waitreply %s", reqcnt,
-                       mom_item_cstring (wexitm),
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld reqfupath %s wexitm %s waitreply %s",
+                       reqcnt, reqfupath, mom_item_cstring (wexitm),
                        waitreply ? "true" : "false");
     }
   while (waitreply);

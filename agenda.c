@@ -692,12 +692,14 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
   assert (ix > 0 && ix <= MOM_JOB_MAX);
   assert (sb);
   char thnbuf[16];
+  long loopcnt = 0;
   memset (thnbuf, 0, sizeof (thnbuf));
   snprintf (thnbuf, sizeof (thnbuf), "momagw#%d", (int) ix);
   pthread_setname_np (pthread_self (), thnbuf);
   mom_worker_num = (int) ix;
   while (atomic_load (&mom_should_run))
     {
+      loopcnt++;
       struct mom_item_st *tkitm = NULL;
       mom_item_lock (MOM_PREDEFITM (the_agenda));
       struct mom_queue_st *agqu = agenda_queue_unsync_mom ();
@@ -708,18 +710,19 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
         }
       else
         {
-          struct timespec ts = {
-            0, 0
-          };
-          clock_gettime (CLOCK_REALTIME, &ts);
-          ts.tv_nsec += 150 * 1000 * 1000;      // 150 milliseconds
-          while (ts.tv_nsec > 1000 * 1000 * 1000)
-            {
-              ts.tv_sec++;
-              ts.tv_nsec -= 1000 * 1000 * 1000;
-            };
+          double waitdelay = (MOM_IS_DEBUGGING (run)
+                              || MOM_IS_DEBUGGING (mutex)) ? 3.2 : 0.6;
+          waitdelay += (ix + 1) * 0.0005;
+          if (loopcnt % 4 == 0)
+            waitdelay += ((mom_random_uint32 () & 0xffff) + 10) * 1.0e-6;
+          double nowtim = mom_clock_time (CLOCK_REALTIME);
+          struct timespec ts = mom_timespec (nowtim + waitdelay);
+          MOM_DEBUGPRINTF (run,
+                           "agenda_thread_worker waiting %.3f sec for change",
+                           waitdelay);
           pthread_cond_timedwait (&cond_agendachanged_mom,
                                   &MOM_PREDEFITM (the_agenda)->itm_mtx, &ts);
+          MOM_DEBUGPRINTF (run, "agenda_thread_worker done waiting");
         }
       mom_item_unlock (MOM_PREDEFITM (the_agenda));
       if (tkitm && tkitm != MOM_EMPTY_SLOT && tkitm->va_itype == MOMITY_ITEM)
