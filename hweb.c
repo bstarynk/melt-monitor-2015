@@ -689,6 +689,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     wexch->webx_sessitm = sessitm;
     wexch->webx_outbuf = NULL;
     wexch->webx_outsiz = 0;
+    atomic_init (&wexch->webx_code, 0);
     wexch->webx_outfil =
       open_memstream (&wexch->webx_outbuf, &wexch->webx_outsiz);
     if (!wexch->webx_outfil)
@@ -1079,9 +1080,13 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
     return;
   if (MOM_UNLIKELY (atomic_load (&wex->webx_code) != 0))
     return;
+  assert (wex->webx_requ != NULL);
   fflush (wex->webx_outfil);
-  MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld httpcode=%d mimetype=%s",
-                   wex->webx_count, httpcode, mimetype);
+  MOM_DEBUGPRINTF (web,
+                   "mom_wexch_reply req#%ld fullpath %s httpcode=%d mimetype=%s",
+                   wex->webx_count,
+                   onion_request_get_fullpath (wex->webx_requ), httpcode,
+                   mimetype);
   atomic_store (&wex->webx_code, httpcode);
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   pthread_cond_broadcast (&wex->webx_donecond);
