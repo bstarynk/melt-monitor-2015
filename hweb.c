@@ -38,10 +38,27 @@ MOM_PRIVATE onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp);
 
 MOM_PRIVATE void
-handle_onion_memory_failure (const char *msg)
+handle_onion_memory_failure_mom (const char *msg)
 {
   MOM_FATAPRINTF ("onion memory failure %s (%m)", msg);
 }
+
+int
+pthread_create_mom (pthread_t * threadp, const pthread_attr_t * attr,
+                    void *(*start_routine) (void *), void *arg)
+{
+  static atomic_int count;
+  char nambuf[20];
+  memset (nambuf, 0, sizeof (nambuf));
+  int n = 1 + atomic_fetch_add (&count, 1);
+  *threadp = 0;
+  snprintf (nambuf, sizeof (nambuf), "moweb#%05d", n);
+  int er = GC_pthread_create (threadp, attr, start_routine, arg);
+  if (*threadp)
+    pthread_setname_np (*threadp, nambuf);
+  return er;
+}                               /* end pthread_create_mom */
+
 
 
 #define MAX_ONIONTHREADS_MOM 4
@@ -52,8 +69,12 @@ mom_start_web (const char *webservice)
   onion_low_initialize_memory_allocation (mom_gc_alloc, mom_gc_alloc_atomic,
                                           mom_gc_calloc, GC_realloc,
                                           GC_strdup, GC_free,
-                                          handle_onion_memory_failure);
-#warning should call onion_low_initialize_threads
+                                          handle_onion_memory_failure_mom);
+  onion_low_initialize_threads
+    (pthread_create_mom,
+     GC_pthread_join,
+     GC_pthread_cancel,
+     GC_pthread_detach, GC_pthread_exit, GC_pthread_sigmask);
   char webhostname[80];
   memset (webhostname, 0, sizeof (webhostname));
   int webport = 0;
@@ -842,6 +863,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     {
       nbloop++;
       assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld wexitm %s reqfupath %s start loop#%ld",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath, nbloop);
       mom_item_lock (wexitm);
       double nowtim = mom_clock_time (CLOCK_REALTIME);
       double remaintim = elapstim - nowtim;
@@ -850,9 +874,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        "webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec loop#%ld",
                        reqcnt, mom_item_cstring (wexitm), reqfupath,
                        remaintim, nbloop);
-      struct timespec ts = (remaintim > 0.0)
-        ? mom_timespec (nowtim + remaintim * 0.35 + 0.01)
-        : mom_timespec (nowtim + 0.02);
+      double waitim = (remaintim > 0.05) ? (remaintim * 0.25 + 0.01) : 0.02;
+      struct timespec ts = mom_timespec (nowtim + waitim);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
           && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
         wexch = (struct mom_webexch_st *) wexitm->itm_payload;
@@ -861,13 +884,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                         reqcnt, mom_item_cstring (wexitm), reqfupath);
       assert (wexch->webx_resp == resp);
       MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld wexitm %s waiting for reqfupath %s...",
-                       reqcnt, mom_item_cstring (wexitm), reqfupath);
+                       "webrequest#%ld wexitm %s before waiting about %.2f sec for reqfupath %s...",
+                       reqcnt, mom_item_cstring (wexitm), waitim, reqfupath);
       int waiterr =
         pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
       MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld afterwait reqfupath %s code %d mimetype %s waiterr#%d (%s)",
-                       reqcnt, reqfupath, wexch->webx_code,
+                       "webrequest#%ld afterwait %.2fs reqfupath %s code %d mimetype %s waiterr#%d (%s)",
+                       reqcnt, waitim, reqfupath,
+                       atomic_load (&wexch->webx_code),
                        wexch->webx_mimetype, waiterr, strerror (waiterr));
       if (waiterr == 0 && atomic_load (&wexch->webx_code) > 0
           && isalpha (wexch->webx_mimetype[0]))
@@ -875,7 +899,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           assert (wexch->webx_outfil);
           fflush (wexch->webx_outfil);
           MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s",
-                           reqcnt, wexch->webx_code, wexch->webx_mimetype);
+                           reqcnt, atomic_load (&wexch->webx_code),
+                           wexch->webx_mimetype);
           onion_response_set_code (resp, atomic_load (&wexch->webx_code));
           if ((!strncmp (wexch->webx_mimetype, "text/", 5)
                || strstr (wexch->webx_mimetype, "json") != NULL
@@ -913,6 +938,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           onion_response_set_length (resp, off);
           onion_response_write (resp, wexch->webx_outbuf, off);
           onion_response_flush (resp);
+          MOM_DEBUGPRINTF (web, "webrequest#%ld responded", reqcnt);
           wexch->webx_resp = NULL;
           wexch->webx_requ = NULL;
           waitreply = false;
@@ -973,7 +999,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       usleep (2000);
     }
   while (waitreply);
-  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end did %ld loops",
+  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end did %ld loops\n",
                    reqcnt, reqfupath, nbloop);
   return OCS_PROCESSED;
 }                               /* end of handle_web_mom */
@@ -1060,6 +1086,7 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   pthread_cond_broadcast (&wex->webx_donecond);
   MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld done", wex->webx_count);
+  usleep (1000);
 }                               /* end mom_wexch_reply */
 
 

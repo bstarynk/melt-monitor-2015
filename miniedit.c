@@ -180,7 +180,7 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
   MOM_DEBUGPRINTF (web, "miniedit_genstyle wexch #%ld tupsty=%s",
                    wexch->webx_count, mom_value_cstring ((void *) tupsty));
   mom_output_gplv3_notice (wexch->webx_outfil, "/*", "*/",
-                           "miniedit/_genstyle.css");
+                           "miniedit_genstyle");
   unsigned nbsty = mom_size (tupsty);
   MOM_WEXCH_PRINTF (wexch, "\n/* generating %d styles */\n", nbsty);
   for (unsigned ix = 0; ix < nbsty; ix++)
@@ -339,6 +339,8 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                    "\n... emitting javascript for srcnod=%s\n",
                    mom_item_cstring (tkitm), mom_item_cstring (wexitm),
                    wexch->webx_count, mom_value_cstring (scrnod));
+  mom_output_gplv3_notice (wexch->webx_outfil, "//! ", "",
+                           "miniedit_genscript");
   mom_emit_javascript (&mjst, scrnod, 0);
   MOM_DEBUGPRINTF (run,
                    "miniedit_genscript taskitm %s wexitm %s webrequest #%ld end emitting javascript",
@@ -347,6 +349,7 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
   MOM_WEXCH_PRINTF (wexch,
                     "\n// end of generated javascript for wexitm %s tkitm %s\n",
                     mom_item_cstring (wexitm), mom_item_cstring (tkitm));
+  mom_wexch_flush (wexch);
   MOM_DEBUGPRINTF (web,
                    "miniedit_genscript wexch #%ld outputting %ld bytes:\n%.*s\n",
                    wexch->webx_count, ftell (wexch->webx_outfil),
