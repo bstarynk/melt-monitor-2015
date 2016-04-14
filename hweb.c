@@ -24,7 +24,7 @@
 #define SESSION_TIMEOUT_MOM 4000        /* a bit more than one hour of inactivity */
 
 // maximal reply delay for a web request - in seconds
-#define REPLY_TIMEOUT_MOM (MOM_IS_DEBUGGING(web)?14.2:4.5)      /* reply timeout in seconds */
+#define REPLY_TIMEOUT_MOM (MOM_IS_DEBUGGING(web)?10.2:4.5)      /* reply timeout in seconds */
 
 const char *web_hostname_mom;
 static struct mom_hashset_st *sessions_hset_mom;
@@ -37,11 +37,23 @@ static volatile atomic_long webcount_mom;
 MOM_PRIVATE onion_connection_status
 handle_web_mom (void *data, onion_request *requ, onion_response *resp);
 
+MOM_PRIVATE void
+handle_onion_memory_failure (const char *msg)
+{
+  MOM_FATAPRINTF ("onion memory failure %s (%m)", msg);
+}
+
+
 #define MAX_ONIONTHREADS_MOM 4
 void
 mom_start_web (const char *webservice)
 {
   MOM_DEBUGPRINTF (web, "mom_start_web starting webservice=%s", webservice);
+  onion_low_initialize_memory_allocation (mom_gc_alloc, mom_gc_alloc_atomic,
+                                          mom_gc_calloc, GC_realloc,
+                                          GC_strdup, GC_free,
+                                          handle_onion_memory_failure);
+#warning should call onion_low_initialize_threads
   char webhostname[80];
   memset (webhostname, 0, sizeof (webhostname));
   int webport = 0;
@@ -820,23 +832,27 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     }
   }
   double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
-  MOM_DEBUGPRINTF (web, "webrequest#%ld elapstim=%.4f wexitm=%s", reqcnt,
-                   elapstim, mom_item_cstring (wexitm));
+  MOM_DEBUGPRINTF (web,
+                   "webrequest#%ld elapstim=%.1f wexitm=%s replytimeout %.2f sec",
+                   reqcnt, elapstim, mom_item_cstring (wexitm),
+                   REPLY_TIMEOUT_MOM);
   bool waitreply = false;
+  long nbloop = 0;
   do
     {
+      nbloop++;
+      assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+      mom_item_lock (wexitm);
       double nowtim = mom_clock_time (CLOCK_REALTIME);
       double remaintim = elapstim - nowtim;
+      struct mom_webexch_st *wexch = NULL;
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec loop#%ld",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath,
+                       remaintim, nbloop);
       struct timespec ts = (remaintim > 0.0)
         ? mom_timespec (nowtim + remaintim * 0.35 + 0.01)
         : mom_timespec (nowtim + 0.02);
-      struct mom_webexch_st *wexch = NULL;
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec",
-                       reqcnt, mom_item_cstring (wexitm), reqfupath,
-                       remaintim);
-      assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
-      mom_item_lock (wexitm);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
           && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
         wexch = (struct mom_webexch_st *) wexitm->itm_payload;
@@ -949,14 +965,16 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           waitreply = true;
           MOM_DEBUGPRINTF (web, "webrequest#%ld waiting again", reqcnt);
         }
-      mom_item_unlock (wexitm);
       MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld reqfupath %s wexitm %s waitreply %s",
+                       "webrequest#%ld reqfupath %s wexitm %s waitreply %s endbody loop#%ld",
                        reqcnt, reqfupath, mom_item_cstring (wexitm),
-                       waitreply ? "true" : "false");
+                       waitreply ? "true" : "false", nbloop);
+      mom_item_unlock (wexitm);
+      usleep (2000);
     }
   while (waitreply);
-  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end", reqcnt, reqfupath);
+  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end did %ld loops",
+                   reqcnt, reqfupath, nbloop);
   return OCS_PROCESSED;
 }                               /* end of handle_web_mom */
 
