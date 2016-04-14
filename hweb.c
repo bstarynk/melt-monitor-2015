@@ -825,10 +825,16 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   bool waitreply = false;
   do
     {
-      struct timespec ts = mom_timespec (elapstim);
+      double nowtim = mom_clock_time (CLOCK_REALTIME);
+      double remaintim = elapstim - nowtim;
+      struct timespec ts = (remaintim > 0.0)
+        ? mom_timespec (nowtim + remaintim * 0.35 + 0.01)
+        : mom_timespec (nowtim + 0.02);
       struct mom_webexch_st *wexch = NULL;
-      MOM_DEBUGPRINTF (web, "webrequest#%ld wexitm %s loop reqfupath %s",
-                       reqcnt, mom_item_cstring (wexitm), reqfupath);
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath,
+                       remaintim);
       assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
       mom_item_lock (wexitm);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
@@ -841,18 +847,20 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       MOM_DEBUGPRINTF (web,
                        "webrequest#%ld wexitm %s waiting for reqfupath %s...",
                        reqcnt, mom_item_cstring (wexitm), reqfupath);
-      pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
+      int waiterr =
+        pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
       MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld afterwait reqfupath %s code %d mimetype %s",
+                       "webrequest#%ld afterwait reqfupath %s code %d mimetype %s waiterr#%d (%s)",
                        reqcnt, reqfupath, wexch->webx_code,
-                       wexch->webx_mimetype);
-      if (wexch->webx_code > 0 && isalpha (wexch->webx_mimetype[0]))
+                       wexch->webx_mimetype, waiterr, strerror (waiterr));
+      if (waiterr == 0 && atomic_load (&wexch->webx_code) > 0
+          && isalpha (wexch->webx_mimetype[0]))
         {
           assert (wexch->webx_outfil);
           fflush (wexch->webx_outfil);
           MOM_DEBUGPRINTF (web, "webrequest#%ld got code %d mimetype %s",
                            reqcnt, wexch->webx_code, wexch->webx_mimetype);
-          onion_response_set_code (resp, wexch->webx_code);
+          onion_response_set_code (resp, atomic_load (&wexch->webx_code));
           if ((!strncmp (wexch->webx_mimetype, "text/", 5)
                || strstr (wexch->webx_mimetype, "json") != NULL
                || strstr (wexch->webx_mimetype, "xml") != NULL
@@ -893,7 +901,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           wexch->webx_requ = NULL;
           waitreply = false;
         }
-      else if (mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
+      else if (waiterr == ETIMEDOUT
+               && mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
         {
           MOM_DEBUGPRINTF (web, "webrequest#%ld timedout", reqcnt);
           MOM_WARNPRINTF ("webrequest#%ld timeout %s fullpath %s", reqcnt,
@@ -941,6 +950,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
           MOM_DEBUGPRINTF (web, "webrequest#%ld waiting again", reqcnt);
         }
       mom_item_unlock (wexitm);
+      MOM_DEBUGPRINTF (web, "webrequest#%ld wexitm %s waitreply %s", reqcnt,
+                       mom_item_cstring (wexitm),
+                       waitreply ? "true" : "false");
     }
   while (waitreply);
   MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end", reqcnt, reqfupath);
@@ -1020,12 +1032,12 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
     return;
   if (!wex->webx_outfil)
     return;
-  if (wex->webx_code)
+  if (MOM_UNLIKELY (atomic_load (&wex->webx_code) != 0))
     return;
   fflush (wex->webx_outfil);
   MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld httpcode=%d mimetype=%s",
                    wex->webx_count, httpcode, mimetype);
-  wex->webx_code = httpcode;
+  atomic_store (&wex->webx_code, httpcode);
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   pthread_cond_broadcast (&wex->webx_donecond);
   MOM_DEBUGPRINTF (web, "mom_wexch_reply req#%ld done", wex->webx_count);
@@ -1043,3 +1055,5 @@ mom_stop_web (void)
       MOM_INFORMPRINTF ("stopping web serving");
     }
 }                               /* end of mom_stop_web */
+
+/// eof hweb.c

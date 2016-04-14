@@ -1969,7 +1969,7 @@ char *mom_webmethod_name (unsigned);
   onion_response* webx_resp;			\
   struct mom_item_st*webx_sessitm;		\
   char webx_mimetype[48];			\
-  int webx_code;				\
+  atomic_int webx_code;				\
   char* webx_outbuf;				\
   size_t webx_outsiz;				\
   FILE* webx_outfil;				\
