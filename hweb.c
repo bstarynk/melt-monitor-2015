@@ -813,6 +813,9 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     return mom_hackc_code (reqcnt, requ, resp);
   struct mom_item_st *wexitm =
     mom_web_handler_exchange (reqcnt, reqfupath, wmeth, requ, resp);
+  MOM_DEBUGPRINTF (web,
+                   "webrequest#%ld reqfupath %s wexitm %s",
+                   reqcnt, reqfupath, mom_item_cstring (wexitm));
   if (!wexitm)
     {
       MOM_DEBUGPRINTF (web,
@@ -827,10 +830,10 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     if (mom_itype (wexitm->itm_payload) == MOMITY_WEBEXCH)
       wexclos = ((struct mom_webexch_st *) wexitm->itm_payload)->webx_clos;
     mom_item_unlock (wexitm);
-    MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wexclos %s",
+    MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wexclos %s wexitm %s",
                      reqcnt, reqfupath,
                      mom_value_cstring ((struct mom_hashedvalue_st *)
-                                        wexclos));
+                                        wexclos), mom_item_cstring (wexitm));
     assert (wexclos->va_itype == MOMITY_NODE);
     {
       struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
