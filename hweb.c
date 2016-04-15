@@ -876,6 +876,12 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        reqcnt, mom_item_cstring (wexitm), reqfupath,
                        remaintim, nbloop);
       double waitim = (remaintim > 0.05) ? (remaintim * 0.25 + 0.01) : 0.02;
+#define WEB_WAITIMAX_MOM 1.5
+      if (waitim > WEB_WAITIMAX_MOM)
+        waitim = WEB_WAITIMAX_MOM;
+      MOM_DEBUGPRINTF (web,
+                       "webrequest#%ld waitim %.2f sec loop#%ld",
+                       reqcnt, waitim, nbloop);
       struct timespec ts = mom_timespec (nowtim + waitim);
       if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
           && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
@@ -1062,7 +1068,14 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   assert (httpcode > 0);
   assert (requ != NULL);
   fflush (wex->webx_outfil);
+  MOM_DEBUGPRINTF (web,
+                   "wexch_reply req#%ld starting fullpath %s httpcode=%d",
+                   wex->webx_count,
+                   requ ? onion_request_get_fullpath (requ) : "??", httpcode);
   int oldhcod = atomic_exchange (&wex->webx_code, httpcode);
+  MOM_DEBUGPRINTF (web,
+                   "wexch_reply req#%ld oldhcod=%d", wex->webx_count,
+                   oldhcod);
   if (MOM_UNLIKELY (oldhcod != 0))
     {
       MOM_WARNPRINTF
@@ -1122,11 +1135,11 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   onion_response_set_length (resp, off);
   onion_response_write (resp, wex->webx_outbuf, off);
   onion_response_flush (resp);
-  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld responded",
-                   wex->webx_count);
+  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld responded fupath %s",
+                   wex->webx_count, onion_request_get_fullpath (requ));
   pthread_cond_broadcast (&wex->webx_donecond);
-  MOM_DEBUGPRINTF (web, "wexch_reply mom_wexch_reply req#%ld done",
-                   wex->webx_count);
+  MOM_DEBUGPRINTF (web, "wexch_reply mom_wexch_reply req#%ld done fupath %s",
+                   wex->webx_count, onion_request_get_fullpath (requ));
   usleep (1000);
 }                               /* end mom_wexch_reply */
 
