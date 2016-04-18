@@ -61,7 +61,6 @@ pthread_create_mom (pthread_t * threadp, const pthread_attr_t * attr,
 
 
 
-#define MAX_ONIONTHREADS_MOM 4
 void
 mom_start_web (const char *webservice)
 {
@@ -100,7 +99,8 @@ mom_start_web (const char *webservice)
     MOM_FATAPRINTF ("invalid webservice %s", webservice);
   onion_mom =
     onion_new (O_THREADED | O_DETACH_LISTEN | O_NO_SIGTERM | O_NO_SIGPIPE);
-  onion_set_max_threads (onion_mom, MAX_ONIONTHREADS_MOM);
+  onion_set_max_threads (onion_mom, 1 + mom_nbjobs);
+  MOM_DEBUGPRINTF (web, "maxonionthreads %d", 1 + mom_nbjobs);
   if (webhostname[0])
     {
       web_hostname_mom = GC_STRDUP (webhostname);
@@ -823,13 +823,24 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                        reqcnt, reqfupath);
       return OCS_NOT_PROCESSED;
     };
+  struct mom_webexch_st *wexch = NULL;
   errno = 0;
   {
     const struct mom_boxnode_st *wexclos = NULL;
     mom_item_lock (wexitm);
     if (mom_itype (wexitm->itm_payload) == MOMITY_WEBEXCH)
-      wexclos = ((struct mom_webexch_st *) wexitm->itm_payload)->webx_clos;
+      {
+        wexch = (struct mom_webexch_st *) wexitm->itm_payload;
+        wexclos = wexch->webx_clos;
+      }
     mom_item_unlock (wexitm);
+    if (MOM_UNLIKELY (!wexch))
+      {
+        MOM_WARNPRINTF ("webrequest#%ld fupath %s wexitm %s no web exchange",
+                        reqcnt, reqfupath, mom_item_cstring (wexitm));
+        return OCS_NOT_PROCESSED;
+      }
+    assert (wexch && wexch->webx_count == reqcnt);
     MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wexclos %s wexitm %s",
                      reqcnt, reqfupath,
                      mom_value_cstring ((struct mom_hashedvalue_st *)
