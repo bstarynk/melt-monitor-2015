@@ -880,6 +880,43 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                          mom_value_cstring ((void *) wexclos));
         return OCS_PROCESSED;
       }
+    else if (wsigitm == MOM_PREDEFITM (signature_webhandler))
+      {
+        MOM_DEBUGPRINTF (web,
+                         "webrequest#%ld fupath %s wexitm %s, webhandler wexclos %s",
+                         reqcnt, reqfupath, mom_item_cstring (wexitm),
+                         mom_value_cstring ((void *) wexclos));
+        assert (wconfun != NULL);
+        mom_webhandler_sig_t *whfun = wconfun;
+        (*whfun) (wexitm, wexch, wexclos);
+        int hcod = atomic_load (&wexch->webx_code);
+        MOM_DEBUGPRINTF (web,
+                         "webrequest#%ld fupath %s wexitm %s loaded hcod=%d",
+                         reqcnt, reqfupath, mom_item_cstring (wexitm), hcod);
+        if (hcod <= 0)
+          {
+            MOM_WARNPRINTF ("webrequest#%ld full path %s %s wexitm %s"
+                            " no reply from webhandler %s (hcod=%d)",
+                            reqcnt, reqfupath, mom_webmethod_name (wmeth),
+                            mom_item_cstring (wexitm),
+                            mom_value_cstring ((void *) wexclos), hcod);
+            return OCS_NOT_PROCESSED;
+          }
+        MOM_DEBUGPRINTF (web,
+                         "webrequest#%ld fupath %s wexitm %s, done webhandler wexclos %s",
+                         reqcnt, reqfupath, mom_item_cstring (wexitm),
+                         mom_value_cstring ((void *) wexclos));
+        return OCS_PROCESSED;
+      }
+    else
+      {
+        MOM_WARNPRINTF
+          ("handle_web webrequest#%ld fupath %s wexitm %s node %s with bad signature %s",
+           reqcnt, reqfupath, mom_item_cstring (wexitm),
+           mom_value_cstring ((void *) wexclos), mom_item_cstring (wsigitm));
+        return OCS_NOT_PROCESSED;
+
+      }
   }
   return OCS_PROCESSED;
 }                               /* end of handle_web_mom */

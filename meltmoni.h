@@ -2039,6 +2039,14 @@ mom_unsync_wexch_reply (struct mom_item_st *wexitm,
 void mom_webexch_payload_cleanup (struct mom_item_st *itm,
                                   struct mom_webexch_st *payl);
 
+
+/// for signature_webhandler
+typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
+                                   struct mom_webexch_st *wexch,
+                                   const struct mom_boxnode_st *wexclos);
+
+
+
 /// for MOMITY_WEBSESSION payload
 #define MOM_WEBSESSION_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
@@ -2387,6 +2395,7 @@ mom_dyncast_taskstepper (const void *p)
     return tstep;
   return NULL;
 }                               /* end of mom_taskstepper_dyncast */
+
 
 static inline unsigned
 mom_taskstepper_nbval (const struct mom_taskstepper_st *tstep)
