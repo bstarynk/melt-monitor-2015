@@ -1265,17 +1265,19 @@ mom_unsync_wexch_reply (struct mom_item_st *wexitm,
         || strstr (wex->webx_mimetype, "javascript")
         || strstr (wex->webx_mimetype, "xml"))))
     MOM_DEBUGPRINTF (web,
-                     "mom_unsync_wexch_reply webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
+                     "mom_unsync_wexch_reply webrequest#%ld textual outbuf:\n%s\n"
+                     "#### %ld bytes for webrequest#%ld\n",
                      wex->webx_count, wex->webx_outbuf, off, wex->webx_count);
   onion_response_set_length (resp, off);
   onion_response_write (resp, wex->webx_outbuf, off);
   onion_response_flush (resp);
   MOM_DEBUGPRINTF (web,
-                   "mom_unsync_wexch_reply webrequest#%ld responded fupath %s",
-                   wex->webx_count, onion_request_get_fullpath (requ));
+                   "mom_unsync_wexch_reply webrequest#%ld responded %s fupath %s",
+                   wex->webx_count, mom_webmethod_name (wex->webx_meth),
+                   onion_request_get_fullpath (requ));
   pthread_cond_broadcast (&wex->webx_donecond);
   MOM_DEBUGPRINTF (web,
-                   "mom_unsync_wexch_reply mom_wexch_reply req#%ld done fupath %s",
+                   "mom_unsync_wexch_reply mom_wexch_reply req#%ld broadcasted done fupath %s",
                    wex->webx_count, onion_request_get_fullpath (requ));
   usleep (1000);
 }                               /* end mom_unsync_wexch_reply */

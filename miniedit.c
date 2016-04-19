@@ -191,7 +191,6 @@ end:;
 #define MAXDEPTH_JAVASCRIPT_MOM 384
 enum minieditgenscript_closoff_en
 {
-  miedgscr_wexitm,
   miedgscr_scrnod,
   miedgscr__last
 };
@@ -233,44 +232,35 @@ mom_emit_javascript (struct mom_minedjs_st *mj, const void *val, int depth)
 }                               /* end of mom_emit_javascript */
 
 
-extern mom_tasklet_sig_t momf_miniedit_genscript;
-const char momsig_miniedit_genscript[] = "signature_tasklet";
+
+
+extern mom_webhandler_sig_t momf_miniedit_genscript;
+const char momsig_miniedit_genscript[] = "signature_webhandler";
 void
-momf_miniedit_genscript (struct mom_item_st *tkitm)
+momf_miniedit_genscript (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wclos)
 {
-  struct mom_item_st *wexitm = NULL;
-  struct mom_item_st *sessitm = NULL;
-  struct mom_boxnode_st *scrnod = NULL;
-  mom_item_lock (tkitm);
-  const struct mom_boxnode_st *tknod =
-    (struct mom_boxnode_st *) tkitm->itm_payload;
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
-                   "momf_miniedit_genscript start tkitm=%s tknod=%s",
-                   mom_item_cstring (tkitm),
-                   mom_value_cstring ((const struct
-                                       mom_hashedvalue_st *) tknod));
-  if (!tknod || tknod->va_itype != MOMITY_NODE
-      || mom_size (tknod) < miedgscr__last)
-    MOM_FATAPRINTF ("minedit_genscript tkitm %s has bad tknod %s",
-                    mom_item_cstring (tkitm),
-                    mom_value_cstring ((const struct mom_hashedvalue_st *)
-                                       tknod));
-  wexitm = mom_dyncast_item (tknod->nod_sons[miedgscr_wexitm]);
-  mom_item_lock (wexitm);
-  scrnod = mom_dyncast_node (tknod->nod_sons[miedgscr_scrnod]);
-  MOM_DEBUGPRINTF (web,
-                   "momf_miniedit_genscript wexitm %s scrnod %s",
+                   "momf_miniedit_genscript start wexitm=%s wclos=%s",
+                   mom_item_cstring (wexitm),
+                   mom_value_cstring ((const void *) wclos));
+  if (!wclos || wclos->va_itype != MOMITY_NODE
+      || mom_size (wclos) < miedgscr__last)
+    MOM_FATAPRINTF ("minedit_genscript wexitm %s has bad wclos %s",
+                    mom_item_cstring (wexitm),
+                    mom_value_cstring ((const void *) wclos));
+  const struct mom_boxnode_st *scrnod =
+    mom_dyncast_node (wclos->nod_sons[miedgscr_scrnod]);
+  MOM_DEBUGPRINTF (web, "momf_miniedit_genscript wexitm %s scrnod %s",
                    mom_item_cstring (wexitm),
                    mom_value_cstring ((void *) scrnod));
   if (!scrnod || scrnod->va_itype != MOMITY_NODE)
-    MOM_FATAPRINTF ("minedit_genscript tkitm %s has bad scrnod %s",
-                    mom_item_cstring (tkitm),
+    MOM_FATAPRINTF ("minedit_genscript wexitm %s has bad scrnod %s",
+                    mom_item_cstring (wexitm),
                     mom_value_cstring ((void *) scrnod));
-  mom_item_lock (wexitm);
-  struct mom_webexch_st *wexch =
-    (struct mom_webexch_st *) wexitm->itm_payload;
-  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
-  sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
                    "miniedit_genscript sessitm=%s wexch #%ld meth %s fupath %s path %s",
                    mom_item_cstring (sessitm),
@@ -278,10 +268,8 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                    mom_webmethod_name (wexch->webx_meth),
                    onion_request_get_fullpath (wexch->webx_requ),
                    onion_request_get_path (wexch->webx_requ));
-  mom_item_lock (sessitm);
   struct mom_minedjs_st mjst = { };
   memset (&mjst, 0, sizeof (mjst));
-  mjst.miejs_taskitm = tkitm;
   mjst.miejs_wexitm = wexitm;
   mjst.miejs_wexch = wexch;
   mjst.miejs_magic = MOM_MINEDJS_MAGIC;
@@ -303,8 +291,8 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
             open_memstream (&wexch->webx_outbuf, &wexch->webx_outsiz);
           if (MOM_UNLIKELY (!wexch->webx_outfil))
             MOM_FATAPRINTF
-              ("miniedit_genscript taskitm %s webrequest #%ld failed to reopen outfile (%m)",
-               mom_item_cstring (tkitm), wexch->webx_count);
+              ("miniedit_genscript wexitm %s webrequest #%ld failed to reopen outfile (%m)",
+               mom_item_cstring (wexitm), wexch->webx_count);
         };
       MOM_WEXCH_PRINTF (wexch, "//failure from %s:%d\n",
                         mjst.miejs_errfile ? : "??", errlin);
@@ -314,20 +302,19 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
     };
   assert (errlin == 0);
   MOM_DEBUGPRINTF (run,
-                   "miniedit_genscript taskitm %s wexitm %s webrequest #%ld"
+                   "miniedit_genscript wexitm %s webrequest #%ld"
                    "\n... emitting javascript for srcnod=%s\n",
-                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
-                   wexch->webx_count, mom_value_cstring (scrnod));
+                   mom_item_cstring (wexitm),
+                   wexch->webx_count, mom_value_cstring ((void *) scrnod));
   mom_output_gplv3_notice (wexch->webx_outfil, "//! ", "",
                            "miniedit_genscript");
   mom_emit_javascript (&mjst, scrnod, 0);
   MOM_DEBUGPRINTF (run,
-                   "miniedit_genscript taskitm %s wexitm %s webrequest #%ld end emitting javascript",
-                   mom_item_cstring (tkitm), mom_item_cstring (wexitm),
-                   wexch->webx_count);
+                   "miniedit_genscript wexitm %s webrequest #%ld end emitting javascript",
+                   mom_item_cstring (wexitm), wexch->webx_count);
   MOM_WEXCH_PRINTF (wexch,
-                    "\n// end of generated javascript for wexitm %s tkitm %s\n",
-                    mom_item_cstring (wexitm), mom_item_cstring (tkitm));
+                    "\n// end of generated javascript for wexitm %s\n",
+                    mom_item_cstring (wexitm));
   mom_wexch_flush (wexch);
   MOM_DEBUGPRINTF (web,
                    "miniedit_genscript wexch #%ld outputting %ld bytes:\n%.*s\n",
@@ -337,10 +324,5 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
   MOM_DEBUGPRINTF (run,
                    "miniedit_genscript replied wexitm %s",
                    mom_item_cstring (wexitm));
-end:
-  if (sessitm)
-    mom_item_unlock (sessitm);
-  if (wexitm)
-    mom_item_unlock (wexitm);
-  mom_item_unlock (tkitm);
+end:;
 }                               /* end of momf_miniedit_genscript */

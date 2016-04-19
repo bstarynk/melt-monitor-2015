@@ -2768,7 +2768,6 @@ struct mom_minedjs_st
   const char *miejs_errfile;
   const void *miejs_fail;
   const void *miejs_expr;
-  struct mom_item_st *miejs_taskitm;
   struct mom_item_st *miejs_wexitm;
   struct mom_webexch_st *miejs_wexch;
 };
