@@ -747,7 +747,7 @@ mom_boxtuple_length (const struct mom_boxtuple_st *btup)
   return mom_raw_size (btup);
 }                               /* end of mom_boxtuple_length */
 
-static inline const struct mom_item_st *
+static inline struct mom_item_st *
 mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
 {
   if (!btup || btup == MOM_EMPTY_SLOT || btup->va_itype != MOMITY_TUPLE)
@@ -756,7 +756,7 @@ mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
   if (rk < 0)
     rk += sz;
   if (rk >= 0 && rk < (int) sz)
-    return btup->seqitem[rk];
+    return (struct mom_item_st *) (btup->seqitem[rk]);
   return NULL;
 }                               /* end of mom_boxtuple_nth */
 

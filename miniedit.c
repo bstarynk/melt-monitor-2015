@@ -64,7 +64,6 @@ momf_miniedit (struct mom_item_st *tkitm)
   struct mom_item_st *wexitm = NULL;
   struct mom_item_st *thistatitm = NULL;
   struct mom_item_st *sessitm = NULL;
-  struct mom_item_st *hsetitm = NULL;
   mom_item_lock (tkitm);
   const struct mom_boxnode_st *tknod =
     (struct mom_boxnode_st *) tkitm->itm_payload;
@@ -112,56 +111,41 @@ end:
 
 enum minieditgenstyle_closoff_en
 {
-  miedgsty_wexitm,
   miedgsty_stytup,
   miedgsty__last
 };
 
 
 void
-mom_mini_genstyle (struct mom_item_st *tkitm, struct mom_item_st *wexitm,
+mom_mini_genstyle (struct mom_item_st *wexitm,
                    struct mom_webexch_st *wexch, struct mom_item_st *styitm)
 {
   MOM_FATAPRINTF
-    ("unimplemented mom_mini_genstyle tkitm=%s wexitm=%s styitm=%s",
-     mom_item_cstring (tkitm), mom_item_cstring (wexitm),
-     mom_item_cstring (styitm));
+    ("unimplemented mom_mini_genstyle wexitm=%s styitm=%s",
+     mom_item_cstring (wexitm), mom_item_cstring (styitm));
 #warning mom_mini_genstyle unimplemented
 }                               /* end mom_mini_genstyle */
 
-extern mom_tasklet_sig_t momf_miniedit_genstyle;
-const char momsig_miniedit_genstyle[] = "signature_tasklet";
+
+extern mom_webhandler_sig_t momf_miniedit_genstyle;
+const char momsig_miniedit_genstyle[] = "signature_webhandler";
 void
-momf_miniedit_genstyle (struct mom_item_st *tkitm)
+momf_miniedit_genstyle (struct mom_item_st *wexitm,
+                        struct mom_webexch_st *wexch,
+                        const struct mom_boxnode_st *wclos)
 {
-  struct mom_item_st *wexitm = NULL;
-  struct mom_item_st *thistatitm = NULL;
-  struct mom_item_st *sessitm = NULL;
-  mom_item_lock (tkitm);
-  const struct mom_boxnode_st *tknod =
-    (struct mom_boxnode_st *) tkitm->itm_payload;
-  MOM_DEBUGPRINTF (web,
-                   "momf_miniedit_genstyle start tkitm=%s tknod=%s",
-                   mom_item_cstring (tkitm),
-                   mom_value_cstring ((const struct
-                                       mom_hashedvalue_st *) tknod));
-  if (!tknod || tknod->va_itype != MOMITY_NODE
-      || mom_size (tknod) < miedgsty__last)
-    MOM_FATAPRINTF ("minedit_genstyle tkitm %s has bad tknod %s",
-                    mom_item_cstring (tkitm),
-                    mom_value_cstring ((const struct mom_hashedvalue_st *)
-                                       tknod));
-  wexitm = mom_dyncast_item (tknod->nod_sons[miedgsty_wexitm]);
-  mom_item_lock (wexitm);
-  MOM_DEBUGPRINTF (web,
-                   "minedit_genstyle wexitm=%s", mom_item_cstring (wexitm));
-  if (!wexitm)
-    goto end;
-  mom_item_lock (wexitm);
-  struct mom_webexch_st *wexch =
-    (struct mom_webexch_st *) wexitm->itm_payload;
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
-  sessitm = wexch->webx_sessitm;
+  unsigned long reqcnt = wexch->webx_count;
+  MOM_DEBUGPRINTF (web,
+                   "momf_miniedit_genstyle start webreq#%ld wexitm=%s wclos=%s",
+                   reqcnt, mom_item_cstring (wexitm),
+                   mom_value_cstring ((const void *) wclos));
+  if (!wclos || wclos->va_itype != MOMITY_NODE
+      || mom_size (wclos) < miedgsty__last)
+    MOM_FATAPRINTF ("minedit_genstyle  webreq#%ld wexitm %s has bad wclos %s",
+                    reqcnt, mom_item_cstring (wexitm),
+                    mom_value_cstring ((const void *) wclos));
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
   MOM_DEBUGPRINTF (web,
                    "miniedit_genstyle sessitm=%s wexch #%ld meth %s fupath %s path %s",
                    mom_item_cstring (sessitm),
@@ -169,14 +153,13 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
                    mom_webmethod_name (wexch->webx_meth),
                    onion_request_get_fullpath (wexch->webx_requ),
                    onion_request_get_path (wexch->webx_requ));
-  mom_item_lock (sessitm);
-  struct mom_tuple_st *tupsty =
-    mom_dyncast_tuple (tknod->nod_sons[miedgsty_stytup]);
+  const struct mom_boxtuple_st *tupsty =
+    mom_dyncast_tuple (wclos->nod_sons[miedgsty_stytup]);
   if (!tupsty)
     MOM_FATAPRINTF
-      ("minedit_genstyle tkitm %s has bad tuple of styles@#%d in tknod %s",
-       mom_item_cstring (tkitm), (int) miedgsty_stytup,
-       mom_value_cstring ((const struct mom_hashedvalue_st *) tknod));
+      ("minedit_genstyle wexitm %s has bad tuple of styles@#%d in wclos %s",
+       mom_item_cstring (wexitm), (int) miedgsty_stytup,
+       mom_value_cstring ((const struct mom_hashedvalue_st *) wclos));
   MOM_DEBUGPRINTF (web, "miniedit_genstyle wexch #%ld tupsty=%s",
                    wexch->webx_count, mom_value_cstring ((void *) tupsty));
   mom_output_gplv3_notice (wexch->webx_outfil, "/*", "*/",
@@ -190,7 +173,7 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
         continue;
       MOM_WEXCH_PRINTF (wexch, "\n/* style #%d: %s */\n", ix,
                         mom_item_cstring (curstyitm));
-      mom_mini_genstyle (tkitm, wexitm, wexch, curstyitm);
+      mom_mini_genstyle (wexitm, wexch, curstyitm);
     }
   MOM_WEXCH_PRINTF (wexch, "\n/* generated %d styles */\n", nbsty);
   mom_wexch_flush (wexch);
@@ -199,12 +182,7 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
                    wexch->webx_count, ftell (wexch->webx_outfil),
                    (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/css");
-end:
-  if (sessitm)
-    mom_item_unlock (sessitm);
-  if (wexitm)
-    mom_item_unlock (wexitm);
-  mom_item_unlock (tkitm);
+end:;
 }                               /* end of momf_miniedit_genstyle */
 
 
@@ -307,7 +285,7 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
   mjst.miejs_wexitm = wexitm;
   mjst.miejs_wexch = wexch;
   mjst.miejs_magic = MOM_MINEDJS_MAGIC;
-  int errlin = setjmp (&mjst.miejs_jb);
+  int errlin = setjmp (mjst.miejs_jb);
   if (errlin > 0)
     {
       MOM_WARNPRINTF_AT (mjst.miejs_errfile ? : "??", errlin,

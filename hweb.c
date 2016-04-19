@@ -882,10 +882,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
       }
     else if (wsigitm == MOM_PREDEFITM (signature_webhandler))
       {
+        struct mom_item_st *sessitm = wexch->webx_sessitm;
         MOM_DEBUGPRINTF (web,
-                         "webrequest#%ld fupath %s wexitm %s, webhandler wexclos %s",
+                         "webrequest#%ld fupath %s wexitm %s, sessitm %s webhandler wexclos %s",
                          reqcnt, reqfupath, mom_item_cstring (wexitm),
+                         mom_item_cstring (sessitm),
                          mom_value_cstring ((void *) wexclos));
+        assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
+        mom_item_lock (sessitm);
         assert (wconfun != NULL);
         mom_webhandler_sig_t *whfun = wconfun;
         (*whfun) (wexitm, wexch, wexclos);
@@ -893,6 +897,7 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         MOM_DEBUGPRINTF (web,
                          "webrequest#%ld fupath %s wexitm %s loaded hcod=%d",
                          reqcnt, reqfupath, mom_item_cstring (wexitm), hcod);
+        mom_item_unlock (sessitm);
         if (hcod <= 0)
           {
             MOM_WARNPRINTF ("webrequest#%ld full path %s %s wexitm %s"
