@@ -383,6 +383,11 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
 
 
 
+MOM_PRIVATE void
+run_tasklet_for_web_mom (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wexclos);
+
 ////////////////////////////////////////////////////////////////
 struct mom_item_st *
 make_session_item_mom (onion_response *resp)
@@ -513,7 +518,8 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     {
       mom_item_lock (MOM_PREDEFITM (web_handlers));
       MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d", reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload, mom_itype_str (MOM_PREDEFITM (web_handlers)  //
-                                                                                                                                                                  ->itm_payload),
+                                                                                                                                                                  ->
+                                                                                                                                                                  itm_payload),
                        nbelem);
       if (nbelem == 1)
         {
@@ -846,142 +852,35 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                      mom_value_cstring ((struct mom_hashedvalue_st *)
                                         wexclos), mom_item_cstring (wexitm));
     assert (wexclos->va_itype == MOMITY_NODE);
+    struct mom_item_st *wconitm = wexclos->nod_connitm;
+    struct mom_item_st *wsigitm = NULL;
+    void *wconfun = NULL;
     {
-      struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
-      unsigned wexarity = mom_raw_size (wexclos);
-      struct mom_hashedvalue_st *smallarr[16] = { 0 };
-      const struct mom_hashedvalue_st **arr =   //
-        ((wexarity + 1) < (sizeof (smallarr) / sizeof (smallarr[0])))   //
-        ? smallarr              //
-        : mom_gc_alloc ((wexarity + 2) * sizeof (void *));
-      arr[0] = (struct mom_hashedvalue_st *) wexitm;
-      for (unsigned ix = 0; ix < wexarity; ix++)
-        arr[ix + 1] = wexclos->nod_sons[ix];
-      const struct mom_boxnode_st *taskclos =
-        mom_boxnode_make (wexclos->nod_connitm, wexarity + 1, arr);
-      taskitm->itm_payload = (struct mom_anyvalue_st *) taskclos;
-      MOM_DEBUGPRINTF (web, "webrequest#%ld taskitm=%s taskclos=%s",
-                       reqcnt, mom_item_cstring (taskitm),
-                       mom_value_cstring ((struct mom_hashedvalue_st *)
-                                          taskclos));
-      mom_agenda_add_tasklet_front (taskitm);
+      mom_item_lock (wconitm);
+      wsigitm = wconitm->itm_funsig;
+      if (wsigitm)
+        wconfun = wconitm->itm_funptr;
+      if (!wconfun)
+        wsigitm = NULL;
+      mom_item_unlock (wconitm);
     }
+    MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wconitm %s wsigitm %s",
+                     reqcnt, reqfupath, mom_item_cstring (wconitm),
+                     mom_item_cstring (wsigitm));
+    if (wsigitm == MOM_PREDEFITM (signature_tasklet))
+      {
+        MOM_DEBUGPRINTF (web,
+                         "webrequest#%ld fupath %s wexitm %s, tasklet wexclos %s",
+                         reqcnt, reqfupath, mom_item_cstring (wexitm),
+                         mom_value_cstring ((void *) wexclos));
+        run_tasklet_for_web_mom (wexitm, wexch, wexclos);
+        MOM_DEBUGPRINTF (web,
+                         "webrequest#%ld fupath %s wexitm %s, done tasklet wexclos %s",
+                         reqcnt, reqfupath, mom_item_cstring (wexitm),
+                         mom_value_cstring ((void *) wexclos));
+        return OCS_PROCESSED;
+      }
   }
-  double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
-  MOM_DEBUGPRINTF (web,
-                   "webrequest#%ld elapstim=%.1f wexitm=%s replytimeout %.2f sec",
-                   reqcnt, elapstim, mom_item_cstring (wexitm),
-                   REPLY_TIMEOUT_MOM);
-  bool waitreply = false;
-  long nbloop = 0;
-  do
-    {
-      nbloop++;
-      assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld wexitm %s reqfupath %s start loop#%ld",
-                       reqcnt, mom_item_cstring (wexitm), reqfupath, nbloop);
-      mom_item_lock (wexitm);
-      double nowtim = mom_clock_time (CLOCK_REALTIME);
-      double remaintim = elapstim - nowtim;
-      struct mom_webexch_st *wexch = NULL;
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec loop#%ld",
-                       reqcnt, mom_item_cstring (wexitm), reqfupath,
-                       remaintim, nbloop);
-      double waitim = (remaintim > 0.05) ? (remaintim * 0.25 + 0.01) : 0.02;
-#define WEB_WAITIMAX_MOM 1.5
-      if (waitim > WEB_WAITIMAX_MOM)
-        waitim = WEB_WAITIMAX_MOM;
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld waitim %.2f sec loop#%ld",
-                       reqcnt, waitim, nbloop);
-      struct timespec ts = mom_timespec (nowtim + waitim);
-      if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
-          && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
-        wexch = (struct mom_webexch_st *) wexitm->itm_payload;
-      if (!wexch || wexch->webx_count != reqcnt)
-        MOM_FATAPRINTF ("webrequest#%ld bad wexitm %s for reqfupath %s",
-                        reqcnt, mom_item_cstring (wexitm), reqfupath);
-      assert (wexch->webx_resp == resp);
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld wexitm %s before waiting about %.2f sec for reqfupath %s...",
-                       reqcnt, mom_item_cstring (wexitm), waitim, reqfupath);
-      int waiterr =
-        pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld afterwait %.2fs reqfupath %s code %d mimetype %s waiterr#%d (%s)",
-                       reqcnt, waitim, reqfupath,
-                       atomic_load (&wexch->webx_code),
-                       wexch->webx_mimetype, waiterr, strerror (waiterr));
-      int hcod = atomic_load (&wexch->webx_code);
-      MOM_DEBUGPRINTF (web, "webrequest#%ld hcod %d reqfupath %s", reqcnt,
-                       hcod, reqfupath);
-      if (hcod > 0)
-        {
-          waitreply = false;
-          wexch->webx_resp = NULL;
-          wexch->webx_requ = NULL;
-        }
-      else if (waiterr == ETIMEDOUT
-               && mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
-        {
-          atomic_store (&wexch->webx_code, -1);
-          MOM_DEBUGPRINTF (web, "webrequest#%ld timedout", reqcnt);
-          MOM_WARNPRINTF ("webrequest#%ld timeout %s fullpath %s", reqcnt,
-                          mom_webmethod_name (wmeth), reqfupath);
-          onion_response_set_code (resp, HTTP_INTERNAL_ERROR);
-          onion_response_set_header (resp, "Content-Type",
-                                     "text/html; charset=UTF-8");
-          char timbuf[80];
-          memset (timbuf, 0, sizeof (timbuf));
-          mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
-                                  "%Y %b %d, %H:%M:%S.__ %Z");
-          char *htmlbuf = NULL;
-          size_t htmlsiz = 0;
-          FILE *htmlout = open_memstream (&htmlbuf, &htmlsiz);
-          if (!htmlout)
-            MOM_FATAPRINTF
-              ("failed to open_memstream for webrequest#%ld timeout %s fullpath %s (%m)",
-               reqcnt, mom_webmethod_name (wmeth), reqfupath);
-          fprintf (htmlout,
-                   "<!doctype html>\n"
-                   "<html><head><title>MONIMELT timedout</title></head>\n"
-                   "<body><h1>MONIMELT request #%ld timedout</h1>\n"
-                   "%s request to <tt>%s</tt> timed out with wexitm %s on %s"
-                   "<hr/><small>monimelt <i>%s</i> gitcommit <tt>%s<tt></small>"
-                   "</body></html>\n\n",
-                   reqcnt, mom_webmethod_name (wmeth),
-                   reqfupath,
-                   mom_item_cstring (wexitm), timbuf,
-                   monimelt_timestamp, monimelt_lastgitcommit);
-          fflush (htmlout);
-          long htmloff = ftell (htmlout);
-          onion_response_set_length (resp, htmloff);
-          onion_response_write (resp, htmlbuf, htmloff);
-          fclose (htmlout), htmlout = NULL;
-          free (htmlbuf), htmlbuf = NULL;
-          onion_response_flush (resp);
-          wexch->webx_requ = NULL;
-          wexch->webx_resp = NULL;
-          waitreply = false;
-        }
-      else
-        {
-          usleep (5 * 1000);
-          waitreply = true;
-          MOM_DEBUGPRINTF (web, "webrequest#%ld waiting again", reqcnt);
-        }
-      MOM_DEBUGPRINTF (web,
-                       "webrequest#%ld reqfupath %s wexitm %s waitreply %s endbody loop#%ld",
-                       reqcnt, reqfupath, mom_item_cstring (wexitm),
-                       waitreply ? "true" : "false", nbloop);
-      mom_item_unlock (wexitm);
-      usleep (2000);
-    }
-  while (waitreply);
-  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end did %ld loops\n",
-                   reqcnt, reqfupath, nbloop);
   return OCS_PROCESSED;
 }                               /* end of handle_web_mom */
 
@@ -1049,32 +948,211 @@ mom_websession_payload_cleanup (struct mom_item_st *itm,        //
 
 
 
+
+void
+run_tasklet_for_web_mom (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wexclos)
+{
+  assert (wexitm && wexitm->va_itype == MOMITY_ITEM
+          && wexitm->itm_payload == (void *) wexch);
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH
+          && wexch->webx_requ != NULL);
+  onion_request *requ = wexch->webx_requ;
+  const char *reqfupath = onion_request_get_fullpath (requ);
+  struct mom_item_st *taskitm = mom_clone_item (wexclos->nod_connitm);
+  unsigned wexarity = mom_raw_size (wexclos);
+  long reqcnt = wexch->webx_count;
+  onion_response *resp = wexch->webx_resp;
+  enum mom_webmethod_en wmeth = wexch->webx_meth;
+  struct mom_hashedvalue_st *smallarr[16] = { 0 };
+  const struct mom_hashedvalue_st **arr =       //
+    ((wexarity + 1) < (sizeof (smallarr) / sizeof (smallarr[0])))       //
+    ? smallarr                  //
+    : mom_gc_alloc ((wexarity + 2) * sizeof (void *));
+  arr[0] = (struct mom_hashedvalue_st *) wexitm;
+  for (unsigned ix = 0; ix < wexarity; ix++)
+    arr[ix + 1] = wexclos->nod_sons[ix];
+  const struct mom_boxnode_st *taskclos =
+    mom_boxnode_make (wexclos->nod_connitm, wexarity + 1, arr);
+  taskitm->itm_payload = (struct mom_anyvalue_st *) taskclos;
+  MOM_DEBUGPRINTF (web,
+                   "run_tasklet_for_web webrequest#%ld taskitm=%s taskclos=%s",
+                   reqcnt, mom_item_cstring (taskitm),
+                   mom_value_cstring ((struct mom_hashedvalue_st *)
+                                      taskclos));
+  mom_agenda_add_tasklet_front (taskitm);
+  double elapstim = mom_clock_time (CLOCK_REALTIME) + REPLY_TIMEOUT_MOM;
+  MOM_DEBUGPRINTF (web,
+                   "run_tasklet_for_web webrequest#%ld elapstim=%.1f wexitm=%s replytimeout %.2f sec",
+                   reqcnt, elapstim, mom_item_cstring (wexitm),
+                   REPLY_TIMEOUT_MOM);
+  bool waitreply = false;
+  long nbloop = 0;
+  do
+    {
+      nbloop++;
+      assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld wexitm %s reqfupath %s start loop#%ld",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath, nbloop);
+      mom_item_lock (wexitm);
+      double nowtim = mom_clock_time (CLOCK_REALTIME);
+      double remaintim = elapstim - nowtim;
+      struct mom_webexch_st *wexch = NULL;
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld wexitm %s loop reqfupath %s remaintim %.3f sec loop#%ld",
+                       reqcnt, mom_item_cstring (wexitm), reqfupath,
+                       remaintim, nbloop);
+      double waitim = (remaintim > 0.05) ? (remaintim * 0.25 + 0.01) : 0.02;
+#define WEB_WAITIMAX_MOM 1.5
+      if (waitim > WEB_WAITIMAX_MOM)
+        waitim = WEB_WAITIMAX_MOM;
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld waitim %.2f sec loop#%ld",
+                       reqcnt, waitim, nbloop);
+      struct timespec ts = mom_timespec (nowtim + waitim);
+      if (wexitm->itm_payload && wexitm->itm_payload != MOM_EMPTY_SLOT
+          && wexitm->itm_payload->va_itype == MOMITY_WEBEXCH)
+        wexch = (struct mom_webexch_st *) wexitm->itm_payload;
+      if (!wexch || wexch->webx_count != reqcnt)
+        MOM_FATAPRINTF
+          ("run_tasklet_for_web webrequest#%ld bad wexitm %s for reqfupath %s",
+           reqcnt, mom_item_cstring (wexitm), reqfupath);
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld wexitm %s before waiting about %.2f sec for reqfupath %s...",
+                       reqcnt, mom_item_cstring (wexitm), waitim, reqfupath);
+      int waiterr =
+        pthread_cond_timedwait (&wexch->webx_donecond, &wexitm->itm_mtx, &ts);
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld afterwait %.2fs reqfupath %s code %d mimetype %s waiterr#%d (%s)",
+                       reqcnt, waitim, reqfupath,
+                       atomic_load (&wexch->webx_code),
+                       wexch->webx_mimetype, waiterr, strerror (waiterr));
+      int hcod = atomic_load (&wexch->webx_code);
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld hcod %d reqfupath %s",
+                       reqcnt, hcod, reqfupath);
+      if (hcod > 0)
+        {
+          waitreply = false;
+          wexch->webx_resp = NULL;
+          wexch->webx_requ = NULL;
+        }
+      else if (waiterr == ETIMEDOUT
+               && mom_clock_time (CLOCK_REALTIME) >= elapstim + 0.01)
+        {
+          atomic_store (&wexch->webx_code, -1);
+          MOM_DEBUGPRINTF (web, "run_tasklet_for_web webrequest#%ld timedout",
+                           reqcnt);
+          MOM_WARNPRINTF
+            ("run_tasklet_for_web webrequest#%ld timeout %s fullpath %s",
+             reqcnt, mom_webmethod_name (wmeth), reqfupath);
+          onion_response_set_code (resp, HTTP_INTERNAL_ERROR);
+          onion_response_set_header (resp, "Content-Type",
+                                     "text/html; charset=UTF-8");
+          char timbuf[80];
+          memset (timbuf, 0, sizeof (timbuf));
+          mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
+                                  "%Y %b %d, %H:%M:%S.__ %Z");
+          char *htmlbuf = NULL;
+          size_t htmlsiz = 0;
+          FILE *htmlout = open_memstream (&htmlbuf, &htmlsiz);
+          if (!htmlout)
+            MOM_FATAPRINTF
+              ("run_tasklet_for_web failed to open_memstream for webrequest#%ld timeout %s fullpath %s (%m)",
+               reqcnt, mom_webmethod_name (wmeth), reqfupath);
+          fprintf (htmlout,
+                   "<!doctype html>\n"
+                   "<html><head><title>MONIMELT timedout</title></head>\n"
+                   "<body><h1>MONIMELT request #%ld timedout</h1>\n"
+                   "%s request to <tt>%s</tt> timed out with wexitm %s on %s"
+                   "<hr/><small>monimelt <i>%s</i> gitcommit <tt>%s<tt></small>"
+                   "</body></html>\n\n",
+                   reqcnt, mom_webmethod_name (wmeth),
+                   reqfupath,
+                   mom_item_cstring (wexitm), timbuf,
+                   monimelt_timestamp, monimelt_lastgitcommit);
+          fflush (htmlout);
+          long htmloff = ftell (htmlout);
+          onion_response_set_length (resp, htmloff);
+          onion_response_write (resp, htmlbuf, htmloff);
+          fclose (htmlout), htmlout = NULL;
+          free (htmlbuf), htmlbuf = NULL;
+          onion_response_flush (resp);
+          wexch->webx_requ = NULL;
+          wexch->webx_resp = NULL;
+          waitreply = false;
+          MOM_DEBUGPRINTF (web,
+                           "run_tasklet_for_web webrequest#%ld wexitm %s done timedout",
+                           reqcnt, mom_item_cstring (wexitm));
+        }
+      else
+        {
+          usleep (5 * 1000);
+          waitreply = true;
+          MOM_DEBUGPRINTF (web,
+                           "run_tasklet_for_web webrequest#%ld waiting again",
+                           reqcnt);
+        }
+      MOM_DEBUGPRINTF (web,
+                       "run_tasklet_for_web webrequest#%ld reqfupath %s wexitm %s waitreply %s endbody loop#%ld",
+                       reqcnt, reqfupath, mom_item_cstring (wexitm),
+                       waitreply ? "true" : "false", nbloop);
+      mom_item_unlock (wexitm);
+      usleep (2000);
+    }
+  while (waitreply);
+  MOM_DEBUGPRINTF (web, "webrequest#%ld reqfupath %s end did %ld loops\n",
+                   reqcnt, reqfupath, nbloop);
+
+}                               /* end of run_tasklet_for_web_mom */
+
 ////////////////
 // the wexitm should have been locked when calling this
 void
-mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
-                 const char *mimetype)
+mom_unsync_wexch_reply (struct mom_item_st *wexitm,
+                        struct mom_webexch_st *wex, int httpcode,
+                        const char *mimetype)
 {
   if (!wex || wex == MOM_EMPTY_SLOT || wex->va_itype != MOMITY_WEBEXCH)
     {
-      MOM_WARNPRINTF ("wexch_reply bad wex@%p", wex);
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply bad wex@%p", wex);
+      return;
+    }
+  if (!wexitm || wexitm == MOM_EMPTY_SLOT || wexitm->va_itype != MOMITY_ITEM)
+    {
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld bad wexitm@%p",
+                      wex->webx_count, wexitm);
+      return;
+    }
+  MOM_DEBUGPRINTF (web,
+                   "mom_unsync_wexch_reply start wexitm %s request#%ld httpcode=%d mimetype=%s",
+                   mom_item_cstring (wexitm), wex->webx_count, httpcode,
+                   mimetype);
+
+  if (wexitm->itm_payload != (void *) wex)
+    {
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld wrong wexitm@%p",
+                      wex->webx_count, wexitm);
       return;
     }
   if (!mimetype || !isalpha (mimetype[0]))
     {
-      MOM_WARNPRINTF ("wexch_reply request#%ld bad mimetype %s",
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld bad mimetype %s",
                       wex->webx_count, mimetype);
       return;
     }
   if (!wex->webx_outfil)
     {
-      MOM_WARNPRINTF ("wexch_reply request#%ld no output file",
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld no output file",
                       wex->webx_count);
       return;
     }
   if (!wex->webx_resp)
     {
-      MOM_WARNPRINTF ("wexch_reply request#%ld no response", wex->webx_count);
+      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld no response",
+                      wex->webx_count);
       return;
     }
   onion_request *requ = wex->webx_requ;
@@ -1083,13 +1161,13 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
   assert (requ != NULL);
   fflush (wex->webx_outfil);
   MOM_DEBUGPRINTF (web,
-                   "wexch_reply req#%ld starting fullpath %s httpcode=%d",
-                   wex->webx_count,
+                   "mom_unsync_wexch_reply req#%ld wexitm %s fullpath %s httpcode=%d",
+                   wex->webx_count, mom_item_cstring (wexitm),
                    requ ? onion_request_get_fullpath (requ) : "??", httpcode);
   int oldhcod = atomic_exchange (&wex->webx_code, httpcode);
   MOM_DEBUGPRINTF (web,
-                   "wexch_reply req#%ld oldhcod=%d", wex->webx_count,
-                   oldhcod);
+                   "mom_unsync_wexch_reply req#%ld oldhcod=%d",
+                   wex->webx_count, oldhcod);
   if (MOM_UNLIKELY (oldhcod != 0))
     {
       MOM_WARNPRINTF
@@ -1099,16 +1177,17 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
       return;
     }
   if (MOM_UNLIKELY (!requ || !resp))
-    MOM_FATAPRINTF ("web request#%ld is corrupted", wex->webx_count);
+    MOM_FATAPRINTF ("mom_unsync_wexch_reply web request#%ld is corrupted",
+                    wex->webx_count);
   MOM_DEBUGPRINTF (web,
-                   "wexch_reply req#%ld fullpath %s httpcode=%d mimetype=%s",
-                   wex->webx_count,
-                   onion_request_get_fullpath (requ), httpcode, mimetype);
+                   "mom_unsync_wexch_reply req#%ld fullpath %s httpcode=%d mimetype=%s",
+                   wex->webx_count, onion_request_get_fullpath (requ),
+                   httpcode, mimetype);
   strncpy (wex->webx_mimetype, mimetype, sizeof (wex->webx_mimetype) - 1);
   assert (wex->webx_outfil);
   fflush (wex->webx_outfil);
   MOM_DEBUGPRINTF (web,
-                   "wexch_reply webrequest#%ld got code %d mimetype %s reqfupath %s",
+                   "mom_unsync_wexch_reply webrequest#%ld got code %d mimetype %s reqfupath %s",
                    wex->webx_count, httpcode, wex->webx_mimetype,
                    onion_request_get_fullpath (requ));
   onion_response_set_code (resp, httpcode);
@@ -1131,12 +1210,12 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
     snprintf (servbuf, sizeof (servbuf), "Monimelt/%.12s %s",
               monimelt_lastgitcommit, monimelt_timestamp);
     onion_response_set_header (resp, "Server", servbuf);
-    MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld servbuf %s",
+    MOM_DEBUGPRINTF (web, "mom_unsync_wexch_reply webrequest#%ld servbuf %s",
                      wex->webx_count, servbuf);
   }
   long off = ftell (wex->webx_outfil);
-  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld off %ld", wex->webx_count,
-                   off);
+  MOM_DEBUGPRINTF (web, "mom_unsync_wexch_reply webrequest#%ld off %ld",
+                   wex->webx_count, off);
   if (MOM_IS_DEBUGGING (web)
       &&
       ((!strncmp (wex->webx_mimetype, "text/", 5)
@@ -1144,18 +1223,20 @@ mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
         || strstr (wex->webx_mimetype, "javascript")
         || strstr (wex->webx_mimetype, "xml"))))
     MOM_DEBUGPRINTF (web,
-                     "wexch_reply webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
+                     "mom_unsync_wexch_reply webrequest#%ld textual outbuf:\n%s\n#### %ld bytes for webrequest#%ld\n",
                      wex->webx_count, wex->webx_outbuf, off, wex->webx_count);
   onion_response_set_length (resp, off);
   onion_response_write (resp, wex->webx_outbuf, off);
   onion_response_flush (resp);
-  MOM_DEBUGPRINTF (web, "wexch_reply webrequest#%ld responded fupath %s",
+  MOM_DEBUGPRINTF (web,
+                   "mom_unsync_wexch_reply webrequest#%ld responded fupath %s",
                    wex->webx_count, onion_request_get_fullpath (requ));
   pthread_cond_broadcast (&wex->webx_donecond);
-  MOM_DEBUGPRINTF (web, "wexch_reply mom_wexch_reply req#%ld done fupath %s",
+  MOM_DEBUGPRINTF (web,
+                   "mom_unsync_wexch_reply mom_wexch_reply req#%ld done fupath %s",
                    wex->webx_count, onion_request_get_fullpath (requ));
   usleep (1000);
-}                               /* end mom_wexch_reply */
+}                               /* end mom_unsync_wexch_reply */
 
 
 void

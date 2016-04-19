@@ -198,7 +198,7 @@ momf_miniedit_genstyle (struct mom_item_st *tkitm)
                    "miniedit_genstyle  wexch #%ld outputting %ld bytes:\n%.*s\n",
                    wexch->webx_count, ftell (wexch->webx_outfil),
                    (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
-  mom_wexch_reply (wexch, HTTP_OK, "text/css");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/css");
 end:
   if (sessitm)
     mom_item_unlock (sessitm);
@@ -330,7 +330,8 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
         };
       MOM_WEXCH_PRINTF (wexch, "//failure from %s:%d\n",
                         mjst.miejs_errfile ? : "??", errlin);
-      mom_wexch_reply (wexch, HTTP_INTERNAL_ERROR, "application/javascript");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_INTERNAL_ERROR,
+                              "application/javascript");
       goto end;
     };
   assert (errlin == 0);
@@ -354,7 +355,7 @@ momf_miniedit_genscript (struct mom_item_st *tkitm)
                    "miniedit_genscript wexch #%ld outputting %ld bytes:\n%.*s\n",
                    wexch->webx_count, ftell (wexch->webx_outfil),
                    (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
-  mom_wexch_reply (wexch, HTTP_OK, "application/javascript");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/javascript");
   MOM_DEBUGPRINTF (run,
                    "miniedit_genscript replied wexitm %s",
                    mom_item_cstring (wexitm));

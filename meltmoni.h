@@ -2029,10 +2029,11 @@ mom_wexch_flush (struct mom_webexch_st *wex)
 }
 
 
-// mom_wexch_reply should be used with the owning webexchange item locked
+// mom_wexch_reply should be used with the owning wexitm locked
 void
-mom_wexch_reply (struct mom_webexch_st *wex, int httpcode,
-                 const char *mimetype);
+mom_unsync_wexch_reply (struct mom_item_st *wexitm,
+                        struct mom_webexch_st *wex, int httpcode,
+                        const char *mimetype);
 
 
 void mom_webexch_payload_cleanup (struct mom_item_st *itm,

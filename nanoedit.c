@@ -919,7 +919,7 @@ dofillpage_nanoedit_mom (struct mom_webexch_st
           mom_wexch_puts (wexch, "</div>\n");
         }
     }
-  mom_wexch_reply (wexch, HTTP_OK, "text/html");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
   MOM_DEBUGPRINTF (web, "dofillpage_nanoedit done webr#%ld tkitm=%s",
                    wexch->webx_count, mom_item_cstring (tkitm));
 }                               /* end of dofillpage_nanoedit_mom */
@@ -958,7 +958,7 @@ doknownitem_nanoedit_mom (struct mom_webexch_st *wexch,
       known = itm != NULL;
     };
   mom_wexch_puts (wexch, known ? "true\n" : "false\n");
-  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
   MOM_DEBUGPRINTF (web,
                    "doknowitem_nanoedit done webr#%ld tkitm=%s name %s known %s",
                    wexch->webx_count, mom_item_cstring (tkitm), name,
@@ -1009,7 +1009,7 @@ docompletename_nanoedit_mom (struct mom_webexch_st
     {
       mom_wexch_puts (wexch, "null\n");
     }
-  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
   MOM_DEBUGPRINTF (web, "docompletename_nanoedit webr#%ld done",
                    wexch->webx_count);
 }                               /* end of docompletename_nanoedit_mom */
@@ -1036,7 +1036,7 @@ doexit_nanoedit_mom (struct mom_webexch_st *wexch,
   MOM_DEBUGPRINTF (web, "doexit_nanoedit jreply=%s",
                    json_dumps (jreply, JSON_INDENT (1)));
   mom_wexch_puts (wexch, json_dumps (jreply, JSON_INDENT (1)));
-  mom_wexch_reply (wexch, HTTP_OK, "application/json");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
   mom_stop_and_dump ();
 }                               /* end of doexit_nanoedit_mom */
 
@@ -1078,7 +1078,7 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
       MOM_WEXCH_PRINTF (wexch,
                         "<b>failed to create item <tt>%s</tt></b>\n",
                         itemnamestr);
-      mom_wexch_reply (wexch, HTTP_FORBIDDEN, "text/html");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_FORBIDDEN, "text/html");
       return;
     }
   else
@@ -1103,7 +1103,7 @@ docreateitem_nanoedit_mom (struct mom_webexch_st
       MOM_WEXCH_PRINTF (wexch,
                         "<b>created item <tt>%s</tt></b> on <i>%s</i>\n",
                         mom_item_cstring (newitm), timbuf);
-      mom_wexch_reply (wexch, HTTP_OK, "text/html");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
       return;
     }
 }                               /* end of docreateitem_nanoedit_mom */
@@ -1131,7 +1131,7 @@ dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
       MOM_WEXCH_PRINTF (wexch,
                         "<b>missing</b> item <tt>%s</tt> to hide\n",
                         dohideitem);
-      mom_wexch_reply (wexch, HTTP_OK, "text/html");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
       return;
     }
   const struct mom_hashedvalue_st *dispitemv =
@@ -1156,7 +1156,7 @@ dohideitem_nanoedit_mom (struct mom_webexch_st *wexch,
   mom_file_puts (fb, "<i>still shown:</i> ");
   showvalue_nanoedit_mom (fb, wexitm, thistatitm, newdispset, 0);
   mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
-  mom_wexch_reply (wexch, HTTP_OK, "text/html");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
 }                               /* end dohideitem_nanoedit_mom */
 
 
@@ -1182,7 +1182,7 @@ dodispitem_nanoedit_mom (struct mom_webexch_st *wexch,
          mom_item_cstring (tkitm), dodispitem);
       MOM_WEXCH_PRINTF (wexch, "<b>missing</b> item <tt>%s</tt> to display\n",
                         dodispitem);
-      mom_wexch_reply (wexch, HTTP_OK, "text/html");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
       return;
     }
   const struct mom_hashedvalue_st *dispitemv =
@@ -1207,7 +1207,7 @@ dodispitem_nanoedit_mom (struct mom_webexch_st *wexch,
   mom_file_puts (fb, "<i>now shown:</i> ");
   showvalue_nanoedit_mom (fb, wexitm, thistatitm, newdispset, 0);
   mom_puts_filebuffer (wexch->webx_outfil, fb, MOM_FILEBUFFER_CLOSE);
-  mom_wexch_reply (wexch, HTTP_OK, "text/html");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/html");
 }                               /* end of dodispitem_nanoedit_mom */
 
 
@@ -1277,7 +1277,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "\",\n");
       MOM_WEXCH_PRINTF (wexch, " \"resultcount\": %ld }\n", nev.nanev_count);
       GC_FREE ((void *) reshtml), reshtml = NULL;
-      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
       return;
     }
   else
@@ -1309,7 +1309,7 @@ doeval_nanoedit_mom (struct mom_webexch_st *wexch,
       mom_wexch_puts (wexch, "\",\n");
       MOM_WEXCH_PRINTF (wexch, " \"resultcount\": %ld }\n", nev.nanev_count);
       GC_FREE ((void *) reshtml), reshtml = NULL;
-      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
     };
 }                               /* end of doeval_nanoedit_mom */
 
@@ -2979,7 +2979,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
         MOM_WEXCH_PRINTF (wexch, " \"bad_name\": \"%s\",\n",
                           mom_boxstring_cstr (badnamstr));
       MOM_WEXCH_PRINTF (wexch, " \"error_from\": %d }\n", linerr);
-      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
       goto end;
     }                           /* end error processing after longjmp */
   else                          /* no error, i.e. first time... */
@@ -3025,7 +3025,7 @@ doparsecommand_nanoedit_mom (struct mom_webexch_st
       MOM_WEXCH_PRINTF (wexch,
                         " \"expr_inside\": \"%s\" }\n",
                         mom_item_cstring (thistatitm));
-      mom_wexch_reply (wexch, HTTP_OK, "application/json");
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
       goto end;
     }
 end:
