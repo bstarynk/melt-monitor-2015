@@ -17,3 +17,14 @@
       along with GCC; see the file COPYING3.   If not see
       <http://www.gnu.org/licenses/>.
 **/
+
+var $webhost = window.location.host;
+var $websocket;
+
+console.log ("miniedit.js $webhost=", $webhost);
+
+$(document).ready(function(){
+    console.log ("miniedit document read start");
+    $websocket = new WebSocket('ws://' + $webhost + "/miniedit_websocket");
+    console.log ("miniedit $websocket=", $websocket);
+}

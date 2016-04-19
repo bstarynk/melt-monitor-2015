@@ -907,6 +907,14 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
                             mom_value_cstring ((void *) wexclos), hcod);
             return OCS_NOT_PROCESSED;
           }
+        else if (hcod == MOM_HTTPCODE_WEBSOCKET)
+          {
+            MOM_DEBUGPRINTF (web,
+                             "webrequest#%ld fupath %s wexitm %s, websocketting wexclos %s",
+                             reqcnt, reqfupath, mom_item_cstring (wexitm),
+                             mom_value_cstring ((void *) wexclos));
+            return OCS_WEBSOCKET;
+          }
         MOM_DEBUGPRINTF (web,
                          "webrequest#%ld fupath %s wexitm %s, done webhandler wexclos %s",
                          reqcnt, reqfupath, mom_item_cstring (wexitm),
@@ -1232,7 +1240,15 @@ mom_unsync_wexch_reply (struct mom_item_st *wexitm,
                    "mom_unsync_wexch_reply webrequest#%ld got code %d mimetype %s reqfupath %s",
                    wex->webx_count, httpcode, wex->webx_mimetype,
                    onion_request_get_fullpath (requ));
-  onion_response_set_code (resp, httpcode);
+  if (httpcode == MOM_HTTPCODE_WEBSOCKET)
+    {
+      MOM_DEBUGPRINTF (web,
+                       "mom_unsync_wexch_reply webrequest#%ld websocketting  reqfupath %s",
+                       wex->webx_count, onion_request_get_fullpath (requ));
+      return;
+    }
+  else
+    onion_response_set_code (resp, httpcode);
   if ((!strncmp (wex->webx_mimetype, "text/", 5)
        || strstr (wex->webx_mimetype, "json") != NULL
        || strstr (wex->webx_mimetype, "xml") != NULL

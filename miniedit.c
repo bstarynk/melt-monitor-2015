@@ -326,3 +326,33 @@ momf_miniedit_genscript (struct mom_item_st *wexitm,
                    mom_item_cstring (wexitm));
 end:;
 }                               /* end of momf_miniedit_genscript */
+
+extern mom_webhandler_sig_t momf_miniedit_websocket;
+const char momsig_miniedit_websocket[] = "signature_webhandler";
+void
+momf_miniedit_websocket (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wclos)
+{
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_websocket start wexitm=%s sessitm=%s wclos=%s",
+                   mom_item_cstring (wexitm),
+                   mom_item_cstring (sessitm),
+                   mom_value_cstring ((const void *) wclos));
+  struct mom_websession_st *wses = (void *) sessitm->itm_payload;
+  if (wses->va_itype != MOMITY_WEBSESSION)
+    MOM_FATAPRINTF ("bad sessitm %s for wexitm %s",
+                    mom_item_cstring (sessitm), mom_item_cstring (wexitm));
+  if (wses->wbss_websock)
+    {
+      MOM_WARNPRINTF
+        ("miniedit_websocket  wexitm=%s sessitm=%s already have a websocket",
+         mom_item_cstring (wexitm), mom_item_cstring (sessitm));
+      return;
+    }
+  wses->wbss_websock =
+    onion_websocket_new (wexch->webx_requ, wexch->webx_resp);
+#warning - incomplete
+}                               /* end of momf_miniedit_websocket */

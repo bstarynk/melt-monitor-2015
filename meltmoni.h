@@ -2035,6 +2035,7 @@ mom_unsync_wexch_reply (struct mom_item_st *wexitm,
                         struct mom_webexch_st *wex, int httpcode,
                         const char *mimetype);
 
+#define MOM_HTTPCODE_WEBSOCKET 999
 
 void mom_webexch_payload_cleanup (struct mom_item_st *itm,
                                   struct mom_webexch_st *payl);

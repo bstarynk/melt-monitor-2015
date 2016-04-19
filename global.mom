@@ -1987,6 +1987,16 @@ comment
 )attrs
 
 
+*miniedit_websocket
+^func
+signature_webhandler
+^funsignature
+(
+comment
+"for miniedit websocket binding"_
+)attrs
+
+
 *minus_delim
 1456140230
 ^mtime
@@ -5823,6 +5833,14 @@ web_state
 web_state__0dmo5BBWK0mbtv
 nano_delimiters
 nanoedit
+)node
+miniedit_websocket
+(
+(
+)tuple
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_genstyle
 )node
 )payload_hashassoc
 
