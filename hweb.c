@@ -612,8 +612,9 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
     MOM_FATAPRINTF
       ("handle_websocket_data with bad sessitm %s, datareadylen %ld",
        mom_item_cstring (sessitm), (long) datareadylen);
-  MOM_DEBUGPRINTF (web, "handle_websocket_data sessitm %s datareadylen %ld",
-                   mom_item_cstring (sessitm), (long) datareadylen);
+  MOM_DEBUGPRINTF (web, "handle_websocket_data sessitm %s datareadylen %ld websockop #%d",
+                   mom_item_cstring (sessitm), (long) datareadylen,
+		   onion_websocket_get_opcode (wses->wbss_websock));
   if (datareadylen > 0)
     {
       if (datareadylen + wses->wbss_inoff + 1 >= wses->wbss_insiz)

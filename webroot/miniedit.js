@@ -20,6 +20,15 @@
 
 var $webhost = window.location.host;
 var $websocket;
+var $handlermapwebsock = new Object;
+
+function mom_register_websock(opnam,fun) {
+    console.debug ("mom_register_websock opnam=", opnam, " fun=", fun);
+    if (fun)
+	$handlermapwebsock[opnam] = fun;
+    else
+	delete $handlermapwebsock[opnam];
+}
 
 console.log ("miniedit.js $webhost=", $webhost);
 
@@ -34,7 +43,27 @@ $(document).ready(function(){
 	console.log ("miniedit $websocket=", $websocket,
 		     " message evt=", evt);
 	var jp = JSON.parse(evt.data);
-	console.log ("miniedit websockmessage jp=", jp);	
+	var jop = null;
+	var jfun = null;
+	console.log ("miniedit websockmessage jp=", jp);
+	if ("$momevap" in jp) {
+	    var apst = jp["$momevap"];
+	    console.log ("miniedit websockmessage apst=", apst);
+	    var evfu = eval(apst);
+	    console.log ("miniedit websockmessage evfu=", evu);
+	    if (evfu)
+		evfu(jp, evt);
+	}
+	else if ("$op" in jp && typeof(jop=jp["$op"])==="string") {
+	    console.log ("miniedit websockmessage jop=", jop);
+	    if (jop in $handlermapwebsock) {
+		jfun =  $handlermapwebsock[jop];
+		console.log ("miniedit websockmessage jfun=", jfun);
+		jfun(jp, evt);
+		console.log ("miniedit websockmessage done jfun=", jfun, " on jp=", jp);
+	    }
+	    else console.warning("miniedit websockmessage bad jop=", jop);
+	}
     };
     $websocket.onclose = function() {
 	console.log ("miniedit closed $websocket=", $websocket);
