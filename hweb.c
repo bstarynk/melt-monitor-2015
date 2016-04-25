@@ -427,6 +427,148 @@ make_session_item_mom (onion_response *resp)
 ////////////////////////////////////////////////////////////////
 
 struct mom_item_st *
+mom_retrieve_session (long reqcnt, onion_request *requ)
+{
+  struct mom_item_st *sessitm = NULL;
+  const char *sesscookie =
+    onion_request_get_cookie (requ, SESSION_COOKIE_MOM);
+  MOM_DEBUGPRINTF (web,
+                   "mom_retrieve_session start reqcnt#%ld sesscookie %s",
+                   reqcnt, sesscookie);
+  if (!sesscookie)
+    return NULL;
+  if (sesscookie)
+    {
+      MOM_DEBUGPRINTF (web, "retrieve_session #%ld sesscookie=%s", reqcnt,
+                       sesscookie);
+      unsigned r1 = 0, r2 = 0;
+      char sessname[64];
+      memset (sessname, 0, sizeof (sessname));
+      int pos = -1;
+      if (sscanf (sesscookie, " %60[A-Za-z0-9_]/%u/%u %n",
+                  sessname, &r1, &r2, &pos) >= 3 && pos > 0)
+        {
+          struct mom_item_st *sitm =
+            mom_find_item_from_string (sessname, NULL);
+          MOM_DEBUGPRINTF (web,
+                           "retrieve_session #%ld sitm %s r1=%u r2=%u",
+                           reqcnt, mom_item_cstring (sitm), r1, r2);
+          if (sitm)
+            {
+              mom_item_lock (sitm);
+              if (sitm->itm_payload
+                  && sitm->itm_payload->va_itype == MOMITY_WEBSESSION)
+                {
+                  struct mom_websession_st *wsess =
+                    (struct mom_websession_st *) sitm->itm_payload;
+                  if (wsess->wbss_rand1 == r1 && wsess->wbss_rand2 == r2)
+                    sessitm = sitm;
+                }
+              mom_item_unlock (sitm);
+            }
+        }
+    };
+  MOM_DEBUGPRINTF (web, "retrieve_session #%ld fullpath %s sessitm %s",
+                   reqcnt, onion_request_get_fullpath (requ),
+                   mom_item_cstring (sessitm));
+  return sessitm;
+}                               /* end of mom_retrieve_session */
+
+
+
+
+onion_connection_status
+mom_handle_websocket_data (void *data, onion_websocket * ws,
+                           ssize_t data_ready_len)
+{
+  struct mom_item_st *sessitm = data;
+  assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
+#warning mom_handle_websocket_data unimplemented
+  MOM_FATAPRINTF ("mom_handle_websocket_data unimplemented sessitm=%s",
+                  mom_item_cstring (sessitm));
+}                               /* end of mom_handle_websocket_data */
+
+
+
+onion_connection_status
+mom_websocket (long reqcnt, onion_request *requ, onion_response *resp)
+{
+  struct mom_websession_st *wses = NULL;
+  struct mom_item_st *sessitm = mom_retrieve_session (reqcnt, requ);
+  const char *reqfupath = onion_request_get_fullpath (requ);
+  MOM_DEBUGPRINTF (web, "mom_websocket reqcnt#%ld fupath %s sessitm %s",
+                   reqcnt, reqfupath, mom_item_cstring (sessitm));
+  if (sessitm)
+    {
+      mom_item_lock (sessitm);
+      if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+        wses = (void *) sessitm->itm_payload;
+      else
+        mom_item_unlock (sessitm);
+    };
+  if (MOM_UNLIKELY (!wses))
+    sessitm = NULL;
+  if (!sessitm)
+    {
+      MOM_WARNPRINTF ("no session for websocket request#%ld fullpath '%s'",
+                      reqcnt, reqfupath);
+      char *errbuf = NULL;
+      size_t errsiz = 0;
+      char timbuf[72];
+      memset (timbuf, 0, sizeof (timbuf));
+      mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
+                              "%Y %b %d, %H:%M:%S.__ %Z");
+      onion_response_set_code (resp, HTTP_INTERNAL_ERROR);
+      onion_response_set_header (resp, "Content-Type",
+                                 "text/html; charset=UTF-8");
+      FILE *efil = open_memstream (&errbuf, &errsiz);
+      if (MOM_UNLIKELY (!efil))
+        MOM_FATAPRINTF
+          ("failed to open error buffer stream for websocket request#%ld fullpath '%s' (%m)",
+           reqcnt, reqfupath);
+      fprintf (efil,
+               "<!doctype html>\n"
+               "<html><head><title>MELT-mon websocket error</title></head>\n"
+               "<body><h1>error: websocket without session</h1>\n"
+               "<p>request #%ld fullpath <tt>%s</tt> at <i>%s</i>.</p>\n"
+               "</body></html>\n", reqcnt, reqfupath, timbuf);
+      fflush (efil);
+      long eoff = ftell (efil);
+      onion_response_set_length (resp, eoff);
+      onion_response_write (resp, errbuf, eoff);
+      fclose (efil), efil = NULL;
+      free (errbuf), errbuf = NULL;
+      onion_response_flush (resp);
+      return OCS_PROCESSED;
+    }
+  assert (wses && wses->va_itype == MOMITY_WEBSESSION);
+  if (MOM_UNLIKELY (wses->wbss_websock != NULL))
+    {
+      MOM_WARNPRINTF
+        ("session %s has already a web socket for request#%ld fullpath '%s'",
+         mom_item_cstring (sessitm), reqcnt, reqfupath);
+      if (sessitm)
+        mom_item_unlock (sessitm);
+      return OCS_INTERNAL_ERROR;
+    }
+  wses->wbss_websock = onion_websocket_new (requ, resp);
+  if (MOM_UNLIKELY (wses->wbss_websock == NULL))
+    MOM_FATAPRINTF
+      ("failed to create websocket for websocket request#%ld fullpath '%s'",
+       reqcnt, reqfupath);
+  MOM_DEBUGPRINTF (web,
+                   "mom_websocket reqcnt#%ld fupath %s sessitm %s websock@%p done",
+                   reqcnt, reqfupath, mom_item_cstring (sessitm),
+                   wses->wbss_websock);
+  onion_websocket_set_userdata (wses->wbss_websock, sessitm, NULL);
+  onion_websocket_set_callback (wses->wbss_websock,
+                                mom_handle_websocket_data);
+  if (sessitm)
+    mom_item_unlock (sessitm);
+  return OCS_WEBSOCKET;
+}                               /* end of mom_websocket */
+
+struct mom_item_st *
 mom_web_handler_exchange (long reqcnt, const char *fullpath,
                           enum mom_webmethod_en wmeth,
                           onion_request *requ, onion_response *resp)
@@ -518,8 +660,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     {
       mom_item_lock (MOM_PREDEFITM (web_handlers));
       MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d", reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload, mom_itype_str (MOM_PREDEFITM (web_handlers)  //
-                                                                                                                                                                  ->
-                                                                                                                                                                  itm_payload),
+                                                                                                                                                                  ->itm_payload),
                        nbelem);
       if (nbelem == 1)
         {
@@ -585,44 +726,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
     }
   struct mom_item_st *wexitm = mom_clone_item (hdlrnod->nod_connitm);
   assert (wexitm != NULL);
-  struct mom_item_st *sessitm = NULL;
-  const char *sesscookie =
-    onion_request_get_cookie (requ, SESSION_COOKIE_MOM);
-  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld wexitm %s sesscookie %s",
-                   reqcnt, mom_item_cstring (wexitm), sesscookie);
-  if (sesscookie)
-    {
-      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld sesscookie=%s", reqcnt,
-                       sesscookie);
-      unsigned r1 = 0, r2 = 0;
-      char sessname[64];
-      memset (sessname, 0, sizeof (sessname));
-      int pos = -1;
-      if (sscanf (sesscookie, " %60[A-Za-z0-9_]/%u/%u %n",
-                  sessname, &r1, &r2, &pos) >= 3 && pos > 0)
-        {
-          struct mom_item_st *sitm =
-            mom_find_item_from_string (sessname, NULL);
-          MOM_DEBUGPRINTF (web,
-                           "web_handler_exchange #%ld sitm %s r1=%u r2=%u",
-                           reqcnt, mom_item_cstring (sitm), r1, r2);
-          if (sitm)
-            {
-              mom_item_lock (sitm);
-              if (sitm->itm_payload
-                  && sitm->itm_payload->va_itype == MOMITY_WEBSESSION)
-                {
-                  struct mom_websession_st *wsess =
-                    (struct mom_websession_st *) sitm->itm_payload;
-                  if (wsess->wbss_rand1 == r1 && wsess->wbss_rand2 == r2)
-                    sessitm = sitm;
-                }
-              mom_item_unlock (sitm);
-            }
-        }
-    };
-  MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath %s sessitm %s",
-                   reqcnt, fullpath, mom_item_cstring (sessitm));
+  struct mom_item_st *sessitm = mom_retrieve_session (reqcnt, requ);
   if (!sessitm)
     {
       sessitm = make_session_item_mom (resp);
@@ -667,8 +771,8 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
             }
           else
             MOM_DEBUGPRINTF (web,
-                             "web_handler_exchange#%ld sessitm=%s valid sesscookie %s",
-                             reqcnt, mom_item_cstring (sessitm), sesscookie);
+                             "web_handler_exchange#%ld sessitm=%s",
+                             reqcnt, mom_item_cstring (sessitm));
         }
       else
         badsession = true;
@@ -817,6 +921,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
     }
   if (wmeth == MOMWEBM_POST && !strcmp (reqfupath, "/mom_hackc_code"))
     return mom_hackc_code (reqcnt, requ, resp);
+  else if (wmeth == MOMWEBM_GET && !strcmp (reqfupath, "/mom_websocket"))
+    return mom_websocket (reqcnt, requ, resp);
   struct mom_item_st *wexitm =
     mom_web_handler_exchange (reqcnt, reqfupath, wmeth, requ, resp);
   MOM_DEBUGPRINTF (web,
