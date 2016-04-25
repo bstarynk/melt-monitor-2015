@@ -641,12 +641,43 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
              mom_item_cstring (sessitm));
           return OCS_NEED_MORE_DATA;
         }
-      MOM_DEBUGPRINTF (web,
-                       "handle_websocket_data got read %d bytes on websocket:\n"
-                       "%*s\n### end %d websocket bytes\n"
-                       "websockopcod=%d", len, len,
-                       wses->wbss_inbuf + wses->wbss_inoff, len,
-                       onion_websocket_get_opcode (wses->wbss_websock));
+      if (MOM_IS_DEBUGGING (web))
+        {
+          char hexbuf[32];
+          memset (hexbuf, 0, sizeof (hexbuf));
+          MOM_DEBUGPRINTF (web,
+                           "handle_websocket_data got read %d bytes on websocket:\n"
+                           "%*s\n### = hex %s end %d websocket bytes\n"
+                           "websockopcod=%d", len,
+                           len, wses->wbss_inbuf + wses->wbss_inoff,
+                           mom_hexdump_data
+                           (hexbuf, sizeof (hexbuf),
+                            (unsigned char *) (wses->wbss_inbuf +
+                                               wses->wbss_inoff), len), len,
+                           onion_websocket_get_opcode (wses->wbss_websock));
+        };
+      if (onion_websocket_get_opcode (wses->wbss_websock) ==
+          OWS_CONNECTION_CLOSE)
+        {
+          // see
+          // http://stackoverflow.com/questions/26606738/socket-close-sends-malformed-packet
+          if (len == 2)
+            {
+              uint16_t nc = 0;
+              memcpy (&nc, wses->wbss_inbuf + wses->wbss_inoff, 2);
+              uint16_t hc = ntohs (nc);
+              MOM_DEBUGPRINTF (web,
+                               "handle_websocket_data closing sessitm=%s with hc=%d",
+                               mom_item_cstring (sessitm), (unsigned) hc);
+            };
+        }
+    };
+  if (onion_websocket_get_opcode (wses->wbss_websock) == OWS_CONNECTION_CLOSE)
+    {
+      MOM_INFORMPRINTF ("handle_websocket_data closing websocket sessitm %s",
+                        mom_item_cstring (sessitm));
+      onion_websocket_close (wses->wbss_websock);
+      onion_websocket_free (wses->wbss_websock), wses->wbss_websock = NULL;
     }
 #warning mom_handle_websocket_data unimplemented
   MOM_FATAPRINTF ("mom_handle_websocket_data unimplemented sessitm=%s",

@@ -381,6 +381,30 @@ mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr)
 }                               /* end of mom_output_utf8_html */
 
 
+const char *
+mom_hexdump_data (char *buf, unsigned buflen, const unsigned char *data,
+                  unsigned datalen)
+{
+  if (!buf || !data)
+    return NULL;
+  if (2 * datalen + 3 < buflen)
+    {
+      for (unsigned ix = 0; ix < datalen; ix++)
+        snprintf (buf + 2 * ix, 3, "%02x", (unsigned) data[ix]);
+    }
+  else
+    {
+      unsigned maxln = (buflen - 3) / 2;
+      if (maxln > datalen)
+        maxln = datalen;
+      for (unsigned ix = 0; ix < maxln; ix++)
+        snprintf (buf + 2 * ix, 3, "%02x", (unsigned) data[ix]);
+      if (maxln > datalen)
+        strcpy (buf + 2 * maxln, "..");
+    }
+  return buf;
+}                               /* end of mom_hexdump_data */
+
 
 
 struct mom_string_and_size_st

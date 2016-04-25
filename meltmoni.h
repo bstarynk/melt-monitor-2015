@@ -380,6 +380,10 @@ void mom_output_utf8_escaped (FILE *f, const char *str, int len,
                               mom_utf8escape_sig_t * rout, void *clientdata);
 
 
+const char *mom_hexdump_data (char *buf, unsigned buflen,
+                              const unsigned char *data, unsigned datalen);
+
+
 const char *mom_double_to_cstr (double x, char *buf, size_t buflen);
 
 // input and parse and GC-allocate such an UTF-8 quoted string; stop
