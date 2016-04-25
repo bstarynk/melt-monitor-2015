@@ -163,6 +163,120 @@ mom_webmethod_name (unsigned wm)
 }                               /* end mom_webmethod_name */
 
 
+void
+mom_unsync_websocket_printf (struct mom_item_st *sessitm,
+                             const char *fmt, ...)
+{
+  va_list args;
+  if (!sessitm || sessitm->va_itype != MOMITY_ITEM)
+    return;
+  struct mom_websession_st *ws = NULL;
+  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+    ws = (void *) sessitm->itm_payload;
+  if (!ws)
+    return;
+  if (!ws->wbss_websock)
+    return;
+  char tmpbuf[128];
+  char *dbuf = NULL;
+  int ln = 0;
+  memset (tmpbuf, 0, sizeof (tmpbuf));
+  va_start (args, fmt);
+  ln = vsnprintf (tmpbuf, sizeof (tmpbuf), fmt, args);
+  va_end (args);
+  int wl = 0;
+  if (ln < (int) sizeof (tmpbuf) - 1)
+    {
+      wl = onion_websocket_write (ws->wbss_websock, tmpbuf, ln);
+      MOM_DEBUGPRINTF (web, "websocket_printf sessitm %s ln=%d wl=%d small:\n"
+                       "%s\n", mom_item_cstring (sessitm), ln, wl, tmpbuf);
+    }
+  else
+    {
+      va_start (args, fmt);
+      ln = vasprintf (&dbuf, fmt, args);
+      va_end (args);
+      wl = onion_websocket_write (ws->wbss_websock, dbuf, ln);
+      MOM_DEBUGPRINTF (web, "websocket_printf sessitm %s ln=%d wl=%d big:\n"
+                       "%s\n", mom_item_cstring (sessitm), ln, wl, dbuf);
+      free (dbuf);
+    };
+  if (MOM_UNLIKELY (wl < ln))
+    MOM_WARNPRINTF ("websocket_printf sessitm %s partial write ln=%d wl=%d",
+                    mom_item_cstring (sessitm), ln, wl);
+}                               /* end of mom_unsync_websocket_printf */
+
+
+
+void
+mom_unsync_websocket_puts (struct mom_item_st *sessitm, const char *str)
+{
+  if (!sessitm || sessitm->va_itype != MOMITY_ITEM)
+    return;
+  if (!str)
+    return;
+  struct mom_websession_st *ws = NULL;
+  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+    ws = (void *) sessitm->itm_payload;
+  if (!ws)
+    return;
+  if (!ws->wbss_websock)
+    return;
+  int ln = strlen (str);
+  int wl = onion_websocket_write (ws->wbss_websock, str, ln);
+  if (MOM_UNLIKELY (wl < ln))
+    MOM_WARNPRINTF ("websocket_puts sessitm %s partial write ln=%d wl=%d",
+                    mom_item_cstring (sessitm), ln, wl);
+}                               /* end of mom_unsync_websocket_puts */
+
+
+
+void
+mom_unsync_websocket_send_json (struct mom_item_st *sessitm, const json_t *js)
+{
+  if (!sessitm || sessitm->va_itype != MOMITY_ITEM)
+    return;
+  if (!js)
+    return;
+  struct mom_websession_st *ws = NULL;
+  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+    ws = (void *) sessitm->itm_payload;
+  if (!ws)
+    return;
+  if (!ws->wbss_websock)
+    return;
+  char *outbuf = NULL;
+  size_t outsiz = 0;
+  FILE *outf = open_memstream (&outbuf, &outsiz);
+  if (!outf)
+    MOM_FATAPRINTF
+      ("mom_unsync_websocket_send_json sessitm %s failed to open memstream (%m)",
+       mom_item_cstring (sessitm));
+  json_dumpf (js, outf,
+              JSON_SORT_KEYS | JSON_ENSURE_ASCII | JSON_ENCODE_ANY |
+              JSON_COMPACT);
+  fputc ('\n', outf);
+  fflush (outf);
+  if (ftell (outf) > INT_MAX / 2)
+    MOM_FATAPRINTF ("mom_unsync_websocket_send_json huge %ld json",
+                    ftell (outf));
+  int ln = (int) ftell (outf);
+  int wl = onion_websocket_write (ws->wbss_websock, outbuf, ln);
+  MOM_DEBUGPRINTF (web, "websocket_send_json sessitm %s\n"
+                   "%*s\n"
+                   "## ln=%d wl=%d", mom_item_cstring (sessitm),
+                   ln, outbuf, ln, wl);
+  if (MOM_UNLIKELY (wl < ln))
+    MOM_WARNPRINTF
+      ("websocket_send_json sessitm %s partial write ln=%d wl=%d",
+       mom_item_cstring (sessitm), ln, wl);
+  fclose (outf);
+  free (outbuf);
+}                               /* end of mom_unsync_websocket_send_json */
+
+
+
+
 #define MOM_MAX_WEB_FILE_SIZE (4096*1024)       /* 4 megabytes */
 
 onion_connection_status
@@ -243,6 +357,9 @@ mom_hackc_code (long reqcnt, onion_request *requ, onion_response *resp)
       char *outbuf = NULL;
       size_t outsiz = 0;
       FILE *outf = open_memstream (&outbuf, &outsiz);
+      if (!outf)
+        MOM_FATAPRINTF ("hack_code #%ld failed to open memstream (%m)",
+                        reqcnt);
       char *linbuf = NULL;
       size_t linsiz = 0;
       int lincnt = 0;
@@ -476,13 +593,59 @@ mom_retrieve_session (long reqcnt, onion_request *requ)
 
 
 
-
+// this handle data on websocket from browser to server
 onion_connection_status
 mom_handle_websocket_data (void *data, onion_websocket * ws,
-                           ssize_t data_ready_len)
+                           ssize_t datareadylen)
 {
   struct mom_item_st *sessitm = data;
   assert (sessitm && sessitm->va_itype == MOMITY_ITEM);
+  assert (ws != NULL);
+  struct mom_websession_st *wses = NULL;
+  {
+    mom_item_lock (sessitm);
+    if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+      wses = (void *) sessitm->itm_payload;
+    mom_item_unlock (sessitm);
+  }
+  if (!wses)
+    MOM_FATAPRINTF
+      ("handle_websocket_data with bad sessitm %s, datareadylen %ld",
+       mom_item_cstring (sessitm), (long) datareadylen);
+  MOM_DEBUGPRINTF (web, "handle_websocket_data sessitm %s datareadylen %ld",
+                   mom_item_cstring (sessitm), (long) datareadylen);
+  if (datareadylen > 0)
+    {
+      if (datareadylen + wses->wbss_inoff + 1 >= wses->wbss_insiz)
+        {
+          unsigned newsiz =
+            (((5 * datareadylen + wses->wbss_inoff) / 4 + 10) | 0x1f) + 1;
+          char *oldbuf = wses->wbss_inbuf;
+          char *newbuf = mom_gc_alloc_atomic (newsiz);
+          if (wses->wbss_inoff > 0 && oldbuf)
+            memcpy (newbuf, oldbuf, wses->wbss_inoff);
+          wses->wbss_inbuf = newbuf;
+          wses->wbss_insiz = newsiz;
+          if (oldbuf)
+            GC_free (oldbuf);
+        };
+      int len = onion_websocket_read (wses->wbss_websock,
+                                      wses->wbss_inbuf + wses->wbss_inoff,
+                                      datareadylen);
+      if (len >= 0)
+        wses->wbss_inbuf[wses->wbss_inoff + len] = (char) 0;
+      else
+        {
+          MOM_WARNPRINTF
+            ("failed to read on websocket for session item %s (%m)",
+             mom_item_cstring (sessitm));
+          return OCS_NEED_MORE_DATA;
+        }
+      MOM_DEBUGPRINTF (web,
+                       "handle_websocket_data got read %d bytes on websocket:\n"
+                       "%*s\n### end %d websocket bytes\n", len, len,
+                       wses->wbss_inbuf + wses->wbss_inoff, len);
+    }
 #warning mom_handle_websocket_data unimplemented
   MOM_FATAPRINTF ("mom_handle_websocket_data unimplemented sessitm=%s",
                   mom_item_cstring (sessitm));
@@ -1100,6 +1263,7 @@ mom_websession_payload_cleanup (struct mom_item_st *itm,        //
   payl->wbss_inbuf = NULL;
   payl->wbss_insiz = 0;
   payl->wbss_inoff = 0;
+
 }                               /* end of mom_websession_payload_cleanup */
 
 

@@ -315,7 +315,7 @@ static inline uint32_t
 mom_random_uint32 (void)
 {
   static _Thread_local int count;
-  if (count % 4096 == 0)
+  if (MOM_UNLIKELY (count % 4096 == 0))
     mom_random_init_genrand ();
   count++;
   return (uint32_t) momrand_genrand_int32 ();
@@ -2054,6 +2054,7 @@ typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
   uint32_t wbss_rand1, wbss_rand2;              \
   time_t wbss_obstime;				\
   onion_websocket* wbss_websock;		\
+  const struct mom_boxnode_st*wbss_wsnod;       \
   char* wbss_inbuf;				\
   unsigned wbss_insiz;				\
   unsigned wbss_inoff;				\
@@ -2063,6 +2064,18 @@ struct mom_websession_st
 {
   MOM_WEBSESSION_FIELDS;
 };
+
+
+void mom_unsync_websocket_printf (struct mom_item_st *itm,
+                                  const char *fmt,
+                                  ...)
+  __attribute__ ((format (printf, 2, 3)));
+
+
+void mom_unsync_websocket_puts (struct mom_item_st *itm, const char *str);
+
+void mom_unsync_websocket_send_json (struct mom_item_st *itm,
+                                     const json_t *js);
 
 void mom_websession_payload_cleanup (struct mom_item_st *itm,
                                      struct mom_websession_st *payl);
