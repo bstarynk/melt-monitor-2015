@@ -711,10 +711,10 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
       else
         {
           double waitdelay = (MOM_IS_DEBUGGING (run)
-                              || MOM_IS_DEBUGGING (mutex)) ? 3.2 : 0.6;
-          waitdelay += (ix + 1) * 0.0005;
+                              || MOM_IS_DEBUGGING (mutex)) ? 3.8 : 1.9;
+          waitdelay += (ix + 1) * 0.03;
           if (loopcnt % 4 == 0)
-            waitdelay += ((mom_random_uint32 () & 0xffff) + 10) * 1.0e-6;
+            waitdelay += ((mom_random_uint32 () & 0xffff) + 10) * 1.0e-5;
           double nowtim = mom_clock_time (CLOCK_REALTIME);
           struct timespec ts = mom_timespec (nowtim + waitdelay);
           MOM_DEBUGPRINTF (run,

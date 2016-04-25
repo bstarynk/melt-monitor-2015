@@ -24,7 +24,20 @@ var $websocket;
 console.log ("miniedit.js $webhost=", $webhost);
 
 $(document).ready(function(){
-    console.log ("miniedit document read start");
-    $websocket = new WebSocket('ws://' + $webhost + "/miniedit_websocket");
+    console.log ("miniedit document read start $webhost=", $webhost);
+    $websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
     console.log ("miniedit $websocket=", $websocket);
-}
+    $websocket.onopen = function () {
+	console.log ("miniedit opened $websocket=", $websocket);
+    };
+    $websocket.onmessage = function(evt) {
+	console.log ("miniedit $websocket=", $websocket,
+		     " message evt=", evt);
+	var jp = JSON.parse(evt.data);
+	console.log ("miniedit websockmessage jp=", jp);	
+    };
+    $websocket.onclose = function() {
+	console.log ("miniedit closed $websocket=", $websocket);
+	$websocket = null;
+    };
+});

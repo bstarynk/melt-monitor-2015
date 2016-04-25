@@ -643,8 +643,10 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
         }
       MOM_DEBUGPRINTF (web,
                        "handle_websocket_data got read %d bytes on websocket:\n"
-                       "%*s\n### end %d websocket bytes\n", len, len,
-                       wses->wbss_inbuf + wses->wbss_inoff, len);
+                       "%*s\n### end %d websocket bytes\n"
+                       "websockopcod=%d", len, len,
+                       wses->wbss_inbuf + wses->wbss_inoff, len,
+                       onion_websocket_get_opcode (wses->wbss_websock));
     }
 #warning mom_handle_websocket_data unimplemented
   MOM_FATAPRINTF ("mom_handle_websocket_data unimplemented sessitm=%s",
