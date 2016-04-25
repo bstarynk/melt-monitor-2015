@@ -678,6 +678,7 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
                         mom_item_cstring (sessitm));
       onion_websocket_close (wses->wbss_websock);
       onion_websocket_free (wses->wbss_websock), wses->wbss_websock = NULL;
+      return OCS_CLOSE_CONNECTION;
     }
 #warning mom_handle_websocket_data unimplemented
   MOM_FATAPRINTF ("mom_handle_websocket_data unimplemented sessitm=%s",
