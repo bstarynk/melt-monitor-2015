@@ -20,3 +20,26 @@
 body {
     font-size: 90%;
 }
+
+nav#mom_minieditnavbar_id {
+    width: 100%;
+    margin: 5px;
+    background-color: #AEF7F8;
+    border: 1px;
+}
+
+div#mom_minieditstatusdiv_id {
+    align: center;
+    width: 90%;
+    margin: 3px;
+    background-color: #F9F5C9;
+    border: 1px;
+}
+
+p#mom_minieditprogramstatusp_id {
+    font-size: 70%;
+    color: #0B3810;
+}
+
+p#mom_miniedittempstatusp_id {
+}

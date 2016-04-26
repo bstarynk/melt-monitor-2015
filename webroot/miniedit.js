@@ -21,6 +21,8 @@
 var $webhost = window.location.host;
 var $websocket;
 var $handlermapwebsock = new Object;
+var $navbar;
+var $progstatusp;
 
 function mom_register_websock(opnam,fun) {
     console.debug ("mom_register_websock opnam=", opnam, " fun=", fun);
@@ -34,6 +36,8 @@ console.log ("miniedit.js $webhost=", $webhost);
 
 $(document).ready(function(){
     console.log ("miniedit document read start $webhost=", $webhost);
+    $navbar = $('#mom_minieditnavbar_id');
+    $progstatusp = $('#mom_minieditprogramstatusp_id');
     $websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
     console.log ("miniedit $websocket=", $websocket);
     $websocket.onopen = function () {
@@ -69,4 +73,19 @@ $(document).ready(function(){
 	console.log ("miniedit closed $websocket=", $websocket);
 	$websocket = null;
     };
+    $.ajax
+    ({url: "/miniedit_startpage",
+      method: "POST",
+      data: {},
+      dataType: "json",
+      success: function (data, stat, jh) {
+          console.log("miniedit_startpage success data=", data, " stat=", stat, " jh=", jh);
+	  var ps = data.progstatus;
+	  console.log("miniedit_startpage ps=", ps);
+	  $progstatusp.html(ps);
+      },
+      error: function (jq, stat, err) {
+          console.log("miniedit_startpage error jq=", jq, " stat=", stat, " err=", err);
+      }
+     });
 });

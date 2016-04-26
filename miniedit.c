@@ -327,6 +327,48 @@ momf_miniedit_genscript (struct mom_item_st *wexitm,
 end:;
 }                               /* end of momf_miniedit_genscript */
 
+
+enum minieditstartpage_closoff_en
+{
+  miedstpg_first,
+  miedstpg__last
+};
+extern mom_webhandler_sig_t momf_miniedit_startpage;
+const char momsig_miniedit_startpage[] = "signature_webhandler";
+void
+momf_miniedit_startpage (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wclos)
+{
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "momf_miniedit_startpage start wexitm=%s wclos=%s sessitm=%s",
+                   mom_item_cstring (wexitm),
+                   mom_value_cstring ((const void *) wclos),
+                   mom_item_cstring (sessitm));
+  if (!wclos || wclos->va_itype != MOMITY_NODE
+      || mom_size (wclos) < miedstpg__last)
+    MOM_FATAPRINTF ("minedit_startpage wexitm %s has bad wclos %s",
+                    mom_item_cstring (wexitm),
+                    mom_value_cstring ((const void *) wclos));
+  char timbuf[72];
+  memset (timbuf, 0, sizeof (timbuf));
+  mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
+                          "%Y %b %d, %H:%M:%S.__ %Z");
+  MOM_WEXCH_PRINTF (wexch,
+                    "{\"progstatus\":\"<b>monimelt</b> stamped <i>%s</i>"
+                    " gitcommit <tt>%.10s</tt>" " pid <i>%d</i>"
+                    " host <tt>%s</tt>" " at <i>%s</i>" " session <tt>%s</tt>"
+                    "\",\n", monimelt_timestamp, monimelt_lastgitcommit,
+                    (int) getpid (), mom_hostname (), timbuf,
+                    mom_item_cstring (sessitm));
+  MOM_WEXCH_PRINTF (wexch, " \"$done\":\"startpage\"}\n");
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
+}                               /* end miniedit_startpage */
+
+
+
 extern mom_webhandler_sig_t momf_miniedit_websocket;
 const char momsig_miniedit_websocket[] = "signature_webhandler";
 void
@@ -354,5 +396,5 @@ momf_miniedit_websocket (struct mom_item_st *wexitm,
     }
   wses->wbss_websock =
     onion_websocket_new (wexch->webx_requ, wexch->webx_resp);
-#warning - incomplete
+#warning miniedit_websocket incomplete
 }                               /* end of momf_miniedit_websocket */

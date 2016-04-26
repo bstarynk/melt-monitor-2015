@@ -1987,7 +1987,21 @@ comment
 )attrs
 
 
+*miniedit_startpage
+1461681361
+^mtime
+^func
+signature_webhandler
+^funsignature
+(
+comment
+"for miniedit start page"_
+)attrs
+
+
 *miniedit_websocket
+1461681361
+^mtime
 ^func
 signature_webhandler
 ^funsignature
@@ -5827,12 +5841,13 @@ web_state
 web_state__0dmo5BBWK0mbtv
 miniedit_genstyle
 )node
-nanoedit
+miniedit_startpage
 (
+(
+)tuple
 web_state
 web_state__0dmo5BBWK0mbtv
-nano_delimiters
-nanoedit
+miniedit_startpage
 )node
 miniedit_websocket
 (
@@ -5841,6 +5856,13 @@ miniedit_websocket
 web_state
 web_state__0dmo5BBWK0mbtv
 miniedit_genstyle
+)node
+nanoedit
+(
+web_state
+web_state__0dmo5BBWK0mbtv
+nano_delimiters
+nanoedit
 )node
 )payload_hashassoc
 

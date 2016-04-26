@@ -2139,8 +2139,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
         case MOMITY_TASKSTEPPER:
           MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s taskstepper",
                            mom_item_cstring (itm));
-          mom_dumpemit_taskstepper (du, itm,
-                                    (const struct mom_taskstepper_st *) payl);
+          mom_dumpemit_taskstepper (du, (struct mom_item_st *) itm,
+                                    (struct mom_taskstepper_st *) payl);
           break;
         default:
           MOM_DEBUGPRINTF (dump,
