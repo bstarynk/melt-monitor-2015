@@ -23,6 +23,9 @@ var $websocket;
 var $handlermapwebsock = new Object;
 var $navbar;
 var $progstatusp;
+var $tempstatusp;
+var $contentdiv;
+var $dumpexitbut;
 
 function mom_register_websock(opnam,fun) {
     console.debug ("mom_register_websock opnam=", opnam, " fun=", fun);
@@ -38,6 +41,9 @@ $(document).ready(function(){
     console.log ("miniedit document read start $webhost=", $webhost);
     $navbar = $('#mom_minieditnavbar_id');
     $progstatusp = $('#mom_minieditprogramstatusp_id');
+    $tempstatusp = $('#mom_miniedittempstatusp_id');
+    $contentdiv = $('#mom_minieditcontentdiv_id');
+    $dumpexitbut = $('#mom_minieditdumpexit_id');
     $websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
     console.log ("miniedit $websocket=", $websocket);
     $websocket.onopen = function () {
@@ -73,6 +79,26 @@ $(document).ready(function(){
 	console.log ("miniedit closed $websocket=", $websocket);
 	$websocket = null;
     };
+    $dumpexitbut.click(function(ev) {
+	console.log("miniedit $dumpexitbut=", $dumpexitbut, " cliked ev=", ev);
+	$.ajax({url: "/miniedit_dumpexit",
+		method: "POST",
+		data: {},
+		dataType; "json",
+		success: function(data, stat, jh) {
+		    console.log("miniedit dumpexit ajaxok data=", data);
+		    tempstatusp.html("<b>dumped, exiting</b> at <i>"+data.now+"</i>"
+				     + "<small>("+data.elapsedreal.toPrecision(3)+ " real seconds,"
+				     + " "+data.processcpu.toPrecision(3)+ " cpu seconds)</small>"
+				    );
+		},
+		error: function(jq, stat, err) {
+		    console.log("miniedit dumpedit ajaxerror jq=", jq, " stat=", stat, " err=", err);
+		}
+	       });			       
+      }
+	       
+    });
     $.ajax
     ({url: "/miniedit_startpage",
       method: "POST",

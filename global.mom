@@ -1963,6 +1963,18 @@ comment
 )attrs
 
 
+*miniedit_dumpexit
+1461692649
+^mtime
+^func
+signature_webhandler
+^funsignature
+(
+comment
+"for miniedit dumpexit"_
+)attrs
+
+
 *miniedit_genscript
 1460384005
 ^mtime
@@ -5823,6 +5835,14 @@ miniedit
 web_state
 web_state__0dmo5BBWK0mbtv
 miniedit
+)node
+miniedit_dumpexit
+(
+(
+)tuple
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_dumpexit
 )node
 miniedit_genscript
 (

@@ -36,10 +36,26 @@ div#mom_minieditstatusdiv_id {
     border: 1px;
 }
 
+div#mom_minieditcontentdiv_id {
+    margin: 5px;
+    background-color: #F7F1DD;
+    border: 1px dashed #954D2A;
+    border-spacing: 3px;
+    min-height: 50px;
+};
+
 p#mom_minieditprogramstatusp_id {
     font-size: 70%;
     color: #0B3810;
 }
 
 p#mom_miniedittempstatusp_id {
+    font-size: 75%;
+    color: #596562;
+}
+
+button#mom_minieditdumpexit_id {
+    font-size: 110%;
+    font-weight: bold;
+    color: darkred;
 }

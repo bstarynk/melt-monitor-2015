@@ -369,6 +369,49 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
 
 
 
+enum minieditdumpexit_closoff_en
+{
+  miedduxi_first,
+  miedduxi__last
+};
+extern mom_webhandler_sig_t momf_miniedit_dumpexit;
+const char momsig_miniedit_dumpexit[] = "signature_webhandler";
+void
+momf_miniedit_dumpexit (struct mom_item_st *wexitm,
+                         struct mom_webexch_st *wexch,
+                         const struct mom_boxnode_st *wclos)
+{
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "momf_miniedit_dumpexit start wexitm=%s wclos=%s sessitm=%s",
+                   mom_item_cstring (wexitm),
+                   mom_value_cstring ((const void *) wclos),
+                   mom_item_cstring (sessitm));
+  if (!wclos || wclos->va_itype != MOMITY_NODE
+      || mom_size (wclos) < miedduxi__last)
+    MOM_FATAPRINTF ("minedit_dumpexit wexitm %s has bad wclos %s",
+                    mom_item_cstring (wexitm),
+                    mom_value_cstring ((const void *) wclos));
+  char timbuf[72];
+  memset (timbuf, 0, sizeof (timbuf));
+  mom_now_strftime_centi (timbuf, sizeof (timbuf) - 1,
+                          "%Y %b %d, %H:%M:%S.__ %Z");
+  json_t *jreply = json_pack ("{s:f,s:f,s:s}", "elapsedreal",
+                              mom_elapsed_real_time (), "processcpu",
+                              mom_process_cpu_time (),
+			      "now", timbuf);
+  // json_dumps will use GC_STRDUP...
+  MOM_DEBUGPRINTF (web, "doexit_nanoedit jreply=%s",
+                   json_dumps (jreply, JSON_INDENT (1)));
+  mom_wexch_puts (wexch, json_dumps (jreply, JSON_INDENT (1)));
+  mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
+  mom_stop_and_dump ();
+  MOM_INFORMPRINTF("miniedit dumpexit at %s", timbuf);
+}                               /* end miniedit_dumpexit */
+
+
+
 extern mom_webhandler_sig_t momf_miniedit_websocket;
 const char momsig_miniedit_websocket[] = "signature_webhandler";
 void
