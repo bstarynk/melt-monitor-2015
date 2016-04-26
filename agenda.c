@@ -728,6 +728,7 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
       if (tkitm && tkitm != MOM_EMPTY_SLOT && tkitm->va_itype == MOMITY_ITEM)
         run_tasklet_mom (tkitm);
     };
+  MOM_DEBUGPRINTF (run, "agenda_thread_worker ending loopcnt#%ld", loopcnt);
   return NULL;
 }                               /* end agenda_thread_worker_mom */
 
@@ -752,8 +753,9 @@ mom_start_agenda (void)
   for (int ix = 1; ix <= (int) nbjobs; ix++)
     pthread_create (&workthread_mom[ix],
                     &at, agenda_thread_wrapper_mom, (void *) (intptr_t) ix);
+  usleep (1000);
   MOM_INFORMPRINTF ("started agenda with %d workers", nbjobs);
-}
+} /* end mom_start_agenda */
 
 
 ////////////////////////////////////////////////////////////////

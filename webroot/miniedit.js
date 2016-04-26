@@ -84,10 +84,10 @@ $(document).ready(function(){
 	$.ajax({url: "/miniedit_dumpexit",
 		method: "POST",
 		data: {},
-		dataType; "json",
+		dataType: "json",
 		success: function(data, stat, jh) {
 		    console.log("miniedit dumpexit ajaxok data=", data);
-		    tempstatusp.html("<b>dumped, exiting</b> at <i>"+data.now+"</i>"
+		    $tempstatusp.html("<b>dumped, exiting</b> at <i>"+data.now+"</i>"
 				     + "<small>("+data.elapsedreal.toPrecision(3)+ " real seconds,"
 				     + " "+data.processcpu.toPrecision(3)+ " cpu seconds)</small>"
 				    );
@@ -96,9 +96,7 @@ $(document).ready(function(){
 		    console.log("miniedit dumpedit ajaxerror jq=", jq, " stat=", stat, " err=", err);
 		}
 	       });			       
-      }
-	       
-    });
+    });	       
     $.ajax
     ({url: "/miniedit_startpage",
       method: "POST",
