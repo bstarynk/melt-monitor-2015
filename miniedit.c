@@ -442,6 +442,7 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
     mom_output_utf8_encoded (wexch->webx_outfil, fdup, -1);
     mom_wexch_puts (wexch, "\",\n");
   }
+  MOM_WEXCH_PRINTF (wexch, " \"docontent\": \"mom_content_updated();\",\n");
   MOM_WEXCH_PRINTF (wexch, " \"$done\":\"startpage\"}\n");
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
 }                               /* end miniedit_startpage */
