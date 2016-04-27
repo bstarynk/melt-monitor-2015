@@ -20,6 +20,12 @@
 
 #include "meltmoni.h"
 
+enum miniedit_sessoff_en
+{
+  miss_contitm,
+  miss__last
+};
+
 enum miniedit_closoff_en
 {
   mic_wexitm,
@@ -328,6 +334,27 @@ end:;
 }                               /* end of momf_miniedit_genscript */
 
 
+MOM_PRIVATE void
+miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
+                         struct mom_item_st *wexitm,
+                         const struct mom_boxnode_st *wclos,
+                         struct mom_item_st *contitm)
+{
+  assert (fbu && fbu->va_itype == MOMITY_FILEBUFFER);
+  assert (wexitm && wexitm->va_itype == MOMITY_ITEM);
+  assert (wclos && wclos->va_itype == MOMITY_NODE);
+  MOM_DEBUGPRINTF (web, "miniedit_outputedit_mom contitm=%s start",
+                   mom_item_cstring (contitm));
+  mom_item_lock (contitm);
+  struct mom_item_st *mieditm = //
+    mom_dyncast_item (mom_unsync_item_get_phys_attr
+                      (contitm, MOM_PREDEFITM (miniedit)));
+  MOM_DEBUGPRINTF (web, "miniedit_outputedit_mom mieditm=%s",
+                   mom_item_cstring (mieditm));
+end:
+  mom_item_unlock (contitm);
+}                               /* end of miniedit_outputedit_mom */
+
 enum minieditstartpage_closoff_en
 {
   miedstpg_first,
@@ -347,6 +374,31 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
                    mom_item_cstring (wexitm),
                    mom_value_cstring ((const void *) wclos),
                    mom_item_cstring (sessitm));
+  assert (sessitm && sessitm != MOM_EMPTY_SLOT
+          && sessitm->va_itype == MOMITY_ITEM);
+  struct mom_item_st *econtitm = NULL;
+  {
+    mom_item_lock (sessitm);
+    if (!sessitm->itm_pcomp)
+      sessitm->itm_pcomp =
+        mom_vectvaldata_reserve (sessitm->itm_pcomp, miss__last);
+    econtitm =
+      mom_dyncast_item (mom_vectvaldata_nth
+                        (sessitm->itm_pcomp, miss_contitm));
+    if (!econtitm)
+      {
+        econtitm = mom_clone_item (MOM_PREDEFITM (miniedit));
+        MOM_DEBUGPRINTF (web,
+                         "momf_miniedit_startpage new econtitm=%s in sessitm=%s",
+                         mom_item_cstring (econtitm),
+                         mom_item_cstring (sessitm));
+        mom_unsync_item_put_phys_attr (econtitm, MOM_PREDEFITM (miniedit),
+                                       MOM_PREDEFITM (value));
+        mom_vectvaldata_put_nth (sessitm->itm_pcomp, miss_contitm,
+                                 (void *) econtitm);
+      }
+    mom_item_unlock (sessitm);
+  }
   if (!wclos || wclos->va_itype != MOMITY_NODE
       || mom_size (wclos) < miedstpg__last)
     MOM_FATAPRINTF ("minedit_startpage wexitm %s has bad wclos %s",
@@ -363,6 +415,12 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
                     "\",\n", monimelt_timestamp, monimelt_lastgitcommit,
                     (int) getpid (), mom_hostname (), timbuf,
                     mom_item_cstring (sessitm));
+  {
+    struct mom_filebuffer_st *fbu = mom_make_filebuffer ();
+    miniedit_outputedit_mom (fbu, wexitm, wclos, econtitm);
+    const char *fdup = mom_filebuffer_strdup (fbu, MOM_FILEBUFFER_CLOSE);
+    MOM_DEBUGPRINTF (web, "momf_miniedit_startpage fdup:\n%s\n", fdup);
+  }
   MOM_WEXCH_PRINTF (wexch, " \"$done\":\"startpage\"}\n");
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
 }                               /* end miniedit_startpage */
