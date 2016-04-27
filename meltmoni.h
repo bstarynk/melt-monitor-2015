@@ -72,6 +72,7 @@
 // libonion from http://www.coralbits.com/libonion/ &
 // https://github.com/davidmoreno/onion
 #include <onion/onion.h>
+#include <onion/version.h>
 #include <onion/low.h>
 #include <onion/codecs.h>
 #include <onion/request.h>

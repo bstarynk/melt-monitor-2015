@@ -88,7 +88,7 @@ $(document).ready(function(){
 		success: function(data, stat, jh) {
 		    console.log("miniedit dumpexit ajaxok data=", data);
 		    $tempstatusp.html("<b>dumped, exiting</b> at <i>"+data.now+"</i>"
-				     + "<small>("+data.elapsedreal.toPrecision(3)+ " real seconds,"
+				     + "; <small>("+data.elapsedreal.toPrecision(3)+ " real seconds,"
 				     + " "+data.processcpu.toPrecision(3)+ " cpu seconds)</small>"
 				    );
 		},

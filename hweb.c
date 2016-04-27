@@ -74,6 +74,10 @@ mom_start_web (const char *webservice)
      GC_pthread_join,
      GC_pthread_cancel,
      GC_pthread_detach, GC_pthread_exit, GC_pthread_sigmask);
+  if (MOM_UNLIKELY (!ONION_VERSION_IS_COMPATIBLE ()))
+    MOM_FATAPRINTF
+      ("onion run version %s is incompatible with header version %s",
+       onion_version (), ONION_VERSION);
   char webhostname[80];
   memset (webhostname, 0, sizeof (webhostname));
   int webport = 0;
@@ -97,8 +101,7 @@ mom_start_web (const char *webservice)
     }
   else
     MOM_FATAPRINTF ("invalid webservice %s", webservice);
-  onion_mom =
-    onion_new (O_THREADED | O_DETACH_LISTEN | O_NO_SIGTERM | O_NO_SIGPIPE);
+  onion_mom = onion_new (O_THREADED | O_DETACH_LISTEN | O_NO_SIGTERM);
   onion_set_max_threads (onion_mom, 1 + mom_nbjobs);
   MOM_DEBUGPRINTF (web, "maxonionthreads %d", 1 + mom_nbjobs);
   if (webhostname[0])
@@ -135,7 +138,8 @@ mom_start_web (const char *webservice)
                    onion_mom, MOM_MAX_WEBDIR);
   onion_listen (onion_mom);
   atomic_store (&mom_should_run, true);
-  MOM_INFORMPRINTF ("web service on %s started with libonion", webservice);
+  MOM_INFORMPRINTF ("web service on %s started with libonion version %s",
+                    webservice, onion_version ());
 }                               /* end mom_start_web */
 
 
@@ -674,12 +678,20 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
             };
         }
     };
+  MOM_DEBUGPRINTF (web, "handle_websocket_data sessitm=%s websockopcod=%d",
+                   mom_item_cstring (sessitm),
+                   onion_websocket_get_opcode (wses->wbss_websock));
   if (onion_websocket_get_opcode (wses->wbss_websock) == OWS_CONNECTION_CLOSE)
     {
       MOM_INFORMPRINTF ("handle_websocket_data closing websocket sessitm %s",
                         mom_item_cstring (sessitm));
+      MOM_DEBUGPRINTF (web,
+                       "handle_websocket_data closing websocket sessitm %s",
+                       mom_item_cstring (sessitm));
       onion_websocket_close (wses->wbss_websock);
-      onion_websocket_free (wses->wbss_websock), wses->wbss_websock = NULL;
+      MOM_DEBUGPRINTF (web,
+                       "handle_websocket_data sessitm=%s closed websocket",
+                       mom_item_cstring (sessitm));
       return OCS_CLOSE_CONNECTION;
     }
 #warning mom_handle_websocket_data unimplemented
@@ -1612,7 +1624,8 @@ mom_stop_web (void)
   if (onion_mom)
     {
       onion_listen_stop (onion_mom);
-      onion_mom = NULL;
+      MOM_DEBUGPRINTF (web, "mom_stop_web stopped listening");
+      onion_free (onion_mom), onion_mom = NULL;
       MOM_INFORMPRINTF ("stopping web serving");
     }
 }                               /* end of mom_stop_web */
