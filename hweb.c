@@ -1,6 +1,6 @@
 // file hweb.c - handling web interface
 
-/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   

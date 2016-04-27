@@ -755,7 +755,7 @@ mom_start_agenda (void)
                     &at, agenda_thread_wrapper_mom, (void *) (intptr_t) ix);
   usleep (1000);
   MOM_INFORMPRINTF ("started agenda with %d workers", nbjobs);
-} /* end mom_start_agenda */
+}                               /* end mom_start_agenda */
 
 
 ////////////////////////////////////////////////////////////////

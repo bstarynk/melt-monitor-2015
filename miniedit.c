@@ -378,8 +378,8 @@ extern mom_webhandler_sig_t momf_miniedit_dumpexit;
 const char momsig_miniedit_dumpexit[] = "signature_webhandler";
 void
 momf_miniedit_dumpexit (struct mom_item_st *wexitm,
-                         struct mom_webexch_st *wexch,
-                         const struct mom_boxnode_st *wclos)
+                        struct mom_webexch_st *wexch,
+                        const struct mom_boxnode_st *wclos)
 {
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
   struct mom_item_st *sessitm = wexch->webx_sessitm;
@@ -400,14 +400,32 @@ momf_miniedit_dumpexit (struct mom_item_st *wexitm,
   json_t *jreply = json_pack ("{s:f,s:f,s:s}", "elapsedreal",
                               mom_elapsed_real_time (), "processcpu",
                               mom_process_cpu_time (),
-			      "now", timbuf);
+                              "now", timbuf);
   // json_dumps will use GC_STRDUP...
-  MOM_DEBUGPRINTF (web, "doexit_nanoedit jreply=%s",
+  MOM_DEBUGPRINTF (web, "minedit_dumpexit jreply=%s",
                    json_dumps (jreply, JSON_INDENT (1)));
   mom_wexch_puts (wexch, json_dumps (jreply, JSON_INDENT (1)));
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
+  {
+    struct mom_websession_st *wses = NULL;
+    mom_item_lock (sessitm);
+    if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
+      wses = (void *) sessitm->itm_payload;
+    mom_item_unlock (sessitm);
+    if (wses != NULL && wses->wbss_websock)
+      {
+        MOM_DEBUGPRINTF (web,
+                         "minedit_dumpexit closing websocket of session %s",
+                         mom_item_cstring (sessitm));
+        onion_websocket_close (wses->wbss_websock);
+        onion_websocket_free (wses->wbss_websock);
+        wses->wbss_websock = NULL;
+      }
+  }
+  MOM_DEBUGPRINTF (web, "minedit_dumpexit before mom_stop_and_dump");
   mom_stop_and_dump ();
-  MOM_INFORMPRINTF("miniedit dumpexit at %s", timbuf);
+  MOM_INFORMPRINTF ("miniedit dumpexit at %s", timbuf);
+  MOM_DEBUGPRINTF (web, "minedit_dumpexit done");
 }                               /* end miniedit_dumpexit */
 
 

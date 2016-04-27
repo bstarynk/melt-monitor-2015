@@ -1541,9 +1541,10 @@ main (int argc_main, char **argv_main)
   long nbwaitloop = 0;
   while (atomic_load (&mom_should_run))
     {
-      usleep ((MOM_IS_DEBUGGING(run)?4500:200) * 1000);
+      usleep ((MOM_IS_DEBUGGING (run) ? 4500 : 200) * 1000);
       nbwaitloop++;
-      MOM_DEBUGPRINTF(run,"waiting while should run nbwaitloop=%ld", nbwaitloop);
+      MOM_DEBUGPRINTF (run, "waiting while should run nbwaitloop=%ld",
+                       nbwaitloop);
     }
   usleep (10 * 1000);
   MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
