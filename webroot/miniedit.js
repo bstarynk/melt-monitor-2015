@@ -105,8 +105,10 @@ $(document).ready(function(){
       success: function (data, stat, jh) {
           console.log("miniedit_startpage success data=", data, " stat=", stat, " jh=", jh);
 	  var ps = data.progstatus;
-	  console.log("miniedit_startpage ps=", ps);
+	  var hc = data.contenthtml;
+	  console.log("miniedit_startpage ps=", ps, "\n.. hc=", hc);
 	  $progstatusp.html(ps);
+	  $contentdiv.html(hc);
       },
       error: function (jq, stat, err) {
           console.log("miniedit_startpage error jq=", jq, " stat=", stat, " err=", err);

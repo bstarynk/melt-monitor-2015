@@ -349,8 +349,26 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
   struct mom_item_st *mieditm = //
     mom_dyncast_item (mom_unsync_item_get_phys_attr
                       (contitm, MOM_PREDEFITM (miniedit)));
-  MOM_DEBUGPRINTF (web, "miniedit_outputedit_mom mieditm=%s",
+  MOM_DEBUGPRINTF (web, "miniedit_outputedit mieditm=%s",
                    mom_item_cstring (mieditm));
+  assert (mieditm != NULL && mieditm->va_itype == MOMITY_ITEM);
+#define NBMEDIT_MOM 31
+#define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
+	  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
+	  goto defaultcasemiedit; foundcasemedit_##Nam
+  switch (mieditm->hva_hash % NBMEDIT_MOM)
+    {
+    case CASE_MIEDIT_MOM (value):
+      mom_file_printf (fbu,
+                       "<span class='mom_minieditvalue_cl' id='mom$%s'>°</span>",
+                       mom_item_cstring (contitm));
+      break;
+    default:
+    defaultcasemiedit:
+      MOM_WARNPRINTF ("miniedit_outputedit contitm=%s unexpected mieditm=%s",
+                      mom_item_cstring (contitm), mom_item_cstring (mieditm));
+      break;
+    };
 end:
   mom_item_unlock (contitm);
 }                               /* end of miniedit_outputedit_mom */
@@ -420,6 +438,9 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
     miniedit_outputedit_mom (fbu, wexitm, wclos, econtitm);
     const char *fdup = mom_filebuffer_strdup (fbu, MOM_FILEBUFFER_CLOSE);
     MOM_DEBUGPRINTF (web, "momf_miniedit_startpage fdup:\n%s\n", fdup);
+    mom_wexch_puts (wexch, " \"contenthtml\": \"");
+    mom_output_utf8_encoded (wexch->webx_outfil, fdup, -1);
+    mom_wexch_puts (wexch, "\",\n");
   }
   MOM_WEXCH_PRINTF (wexch, " \"$done\":\"startpage\"}\n");
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
