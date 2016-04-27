@@ -418,8 +418,6 @@ momf_miniedit_dumpexit (struct mom_item_st *wexitm,
                          "minedit_dumpexit closing websocket of session %s",
                          mom_item_cstring (sessitm));
         onion_websocket_close (wses->wbss_websock);
-        onion_websocket_free (wses->wbss_websock);
-        wses->wbss_websock = NULL;
       }
   }
   MOM_DEBUGPRINTF (web, "minedit_dumpexit before mom_stop_and_dump");
