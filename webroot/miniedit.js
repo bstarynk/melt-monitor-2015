@@ -35,6 +35,17 @@ function mom_register_websock(opnam,fun) {
 	delete $handlermapwebsock[opnam];
 }
 
+function mom_content_updated() {
+    console.log ("mom_content_updated $contentdiv=", $contentdiv);
+    $($contentdiv).find(".mom_minieditvalue_cl")
+	//.input(function(ev) {console.log ("minieditvalue input ev=", ev);})
+	.keypress(function(ev){
+	    console.log("mineditvalue keypress $(this)=", $(this)," ev=", ev);
+	    return false;
+	})
+	.each(function (ix,el){console.log("minieditvalue ix=", ix, " el=", el);});
+}
+
 console.log ("miniedit.js $webhost=", $webhost);
 
 $(document).ready(function(){
@@ -123,8 +134,13 @@ $(document).ready(function(){
       success: function (data, stat, jh) {
           console.log("miniedit_startpage success data=", data, " stat=", stat, " jh=", jh);
 	  var ps = data.progstatus;
-	  console.log("miniedit_startpage ps=", ps);
+	  var hc = data.contenthtml;
+	  var dc = data.docontent;
+	  console.log("miniedit_startpage ps=", ps, "\n.. hc=", hc);
 	  $progstatusp.html(ps);
+	  $contentdiv.html(hc);
+	  console.log("miniedit_startpage dc=", dc);
+	  if (dc) eval(dc);
       },
       error: function (jq, stat, err) {
           console.log("miniedit_startpage error jq=", jq, " stat=", stat, " err=", err);

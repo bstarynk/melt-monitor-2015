@@ -59,3 +59,9 @@ button#mom_minieditdumpexit_id {
     font-weight: bold;
     color: darkred;
 }
+
+span.mom_minieditvalue_cl {
+    background-color: lightpink;
+    min-height: 9px;
+    min-width: 5px;
+}
