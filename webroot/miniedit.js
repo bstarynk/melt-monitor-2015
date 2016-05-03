@@ -44,7 +44,16 @@ $(document).ready(function(){
     $tempstatusp = $('#mom_miniedittempstatusp_id');
     $contentdiv = $('#mom_minieditcontentdiv_id');
     $dumpexitbut = $('#mom_minieditdumpexit_id');
-    $websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
+    console.log ("miniedit readying $navbar=", $navbar,
+		 " $progstatusp=", $progstatusp,
+		 " $tempstatusp=", $tempstatusp,
+		 " $contentdiv=", $contentdiv,
+		 " $dumpexitbut=", $dumpexitbut,
+		 " $websocket=", $websocket);
+    if (!$websocket) {
+	console.log("miniedit getting websocket");
+	$websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
+    }
     console.log ("miniedit $websocket=", $websocket);
     $websocket.onopen = function () {
 	console.log ("miniedit opened $websocket=", $websocket);
@@ -79,6 +88,7 @@ $(document).ready(function(){
 	console.log ("miniedit closed $websocket=", $websocket);
 	$websocket = null;
     };
+    console.log ("miniedit $dumpexitbut=", $dumpexitbut);
     $dumpexitbut.click(function(ev) {
 	console.log("miniedit $dumpexitbut=", $dumpexitbut, " cliked ev=", ev);
 	$.ajax({url: "/miniedit_dumpexit",
@@ -96,7 +106,15 @@ $(document).ready(function(){
 		    console.log("miniedit dumpedit ajaxerror jq=", jq, " stat=", stat, " err=", err);
 		}
 	       });			       
-    });	       
+    });
+    console.log("miniedit $contentdiv=", $contentdiv);
+    $contentdiv.on('input', function(ev) {
+	console.log("miniedit $contentdiv=", $contentdiv, " input ev=", ev, " $(this)=", $(this));
+    });
+    console.log("miniedit $contentdiv=", $contentdiv);
+    $($contentdiv).keypress(function(ev) {
+	console.log("miniedit $contentdiv=", $contentdiv, " keypress ev=", ev, " $(this)=", $(this));
+    });
     $.ajax
     ({url: "/miniedit_startpage",
       method: "POST",
