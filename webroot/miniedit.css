@@ -68,3 +68,26 @@ span.mom_minieditvalue_cl {
     float: left;
     gap: 2px;
 }
+
+
+span.mom_minieditword_cl {
+    background-color: azure;
+    color: #3B0346;
+    min-height: 9px;
+    min-width: 7px;
+    border: 1px dashed #A57D2A;
+    font-family: fixed;
+    float: left;
+    gap: 1px;
+}
+
+span.mom_minieditname_cl {
+    background-color: azure;
+    color: #763F05;
+    min-height: 9px;
+    min-width: 7px;
+    border: 1px dashed #A57D2A;
+    font-family: fixed;
+    float: left;
+    gap: 1px;
+}

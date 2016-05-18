@@ -562,17 +562,28 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
   const char *whichstr = onion_request_get_post (wexch->webx_requ, "which");
   const char *offsetstr = onion_request_get_post (wexch->webx_requ, "offset");
   const char *keystr = onion_request_get_post (wexch->webx_requ, "key");
+  const char *altstr = onion_request_get_post (wexch->webx_requ, "alt");
+  const char *ctrlstr = onion_request_get_post (wexch->webx_requ, "ctrl");
+  const char *metastr = onion_request_get_post (wexch->webx_requ, "meta");
+  const char *timestampstr =
+    onion_request_get_post (wexch->webx_requ, "timestamp");
   struct mom_item_st *miditm = mom_find_item_by_string (midstr);
   MOM_DEBUGPRINTF (web,
-                   "miniedit_keypressajax midstr=%s whichstr=%s offsetstr=%s keystr=%s miditm=%s",
+                   "miniedit_keypressajax midstr=%s whichstr=%s offsetstr=%s"
+                   " keystr=%s altstr=%s ctrlstr=%s metastr=%s timestampstr=%s miditm=%s",
                    midstr, whichstr, offsetstr, keystr,
+                   altstr, ctrlstr, metastr, timestampstr,
                    mom_item_cstring (miditm));
+  bool isalt = altstr && (altstr[0] == 't' || altstr[0] == '1');
+  bool isctrl = ctrlstr && (ctrlstr[0] == 't' || ctrlstr[0] == '1');
+  bool ismeta = metastr && (metastr[0] == 't' || metastr[0] == '1');
+  long timestampl = timestampstr ? atol (timestampstr) : -1;
   if (!miditm)
     {
       MOM_WARNPRINTF
         ("miniedit_keypressajax req#%ld bad midstr=%s sessitm=%s",
          wexch->webx_count, midstr, mom_item_cstring (sessitm));
-      MOM_WEXCH_PRINTF ("bad midstr %s", midstr);
+      MOM_WEXCH_PRINTF (wexch, "bad midstr %s", midstr);
       mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
       goto end;
     }
@@ -583,16 +594,16 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
     mom_dyncast_item (mom_unsync_item_get_phys_attr
                       (miditm, MOM_PREDEFITM (miniedit)));
   MOM_DEBUGPRINTF (web,
-                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d offsetint=%d",
+                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d offsetint=%d timestampl=%ld",
                    wexch->webx_count, mom_item_cstring (mieditm), whichint,
-                   offsetint);
+                   offsetint, timestampl);
   if (!mieditm)
     {
       MOM_WARNPRINTF
         ("miniedit_keypressajax req#%ld  miditm=%s without miniedit sessitm=%s",
          wexch->webx_count, mom_item_cstring (miditm),
          mom_item_cstring (sessitm));
-      MOM_WEXCH_PRINTF ("bad miditm %s", mom_item_cstring (miditm));
+      MOM_WEXCH_PRINTF (wexch, "bad miditm %s", mom_item_cstring (miditm));
       mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
       goto end;
     }
@@ -603,8 +614,48 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
   switch (mieditm->hva_hash % NBMEDIT_MOM)
     {
     case CASE_MIEDIT_MOM (value):
-      MOM_DEBUGPRINTF (web, "miniedit_keypressajax value miditm=%s",
-                       mom_item_cstring (miditm));
+      MOM_DEBUGPRINTF (web,
+                       "miniedit_keypressajax value miditm=%s key=%s which#%d",
+                       mom_item_cstring (miditm), keystr, whichint);
+      if (keystr && !isctrl && !ismeta && !isalt && keystr[0] && !keystr[1]
+          && isalpha (keystr[0]) && keystr[0] == (char) whichint)
+        {
+          struct mom_item_st *keyitm = mom_find_item_by_string (keystr);
+          MOM_DEBUGPRINTF (web,
+                           "miniedit_keypressajax value miditm=%s good key=%s keyitm=%s",
+                           mom_item_cstring (miditm), keystr,
+                           mom_item_cstring (keyitm));
+          void *valv = NULL;
+          const char *valcss = NULL;
+          if (keyitm)
+            {
+              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (miniedit),
+                                             MOM_PREDEFITM (item));
+              valv = keyitm;
+              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (item),
+                                             valv);
+              valcss = "mom_minieditname_cl";
+            }
+          else
+            {
+              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (miniedit),
+                                             (void *) MOM_PREDEFITM (word));
+              valv = mom_boxstring_make (keystr);
+              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
+                                             valv);
+              valcss = "mom_minieditword_cl";
+            }
+          MOM_DEBUGPRINTF (web,
+                           "miniedit_keypressajax value miditm=%s valv=%s valcss=%s",
+                           mom_item_cstring (miditm),
+                           mom_value_cstring (valv), valcss);
+          MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                            mom_item_cstring (miditm));
+          MOM_WEXCH_PRINTF (wexch, " \"replacecss\": \"%s\",\n", valcss);
+          MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n", keystr);
+          mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
+          goto end;
+        }
       MOM_WARNPRINTF ("miniedit_keypressajax req#%ld incomplete",
                       wexch->webx_count);
       break;
@@ -614,7 +665,7 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
         ("miniedit_keypressajax req#%ld bad miditm=%s sessitm=%s has unexpected mieditm=%s",
          wexch->webx_count, mom_item_cstring (miditm),
          mom_item_cstring (sessitm), mom_item_cstring (mieditm));
-      MOM_WEXCH_PRINTF ("miditm %s with strange mieditm %s",
+      MOM_WEXCH_PRINTF (wexch, "miditm %s with strange mieditm %s",
                         mom_item_cstring (miditm),
                         mom_item_cstring (mieditm));
       mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");

@@ -147,23 +147,51 @@ $(document).ready(function(){
 	    var mid = cc.id.substr(4);
 	    console.log ("miniedit keypress mid=", mid, " ev=", ev);
 	    var ajdata = {mom_id: mid};
+	    var off = null;
 	    if (wi > 0)
 		ajdata.which = wi;
-	    if (typeof cc.key == "string")
-		ajdata.key = cc.key;
+	    if (typeof ev.key == "string")
+		ajdata.key = ev.key;
 	    if (fo.startOffset == fo.endOffset)
-		ajdata.offset= fo.startOffset;
+		off=ajdata.offset= fo.startOffset;
 	    else {
 		ajdata.startOffset= fo.startOffset;
 		ajdata.endOffset= fo.endOffset;
 	    };
+	    if (ev.ctrlKey)
+		ajdata.ctrl = true;
+	    if (ev.altKey)
+		ajdata.alt = true;
+	    if (ev.metaKey)
+		ajdata.meta = true;
+	    if (ev.timeStamp)
+		ajdata.timestamp = ev.timeStamp;
 	    console.log ("miniedit keypress ajdata=", ajdata);
 	    $.ajax({url: "/miniedit_keypressajax",
 		    method: "POST",
 		    data: ajdata,
 		    dataType: "json",
 		    success: function (jdata, stat, jh) {
+			var replacedel = null;
+			var replacecss;
+			var replacehtml;
 			console.log("miniedit keypressajax ok jdata=",  jdata);
+			if (jdata.replaceid == mid)
+			    replacedel = cc;
+			else replacedel = $("#mom$" + jdata.replaceid);
+			if (replacedel) {
+			    replacecss = jdata.replacecss;
+			    replacehtml = jdata.replacehtml;
+			}
+			console.log("miniedit keypressajax replacedel=", replacedel,
+				    " replacecss=", replacecss, " cc=", cc, 
+				    " replacehtml=", replacehtml);
+			if (cc==replacedel) {
+			    $(cc).replaceWith("<span class='"+replacecss+"' id='mom$"+jdata.replaceid+"'>"+replacehtml+"</span>");
+			}
+			else {
+			    console.warn("miniedit keypressajax strange jdata=", jdata);
+			}
 		    },
 		    error: function(jq, stat, err) {
 			console.log("miniedit keypressajax error jq=", jq,
