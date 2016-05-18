@@ -362,7 +362,7 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
     {
     case CASE_MIEDIT_MOM (value):
       mom_file_printf (fbu,
-                       "<span class='mom_minieditvalue_cl' id='mom$%s'>°</span>",
+                       "<span class='mom_minieditvalue_cl' id='mom$%s'></span>",
                        mom_item_cstring (contitm));
       break;
     default:

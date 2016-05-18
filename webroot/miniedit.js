@@ -120,11 +120,36 @@ $(document).ready(function(){
     });
     console.log("miniedit $contentdiv=", $contentdiv);
     $contentdiv.on('input', function(ev) {
-	console.log("miniedit $contentdiv=", $contentdiv, " input ev=", ev, " $(this)=", $(this));
+	// http://stackoverflow.com/a/26353788/841108
+	var fo = window.getSelection().getRangeAt(0);
+	var pn = fo.commonAncestorContainer.parentNode;
+	var wi = ev.which;
+	console.log("miniedit input $contentdiv=", $contentdiv, " ev=", ev,
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
     });
     console.log("miniedit $contentdiv=", $contentdiv);
     $($contentdiv).keypress(function(ev) {
-	console.log("miniedit $contentdiv=", $contentdiv, " keypress ev=", ev, " $(this)=", $(this));
+	var fo = window.getSelection().getRangeAt(0);
+	var pn = fo.commonAncestorContainer.parentNode;
+	var wi = ev.which;
+	console.log("miniedit keypress $contentdiv=", $contentdiv, " ev=", ev,
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
+    });
+    console.log("miniedit $contentdiv=", $contentdiv);
+    $($contentdiv).keyup(function(ev) {
+	var fo = window.getSelection().getRangeAt(0);
+	var pn = fo.commonAncestorContainer.parentNode;
+	var wi = ev.which;
+	console.log("miniedit keyup $contentdiv=", $contentdiv, " ev=", ev,
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
+    });
+    console.log("miniedit $contentdiv=", $contentdiv);
+    $($contentdiv).keydown(function(ev) {
+	var fo = window.getSelection().getRangeAt(0);
+	var pn = fo.commonAncestorContainer.parentNode;
+	var wi = ev.which;
+	console.log("miniedit keydown $contentdiv=", $contentdiv, " ev=", ev,
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
     });
     $.ajax
     ({url: "/miniedit_startpage",

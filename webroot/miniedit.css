@@ -63,5 +63,8 @@ button#mom_minieditdumpexit_id {
 span.mom_minieditvalue_cl {
     background-color: lightpink;
     min-height: 9px;
-    min-width: 5px;
+    min-width: 7px;
+    border: 1px dashed #A56D2A;
+    float: left;
+    gap: 2px;
 }
