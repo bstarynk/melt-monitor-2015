@@ -172,12 +172,12 @@ Debian package.
 
 + [libonion](http://www.coralbits.com/libonion/) is an HTTP server
   library that is absolutely required, but it is not packaged in
-  Debian. So compile its latest source from
-  [David Moreno `onion` github](https://github.com/davidmoreno/onion);
-  I did contribute some small patches to it (sometimes, when I need a
-  patch not yet accepted in `libonion` by David Moreno, you'll need to
-  compile my github
-  [fork of onion](https://github.com/bstarynk/onion)...).
+  Debian. So compile its latest source from [David Moreno `onion`
+  github](https://github.com/davidmoreno/onion); I did contribute some
+  small patches to it (sometimes, when I need a patch not yet accepted
+  in `libonion` by David Moreno, you'll need to compile my github
+  [fork of onion](https://github.com/bstarynk/onion)...). I need at
+  least the version 0.8 (may 2016) of `libonion`
 
 + I am using some HTML5 things (e.g. JQuery, etc...) but I am copying
 them under my `webroot/` subdirectory, which also contains some of my
@@ -336,7 +336,7 @@ to get some command line help.  Later, try something like `./monimelt
 -Drun,web -W localhost.localdomain:8086/ -J 3` in the terminal and use your
 browser on URLs like `http://localhost.localdomain:8086/hackc.html` to
 be able to type some C code and run it, or
-`http://localhost.localdomain:8086/nanoedit.html` to try the nano
+`http://localhost.localdomain:8086/miniedit.html` to try the nano
 editor (very alpha, not working yet).
 
 To simply dump the state and test the persistency machinery, try

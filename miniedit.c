@@ -351,6 +351,8 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
                       (contitm, MOM_PREDEFITM (miniedit)));
   MOM_DEBUGPRINTF (web, "miniedit_outputedit mieditm=%s",
                    mom_item_cstring (mieditm));
+  if (mieditm == NULL)
+    MOM_FATAPRINTF("miniedit_outputedit nil mieditm in contitm=%s", mom_item_cstring(contitm));
   assert (mieditm != NULL && mieditm->va_itype == MOMITY_ITEM);
 #define NBMEDIT_MOM 31
 #define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
@@ -535,5 +537,7 @@ momf_miniedit_websocket (struct mom_item_st *wexitm,
     }
   wses->wbss_websock =
     onion_websocket_new (wexch->webx_requ, wexch->webx_resp);
+  MOM_WARNPRINTF
+    ("miniedit_websocket wexitm=%s incomplete");
 #warning miniedit_websocket incomplete
 }                               /* end of momf_miniedit_websocket */
