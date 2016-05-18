@@ -1101,6 +1101,7 @@ momf_ldc_payload_tasklet (struct mom_item_st *itm, struct mom_loader_st *ld)
   (void) mom_unsync_item_initialize_tasklet (itm, 9 * nbfra / 8 + 10,
                                              9 * nbsca / 8 + 20,
                                              9 * nbptr / 8 + 30);
+  ld->ld_kindcount[MOMITY_TASKLET]++;
 }                               /* end of momf_ldc_payload_tasklet */
 
 
@@ -1235,7 +1236,10 @@ momf_ldc_taskstepper (struct mom_item_st *itm, struct mom_loader_st *ld)
                 mom_item_cstring (itm)) < (int) sizeof (nambuf)
       && (tstep = dlsym (mom_prog_dlhandle, nambuf)) != NULL
       && tstep->va_itype == MOMITY_TASKSTEPPER)
-    itm->itm_payload = (void *) tstep;
+    {
+      itm->itm_payload = (void *) tstep;
+      ld->ld_kindcount[MOMITY_TASKSTEPPER]++;
+    }
   else
     MOM_WARNPRINTF ("failed to find tasktepper for %s : %s",
                     mom_item_cstring (itm), dlerror ());

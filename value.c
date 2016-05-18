@@ -1579,6 +1579,7 @@ momf_ldp_tuple (struct mom_item_st *itm,
     }
   const struct mom_boxtuple_st *tup = mom_boxtuple_make_arr (elemsize, arr);
   mom_loader_push (ld, mom_ldstate_make_tuple (tup));
+  ld->ld_kindcount[MOMITY_TUPLE]++;
   MOM_DEBUGPRINTF (load, "momf_ldp_tuple pushed #%d %s",
                    ld->ld_stacktop,
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
@@ -1606,6 +1607,7 @@ momf_ldp_set (struct mom_item_st *itm,
     }
   const struct mom_boxset_st *set = mom_boxset_make_arr (elemsize, arr);
   mom_loader_push (ld, mom_ldstate_make_set (set));
+  ld->ld_kindcount[MOMITY_SET]++;
   MOM_DEBUGPRINTF (load, "momf_ldp_set pushed #%d %s",
                    ld->ld_stacktop,
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
@@ -1641,6 +1643,7 @@ momf_ldp_node (struct mom_item_st *itm,
   const struct mom_boxnode_st *nod =
     mom_boxnode_make (connitm, elemsize - 1, arr);
   mom_loader_push (ld, mom_ldstate_make_node (nod));
+  ld->ld_kindcount[MOMITY_NODE]++;
   MOM_DEBUGPRINTF (load, "momf_ldp_node pushed #%d %s",
                    ld->ld_stacktop,
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
@@ -1680,6 +1683,7 @@ momf_ldp_nodemeta (struct mom_item_st *itm,
                    metark);
   const struct mom_boxnode_st *nod =
     mom_boxnode_make_meta (connitm, elemsize - 3, arr, metaitm, metark);
+  ld->ld_kindcount[MOMITY_NODE]++;
   mom_loader_push (ld, mom_ldstate_make_node (nod));
   MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta pushed #%d %s",
                    ld->ld_stacktop,

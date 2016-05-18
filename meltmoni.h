@@ -433,6 +433,7 @@ enum momitype_en
   MOMITY_TASKSTEPPER,
   MOMITY_FILE,
   MOMITY_FILEBUFFER,
+  MOMITY__LAST
 };
 struct mom_item_st;
 struct mom_loader_st;
@@ -1798,7 +1799,8 @@ mom_ldstate_make_node (const struct mom_boxnode_st *nd)
   /* ld_magic is always MOM_LOADER_MAGIC */	\
   unsigned ld_magic;				\
   FILE *ld_file;				\
-  const char *ld_path
+  const char *ld_path;				\
+  long ld_kindcount[MOMITY__LAST]
 
 struct mom_loader_st
 {

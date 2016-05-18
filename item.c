@@ -2324,6 +2324,7 @@ momf_ldp_payload_assoval (struct mom_item_st *itm,
                        mom_value_cstring (attval));
       asso = mom_assovaldata_put (asso, attitm, attval);
     }
+  ld->ld_kindcount[MOMITY_ASSOVALDATA]++;
   itm->itm_payload = (struct mom_anyvalue_st *) asso;
 }                               /* end of momf_ldp_payload_assoval */
 
@@ -2347,6 +2348,7 @@ momf_ldp_payload_vect (struct mom_item_st *itm,
                        ix, mom_value_cstring (val));
       vec = mom_vectvaldata_append (vec, val);
     }
+  ld->ld_kindcount[MOMITY_VECTVALDATA]++;
   itm->itm_payload = (struct mom_anyvalue_st *) vec;
 }                               /* end of momf_ldp_payload_vect */
 
@@ -2371,6 +2373,7 @@ momf_ldp_payload_queue (struct mom_item_st *itm,
                        ix, mom_value_cstring (val));
       mom_queue_append (qu, val);
     }
+  ld->ld_kindcount[MOMITY_QUEUE]++;
   itm->itm_payload = (struct mom_anyvalue_st *) qu;
 }                               /* end of momf_ldp_payload_queue */
 
@@ -2395,6 +2398,7 @@ momf_ldp_payload_hashset (struct mom_item_st *itm,
         continue;
       hset = mom_hashset_insert (hset, elitm);
     }
+  ld->ld_kindcount[MOMITY_HASHSET]++;
   itm->itm_payload = (struct mom_anyvalue_st *) hset;
 }                               /* end of momf_ldp_payload_hashset */
 
@@ -2426,6 +2430,7 @@ momf_ldp_payload_hashmap (struct mom_item_st *itm,
                        mom_value_cstring (attval));
       hmap = mom_hashmap_put (hmap, attitm, attval);
     }
+  ld->ld_kindcount[MOMITY_HASHMAP]++;
   itm->itm_payload = (struct mom_anyvalue_st *) hmap;
 }                               /* end of momf_ldp_payload_hashmap */
 

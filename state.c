@@ -257,6 +257,7 @@ first_pass_loader_mom (struct mom_loader_st *ld)
           const char *end = NULL;
           struct mom_item_st *itm =
             mom_make_item_from_string (linbuf + 1, &end);
+          ld->ld_kindcount[MOMITY_ITEM]++;
           MOM_DEBUGPRINTF (load, "first pass line#%d made item %s (@%p)",
                            linecount, mom_item_cstring (itm), (void *) itm);
           ld->ld_hsetitems = mom_hashset_insert (ld->ld_hsetitems, itm);
@@ -324,10 +325,13 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass %s double %g",
                                boxed ? "boxed" : "raw", x);
               if (boxed)
-                mom_loader_push
-                  (ld,
-                   mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
-                                         mom_boxdouble_make (x)));
+                {
+                  mom_loader_push
+                    (ld,
+                     mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
+                                           mom_boxdouble_make (x)));
+                  ld->ld_kindcount[MOMITY_BOXDOUBLE]++;
+                }
               else
                 mom_loader_push (ld, mom_ldstate_make_dbl (x));
             }
@@ -338,10 +342,13 @@ second_pass_loader_mom (struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "second_pass %s integer %lld",
                                boxed ? "boxed" : "raw", ll);
               if (boxed)
-                mom_loader_push
-                  (ld,
-                   mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
-                                         mom_boxint_make (ll)));
+                {
+                  mom_loader_push
+                    (ld,
+                     mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
+                                           mom_boxint_make (ll)));
+                  ld->ld_kindcount[MOMITY_BOXINT]++;
+                }
               else
                 mom_loader_push (ld, mom_ldstate_make_int (ll));
             }
@@ -357,6 +364,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 (ld,
                  mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (INFINITY)));
+              ld->ld_kindcount[MOMITY_BOXDOUBLE]++;
             }
           else if (!strncmp (linbuf, "-INF_", 5))
             {
@@ -365,6 +373,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 (ld,
                  mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (-INFINITY)));
+              ld->ld_kindcount[MOMITY_BOXDOUBLE]++;
             }
           else if (!strncmp (linbuf, "+NAN_", 5))
             {
@@ -373,6 +382,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 (ld,
                  mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxdouble_make (NAN)));
+              ld->ld_kindcount[MOMITY_BOXDOUBLE]++;
             }
           else if (!strncmp (linbuf, "+INF", 4))
             {
@@ -430,6 +440,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                 (ld,
                  mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
                                        mom_boxstring_make (ss.ss_str)));
+              ld->ld_kindcount[MOMITY_BOXSTRING]++;
             }
           else if (!end[1] || isspace (end[1]))
             {
@@ -444,6 +455,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
         {
           MOM_DEBUGPRINTF (load, "second_pass nil value");
           mom_loader_push (ld, mom_ldstate_make_val (NULL));
+          ld->ld_kindcount[MOMITY_NONE]++;
         }
       //// ( is pushing a mark
       else if (linbuf[0] == '(' && (!linbuf[1] || isspace (linbuf[1])))
@@ -696,7 +708,6 @@ mom_load_state (const char *statepath)
   first_pass_loader_mom (mom_loader);
   second_pass_loader_mom (mom_loader);
   unsigned nbitems = mom_loader->ld_hsetitems->cda_count;
-  mom_loader = NULL;
   start_after_load_mom (nbitems);
   double endrealtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
@@ -708,6 +719,30 @@ mom_load_state (const char *statepath)
      endcputime - startcputime,
      (endrealtime - startrealtime) * (1.0e6 / nbitems),
      (endcputime - startcputime) * (1.0e6 / nbitems));
+  MOM_INFORMPRINTF
+    ("loaded %ld nils, %ld ints, %ld strings, %ld items, %ld tuples, %ld sets, %ld nodes",
+     mom_loader->ld_kindcount[MOMITY_NONE],
+     mom_loader->ld_kindcount[MOMITY_BOXINT],
+     mom_loader->ld_kindcount[MOMITY_BOXSTRING],
+     mom_loader->ld_kindcount[MOMITY_ITEM],
+     mom_loader->ld_kindcount[MOMITY_TUPLE],
+     mom_loader->ld_kindcount[MOMITY_SET],
+     mom_loader->ld_kindcount[MOMITY_NODE]);
+  MOM_INFORMPRINTF
+    ("loaded payloads: %ld assocs, %ld vects, %ld queues, %ld hashsets, %ld hashmaps",
+     mom_loader->ld_kindcount[MOMITY_ASSOVALDATA],
+     mom_loader->ld_kindcount[MOMITY_VECTVALDATA],
+     mom_loader->ld_kindcount[MOMITY_QUEUE],
+     mom_loader->ld_kindcount[MOMITY_HASHSET],
+     mom_loader->ld_kindcount[MOMITY_HASHMAP]);
+  MOM_INFORMPRINTF
+    ("... %ld hashassocs, %ld jsons, %ld tasklets, %ld tasksteppers, %ld filebuffers",
+     mom_loader->ld_kindcount[MOMITY_HASHASSOC],
+     mom_loader->ld_kindcount[MOMITY_JSON],
+     mom_loader->ld_kindcount[MOMITY_TASKLET],
+     mom_loader->ld_kindcount[MOMITY_TASKSTEPPER],
+     mom_loader->ld_kindcount[MOMITY_FILEBUFFER]);
+  mom_loader = NULL;
 }                               /* end mom_load_state */
 
 
