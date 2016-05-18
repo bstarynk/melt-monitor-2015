@@ -118,37 +118,80 @@ $(document).ready(function(){
 		}
 	       });			       
     });
+    //
     console.log("miniedit $contentdiv=", $contentdiv);
     $contentdiv.on('input', function(ev) {
 	// http://stackoverflow.com/a/26353788/841108
 	var fo = window.getSelection().getRangeAt(0);
-	var pn = fo.commonAncestorContainer.parentNode;
+	var cc = fo.commonAncestorContainer;
+	var pn = cc.parentNode;
 	var wi = ev.which;
-	console.log("miniedit input $contentdiv=", $contentdiv, " ev=", ev,
-		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
+	console.log("miniedit input $contentdiv=", $contentdiv,
+		    " ev=", ev,  " .key=", ev.key, 
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn,  " cc=", cc, ";.id=", cc.id,
+		    " wi=", wi);
+	return false;
     });
+    //
     console.log("miniedit $contentdiv=", $contentdiv);
     $($contentdiv).keypress(function(ev) {
 	var fo = window.getSelection().getRangeAt(0);
-	var pn = fo.commonAncestorContainer.parentNode;
+	var cc = fo.commonAncestorContainer;
+	var pn = cc.parentNode;
 	var wi = ev.which;
-	console.log("miniedit keypress $contentdiv=", $contentdiv, " ev=", ev,
-		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
+	console.log("miniedit keypress $contentdiv=", $contentdiv, 
+		    " ev=", ev,  " .key=", ev.key, 
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " cc=", cc, ";.id=", cc.id,
+		    " wi=", wi);
+	if (cc.id && /^mom\$/.test(cc.id)) {
+	    var mid = cc.id.substr(4);
+	    console.log ("miniedit keypress mid=", mid, " ev=", ev);
+	    var ajdata = {mom_id: mid};
+	    if (wi > 0)
+		ajdata.which = wi;
+	    if (typeof cc.key == "string")
+		ajdata.key = cc.key;
+	    if (fo.startOffset == fo.endOffset)
+		ajdata.offset= fo.startOffset;
+	    else {
+		ajdata.startOffset= fo.startOffset;
+		ajdata.endOffset= fo.endOffset;
+	    };
+	    console.log ("miniedit keypress ajdata=", ajdata);
+	    $.ajax({url: "/miniedit_keypressajax",
+		    method: "POST",
+		    data: ajdata,
+		    dataType: "json",
+		    success: function (jdata, stat, jh) {
+			console.log("miniedit keypressajax ok jdata=",  jdata);
+		    },
+		    error: function(jq, stat, err) {
+			console.log("miniedit keypressajax error jq=", jq,
+				    " stat=", stat, " err=", err);
+		    }
+		   });
+		    
+	}
+	return false;
     });
+    //
     console.log("miniedit $contentdiv=", $contentdiv);
     $($contentdiv).keyup(function(ev) {
 	var fo = window.getSelection().getRangeAt(0);
 	var pn = fo.commonAncestorContainer.parentNode;
 	var wi = ev.which;
-	console.log("miniedit keyup $contentdiv=", $contentdiv, " ev=", ev,
+	console.log("miniedit keyup $contentdiv=", $contentdiv,
+		    " ev=", ev,  " .key=", ev.key, 
 		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
     });
+    //
     console.log("miniedit $contentdiv=", $contentdiv);
     $($contentdiv).keydown(function(ev) {
 	var fo = window.getSelection().getRangeAt(0);
 	var pn = fo.commonAncestorContainer.parentNode;
 	var wi = ev.which;
-	console.log("miniedit keydown $contentdiv=", $contentdiv, " ev=", ev,
+	console.log("miniedit keydown $contentdiv=", $contentdiv,
+		    " ev=", ev,  " .key=", ev.key, 
 		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " wi=", wi);
     });
     $.ajax

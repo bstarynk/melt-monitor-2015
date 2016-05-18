@@ -352,7 +352,8 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
   MOM_DEBUGPRINTF (web, "miniedit_outputedit mieditm=%s",
                    mom_item_cstring (mieditm));
   if (mieditm == NULL)
-    MOM_FATAPRINTF("miniedit_outputedit nil mieditm in contitm=%s", mom_item_cstring(contitm));
+    MOM_FATAPRINTF ("miniedit_outputedit nil mieditm in contitm=%s",
+                    mom_item_cstring (contitm));
   assert (mieditm != NULL && mieditm->va_itype == MOMITY_ITEM);
 #define NBMEDIT_MOM 31
 #define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
@@ -537,7 +538,52 @@ momf_miniedit_websocket (struct mom_item_st *wexitm,
     }
   wses->wbss_websock =
     onion_websocket_new (wexch->webx_requ, wexch->webx_resp);
-  MOM_WARNPRINTF
-    ("miniedit_websocket wexitm=%s incomplete");
+  MOM_WARNPRINTF ("miniedit_websocket wexitm=%s incomplete");
 #warning miniedit_websocket incomplete
 }                               /* end of momf_miniedit_websocket */
+
+extern mom_webhandler_sig_t momf_miniedit_keypressajax;
+const char momsig_miniedit_keypressajax[] = "signature_webhandler";
+void
+momf_miniedit_keypressajax (struct mom_item_st *wexitm,
+                            struct mom_webexch_st *wexch,
+                            const struct mom_boxnode_st *wclos)
+{
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
+  struct mom_item_st *sessitm = wexch->webx_sessitm;
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_keypressajax start wexitm=%s wclos=%s sessitm=%s",
+                   mom_item_cstring (wexitm),
+                   mom_value_cstring ((const void *) wclos),
+                   mom_item_cstring (sessitm));
+  const char *midstr = onion_request_get_post (wexch->webx_requ, "mom_id");
+  const char *whichstr = onion_request_get_post (wexch->webx_requ, "which");
+  const char *offsetstr = onion_request_get_post (wexch->webx_requ, "offset");
+  const char *keystr = onion_request_get_post (wexch->webx_requ, "key");
+  struct mom_item_st *miditm = mom_find_item_by_string (midstr);
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_keypressajax midstr=%s whichstr=%s offsetstr=%s keystr=%s miditm=%s",
+                   midstr, whichstr, offsetstr, keystr,
+                   mom_item_cstring (miditm));
+  if (!miditm)
+    {
+      MOM_WARNPRINTF
+        ("miniedit_keypressajax req#%ld bad midstr=%s sessitm=%s",
+         wexch->webx_count, midstr, sessitm);
+      MOM_WEXCH_PRINTF ("bad midstr %s", midstr);
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
+      return;
+    }
+  int whichint = atoi (whichstr);
+  mom_item_lock (miditm);
+  struct mom_item_st *mieditm = //
+    mom_dyncast_item (mom_unsync_item_get_phys_attr
+                      (miditm, MOM_PREDEFITM (miniedit)));
+  MOM_DEBUGPRINTF (web,
+                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d",
+                   wexch->webx_count, mom_item_cstring (mieditm), whichint);
+end:
+  if (miditm)
+    mom_item_unlock (miditm);
+
+}                               /* end of momf_miniedit_keypressajax */

@@ -1999,6 +1999,18 @@ comment
 )attrs
 
 
+*miniedit_keypressajax
+1463582655
+^mtime
+^func
+signature_webhandler
+^funsignature
+(
+comment
+"for miniedit keypress ajax"_
+)attrs
+
+
 *miniedit_startpage
 1461681361
 ^mtime
@@ -5870,6 +5882,14 @@ web_state
 web_state__0dmo5BBWK0mbtv
 miniedit_genstyle
 )node
+miniedit_keypressajax
+(
+(
+)tuple
+web_state
+web_state__0dmo5BBWK0mbtv
+miniedit_keypressajax
+)node
 miniedit_startpage
 (
 (
@@ -5884,7 +5904,7 @@ miniedit_websocket
 )tuple
 web_state
 web_state__0dmo5BBWK0mbtv
-miniedit_genstyle
+miniedit_websocket
 )node
 nanoedit
 (
