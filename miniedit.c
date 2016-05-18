@@ -371,6 +371,8 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
       MOM_WARNPRINTF ("miniedit_outputedit contitm=%s unexpected mieditm=%s",
                       mom_item_cstring (contitm), mom_item_cstring (mieditm));
       break;
+#undef CASE_MIEDIT_MOM
+#undef NBMEDIT_MOM
     };
 end:
   mom_item_unlock (contitm);
@@ -569,19 +571,57 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
     {
       MOM_WARNPRINTF
         ("miniedit_keypressajax req#%ld bad midstr=%s sessitm=%s",
-         wexch->webx_count, midstr, sessitm);
+         wexch->webx_count, midstr, mom_item_cstring (sessitm));
       MOM_WEXCH_PRINTF ("bad midstr %s", midstr);
       mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
-      return;
+      goto end;
     }
   int whichint = atoi (whichstr);
+  int offsetint = atoi (offsetstr);
   mom_item_lock (miditm);
   struct mom_item_st *mieditm = //
     mom_dyncast_item (mom_unsync_item_get_phys_attr
                       (miditm, MOM_PREDEFITM (miniedit)));
   MOM_DEBUGPRINTF (web,
-                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d",
-                   wexch->webx_count, mom_item_cstring (mieditm), whichint);
+                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d offsetint=%d",
+                   wexch->webx_count, mom_item_cstring (mieditm), whichint,
+                   offsetint);
+  if (!mieditm)
+    {
+      MOM_WARNPRINTF
+        ("miniedit_keypressajax req#%ld  miditm=%s without miniedit sessitm=%s",
+         wexch->webx_count, mom_item_cstring (miditm),
+         mom_item_cstring (sessitm));
+      MOM_WEXCH_PRINTF ("bad miditm %s", mom_item_cstring (miditm));
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
+      goto end;
+    }
+#define NBMEDIT_MOM 31
+#define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
+	  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
+	  goto defaultcasemiedit; foundcasemedit_##Nam
+  switch (mieditm->hva_hash % NBMEDIT_MOM)
+    {
+    case CASE_MIEDIT_MOM (value):
+      MOM_DEBUGPRINTF (web, "miniedit_keypressajax value miditm=%s",
+                       mom_item_cstring (miditm));
+      MOM_WARNPRINTF ("miniedit_keypressajax req#%ld incomplete",
+                      wexch->webx_count);
+      break;
+    default:
+    defaultcasemiedit:
+      MOM_WARNPRINTF
+        ("miniedit_keypressajax req#%ld bad miditm=%s sessitm=%s has unexpected mieditm=%s",
+         wexch->webx_count, mom_item_cstring (miditm),
+         mom_item_cstring (sessitm), mom_item_cstring (mieditm));
+      MOM_WEXCH_PRINTF ("miditm %s with strange mieditm %s",
+                        mom_item_cstring (miditm),
+                        mom_item_cstring (mieditm));
+      mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
+      goto end;
+    }
+#undef CASE_MIEDIT_MOM
+#undef NBMEDIT_MOM
 end:
   if (miditm)
     mom_item_unlock (miditm);
