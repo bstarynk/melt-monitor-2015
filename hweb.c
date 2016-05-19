@@ -64,14 +64,15 @@ pthread_create_mom (pthread_t * threadp, const pthread_attr_t * attr,
 void
 mom_start_web (const char *webservice)
 {
-  MOM_DEBUGPRINTF (web, "mom_start_web starting webservice=%s onion version %s",
-		   webservice, onion_version());
+  MOM_DEBUGPRINTF (web,
+                   "mom_start_web starting webservice=%s onion version %s",
+                   webservice, onion_version ());
 #if ONION_VERSION_MAJOR==0 && ONION_VERSION_MINOR<8
 #error monimelt needs libonion 0.8 at least
 #endif
-  if (onion_version_major()==0 && onion_version_minor()<8)
-    MOM_FATAPRINTF("too old libonion version %s; 0.8 at least is required",
-		   onion_version());
+  if (onion_version_major () == 0 && onion_version_minor () < 8)
+    MOM_FATAPRINTF ("too old libonion version %s; 0.8 at least is required",
+                    onion_version ());
   onion_low_initialize_memory_allocation (mom_gc_alloc, mom_gc_alloc_atomic,
                                           mom_gc_calloc, GC_realloc,
                                           GC_strdup, GC_free,
@@ -112,7 +113,7 @@ mom_start_web (const char *webservice)
   onion_set_max_threads (onion_mom, 1 + mom_nbjobs);
   MOM_DEBUGPRINTF (web, "maxonionthreads %d", 1 + mom_nbjobs);
   if (!strcmp (webhostname, "_"))
-    strcpy(webhostname, "localhost.localdomain");
+    strcpy (webhostname, "localhost.localdomain");
   if (webhostname[0])
     {
       web_hostname_mom = GC_STRDUP (webhostname);
@@ -763,7 +764,7 @@ mom_websocket (long reqcnt, onion_request *requ, onion_response *resp)
     }
   MOM_DEBUGPRINTF (web,
                    "mom_websocket reqcnt#%ld sessitm %s",
-		   reqcnt, mom_item_cstring(sessitm));
+                   reqcnt, mom_item_cstring (sessitm));
   assert (wses && wses->va_itype == MOMITY_WEBSESSION);
   if (MOM_UNLIKELY (wses->wbss_websock != NULL))
     {

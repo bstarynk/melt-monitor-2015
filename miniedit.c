@@ -1,21 +1,21 @@
 // file miniedit.c
 
 /**   Copyright (C)  2016  Basile Starynkevitch and later the FSF
-    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
-    This file is part of GCC.
+      MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+      This file is part of GCC.
   
-    GCC is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3, or (at your option)
-    any later version.
+      GCC is free software; you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation; either version 3, or (at your option)
+      any later version.
   
-    GCC is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING3.   If not see
-    <http://www.gnu.org/licenses/>.
+      GCC is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+      You should have received a copy of the GNU General Public License
+      along with GCC; see the file COPYING3.   If not see
+      <http://www.gnu.org/licenses/>.
 **/
 
 #include "meltmoni.h"
@@ -355,21 +355,49 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
     MOM_FATAPRINTF ("miniedit_outputedit nil mieditm in contitm=%s",
                     mom_item_cstring (contitm));
   assert (mieditm != NULL && mieditm->va_itype == MOMITY_ITEM);
-#define NBMEDIT_MOM 31
+#define NBMEDIT_MOM 53
 #define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
-	  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
-	  goto defaultcasemiedit; foundcasemedit_##Nam
+  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
+  goto defaultcasemiedit; foundcasemedit_##Nam
   switch (mieditm->hva_hash % NBMEDIT_MOM)
     {
     case CASE_MIEDIT_MOM (empty):
-      mom_file_printf (fbu,
-                       "<span class='mom_minieditempty_cl' id='mom$%s'>&nbsp;</span>",
-                       mom_item_cstring (contitm));
+      {
+        MOM_DEBUGPRINTF (web, "miniedit_outputedit empty, contitm=%s",
+                         mom_item_cstring (contitm));
+        mom_file_printf (fbu,
+                         "<span class='mom_minieditempty_cl' id='mom$%s'>&nbsp;</span>",
+                         mom_item_cstring (contitm));
+      }
       break;
-    case CASE_MIEDIT_MOM (value):
-      mom_file_printf (fbu,
-                       "<span class='mom_minieditvalue_cl' id='mom$%s'></span>",
-                       mom_item_cstring (contitm));
+    case CASE_MIEDIT_MOM (word):
+      {
+        FILE *fil = mom_file (fbu);
+        const struct mom_boxstring_st *wostr =
+          mom_dyncast_boxstring (mom_unsync_item_get_phys_attr
+                                 (contitm, MOM_PREDEFITM (word)));
+        MOM_DEBUGPRINTF (web, "miniedit_outputedit word, contitm=%s wostr=%s",
+                         mom_item_cstring (contitm),
+                         mom_value_cstring (wostr));
+        mom_file_printf (fbu,
+                         "<span class='mom_minieditword_cl' id='mom$%s'>",
+                         mom_item_cstring (contitm));
+        mom_output_utf8_html (fil, mom_boxstring_cstr (wostr),
+                              mom_size (wostr), false);
+        mom_file_puts (fbu, "</span>");
+      }
+      break;
+    case CASE_MIEDIT_MOM (item):
+      {
+        const struct mom_item_st *vitm =
+          mom_dyncast_boxstring (mom_unsync_item_get_phys_attr
+                                 (contitm, MOM_PREDEFITM (item)));
+        MOM_DEBUGPRINTF (web, "miniedit_outputedit item, contitm=%s vitm=%s",
+                         mom_item_cstring (contitm), mom_item_cstring (vitm));
+        mom_file_printf (fbu,
+                         "<span class='mom_miniedititem_cl' id='mom$%s'>%s</span>",
+                         mom_item_cstring (contitm), mom_item_cstring (vitm));
+      }
       break;
     default:
     defaultcasemiedit:
@@ -612,68 +640,119 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
       mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
       goto end;
     }
-#define NBMEDIT_MOM 31
+#define NBMEDIT_MOM 53
 #define CASE_MIEDIT_MOM(Nam) momhashpredef_##Nam % NBMEDIT_MOM:	\
-	  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
-	  goto defaultcasemiedit; foundcasemedit_##Nam
+  if (mieditm == MOM_PREDEFITM(Nam)) goto foundcasemedit_##Nam;	\
+  goto defaultcasemiedit; foundcasemedit_##Nam
   switch (mieditm->hva_hash % NBMEDIT_MOM)
     {
     case CASE_MIEDIT_MOM (empty):
-      MOM_DEBUGPRINTF (web,
-                       "miniedit_keypressajax empty miditm=%s key=%s which#%d",
-                       mom_item_cstring (miditm), keystr, whichint);
-      if (keystr && !isctrl && !ismeta && !isalt && keystr[0] && !keystr[1]
-          && isalpha (keystr[0]) && keystr[0] == (char) whichint)
-        {
-          struct mom_item_st *keyitm = mom_find_item_by_string (keystr);
-          MOM_DEBUGPRINTF (web,
-                           "miniedit_keypressajax empty miditm=%s good key=%s keyitm=%s",
-                           mom_item_cstring (miditm), keystr,
-                           mom_item_cstring (keyitm));
-          void *valv = NULL;
-          const char *valcss = NULL;
-          if (keyitm)
-            {
-              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (miniedit),
-                                             MOM_PREDEFITM (item));
-              valv = keyitm;
-              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (item),
-                                             valv);
-              valcss = "mom_minieditname_cl";
-            }
-          else
-            {
-              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (miniedit),
-                                             (void *) MOM_PREDEFITM (word));
-              valv = mom_boxstring_make (keystr);
-              mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
-                                             valv);
-              valcss = "mom_minieditword_cl";
-            }
-          MOM_DEBUGPRINTF (web,
-                           "miniedit_keypressajax value miditm=%s valv=%s valcss=%s",
-                           mom_item_cstring (miditm),
-                           mom_value_cstring (valv), valcss);
-          MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
-                            mom_item_cstring (miditm));
-          MOM_WEXCH_PRINTF (wexch, " \"replacecss\": \"%s\",\n", valcss);
-          MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n", keystr);
-          mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "application/json");
-          goto end;
-        }
-      MOM_WARNPRINTF ("miniedit_keypressajax req#%ld incomplete",
-                      wexch->webx_count);
+      {
+        MOM_DEBUGPRINTF (web,
+                         "miniedit_keypressajax empty miditm=%s key=%s which#%d",
+                         mom_item_cstring (miditm), keystr, whichint);
+        if (keystr && !isctrl && !ismeta && !isalt && keystr[0] && !keystr[1]
+            && isalpha (keystr[0]) && keystr[0] == (char) whichint)
+          {
+            struct mom_item_st *keyitm = mom_find_item_by_string (keystr);
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax empty miditm=%s good key=%s keyitm=%s",
+                             mom_item_cstring (miditm), keystr,
+                             mom_item_cstring (keyitm));
+            void *valv = NULL;
+            const char *valcss = NULL;
+            if (keyitm)
+              {
+                mom_unsync_item_put_phys_attr (miditm,
+                                               MOM_PREDEFITM (miniedit),
+                                               MOM_PREDEFITM (item));
+                valv = keyitm;
+                mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (item),
+                                               valv);
+                valcss = "mom_minieditname_cl";
+              }
+            else
+              {
+                mom_unsync_item_put_phys_attr (miditm,
+                                               MOM_PREDEFITM (miniedit),
+                                               (void *) MOM_PREDEFITM (word));
+                valv = mom_boxstring_make (keystr);
+                mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
+                                               valv);
+                valcss = "mom_minieditword_cl";
+              }
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax value miditm=%s valv=%s valcss=%s",
+                             mom_item_cstring (miditm),
+                             mom_value_cstring (valv), valcss);
+            MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                              mom_item_cstring (miditm));
+            MOM_WEXCH_PRINTF (wexch, " \"replacecss\": \"%s\",\n", valcss);
+            MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n", keystr);
+            mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK,
+                                    "application/json");
+            goto end;
+          }
+        MOM_WARNPRINTF ("miniedit_keypressajax req#%ld incomplete",
+                        wexch->webx_count);
+      }
       break;
+      ////
+    case CASE_MIEDIT_MOM (item):
+      {
+        struct mom_item_st *vitm =      //
+          mom_dyncast_item (mom_unsync_item_get_phys_attr
+                            (miditm, MOM_PREDEFITM (item)));
+        const char *vitstr = mom_item_cstring (vitm);
+        int vnamlen = vitstr ? strlen (vitstr) : 0;
+        struct mom_boxstring_st *namstr = NULL;
+        MOM_DEBUGPRINTF (web,
+                         "miniedit_keypressajax item miditm=%s vitm=%s vnamlen=%d off=%d key=%s which#%d",
+                         mom_item_cstring (miditm), vitstr,
+                         vnamlen, offsetint, keystr, whichint);
+        if (offsetint <= 0)
+          namstr = mom_boxstring_printf ("%s%s", keystr, vitstr);
+        else if (offsetint >= vnamlen)
+          namstr = mom_boxstring_printf ("%s%s", vitstr, keystr);
+        else
+          namstr = mom_boxstring_printf ("%*s%s%*s",
+                                         offsetint, vitstr, keystr,
+                                         vnamlen - offsetint, vitstr);
+        MOM_DEBUGPRINTF (web, "miniedit_keypressajax item namstr=%s",
+                         mom_value_cstring (namstr));
+        MOM_WARNPRINTF
+          ("miniedit_keypressajax req#%ld item incomplete namstr=%s",
+           wexch->webx_count, mom_value_cstring (namstr));
+#warning miniedit_keypressajax incomplete for item
+      }
+      break;
+      ////
+    case CASE_MIEDIT_MOM (word):
+      {
+        const struct mom_boxstring_st *worstr = //
+          mom_dyncast_boxstring (mom_unsync_item_get_phys_attr
+                                 (miditm, MOM_PREDEFITM (word)));
+        MOM_DEBUGPRINTF (web,
+                         "miniedit_keypressajax word miditm=%s worstr=%s off=%d key=%s which#%d",
+                         mom_item_cstring (miditm),
+                         mom_value_cstring ((void *) worstr), offsetint,
+                         keystr, whichint);
+#warning miniedit_keypressajax incomplete for word
+      }
+      break;
+      ////
     default:
     defaultcasemiedit:
-      MOM_WARNPRINTF
-        ("miniedit_keypressajax req#%ld bad miditm=%s sessitm=%s has unexpected mieditm=%s",
-         wexch->webx_count, mom_item_cstring (miditm),
-         mom_item_cstring (sessitm), mom_item_cstring (mieditm));
-      MOM_WEXCH_PRINTF (wexch, "miditm %s with strange mieditm %s",
-                        mom_item_cstring (miditm),
-                        mom_item_cstring (mieditm));
-      mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
+      {
+        MOM_WARNPRINTF
+          ("miniedit_keypressajax req#%ld bad miditm=%s sessitm=%s has unexpected mieditm=%s",
+           wexch->webx_count, mom_item_cstring (miditm),
+           mom_item_cstring (sessitm), mom_item_cstring (mieditm));
+        MOM_WEXCH_PRINTF (wexch, "miditm %s with strange mieditm %s",
+                          mom_item_cstring (miditm),
+                          mom_item_cstring (mieditm));
+        mom_unsync_wexch_reply (wexitm, wexch, HTTP_NOT_FOUND, "text/plain");
+      }
       goto end;
     }
 #undef CASE_MIEDIT_MOM

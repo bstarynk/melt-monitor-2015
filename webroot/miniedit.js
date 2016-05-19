@@ -61,6 +61,11 @@ $(document).ready(function(){
 		 " $contentdiv=", $contentdiv,
 		 " $dumpexitbut=", $dumpexitbut,
 		 " $websocket=", $websocket);
+    if ($websocket) {
+	console.log("miniedit old $websocket=", $websocket);
+	$websocket.close();
+	$websocket = null;
+    }
     if (!$websocket) {
 	console.log("miniedit getting websocket");
 	$websocket = new WebSocket('ws://' + $webhost + "/mom_websocket");
@@ -168,7 +173,7 @@ $(document).ready(function(){
 		ajdata.meta = true;
 	    if (ev.timeStamp)
 		ajdata.timestamp = ev.timeStamp;
-	    console.log ("miniedit keypress ajdata=", ajdata);
+	    console.log ("miniedit keypress ajdata=", ajdata, " el=", el);
 	    $.ajax({url: "/miniedit_keypressajax",
 		    method: "POST",
 		    data: ajdata,
@@ -179,7 +184,7 @@ $(document).ready(function(){
 			var replacehtml;
 			var range;
 			var sel;
-			console.log("miniedit keypressajax ok jdata=",  jdata);
+			console.log("miniedit keypressajax ok jdata=", jdata, " el=", el);
 			if (jdata.replaceid == mid)
 			    replacedel = el;
 			else replacedel = $("#mom$" + jdata.replaceid);
@@ -189,13 +194,15 @@ $(document).ready(function(){
 			}
 			console.log("miniedit keypressajax replacedel=", replacedel,
 				    " replacecss=", replacecss, " cc=", cc, 
-				    " replacehtml=", replacehtml);
-			if (el.attr('class') == replacecss && el==replacedel) {
+				    " replacehtml=", replacehtml, " el=", el);
+			if ((!replacecss || $(el).attr('class') == replacecss)
+			    && el==replacedel) {
 			    console.log("miniedit keypressajax insitu el=", el, " replacehtml=", replacehtml);
-			    el.html(replacehtml);
+			    $(el).html(replacehtml);
 			}
 			else if (el==replacedel) {
-			    console.log("miniedit keypressajax mutating el=", el, " of class=", el.attr('class'),
+			    console.log("miniedit keypressajax mutating el=", el,
+					" of class=", $(el).attr('class'),
 					" to span of replacecss=", replacecss);
 			    $(el).replaceWith("<span class='"+replacecss+"' id='mom$"+jdata.replaceid+"'>"+replacehtml+"</span>");
 			    // http://stackoverflow.com/a/6249440/841108
