@@ -82,7 +82,7 @@ mom_start_web (const char *webservice)
   memset (webhostname, 0, sizeof (webhostname));
   int webport = 0;
   int pos = -1;
-  if (isalpha (webservice[0]))
+  if (isalpha (webservice[0]) || webservice[0] == '_')
     {
       if (sscanf
           (webservice, "%70[A-Za-z0-9_.+-]:%d %n", webhostname, &webport,
