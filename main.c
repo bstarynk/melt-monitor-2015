@@ -1100,7 +1100,7 @@ usage_mom (const char *argv0)
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
   printf ("\t -W | --web <webservice>"
-          " \t# start a web service, e.g. localhost:8085\n");
+          " \t# start a web service, e.g. localhost.localdomain:8085 or _:8085\n");
   printf ("\t -J | --jobs <nbjobs>"
           " \t#set number of jobs, default %d, max %d\n", mom_nbjobs,
           MOM_JOB_MAX);

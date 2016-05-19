@@ -104,6 +104,8 @@ mom_start_web (const char *webservice)
   onion_mom = onion_new (O_THREADED | O_DETACH_LISTEN | O_NO_SIGTERM);
   onion_set_max_threads (onion_mom, 1 + mom_nbjobs);
   MOM_DEBUGPRINTF (web, "maxonionthreads %d", 1 + mom_nbjobs);
+  if (!strcmp (webhostname, "_"))
+    strcpy(webhostname, "localhost.localdomain");
   if (webhostname[0])
     {
       web_hostname_mom = GC_STRDUP (webhostname);
