@@ -361,6 +361,11 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
 	  goto defaultcasemiedit; foundcasemedit_##Nam
   switch (mieditm->hva_hash % NBMEDIT_MOM)
     {
+    case CASE_MIEDIT_MOM (empty):
+      mom_file_printf (fbu,
+                       "<span class='mom_minieditempty_cl' id='mom$%s'>&nbsp;</span>",
+                       mom_item_cstring (contitm));
+      break;
     case CASE_MIEDIT_MOM (value):
       mom_file_printf (fbu,
                        "<span class='mom_minieditvalue_cl' id='mom$%s'></span>",
@@ -416,7 +421,7 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
                          mom_item_cstring (econtitm),
                          mom_item_cstring (sessitm));
         mom_unsync_item_put_phys_attr (econtitm, MOM_PREDEFITM (miniedit),
-                                       MOM_PREDEFITM (value));
+                                       MOM_PREDEFITM (empty));
         mom_vectvaldata_put_nth (sessitm->itm_pcomp, miss_contitm,
                                  (void *) econtitm);
       }
@@ -613,16 +618,16 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
 	  goto defaultcasemiedit; foundcasemedit_##Nam
   switch (mieditm->hva_hash % NBMEDIT_MOM)
     {
-    case CASE_MIEDIT_MOM (value):
+    case CASE_MIEDIT_MOM (empty):
       MOM_DEBUGPRINTF (web,
-                       "miniedit_keypressajax value miditm=%s key=%s which#%d",
+                       "miniedit_keypressajax empty miditm=%s key=%s which#%d",
                        mom_item_cstring (miditm), keystr, whichint);
       if (keystr && !isctrl && !ismeta && !isalt && keystr[0] && !keystr[1]
           && isalpha (keystr[0]) && keystr[0] == (char) whichint)
         {
           struct mom_item_st *keyitm = mom_find_item_by_string (keystr);
           MOM_DEBUGPRINTF (web,
-                           "miniedit_keypressajax value miditm=%s good key=%s keyitm=%s",
+                           "miniedit_keypressajax empty miditm=%s good key=%s keyitm=%s",
                            mom_item_cstring (miditm), keystr,
                            mom_item_cstring (keyitm));
           void *valv = NULL;

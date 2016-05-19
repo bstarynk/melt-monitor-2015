@@ -141,11 +141,13 @@ $(document).ready(function(){
 	var wi = ev.which;
 	console.log("miniedit keypress $contentdiv=", $contentdiv, 
 		    " ev=", ev,  " .key=", ev.key, 
-		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " cc=", cc, ";.id=", cc.id,
+		    " $(this)=", $(this), " fo=", fo, " pn=", pn, " cc=", cc, ";.id=", cc.id?cc.id:"",
 		    " wi=", wi);
-	if (cc.id && /^mom\$/.test(cc.id)) {
-	    var mid = cc.id.substr(4);
-	    console.log ("miniedit keypress mid=", mid, " ev=", ev);
+	var el;
+	if ((((el=null),cc.id) && /^mom\$/.test(((el=cc).id)))
+	    || (((el=null),pn.id) && /^mom\$/.test(((el=pn).id)))) {
+	    var mid = el.id.substr(4);
+	    console.log ("miniedit keypress mid=", mid, " el=", el, " ev=", ev);
 	    var ajdata = {mom_id: mid};
 	    var off = null;
 	    if (wi > 0)
@@ -156,7 +158,7 @@ $(document).ready(function(){
 		off=ajdata.offset= fo.startOffset;
 	    else {
 		ajdata.startOffset= fo.startOffset;
-		ajdata.endOffset= fo.endOffset;
+		off=ajdata.endOffset= fo.endOffset;
 	    };
 	    if (ev.ctrlKey)
 		ajdata.ctrl = true;
@@ -175,9 +177,11 @@ $(document).ready(function(){
 			var replacedel = null;
 			var replacecss;
 			var replacehtml;
+			var range;
+			var sel;
 			console.log("miniedit keypressajax ok jdata=",  jdata);
 			if (jdata.replaceid == mid)
-			    replacedel = cc;
+			    replacedel = el;
 			else replacedel = $("#mom$" + jdata.replaceid);
 			if (replacedel) {
 			    replacecss = jdata.replacecss;
@@ -186,8 +190,22 @@ $(document).ready(function(){
 			console.log("miniedit keypressajax replacedel=", replacedel,
 				    " replacecss=", replacecss, " cc=", cc, 
 				    " replacehtml=", replacehtml);
-			if (cc==replacedel) {
-			    $(cc).replaceWith("<span class='"+replacecss+"' id='mom$"+jdata.replaceid+"'>"+replacehtml+"</span>");
+			if (el.attr('class') == replacecss && el==replacedel) {
+			    console.log("miniedit keypressajax insitu el=", el, " replacehtml=", replacehtml);
+			    el.html(replacehtml);
+			}
+			else if (el==replacedel) {
+			    console.log("miniedit keypressajax mutating el=", el, " of class=", el.attr('class'),
+					" to span of replacecss=", replacecss);
+			    $(el).replaceWith("<span class='"+replacecss+"' id='mom$"+jdata.replaceid+"'>"+replacehtml+"</span>");
+			    // http://stackoverflow.com/a/6249440/841108
+			    range = document.createRange();
+			    sel = window.getSelection();
+			    range.setStart(el,off);
+			    range.collapse(true);
+			    sel.removeAllRanges();
+			    sel.addRange(range);
+			    console.log ("miniedit keypressajax el=", el, " range=", range, " sel=", sel);
 			}
 			else {
 			    console.warn("miniedit keypressajax strange jdata=", jdata);

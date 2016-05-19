@@ -60,12 +60,9 @@ button#mom_minieditdumpexit_id {
     color: darkred;
 }
 
-span.mom_minieditvalue_cl {
+span.mom_minieditempty_cl {
     background-color: lightpink;
-    min-height: 9px;
-    min-width: 7px;
     border: 1px dashed #A56D2A;
-    float: left;
     gap: 2px;
 }
 
@@ -77,7 +74,6 @@ span.mom_minieditword_cl {
     min-width: 7px;
     border: 1px dashed #A57D2A;
     font-family: fixed;
-    float: left;
     gap: 1px;
 }
 
