@@ -173,7 +173,7 @@ $(document).ready(function(){
 		ajdata.meta = true;
 	    if (ev.timeStamp)
 		ajdata.timestamp = ev.timeStamp;
-	    console.log ("miniedit keypress ajdata=", ajdata, " el=", el);
+	    console.log ("miniedit keypress ajdata=", ajdata, " el=", el, " ev=", ev);
 	    $.ajax({url: "/miniedit_keypressajax",
 		    method: "POST",
 		    data: ajdata,
@@ -184,7 +184,7 @@ $(document).ready(function(){
 			var replacehtml;
 			var range;
 			var sel;
-			console.log("miniedit keypressajax ok jdata=", jdata, " el=", el);
+			console.log("miniedit keypressajax ok jdata=", jdata, " el=", el, " ev=", ev);
 			if (jdata.replaceid == mid)
 			    replacedel = el;
 			else replacedel = $("#mom$" + jdata.replaceid);
@@ -199,12 +199,14 @@ $(document).ready(function(){
 			    && el==replacedel) {
 			    console.log("miniedit keypressajax insitu el=", el, " replacehtml=", replacehtml);
 			    $(el).html(replacehtml);
+			    console.log("miniedit keypressajax done el=", el);
 			}
 			else if (el==replacedel) {
 			    console.log("miniedit keypressajax mutating el=", el,
 					" of class=", $(el).attr('class'),
-					" to span of replacecss=", replacecss);
+					" to span of replacecss=", replacecss, " replacehtml=", replacehtml);
 			    $(el).replaceWith("<span class='"+replacecss+"' id='mom$"+jdata.replaceid+"'>"+replacehtml+"</span>");
+			    console.log("miniedit keypressajax replaced el=", el);
 			    // http://stackoverflow.com/a/6249440/841108
 			    range = document.createRange();
 			    sel = window.getSelection();
@@ -212,10 +214,10 @@ $(document).ready(function(){
 			    range.collapse(true);
 			    sel.removeAllRanges();
 			    sel.addRange(range);
-			    console.log ("miniedit keypressajax el=", el, " range=", range, " sel=", sel);
+			    console.log ("miniedit keypressajax el=", el, " range=", range, " sel=", sel, " ev=", ev);
 			}
 			else {
-			    console.warn("miniedit keypressajax strange jdata=", jdata);
+			    console.warn("miniedit keypressajax strange jdata=", jdata, " ev=", ev);
 			}
 		    },
 		    error: function(jq, stat, err) {
@@ -223,8 +225,9 @@ $(document).ready(function(){
 				    " stat=", stat, " err=", err);
 		    }
 		   });
-		    
-	}
+	    console.log ("miniedit keypress good ev=", ev, " el=", el);
+	};
+	console.log ("miniedit keypress ending ev=", ev);
 	return false;
     });
     //
