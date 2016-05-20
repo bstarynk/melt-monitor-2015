@@ -711,8 +711,8 @@ agenda_thread_worker_mom (struct GC_stack_base *sb, void *data)
       else
         {
           double waitdelay = (MOM_IS_DEBUGGING (run)
-                              || MOM_IS_DEBUGGING (mutex)) ? 5.8 : 1.9;
-          waitdelay += (ix + 1) * 0.0333;
+                              || MOM_IS_DEBUGGING (mutex)) ? 6.8 : 2.6;
+          waitdelay += (ix + 1) * 0.04;
           if ((loopcnt + ix) % 4 == 0)
             waitdelay += ((mom_random_uint32 () & 0xffff) + 10) * 1.0e-5;
           double nowtim = mom_clock_time (CLOCK_REALTIME);

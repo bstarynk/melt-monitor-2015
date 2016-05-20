@@ -126,6 +126,7 @@ void
 mom_mini_genstyle (struct mom_item_st *wexitm,
                    struct mom_webexch_st *wexch, struct mom_item_st *styitm)
 {
+  assert (wexch && wexch->va_itype == MOMITY_WEBEXCH);
   MOM_FATAPRINTF
     ("unimplemented mom_mini_genstyle wexitm=%s styitm=%s",
      mom_item_cstring (wexitm), mom_item_cstring (styitm));
@@ -188,6 +189,7 @@ momf_miniedit_genstyle (struct mom_item_st *wexitm,
                    wexch->webx_count, ftell (wexch->webx_outfil),
                    (int) ftell (wexch->webx_outfil), wexch->webx_outbuf);
   mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK, "text/css");
+  goto end;
 end:;
 }                               /* end of momf_miniedit_genstyle */
 
@@ -366,7 +368,7 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
         MOM_DEBUGPRINTF (web, "miniedit_outputedit empty, contitm=%s",
                          mom_item_cstring (contitm));
         mom_file_printf (fbu,
-                         "<span class='mom_minieditempty_cl' id='mom$%s'>&nbsp;</span>",
+                         "<span class='mom_minieditempty_cl' id='mom$%s' tabindex='0'>&nbsp;</span>",
                          mom_item_cstring (contitm));
       }
       break;
@@ -378,9 +380,9 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
                                  (contitm, MOM_PREDEFITM (word)));
         MOM_DEBUGPRINTF (web, "miniedit_outputedit word, contitm=%s wostr=%s",
                          mom_item_cstring (contitm),
-                         mom_value_cstring (wostr));
+                         mom_value_cstring ((void *) wostr));
         mom_file_printf (fbu,
-                         "<span class='mom_minieditword_cl' id='mom$%s'>",
+                         "<span class='mom_minieditword_cl' id='mom$%s' tabindex='0'>",
                          mom_item_cstring (contitm));
         mom_output_utf8_html (fil, mom_boxstring_cstr (wostr),
                               mom_size (wostr), false);
@@ -390,12 +392,12 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
     case CASE_MIEDIT_MOM (item):
       {
         const struct mom_item_st *vitm =
-          mom_dyncast_boxstring (mom_unsync_item_get_phys_attr
-                                 (contitm, MOM_PREDEFITM (item)));
+          mom_dyncast_item (mom_unsync_item_get_phys_attr
+                            (contitm, MOM_PREDEFITM (item)));
         MOM_DEBUGPRINTF (web, "miniedit_outputedit item, contitm=%s vitm=%s",
                          mom_item_cstring (contitm), mom_item_cstring (vitm));
         mom_file_printf (fbu,
-                         "<span class='mom_miniedititem_cl' id='mom$%s'>%s</span>",
+                         "<span class='mom_miniedititem_cl' id='mom$%s' tabindex='0'>%s</span>",
                          mom_item_cstring (contitm), mom_item_cstring (vitm));
       }
       break;
@@ -444,14 +446,14 @@ momf_miniedit_startpage (struct mom_item_st *wexitm,
     if (!econtitm)
       {
         econtitm = mom_clone_item (MOM_PREDEFITM (miniedit));
-        MOM_DEBUGPRINTF (web,
-                         "momf_miniedit_startpage new econtitm=%s in sessitm=%s",
-                         mom_item_cstring (econtitm),
-                         mom_item_cstring (sessitm));
         mom_unsync_item_put_phys_attr (econtitm, MOM_PREDEFITM (miniedit),
                                        MOM_PREDEFITM (empty));
         mom_vectvaldata_put_nth (sessitm->itm_pcomp, miss_contitm,
                                  (void *) econtitm);
+        MOM_DEBUGPRINTF (web,
+                         "momf_miniedit_startpage new empty econtitm=%s in sessitm=%s",
+                         mom_item_cstring (econtitm),
+                         mom_item_cstring (sessitm));
       }
     mom_item_unlock (sessitm);
   }
@@ -573,7 +575,8 @@ momf_miniedit_websocket (struct mom_item_st *wexitm,
     }
   wses->wbss_websock =
     onion_websocket_new (wexch->webx_requ, wexch->webx_resp);
-  MOM_WARNPRINTF ("miniedit_websocket wexitm=%s incomplete");
+  MOM_WARNPRINTF ("miniedit_websocket wexitm=%s incomplete",
+                  mom_item_cstring (wexitm));
 #warning miniedit_websocket incomplete
 }                               /* end of momf_miniedit_websocket */
 
@@ -627,9 +630,10 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
     mom_dyncast_item (mom_unsync_item_get_phys_attr
                       (miditm, MOM_PREDEFITM (miniedit)));
   MOM_DEBUGPRINTF (web,
-                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d offsetint=%d timestampl=%ld",
+                   "miniedit_keypressajax req#%ld mieditm=%s whichint=%d offsetint=%d"
+                   " timestampl=%ld miditm=%s",
                    wexch->webx_count, mom_item_cstring (mieditm), whichint,
-                   offsetint, timestampl);
+                   offsetint, timestampl, mom_item_cstring (miditm));
   if (!mieditm)
     {
       MOM_WARNPRINTF
@@ -659,7 +663,7 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                              "miniedit_keypressajax empty miditm=%s good key=%s keyitm=%s",
                              mom_item_cstring (miditm), keystr,
                              mom_item_cstring (keyitm));
-            void *valv = NULL;
+            const void *valv = NULL;
             const char *valcss = NULL;
             if (keyitm)
               {
@@ -670,6 +674,10 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                 mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (item),
                                                valv);
                 valcss = "mom_minieditname_cl";
+                MOM_DEBUGPRINTF (web,
+                                 "miniedit_keypressajax empty putattr miditm=%s `item`:%s",
+                                 mom_item_cstring (miditm),
+                                 mom_item_cstring (keyitm));
               }
             else
               {
@@ -680,6 +688,10 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                 mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
                                                valv);
                 valcss = "mom_minieditword_cl";
+                MOM_DEBUGPRINTF (web,
+                                 "miniedit_keypressajax empty putattr miditm=%s `word`:%s",
+                                 mom_item_cstring (miditm),
+                                 mom_value_cstring ((void *) valv));
               }
             MOM_DEBUGPRINTF (web,
                              "miniedit_keypressajax value miditm=%s valv=%s valcss=%s",
@@ -705,7 +717,7 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                             (miditm, MOM_PREDEFITM (item)));
         const char *vitstr = mom_item_cstring (vitm);
         int vnamlen = vitstr ? strlen (vitstr) : 0;
-        struct mom_boxstring_st *namstr = NULL;
+        const struct mom_boxstring_st *namstr = NULL;
         MOM_DEBUGPRINTF (web,
                          "miniedit_keypressajax item miditm=%s vitm=%s vnamlen=%d off=%d key=%s which#%d",
                          mom_item_cstring (miditm), vitstr,
@@ -718,25 +730,119 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
           namstr = mom_boxstring_printf ("%*s%s%*s",
                                          offsetint, vitstr, keystr,
                                          vnamlen - offsetint, vitstr);
-        MOM_DEBUGPRINTF (web, "miniedit_keypressajax item namstr=%s",
-                         mom_value_cstring (namstr));
+        MOM_DEBUGPRINTF (web, "miniedit_keypressajax item namstr=%s vitm=%s",
+                         mom_value_cstring ((void *) namstr), vitstr);
+        struct mom_item_st *namitm =
+          mom_find_item_by_string (mom_boxstring_cstr (namstr));
         MOM_WARNPRINTF
-          ("miniedit_keypressajax req#%ld item incomplete namstr=%s",
-           wexch->webx_count, mom_value_cstring (namstr));
-#warning miniedit_keypressajax incomplete for item
+          ("miniedit_keypressajax req#%ld item incomplete namstr=%s namitm=%s",
+           wexch->webx_count, mom_value_cstring ((void *) namstr),
+           mom_item_cstring (namitm));
+        if (namitm != NULL)
+          {
+            MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                              mom_item_cstring (miditm));
+            MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n",
+                              mom_boxstring_cstr (namstr));
+            mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK,
+                                    "application/json");
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax req#%ld still item %s",
+                             wexch->webx_count, mom_item_cstring (namitm));
+            goto end;
+          }
+        else                    /* namitm == NULL */
+          {
+            mom_unsync_item_remove_phys_attr (miditm, MOM_PREDEFITM (item));
+            mom_unsync_item_put_phys_attr (miditm,
+                                           MOM_PREDEFITM (miniedit),
+                                           (void *) MOM_PREDEFITM (word));
+            mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
+                                           namstr);
+            MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                              mom_item_cstring (miditm));
+            mom_wexch_puts (wexch,
+                            " \"replacecss\": \"mom_minieditword_cl\",\n");
+            MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n",
+                              mom_boxstring_cstr (namstr));
+            mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK,
+                                    "application/json");
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax req#%ld wexitm=%s miditm=%s change item to word %s",
+                             wexch->webx_count, mom_item_cstring (wexitm),
+                             mom_item_cstring (miditm),
+                             mom_boxstring_cstr (namstr));
+            goto end;
+          };
       }
       break;
       ////
     case CASE_MIEDIT_MOM (word):
       {
-        const struct mom_boxstring_st *worstr = //
+        const struct mom_boxstring_st *oldwstrv =       //
           mom_dyncast_boxstring (mom_unsync_item_get_phys_attr
                                  (miditm, MOM_PREDEFITM (word)));
         MOM_DEBUGPRINTF (web,
-                         "miniedit_keypressajax word miditm=%s worstr=%s off=%d key=%s which#%d",
+                         "miniedit_keypressajax word miditm=%s oldwstrv=%s off=%d key=%s which#%d",
                          mom_item_cstring (miditm),
-                         mom_value_cstring ((void *) worstr), offsetint,
+                         mom_value_cstring ((void *) oldwstrv), offsetint,
                          keystr, whichint);
+        unsigned oldwlen = mom_size (oldwstrv);
+        const char *olds = mom_boxstring_cstr (oldwstrv);
+        struct mom_boxstring_st *newstrv = NULL;
+        if (offsetint <= 0)
+          newstrv = mom_boxstring_printf ("%s%s", keystr, olds);
+        else if (offsetint >= oldwlen)
+          newstrv = mom_boxstring_printf ("%s%s", olds, keystr);
+        else
+          newstrv = mom_boxstring_printf ("%*s%s%*s",
+                                          offsetint, olds, keystr,
+                                          oldwlen - offsetint, olds);
+        struct mom_item_st *newitm =
+          mom_find_item_by_string (mom_boxstring_cstr (newstrv));
+        MOM_DEBUGPRINTF (web,
+                         "miniedit_keypressajax word req#%ld newstrv=%s newitm=%s",
+                         wexch->webx_count, mom_value_cstring (newstrv),
+                         mom_item_cstring (newitm));
+        if (newitm != NULL)
+          {
+            /* mutate word to item */
+            mom_unsync_item_remove_phys_attr (miditm, MOM_PREDEFITM (word));
+            mom_unsync_item_put_phys_attr (miditm,
+                                           MOM_PREDEFITM (miniedit),
+                                           (void *) MOM_PREDEFITM (item));
+            mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (item),
+                                           newitm);
+            MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                              mom_item_cstring (miditm));
+            mom_wexch_puts (wexch,
+                            " \"replacecss\": \"mom_miniedititem_cl\",\n");
+            MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n",
+                              mom_item_cstring (newitm));
+            mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK,
+                                    "application/json");
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax req#%ld wexitm=%s miditm=%s change word to item %s",
+                             wexch->webx_count, mom_item_cstring (wexitm),
+                             mom_item_cstring (miditm),
+                             mom_boxstring_cstr (newstrv));
+            goto end;
+          }
+        else                    /* newitm is null */
+          {
+            MOM_WEXCH_PRINTF (wexch, "{\"replaceid\": \"%s\",\n",
+                              mom_item_cstring (miditm));
+            MOM_WEXCH_PRINTF (wexch, " \"replacehtml\": \"%s\" }\n",
+                              mom_boxstring_cstr (newstrv));
+            mom_unsync_item_put_phys_attr (miditm, MOM_PREDEFITM (word),
+                                           newstrv);
+            mom_unsync_wexch_reply (wexitm, wexch, HTTP_OK,
+                                    "application/json");
+            MOM_DEBUGPRINTF (web,
+                             "miniedit_keypressajax req#%ld still word %s",
+                             wexch->webx_count, mom_value_cstring (newstrv));
+            goto end;
+          };
 #warning miniedit_keypressajax incomplete for word
       }
       break;
