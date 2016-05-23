@@ -730,12 +730,8 @@ momf_nanoeval_flattennodeany (struct mom_nanoeval_st *nev,
         len++;
     }
   const void *smallarr[16] = { NULL };
-  const void **arr =
-    (len <
-     sizeof (smallarr) / sizeof (void *))? smallarr : mom_gc_alloc ((len +
-                                                                     1) *
-                                                                    sizeof
-                                                                    (void *));
+  const void **arr = (len < sizeof (smallarr) / sizeof (void *))? smallarr      //
+    : mom_gc_alloc ((len + 1) * sizeof (void *));
   unsigned cnt = 0;
   for (unsigned ix = 2; ix < nbval; ix++)
     {

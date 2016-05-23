@@ -2051,13 +2051,8 @@ nanoeval_othernode_mom (struct mom_nanoeval_st *nev,
             case NANOEVALSIG_MOM (signature_nanoevalany):
               {
                 void *smallarr[16] = { 0 };
-                const void **arrv =
-                  (arity <
-                   sizeof (smallarr) /
-                   sizeof (smallarr[0])) ? smallarr : mom_gc_alloc ((arity +
-                                                                     1) *
-                                                                    sizeof
-                                                                    (void *));
+                const void **arrv = (arity < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr       //
+                  : mom_gc_alloc ((arity + 1) * sizeof (void *));
                 MOM_DEBUGPRINTF (run,
                                  "nanoeval_othernode opitm %s nanev %s optsigitm %s arity=%d depth#%d",
                                  mom_item_cstring (opitm),

@@ -78,7 +78,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
   if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
     {
       unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
-      hset = mom_gc_alloc (sizeof (*hset) + newsiz * sizeof (void *));
+      hset = mom_gc_alloc (sizeof (*hset) + (newsiz - 1) * sizeof (void *));
       hset->va_itype = MOMITY_HASHSET;
       mom_put_size (hset, newsiz);
       hset->cda_count = 0;
@@ -96,7 +96,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
       unsigned oldcnt = cnt;
       struct mom_hashset_st *oldhset = hset;
       struct mom_hashset_st *newhset =
-        mom_gc_alloc (sizeof (*newhset) + newsiz * sizeof (void *));
+        mom_gc_alloc (sizeof (*newhset) + (newsiz - 1) * sizeof (void *));
       newhset->va_itype = MOMITY_HASHSET;
       mom_put_size (newhset, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -123,7 +123,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
       unsigned oldcnt = cnt;
       struct mom_hashset_st *oldhset = hset;
       struct mom_hashset_st *newhset =
-        mom_gc_alloc (sizeof (*newhset) + newsiz * sizeof (void *));
+        mom_gc_alloc (sizeof (*newhset) + (newsiz - 1) * sizeof (void *));
       newhset->va_itype = MOMITY_HASHSET;
       mom_put_size (newhset, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -222,11 +222,8 @@ mom_hashset_to_boxset (const struct mom_hashset_st *hset)
   unsigned siz = mom_raw_size (hset);
   assert (cnt <= siz);
   struct mom_item_st *smallarr[16] = { };
-  const struct mom_item_st **arr =
-    (cnt <
-     sizeof (smallarr) /
-     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc ((cnt +
-                                                       1) * sizeof (void *));
+  const struct mom_item_st **arr = (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr  //
+    : mom_gc_alloc ((cnt + 1) * sizeof (void *));
   unsigned card = 0;
   for (unsigned ix = 0; ix < siz; ix++)
     {
@@ -322,7 +319,7 @@ mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
       unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
       hmap =
         mom_gc_alloc (sizeof (*hmap) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       hmap->va_itype = MOMITY_HASHMAP;
       mom_put_size (hmap, newsiz);
       hmap->cda_count = 0;
@@ -341,7 +338,7 @@ mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
       struct mom_hashmap_st *oldhmap = hmap;
       struct mom_hashmap_st *newhmap =
         mom_gc_alloc (sizeof (*newhmap) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newhmap->va_itype = MOMITY_HASHMAP;
       mom_put_size (newhmap, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -369,7 +366,7 @@ mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
       struct mom_hashmap_st *oldhmap = hmap;
       struct mom_hashmap_st *newhmap =
         mom_gc_alloc (sizeof (*newhmap) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newhmap->va_itype = MOMITY_HASHMAP;
       mom_put_size (newhmap, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -591,7 +588,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
       unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
       hass =
         mom_gc_alloc (sizeof (*hass) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       hass->va_itype = MOMITY_HASHASSOC;
       mom_put_size (hass, newsiz);
       hass->cda_count = 0;
@@ -610,7 +607,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
       struct mom_hashassoc_st *oldhass = hass;
       struct mom_hashassoc_st *newhass =
         mom_gc_alloc (sizeof (*newhass) +
-                      newsiz * sizeof (struct mom_hassocentry_tu));
+                      (newsiz - 1) * sizeof (struct mom_hassocentry_tu));
       newhass->va_itype = MOMITY_HASHASSOC;
       mom_put_size (newhass, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -639,7 +636,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
       struct mom_hashassoc_st *oldhass = hass;
       struct mom_hashassoc_st *newhass =
         mom_gc_alloc (sizeof (*newhass) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newhass->va_itype = MOMITY_HASHASSOC;
       mom_put_size (newhass, newsiz);
       for (unsigned ix = 0; ix < oldsiz; ix++)
@@ -860,7 +857,7 @@ mom_hashassoc_put (struct mom_hashassoc_st *hass,
       unsigned newsiz = 5;
       hass =
         mom_gc_alloc (sizeof (*hass) +
-                      newsiz * sizeof (struct mom_itementry_tu));
+                      (newsiz - 1) * sizeof (struct mom_itementry_tu));
       hass->va_itype = MOMITY_HASHASSOC;
       mom_put_size (hass, newsiz);
     };

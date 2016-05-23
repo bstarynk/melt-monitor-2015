@@ -1319,7 +1319,8 @@ remove_at_md:
         {
           struct mom_assovaldata_st *newasso
             = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
-                            + newsiz * sizeof (struct mom_itementry_tu));
+                            + (newsiz -
+                               1) * sizeof (struct mom_itementry_tu));
           newasso->va_itype = MOMITY_ASSOVALDATA;
           mom_put_size (newasso, newsiz);
           for (int ix = 0; ix < md; ix++)
@@ -1350,7 +1351,7 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
       unsigned newsiz = mom_prime_above (gap + 3);
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
-                        + newsiz * sizeof (struct mom_itementry_tu));
+                        + (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newasso->va_itype = MOMITY_ASSOVALDATA;
       mom_put_size (newasso, newsiz);
       return newasso;
@@ -1364,7 +1365,7 @@ mom_assovaldata_reserve (struct mom_assovaldata_st *asso, unsigned gap)
   unsigned newsiz = mom_prime_above (gap + cnt + cnt / 16 + 3);
   struct mom_assovaldata_st *newasso
     = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
-                    + newsiz * sizeof (struct mom_itementry_tu));
+                    + (newsiz - 1) * sizeof (struct mom_itementry_tu));
   newasso->va_itype = MOMITY_ASSOVALDATA;
   mom_put_size (newasso, newsiz);
   for (unsigned ix = 0; ix < cnt; ix++)
@@ -1417,7 +1418,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       const unsigned newsiz = 5;
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
-                        + newsiz * sizeof (struct mom_itementry_tu));
+                        + (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newasso->va_itype = MOMITY_ASSOVALDATA;
       mom_put_size (newasso, newsiz);
       newasso->ada_ents[0].ient_itm = (struct mom_item_st *) itmat;
@@ -1458,7 +1459,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
       assert (newsiz > siz);
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
-                        + newsiz * sizeof (struct mom_itementry_tu));
+                        + (newsiz - 1) * sizeof (struct mom_itementry_tu));
       newasso->va_itype = MOMITY_ASSOVALDATA;
       mom_put_size (newasso, newsiz);
       for (int ix = 0; ix < lo; ix++)
@@ -1590,7 +1591,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
   if (!vec || vec->va_itype != MOMITY_VECTVALDATA)
     {
       unsigned siz = mom_prime_above (gap + gap / 16 + 2);
-      vec = mom_gc_alloc (sizeof (*vec) + siz * sizeof (void *));
+      vec = mom_gc_alloc (sizeof (*vec) + (siz - 1) * sizeof (void *));
       vec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (vec, siz);
       return vec;
@@ -1603,7 +1604,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
         MOM_FATAPRINTF ("too big gap %u for count %u", gap, cnt);
       unsigned newsiz = mom_prime_above (cnt + gap + cnt / 16 + 4);
       struct mom_vectvaldata_st *newvec
-        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+        = mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
       newvec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (newvec, newsiz);
       mempcpy (newvec->vecd_valarr, vec->vecd_valarr, cnt * sizeof (void *));
@@ -1621,7 +1622,7 @@ mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
     {
       unsigned newsiz = mom_prime_above (count + count / 8 + 2);
       struct mom_vectvaldata_st *newvec
-        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+        = mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
       newvec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (newvec, newsiz);
       newvec->cda_count = count;
@@ -1634,7 +1635,7 @@ mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
     {
       unsigned newsiz = mom_prime_above (count + count / 8 + 2);
       struct mom_vectvaldata_st *newvec
-        = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+        = mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
       newvec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (newvec, newsiz);
       newvec->cda_count = count;
@@ -1648,7 +1649,7 @@ mom_vectvaldata_resize (struct mom_vectvaldata_st *vec, unsigned count)
       if (newsiz != size)
         {
           struct mom_vectvaldata_st *newvec
-            = mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+            = mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
           newvec->va_itype = MOMITY_VECTVALDATA;
           mom_put_size (newvec, newsiz);
           newvec->cda_count = count;
@@ -1695,7 +1696,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
   if (!vec || vec->va_itype != MOMITY_VECTVALDATA)
     {
       const unsigned nsiz = 5;
-      vec = mom_gc_alloc (sizeof (*vec) + nsiz * sizeof (void *));
+      vec = mom_gc_alloc (sizeof (*vec) + (nsiz - 1) * sizeof (void *));
       vec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (vec, nsiz);
       vec->cda_count = 1;
@@ -1711,7 +1712,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
       unsigned newsiz =
         mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 2);
       struct mom_vectvaldata_st *newvec =
-        mom_gc_alloc (sizeof (*vec) + newsiz * sizeof (void *));
+        mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
       newvec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (newvec, newsiz);
       newvec->cda_count = cnt;
@@ -1793,7 +1794,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
           unsigned oldsiz = sz;
           unsigned oldcnt = cnt;
           struct mom_item_st **newarr =
-            mom_gc_alloc (newsiz * sizeof (struct mom_item_st *));
+            mom_gc_alloc ((newsiz - 1) * sizeof (struct mom_item_st *));
           curad->rad_items = newarr;
           curad->rad_size = newsiz;
           curad->rad_count = 0;

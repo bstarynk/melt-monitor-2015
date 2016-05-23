@@ -101,7 +101,7 @@ mom_boxstring_make (const char *s)
   if (l >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too long %d boxed string %.60s", l, s);
   struct mom_boxstring_st *bs =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + (l + 1));
+    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + l);
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_hsiz = l >> 16;
   bs->va_lsiz = l & 0xffff;
@@ -126,7 +126,7 @@ mom_boxstring_make_len (const char *s, int len)
         break;
       };
   struct mom_boxstring_st *bs =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + (len + 1));
+    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + (len));
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_hsiz = len >> 16;
   bs->va_lsiz = len & 0xffff;
@@ -261,7 +261,8 @@ mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st *const *arr1,
   if (siz1 > MOM_SIZE_MAX || siz2 > MOM_SIZE_MAX || tsiz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big tuple from siz1=%d, siz2=%d", siz1, siz2);
   struct mom_boxtuple_st *tup =
-    mom_gc_alloc (sizeof (struct mom_boxtuple_st) + tsiz * sizeof (void *));
+    mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
+                  (tsiz - 1) * sizeof (void *));
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = tsiz >> 16;
   tup->va_lsiz = tsiz & 0xffff;
@@ -286,7 +287,8 @@ mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st *const *arr)
   if (MOM_UNLIKELY (!arr || siz == 0))
     return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
-    mom_gc_alloc (sizeof (struct mom_boxtuple_st) + siz * sizeof (void *));
+    mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
+                  (siz - 1) * sizeof (void *));
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = siz >> 16;
   tup->va_lsiz = siz & 0xffff;
@@ -307,7 +309,8 @@ mom_boxtuple_make_va (unsigned siz, ...)
   if (MOM_UNLIKELY (siz == 0))
     return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
-    mom_gc_alloc (sizeof (struct mom_boxtuple_st) + siz * sizeof (void *));
+    mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
+                  (siz - 1) * sizeof (void *));
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = siz >> 16;
   tup->va_lsiz = siz & 0xffff;
@@ -331,10 +334,8 @@ mom_boxtuple_make_sentinel_va (struct mom_item_st *itm1, ...)
       siz++;
   va_end (args);
   struct mom_item_st *smallarr[16] = { NULL };
-  struct mom_item_st **arr =
-    (siz <
-     sizeof (smallarr) /
-     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc (sizeof (void *) * siz);
+  struct mom_item_st **arr = (siz < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr        //
+    : mom_gc_alloc (sizeof (void *) * siz);
   va_start (args, itm1);
   for (unsigned ix = 0; ix < siz; ix++)
     {
@@ -377,7 +378,8 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
   if (siz1 > MOM_SIZE_MAX || siz2 > MOM_SIZE_MAX || tsiz >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big set from siz1=%d, siz2=%d", siz1, siz2);
   struct mom_boxset_st *set =
-    mom_gc_alloc (sizeof (struct mom_boxset_st) + tsiz * sizeof (void *));
+    mom_gc_alloc (sizeof (struct mom_boxset_st) +
+                  (tsiz - 1) * sizeof (void *));
   set->va_itype = MOMITY_SET;
   unsigned cnt = 0;
   for (unsigned ix = 0; ix < siz1; ix++)
@@ -405,7 +407,8 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
       assert (cnt < tsiz);
       struct mom_boxset_st *oldset = set;
       struct mom_boxset_st *newset =
-        mom_gc_alloc (sizeof (struct mom_boxset_st) + cnt * sizeof (void *));
+        mom_gc_alloc (sizeof (struct mom_boxset_st) +
+                      (cnt - 1) * sizeof (void *));
       newset->va_itype = MOMITY_SET;
       if (tsiz > 10)
         GC_FREE (oldset);
@@ -425,9 +428,8 @@ mom_boxset_make_va (unsigned siz, ...)
     MOM_FATAPRINTF ("too big set %d", siz);
   struct mom_item_st *smallarr[16] = { NULL };
   const unsigned smallsize = sizeof (smallarr) / sizeof (smallarr[0]);
-  struct mom_item_st **arr =
-    siz <
-    smallsize ? smallarr : mom_gc_alloc (siz * sizeof (struct mom_item_st *));
+  struct mom_item_st **arr = (siz < smallsize) ? smallarr       //
+    : mom_gc_alloc (siz * sizeof (struct mom_item_st *));
   va_start (args, siz);
   unsigned cnt = 0;
   for (unsigned ix = 0; ix < siz; ix++)
@@ -452,11 +454,8 @@ mom_boxset_make_sentinel_va (struct mom_item_st *itm1, ...)
       siz++;
   va_end (args);
   struct mom_item_st *smallarr[16] = { NULL };
-  struct mom_item_st **arr
-    =
-    (siz <
-     sizeof (smallarr) /
-     sizeof (smallarr[0])) ? smallarr : mom_gc_alloc (sizeof (void *) * siz);
+  struct mom_item_st **arr = (siz < sizeof (smallarr) / sizeof (smallarr[0]))   //
+    ? smallarr : mom_gc_alloc (sizeof (void *) * siz);
   va_start (args, itm1);
   for (unsigned ix = 0; ix < siz; ix++)
     arr[ix] = va_arg (args, struct mom_item_st *);
@@ -659,7 +658,7 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
     MOM_FATAPRINTF ("too big %d node of connective %s",
                     size, mom_item_cstring (conn));
   struct mom_boxnode_st *nod =
-    mom_gc_alloc (sizeof (*nod) + size * sizeof (void *));
+    mom_gc_alloc (sizeof (*nod) + (size - 1) * sizeof (void *));
   nod->va_itype = MOMITY_NODE;
   nod->va_hsiz = size >> 16;
   nod->va_lsiz = size & 0xffff;

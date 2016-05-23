@@ -20,8 +20,10 @@
 ## onion is not packaged, see https://github.com/davidmoreno/onion
 ## Boehm GC is from http://www.hboehm.info/gc/
 CC=gcc
-CCFLAGS=  -std=gnu11 -Wall -Wextra -fdiagnostics-color=auto
-CFLAGS= $(CCFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
+CXX=g++
+WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
+CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
+CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent
 MD5SUM= md5sum
 INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
@@ -33,15 +35,16 @@ OPTIMFLAGS= -Og -g3
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
         -lhiredis -lgccjit -lonion -lpthread -lcrypt -lm -ldl
 
-PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c))
+PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c momplug_*.cc))
 PLUGINS=  $(patsubst %.c,%.so,$(PLUGIN_SOURCES))
 # modules are generated inside modules/
 MODULE_SOURCES= $(sort $(wildcard modules/momg_*.c))
 # generated headers
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
-SOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
-OBJECTS= $(patsubst %.c,%.o,$(SOURCES))
+CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
+CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.cc)))
+OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
 .PHONY: all tags modules plugins clean tests 
 all: monimelt
@@ -76,7 +79,7 @@ $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
 monimelt: $(OBJECTS) global.mom
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
 	$(MAKE) _timestamp.c _timestamp.o
-	$(LINK.c)  $(LINKFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
+	$(LINK.cc)  $(LINKFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
 	rm _timestamp.*
 
 indent: .indent.pro

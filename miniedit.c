@@ -68,7 +68,6 @@ void
 momf_miniedit (struct mom_item_st *tkitm)
 {
   struct mom_item_st *wexitm = NULL;
-  struct mom_item_st *thistatitm = NULL;
   struct mom_item_st *sessitm = NULL;
   mom_item_lock (tkitm);
   const struct mom_boxnode_st *tknod =
@@ -409,6 +408,7 @@ miniedit_outputedit_mom (struct mom_filebuffer_st *fbu,
 #undef CASE_MIEDIT_MOM
 #undef NBMEDIT_MOM
     };
+  goto end;
 end:
   mom_item_unlock (contitm);
 }                               /* end of miniedit_outputedit_mom */
@@ -789,7 +789,7 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                          keystr, whichint);
         unsigned oldwlen = mom_size (oldwstrv);
         const char *olds = mom_boxstring_cstr (oldwstrv);
-        struct mom_boxstring_st *newstrv = NULL;
+        const struct mom_boxstring_st *newstrv = NULL;
         if (offsetint <= 0)
           newstrv = mom_boxstring_printf ("%s%s", keystr, olds);
         else if (offsetint >= oldwlen)
@@ -802,7 +802,8 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
           mom_find_item_by_string (mom_boxstring_cstr (newstrv));
         MOM_DEBUGPRINTF (web,
                          "miniedit_keypressajax word req#%ld newstrv=%s newitm=%s",
-                         wexch->webx_count, mom_value_cstring (newstrv),
+                         wexch->webx_count,
+                         mom_value_cstring ((void *) newstrv),
                          mom_item_cstring (newitm));
         if (newitm != NULL)
           {
@@ -840,7 +841,8 @@ momf_miniedit_keypressajax (struct mom_item_st *wexitm,
                                     "application/json");
             MOM_DEBUGPRINTF (web,
                              "miniedit_keypressajax req#%ld still word %s",
-                             wexch->webx_count, mom_value_cstring (newstrv));
+                             wexch->webx_count,
+                             mom_value_cstring ((void *) newstrv));
             goto end;
           };
 #warning miniedit_keypressajax incomplete for word

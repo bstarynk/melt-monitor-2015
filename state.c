@@ -845,8 +845,9 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
     {
       memset (predbuf, 0, sizeof (predbuf));
       nbtry++;
-      snprintf (predbuf, sizeof (predbuf), MOM_HEADER "-r%x-p%d-t%d.tmp~",
-                mom_random_uint32 (), (int) getpid (), nbtry);
+      snprintf (predbuf, sizeof (predbuf),
+                MOM_HEADER_PREDEF "-r%x-p%d-t%d.tmp~", mom_random_uint32 (),
+                (int) getpid (), nbtry);
     }
   while (nbtry < 20 && access (predbuf, F_OK));
   du->du_predefhtmpath = mom_boxstring_make (predbuf);
@@ -861,7 +862,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
       MOM_FATAPRINTF ("failed to open predefined header %s in %s: %s",
                       du->du_predefhtmpath->cstr, cwdbuf, strerror (e));
     }
-  mom_output_gplv3_notice (fpred, "///", "", MOM_HEADER);
+  mom_output_gplv3_notice (fpred, "///", "", MOM_HEADER_PREDEF);
   fputs ("\n", fpred);
   fputs ("#ifndef" " MOM_HAS_PREDEFINED\n", fpred);
   fputs ("#error missing MOM_HAS_PREDEFINED\n", fpred);
@@ -1222,11 +1223,11 @@ mom_dump_state (void)
   struct stat statprevpredef = { };
   struct stat stattmprefedef = { };
   bool sameheaderfile = false;
-  if (!stat (MOM_HEADER, &statprevpredef)
+  if (!stat (MOM_HEADER_PREDEF, &statprevpredef)
       && !stat (du->du_predefhtmpath->cstr, &stattmprefedef)
       && statprevpredef.st_size == stattmprefedef.st_size)
     {
-      FILE *prevpf = fopen (MOM_HEADER, "r");
+      FILE *prevpf = fopen (MOM_HEADER_PREDEF, "r");
       FILE *tmpf = fopen (du->du_predefhtmpath->cstr, "r");
       if (prevpf && tmpf)
         {
@@ -1248,15 +1249,15 @@ mom_dump_state (void)
     }
   if (!sameheaderfile)
     {
-      (void) rename (MOM_HEADER, MOM_HEADER "%");
-      if (rename (du->du_predefhtmpath->cstr, MOM_HEADER))
-        MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER " : %m",
+      (void) rename (MOM_HEADER_PREDEF, MOM_HEADER_PREDEF "%");
+      if (rename (du->du_predefhtmpath->cstr, MOM_HEADER_PREDEF))
+        MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER_PREDEF " : %m",
                         du->du_predefhtmpath->cstr);
     }
   else
     {
       MOM_INFORMPRINTF ("header file %s did not change, sized %ld\n",
-                        MOM_HEADER, statprevpredef.st_size);
+                        MOM_HEADER_PREDEF, statprevpredef.st_size);
       if (remove (du->du_predefhtmpath->cstr))
         MOM_FATAPRINTF ("failed to remove temporary %s : %m",
                         du->du_predefhtmpath->cstr);
