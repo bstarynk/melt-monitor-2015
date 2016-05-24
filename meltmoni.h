@@ -21,7 +21,8 @@
 #define MONIMELT_INCLUDED_ 1
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /*__cplusplus*/
 
 #ifndef _GNU_SOURCE
@@ -878,14 +879,18 @@ static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
   return NULL;
 }
 
-const struct mom_boxnode_st *mom_boxnode_make_meta   
+const struct mom_boxnode_st *mom_boxnode_make_meta
 (const struct mom_item_st *conn, int size,
  const struct mom_hashedvalue_st **sons,
  const struct mom_item_st *meta, intptr_t metarank);
 
-static inline const struct mom_boxnode_st *
-mom_boxnode_make (const struct mom_item_st *conn,
-    int size, const struct mom_hashedvalue_st **sons)
+static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
+    mom_item_st
+    *conn,
+    int size,
+    const struct
+    mom_hashedvalue_st
+    **sons)
 {
   return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
 }
@@ -2004,11 +2009,11 @@ struct mom_webexch_st
 };
 
 static inline
-struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st*itm)
+struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st *itm)
 {
   struct mom_webexch_st *wex = NULL;
   if (itm && itm != MOM_EMPTY_SLOT
-      && itm->itm_paylsig == MOM_PREDEFITM(web_exchange)
+      && itm->itm_paylsig == MOM_PREDEFITM (web_exchange)
       && (wex = (struct mom_webexch_st *) itm->itm_payldata)
       && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH)
     return wex;

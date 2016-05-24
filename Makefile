@@ -25,8 +25,10 @@ WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
 CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent
+ASTYLE= astyle
 MD5SUM= md5sum
 INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
+ASTYLEFLAGS= --style=gnu -s2
 PACKAGES= glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
 PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))
@@ -83,10 +85,17 @@ monimelt: $(OBJECTS) global.mom
 	rm _timestamp.*
 
 indent: .indent.pro
-	for f in $(wildcard [a-z]*.[ch]) ; do \
+	cp -v meltmoni.h meltmoni.h%
+	$(ASTYLE) $(ASTYLEFLAGS) meltmoni.h
+	for f in $(wildcard [a-z]*.c) ; do \
 	  echo indenting $$f ; cp $$f $$f%; \
           $(INDENT) $(INDENTFLAGS) $$f ; $(INDENT)  $(INDENTFLAGS) $$f; \
         done
+	for g in $(wildcard [a-z]*.cc) ; do \
+	  echo astyling $$g ; cp $$g $$g% ; \
+	  $(ASTYLE)  $(ASTYLEFLAGS) $g ; \
+	done
+
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@

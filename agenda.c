@@ -34,7 +34,7 @@ static inline struct mom_queue_st *
 agenda_queue_unsync_mom (void)
 {
   struct mom_queue_st *agqu = NULL;
-  if (MOM_PREDEFITM (the_agenda)->itm_paylsig == MOM_PREDEFITM(queue))
+  if (MOM_PREDEFITM (the_agenda)->itm_paylsig == MOM_PREDEFITM (queue))
     agqu = MOM_PREDEFITM (the_agenda)->itm_payldata;
   if (MOM_UNLIKELY
       (!agqu || agqu == MOM_EMPTY_SLOT || agqu->va_itype != MOMITY_QUEUE))
@@ -43,7 +43,7 @@ agenda_queue_unsync_mom (void)
       agqu->va_itype = MOMITY_QUEUE;
       MOM_PREDEFITM (the_agenda)->itm_payldata =
         (struct mom_anyvalue_st *) agqu;
-      MOM_PREDEFITM (the_agenda)->itm_paylsig = MOM_PREDEFITM(queue);
+      MOM_PREDEFITM (the_agenda)->itm_paylsig = MOM_PREDEFITM (queue);
     }
   return agqu;
 }
@@ -283,7 +283,7 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
                         const struct mom_boxnode_st *nod)
 {
   assert (tskitm != NULL && tskitm->va_itype == MOMITY_ITEM
-	  // && tskitm->itm_paylsig == MOM_PREDEFITM(tasklet)
+          // && tskitm->itm_paylsig == MOM_PREDEFITM(tasklet)
           && tskitm->itm_payldata == (void *) tkstk);
   assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
   if (!nod || nod == MOM_EMPTY_SLOT || nod->va_itype != MOMITY_NODE)

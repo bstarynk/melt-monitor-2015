@@ -182,11 +182,12 @@ mom_unsync_websocket_printf (struct mom_item_st *sessitm,
                              const char *fmt, ...)
 {
   va_list args;
-  if (!sessitm || sessitm == MOM_EMPTY_SLOT || sessitm->va_itype != MOMITY_ITEM)
+  if (!sessitm || sessitm == MOM_EMPTY_SLOT
+      || sessitm->va_itype != MOMITY_ITEM)
     return;
   struct mom_websession_st *ws = NULL;
-  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
-      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+  if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+      && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
     ws = sessitm->itm_payldata;
   if (!ws)
     return;
@@ -226,13 +227,14 @@ mom_unsync_websocket_printf (struct mom_item_st *sessitm,
 void
 mom_unsync_websocket_puts (struct mom_item_st *sessitm, const char *str)
 {
-  if (!sessitm || sessitm == MOM_EMPTY_SLOT || sessitm->va_itype != MOMITY_ITEM)
+  if (!sessitm || sessitm == MOM_EMPTY_SLOT
+      || sessitm->va_itype != MOMITY_ITEM)
     return;
   if (!str)
     return;
   struct mom_websession_st *ws = NULL;
-  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
-      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+  if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+      && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
     ws = sessitm->itm_payldata;
   if (!ws)
     return;
@@ -255,8 +257,8 @@ mom_unsync_websocket_send_json (struct mom_item_st *sessitm, const json_t *js)
   if (!js)
     return;
   struct mom_websession_st *ws = NULL;
-  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
-      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+  if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+      && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
     ws = sessitm->itm_payldata;
   if (!ws)
     return;
@@ -537,7 +539,7 @@ make_session_item_mom (onion_response *resp)
   time (&now);
   wsess->wbss_obstime = now + SESSION_TIMEOUT_MOM;
   sessitm->itm_payldata = wsess;
-  sessitm->itm_paylsig = MOM_PREDEFITM(web_session);
+  sessitm->itm_paylsig = MOM_PREDEFITM (web_session);
   pthread_mutex_lock (&sessions_mtx_mom);
   sessions_hset_mom = mom_hashset_insert (sessions_hset_mom, sessitm);
   pthread_mutex_unlock (&sessions_mtx_mom);
@@ -591,10 +593,10 @@ mom_retrieve_session (long reqcnt, onion_request *requ)
           if (sitm)
             {
               mom_item_lock (sitm);
-	      if (sitm->itm_paylsig == MOM_PREDEFITM(web_session)
-		  && sitm->itm_payldata != NULL 
-		  && ((struct mom_websession_st *)sitm->itm_payldata)->va_itype == MOMITY_WEBSESSION
-		  )
+              if (sitm->itm_paylsig == MOM_PREDEFITM (web_session)
+                  && sitm->itm_payldata != NULL
+                  && ((struct mom_websession_st *) sitm->
+                      itm_payldata)->va_itype == MOMITY_WEBSESSION)
                 {
                   struct mom_websession_st *wsess =
                     (struct mom_websession_st *) sitm->itm_payldata;
@@ -624,9 +626,9 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
   struct mom_websession_st *wses = NULL;
   {
     mom_item_lock (sessitm);
-    if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
-	&& sessitm->itm_payldata
-	&& mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
+    if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+        && sessitm->itm_payldata
+        && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
       wses = (void *) sessitm->itm_payldata;
     mom_item_unlock (sessitm);
   }
@@ -730,8 +732,8 @@ mom_websocket (long reqcnt, onion_request *requ, onion_response *resp)
   if (sessitm)
     {
       mom_item_lock (sessitm);
-  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
-      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+      if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+          && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
         wses = (void *) sessitm->itm_payldata;
       else
         mom_item_unlock (sessitm);
@@ -894,21 +896,22 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
   if (nbelem > 0)
     {
       mom_item_lock (MOM_PREDEFITM (web_handlers));
-      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld  webhandlerpaylsig %s "
-		       "webhandlerpayldata@%p ityp=%s nbelem=%d", reqcnt,
-		       mom_item_cstring(MOM_PREDEFITM (web_handlers)->itm_paylsig),
-		       MOM_PREDEFITM (web_handlers)->itm_payldata, //
-		       mom_itype_str (MOM_PREDEFITM (web_handlers)->itm_payldata),
-                       nbelem);
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld  webhandlerpaylsig %s " "webhandlerpayldata@%p ityp=%s nbelem=%d", reqcnt, mom_item_cstring (MOM_PREDEFITM (web_handlers)->itm_paylsig), MOM_PREDEFITM (web_handlers)->itm_payldata,     //
+                       mom_itype_str (MOM_PREDEFITM
+                                      (web_handlers)->itm_payldata), nbelem);
       struct mom_hashassoc_st *hass = NULL;
-      if (MOM_PREDEFITM (web_handlers)->itm_paylsig == MOM_PREDEFITM(hashassoc)
-	  && mom_itype(MOM_PREDEFITM (web_handlers)->itm_payldata) == MOMITY_HASHASSOC)
-	hass = MOM_PREDEFITM (web_handlers)->itm_payldata;
-      if (!hass) {
-	MOM_WARNPRINTF("web_handlers payload is not an hashassoc (paylsig:%s) for req#%ld fullpath '%s'",
-		       mom_item_cstring(MOM_PREDEFITM (web_handlers)->itm_paylsig),  reqcnt,
-		        fullpath);
-      }
+      if (MOM_PREDEFITM (web_handlers)->itm_paylsig ==
+          MOM_PREDEFITM (hashassoc)
+          && mom_itype (MOM_PREDEFITM (web_handlers)->itm_payldata) ==
+          MOMITY_HASHASSOC)
+        hass = MOM_PREDEFITM (web_handlers)->itm_payldata;
+      if (!hass)
+        {
+          MOM_WARNPRINTF
+            ("web_handlers payload is not an hashassoc (paylsig:%s) for req#%ld fullpath '%s'",
+             mom_item_cstring (MOM_PREDEFITM (web_handlers)->itm_paylsig),
+             reqcnt, fullpath);
+        }
       if (nbelem == 1)
         {
           hdlrval =
@@ -933,8 +936,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
           const struct mom_boxtuple_st *tup =
             mom_boxtuple_make_arr (nbelem, elemarr);
           hdlrval =
-            mom_hashassoc_get (hass,
-                               (const struct mom_hashedvalue_st *) tup);
+            mom_hashassoc_get (hass, (const struct mom_hashedvalue_st *) tup);
           if (hdlrval)
             {
               hdlrkey = (struct mom_hashedvalue_st *) tup;
@@ -984,7 +986,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
       bool badsession = false;
       pthread_mutex_lock (&sessitm->itm_mtx);
       struct mom_websession_st *wsess = NULL;
-      if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session))
+      if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session))
         wsess = sessitm->itm_payldata;
       if (wsess && wsess->va_itype == MOMITY_WEBSESSION)
         {
@@ -1053,7 +1055,7 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
         ("web_handler_exchange #%ld fullpath %s failed to open outfile (%m)",
          reqcnt, fullpath);
     pthread_cond_init (&wexch->webx_donecond, NULL);
-    wexitm->itm_paylsig = MOM_PREDEFITM(web_exchange);
+    wexitm->itm_paylsig = MOM_PREDEFITM (web_exchange);
     wexitm->itm_payldata = (struct mom_anyvalue_st *) wexch;
   }
   MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld fullpath %s wexitm %s",
@@ -1187,8 +1189,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
   {
     const struct mom_boxnode_st *wexclos = NULL;
     mom_item_lock (wexitm);
-    if (wexitm->itm_paylsig == MOM_PREDEFITM(web_exchange)
-	&& mom_itype (wexitm->itm_payldata) == MOMITY_WEBEXCH)
+    if (wexitm->itm_paylsig == MOM_PREDEFITM (web_exchange)
+        && mom_itype (wexitm->itm_payldata) == MOMITY_WEBEXCH)
       {
         wexch = (struct mom_webexch_st *) wexitm->itm_payldata;
         wexclos = wexch->webx_clos;
@@ -1218,7 +1220,8 @@ handle_web_mom (void *data, onion_request *requ, onion_response *resp)
         wsigitm = NULL;
       mom_item_unlock (wconitm);
     }
-    MOM_DEBUGPRINTF (web, "webrequest#%ld fupath %s wconitm %s wsigitm %s wconfun@%p",
+    MOM_DEBUGPRINTF (web,
+                     "webrequest#%ld fupath %s wconitm %s wsigitm %s wconfun@%p",
                      reqcnt, reqfupath, mom_item_cstring (wconitm),
                      mom_item_cstring (wsigitm), wconfun);
     if (wsigitm == MOM_PREDEFITM (signature_tasklet))
@@ -1360,7 +1363,7 @@ run_tasklet_for_web_mom (struct mom_item_st *wexitm,
                          const struct mom_boxnode_st *wexclos)
 {
   assert (wexitm && wexitm->va_itype == MOMITY_ITEM
-	  && wexitm->itm_paylsig == MOM_PREDEFITM(web_exchange)
+          && wexitm->itm_paylsig == MOM_PREDEFITM (web_exchange)
           && wexitm->itm_payldata == (void *) wexch);
   assert (wexch && wexch->va_itype == MOMITY_WEBEXCH
           && wexch->webx_requ != NULL);
@@ -1381,8 +1384,8 @@ run_tasklet_for_web_mom (struct mom_item_st *wexitm,
     arr[ix + 1] = wexclos->nod_sons[ix];
   const struct mom_boxnode_st *taskclos =
     mom_boxnode_make (wexclos->nod_connitm, wexarity + 1, arr);
-  taskitm->itm_paylsig = MOM_PREDEFITM(tasklet);
-  taskitm->itm_payldata = (void*) taskclos;
+  taskitm->itm_paylsig = MOM_PREDEFITM (tasklet);
+  taskitm->itm_payldata = (void *) taskclos;
   MOM_DEBUGPRINTF (web,
                    "run_tasklet_for_web webrequest#%ld taskitm=%s taskclos=%s",
                    reqcnt, mom_item_cstring (taskitm),
@@ -1420,9 +1423,9 @@ run_tasklet_for_web_mom (struct mom_item_st *wexitm,
                        reqcnt, waitim, nbloop);
       struct timespec ts = mom_timespec (nowtim + waitim);
       if (wexitm->itm_payldata != NULL
-	  && wexitm->itm_paylsig == MOM_PREDEFITM(web_exchange)
-	  && wexitm->itm_payldata != MOM_EMPTY_SLOT
-          && mom_itype(wexitm->itm_payldata) == MOMITY_WEBEXCH)
+          && wexitm->itm_paylsig == MOM_PREDEFITM (web_exchange)
+          && wexitm->itm_payldata != MOM_EMPTY_SLOT
+          && mom_itype (wexitm->itm_payldata) == MOMITY_WEBEXCH)
         wexch = (struct mom_webexch_st *) wexitm->itm_payldata;
       if (!wexch || wexch->webx_count != reqcnt)
         MOM_FATAPRINTF
@@ -1540,10 +1543,13 @@ mom_unsync_wexch_reply (struct mom_item_st *wexitm,
                    mom_item_cstring (wexitm), wex->webx_count, httpcode,
                    mimetype);
 
-  if (wexitm->itm_payldata != (void *) wex || wexitm->itm_paylsig != MOM_PREDEFITM(web_exchange))
+  if (wexitm->itm_payldata != (void *) wex
+      || wexitm->itm_paylsig != MOM_PREDEFITM (web_exchange))
     {
-      MOM_WARNPRINTF ("mom_unsync_wexch_reply request#%ld wrong wexitm %s of paylsig %s (wex@%p)",
-                      wex->webx_count, mom_item_cstring(wexitm), mom_item_cstring(wexitm->itm_paylsig), (void*)wex);
+      MOM_WARNPRINTF
+        ("mom_unsync_wexch_reply request#%ld wrong wexitm %s of paylsig %s (wex@%p)",
+         wex->webx_count, mom_item_cstring (wexitm),
+         mom_item_cstring (wexitm->itm_paylsig), (void *) wex);
       return;
     }
   if (!mimetype || !isalpha (mimetype[0]))

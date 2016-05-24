@@ -634,67 +634,6 @@ second_pass_loader_mom (struct mom_loader_st *ld)
 
 
 void
-start_after_load_mom (unsigned nbitems)
-{
-  MOM_DEBUGPRINTF (load, "start_after_load nbitems=%u", nbitems);
-  const struct mom_hashedvalue_st *closv = NULL;
-  closv =
-    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
-                                   MOM_PREDEFITM (after_load));
-  MOM_DEBUGPRINTF (load, "start_after_load closv=%s",
-                   mom_value_cstring (closv));
-  if (!closv)
-    return;
-  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
-  if (!closnod)
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has non-node `after_load` value %s, ignoring it",
-         mom_value_cstring (closv));
-      return;
-    }
-  struct mom_item_st *clositm = closnod->nod_connitm;
-  MOM_DEBUGPRINTF (load, "start_after_load clositm=%s",
-                   mom_item_cstring (clositm));
-  assert (clositm && clositm->va_itype == MOMITY_ITEM);
-  const void *funptr = clositm->itm_funptr;
-  struct mom_item_st *closigitm = clositm->itm_funsig;
-  if (!funptr)
-    {
-      MOM_WARNPRINTF ("`after_load` closure %s has no function",
-                      mom_value_cstring (closv));
-      return;
-    }
-  if (closigitm == MOM_PREDEFITM (signature_closure_1int_to_void))
-    {
-      mom_closure_1int_to_void_sig_t *fun =
-        (mom_closure_1int_to_void_sig_t *) funptr;
-      MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
-                       mom_value_cstring (closv), funptr);
-      (*fun) (closnod, (intptr_t) nbitems);
-      MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
-                       mom_value_cstring (closv), funptr);
-    }
-  else if (closigitm == MOM_PREDEFITM (signature_closure_void_to_void))
-    {
-      mom_closure_void_to_void_sig_t *fun =
-        (mom_closure_void_to_void_sig_t *) funptr;
-      MOM_DEBUGPRINTF (load, "start_after_load before applying %s (fun@%p)",
-                       mom_value_cstring (closv), funptr);
-      (*fun) (closnod);
-      MOM_DEBUGPRINTF (load, "start_after_load after applying %s (fun@%p)",
-                       mom_value_cstring (closv), funptr);
-    }
-  else
-    {
-      MOM_WARNPRINTF
-        ("`after_load` closure %s has bad signature %s - expecting signature_closure_1int_to_void",
-         mom_value_cstring (closv), mom_item_cstring (closigitm));
-      return;
-    }
-}                               /* end start_after_load_mom */
-
-void
 mom_load_state (const char *statepath)
 {
   double startrealtime = mom_elapsed_real_time ();
@@ -708,7 +647,6 @@ mom_load_state (const char *statepath)
   first_pass_loader_mom (mom_loader);
   second_pass_loader_mom (mom_loader);
   unsigned nbitems = mom_loader->ld_hsetitems->cda_count;
-  start_after_load_mom (nbitems);
   double endrealtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   MOM_INFORMPRINTF
@@ -745,6 +683,18 @@ mom_load_state (const char *statepath)
   mom_loader = NULL;
 }                               /* end mom_load_state */
 
+
+void
+mom_dumpscan_data_payload_item (struct mom_dumper_st *du,
+                                struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (itm && itm->va_itype == MOMITY_ITEM);
+  MOM_WARNPRINTF
+    ("dumpscan_data_payload_item unimplemented itm=%s paylsig:%s payldata@%p",
+     mom_item_cstring (itm), mom_item_cstring (itm->itm_paylsig),
+     itm->itm_payldata);
+}
 
 
 void
@@ -798,10 +748,22 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
     mom_dumpscan_assovaldata (du, itm->itm_pattr);
   if (itm->itm_pcomp)
     mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
-  if (itm->itm_funsig)
-    mom_dumpscan_item (du, itm->itm_funsig);
+#warning mom_dumpscan_content_item accessing purposedly obsolete itm_funsig & itm_funptr
+  if (itm->itm_funsig || itm->itm_funptr)
+    MOM_WARNPRINTF ("dumped item %s has obsolete funsig %s or funptr@%p",
+                    mom_item_cstring (itm),
+                    mom_item_cstring (itm->itm_funsig), itm->itm_funptr);
   if (itm->itm_payload)
-    mom_dumpscan_payload (du, itm->itm_payload);
+    {
+      MOM_WARNPRINTF ("dumped item %s has obsolete payload @%p",
+                      mom_item_cstring (itm), itm->itm_payload);
+      mom_dumpscan_payload (du, itm->itm_payload);
+    }
+  if (itm->itm_paylsig)
+    {
+      mom_dumpscan_item (du, itm->itm_paylsig);
+      mom_dumpscan_data_payload_item (du, itm);
+    }
   pthread_mutex_unlock (&itm->itm_mtx);
   MOM_DEBUGPRINTF (dump, "dumpscan_content_item done itm %s",
                    mom_item_cstring (itm));
@@ -963,203 +925,7 @@ mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)
     }
 }
 
-MOM_PRIVATE void
-dump_nanoeval_mom (const struct mom_boxnode_st *nod,
-                   const struct mom_item_st *whatitm)
-{
-  // volatile needed to be setjmp friendly
-  const void *volatile res = NULL;
-  unsigned volatile sz = mom_size (nod);
-  long maxstep = 1024 * 1024 * 4 + sz * 8192;
-  MOM_DEBUGPRINTF (dump, "start dump_nanoeval nod=%s whatitm=%s",
-                   mom_value_cstring ((const void *) nod),
-                   mom_item_cstring (whatitm));
-  assert (nod->nod_connitm == MOM_PREDEFITM (nanoeval));
-  if (MOM_UNLIKELY (mom_skip_dump_hooks))
-    {
-      MOM_WARNPRINTF ("skipping dump hook %s node %s",
-                      mom_item_cstring (whatitm),
-                      mom_value_cstring ((const void *) nod));
-      return;
-    }
-  struct mom_item_st *tkitm = NULL;
-  struct mom_item_st *thistatitm = NULL;
-  struct mom_nanoeval_st nev = { 0 };
-  memset (&nev, 0, sizeof (nev));
-  thistatitm = mom_clone_item (whatitm);
-  thistatitm->itm_payload = (void *) mom_hashmap_reserve (NULL, (2 * sz) | 7);
-  nev.nanev_magic = NANOEVAL_MAGIC_MOM;
-  nev.nanev_tkitm = tkitm;
-  nev.nanev_count = 0;
-  nev.nanev_maxstep = maxstep;
-  MOM_DEBUGPRINTF (run, "dump nanoeval %s thistatitm %s",
-                   mom_item_cstring (whatitm), mom_item_cstring (thistatitm));
-  mom_bind_nanoev (&nev, thistatitm, whatitm, nod);
-  int errlin = 0;
-  if ((errlin = setjmp (nev.nanev_jb)) > 0)
-    {
-      MOM_WARNPRINTF_AT (nev.nanev_errfile ? : "??", errlin,
-                         "dump-nanoeval %s failed\n"
-                         ".. for node %s,\n"
-                         ".. failure %s,\n"
-                         ".. with expr %s\n",
-                         mom_item_cstring (whatitm),
-                         mom_value_cstring ((const void *) nod),
-                         mom_value_cstring (nev.nanev_fail),
-                         mom_value_cstring (nev.nanev_expr));
-      return;
-    }
-  else
-    {
-      for (unsigned ix = 0; ix < sz; ix++)
-        {
-          MOM_DEBUGPRINTF (run, "dump nanoeval %s subexpr#%d : %s",
-                           mom_item_cstring (whatitm), ix,
-                           mom_value_cstring (nod->nod_sons[ix]));
-          res = mom_nanoeval (&nev, thistatitm, nod->nod_sons[ix], 0);
-          MOM_DEBUGPRINTF (run, "dump nanoeval %s subexpr#%d result=%s",
-                           mom_item_cstring (whatitm), ix,
-                           mom_value_cstring ((void *) res));
 
-        }
-    }
-  MOM_DEBUGPRINTF (dump,
-                   "end dump_nanoeval nod=%s whatitm=%s thistatitm=%s last res=%s",
-                   mom_value_cstring ((const void *) nod),
-                   mom_item_cstring (whatitm), mom_item_cstring (thistatitm),
-                   mom_value_cstring ((void *) res));
-}                               /* end dump_nanoeval_mom */
-
-
-
-MOM_PRIVATE void
-before_dump_mom ()
-{
-  const struct mom_hashedvalue_st *closv = NULL;
-  mom_item_lock (MOM_PREDEFITM (the_system));
-  closv =
-    mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
-                                   MOM_PREDEFITM (before_dump));
-  mom_item_unlock (MOM_PREDEFITM (the_system));
-  MOM_DEBUGPRINTF (dump, "before_dump closv=%s", mom_value_cstring (closv));
-  if (!closv)
-    goto end;
-  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
-  if (!closnod)
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has non-node `before_dump` value %s, ignoring it",
-         mom_value_cstring (closv));
-      goto end;
-    }
-  struct mom_item_st *clositm = closnod->nod_connitm;
-  MOM_DEBUGPRINTF (dump, "before_dump clositm=%s",
-                   mom_item_cstring (clositm));
-  assert (clositm && clositm->va_itype == MOMITY_ITEM);
-  if (clositm == MOM_PREDEFITM (nanoeval))
-    {
-      dump_nanoeval_mom (closnod, MOM_PREDEFITM (before_dump));
-      MOM_INFORMPRINTF ("nanoevaled node of %d sons before dump",
-                        mom_size (closnod));
-      goto end;
-    }
-  const void *funptr = clositm->itm_funptr;
-  if (!funptr)
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has non-closure `before_dump` value %s, ignoring it",
-         mom_value_cstring (closv));
-      goto end;
-    }
-  struct mom_item_st *closigitm = clositm->itm_funsig;
-  MOM_DEBUGPRINTF (dump, "before_dump closigitm=%s",
-                   mom_item_cstring (closigitm));
-  if (closigitm != MOM_PREDEFITM (signature_closure_void_to_void))
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has `before_dump` value %s with bad signature %s, ignoring it",
-         mom_value_cstring (closv), mom_item_cstring (closigitm));
-      goto end;
-    }
-  {
-    mom_closure_void_to_void_sig_t *fun =
-      (mom_closure_void_to_void_sig_t *) funptr;
-    MOM_DEBUGPRINTF (dump, "before_dump before applying %s",
-                     mom_value_cstring (closv));
-    (*fun) (closnod);
-    MOM_DEBUGPRINTF (dump, "before_dump after applying %s",
-                     mom_value_cstring (closv));
-    return;
-  }
-end:                           // this is only reached on failure
-  return;
-}                               /* end of before_dump_mom */
-
-
-
-MOM_PRIVATE void
-after_dump_mom (void)
-{
-  const struct mom_hashedvalue_st *closv = NULL;
-  {
-    mom_item_lock (MOM_PREDEFITM (the_system));
-    closv =
-      mom_unsync_item_get_phys_attr (MOM_PREDEFITM (the_system),
-                                     MOM_PREDEFITM (after_dump));
-    mom_item_unlock (MOM_PREDEFITM (the_system));
-  }
-  MOM_DEBUGPRINTF (dump, "after_dump closv=%s", mom_value_cstring (closv));
-  if (!closv)
-    goto end;
-  const struct mom_boxnode_st *closnod = mom_dyncast_node (closv);
-  if (!closnod)
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has non-node `after_dump` value %s, ignoring it",
-         mom_value_cstring (closv));
-      goto end;
-    }
-  struct mom_item_st *clositm = closnod->nod_connitm;
-  MOM_DEBUGPRINTF (dump, "after_dump clositm=%s", mom_item_cstring (clositm));
-  assert (clositm && clositm->va_itype == MOMITY_ITEM);
-  if (clositm == MOM_PREDEFITM (nanoeval))
-    {
-      dump_nanoeval_mom (closnod, MOM_PREDEFITM (after_dump));
-      MOM_INFORMPRINTF ("nanoevaled node of %d sons after dump",
-                        mom_size (closnod));
-      goto end;
-    }
-  const void *funptr = clositm->itm_funptr;
-  if (!funptr)
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has non-closure `after_dump` value %s, ignoring it",
-         mom_value_cstring (closv));
-      goto end;
-    }
-  struct mom_item_st *closigitm = clositm->itm_funsig;
-  MOM_DEBUGPRINTF (dump, "after_dump closigitm=%s",
-                   mom_item_cstring (closigitm));
-  if (closigitm != MOM_PREDEFITM (signature_closure_void_to_void))
-    {
-      MOM_WARNPRINTF
-        ("`the_system` has `after_dump` value %s with bad signature %s, ignoring it",
-         mom_value_cstring (closv), mom_item_cstring (closigitm));
-      goto end;
-    }
-  {
-    mom_closure_void_to_void_sig_t *fun =
-      (mom_closure_void_to_void_sig_t *) funptr;
-    MOM_DEBUGPRINTF (dump, "after_dump before applying %s",
-                     mom_value_cstring (closv));
-    (*fun) (closnod);
-    MOM_DEBUGPRINTF (dump, "after_dump after applying %s",
-                     mom_value_cstring (closv));
-    return;
-  }
-end:
-  return;
-}                               /* end of after_dump_mom */
 
 MOM_PRIVATE void
 run_make_after_dump_mom (void)
@@ -1197,7 +963,6 @@ mom_dump_state (void)
 {
   double startrealtime = mom_elapsed_real_time ();
   double startcputime = mom_process_cpu_time ();
-  before_dump_mom ();
   struct mom_dumper_st *du = mom_gc_alloc (sizeof (struct mom_dumper_st));
   du->va_itype = MOMITY_DUMPER;
   du->du_state = MOMDUMP_NONE;
@@ -1261,13 +1026,11 @@ mom_dump_state (void)
       if (remove (du->du_predefhtmpath->cstr))
         MOM_FATAPRINTF ("failed to remove temporary %s : %m",
                         du->du_predefhtmpath->cstr);
-
     }
   MOM_DEBUGPRINTF (dump, "itemset=%s",
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
                                       mom_hashset_to_boxset
                                       (du->du_itemset)));
-  after_dump_mom ();
   if (mom_dont_make_after_dump)
     MOM_INFORMPRINTF ("don't run make after dump");
   else
