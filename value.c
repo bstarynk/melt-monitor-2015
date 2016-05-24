@@ -646,7 +646,7 @@ update_node_hash_mom (struct mom_boxnode_st *nod)
 
 const struct mom_boxnode_st *
 mom_boxnode_make_meta (const struct mom_item_st *conn,
-                       unsigned size,
+                       int size,
                        const struct mom_hashedvalue_st **sons,
                        const struct mom_item_st *metaitm, intptr_t metarank)
 {
@@ -654,6 +654,7 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
     return NULL;
   if (!sons || sons == MOM_EMPTY_SLOT)
     size = 0;
+  if (size < 0) size = 0;
   if (size >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big %d node of connective %s",
                     size, mom_item_cstring (conn));

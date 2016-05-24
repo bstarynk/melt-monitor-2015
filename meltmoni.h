@@ -878,19 +878,14 @@ static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
   return NULL;
 }
 
-const struct mom_boxnode_st *mom_boxnode_make_meta    //
-
-(const struct mom_item_st *conn, unsigned size,
+const struct mom_boxnode_st *mom_boxnode_make_meta   
+(const struct mom_item_st *conn, int size,
  const struct mom_hashedvalue_st **sons,
  const struct mom_item_st *meta, intptr_t metarank);
 
-static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
-    mom_item_st
-    *conn,
-    unsigned size,
-    const struct
-    mom_hashedvalue_st
-    **sons)
+static inline const struct mom_boxnode_st *
+mom_boxnode_make (const struct mom_item_st *conn,
+    int size, const struct mom_hashedvalue_st **sons)
 {
   return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
 }
