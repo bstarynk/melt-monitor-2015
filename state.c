@@ -586,8 +586,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
             }
           else
             MOM_FATAPRINTF
-              ("invalid previous mark#%d with stacktop #%d for parent function %s",
-               pmark, ld->ld_stacktop, nambuf);
+              ("invalid previous mark#%d with stacktop #%d for parent function %s; curitm:%s",
+               pmark, ld->ld_stacktop, nambuf, mom_item_cstring(curitm));
         }
       /// *foo is for defining item foo
       else if (linbuf[0] == '*' && isalpha (linbuf[1]))

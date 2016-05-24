@@ -25,10 +25,6 @@
 (
 comment
 "the addition operator"_
-nanoeval
-(
-nanoeval_add2
-)node
 )attrs
 
 
@@ -65,10 +61,6 @@ comment
 (
 comment
 "apply first arg to other ones"_
-nanoeval
-(
-nanoeval_applyany
-)node
 )attrs
 
 
@@ -78,10 +70,6 @@ nanoeval_applyany
 (
 comment
 "apply_flatten closnod flatitm args...: flatten args which are node of flatitm & apply closnod"_
-nanoeval
-(
-nanoeval_apply_flattenany
-)node
 )attrs
 
 
@@ -210,10 +198,6 @@ comment
 (
 comment
 "for cloning an item"_
-nanoeval
-(
-nanoeval_clone1
-)node
 )attrs
 
 
@@ -331,10 +315,6 @@ comment
 (
 comment
 "the difference operator"_
-nanoeval
-(
-nanoeval_diff2
-)node
 )attrs
 
 
@@ -487,10 +467,6 @@ comment
 (
 comment
 "the division operator"_
-nanoeval
-(
-nanoeval_div2
-)node
 )attrs
 
 
@@ -499,7 +475,7 @@ nanoeval_div2
 ^mtime
 (
 comment
-"for diving into some item at nanoevaluation"_
+"for diving into some item"_
 )attrs
 
 
@@ -612,10 +588,6 @@ comment
 (
 comment
 "test for equality of two values"_
-nanoeval
-(
-nanoeval_equal2
-)node
 )attrs
 
 
@@ -634,24 +606,9 @@ comment
 (
 comment
 "throw a failure"_
-nanoeval
-(
-nanoeval_fail1
-)node
 )attrs
 
 
-*failure_nanostep
-1458912739
-^mtime
-^func
-signature_nanotaskstep
-^funsignature
-(
-comment
-"a nanostep routine for failure"_
-)attrs
-^taskstepper
 
 
 *file_name
@@ -678,10 +635,6 @@ comment
 (
 comment
 "to make a node, but flattening some arguments"_
-nanoeval
-(
-nanoeval_flattennodeany
-)node
 )attrs
 
 
@@ -691,10 +644,6 @@ nanoeval_flattennodeany
 (
 comment
 "primitive for fold left (nodefun,inival,compval)"_
-nanoeval
-(
-nanoeval_fold_left3
-)node
 )attrs
 
 
@@ -704,10 +653,6 @@ nanoeval_fold_left3
 (
 comment
 "primitive for fold right (nodefun,compval,inival)"_
-nanoeval
-(
-nanoeval_fold_right3
-)node
 )attrs
 
 
@@ -717,10 +662,6 @@ nanoeval_fold_right3
 (
 comment
 "primitive for fold left with index (nodefun,inival,compval)"_
-nanoeval
-(
-nanoeval_foldix_left3
-)node
 )attrs
 
 
@@ -730,10 +671,6 @@ nanoeval_foldix_left3
 (
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
-nanoeval
-(
-nanoeval_foldix_right3
-)node
 )attrs
 
 
@@ -761,10 +698,6 @@ comment
 (
 comment
 "test for greater of two values"_
-nanoeval
-(
-nanoeval_greater2
-)node
 )attrs
 
 
@@ -774,10 +707,6 @@ nanoeval_greater2
 (
 comment
 "test for greater or equal of two values"_
-nanoeval
-(
-nanoeval_greater_or_equal2
-)node
 )attrs
 
 
@@ -843,19 +772,9 @@ comment
 "prototype for header stuff"_
 digest
 (
-(
 dust
 hdr
 )tuple
-web_state__0dmo5BBWK0mbtv
-(
-digest_header_stuff_body
-18
-~
-dive
-)nodemeta
-nano_closure
-)node
 )attrs
 
 
@@ -874,10 +793,6 @@ comment
 (
 comment
 "the identity function"_
-nanoeval
-(
-nanoeval_identity1
-)node
 notice
 (
 parenthesis
@@ -934,10 +849,6 @@ is_scalar
 (
 comment
 "to test atomicity"_
-nanoeval
-(
-nanoeval_is_atom1
-)node
 )attrs
 
 
@@ -946,11 +857,7 @@ nanoeval_is_atom1
 ^mtime
 (
 comment
-"test if argument is a nano-closure"_
-nanoeval
-(
-nanoeval_is_closure1
-)node
+"test if argument is a closure"_
 )attrs
 
 
@@ -960,10 +867,6 @@ nanoeval_is_closure1
 (
 comment
 "to test if argument is a double"_
-nanoeval
-(
-nanoeval_is_double1
-)node
 )attrs
 
 
@@ -973,10 +876,6 @@ nanoeval_is_double1
 (
 comment
 "to test if argument is an integer"_
-nanoeval
-(
-nanoeval_is_int1
-)node
 )attrs
 
 
@@ -986,10 +885,6 @@ nanoeval_is_int1
 (
 comment
 "to test if argument is an item"_
-nanoeval
-(
-nanoeval_is_item1
-)node
 notice
 item
 )attrs
@@ -1001,10 +896,6 @@ item
 (
 comment
 "test if argument is a node"_
-nanoeval
-(
-nanoeval_is_node1
-)node
 )attrs
 
 
@@ -1014,10 +905,6 @@ nanoeval_is_node1
 (
 comment
 "to test if argument is null"_
-nanoeval
-(
-nanoeval_is_null1
-)node
 notice
 not
 )attrs
@@ -1029,10 +916,6 @@ not
 (
 comment
 "to test if argument is a number"_
-nanoeval
-(
-nanoeval_is_number1
-)node
 )attrs
 
 
@@ -1042,10 +925,6 @@ nanoeval_is_number1
 (
 comment
 "to test if argument is scalar"_
-nanoeval
-(
-nanoeval_is_scalar1
-)node
 )attrs
 
 
@@ -1055,10 +934,6 @@ nanoeval_is_scalar1
 (
 comment
 "test if argument is a sequence"_
-nanoeval
-(
-nanoeval_is_sequence1
-)node
 notice
 (
 set
@@ -1073,10 +948,6 @@ tuple
 (
 comment
 "test if argument is a set"_
-nanoeval
-(
-nanoeval_is_set1
-)node
 notice
 set
 )attrs
@@ -1088,10 +959,6 @@ set
 (
 comment
 "to test if argument is string"_
-nanoeval
-(
-nanoeval_is_string1
-)node
 )attrs
 
 
@@ -1101,10 +968,6 @@ nanoeval_is_string1
 (
 comment
 "test if argument is a tuple"_
-nanoeval
-(
-nanoeval_is_tuple1
-)node
 notice
 tuple
 )attrs
@@ -1149,10 +1012,6 @@ comment
 (
 comment
 "to iterate a function on a composite value"_
-nanoeval
-(
-nanoeval_iter2
-)node
 )attrs
 
 
@@ -1162,10 +1021,6 @@ nanoeval_iter2
 (
 comment
 "to iterate a function on a composite value and its index"_
-nanoeval
-(
-nanoeval_iterix2
-)node
 )attrs
 
 
@@ -1211,10 +1066,6 @@ comment
 (
 comment
 "test for less of two values"_
-nanoeval
-(
-nanoeval_less2
-)node
 )attrs
 
 
@@ -1224,10 +1075,6 @@ nanoeval_less2
 (
 comment
 "test for less or equal of two values"_
-nanoeval
-(
-nanoeval_less_or_equal2
-)node
 )attrs
 
 
@@ -1244,661 +1091,7 @@ comment
 1458218225
 ^mtime
 (
-parent
-web_state__0dmo5BBWK0mbtv
 )attrs
-(
-bd
-(
-(
-)tuple
-let__6u7e2UmXWwKFsm
-(
-(
-(
-dust
-(
-(
-before_dump
-28
-~
-verbatim
-)nodemeta
-25
-~
-clone
-)nodemeta
-20
-~
-be
-)nodemeta
-(
-modtup
-(
-the_system
-initial_modules
-41
-~
-get
-)nodemeta
-36
-~
-be
-)nodemeta
-(
-dbg_blue
-(
-"before-dump dust="_
-55
-~
-out_raw
-)nodemeta
-dust
-(
-" modtup="_
-63
-~
-out_raw
-)nodemeta
-modtup
-50
-~
-output
-)nodemeta
-(
-dust
-72
-~
-prepare_dump_state
-)nodemeta
-(
-dbg_blue
-(
-"before-dump prepared dust="_
-83
-~
-out_raw
-)nodemeta
-(
-dust
-89
-~
-out_content
-)nodemeta
-78
-~
-output
-)nodemeta
-(
-(
-prhd
-(
-dust
-104
-~
-prepare_header
-)nodemeta
-99
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump prhd="_
-119
-~
-out_raw
-)nodemeta
-(
-prhd
-125
-~
-out_content
-)nodemeta
-114
-~
-output
-)nodemeta
-111
-~
-step
-)nodemeta
-(
-nprmod
-(
-(
-(
-m
-i
-144
-~
-tuple
-)nodemeta
-(
-(
-pm
-(
-dust
-m
-160
-~
-prepare_module
-)nodemeta
-155
-~
-be
-)nodemeta
-(
-pm
-(
-index
-174
-~
-verbatim
-)nodemeta
-i
-169
-~
-put
-)nodemeta
-(
-pm
-(
-module
-188
-~
-verbatim
-)nodemeta
-(
-modtup
-i
-194
-~
-get
-)nodemeta
-183
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump prepared module pm="_
-208
-~
-out_raw
-)nodemeta
-(
-pm
-214
-~
-out_content
-)nodemeta
-203
-~
-output
-)nodemeta
-pm
-152
-~
-let
-)nodemeta
-141
-~
-func
-)nodemeta
-modtup
-(
-nprmod
-227
-~
-verbatim
-)nodemeta
-138
-~
-mapix
-)nodemeta
-133
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump nprmod="_
-243
-~
-out_raw
-)nodemeta
-nprmod
-238
-~
-output
-)nodemeta
-235
-~
-step
-)nodemeta
-(
-dihd
-(
-dust
-prhd
-258
-~
-digest_header
-)nodemeta
-253
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump dihd="_
-275
-~
-out_raw
-)nodemeta
-dihd
-270
-~
-output
-)nodemeta
-267
-~
-step
-)nodemeta
-(
-ndimod
-(
-(
-(
-pm
-i
-296
-~
-tuple
-)nodemeta
-(
-(
-dim
-(
-dust
-pm
-312
-~
-digest_module
-)nodemeta
-307
-~
-be
-)nodemeta
-(
-dim
-(
-index
-326
-~
-verbatim
-)nodemeta
-i
-321
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump digested module="_
-340
-~
-out_raw
-)nodemeta
-dim
-335
-~
-output
-)nodemeta
-dim
-304
-~
-let
-)nodemeta
-293
-~
-func
-)nodemeta
-nprmod
-(
-ndimod
-355
-~
-verbatim
-)nodemeta
-290
-~
-mapix
-)nodemeta
-285
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump ndimod="_
-371
-~
-out_raw
-)nodemeta
-ndimod
-366
-~
-output
-)nodemeta
-363
-~
-step
-)nodemeta
-(
-asthd
-(
-dust
-dihd
-386
-~
-emit_code_ast
-)nodemeta
-381
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump asthd="_
-403
-~
-out_raw
-)nodemeta
-(
-asthd
-409
-~
-out_content
-)nodemeta
-398
-~
-output
-)nodemeta
-395
-~
-step
-)nodemeta
-(
-nastmod
-(
-(
-(
-m
-i
-428
-~
-tuple
-)nodemeta
-(
-(
-astmd
-(
-dust
-m
-444
-~
-emit_code_ast
-)nodemeta
-439
-~
-be
-)nodemeta
-(
-astmd
-(
-index
-458
-~
-verbatim
-)nodemeta
-i
-453
-~
-put
-)nodemeta
-(
-astmd
-(
-module
-472
-~
-verbatim
-)nodemeta
-(
-modtup
-i
-478
-~
-get
-)nodemeta
-467
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST module="_
-492
-~
-out_raw
-)nodemeta
-(
-astmd
-498
-~
-out_content
-)nodemeta
-487
-~
-output
-)nodemeta
-astmd
-436
-~
-let
-)nodemeta
-425
-~
-func
-)nodemeta
-ndimod
-(
-nastmod
-511
-~
-verbatim
-)nodemeta
-422
-~
-mapix
-)nodemeta
-417
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump nastmod="_
-527
-~
-out_raw
-)nodemeta
-(
-nastmod
-533
-~
-out_content
-)nodemeta
-522
-~
-output
-)nodemeta
-519
-~
-step
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST header="_
-546
-~
-out_raw
-)nodemeta
-asthd
-541
-~
-output
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST module nodes="_
-560
-~
-out_raw
-)nodemeta
-nastmod
-555
-~
-output
-)nodemeta
-(
-dust
-asthd
-569
-~
-output_header_file
-)nodemeta
-(
-(
-(
-astmd
-i
-583
-~
-tuple
-)nodemeta
-(
-dbg_blue
-(
-"before-dump astmd="_
-596
-~
-out_raw
-)nodemeta
-(
-astmd
-602
-~
-out_content
-)nodemeta
-(
-".. i="_
-608
-~
-out_raw
-)nodemeta
-i
-591
-~
-output
-)nodemeta
-(
-(
-m
-(
-modtup
-i
-625
-~
-get
-)nodemeta
-620
-~
-be
-)nodemeta
-(
-nam
-(
-m
-(
-file_name
-644
-~
-verbatim
-)nodemeta
-639
-~
-get
-)nodemeta
-634
-~
-be
-)nodemeta
-(
-dust
-astmd
-nam
-652
-~
-output_c_module_file
-)nodemeta
-617
-~
-let
-)nodemeta
-580
-~
-func
-)nodemeta
-nastmod
-577
-~
-iterix
-)nodemeta
-96
-~
-let
-)nodemeta
-17
-~
-let
-)nodemeta
-14
-~
-transient
-)nodemeta
-nano_closure
-)node
-)payload_hashmap
 
 
 *letrec
@@ -1925,21 +1118,6 @@ comment
 (
 comment
 "the main module"_
-digest
-(
-(
-dust
-modu
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-digest_main_module_body
-18
-~
-dive
-)nodemeta
-nano_closure
-)node
 )attrs
 
 
@@ -1949,10 +1127,6 @@ nano_closure
 (
 comment
 "primitive to map a function to a value with a connective"_
-nanoeval
-(
-nanoeval_map3
-)node
 )attrs
 
 
@@ -1962,10 +1136,6 @@ nanoeval_map3
 (
 comment
 "primitive to map a function to a value and index with a connective"_
-nanoeval
-(
-nanoeval_mapix3
-)node
 )attrs
 
 
@@ -2101,10 +1271,6 @@ comment
 (
 comment
 "the multiplication operator"_
-nanoeval
-(
-nanoeval_mult2
-)node
 )attrs
 
 
@@ -2126,1213 +1292,9 @@ comment
 )attrs
 
 
-*nano_closure
-1457527228
-^mtime
-(
-comment
-"for nanoclosures"_
-)attrs
 
 
-*nano_delimiters
-1452779982
-^mtime
-(
-comment
-"dictionnary of delimiters for nanoedit"_
-)attrs
-(
-"$"_
-dollar_delim
-"%"_
-percent_delim
-"("_
-left_paren_delim
-")"_
-right_paren_delim
-"*"_
-star_delim
-"+"_
-plus_delim
-","_
-comma_delim
-"-"_
-minus_delim
-"/"_
-slash_delim
-"/%"_
-slashpercent_delim
-";"_
-semicolon_delim
-"["_
-left_bracket_delim
-"\\"_
-backslash_delim
-"\\\\"_
-double_backslash_delim
-"]"_
-right_bracket_delim
-"{"_
-left_brace_delim
-"}"_
-right_brace_delim
-"~"_
-tilde_delim
-"\u00b0"_
-degree_delim
-)payload_hashassoc
 
-
-*nano_displayer
-1452115787
-^mtime
-^func
-signature_displayer
-^funsignature
-
-
-*nanoedit
-1458633901
-^mtime
-^func
-signature_tasklet
-^funsignature
-(
-comment
-"for nanoedit"_
-)attrs
-
-
-*nanoeval
-1455546250
-^mtime
-(
-comment
-"for nanoeval"_
-)attrs
-
-
-*nanoeval_add2
-1455914663
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to evaluate add"_
-)attrs
-
-
-*nanoeval_apply_flattenany
-1457100006
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"nanoeval routine for apply_flatten"_
-)attrs
-
-
-*nanoeval_applyany
-1457097708
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-
-
-*nanoeval_clone1
-1456922491
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to clone an item"_
-notice
-clone
-)attrs
-
-
-*nanoeval_diff2
-1456140230
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to evaluate diff"_
-)attrs
-
-
-*nanoeval_div2
-1456141884
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to evaluate div"_
-)attrs
-
-
-*nanoeval_equal2
-1457364041
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for equality"_
-notice
-equal
-)attrs
-
-
-*nanoeval_fail1
-1457596906
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-
-
-*nanoeval_flattennodeany
-1456758793
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function to evaluate flatten node"_
-)attrs
-
-
-*nanoeval_fold_left3
-1457090580
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"nanoeval routine for fold_left"_
-)attrs
-
-
-*nanoeval_fold_right3
-1457090580
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"nanoeval routine for fold_right"_
-)attrs
-
-
-*nanoeval_foldix_left3
-1457090580
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"nanoeval routine for foldix_left"_
-)attrs
-
-
-*nanoeval_foldix_right3
-1457090580
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"nanoeval routine for foldix_right"_
-)attrs
-
-
-*nanoeval_greater2
-1457365666
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for greater than"_
-notice
-greater
-)attrs
-
-
-*nanoeval_greater_or_equal2
-1457365666
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for greater or equal"_
-notice
-greater_or_equal
-)attrs
-
-
-*nanoeval_identity1
-1456312768
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"function to evaluate identity"_
-)attrs
-
-
-*nanoeval_is_atom1
-1457360526
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_atom"_
-notice
-is_atom
-)attrs
-
-
-*nanoeval_is_closure1
-1457598341
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_closure"_
-notice
-is_closure
-)attrs
-
-
-*nanoeval_is_double1
-1457358950
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_double"_
-notice
-is_double
-)attrs
-
-
-*nanoeval_is_int1
-1457358950
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_int"_
-notice
-is_int
-)attrs
-
-
-*nanoeval_is_item1
-1457360821
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_item"_
-notice
-is_item
-)attrs
-
-
-*nanoeval_is_node1
-1457361540
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_node"_
-notice
-is_node
-)attrs
-
-
-*nanoeval_is_null1
-1457414352
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_null"_
-notice
-is_null
-)attrs
-
-
-*nanoeval_is_number1
-1457359776
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_number"_
-notice
-is_number
-)attrs
-
-
-*nanoeval_is_scalar1
-1457360097
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_scalar"_
-notice
-is_scalar
-)attrs
-
-
-*nanoeval_is_sequence1
-1457361164
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_sequence"_
-notice
-is_sequence
-)attrs
-
-
-*nanoeval_is_set1
-1457361412
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_set"_
-notice
-is_set
-)attrs
-
-
-*nanoeval_is_string1
-1457360097
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_string"_
-notice
-is_string
-)attrs
-
-
-*nanoeval_is_tuple1
-1457361164
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for is_tuple"_
-notice
-is_tuple
-)attrs
-
-
-*nanoeval_iter2
-1457079401
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for nanoeval iter"_
-)attrs
-
-
-*nanoeval_iterix2
-1457079835
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for nanoeval iterix"_
-)attrs
-
-
-*nanoeval_less2
-1457365666
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for less than"_
-notice
-less
-)attrs
-
-
-*nanoeval_less_or_equal2
-1457365666
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for less or equal"_
-notice
-less_or_equal
-)attrs
-
-
-*nanoeval_map3
-1457082461
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"routine for nanoeval of map"_
-)attrs
-
-
-*nanoeval_mapix3
-1457082461
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"routine for nanoeval of mapix"_
-)attrs
-
-
-*nanoeval_mult2
-1456130464
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to evaluate mult"_
-)attrs
-
-
-*nanoeval_node_arity1
-1457430266
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for node_arity"_
-notice
-(
-node_arity
-)node
-)attrs
-
-
-*nanoeval_node_connective1
-1457430266
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for node_connective"_
-notice
-node_connective
-)attrs
-
-
-*nanoeval_node_nth2
-1457430266
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for node_nth"_
-notice
-node_nth
-)attrs
-
-
-*nanoeval_nodeany
-1456758018
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function to evaluate node"_
-)attrs
-
-
-*nanoeval_out_indent1
-1457095329
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to nanoeval out_indent"_
-)attrs
-
-
-*nanoeval_out_indentation1
-1457095329
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to nanoeval out_indentation"_
-)attrs
-
-
-*nanoeval_out_last_line_width1
-1457095329
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to nanoeval out_last_line_width"_
-)attrs
-
-
-*nanoeval_out_newline1
-1457095329
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to nanoeval out_newline"_
-)attrs
-
-
-*nanoeval_out_outdent1
-1457095329
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to nanoeval out_outdent"_
-)attrs
-
-
-*nanoeval_out_puts2
-1457095329
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine to nanoeval out_puts"_
-)attrs
-
-
-*nanoeval_payl_assovaldata1
-1456825884
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"nanoeval of payl_assovaldata"_
-)attrs
-
-
-*nanoeval_payl_assovaldata_get2
-1456833278
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to get an attribute in an assocvaldata"_
-)attrs
-
-
-*nanoeval_payl_assovaldata_putany
-1456833278
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function to put attributes in an assocvaldata"_
-)attrs
-
-
-*nanoeval_payl_assovaldata_remove2
-1456833278
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to remove an attribute in an assocvaldata"_
-)attrs
-
-
-*nanoeval_payl_assovaldata_set_attrs1
-1456833278
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"function to compute the set of attributes"_
-)attrs
-
-
-*nanoeval_payl_clear1
-1456930351
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine to clear payload"_
-)attrs
-
-
-*nanoeval_payl_file_close1
-1456929384
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_file_close"_
-)attrs
-
-
-*nanoeval_payl_file_write2
-1456929384
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for payl_file_write"_
-)attrs
-
-
-*nanoeval_payl_filebuffer1
-1456929384
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_filebuffer"_
-)attrs
-
-
-*nanoeval_payl_hashassoc1
-1456904945
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"for payl_hashassoc"_
-)attrs
-
-
-*nanoeval_payl_hashassoc_count1
-1456921741
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_hashassoc_count"_
-)attrs
-
-
-*nanoeval_payl_hashassoc_get2
-1456910539
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for payl_hashassoc_get"_
-)attrs
-
-
-*nanoeval_payl_hashassoc_putany
-1456910539
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"routine for payl_hashassoc_put"_
-)attrs
-
-
-*nanoeval_payl_hashassoc_removeany
-1456910539
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"routine for payl_hashassoc_remove"_
-)attrs
-
-
-*nanoeval_payl_hashassoc_sorted_key_node2
-1456921741
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for payl_hashassoc_sorted_key_node"_
-)attrs
-
-
-*nanoeval_payl_hashmap1
-1456897878
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_hashmap"_
-)attrs
-
-
-*nanoeval_payl_hashmap_count1
-1456897878
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_hashmap_count"_
-)attrs
-
-
-*nanoeval_payl_hashmap_get2
-1456897878
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for payl_hashmap_get"_
-)attrs
-
-
-*nanoeval_payl_hashmap_keyset1
-1456897878
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"routine for payl_hashmap_keyset"_
-)attrs
-
-
-*nanoeval_payl_hashmap_putany
-1456897878
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"routine for payl_hashmap_put"_
-)attrs
-
-
-*nanoeval_payl_hashmap_removeany
-1456897878
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"routine for payl_hashmap_remove"_
-)attrs
-
-
-*nanoeval_payl_hashset1
-1456841456
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"nanoeval of payl hashset"_
-)attrs
-
-
-*nanoeval_payl_hashset_insert_content2
-1456845046
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_hashset_insert_content"_
-)attrs
-
-
-*nanoeval_payl_hashset_insertany
-1456855856
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function of payl_hashset_insert"_
-)attrs
-
-
-*nanoeval_payl_hashset_remove_content2
-1456855856
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function of payl_hashset_remove"_
-)attrs
-
-
-*nanoeval_payl_hashset_removeany
-1456855856
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function of payl_hashset_remove"_
-)attrs
-
-
-*nanoeval_payl_hashset_reserve2
-1456841817
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_hashset_reserve"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata1
-1456839406
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"nanoaval of payl_vectvaldata"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_appendany
-1456840222
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_appendany"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_count1
-1456840222
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_count"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_node2
-1456840222
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_node"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_nth2
-1456840222
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_nth"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_put_nth3
-1456840222
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_put_nth"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_reserve2
-1456840222
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_reserve"_
-)attrs
-
-
-*nanoeval_payl_vectvaldata_resize2
-1456840222
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"nanoeval of payl_vectvaldata_resize"_
-)attrs
-
-
-*nanoeval_put3
-1456219019
-^mtime
-^func
-signature_nanoeval3
-^funsignature
-(
-comment
-"function to evaluate put"_
-)attrs
-
-
-*nanoeval_rem2
-1456141884
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"function to evaluate rem"_
-)attrs
-
-
-*nanoeval_reviter2
-1457086941
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for nanoeval reviter"_
-)attrs
-
-
-*nanoeval_same2
-1457364041
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for same"_
-notice
-same
-)attrs
-
-
-*nanoeval_setany
-1456152800
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function to evaluate set"_
-)attrs
-
-
-*nanoeval_size1
-1456761997
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"function to evaluate size"_
-)attrs
-
-
-*nanoeval_tupleany
-1456154292
-^mtime
-^func
-signature_nanoevalany
-^funsignature
-(
-comment
-"function to evaluate tuple"_
-)attrs
-
-
-*nanoeval_type1
-1456312768
-^mtime
-^func
-signature_nanoeval1
-^funsignature
-(
-comment
-"function to evaluate type"_
-)attrs
-
-
-*nanoeval_unequal2
-1457365666
-^mtime
-^func
-signature_nanoeval2
-^funsignature
-(
-comment
-"routine for nonequality"_
-notice
-unequal
-)attrs
 
 
 *nastmod
@@ -3368,10 +1330,6 @@ comment
 (
 comment
 "for nodes"_
-nanoeval
-(
-nanoeval_nodeany
-)node
 notice
 (
 flatten_node
@@ -3389,10 +1347,6 @@ node_nth
 (
 comment
 "get the arity of a node, or else nil"_
-nanoeval
-(
-nanoeval_node_arity1
-)node
 )attrs
 
 
@@ -3402,10 +1356,6 @@ nanoeval_node_arity1
 (
 comment
 "get the connective of a node, or else nil"_
-nanoeval
-(
-nanoeval_node_connective1
-)node
 )attrs
 
 
@@ -3415,10 +1365,6 @@ nanoeval_node_connective1
 (
 comment
 "get the nth son of a node, or else nil"_
-nanoeval
-(
-nanoeval_node_nth2
-)node
 )attrs
 
 
@@ -3437,10 +1383,6 @@ comment
 (
 comment
 "negation, same as is_null"_
-nanoeval
-(
-nanoeval_is_null1
-)node
 notice
 is_null
 )attrs
@@ -3628,10 +1570,6 @@ comment
 (
 comment
 "output with more indentation"_
-nanoeval
-(
-nanoeval_out_indent1
-)node
 )attrs
 
 
@@ -3641,10 +1579,6 @@ nanoeval_out_indent1
 (
 comment
 "give the indentation of some output"_
-nanoeval
-(
-nanoeval_out_indentation1
-)node
 )attrs
 
 
@@ -3654,10 +1588,6 @@ nanoeval_out_indentation1
 (
 comment
 "give the last line width of some output"_
-nanoeval
-(
-nanoeval_out_last_line_width1
-)node
 )attrs
 
 
@@ -3667,10 +1597,6 @@ nanoeval_out_last_line_width1
 (
 comment
 "output an indented newline"_
-nanoeval
-(
-nanoeval_out_newline1
-)node
 )attrs
 
 
@@ -3680,10 +1606,6 @@ nanoeval_out_newline1
 (
 comment
 "output with less indentation"_
-nanoeval
-(
-nanoeval_out_outdent1
-)node
 )attrs
 
 
@@ -3693,10 +1615,6 @@ nanoeval_out_outdent1
 (
 comment
 "put to output arg0 the string arg1"_
-nanoeval
-(
-nanoeval_out_puts2
-)node
 )attrs
 
 
@@ -3787,10 +1705,6 @@ comment
 (
 comment
 "for parenthesized expression"_
-nanoeval
-(
-nanoeval_identity1
-)node
 notice
 (
 identity
@@ -3804,10 +1718,6 @@ identity
 (
 comment
 "for association payload mapping items to values"_
-nanoeval
-(
-nanoeval_payl_assovaldata1
-)node
 notice
 (
 payl_assovaldata_get
@@ -3824,10 +1734,6 @@ payl_assovaldata_set_attrs
 (
 comment
 "get an attribute in given item assocvaldata payload"_
-nanoeval
-(
-nanoeval_payl_assovaldata_get2
-)node
 )attrs
 
 
@@ -3837,10 +1743,6 @@ nanoeval_payl_assovaldata_get2
 (
 comment
 "put attributes in given item assocvaldata payload"_
-nanoeval
-(
-nanoeval_payl_assovaldata_putany
-)node
 )attrs
 
 
@@ -3850,10 +1752,6 @@ nanoeval_payl_assovaldata_putany
 (
 comment
 "remove attributes in given item assocvaldata payload"_
-nanoeval
-(
-nanoeval_payl_assovaldata_remove2
-)node
 )attrs
 
 
@@ -3863,10 +1761,6 @@ nanoeval_payl_assovaldata_remove2
 (
 comment
 "give the set of attributes in given item assocvaldata payload"_
-nanoeval
-(
-nanoeval_payl_assovaldata_set_attrs1
-)node
 )attrs
 
 
@@ -3876,10 +1770,6 @@ nanoeval_payl_assovaldata_set_attrs1
 (
 comment
 "operation to clear the payload of some item"_
-nanoeval
-(
-nanoeval_payl_clear1
-)node
 )attrs
 
 
@@ -3907,10 +1797,6 @@ comment
 (
 comment
 "file close operation"_
-nanoeval
-(
-nanoeval_payl_file_close1
-)node
 )attrs
 
 
@@ -3920,10 +1806,6 @@ nanoeval_payl_file_close1
 (
 comment
 "for written file payload"_
-nanoeval
-(
-nanoeval_payl_file_write2
-)node
 )attrs
 
 
@@ -3933,10 +1815,6 @@ nanoeval_payl_file_write2
 (
 comment
 "for file buffer payload"_
-nanoeval
-(
-nanoeval_payl_filebuffer1
-)node
 )attrs
 
 
@@ -3946,10 +1824,6 @@ nanoeval_payl_filebuffer1
 (
 comment
 "for associative hash payloads"_
-nanoeval
-(
-nanoeval_payl_hashassoc1
-)node
 notice
 (
 payl_hashassoc_count
@@ -3967,10 +1841,6 @@ payl_hashassoc_sorted_key_node
 (
 comment
 "get a node with sorted keys"_
-nanoeval
-(
-nanoeval_payl_hashassoc_count1
-)node
 )attrs
 
 
@@ -3980,10 +1850,6 @@ nanoeval_payl_hashassoc_count1
 (
 comment
 "get in an hashassoc item"_
-nanoeval
-(
-nanoeval_payl_hashassoc_get2
-)node
 )attrs
 
 
@@ -3993,10 +1859,6 @@ nanoeval_payl_hashassoc_get2
 (
 comment
 "put in an hashassoc item"_
-nanoeval
-(
-nanoeval_payl_hashassoc_putany
-)node
 )attrs
 
 
@@ -4006,10 +1868,6 @@ nanoeval_payl_hashassoc_putany
 (
 comment
 "remove in an hashassoc item"_
-nanoeval
-(
-nanoeval_payl_hashassoc_removeany
-)node
 )attrs
 
 
@@ -4019,10 +1877,6 @@ nanoeval_payl_hashassoc_removeany
 (
 comment
 "get a node with sorted keys"_
-nanoeval
-(
-nanoeval_payl_hashassoc_sorted_key_node2
-)node
 )attrs
 
 
@@ -4032,10 +1886,6 @@ nanoeval_payl_hashassoc_sorted_key_node2
 (
 comment
 "for item payload of hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap1
-)node
 notice
 (
 payl_hashmap_count
@@ -4053,10 +1903,6 @@ payl_hashmap_remove
 (
 comment
 "operation to obtain the set of keys in an hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap_count1
-)node
 )attrs
 
 
@@ -4066,10 +1912,6 @@ nanoeval_payl_hashmap_count1
 (
 comment
 "operation to get a key in an hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap_get2
-)node
 )attrs
 
 
@@ -4079,10 +1921,6 @@ nanoeval_payl_hashmap_get2
 (
 comment
 "operation to obtain the set of keys in an hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap_keyset1
-)node
 )attrs
 
 
@@ -4092,10 +1930,6 @@ nanoeval_payl_hashmap_keyset1
 (
 comment
 "operation to put a key in an hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap_putany
-)node
 )attrs
 
 
@@ -4105,10 +1939,6 @@ nanoeval_payl_hashmap_putany
 (
 comment
 "operation to remove a key in an hashmap"_
-nanoeval
-(
-nanoeval_payl_hashmap_removeany
-)node
 )attrs
 
 
@@ -4118,10 +1948,6 @@ nanoeval_payl_hashmap_removeany
 (
 comment
 "for item payload of hashset"_
-nanoeval
-(
-nanoeval_payl_hashset1
-)node
 notice
 (
 payl_hashset_insert
@@ -4139,10 +1965,6 @@ payl_hashset_reserve
 (
 comment
 "insert some content in an hashed set payload"_
-nanoeval
-(
-nanoeval_payl_hashset_insertany
-)node
 )attrs
 
 
@@ -4152,10 +1974,6 @@ nanoeval_payl_hashset_insertany
 (
 comment
 "insert some content in an hashed set payload"_
-nanoeval
-(
-nanoeval_payl_hashset_insert_content2
-)node
 )attrs
 
 
@@ -4165,10 +1983,6 @@ nanoeval_payl_hashset_insert_content2
 (
 comment
 "remove some content in an hashed set payload"_
-nanoeval
-(
-nanoeval_payl_hashset_removeany
-)node
 )attrs
 
 
@@ -4178,10 +1992,6 @@ nanoeval_payl_hashset_removeany
 (
 comment
 "remove some content in an hashed set payload"_
-nanoeval
-(
-nanoeval_payl_hashset_remove_content2
-)node
 )attrs
 
 
@@ -4191,10 +2001,6 @@ nanoeval_payl_hashset_remove_content2
 (
 comment
 "reserve in an hashed set payload"_
-nanoeval
-(
-nanoeval_payl_hashset_reserve2
-)node
 )attrs
 
 
@@ -4240,10 +2046,6 @@ comment
 (
 comment
 "append into a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_appendany
-)node
 )attrs
 
 
@@ -4253,10 +2055,6 @@ nanoeval_payl_vectvaldata_appendany
 (
 comment
 "count in a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_count1
-)node
 )attrs
 
 
@@ -4266,10 +2064,6 @@ nanoeval_payl_vectvaldata_count1
 (
 comment
 "make node from vector of values payload"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_node2
-)node
 )attrs
 
 
@@ -4279,10 +2073,6 @@ nanoeval_payl_vectvaldata_node2
 (
 comment
 "nth component in a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_nth2
-)node
 )attrs
 
 
@@ -4292,10 +2082,6 @@ nanoeval_payl_vectvaldata_nth2
 (
 comment
 "put_nth component in a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_put_nth3
-)node
 )attrs
 
 
@@ -4305,10 +2091,6 @@ nanoeval_payl_vectvaldata_put_nth3
 (
 comment
 "reserve in a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_reserve2
-)node
 )attrs
 
 
@@ -4318,10 +2100,6 @@ nanoeval_payl_vectvaldata_reserve2
 (
 comment
 "resize in a vector of values"_
-nanoeval
-(
-nanoeval_payl_vectvaldata_resize2
-)node
 )attrs
 
 
@@ -4331,10 +2109,6 @@ nanoeval_payl_vectvaldata_resize2
 (
 comment
 "for vector of values payload in items"_
-nanoeval
-(
-nanoeval_payl_vectvaldata1
-)node
 notice
 (
 payl_vectval_append
@@ -4551,10 +2325,6 @@ sequence
 (
 comment
 "to put something"_
-nanoeval
-(
-nanoeval_put3
-)node
 )attrs
 
 
@@ -4582,10 +2352,6 @@ comment
 (
 comment
 "the remainder or modulus operator"_
-nanoeval
-(
-nanoeval_rem2
-)node
 )attrs
 
 
@@ -4595,10 +2361,6 @@ nanoeval_rem2
 (
 comment
 "to reverse iterate a function on a composite value"_
-nanoeval
-(
-nanoeval_reviter2
-)node
 )attrs
 
 
@@ -4644,10 +2406,6 @@ comment
 (
 comment
 "test for identity of two values"_
-nanoeval
-(
-nanoeval_same2
-)node
 )attrs
 
 
@@ -4675,10 +2433,6 @@ comment
 (
 comment
 "for sets"_
-nanoeval
-(
-nanoeval_setany
-)node
 notice
 (
 is_sequence
@@ -4737,78 +2491,6 @@ comment
 )attrs
 
 
-*signature_nanoeval0
-1455613631
-^mtime
-(
-comment
-"signature for nanoeval0"_
-)attrs
-
-
-*signature_nanoeval1
-1455613736
-^mtime
-(
-comment
-"signature for nanoeval1"_
-)attrs
-
-
-*signature_nanoeval2
-1455613736
-^mtime
-(
-comment
-"signature for nanoeval 2"_
-)attrs
-
-
-*signature_nanoeval3
-1455613736
-^mtime
-(
-comment
-"signature for nanoeval3"_
-)attrs
-
-
-*signature_nanoeval4
-1455613736
-^mtime
-(
-comment
-"signature for nanoeval4"_
-)attrs
-
-
-*signature_nanoevalany
-1455613761
-^mtime
-(
-comment
-"signature for nanoevalany"_
-)attrs
-
-
-*signature_nanotaskexception
-1458906692
-^mtime
-(
-comment
-"signature for task exceptions"_
-)attrs
-
-
-*signature_nanotaskstep
-1458465979
-^mtime
-(
-comment
-"signature of nanotasksteps of mom_nanotaskstep_sig_t"_
-)attrs
-
-
 *signature_tasklet
 1446190348
 ^mtime
@@ -4833,10 +2515,6 @@ comment
 (
 comment
 "for size information"_
-nanoeval
-(
-nanoeval_size1
-)node
 )attrs
 
 
@@ -5017,7 +2695,6 @@ apply
 apply_flatten
 equal
 fail
-failure_nanostep
 fold_left
 fold_right
 foldix_left
@@ -5038,662 +2715,6 @@ reviter
 same
 unequal
 )set
-old_before_dump
-(
-(
-(
-(
-)tuple
-let__6u7e2UmXWwKFsm
-(
-(
-(
-dust
-(
-(
-before_dump
-28
-~
-verbatim
-)nodemeta
-25
-~
-clone
-)nodemeta
-20
-~
-be
-)nodemeta
-(
-modtup
-(
-the_system
-initial_modules
-41
-~
-get
-)nodemeta
-36
-~
-be
-)nodemeta
-(
-dbg_blue
-(
-"before-dump dust="_
-55
-~
-out_raw
-)nodemeta
-dust
-(
-" modtup="_
-63
-~
-out_raw
-)nodemeta
-modtup
-50
-~
-output
-)nodemeta
-(
-dust
-72
-~
-prepare_dump_state
-)nodemeta
-(
-dbg_blue
-(
-"before-dump prepared dust="_
-83
-~
-out_raw
-)nodemeta
-(
-dust
-89
-~
-out_content
-)nodemeta
-78
-~
-output
-)nodemeta
-(
-(
-prhd
-(
-dust
-104
-~
-prepare_header
-)nodemeta
-99
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump prhd="_
-119
-~
-out_raw
-)nodemeta
-(
-prhd
-125
-~
-out_content
-)nodemeta
-114
-~
-output
-)nodemeta
-111
-~
-step
-)nodemeta
-(
-nprmod
-(
-(
-(
-m
-i
-144
-~
-tuple
-)nodemeta
-(
-(
-pm
-(
-dust
-m
-160
-~
-prepare_module
-)nodemeta
-155
-~
-be
-)nodemeta
-(
-pm
-(
-index
-174
-~
-verbatim
-)nodemeta
-i
-169
-~
-put
-)nodemeta
-(
-pm
-(
-module
-188
-~
-verbatim
-)nodemeta
-(
-modtup
-i
-194
-~
-get
-)nodemeta
-183
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump prepared module pm="_
-208
-~
-out_raw
-)nodemeta
-(
-pm
-214
-~
-out_content
-)nodemeta
-203
-~
-output
-)nodemeta
-pm
-152
-~
-let
-)nodemeta
-141
-~
-func
-)nodemeta
-modtup
-(
-nprmod
-227
-~
-verbatim
-)nodemeta
-138
-~
-mapix
-)nodemeta
-133
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump nprmod="_
-243
-~
-out_raw
-)nodemeta
-nprmod
-238
-~
-output
-)nodemeta
-235
-~
-step
-)nodemeta
-(
-dihd
-(
-dust
-prhd
-258
-~
-digest_header
-)nodemeta
-253
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump dihd="_
-275
-~
-out_raw
-)nodemeta
-dihd
-270
-~
-output
-)nodemeta
-267
-~
-step
-)nodemeta
-(
-ndimod
-(
-(
-(
-pm
-i
-296
-~
-tuple
-)nodemeta
-(
-(
-dim
-(
-dust
-pm
-312
-~
-digest_module
-)nodemeta
-307
-~
-be
-)nodemeta
-(
-dim
-(
-index
-326
-~
-verbatim
-)nodemeta
-i
-321
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump digested module="_
-340
-~
-out_raw
-)nodemeta
-dim
-335
-~
-output
-)nodemeta
-dim
-304
-~
-let
-)nodemeta
-293
-~
-func
-)nodemeta
-nprmod
-(
-ndimod
-355
-~
-verbatim
-)nodemeta
-290
-~
-mapix
-)nodemeta
-285
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump ndimod="_
-371
-~
-out_raw
-)nodemeta
-ndimod
-366
-~
-output
-)nodemeta
-363
-~
-step
-)nodemeta
-(
-asthd
-(
-dust
-dihd
-386
-~
-emit_code_ast
-)nodemeta
-381
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump asthd="_
-403
-~
-out_raw
-)nodemeta
-(
-asthd
-409
-~
-out_content
-)nodemeta
-398
-~
-output
-)nodemeta
-395
-~
-step
-)nodemeta
-(
-nastmod
-(
-(
-(
-m
-i
-428
-~
-tuple
-)nodemeta
-(
-(
-astmd
-(
-dust
-m
-444
-~
-emit_code_ast
-)nodemeta
-439
-~
-be
-)nodemeta
-(
-astmd
-(
-index
-458
-~
-verbatim
-)nodemeta
-i
-453
-~
-put
-)nodemeta
-(
-astmd
-(
-module
-472
-~
-verbatim
-)nodemeta
-(
-modtup
-i
-478
-~
-get
-)nodemeta
-467
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST module="_
-492
-~
-out_raw
-)nodemeta
-(
-astmd
-498
-~
-out_content
-)nodemeta
-487
-~
-output
-)nodemeta
-astmd
-436
-~
-let
-)nodemeta
-425
-~
-func
-)nodemeta
-ndimod
-(
-nastmod
-511
-~
-verbatim
-)nodemeta
-422
-~
-mapix
-)nodemeta
-417
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"before-dump nastmod="_
-527
-~
-out_raw
-)nodemeta
-(
-nastmod
-533
-~
-out_content
-)nodemeta
-522
-~
-output
-)nodemeta
-519
-~
-step
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST header="_
-546
-~
-out_raw
-)nodemeta
-asthd
-541
-~
-output
-)nodemeta
-(
-dbg_blue
-(
-"before-dump AST module nodes="_
-560
-~
-out_raw
-)nodemeta
-nastmod
-555
-~
-output
-)nodemeta
-(
-dust
-asthd
-569
-~
-output_header_file
-)nodemeta
-(
-(
-(
-astmd
-i
-583
-~
-tuple
-)nodemeta
-(
-dbg_blue
-(
-"before-dump astmd="_
-596
-~
-out_raw
-)nodemeta
-(
-astmd
-602
-~
-out_content
-)nodemeta
-(
-".. i="_
-608
-~
-out_raw
-)nodemeta
-i
-591
-~
-output
-)nodemeta
-(
-(
-m
-(
-modtup
-i
-625
-~
-get
-)nodemeta
-620
-~
-be
-)nodemeta
-(
-nam
-(
-m
-(
-file_name
-644
-~
-verbatim
-)nodemeta
-639
-~
-get
-)nodemeta
-634
-~
-be
-)nodemeta
-(
-dust
-astmd
-nam
-652
-~
-output_c_module_file
-)nodemeta
-617
-~
-let
-)nodemeta
-580
-~
-func
-)nodemeta
-nastmod
-577
-~
-iterix
-)nodemeta
-96
-~
-let
-)nodemeta
-17
-~
-let
-)nodemeta
-14
-~
-transient
-)nodemeta
-nano_closure
-)node
-apply
-)node
-nanoeval
-)node
 other_modules
 (
 item_module
@@ -5712,7 +2733,6 @@ node
 )tuple
 )attrs
 (
-nano_displayer
 )comps
 
 
@@ -5749,10 +2769,6 @@ comment
 (
 comment
 "for tuples"_
-nanoeval
-(
-nanoeval_tupleany
-)node
 notice
 (
 is_sequence
@@ -5767,10 +2783,6 @@ is_tuple
 (
 comment
 "for type information"_
-nanoeval
-(
-nanoeval_type1
-)node
 sequence
 (
 none
@@ -5790,7 +2802,7 @@ node
 ^mtime
 (
 comment
-"for nanoeval type error"_
+"for type error"_
 )attrs
 
 
@@ -5809,10 +2821,6 @@ comment
 (
 comment
 "test for inequality of two values"_
-nanoeval
-(
-nanoeval_unequal2
-)node
 )attrs
 
 
@@ -5878,68 +2886,6 @@ comment
 "hashassoc for web handlers"_
 )attrs
 (
-miniedit
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit
-)node
-miniedit_dumpexit
-(
-(
-)tuple
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_dumpexit
-)node
-miniedit_genscript
-(
-(
-parent
-)node
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_genscript
-)node
-miniedit_genstyle
-(
-(
-)tuple
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_genstyle
-)node
-miniedit_keypressajax
-(
-(
-)tuple
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_keypressajax
-)node
-miniedit_startpage
-(
-(
-)tuple
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_startpage
-)node
-miniedit_websocket
-(
-(
-)tuple
-web_state
-web_state__0dmo5BBWK0mbtv
-miniedit_websocket
-)node
-nanoedit
-(
-web_state
-web_state__0dmo5BBWK0mbtv
-nano_delimiters
-nanoedit
-)node
 )payload_hashassoc
 
 
@@ -5957,1408 +2903,6 @@ comment
 ^mtime
 
 
-*web_state__0dmo5BBWK0mbtv
-1457512756
-^mtime
-(
-display
-raw
-expression
-(
-process_hdr_in_prepare_header
-digest_main_module_body
-main_module
-display
-)node
-item
-(
-digest_main_module_body
-main_module
-process_hdr_in_prepare_header
-)set
-)attrs
-(
-digest_header
-(
-(
-dust
-hdr
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"digest_header start dust="_
-19
-~
-out_raw
-)nodemeta
-(
-dust
-25
-~
-out_content
-)nodemeta
-(
-" hdr="_
-31
-~
-out_raw
-)nodemeta
-(
-hdr
-37
-~
-out_content
-)nodemeta
-14
-~
-output
-)nodemeta
-(
-(
-h
-(
-(
-hdr
-header
-55
-~
-get
-)nodemeta
-(
-(
-(
-digest_header
-69
-~
-verbatim
-)nodemeta
-(
-header
-75
-~
-verbatim
-)nodemeta
-hdr
-66
-~
-node
-)nodemeta
-63
-~
-fail
-)nodemeta
-52
-~
-or
-)nodemeta
-47
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"digest_header h="_
-95
-~
-out_raw
-)nodemeta
-(
-h
-101
-~
-out_content
-)nodemeta
-90
-~
-output
-)nodemeta
-87
-~
-step
-)nodemeta
-(
-d
-(
-h
-digest
-114
-~
-get
-)nodemeta
-109
-~
-be
-)nodemeta
-(
-(
-(
-d
-129
-~
-is_closure
-)nodemeta
-(
-dbg_blue
-(
-"digest_header before applying d="_
-140
-~
-out_raw
-)nodemeta
-d
-(
-" dust="_
-148
-~
-out_raw
-)nodemeta
-(
-dust
-154
-~
-out_content
-)nodemeta
-(
-" hdr="_
-160
-~
-out_raw
-)nodemeta
-(
-hdr
-166
-~
-out_content
-)nodemeta
-135
-~
-output
-)nodemeta
-(
-d
-dust
-hdr
-173
-~
-apply
-)nodemeta
-126
-~
-when
-)nodemeta
-(
-(
-(
-digest_header
-190
-~
-verbatim
-)nodemeta
-(
-digest
-196
-~
-verbatim
-)nodemeta
-hdr
-h
-187
-~
-node
-)nodemeta
-184
-~
-fail
-)nodemeta
-123
-~
-cond
-)nodemeta
-44
-~
-let
-)nodemeta
-nano_closure
-)node
-digest_module
-(
-(
-dust
-modu
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"digest_module start dust="_
-19
-~
-out_raw
-)nodemeta
-dust
-(
-"; modu="_
-27
-~
-out_raw
-)nodemeta
-(
-modu
-33
-~
-out_content
-)nodemeta
-14
-~
-output
-)nodemeta
-(
-(
-m
-(
-(
-modu
-module
-51
-~
-get
-)nodemeta
-(
-(
-(
-digest_module
-65
-~
-verbatim
-)nodemeta
-(
-module
-71
-~
-verbatim
-)nodemeta
-modu
-62
-~
-node
-)nodemeta
-59
-~
-fail
-)nodemeta
-48
-~
-or
-)nodemeta
-43
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"digest_module m="_
-91
-~
-out_raw
-)nodemeta
-(
-m
-97
-~
-out_content
-)nodemeta
-86
-~
-output
-)nodemeta
-83
-~
-step
-)nodemeta
-(
-d
-(
-m
-(
-digest
-115
-~
-verbatim
-)nodemeta
-(
-truth
-118
-~
-verbatim
-)nodemeta
-110
-~
-get
-)nodemeta
-105
-~
-be
-)nodemeta
-(
-dbg_blue
-(
-"digest_module inside m="_
-131
-~
-out_raw
-)nodemeta
-m
-(
-"; d="_
-139
-~
-out_raw
-)nodemeta
-d
-126
-~
-output
-)nodemeta
-(
-(
-(
-d
-154
-~
-is_closure
-)nodemeta
-(
-d
-dust
-modu
-160
-~
-apply
-)nodemeta
-151
-~
-when
-)nodemeta
-(
-(
-(
-digest_module
-177
-~
-verbatim
-)nodemeta
-(
-digest
-183
-~
-verbatim
-)nodemeta
-modu
-m
-174
-~
-node
-)nodemeta
-171
-~
-fail
-)nodemeta
-148
-~
-cond
-)nodemeta
-40
-~
-let
-)nodemeta
-nano_closure
-)node
-emit_code_ast
-(
-(
-dust
-it
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"emit_code_ast dust="_
-19
-~
-out_raw
-)nodemeta
-dust
-(
-" it="_
-27
-~
-out_raw
-)nodemeta
-(
-it
-33
-~
-out_content
-)nodemeta
-14
-~
-output
-)nodemeta
-(
-(
-pe
-(
-(
-it
-prepare_ast_emission
-51
-~
-get
-)nodemeta
-(
-truth
-59
-~
-verbatim
-)nodemeta
-48
-~
-or
-)nodemeta
-43
-~
-be
-)nodemeta
-(
-e
-(
-(
-(
-pe
-78
-~
-is_closure
-)nodemeta
-(
-dbg_blue
-(
-"emit_code_ast prepar. pe="_
-89
-~
-out_raw
-)nodemeta
-pe
-(
-" dust="_
-97
-~
-out_raw
-)nodemeta
-dust
-(
-" it="_
-105
-~
-out_raw
-)nodemeta
-it
-84
-~
-output
-)nodemeta
-(
-pe
-dust
-it
-114
-~
-apply
-)nodemeta
-75
-~
-when
-)nodemeta
-it
-72
-~
-cond
-)nodemeta
-67
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"emit_code_ast e="_
-137
-~
-out_raw
-)nodemeta
-e
-132
-~
-output
-)nodemeta
-129
-~
-step
-)nodemeta
-(
-ec
-(
-e
-(
-emit_code_ast
-157
-~
-verbatim
-)nodemeta
-152
-~
-get
-)nodemeta
-147
-~
-be
-)nodemeta
-(
-(
-dbg_blue
-(
-"emit_code_ast ec="_
-173
-~
-out_raw
-)nodemeta
-ec
-168
-~
-output
-)nodemeta
-165
-~
-step
-)nodemeta
-(
-(
-(
-ec
-189
-~
-is_closure
-)nodemeta
-(
-ec
-dust
-e
-195
-~
-apply
-)nodemeta
-186
-~
-when
-)nodemeta
-(
-(
-(
-emit_code_ast
-212
-~
-verbatim
-)nodemeta
-it
-e
-209
-~
-node
-)nodemeta
-206
-~
-fail
-)nodemeta
-183
-~
-cond
-)nodemeta
-40
-~
-let
-)nodemeta
-nano_closure
-)node
-out_c_code
-(
-(
-dust
-outf
-ast
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-(
-(
-ast
-22
-~
-is_item
-)nodemeta
-(
-(
-o
-(
-ast
-out_c_code
-36
-~
-get
-)nodemeta
-31
-~
-be
-)nodemeta
-(
-(
-(
-o
-51
-~
-is_node
-)nodemeta
-(
-o
-dust
-outf
-ast
-57
-~
-apply
-)nodemeta
-48
-~
-when
-)nodemeta
-(
-outf
-(
-o
-75
-~
-out_raw
-)nodemeta
-70
-~
-output
-)nodemeta
-45
-~
-cond
-)nodemeta
-28
-~
-let
-)nodemeta
-19
-~
-when
-)nodemeta
-(
-(
-ast
-88
-~
-is_node
-)nodemeta
-(
-(
-c
-(
-ast
-102
-~
-node_connective
-)nodemeta
-97
-~
-be
-)nodemeta
-(
-o
-(
-c
-out_c_node
-114
-~
-get
-)nodemeta
-109
-~
-be
-)nodemeta
-(
-(
-(
-o
-129
-~
-is_node
-)nodemeta
-(
-o
-dust
-outf
-ast
-135
-~
-apply
-)nodemeta
-126
-~
-when
-)nodemeta
-(
-outf
-ast
-148
-~
-output
-)nodemeta
-123
-~
-cond
-)nodemeta
-94
-~
-let
-)nodemeta
-85
-~
-when
-)nodemeta
-(
-outf
-(
-ast
-164
-~
-out_raw
-)nodemeta
-159
-~
-output
-)nodemeta
-16
-~
-cond
-)nodemeta
-nano_closure
-)node
-output_c_module_file
-(
-(
-dust
-em
-nam
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"output_c_module_file dust="_
-21
-~
-out_raw
-)nodemeta
-(
-dust
-27
-~
-out_content
-)nodemeta
-(
-".. em="_
-(
-em
-38
-~
-out_content
-)nodemeta
-(
-" .. nam="_
-44
-~
-out_raw
-)nodemeta
-nam
-33
-~
-out_raw
-)nodemeta
-(
-(
-om
-(
-(
-output_c_module_file
-64
-~
-verbatim
-)nodemeta
-61
-~
-clone
-)nodemeta
-(
-om
-nam
-71
-~
-payl_file_write
-)nodemeta
-(
-dbg_blue
-"output_c_module_file om="_
-(
-om
-86
-~
-out_content
-)nodemeta
-79
-~
-output
-)nodemeta
-(
-om
-(
-"///"_
-""_
-nam
-98
-~
-out_gplv3_notice
-)nodemeta
-(
-out_newline
-108
-~
-out_apply
-)nodemeta
-93
-~
-output
-)nodemeta
-(
-dust
-om
-em
-115
-~
-out_c_code
-)nodemeta
-(
-om
-(
-out_newline
-130
-~
-out_apply
-)nodemeta
-(
-"// end C-code file "_
-136
-~
-out_raw
-)nodemeta
-(
-nam
-142
-~
-out_raw
-)nodemeta
-(
-out_newline
-148
-~
-out_apply
-)nodemeta
-125
-~
-output
-)nodemeta
-(
-om
-155
-~
-payl_file_close
-)nodemeta
-56
-~
-be
-)nodemeta
-53
-~
-let
-)nodemeta
-16
-~
-output
-)nodemeta
-nano_closure
-)node
-output_header_file
-(
-(
-dust
-eh
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"output_header_file dust="_
-19
-~
-out_raw
-)nodemeta
-(
-dust
-25
-~
-out_content
-)nodemeta
-(
-".. eh="_
-31
-~
-out_raw
-)nodemeta
-(
-eh
-37
-~
-out_content
-)nodemeta
-14
-~
-output
-)nodemeta
-(
-(
-oh
-(
-(
-output_header
-55
-~
-verbatim
-)nodemeta
-52
-~
-clone
-)nodemeta
-47
-~
-be
-)nodemeta
-(
-on
-"header_memo.h"_
-63
-~
-be
-)nodemeta
-(
-dbg_blue
-"output_header_file oh="_
-71
-~
-output
-)nodemeta
-(
-oh
-79
-~
-out_content
-)nodemeta
-44
-~
-let
-)nodemeta
-(
-oh
-on
-86
-~
-payl_file_write
-)nodemeta
-(
-oh
-(
-"//"_
-""_
-on
-99
-~
-out_gplv3_notice
-)nodemeta
-(
-out_newline
-109
-~
-out_apply
-)nodemeta
-94
-~
-output
-)nodemeta
-(
-dust
-oh
-eh
-116
-~
-out_c_code
-)nodemeta
-(
-oh
-(
-out_newline
-131
-~
-out_apply
-)nodemeta
-(
-"// end of header file "_
-137
-~
-out_raw
-)nodemeta
-(
-on
-143
-~
-out_raw
-)nodemeta
-(
-out_newline
-149
-~
-out_apply
-)nodemeta
-126
-~
-output
-)nodemeta
-(
-oh
-156
-~
-payl_file_close
-)nodemeta
-nano_closure
-)node
-prepare_dump_state
-(
-(
-dust
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dust
-12
-~
-payl_hashassoc
-)nodemeta
-(
-(
-vt
-(
-(
-the_system
-29
-~
-verbatim
-)nodemeta
-(
-value_types
-32
-~
-verbatim
-)nodemeta
-26
-~
-get
-)nodemeta
-21
-~
-be
-)nodemeta
-(
-dust
-(
-value_types
-42
-~
-verbatim
-)nodemeta
-vt
-37
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"prepare dump_state; dust="_
-53
-~
-out_raw
-)nodemeta
-dust
-(
-"; vt="_
-61
-~
-out_raw
-)nodemeta
-vt
-48
-~
-output
-)nodemeta
-dust
-18
-~
-let
-)nodemeta
-nano_closure
-)node
-prepare_header
-(
-(
-dust
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"start prepare_header dust="_
-17
-~
-out_raw
-)nodemeta
-(
-dust
-23
-~
-out_content
-)nodemeta
-(
-" header_stuff="_
-29
-~
-out_raw
-)nodemeta
-(
-header_stuff
-35
-~
-out_content
-)nodemeta
-12
-~
-output
-)nodemeta
-(
-(
-hdr
-(
-header_stuff
-50
-~
-clone
-)nodemeta
-45
-~
-be
-)nodemeta
-(
-hdr
-header
-header_stuff
-57
-~
-put
-)nodemeta
-(
-process_hdr_in_prepare_header
-67
-~
-dive
-)nodemeta
-(
-dbg_blue
-(
-"prepare header dust="_
-78
-~
-out_raw
-)nodemeta
-(
-dust
-84
-~
-out_content
-)nodemeta
-(
-".. result hdr="_
-90
-~
-out_raw
-)nodemeta
-(
-hdr
-96
-~
-out_content
-)nodemeta
-73
-~
-output
-)nodemeta
-hdr
-42
-~
-let
-)nodemeta
-nano_closure
-)node
-prepare_module
-(
-(
-dust
-modu
-)tuple
-web_state__0dmo5BBWK0mbtv
-(
-dbg_blue
-(
-"start prepare_module dust="_
-19
-~
-out_raw
-)nodemeta
-dust
-(
-" modu="_
-27
-~
-out_raw
-)nodemeta
-modu
-14
-~
-output
-)nodemeta
-(
-(
-m
-(
-modu
-44
-~
-clone
-)nodemeta
-39
-~
-be
-)nodemeta
-(
-m
-module
-modu
-51
-~
-put
-)nodemeta
-(
-dbg_blue
-(
-"prepare module dust="_
-66
-~
-out_raw
-)nodemeta
-(
-dust
-72
-~
-out_content
-)nodemeta
-(
-" modu="_
-78
-~
-out_raw
-)nodemeta
-(
-modu
-84
-~
-out_content
-)nodemeta
-(
-" m="_
-90
-~
-out_raw
-)nodemeta
-(
-m
-96
-~
-out_content
-)nodemeta
-61
-~
-output
-)nodemeta
-m
-36
-~
-let
-)nodemeta
-nano_closure
-)node
-something
-(
-asthd
-astmd
-bdu
-dihd
-dim
-file_name
-i
-index
-m
-modtup
-nastmod
-ndimod
-nprmod
-pm
-prhd
-)set
-)payload_hashmap
 
 
 *when
