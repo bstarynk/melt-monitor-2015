@@ -799,6 +799,15 @@ comment
 )attrs
 
 
+*hashassoc
+1464079301
+^mtime
+(
+comment
+"payload signature of hashassocs"_
+)attrs
+
+
 *hashset
 1446576569
 ^mtime
