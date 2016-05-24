@@ -2417,8 +2417,8 @@ momf_ldp_payload_hashmap (struct mom_item_st *itm,
   MOM_DEBUGPRINTF (load, "momf_ldp_payload_hashmap itm=%s elemsiz=%d",
                    mom_item_cstring (itm), elemsiz);
   if (elemsiz % 2)
-    MOM_FATAPRINTF ("momf_ldp_payload_hashmap with odd size %d for itm:%s", elemsiz,
-		    mom_item_cstring(itm));
+    MOM_FATAPRINTF ("momf_ldp_payload_hashmap with odd size %d for itm:%s",
+                    elemsiz, mom_item_cstring (itm));
   struct mom_hashmap_st *hmap =
     mom_hashmap_reserve (NULL, elemsiz / 2 + elemsiz / 8 + elemsiz / 64 + 1);
   for (unsigned ix = 0; ix < elemsiz; ix += 2)

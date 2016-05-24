@@ -587,7 +587,7 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           else
             MOM_FATAPRINTF
               ("invalid previous mark#%d with stacktop #%d for parent function %s; curitm:%s",
-               pmark, ld->ld_stacktop, nambuf, mom_item_cstring(curitm));
+               pmark, ld->ld_stacktop, nambuf, mom_item_cstring (curitm));
         }
       /// *foo is for defining item foo
       else if (linbuf[0] == '*' && isalpha (linbuf[1]))
@@ -886,11 +886,16 @@ dump_emit_global_mom (struct mom_dumper_st *du)
         (struct mom_item_st *) mom_seqitems_nth (setitems, ix);
       assert (curitm && curitm->va_itype == MOMITY_ITEM);
       MOM_DEBUGPRINTF (dump, "should dump %s", mom_item_cstring (curitm));
-      fputs ("\n", fglob);
+      fputs ("\n\n", fglob);
+      off_t startoff = ftell (fglob);
       fprintf (fglob, "*%s\n", mom_item_cstring (curitm));
       pthread_mutex_lock (&curitm->itm_mtx);
       mom_dumpemit_item_content (du, curitm);
       pthread_mutex_unlock (&curitm->itm_mtx);
+      if (ftell (fglob) - startoff > 1024)
+        fprintf (fglob, "#end item %s\n\n", mom_item_cstring (curitm));
+      if (ix % 16 == 0)
+        fputs ("\n", fglob);
       fputs ("\n", fglob);
     }
   fputs ("\n### eof " MOM_GLOBAL_STATE "\n", fglob);
