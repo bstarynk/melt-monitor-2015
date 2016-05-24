@@ -1273,18 +1273,21 @@ enum mom_space_en
 #define MOM_SIGNATURE_PREFIX "momsig_"
 
 /* inside an item, va_ixv is the space index */
-#define MOM_ITEM_FIELDS				\
-  MOM_HASHEDVALUE_FIELDS;			\
-  struct mom_itemname_tu* itm_radix;		\
-  pthread_mutex_t itm_mtx;			\
-  uint32_t itm_hid;				\
-  uint64_t itm_lid;				\
-  time_t itm_mtime;				\
-  void* itm_funptr;				\
-  struct mom_item_st* itm_funsig;               \
-  struct mom_assovaldata_st* itm_pattr;		\
-  struct mom_vectvaldata_st* itm_pcomp;		\
-  struct mom_anyvalue_st* itm_payload
+#define MOM_ITEM_FIELDS							\
+  MOM_HASHEDVALUE_FIELDS;						\
+  struct mom_itemname_tu* itm_radix;					\
+  pthread_mutex_t itm_mtx;						\
+  uint32_t itm_hid;							\
+  uint64_t itm_lid;							\
+  time_t itm_mtime;							\
+  void* itm_funptr __attribute((deprecated));				\
+  struct mom_item_st* itm_funsig __attribute((deprecated));		\
+  struct mom_assovaldata_st* itm_pattr;					\
+  struct mom_vectvaldata_st* itm_pcomp;					\
+  struct mom_anyvalue_st* itm_payload __attribute((deprecated));	\
+  struct mom_item_st* itm_paylsig;     					\
+  void* itm_payldata
+
 
 
 struct mom_item_st
@@ -2005,13 +2008,13 @@ struct mom_webexch_st
   MOM_WEBEXCH_FIELDS;
 };
 
-static inline struct mom_webexch_st *mom_item_unsync_webexch (struct
-    mom_item_st
-    *itm)
+static inline
+struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st*itm)
 {
   struct mom_webexch_st *wex = NULL;
   if (itm && itm != MOM_EMPTY_SLOT
-      && (wex = (struct mom_webexch_st *) itm->itm_payload)
+      && itm->itm_paylsig == MOM_PREDEFITM(web_exchange)
+      && (wex = (struct mom_webexch_st *) itm->itm_payldata)
       && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH)
     return wex;
   return NULL;

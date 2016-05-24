@@ -33,15 +33,17 @@ static __thread struct mom_tasklet_st *current_tasklet_mom;
 static inline struct mom_queue_st *
 agenda_queue_unsync_mom (void)
 {
-  struct mom_queue_st *agqu =
-    (struct mom_queue_st *) (MOM_PREDEFITM (the_agenda)->itm_payload);
+  struct mom_queue_st *agqu = NULL;
+  if (MOM_PREDEFITM (the_agenda)->itm_paylsig == MOM_PREDEFITM(queue))
+    agqu = MOM_PREDEFITM (the_agenda)->itm_payldata;
   if (MOM_UNLIKELY
       (!agqu || agqu == MOM_EMPTY_SLOT || agqu->va_itype != MOMITY_QUEUE))
     {
       agqu = mom_gc_alloc (sizeof (*agqu));
       agqu->va_itype = MOMITY_QUEUE;
-      MOM_PREDEFITM (the_agenda)->itm_payload =
+      MOM_PREDEFITM (the_agenda)->itm_payldata =
         (struct mom_anyvalue_st *) agqu;
+      MOM_PREDEFITM (the_agenda)->itm_paylsig = MOM_PREDEFITM(queue);
     }
   return agqu;
 }
@@ -179,8 +181,8 @@ unsync_run_node_tasklet_mom (struct mom_item_st * tkitm,
   void *connfun = NULL;
   struct mom_item_st *connsigitm = NULL;
   mom_item_lock (connitm);
-  connfun = connitm->itm_funptr;
-  connsigitm = connitm->itm_funsig;
+  connfun = connitm->itm_payldata;
+  connsigitm = connitm->itm_paylsig;
   mom_item_unlock (connitm);
   if (connsigitm == MOM_PREDEFITM (signature_tasklet) && connfun)
     {
@@ -279,7 +281,8 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
                         const struct mom_boxnode_st *nod)
 {
   assert (tskitm != NULL && tskitm->va_itype == MOMITY_ITEM
-          && tskitm->itm_payload == (void *) tkstk);
+	  // && tskitm->itm_paylsig == MOM_PREDEFITM(tasklet)
+          && tskitm->itm_payldata == (void *) tkstk);
   assert (tkstk != NULL && tkstk->va_itype == MOMITY_TASKLET);
   if (!nod || nod == MOM_EMPTY_SLOT || nod->va_itype != MOMITY_NODE)
     {
