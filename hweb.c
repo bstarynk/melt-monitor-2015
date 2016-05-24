@@ -182,11 +182,12 @@ mom_unsync_websocket_printf (struct mom_item_st *sessitm,
                              const char *fmt, ...)
 {
   va_list args;
-  if (!sessitm || sessitm->va_itype != MOMITY_ITEM)
+  if (!sessitm || sessitm == MOM_EMPTY_SLOT || sessitm->va_itype != MOMITY_ITEM)
     return;
   struct mom_websession_st *ws = NULL;
-  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
-    ws = (void *) sessitm->itm_payload;
+  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
+      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+    ws = sessitm->itm_payldata;
   if (!ws)
     return;
   if (!ws->wbss_websock)
@@ -225,13 +226,14 @@ mom_unsync_websocket_printf (struct mom_item_st *sessitm,
 void
 mom_unsync_websocket_puts (struct mom_item_st *sessitm, const char *str)
 {
-  if (!sessitm || sessitm->va_itype != MOMITY_ITEM)
+  if (!sessitm || sessitm == MOM_EMPTY_SLOT || sessitm->va_itype != MOMITY_ITEM)
     return;
   if (!str)
     return;
   struct mom_websession_st *ws = NULL;
-  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
-    ws = (void *) sessitm->itm_payload;
+  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
+      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+    ws = sessitm->itm_payldata;
   if (!ws)
     return;
   if (!ws->wbss_websock)
@@ -253,8 +255,9 @@ mom_unsync_websocket_send_json (struct mom_item_st *sessitm, const json_t *js)
   if (!js)
     return;
   struct mom_websession_st *ws = NULL;
-  if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
-    ws = (void *) sessitm->itm_payload;
+  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
+      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+    ws = sessitm->itm_payldata;
   if (!ws)
     return;
   if (!ws->wbss_websock)
@@ -533,7 +536,8 @@ make_session_item_mom (onion_response *resp)
   time_t now = 0;
   time (&now);
   wsess->wbss_obstime = now + SESSION_TIMEOUT_MOM;
-  sessitm->itm_payload = (struct mom_anyvalue_st *) wsess;
+  sessitm->itm_payldata = wsess;
+  sessitm->itm_paylsig = MOM_PREDEFITM(web_session);
   pthread_mutex_lock (&sessions_mtx_mom);
   sessions_hset_mom = mom_hashset_insert (sessions_hset_mom, sessitm);
   pthread_mutex_unlock (&sessions_mtx_mom);
@@ -587,11 +591,13 @@ mom_retrieve_session (long reqcnt, onion_request *requ)
           if (sitm)
             {
               mom_item_lock (sitm);
-              if (sitm->itm_payload
-                  && sitm->itm_payload->va_itype == MOMITY_WEBSESSION)
+	      if (sitm->itm_paylsig == MOM_PREDEFITM(web_session)
+		  && sitm->itm_payldata != NULL 
+		  && ((struct mom_websession_st *)sitm->itm_payldata)->va_itype == MOMITY_WEBSESSION
+		  )
                 {
                   struct mom_websession_st *wsess =
-                    (struct mom_websession_st *) sitm->itm_payload;
+                    (struct mom_websession_st *) sitm->itm_payldata;
                   if (wsess->wbss_rand1 == r1 && wsess->wbss_rand2 == r2)
                     sessitm = sitm;
                 }
@@ -618,8 +624,10 @@ mom_handle_websocket_data (void *data, onion_websocket * ws,
   struct mom_websession_st *wses = NULL;
   {
     mom_item_lock (sessitm);
-    if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
-      wses = (void *) sessitm->itm_payload;
+    if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
+	&& sessitm->itm_payldata
+	&& mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
+      wses = (void *) sessitm->itm_payldata;
     mom_item_unlock (sessitm);
   }
   if (!wses)
@@ -722,8 +730,9 @@ mom_websocket (long reqcnt, onion_request *requ, onion_response *resp)
   if (sessitm)
     {
       mom_item_lock (sessitm);
-      if (mom_itype (sessitm->itm_payload) == MOMITY_WEBSESSION)
-        wses = (void *) sessitm->itm_payload;
+  if (sessitm->itm_paylsig == MOM_PREDEFITM(web_session)
+      && mom_itype(sessitm->itm_payldata) == MOMITY_WEBSESSION)
+        wses = (void *) sessitm->itm_payldata;
       else
         mom_item_unlock (sessitm);
     };
@@ -792,6 +801,8 @@ mom_websocket (long reqcnt, onion_request *requ, onion_response *resp)
   return OCS_WEBSOCKET;
 }                               /* end of mom_websocket */
 
+
+////////////////
 struct mom_item_st *
 mom_web_handler_exchange (long reqcnt, const char *fullpath,
                           enum mom_webmethod_en wmeth,
@@ -883,14 +894,25 @@ mom_web_handler_exchange (long reqcnt, const char *fullpath,
   if (nbelem > 0)
     {
       mom_item_lock (MOM_PREDEFITM (web_handlers));
-      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld webhandlerpayload@%p ityp=%s nbelem=%d", reqcnt, MOM_PREDEFITM (web_handlers)->itm_payload, mom_itype_str (MOM_PREDEFITM (web_handlers)  //
-                                                                                                                                                                  ->itm_payload),
+      MOM_DEBUGPRINTF (web, "web_handler_exchange #%ld  webhandlerpaylsig %s "
+		       "webhandlerpayldata@%p ityp=%s nbelem=%d", reqcnt,
+		       mom_item_cstring(MOM_PREDEFITM (web_handlers)->itm_paylsig),
+		       MOM_PREDEFITM (web_handlers)->itm_payldata, //
+		       mom_itype_str (MOM_PREDEFITM (web_handlers)->itm_payldata),
                        nbelem);
+      struct mom_hashassoc_st *hass = NULL;
+      if (MOM_PREDEFITM (web_handlers)->itm_paylsig == MOM_PREDEFITM(hashassoc)
+	  && mom_itype(MOM_PREDEFITM (web_handlers)->itm_payldata) == MOMITY_HASHASSOC)
+	hass = MOM_PREDEFITM (web_handlers)->itm_payldata;
+      if (!hass) {
+	MOM_WARNPRINTF("web_handlers payload is not an hashassoc (paylsig:%s) for req#%ld fullpath '%s'",
+		       mom_item_cstring(MOM_PREDEFITM (web_handlers)->itm_paylsig),  reqcnt,
+		        fullpath);
+      }
       if (nbelem == 1)
         {
           hdlrval =
-            mom_hashassoc_get ((struct mom_hashassoc_st *)
-                               MOM_PREDEFITM (web_handlers)->itm_payload,
+            mom_hashassoc_get (hass,
                                (const struct mom_hashedvalue_st *)
                                elemarr[0]);
           if (hdlrval)
