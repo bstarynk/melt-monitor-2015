@@ -23,6 +23,8 @@
 bool mom_skip_dump_hooks;
 bool mom_dont_make_after_dump;
 
+atomic_int mom_nb_warnings;
+
 static char hostname_mom[80];
 
 void *mom_prog_dlhandle;
@@ -667,6 +669,7 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
   char *bigbuf = NULL;
   char *msg = NULL;
   int err = errno;
+  int nbwarn = 1 + atomic_fetch_add (&mom_nb_warnings, 1);
   memset (buf, 0, sizeof (buf));
   memset (thrname, 0, sizeof (thrname));
   memset (timbuf, 0, sizeof (timbuf));
@@ -694,27 +697,27 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
   if (syslogging_mom)
     {
       if (err)
-        syslog (LOG_WARNING, "MONIMELT WARNING @%s:%d <%s:%d> %s %s (%s)",
-                fil, lin, thrname, (int) mom_gettid (), timbuf,
+        syslog (LOG_WARNING, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)",
+                nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
                 msg, strerror (err));
       else
-        syslog (LOG_WARNING, "MONIMELT WARNING @%s:%d <%s:%d> %s %s",
-                fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+        syslog (LOG_WARNING, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s",
+                nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
     }
   else
     {
       if (err)
-        fprintf (stderr, "MONIMELT WARNING @%s:%d <%s:%d> %s %s (%s)\n",
-                 fil, lin, thrname, (int) mom_gettid (), timbuf,
+        fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)\n",
+                 nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
                  msg, strerror (err));
       else
-        fprintf (stderr, "MONIMELT WARNING @%s:%d <%s:%d> %s %s\n",
-                 fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+        fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s\n",
+                 nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
       fflush (NULL);
     }
   if (bigbuf)
     free (bigbuf);
-}
+}                               /* end of mom_warnprintf_at */
 
 
 /************************* fatal *************************/
@@ -1579,8 +1582,15 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("made ok after adding %d predefined",
                         count_added_predef_mom);
     }
-  MOM_INFORMPRINTF ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds)\n",
-                    argv[0], (int) getpid (), mom_elapsed_real_time (),
-                    mom_process_cpu_time ());
+  int nbwarn = atomic_load (&mom_nb_warnings);
+  if (nbwarn > 0)
+    MOM_INFORMPRINTF
+      ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds, %d warnings)\n",
+       argv[0], (int) getpid (), mom_elapsed_real_time (),
+       mom_process_cpu_time (), nbwarn);
+  else
+    MOM_INFORMPRINTF ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds)\n",
+                      argv[0], (int) getpid (), mom_elapsed_real_time (),
+                      mom_process_cpu_time ());
   return 0;
 }                               /* end of main */
