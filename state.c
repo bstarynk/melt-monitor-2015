@@ -987,7 +987,9 @@ mom_dump_state (void)
   du->du_predefset = mom_predefined_items_boxset ();
   du->du_itemque->va_itype = MOMITY_QUEUE;
   dump_scan_pass_mom (du);
+  errno = 0;
   dump_emit_pass_mom (du);
+  errno = 0;
   /// should rename the temporary files
   (void) rename ("global.mom", "global.mom%");
   if (rename (du->du_globaltmpath->cstr, "global.mom"))
