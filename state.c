@@ -769,6 +769,7 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
                    mom_item_cstring (itm));
 }                               /* end of mom_dumpscan_content_item */
 
+
 MOM_PRIVATE void
 dump_scan_pass_mom (struct mom_dumper_st *du)
 {
@@ -795,6 +796,7 @@ dump_scan_pass_mom (struct mom_dumper_st *du)
     }
   MOM_INFORMPRINTF ("scanned %ld items", scancount);
 }                               /* end dump_scan_pass_mom */
+
 
 void
 dump_emit_predefined_header_mom (struct mom_dumper_st *du)
@@ -912,6 +914,7 @@ dump_emit_pass_mom (struct mom_dumper_st *du)
   dump_emit_predefined_header_mom (du);
   dump_emit_global_mom (du);
 }
+
 
 void
 mom_dumpscan_item (struct mom_dumper_st *du, const struct mom_item_st *itm)

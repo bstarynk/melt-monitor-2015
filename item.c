@@ -1955,6 +1955,24 @@ dumpemit_assovaldata_mom (struct mom_dumper_st *du,
     }
 }
 
+
+void
+mom_dumpemit_item_payload_data (struct mom_dumper_st *du,
+                                const struct mom_item_st *itm)
+{
+  assert (du && du->va_itype == MOMITY_DUMPER);
+  assert (du->du_state == MOMDUMP_EMIT);
+  FILE *femit = du->du_emitfile;
+  assert (femit != NULL);
+  assert (itm != NULL && itm != MOM_EMPTY_SLOT
+          && itm->va_itype == MOMITY_ITEM);
+#warning mom_dumpemit_item_payload_data unimplemented
+  MOM_WARNPRINTF
+    ("dumpemit_item_payload_data itm:%s paysig:%s paydata@%p unimplemented",
+     mom_item_cstring (itm), mom_item_cstring (itm->itm_paylsig),
+     itm->itm_payldata);
+}                               /* end mom_dumpemit_item_payload_data */
+
 void
 mom_dumpemit_item_content (struct mom_dumper_st *du,
                            const struct mom_item_st *itm)
@@ -1970,13 +1988,18 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
     {
       fprintf (femit, "%ld\n" "^mtime\n", (long) itm->itm_mtime);
     }
+  ////
+#warning mom_dumpemit_item_content handle obsolete itm_funptr & itm_funsig
   /// emit the funptr
   if (itm->itm_funptr && itm->itm_funptr != MOM_EMPTY_SLOT)
     {
       Dl_info dinf;
       memset (&dinf, 0, sizeof (dinf));
-      if (dladdr (itm->itm_funptr, &dinf)
-          && dinf.dli_saddr == itm->itm_funptr
+      int okdla = dladdr (itm->itm_funptr, &dinf);
+      MOM_WARNPRINTF
+        ("dumpemit_item_content itm:%s obsolete itm_funptr@%p (%s)",
+         mom_item_cstring (itm), itm->itm_funptr, dinf.dli_sname);
+      if (okdla && dinf.dli_saddr == itm->itm_funptr
           && !strncmp (dinf.dli_sname, MOM_FUNC_PREFIX,
                        strlen (MOM_FUNC_PREFIX)))
         {
@@ -1995,11 +2018,15 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   if (itm->itm_funsig && itm->itm_funsig != MOM_EMPTY_SLOT
       && mom_dumped_item (du, itm->itm_funsig))
     {
+      MOM_WARNPRINTF ("dumpemit_item_content itm:%s obsolete itm_funsig:%s",
+                      mom_item_cstring (itm),
+                      mom_item_cstring (itm->itm_funsig));
       MOM_DEBUGPRINTF (dump, "dumpemit_item_content funsig %s",
                        mom_item_cstring (itm->itm_funsig));
       mom_dumpemit_refitem (du, itm->itm_funsig);
       fputs ("^funsignature\n", femit);
     }
+  ///
   /// emit the attributes
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
@@ -2028,10 +2055,14 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
         mom_dumpemit_value (du, comps->vecd_valarr[ix]);
       fputs (")comps\n", femit);
     }
+  ////
   //// should dump the payload
+#warning  mom_dumpemit_item_content handle obsolete payload
   if (itm->itm_payload && itm->itm_payload != MOM_EMPTY_SLOT)
     {
       struct mom_anyvalue_st *payl = itm->itm_payload;
+      MOM_WARNPRINTF ("dumpemit_item_content itm:%s obsolete payload@%p",
+                      mom_item_cstring (itm), (void *) payl);
       MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s payloadtype %s",
                        mom_item_cstring (itm), mom_itype_str (payl));
       switch (payl->va_itype)
@@ -2155,6 +2186,8 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
   else
     MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s without payload",
                      mom_item_cstring (itm));
+  if (itm->itm_payldata != NULL && itm->itm_paylsig != NULL)
+    mom_dumpemit_item_payload_data (du, itm);
   MOM_DEBUGPRINTF (dump, "dumpemit_item_content done itm %s @%p",
                    mom_item_cstring (itm), (void *) itm);
 }                               /* end of mom_dumpemit_item_content */
