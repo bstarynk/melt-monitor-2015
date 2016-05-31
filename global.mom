@@ -824,17 +824,6 @@ comment
 
 
 
-*miniedit
-1460370485
-^mtime
-^func
-signature_tasklet
-^funsignature
-(
-comment
-"for miniedit"_
-)attrs
-
 
 
 *name
