@@ -106,7 +106,7 @@ predefgc: $(OBJECTS)  predefgc.cc
 	sort -u _listpredefs > _listpredefs.sorted
 	mv _listpredefs.sorted _listpredefs
 	$(LINK.cc) predefgc.cc -o predefgc.bin
-	./predefgc.bin _listpredefs
+	./predefgc.bin _listpredefs | tee _listpredefs.useless
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@

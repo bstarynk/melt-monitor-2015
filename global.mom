@@ -19,32 +19,6 @@
 
 
 
-*add
-1455882213
-^mtime
-(
-comment
-"the addition operator"_
-)attrs
-
-
-*after_dump
-1453887296
-^mtime
-(
-comment
-"to do after dump"_
-)attrs
-
-
-*after_load
-1453801577
-^mtime
-(
-comment
-"give closure to run after loading"_
-)attrs
-
 
 *and
 1455462876
@@ -53,6 +27,8 @@ comment
 comment
 "for conjunctions"_
 )attrs
+
+
 
 
 *apply
@@ -64,6 +40,7 @@ comment
 )attrs
 
 
+
 *apply_flatten
 1457100006
 ^mtime
@@ -73,6 +50,7 @@ comment
 )attrs
 
 
+
 *arg
 1455801211
 ^mtime
@@ -80,6 +58,7 @@ comment
 comment
 "for arguments"_
 )attrs
+
 
 
 *arity
@@ -93,6 +72,7 @@ size
 )attrs
 
 
+
 *assign
 1456753938
 ^mtime
@@ -100,6 +80,7 @@ size
 comment
 "assignment operation"_
 )attrs
+
 
 
 *associativity
@@ -111,32 +92,6 @@ comment
 )attrs
 
 
-*ast
-1457430901
-^mtime
-(
-comment
-"variable for abstract syntax tree"_
-)attrs
-
-
-*asthd
-1457524516
-^mtime
-(
-comment
-"variable for AST of header"_
-)attrs
-
-
-*astmd
-1457524561
-^mtime
-(
-comment
-"variable (for AST of module)"_
-)attrs
-
 
 *backslash_delim
 1458115026
@@ -146,23 +101,6 @@ comment
 "for backslash delimiter, e.g. for dive"_
 )attrs
 
-
-*bd
-1458218047
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*bdu
-1457522442
-^mtime
-(
-comment
-"variable..."_
-)attrs
 
 
 *be
@@ -174,6 +112,7 @@ comment
 )attrs
 
 
+
 *before_dump
 1453830276
 ^mtime
@@ -182,14 +121,6 @@ comment
 "to do before dump"_
 )attrs
 
-
-*c
-1457430917
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *clone
@@ -201,6 +132,7 @@ comment
 )attrs
 
 
+
 *comma_delim
 1453199017
 ^mtime
@@ -208,6 +140,7 @@ comment
 comment
 "for , delimiter token"_
 )attrs
+
 
 
 *comment
@@ -219,6 +152,7 @@ comment
 )attrs
 
 
+
 *cond
 1455462590
 ^mtime
@@ -226,6 +160,7 @@ comment
 comment
 "for conditionals"_
 )attrs
+
 
 
 *cooked
@@ -237,14 +172,6 @@ comment
 )attrs
 
 
-*d
-1457336120
-^mtime
-(
-comment
-"variable"_
-)attrs
-
 
 *dbg_blue
 1457617248
@@ -253,6 +180,7 @@ comment
 comment
 "for debug blue"_
 )attrs
+
 
 
 *dbg_green
@@ -264,6 +192,8 @@ comment
 )attrs
 
 
+
+
 *dbg_red
 1457617248
 ^mtime
@@ -271,6 +201,7 @@ comment
 comment
 "for debug red"_
 )attrs
+
 
 
 *dbg_yellow
@@ -282,6 +213,7 @@ comment
 )attrs
 
 
+
 *degree_delim
 1457522889
 ^mtime
@@ -289,6 +221,7 @@ comment
 comment
 "for \u00b0, useful for verbatim"_
 )attrs
+
 
 
 *delimiter
@@ -300,6 +233,7 @@ comment
 )attrs
 
 
+
 *depth
 1454531567
 ^mtime
@@ -308,139 +242,6 @@ comment
 "for depth"_
 )attrs
 
-
-*diff
-1456140230
-^mtime
-(
-comment
-"the difference operator"_
-)attrs
-
-
-*digest
-1457335506
-^mtime
-(
-comment
-"to digest something"_
-)attrs
-
-
-*digest_header
-1457336103
-^mtime
-(
-comment
-"to digest the header"_
-)attrs
-
-
-*digest_header_stuff_body
-1458220946
-^mtime
-(
-comment
-"body of digest of header_stuff"_
-dive
-(
-(
-dbg_blue
-(
-"digest_header_stuff_body dust="_
-19
-~
-out_raw
-)nodemeta
-dust
-(
-" hdr="_
-27
-~
-out_raw
-)nodemeta
-hdr
-14
-~
-output
-)nodemeta
-"incomplete digest_header_stuff_body"_
-11
-~
-sequence
-)nodemeta
-)attrs
-
-
-*digest_main_module_body
-1458221353
-^mtime
-(
-dive
-(
-(
-dbg_blue
-(
-"digest_main_module_body dust="_
-19
-~
-out_raw
-)nodemeta
-(
-dust
-25
-~
-out_content
-)nodemeta
-(
-".. modu="_
-31
-~
-out_raw
-)nodemeta
-(
-modu
-37
-~
-out_content
-)nodemeta
-14
-~
-output
-)nodemeta
-"digest_main_module_body incomplete"_
-11
-~
-sequence
-)nodemeta
-)attrs
-
-
-*digest_module
-1457336214
-^mtime
-(
-comment
-"digest a given module"_
-)attrs
-
-
-*dihd
-1457524434
-^mtime
-(
-comment
-"variable (e.g. for digested header)"_
-)attrs
-
-
-*dim
-1457524498
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *display
@@ -452,6 +253,7 @@ comment
 )attrs
 
 
+
 *displayer
 1452104741
 ^mtime
@@ -460,14 +262,6 @@ comment
 "attribute giving the displayer closure"_
 )attrs
 
-
-*div
-1456141884
-^mtime
-(
-comment
-"the division operator"_
-)attrs
 
 
 *dive
@@ -479,6 +273,7 @@ comment
 )attrs
 
 
+
 *dollar_delim
 1457958342
 ^mtime
@@ -486,6 +281,7 @@ comment
 comment
 "for dollar sign"_
 )attrs
+
 
 
 *double
@@ -504,74 +300,6 @@ is_scalar
 )attrs
 
 
-*double_backslash_delim
-1458115372
-^mtime
-(
-associativity
-left_assoc
-comment
-"for \\ delimiter token"_
-operator
-dive
-precedence
-1_
-)attrs
-
-
-*dust
-1457332208
-^mtime
-(
-comment
-"variable holding the dump state..."_
-)attrs
-
-
-*e
-1457337255
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*ec
-1457337265
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*eh
-1457442779
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*em
-1457512310
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*emit_code_ast
-1457337194
-^mtime
-(
-comment
-"to emit the AST code"_
-)attrs
-
 
 *empty
 1463643263
@@ -580,6 +308,7 @@ comment
 comment
 "for empty stuff"_
 )attrs
+
 
 
 *equal
@@ -591,6 +320,7 @@ comment
 )attrs
 
 
+
 *expression
 1453445242
 ^mtime
@@ -598,6 +328,7 @@ comment
 comment
 "for expression"_
 )attrs
+
 
 
 *fail
@@ -610,16 +341,6 @@ comment
 
 
 
-
-*file_name
-1457524589
-^mtime
-(
-comment
-"attribute (to give a file name)"_
-)attrs
-
-
 *first
 1456995334
 ^mtime
@@ -627,6 +348,7 @@ comment
 comment
 "for first of several expressions"_
 )attrs
+
 
 
 *flatten_node
@@ -638,6 +360,8 @@ comment
 )attrs
 
 
+
+
 *fold_left
 1457090580
 ^mtime
@@ -645,6 +369,7 @@ comment
 comment
 "primitive for fold left (nodefun,inival,compval)"_
 )attrs
+
 
 
 *fold_right
@@ -656,6 +381,7 @@ comment
 )attrs
 
 
+
 *foldix_left
 1457090580
 ^mtime
@@ -663,6 +389,7 @@ comment
 comment
 "primitive for fold left with index (nodefun,inival,compval)"_
 )attrs
+
 
 
 *foldix_right
@@ -674,6 +401,7 @@ comment
 )attrs
 
 
+
 *func
 1455800324
 ^mtime
@@ -681,6 +409,7 @@ comment
 comment
 "for functions & closures"_
 )attrs
+
 
 
 *get
@@ -692,6 +421,7 @@ comment
 )attrs
 
 
+
 *greater
 1457365666
 ^mtime
@@ -699,6 +429,7 @@ comment
 comment
 "test for greater of two values"_
 )attrs
+
 
 
 *greater_or_equal
@@ -710,14 +441,6 @@ comment
 )attrs
 
 
-*h
-1457336112
-^mtime
-(
-comment
-"variable"_
-)attrs
-
 
 *hackc
 1446033098
@@ -726,6 +449,7 @@ comment
 comment
 "hackc root proto"_
 )attrs
+
 
 
 *hashassoc
@@ -737,6 +461,7 @@ comment
 )attrs
 
 
+
 *hashset
 1446576569
 ^mtime
@@ -745,46 +470,6 @@ comment
 "hashed set"_
 )attrs
 
-
-*hdr
-1457335875
-^mtime
-(
-comment
-"variable for header"_
-)attrs
-
-
-*header
-1457335884
-^mtime
-(
-comment
-"header attribute"_
-)attrs
-
-
-*header_stuff
-1458201180
-^mtime
-(
-comment
-"prototype for header stuff"_
-digest
-(
-dust
-hdr
-)tuple
-)attrs
-
-
-*i
-1457522500
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *identity
@@ -800,6 +485,7 @@ parenthesis
 )attrs
 
 
+
 *included_files
 1457031973
 ^mtime
@@ -809,14 +495,6 @@ comment
 )attrs
 
 
-*index
-1457524407
-^mtime
-(
-comment
-"attribute giving some index"_
-)attrs
-
 
 *initial_modules
 1457332482
@@ -825,6 +503,7 @@ comment
 comment
 "give the initial modules to be generated"_
 )attrs
+
 
 
 *int
@@ -843,6 +522,7 @@ is_scalar
 )attrs
 
 
+
 *is_atom
 1457360526
 ^mtime
@@ -850,6 +530,8 @@ is_scalar
 comment
 "to test atomicity"_
 )attrs
+
+
 
 
 *is_closure
@@ -861,6 +543,7 @@ comment
 )attrs
 
 
+
 *is_double
 1457358950
 ^mtime
@@ -870,6 +553,7 @@ comment
 )attrs
 
 
+
 *is_int
 1457358950
 ^mtime
@@ -877,6 +561,7 @@ comment
 comment
 "to test if argument is an integer"_
 )attrs
+
 
 
 *is_item
@@ -890,6 +575,7 @@ item
 )attrs
 
 
+
 *is_node
 1457361540
 ^mtime
@@ -897,6 +583,7 @@ item
 comment
 "test if argument is a node"_
 )attrs
+
 
 
 *is_null
@@ -910,6 +597,7 @@ not
 )attrs
 
 
+
 *is_number
 1457359776
 ^mtime
@@ -919,6 +607,7 @@ comment
 )attrs
 
 
+
 *is_scalar
 1457360097
 ^mtime
@@ -926,6 +615,7 @@ comment
 comment
 "to test if argument is scalar"_
 )attrs
+
 
 
 *is_sequence
@@ -942,6 +632,7 @@ tuple
 )attrs
 
 
+
 *is_set
 1457361412
 ^mtime
@@ -953,6 +644,7 @@ set
 )attrs
 
 
+
 *is_string
 1457360097
 ^mtime
@@ -960,6 +652,7 @@ set
 comment
 "to test if argument is string"_
 )attrs
+
 
 
 *is_tuple
@@ -972,14 +665,6 @@ notice
 tuple
 )attrs
 
-
-*it
-1457337218
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *item
@@ -997,6 +682,7 @@ is_item
 )attrs
 
 
+
 *item_module
 1457332509
 ^mtime
@@ -1004,6 +690,7 @@ is_item
 comment
 "the item module"_
 )attrs
+
 
 
 *iter
@@ -1015,6 +702,7 @@ comment
 )attrs
 
 
+
 *iterix
 1457079401
 ^mtime
@@ -1022,6 +710,8 @@ comment
 comment
 "to iterate a function on a composite value and its index"_
 )attrs
+
+
 
 
 *left_assoc
@@ -1033,6 +723,7 @@ comment
 )attrs
 
 
+
 *left_brace_delim
 1453199148
 ^mtime
@@ -1040,6 +731,7 @@ comment
 comment
 "for { delimiter token"_
 )attrs
+
 
 
 *left_bracket_delim
@@ -1051,6 +743,7 @@ comment
 )attrs
 
 
+
 *left_paren_delim
 1453199017
 ^mtime
@@ -1058,6 +751,7 @@ comment
 comment
 "for ( delimiter token"_
 )attrs
+
 
 
 *less
@@ -1069,6 +763,7 @@ comment
 )attrs
 
 
+
 *less_or_equal
 1457365666
 ^mtime
@@ -1076,6 +771,7 @@ comment
 comment
 "test for less or equal of two values"_
 )attrs
+
 
 
 *let
@@ -1087,12 +783,6 @@ comment
 )attrs
 
 
-*let__6u7e2UmXWwKFsm
-1458218225
-^mtime
-(
-)attrs
-
 
 *letrec
 1455623664
@@ -1102,14 +792,6 @@ comment
 "letrec keyword"_
 )attrs
 
-
-*m
-1457332829
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *main_module
@@ -1121,6 +803,7 @@ comment
 )attrs
 
 
+
 *map
 1457082461
 ^mtime
@@ -1130,6 +813,7 @@ comment
 )attrs
 
 
+
 *mapix
 1457082461
 ^mtime
@@ -1137,6 +821,7 @@ comment
 comment
 "primitive to map a function to a value and index with a connective"_
 )attrs
+
 
 
 *miniedit
@@ -1151,137 +836,6 @@ comment
 )attrs
 
 
-*miniedit_dumpexit
-1461692649
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit dumpexit"_
-)attrs
-
-
-*miniedit_genscript
-1460384005
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit script generation"_
-)attrs
-
-
-*miniedit_genstyle
-1460384005
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit style generation"_
-)attrs
-
-
-*miniedit_keypressajax
-1463582655
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit keypress ajax"_
-)attrs
-
-
-*miniedit_startpage
-1461681361
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit start page"_
-)attrs
-
-
-*miniedit_websocket
-1461681361
-^mtime
-^func
-signature_webhandler
-^funsignature
-(
-comment
-"for miniedit websocket binding"_
-)attrs
-
-
-*minus_delim
-1456140230
-^mtime
-(
-associativity
-left_assoc
-comment
-"for - delimiter token"_
-operator
-diff
-precedence
-4_
-)attrs
-
-
-*modtup
-1457522457
-^mtime
-(
-comment
-"variable (for tuple of modules)"_
-)attrs
-
-
-*modu
-1457332822
-^mtime
-(
-comment
-"variable for a module"_
-)attrs
-
-
-*module
-1457332845
-^mtime
-(
-comment
-"related to module"_
-)attrs
-
-
-*mult
-1456130464
-^mtime
-(
-comment
-"the multiplication operator"_
-)attrs
-
-
-*nam
-1457512317
-^mtime
-(
-comment
-"variable"_
-)attrs
-
 
 *name
 1452697324
@@ -1293,26 +847,10 @@ comment
 
 
 
-
-
-
-
-*nastmod
-1457524542
+*nano_closure
+1464696999
 ^mtime
-(
-comment
-"variable (for node of modules ASTs)"_
-)attrs
 
-
-*ndimod
-1457524485
-^mtime
-(
-comment
-"variable for node of digested modules"_
-)attrs
 
 
 *no_assoc
@@ -1322,6 +860,7 @@ comment
 comment
 "for non-associative delimiters"_
 )attrs
+
 
 
 *node
@@ -1341,6 +880,8 @@ node_nth
 )attrs
 
 
+
+
 *node_arity
 1457430266
 ^mtime
@@ -1348,6 +889,7 @@ node_nth
 comment
 "get the arity of a node, or else nil"_
 )attrs
+
 
 
 *node_connective
@@ -1359,6 +901,7 @@ comment
 )attrs
 
 
+
 *node_nth
 1457430266
 ^mtime
@@ -1368,6 +911,7 @@ comment
 )attrs
 
 
+
 *none
 1457014740
 ^mtime
@@ -1375,6 +919,7 @@ comment
 comment
 "pseudo type for nil"_
 )attrs
+
 
 
 *not
@@ -1388,63 +933,11 @@ is_null
 )attrs
 
 
+
 *notice
 1446546422
 ^mtime
 
-
-*nprmod
-1457522491
-^mtime
-(
-comment
-"variable (for node of prepared modules)"_
-)attrs
-
-
-*o
-1457430909
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*oh
-1457442788
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*old_before_dump
-1458891514
-^mtime
-(
-comment
-"hold the old before_dump"_
-)attrs
-
-
-*om
-1457512326
-^mtime
-(
-comment
-"variable"_
-)attrs
-
-
-*on
-1457442828
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *operator
@@ -1456,6 +949,7 @@ comment
 )attrs
 
 
+
 *or
 1455462876
 ^mtime
@@ -1463,6 +957,7 @@ comment
 comment
 "for disjunctions"_
 )attrs
+
 
 
 *other_modules
@@ -1474,6 +969,7 @@ comment
 )attrs
 
 
+
 *out_apply
 1456930526
 ^mtime
@@ -1482,23 +978,6 @@ comment
 "apply a function to the output"_
 )attrs
 
-
-*out_c_code
-1457430877
-^mtime
-(
-comment
-"give in an item the closure to output it"_
-)attrs
-
-
-*out_c_node
-1457430945
-^mtime
-(
-comment
-"gives the C outputting closure in the connective of an AST node"_
-)attrs
 
 
 *out_content
@@ -1510,6 +989,7 @@ comment
 )attrs
 
 
+
 *out_decimal
 1456812179
 ^mtime
@@ -1517,6 +997,7 @@ comment
 comment
 "output decimal"_
 )attrs
+
 
 
 *out_filebuffer
@@ -1528,6 +1009,7 @@ comment
 )attrs
 
 
+
 *out_flush
 1456932330
 ^mtime
@@ -1535,6 +1017,7 @@ comment
 comment
 "to flush_output"_
 )attrs
+
 
 
 *out_gplv3_notice
@@ -1546,6 +1029,7 @@ comment
 )attrs
 
 
+
 *out_hexa
 1456812179
 ^mtime
@@ -1553,6 +1037,8 @@ comment
 comment
 "output hexa"_
 )attrs
+
+
 
 
 *out_html
@@ -1564,6 +1050,7 @@ comment
 )attrs
 
 
+
 *out_indent
 1457095329
 ^mtime
@@ -1571,6 +1058,7 @@ comment
 comment
 "output with more indentation"_
 )attrs
+
 
 
 *out_indentation
@@ -1582,6 +1070,7 @@ comment
 )attrs
 
 
+
 *out_last_line_width
 1457095329
 ^mtime
@@ -1589,6 +1078,7 @@ comment
 comment
 "give the last line width of some output"_
 )attrs
+
 
 
 *out_newline
@@ -1600,6 +1090,7 @@ comment
 )attrs
 
 
+
 *out_outdent
 1457095329
 ^mtime
@@ -1607,6 +1098,7 @@ comment
 comment
 "output with less indentation"_
 )attrs
+
 
 
 *out_puts
@@ -1618,6 +1110,7 @@ comment
 )attrs
 
 
+
 *out_raw
 1457501635
 ^mtime
@@ -1625,6 +1118,7 @@ comment
 comment
 "output a raw string or number"_
 )attrs
+
 
 
 *out_utf8enc
@@ -1635,14 +1129,6 @@ comment
 "output UTF8 C/JSON encoding"_
 )attrs
 
-
-*outf
-1457430888
-^mtime
-(
-comment
-"variable for output file"_
-)attrs
 
 
 *output
@@ -1663,32 +1149,6 @@ out_puts
 )attrs
 
 
-*output_c_module_file
-1457512301
-^mtime
-(
-comment
-"to output a C module file"_
-)attrs
-
-
-*output_header
-1457442820
-^mtime
-(
-comment
-"prototype to be cloned for output header"_
-)attrs
-
-
-*output_header_file
-1457442771
-^mtime
-(
-comment
-"function to output the header file"_
-)attrs
-
 
 *parent
 1454575823
@@ -1697,6 +1157,7 @@ comment
 comment
 "attribute giving parent"_
 )attrs
+
 
 
 *parenthesis
@@ -1710,6 +1171,7 @@ notice
 identity
 )tuple
 )attrs
+
 
 
 *payl_assovaldata
@@ -1728,6 +1190,7 @@ payl_assovaldata_set_attrs
 )attrs
 
 
+
 *payl_assovaldata_get
 1456833278
 ^mtime
@@ -1735,6 +1198,7 @@ payl_assovaldata_set_attrs
 comment
 "get an attribute in given item assocvaldata payload"_
 )attrs
+
 
 
 *payl_assovaldata_put
@@ -1746,6 +1210,7 @@ comment
 )attrs
 
 
+
 *payl_assovaldata_remove
 1456833278
 ^mtime
@@ -1753,6 +1218,8 @@ comment
 comment
 "remove attributes in given item assocvaldata payload"_
 )attrs
+
+
 
 
 *payl_assovaldata_set_attrs
@@ -1764,6 +1231,7 @@ comment
 )attrs
 
 
+
 *payl_clear
 1456930351
 ^mtime
@@ -1771,6 +1239,7 @@ comment
 comment
 "operation to clear the payload of some item"_
 )attrs
+
 
 
 *payl_dumper
@@ -1782,6 +1251,7 @@ comment
 )attrs
 
 
+
 *payl_file
 1457031403
 ^mtime
@@ -1789,6 +1259,7 @@ comment
 comment
 "file payload"_
 )attrs
+
 
 
 *payl_file_close
@@ -1800,6 +1271,7 @@ comment
 )attrs
 
 
+
 *payl_file_write
 1456929384
 ^mtime
@@ -1809,6 +1281,7 @@ comment
 )attrs
 
 
+
 *payl_filebuffer
 1456929384
 ^mtime
@@ -1816,6 +1289,7 @@ comment
 comment
 "for file buffer payload"_
 )attrs
+
 
 
 *payl_hashassoc
@@ -1835,6 +1309,7 @@ payl_hashassoc_sorted_key_node
 )attrs
 
 
+
 *payl_hashassoc_count
 1456921741
 ^mtime
@@ -1842,6 +1317,7 @@ payl_hashassoc_sorted_key_node
 comment
 "get a node with sorted keys"_
 )attrs
+
 
 
 *payl_hashassoc_get
@@ -1853,6 +1329,7 @@ comment
 )attrs
 
 
+
 *payl_hashassoc_put
 1456910539
 ^mtime
@@ -1860,6 +1337,7 @@ comment
 comment
 "put in an hashassoc item"_
 )attrs
+
 
 
 *payl_hashassoc_remove
@@ -1871,6 +1349,7 @@ comment
 )attrs
 
 
+
 *payl_hashassoc_sorted_key_node
 1456921741
 ^mtime
@@ -1878,6 +1357,7 @@ comment
 comment
 "get a node with sorted keys"_
 )attrs
+
 
 
 *payl_hashmap
@@ -1897,6 +1377,7 @@ payl_hashmap_remove
 )attrs
 
 
+
 *payl_hashmap_count
 1456897878
 ^mtime
@@ -1904,6 +1385,7 @@ payl_hashmap_remove
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
+
 
 
 *payl_hashmap_get
@@ -1915,6 +1397,8 @@ comment
 )attrs
 
 
+
+
 *payl_hashmap_keyset
 1456897878
 ^mtime
@@ -1922,6 +1406,7 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
+
 
 
 *payl_hashmap_put
@@ -1933,6 +1418,7 @@ comment
 )attrs
 
 
+
 *payl_hashmap_remove
 1456897878
 ^mtime
@@ -1940,6 +1426,7 @@ comment
 comment
 "operation to remove a key in an hashmap"_
 )attrs
+
 
 
 *payl_hashset
@@ -1959,6 +1446,7 @@ payl_hashset_reserve
 )attrs
 
 
+
 *payl_hashset_insert
 1456855856
 ^mtime
@@ -1966,6 +1454,7 @@ payl_hashset_reserve
 comment
 "insert some content in an hashed set payload"_
 )attrs
+
 
 
 *payl_hashset_insert_content
@@ -1977,6 +1466,7 @@ comment
 )attrs
 
 
+
 *payl_hashset_remove
 1456855856
 ^mtime
@@ -1984,6 +1474,7 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
+
 
 
 *payl_hashset_remove_content
@@ -1995,6 +1486,7 @@ comment
 )attrs
 
 
+
 *payl_hashset_reserve
 1456841817
 ^mtime
@@ -2002,6 +1494,7 @@ comment
 comment
 "reserve in an hashed set payload"_
 )attrs
+
 
 
 *payl_json
@@ -2013,6 +1506,7 @@ comment
 )attrs
 
 
+
 *payl_loader
 1457031316
 ^mtime
@@ -2020,6 +1514,7 @@ comment
 comment
 "loader payload"_
 )attrs
+
 
 
 *payl_queue
@@ -2031,6 +1526,7 @@ comment
 )attrs
 
 
+
 *payl_tasklet
 1457031395
 ^mtime
@@ -2038,6 +1534,7 @@ comment
 comment
 "tasklet payload"_
 )attrs
+
 
 
 *payl_vectval_append
@@ -2049,6 +1546,7 @@ comment
 )attrs
 
 
+
 *payl_vectval_count
 1456840222
 ^mtime
@@ -2056,6 +1554,7 @@ comment
 comment
 "count in a vector of values"_
 )attrs
+
 
 
 *payl_vectval_node
@@ -2067,6 +1566,8 @@ comment
 )attrs
 
 
+
+
 *payl_vectval_nth
 1456840222
 ^mtime
@@ -2074,6 +1575,7 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
+
 
 
 *payl_vectval_put_nth
@@ -2085,6 +1587,7 @@ comment
 )attrs
 
 
+
 *payl_vectval_reserve
 1456840222
 ^mtime
@@ -2094,6 +1597,7 @@ comment
 )attrs
 
 
+
 *payl_vectval_resize
 1456840222
 ^mtime
@@ -2101,6 +1605,7 @@ comment
 comment
 "resize in a vector of values"_
 )attrs
+
 
 
 *payl_vectvaldata
@@ -2122,6 +1627,7 @@ payl_vectval_resize
 )attrs
 
 
+
 *payl_webexch
 1457031348
 ^mtime
@@ -2131,6 +1637,7 @@ comment
 )attrs
 
 
+
 *payl_websession
 1457031373
 ^mtime
@@ -2138,6 +1645,7 @@ comment
 comment
 "web session payload"_
 )attrs
+
 
 
 *payload
@@ -2178,6 +1686,7 @@ payl_filebuffer
 )attrs
 
 
+
 *payload_module
 1457332521
 ^mtime
@@ -2186,14 +1695,6 @@ comment
 "the payload module"_
 )attrs
 
-
-*pe
-1457337227
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *percent_delim
@@ -2205,6 +1706,7 @@ comment
 )attrs
 
 
+
 *persistent
 1456994815
 ^mtime
@@ -2213,29 +1715,6 @@ comment
 "for persistent item-making expressions"_
 )attrs
 
-
-*plus_delim
-1455805494
-^mtime
-(
-associativity
-left_assoc
-comment
-"for + delimiter token"_
-operator
-add
-precedence
-4_
-)attrs
-
-
-*pm
-1457522600
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *precedence
@@ -2247,77 +1726,6 @@ comment
 )attrs
 
 
-*prepare_ast_emission
-1457337246
-^mtime
-(
-comment
-"slot to prepare the emission of ast"_
-)attrs
-
-
-*prepare_dump_state
-1457439321
-^mtime
-(
-comment
-"to prepare the dump state"_
-)attrs
-
-
-*prepare_header
-1457332149
-^mtime
-(
-comment
-"function to prepare the common header"_
-)attrs
-
-
-*prepare_module
-1457332812
-^mtime
-(
-comment
-"function to prepare a module "_
-)attrs
-
-
-*prhd
-1457522474
-^mtime
-(
-comment
-"variable (for prepared header)"_
-)attrs
-
-
-*process_hdr_in_prepare_header
-1458151264
-^mtime
-(
-comment
-"dived code to process hdr in prepare_header function"_
-dive
-(
-(
-dbg_blue
-(
-"process_hdr_in_prepare_header incomplete"_
-18
-~
-out_raw
-)nodemeta
-13
-~
-output
-)nodemeta
-10
-~
-sequence
-)nodemeta
-)attrs
-
 
 *put
 1455358475
@@ -2326,6 +1734,7 @@ sequence
 comment
 "to put something"_
 )attrs
+
 
 
 *queue
@@ -2337,6 +1746,7 @@ comment
 )attrs
 
 
+
 *raw
 1452095862
 ^mtime
@@ -2345,14 +1755,6 @@ comment
 "for raw display"_
 )attrs
 
-
-*rem
-1456141884
-^mtime
-(
-comment
-"the remainder or modulus operator"_
-)attrs
 
 
 *reviter
@@ -2364,6 +1766,8 @@ comment
 )attrs
 
 
+
+
 *right_assoc
 1455871773
 ^mtime
@@ -2371,6 +1775,7 @@ comment
 comment
 "for right associative delimiters"_
 )attrs
+
 
 
 *right_brace_delim
@@ -2382,6 +1787,7 @@ comment
 )attrs
 
 
+
 *right_bracket_delim
 1453199107
 ^mtime
@@ -2389,6 +1795,7 @@ comment
 comment
 "for ] delimiter token"_
 )attrs
+
 
 
 *right_paren_delim
@@ -2400,6 +1807,7 @@ comment
 )attrs
 
 
+
 *same
 1457364041
 ^mtime
@@ -2407,6 +1815,7 @@ comment
 comment
 "test for identity of two values"_
 )attrs
+
 
 
 *semicolon_delim
@@ -2418,6 +1827,7 @@ comment
 )attrs
 
 
+
 *sequence
 1452422570
 ^mtime
@@ -2425,6 +1835,7 @@ comment
 comment
 "for sequences"_
 )attrs
+
 
 
 *set
@@ -2441,6 +1852,7 @@ is_set
 )attrs
 
 
+
 *signature
 1455623962
 ^mtime
@@ -2448,6 +1860,7 @@ is_set
 comment
 "signature keyword"_
 )attrs
+
 
 
 *signature_closure_1int_to_void
@@ -2459,6 +1872,7 @@ comment
 )attrs
 
 
+
 *signature_closure_void_to_void
 1453831944
 ^mtime
@@ -2466,6 +1880,7 @@ comment
 comment
 "signature for void -> void closures"_
 )attrs
+
 
 
 *signature_displayer
@@ -2477,9 +1892,11 @@ comment
 )attrs
 
 
+
 *signature_loader_caret
 1445950071
 ^mtime
+
 
 
 *signature_loader_paren
@@ -2491,6 +1908,20 @@ comment
 )attrs
 
 
+
+*signature_nanotaskexception
+1464696999
+^mtime
+
+
+
+*signature_nanotaskstep
+1464696999
+^mtime
+
+
+
+
 *signature_tasklet
 1446190348
 ^mtime
@@ -2498,6 +1929,7 @@ comment
 comment
 "signature of tasklet functions"_
 )attrs
+
 
 
 *signature_webhandler
@@ -2509,6 +1941,7 @@ comment
 )attrs
 
 
+
 *size
 1456761997
 ^mtime
@@ -2518,59 +1951,6 @@ comment
 )attrs
 
 
-*slash_delim
-1456141884
-^mtime
-(
-associativity
-left_assoc
-comment
-"for / delimiter token, e.g. for division"_
-operator
-div
-precedence
-3_
-)attrs
-
-
-*slashpercent_delim
-1456141884
-^mtime
-(
-associativity
-left_assoc
-comment
-"for /% delimiter token, e.g. for remainder or modulus"_
-operator
-rem
-precedence
-3_
-)attrs
-
-
-*something
-1457522594
-^mtime
-(
-comment
-"variable ..."_
-)attrs
-
-
-*star_delim
-1456130464
-^mtime
-(
-associativity
-left_assoc
-comment
-"for * delimiter token"_
-operator
-mult
-precedence
-3_
-)attrs
-
 
 *step
 1454531512
@@ -2579,6 +1959,7 @@ precedence
 comment
 "for steps, e.g. limits"_
 )attrs
+
 
 
 *string
@@ -2596,6 +1977,7 @@ is_string
 )attrs
 
 
+
 *switch_item
 1457337792
 ^mtime
@@ -2603,6 +1985,7 @@ is_string
 comment
 "to switch on items"_
 )attrs
+
 
 
 *tasklet
@@ -2614,6 +1997,7 @@ comment
 )attrs
 
 
+
 *the_agenda
 1458227320
 ^mtime
@@ -2623,6 +2007,7 @@ comment
 )attrs
 (
 )payload_queue
+
 
 
 *the_system
@@ -2734,6 +2119,9 @@ node
 )attrs
 (
 )comps
+#end item the_system
+
+
 
 
 *tilde_delim
@@ -2745,6 +2133,7 @@ comment
 )attrs
 
 
+
 *transient
 1456994815
 ^mtime
@@ -2754,6 +2143,7 @@ comment
 )attrs
 
 
+
 *truth
 1455463429
 ^mtime
@@ -2761,6 +2151,7 @@ comment
 comment
 "for true value"_
 )attrs
+
 
 
 *tuple
@@ -2775,6 +2166,7 @@ is_sequence
 is_tuple
 )set
 )attrs
+
 
 
 *type
@@ -2797,6 +2189,7 @@ node
 )attrs
 
 
+
 *type_error
 1455914086
 ^mtime
@@ -2804,6 +2197,7 @@ node
 comment
 "for type error"_
 )attrs
+
 
 
 *undefined_result
@@ -2815,6 +2209,8 @@ comment
 )attrs
 
 
+
+
 *unequal
 1457365666
 ^mtime
@@ -2822,6 +2218,7 @@ comment
 comment
 "test for inequality of two values"_
 )attrs
+
 
 
 *value
@@ -2833,6 +2230,7 @@ comment
 )attrs
 
 
+
 *value_module
 1457332492
 ^mtime
@@ -2840,6 +2238,7 @@ comment
 comment
 "the value module"_
 )attrs
+
 
 
 *value_types
@@ -2851,6 +2250,7 @@ comment
 )attrs
 
 
+
 *verbatim
 1455468628
 ^mtime
@@ -2859,14 +2259,6 @@ comment
 "for verbatim"_
 )attrs
 
-
-*vt
-1457964687
-^mtime
-(
-comment
-"variable"_
-)attrs
 
 
 *web_exchange
@@ -2878,6 +2270,7 @@ comment
 )attrs
 
 
+
 *web_handlers
 1446061228
 ^mtime
@@ -2885,8 +2278,7 @@ comment
 comment
 "hashassoc for web handlers"_
 )attrs
-(
-)payload_hashassoc
+
 
 
 *web_session
@@ -2896,12 +2288,6 @@ comment
 comment
 "for web sessions"_
 )attrs
-
-
-*web_state
-1446463595
-^mtime
-
 
 
 
@@ -2914,6 +2300,7 @@ comment
 )attrs
 
 
+
 *while
 1455520074
 ^mtime
@@ -2921,6 +2308,7 @@ comment
 comment
 "for while"_
 )attrs
+
 
 
 *word

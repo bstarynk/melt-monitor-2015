@@ -1281,6 +1281,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
 	    MOM_FATAPRINTF ("too many %d unpredefined", count_unpredef_mom);
 	  unpredefined_mom[count_unpredef_mom] = optarg;
 	  count_unpredef_mom++;
+	  should_dump_mom = true;
 	  break;
 	case xtraopt_outputcontent:
 	  if (optarg)
