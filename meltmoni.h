@@ -1307,6 +1307,10 @@ static inline struct mom_item_st *mom_dyncast_item (const void *p)
   return NULL;
 }
 
+void mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
+                                  momhash_t hash);
+
+void mom_initialize_predefined_items(void);
 
 momhash_t mom_cstring_hash_len (const char *str, int len);
 

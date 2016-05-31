@@ -1733,20 +1733,20 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
 static struct mom_hashset_st *predef_hset_mom;
 static pthread_mutex_t predef_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 
-MOM_PRIVATE void
-initialize_predefined_mom (struct mom_item_st *itm, const char *name,
-                           momhash_t hash)
+void
+mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
+                             momhash_t hash)
 {
   assert (itm->va_itype == MOMITY_ITEM && itm->hva_hash == hash);
-  MOM_DEBUGPRINTF (item, "initialize_predefined start %s itm@%p", name,
+  MOM_DEBUGPRINTF (item, "initialize_a_predefined start %s itm@%p", name,
                    (void *) itm);
   const char *twou = strstr (name, "__");
   uint16_t hid = 0;
   uint64_t lid = 0;
   if (twou)
     {
-#warning initialize_predefined unimplemented for cloned
-      MOM_FATAPRINTF ("initialize_predefined unimplemented for cloned %s",
+#warning initialize_a_predefined unimplemented for cloned
+      MOM_FATAPRINTF ("initialize_a_predefined unimplemented for cloned %s",
                       name);
     }
   else
@@ -1756,7 +1756,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
     };
   const struct mom_itemname_tu *radix = mom_make_name_radix (name);
   if (!radix)
-    MOM_FATAPRINTF ("initialize_predefined failed to make radix %s", name);
+    MOM_FATAPRINTF ("initialize_a_predefined failed to make radix %s", name);
   struct radix_mom_st *curad = NULL;
   unsigned radrk = 0;
   {
@@ -1822,7 +1822,7 @@ initialize_predefined_mom (struct mom_item_st *itm, const char *name,
   curad->rad_count++;
   pthread_mutex_unlock (&curad->rad_mtx);
   mom_item_put_space (itm, MOMSPA_PREDEF);
-}                               /* end initialize_predefined_mom  */
+}                               /* end mom_initialize_a_predefined  */
 
 void
 mom_initialize_items (void)
@@ -1837,9 +1837,7 @@ mom_initialize_items (void)
     mom_hashset_reserve (NULL,
                          (4 * MOM_NB_PREDEFINED / 3 +
                           MOM_NB_PREDEFINED / 32) + 20);
-#define MOM_HAS_PREDEFINED(Nam,Hash) \
-  initialize_predefined_mom(&mompredef_##Nam, #Nam, Hash);
-#include "_mom_predef.h"
+  mom_initialize_predefined_items ();
   if (MOM_IS_DEBUGGING (item))
     {
       MOM_DEBUGPRINTF (item, "showing %d predefined items",

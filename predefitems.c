@@ -28,3 +28,16 @@
   .itm_lid = 0,					\
   };
 #include "_mom_predef.h"
+
+
+void
+mom_initialize_predefined_items (void)
+{
+  static bool initialized;
+  if (initialized)
+    MOM_FATAPRINTF ("already initialized items");
+  initialized = true;
+#define MOM_HAS_PREDEFINED(Nam,Hash) \
+  mom_initialize_a_predefined (&mompredef_##Nam, #Nam, Hash);
+#include "_mom_predef.h"
+}                               /* end mom_initialize_predefined_items */
