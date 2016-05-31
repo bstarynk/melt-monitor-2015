@@ -311,5 +311,7 @@ momf_ldp_payload_filebuffer (struct mom_item_st *itm,
         continue;
       mom_file_puts (fb, s);
     }
+  itm->itm_paylkind = NULL;     // MOM_PREDEFITM(filebuffer);
+  itm->itm_payldata = fb;
   ld->ld_kindcount[MOMITY_FILEBUFFER]++;
 }                               /* end momf_ldp_payload_filebuffer */

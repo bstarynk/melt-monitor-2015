@@ -667,7 +667,7 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
   nod->nod_connitm = (struct mom_item_st *) conn;
   nod->nod_metaitem = (struct mom_item_st *) metaitm;
   nod->nod_metarank = metarank;
-  for (unsigned ix = 0; ix < size; ix++)
+  for (unsigned ix = 0; ix < (unsigned) size; ix++)
     {
       const struct mom_hashedvalue_st *curson = sons[ix];
       if (curson == MOM_EMPTY_SLOT)
@@ -1244,22 +1244,6 @@ mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
   strftime (timbuf, sizeof (timbuf), "%c %Z",
             localtime_r (&itm->itm_mtime, &tm));
   fprintf (fout, "#mtim: %s\n", timbuf);
-  if (itm->itm_funptr)
-    {
-      Dl_info di = { };
-      if (dladdr (itm->itm_funptr, &di))
-        {
-          if (di.dli_saddr != itm->itm_funptr)
-            fprintf (fout, "#fun:%s+%#x", di.dli_sname,
-                     (int) ((const char *) (itm->itm_funptr) -
-                            (const char *) di.dli_saddr));
-          else
-            fprintf (fout, "#fun:%s", di.dli_sname);
-        }
-      else
-        fprintf (fout, "#fun@%p", itm->itm_funptr);
-      fprintf (fout, "/%s\n", mom_item_cstring (itm->itm_funsig));
-    };
   // output attributes
   struct mom_assovaldata_st *attrs = itm->itm_pattr;
   if (attrs && attrs != MOM_EMPTY_SLOT
@@ -1301,7 +1285,7 @@ mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
         }
     }
   // output payload
-  if (itm->itm_payload)
+  if (itm->itm_payldata)
     mom_unsync_item_output_payload (fout, itm);
   mom_item_unlock (itm);
   fprintf (fout, "--%s--\n", mom_item_cstring (itm));

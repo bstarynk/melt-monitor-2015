@@ -95,7 +95,7 @@ indent: .indent.pro
         done
 	for g in $(wildcard [a-z]*.cc) ; do \
 	  echo astyling $$g ; cp $$g $$g% ; \
-	  $(ASTYLE)  $(ASTYLEFLAGS) $g ; \
+	  $(ASTYLE)  $(ASTYLEFLAGS) $$g ; \
 	done
 
 predefgc: $(OBJECTS)  predefgc.cc

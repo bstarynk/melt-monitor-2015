@@ -691,8 +691,8 @@ mom_dumpscan_data_payload_item (struct mom_dumper_st *du,
   assert (du && du->va_itype == MOMITY_DUMPER);
   assert (itm && itm->va_itype == MOMITY_ITEM);
   MOM_WARNPRINTF
-    ("dumpscan_data_payload_item unimplemented itm=%s paylsig:%s payldata@%p",
-     mom_item_cstring (itm), mom_item_cstring (itm->itm_paylsig),
+    ("dumpscan_data_payload_item unimplemented itm=%s paylkind:%s payldata@%p",
+     mom_item_cstring (itm), mom_item_cstring (itm->itm_paylkind),
      itm->itm_payldata);
 }
 
@@ -726,9 +726,6 @@ mom_dumpscan_payload (struct mom_dumper_st *du, struct mom_anyvalue_st *payl)
       case MOMITY_HASHASSOC:
         mom_dumpscan_hashassoc (du, (struct mom_hashassoc_st *) payl);
         return;
-      case MOMITY_TASKLET:
-        mom_dumpscan_tasklet (du, (struct mom_tasklet_st *) payl);
-        return;
       case MOMITY_TASKSTEPPER:
         return;
       default:
@@ -748,20 +745,9 @@ mom_dumpscan_content_item (struct mom_dumper_st *du, struct mom_item_st *itm)
     mom_dumpscan_assovaldata (du, itm->itm_pattr);
   if (itm->itm_pcomp)
     mom_dumpscan_vectvaldata (du, itm->itm_pcomp);
-#warning mom_dumpscan_content_item accessing purposedly obsolete itm_funsig & itm_funptr
-  if (itm->itm_funsig || itm->itm_funptr)
-    MOM_WARNPRINTF ("dumped item %s has obsolete funsig %s or funptr@%p",
-                    mom_item_cstring (itm),
-                    mom_item_cstring (itm->itm_funsig), itm->itm_funptr);
-  if (itm->itm_payload)
+  if (itm->itm_paylkind)
     {
-      MOM_WARNPRINTF ("dumped item %s has obsolete payload @%p",
-                      mom_item_cstring (itm), itm->itm_payload);
-      mom_dumpscan_payload (du, itm->itm_payload);
-    }
-  if (itm->itm_paylsig)
-    {
-      mom_dumpscan_item (du, itm->itm_paylsig);
+      mom_dumpscan_item (du, itm->itm_paylkind);
       mom_dumpscan_data_payload_item (du, itm);
     }
   pthread_mutex_unlock (&itm->itm_mtx);

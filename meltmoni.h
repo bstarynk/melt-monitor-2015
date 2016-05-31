@@ -1272,6 +1272,9 @@ enum mom_space_en
 #define MOM_FUNC_PREFIX "momf_"
 #define MOM_SIGNATURE_PREFIX "momsig_"
 
+#define MOM_DATA_PREFIX "momd_"
+#define MOM_DATAKIND_PREFIX "momkind_"
+
 /* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS							\
   MOM_HASHEDVALUE_FIELDS;						\
@@ -1280,12 +1283,9 @@ enum mom_space_en
   uint32_t itm_hid;							\
   uint64_t itm_lid;							\
   time_t itm_mtime;							\
-  void* itm_funptr __attribute((deprecated));				\
-  struct mom_item_st* itm_funsig __attribute((deprecated));		\
   struct mom_assovaldata_st* itm_pattr;					\
   struct mom_vectvaldata_st* itm_pcomp;					\
-  struct mom_anyvalue_st* itm_payload __attribute((deprecated));	\
-  struct mom_item_st* itm_paylsig;     					\
+  struct mom_item_st* itm_paylkind;            				\
   void* itm_payldata
 
 
@@ -2017,7 +2017,7 @@ struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st *itm)
 {
   struct mom_webexch_st *wex = NULL;
   if (itm && itm != MOM_EMPTY_SLOT
-      && itm->itm_paylsig == MOM_PREDEFITM (web_exchange)
+      && itm->itm_paylkind == MOM_PREDEFITM (web_exchange)
       && (wex = (struct mom_webexch_st *) itm->itm_payldata)
       && wex != MOM_EMPTY_SLOT && wex->va_itype == MOMITY_WEBEXCH)
     return wex;

@@ -913,19 +913,12 @@ end:
 
 
 void
-cleanup_item_payload_mom (struct mom_item_st *itm,
-                          struct mom_anyvalue_st *payl)
+cleanup_item_payload_mom (struct mom_item_st *itm, void *payl)
 {
   assert (itm != NULL && itm->va_itype == MOMITY_ITEM);
-  switch (payl->va_itype)
-    {
-    case MOMITY_WEBEXCH:
-      mom_webexch_payload_cleanup (itm, (struct mom_webexch_st *) payl);
-      break;
-    case MOMITY_WEBSESSION:
-      mom_websession_payload_cleanup (itm, (struct mom_websession_st *) payl);
-      break;
-    }
+  MOM_WARNPRINTF ("unimplemented cleanup_item_payload_mom itm=%s payl@%p",
+                  mom_item_cstring (itm), payl);
+#warning cleanup_item_payload_mom is unimplemented
 }                               /* end of cleanup_item_payload_mom */
 
 
@@ -937,10 +930,10 @@ mom_cleanup_item (void *itmad, void *clad)
   struct mom_item_st *itm = itmad;
   struct radix_mom_st *curad = NULL;
   MOM_DEBUGPRINTF (item, "mom_cleanup_item itm=%s", mom_item_cstring (itm));
-  struct mom_anyvalue_st *payl = itm->itm_payload;
+  void *payl = itm->itm_payldata;
   if (payl && payl != MOM_EMPTY_SLOT)
     {
-      itm->itm_payload = NULL;
+      itm->itm_payldata = NULL;
       cleanup_item_payload_mom (itm, payl);
     }
   {
@@ -1947,23 +1940,6 @@ dumpemit_assovaldata_mom (struct mom_dumper_st *du,
 
 
 void
-mom_dumpemit_item_payload_data (struct mom_dumper_st *du,
-                                const struct mom_item_st *itm)
-{
-  assert (du && du->va_itype == MOMITY_DUMPER);
-  assert (du->du_state == MOMDUMP_EMIT);
-  FILE *femit = du->du_emitfile;
-  assert (femit != NULL);
-  assert (itm != NULL && itm != MOM_EMPTY_SLOT
-          && itm->va_itype == MOMITY_ITEM);
-#warning mom_dumpemit_item_payload_data unimplemented
-  MOM_WARNPRINTF
-    ("dumpemit_item_payload_data itm:%s paysig:%s paydata@%p unimplemented",
-     mom_item_cstring (itm), mom_item_cstring (itm->itm_paylsig),
-     itm->itm_payldata);
-}                               /* end mom_dumpemit_item_payload_data */
-
-void
 mom_dumpemit_item_content (struct mom_dumper_st *du,
                            const struct mom_item_st *itm)
 {
@@ -1978,45 +1954,6 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
     {
       fprintf (femit, "%ld\n" "^mtime\n", (long) itm->itm_mtime);
     }
-  ////
-#warning mom_dumpemit_item_content handle obsolete itm_funptr & itm_funsig
-  /// emit the funptr
-  if (itm->itm_funptr && itm->itm_funptr != MOM_EMPTY_SLOT)
-    {
-      Dl_info dinf;
-      memset (&dinf, 0, sizeof (dinf));
-      int okdla = dladdr (itm->itm_funptr, &dinf);
-      MOM_WARNPRINTF
-        ("dumpemit_item_content itm:%s obsolete itm_funptr@%p (%s)",
-         mom_item_cstring (itm), itm->itm_funptr, dinf.dli_sname);
-      if (okdla && dinf.dli_saddr == itm->itm_funptr
-          && !strncmp (dinf.dli_sname, MOM_FUNC_PREFIX,
-                       strlen (MOM_FUNC_PREFIX)))
-        {
-          if (strcmp
-              (dinf.dli_sname + strlen (MOM_FUNC_PREFIX),
-               mom_item_cstring (itm)))
-            fprintf (femit, "%s\n" "^altfunc",
-                     dinf.dli_sname + strlen (MOM_FUNC_PREFIX));
-          else
-            fputs ("^func\n", femit);
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content dli_sname %s",
-                           dinf.dli_sname);
-        }
-    }
-  // emit the signature
-  if (itm->itm_funsig && itm->itm_funsig != MOM_EMPTY_SLOT
-      && mom_dumped_item (du, itm->itm_funsig))
-    {
-      MOM_WARNPRINTF ("dumpemit_item_content itm:%s obsolete itm_funsig:%s",
-                      mom_item_cstring (itm),
-                      mom_item_cstring (itm->itm_funsig));
-      MOM_DEBUGPRINTF (dump, "dumpemit_item_content funsig %s",
-                       mom_item_cstring (itm->itm_funsig));
-      mom_dumpemit_refitem (du, itm->itm_funsig);
-      fputs ("^funsignature\n", femit);
-    }
-  ///
   /// emit the attributes
   if (itm->itm_pattr && itm->itm_pattr != MOM_EMPTY_SLOT)
     {
@@ -2047,137 +1984,184 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
     }
   ////
   //// should dump the payload
-#warning  mom_dumpemit_item_content handle obsolete payload
-  if (itm->itm_payload && itm->itm_payload != MOM_EMPTY_SLOT)
+  if (itm->itm_payldata && itm->itm_payldata != MOM_EMPTY_SLOT
+      && itm->itm_paylkind && itm->itm_paylkind != MOM_EMPTY_SLOT)
     {
-      struct mom_anyvalue_st *payl = itm->itm_payload;
-      MOM_WARNPRINTF ("dumpemit_item_content itm:%s obsolete payload@%p",
-                      mom_item_cstring (itm), (void *) payl);
-      MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s payloadtype %s",
-                       mom_item_cstring (itm), mom_itype_str (payl));
-      switch (payl->va_itype)
+      void *payld = itm->itm_payldata;
+      struct mom_item_st *kinditm = itm->itm_paylkind;
+      const char *kindname = mom_item_cstring (kinditm);
+      MOM_DEBUGPRINTF (dump,
+                       "dumpemit_item_content itm %s kindname %s payld@%p",
+                       mom_item_cstring (itm), kindname, payld);
+      if (!strncmp (kindname, "signature_", sizeof ("signature_") - 1))
         {
-        case MOMITY_BOXINT:
-        case MOMITY_BOXDOUBLE:
-        case MOMITY_BOXSTRING:
-        case MOMITY_TUPLE:
-        case MOMITY_SET:
-        case MOMITY_NODE:
-        case MOMITY_ITEM:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content value payload %s",
-                           mom_value_cstring ((struct mom_hashedvalue_st *)
-                                              payl));
-          mom_dumpemit_value (du, (struct mom_hashedvalue_st *) payl);
-          fputs ("^payload_val\n", femit);
-          break;
-        case MOMITY_ASSOVALDATA:
-          fputs ("(\n", femit);
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s assovaldata",
-                           mom_item_cstring (itm));
-          dumpemit_assovaldata_mom (du, (struct mom_assovaldata_st *) payl);
-          fputs (")payload_assoval\n", femit);
-          break;
-        case MOMITY_VECTVALDATA:
-          {
-            MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s vectvaldata",
-                             mom_item_cstring (itm));
-            struct mom_vectvaldata_st *comps =
-              (struct mom_vectvaldata_st *) payl;
-            unsigned siz = mom_raw_size (comps);
-            unsigned cnt = comps->cda_count;
-            assert (cnt <= siz);
-            fputs ("(\n", femit);
-            for (unsigned ix = 0; ix < cnt; ix++)
-              mom_dumpemit_value (du, comps->vecd_valarr[ix]);
-            fputs (")payload_vect\n", femit);
-          }
-          break;
-        case MOMITY_QUEUE:
-          {
-            MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s queue",
-                             mom_item_cstring (itm));
-            struct mom_queue_st *qu = (struct mom_queue_st *) payl;
-            fputs ("(\n", femit);
-            if (qu->qu_first && qu->qu_first != MOM_EMPTY_SLOT)
+          Dl_info dinf;
+          memset (&dinf, 0, sizeof (dinf));
+          int okdla = dladdr (payld, &dinf);
+          MOM_DEBUGPRINTF
+            (dump, "dumpemit_item_content itm:%s kind:%s funptr@%p (%s)",
+             mom_item_cstring (itm), kindname, payld, dinf.dli_sname);
+          if (okdla && dinf.dli_saddr == payld
+              && !strncmp (dinf.dli_sname, MOM_FUNC_PREFIX,
+                           strlen (MOM_FUNC_PREFIX)))
+            {
+              if (!strcmp
+                  (dinf.dli_sname + strlen (MOM_FUNC_PREFIX),
+                   mom_item_cstring (itm)))
+                fputs ("^func\n", femit);
+              MOM_DEBUGPRINTF (dump,
+                               "dumpemit_item_content %s kind %s function dli_sname %s",
+                               mom_item_cstring (itm), kindname,
+                               dinf.dli_sname);
+            }
+        }
+      else if (!strncmp (kindname, "data_", sizeof ("data_") - 1))
+        {
+          Dl_info dinf;
+          memset (&dinf, 0, sizeof (dinf));
+          int okdla = dladdr (payld, &dinf);
+          MOM_DEBUGPRINTF
+            (dump, "dumpemit_item_content itm:%s kind:%s dataptr@%p (%s)",
+             mom_item_cstring (itm), kindname, payld, dinf.dli_sname);
+          if (okdla && dinf.dli_saddr == payld
+              && !strncmp (dinf.dli_sname, MOM_DATA_PREFIX,
+                           strlen (MOM_DATA_PREFIX)))
+            {
+              if (!strcmp
+                  (dinf.dli_sname + strlen (MOM_DATA_PREFIX),
+                   mom_item_cstring (itm)))
+                fputs ("^data\n", femit);
+              MOM_DEBUGPRINTF (dump,
+                               "dumpemit_item_content %s kind %s data dli_sname %s",
+                               mom_item_cstring (itm), kindname,
+                               dinf.dli_sname);
+            }
+        }
+      else
+        {
+          struct mom_anyvalue_st *paylv = payld;
+          MOM_DEBUGPRINTF
+            (dump, "dumpemit_item_content itm:%s kind:%s paylv@%p [%s]",
+             mom_item_cstring (itm), kindname, payld, mom_itype_str (paylv));
+          switch (paylv->va_itype)
+            {
+            case MOMITY_BOXINT:
+            case MOMITY_BOXDOUBLE:
+            case MOMITY_BOXSTRING:
+            case MOMITY_TUPLE:
+            case MOMITY_SET:
+            case MOMITY_NODE:
+            case MOMITY_ITEM:
+              MOM_DEBUGPRINTF (dump, "dumpemit_item_content value payload %s",
+                               mom_value_cstring ((struct mom_hashedvalue_st
+                                                   *) paylv));
+              mom_dumpemit_value (du, (struct mom_hashedvalue_st *) paylv);
+              fputs ("^payload_val\n", femit);
+              break;
+            case MOMITY_ASSOVALDATA:
+              fputs ("(\n", femit);
+              MOM_DEBUGPRINTF (dump,
+                               "dumpemit_item_content itm %s assovaldata",
+                               mom_item_cstring (itm));
+              dumpemit_assovaldata_mom (du,
+                                        (struct mom_assovaldata_st *) paylv);
+              fputs (")payload_assoval\n", femit);
+              break;
+            case MOMITY_VECTVALDATA:
               {
-                for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL;
-                     ql = ql->qu_next)
+                MOM_DEBUGPRINTF (dump,
+                                 "dumpemit_item_content itm %s vectvaldata",
+                                 mom_item_cstring (itm));
+                struct mom_vectvaldata_st *comps =
+                  (struct mom_vectvaldata_st *) paylv;
+                unsigned siz = mom_raw_size (comps);
+                unsigned cnt = comps->cda_count;
+                assert (cnt <= siz);
+                fputs ("(\n", femit);
+                for (unsigned ix = 0; ix < cnt; ix++)
+                  mom_dumpemit_value (du, comps->vecd_valarr[ix]);
+                fputs (")payload_vect\n", femit);
+              }
+              break;
+            case MOMITY_QUEUE:
+              {
+                MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s queue",
+                                 mom_item_cstring (itm));
+                struct mom_queue_st *qu = (struct mom_queue_st *) paylv;
+                fputs ("(\n", femit);
+                if (qu->qu_first && qu->qu_first != MOM_EMPTY_SLOT)
                   {
-                    for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+                    for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL;
+                         ql = ql->qu_next)
                       {
-                        struct mom_hashedvalue_st *curval = ql->qu_elems[ix];
-                        if (!curval || curval == MOM_EMPTY_SLOT)
-                          continue;
-                        mom_dumpemit_value (du, curval);
+                        for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+                          {
+                            struct mom_hashedvalue_st *curval =
+                              ql->qu_elems[ix];
+                            if (!curval || curval == MOM_EMPTY_SLOT)
+                              continue;
+                            mom_dumpemit_value (du, curval);
+                          }
                       }
                   }
+                fputs (")payload_queue\n", femit);
               }
-            fputs (")payload_queue\n", femit);
-          }
-          break;
-        case MOMITY_HASHSET:
-          {
-            struct mom_hashset_st *hset = (struct mom_hashset_st *) payl;
-            const struct mom_boxset_st *bxset = mom_hashset_to_boxset (hset);
-            MOM_DEBUGPRINTF (dump,
-                             "dumpemit_item_content itm %s hashset bxset %s",
-                             mom_item_cstring (itm),
-                             mom_value_cstring ((struct mom_hashedvalue_st *)
-                                                bxset));
-            unsigned siz = mom_size (bxset);
-            fputs ("(\n", femit);
-            for (unsigned ix = 0; ix < siz; ix++)
+              break;
+            case MOMITY_HASHSET:
               {
-                struct mom_item_st *elemitm = bxset->seqitem[ix];
-                if (!mom_dumped_item (du, elemitm))
-                  continue;
-                mom_dumpemit_refitem (du, elemitm);
+                struct mom_hashset_st *hset = (struct mom_hashset_st *) paylv;
+                const struct mom_boxset_st *bxset =
+                  mom_hashset_to_boxset (hset);
+                MOM_DEBUGPRINTF (dump,
+                                 "dumpemit_item_content itm %s hashset bxset %s",
+                                 mom_item_cstring (itm),
+                                 mom_value_cstring ((struct mom_hashedvalue_st
+                                                     *) bxset));
+                unsigned siz = mom_size (bxset);
+                fputs ("(\n", femit);
+                for (unsigned ix = 0; ix < siz; ix++)
+                  {
+                    struct mom_item_st *elemitm = bxset->seqitem[ix];
+                    if (!mom_dumped_item (du, elemitm))
+                      continue;
+                    mom_dumpemit_refitem (du, elemitm);
+                  }
+                fputs (")payload_hashset\n", femit);
               }
-            fputs (")payload_hashset\n", femit);
-          }
-          break;
-        case MOMITY_HASHMAP:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashmap",
-                           mom_item_cstring (itm));
-          mom_dumpemit_hashmap_payload (du, (struct mom_hashmap_st *) payl);
-          break;
-        case MOMITY_HASHASSOC:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashassoc",
-                           mom_item_cstring (itm));
-          mom_dumpemit_hashassoc_payload (du,
-                                          (struct mom_hashassoc_st *) payl);
-          break;
-        case MOMITY_FILEBUFFER:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s filebuffer",
-                           mom_item_cstring (itm));
-          mom_dumpemit_filebuffer_payload (du,
-                                           (struct mom_filebuffer_st *) payl);
-          break;
-        case MOMITY_TASKLET:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s tasklet",
-                           mom_item_cstring (itm));
-          mom_dumpemit_tasklet_payload (du, (struct mom_tasklet_st *) payl);
-          break;
-        case MOMITY_TASKSTEPPER:
-          MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s taskstepper",
-                           mom_item_cstring (itm));
-          mom_dumpemit_taskstepper (du, (struct mom_item_st *) itm,
-                                    (struct mom_taskstepper_st *) payl);
-          break;
-        default:
-          MOM_DEBUGPRINTF (dump,
-                           "dumpemit_item_content itm %s other payload %s @%p",
-                           mom_item_cstring (itm),
-                           mom_itype_str (itm->itm_payload),
-                           itm->itm_payload);
-          break;
+              break;
+            case MOMITY_HASHMAP:
+              MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashmap",
+                               mom_item_cstring (itm));
+              mom_dumpemit_hashmap_payload (du,
+                                            (struct mom_hashmap_st *) payld);
+              break;
+            case MOMITY_HASHASSOC:
+              MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s hashassoc",
+                               mom_item_cstring (itm));
+              mom_dumpemit_hashassoc_payload (du,
+                                              (struct mom_hashassoc_st *)
+                                              payld);
+              break;
+            case MOMITY_FILEBUFFER:
+              MOM_DEBUGPRINTF (dump,
+                               "dumpemit_item_content itm %s filebuffer",
+                               mom_item_cstring (itm));
+              mom_dumpemit_filebuffer_payload (du,
+                                               (struct mom_filebuffer_st *)
+                                               payld);
+              break;
+            default:
+              MOM_DEBUGPRINTF (dump,
+                               "dumpemit_item_content itm %s kind %s other payload %s @%p",
+                               mom_item_cstring (itm), kindname,
+                               mom_itype_str (payld), payld);
+              break;
+            }
         }
     }
   else
     MOM_DEBUGPRINTF (dump, "dumpemit_item_content itm %s without payload",
                      mom_item_cstring (itm));
-  if (itm->itm_payldata != NULL && itm->itm_paylsig != NULL)
-    mom_dumpemit_item_payload_data (du, itm);
   MOM_DEBUGPRINTF (dump, "dumpemit_item_content done itm %s @%p",
                    mom_item_cstring (itm), (void *) itm);
 }                               /* end of mom_dumpemit_item_content */
@@ -2221,7 +2205,7 @@ momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
       void *f = dlsym (mom_prog_dlhandle, funambuf);
       if (f)
         {
-          itm->itm_funptr = f;
+          itm->itm_payldata = f;
           MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s f@%p",
                            mom_item_cstring (itm), f);
         }
@@ -2248,8 +2232,8 @@ momf_ldc_func (struct mom_item_st *itm, struct mom_loader_st *ld)
               MOM_DEBUGPRINTF (load, "momf_ldc_func itm=%s sigitm=%s",
                                mom_item_cstring (itm),
                                mom_item_cstring (sigitm));
-              if (!itm->itm_funsig)
-                itm->itm_funsig = sigitm;
+              if (!itm->itm_paylkind)
+                itm->itm_paylkind = sigitm;
             }
         }
     }
@@ -2268,7 +2252,7 @@ momf_ldc_funsignature (struct mom_item_st *itm, struct mom_loader_st *ld)
   MOM_DEBUGPRINTF (load, "momf_ldc_funsignature itm=%s sigitm=%s",
                    mom_item_cstring (itm), mom_item_cstring (sigitm));
   if (sigitm)
-    itm->itm_funsig = sigitm;
+    itm->itm_paylkind = sigitm;
   mom_loader_pop (ld, 1);
 }
 
@@ -2349,7 +2333,8 @@ momf_ldp_payload_assoval (struct mom_item_st *itm,
       asso = mom_assovaldata_put (asso, attitm, attval);
     }
   ld->ld_kindcount[MOMITY_ASSOVALDATA]++;
-  itm->itm_payload = (struct mom_anyvalue_st *) asso;
+  itm->itm_payldata = (struct mom_anyvalue_st *) asso;
+  itm->itm_paylkind = NULL;
 }                               /* end of momf_ldp_payload_assoval */
 
 ////////////////
@@ -2373,7 +2358,10 @@ momf_ldp_payload_vect (struct mom_item_st *itm,
       vec = mom_vectvaldata_append (vec, val);
     }
   ld->ld_kindcount[MOMITY_VECTVALDATA]++;
-  itm->itm_payload = (struct mom_anyvalue_st *) vec;
+  itm->itm_payldata = (struct mom_anyvalue_st *) vec;
+#warning momf_ldp_payload_vect  should set payload kind to vector
+  MOM_WARNPRINTF ("momf_ldp_payload_vector should set kind of item %s",
+                  mom_item_cstring (itm));
 }                               /* end of momf_ldp_payload_vect */
 
 
@@ -2398,7 +2386,8 @@ momf_ldp_payload_queue (struct mom_item_st *itm,
       mom_queue_append (qu, val);
     }
   ld->ld_kindcount[MOMITY_QUEUE]++;
-  itm->itm_payload = (struct mom_anyvalue_st *) qu;
+  itm->itm_paylkind = MOM_PREDEFITM (queue);
+  itm->itm_payldata = (struct mom_anyvalue_st *) qu;
 }                               /* end of momf_ldp_payload_queue */
 
 
@@ -2423,7 +2412,8 @@ momf_ldp_payload_hashset (struct mom_item_st *itm,
       hset = mom_hashset_insert (hset, elitm);
     }
   ld->ld_kindcount[MOMITY_HASHSET]++;
-  itm->itm_payload = (struct mom_anyvalue_st *) hset;
+  itm->itm_payldata = (struct mom_anyvalue_st *) hset;
+  itm->itm_paylkind = MOM_PREDEFITM (hashset);
 }                               /* end of momf_ldp_payload_hashset */
 
 
@@ -2456,7 +2446,10 @@ momf_ldp_payload_hashmap (struct mom_item_st *itm,
       hmap = mom_hashmap_put (hmap, attitm, attval);
     }
   ld->ld_kindcount[MOMITY_HASHMAP]++;
-  itm->itm_payload = (struct mom_anyvalue_st *) hmap;
+  itm->itm_payldata = (struct mom_anyvalue_st *) hmap;
+#warning momf_ldp_payload_hashmap should set the kind to hashmap
+  MOM_WARNPRINTF ("momf_ldp_payload_hashmap itm %s should have hashmap kind",
+                  mom_item_cstring (itm));
 }                               /* end of momf_ldp_payload_hashmap */
 
 
@@ -2466,9 +2459,25 @@ mom_unsync_item_clear_payload (struct mom_item_st *itm)
 {
   if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     return false;
-  if (!itm->itm_payload)
+  if (!itm->itm_payldata)
     return true;
-  unsigned typl = mom_itype (itm->itm_payload);
+  struct mom_item_st *kinditm = itm->itm_paylkind;
+  const char *kindname = mom_item_cstring (kinditm);
+  MOM_WARNPRINTF ("clearing payload of item %s kind %s @%p",
+                  mom_item_cstring (itm), kindname, itm->itm_payldata);
+  if (!strncmp (kindname, "signature", sizeof ("signature") - 1))
+    {
+      itm->itm_paylkind = NULL;
+      itm->itm_payldata = NULL;
+      return true;
+    }
+  else if (!strncmp (kindname, "data", sizeof ("data") - 1))
+    {
+      itm->itm_paylkind = NULL;
+      itm->itm_payldata = NULL;
+      return true;
+    }
+  unsigned typl = mom_itype (itm->itm_payldata);
   switch (typl)
     {
     case MOMITY_WEBEXCH:
@@ -2490,11 +2499,12 @@ mom_unsync_item_clear_payload (struct mom_item_st *itm)
       return false;
     case MOMITY_FILE:
     case MOMITY_FILEBUFFER:
-      mom_file_close (itm->itm_payload);
+      mom_file_close (itm->itm_payldata);
     default:
       break;
     }
-  itm->itm_payload = NULL;
+  itm->itm_paylkind = NULL;
+  itm->itm_payldata = NULL;
   return true;
 }                               /* end of mom_unsync_item_clear_payload */
 
@@ -2662,11 +2672,24 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
     return;
   if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     return;
-  if (!itm->itm_payload || itm->itm_payload == MOM_EMPTY_SLOT)
+  void *payld = itm->itm_payldata;
+  if (!payld || payld == MOM_EMPTY_SLOT)
     return;
-  unsigned typayl = mom_itype (itm->itm_payload);
-  fprintf (fout, "#item %s payload %s\n", mom_item_cstring (itm),
-           mom_itype_str (itm->itm_payload));
+  struct mom_item_st *kinditm = itm->itm_paylkind;
+  if (!kinditm || kinditm == MOM_EMPTY_SLOT)
+    return;
+  assert (kinditm->va_itype == MOMITY_ITEM);
+  const char *kindname = mom_item_cstring (kinditm);
+  fprintf (fout, "#item %s payload kind %s\n", mom_item_cstring (itm),
+           kindname);
+  if (!strncmp (kindname, "signature_", sizeof ("signature_") - 1))
+    {
+      Dl_info dinf;
+      memset (&dinf, 0, sizeof (dinf));
+      int okdla = dladdr (payld, &dinf);
+    }
+#warning mom_unsync_item_output_payload a ameliorer
+  unsigned typayl = mom_itype (itm->itm_payldata);
   switch (typayl)
     {
     case MOMITY_BOXINT:
@@ -2680,43 +2703,44 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
         long lastnl = ftell (fout);
         mom_output_value (fout, &lastnl, 1,
                           (const struct mom_hashedvalue_st *)
-                          itm->itm_payload);
+                          itm->itm_payldata);
       }
       return;
     case MOMITY_ASSOVALDATA:
       output_assovaldata_mom (fout,
                               (const struct mom_assovaldata_st *)
-                              itm->itm_payload);
+                              itm->itm_payldata);
       return;
     case MOMITY_VECTVALDATA:
       output_vectvaldata_mom (fout,
                               (const struct mom_vectvaldata_st *)
-                              itm->itm_payload);
+                              itm->itm_payldata);
       return;
     case MOMITY_QUEUE:
-      output_queue_mom (fout, (const struct mom_queue_st *) itm->itm_payload);
+      output_queue_mom (fout,
+                        (const struct mom_queue_st *) itm->itm_payldata);
       return;
     case MOMITY_HASHSET:
       output_hashset_mom (fout,
-                          (const struct mom_hashset_st *) itm->itm_payload);
+                          (const struct mom_hashset_st *) itm->itm_payldata);
       return;
     case MOMITY_HASHMAP:
       output_hashmap_mom (fout,
-                          (const struct mom_hashmap_st *) itm->itm_payload);
+                          (const struct mom_hashmap_st *) itm->itm_payldata);
       return;
     case MOMITY_HASHASSOC:
       output_hashassoc_mom (fout,
                             (const struct mom_hashassoc_st *)
-                            itm->itm_payload);
+                            itm->itm_payldata);
       return;
     case MOMITY_WEBEXCH:
       output_webexch_mom (fout,
-                          (const struct mom_webexch_st *) itm->itm_payload);
+                          (const struct mom_webexch_st *) itm->itm_payldata);
       return;
     case MOMITY_FILEBUFFER:
       output_filebuffer_mom (fout,
                              (const struct mom_filebuffer_st *)
-                             itm->itm_payload);
+                             itm->itm_payldata);
       return;
     default:
       fprintf (fout, "...\n");

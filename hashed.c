@@ -1153,7 +1153,7 @@ momf_ldp_payload_hashassoc (struct mom_item_st *itm,
       hass = mom_hashassoc_put (hass, keyatt, valatt);
     };
   itm->itm_payldata = (struct mom_anyvalue_st *) hass;
-  itm->itm_paylsig = MOM_PREDEFITM (hashassoc);
+  itm->itm_paylkind = MOM_PREDEFITM (hashassoc);
   ld->ld_kindcount[MOMITY_HASHASSOC]++;
   MOM_DEBUGPRINTF (load,
                    "momf_ldp_payload_hashassoc done itm %s hass@%p cnt%d",

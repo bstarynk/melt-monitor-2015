@@ -34,7 +34,7 @@ static inline struct mom_queue_st *
 agenda_queue_unsync_mom (void)
 {
   struct mom_queue_st *agqu = NULL;
-  if (MOM_PREDEFITM (the_agenda)->itm_paylsig == MOM_PREDEFITM (queue))
+  if (MOM_PREDEFITM (the_agenda)->itm_paylkind == MOM_PREDEFITM (queue))
     agqu = MOM_PREDEFITM (the_agenda)->itm_payldata;
   if (MOM_UNLIKELY
       (!agqu || agqu == MOM_EMPTY_SLOT || agqu->va_itype != MOMITY_QUEUE))
@@ -43,7 +43,7 @@ agenda_queue_unsync_mom (void)
       agqu->va_itype = MOMITY_QUEUE;
       MOM_PREDEFITM (the_agenda)->itm_payldata =
         (struct mom_anyvalue_st *) agqu;
-      MOM_PREDEFITM (the_agenda)->itm_paylsig = MOM_PREDEFITM (queue);
+      MOM_PREDEFITM (the_agenda)->itm_paylkind = MOM_PREDEFITM (queue);
     }
   return agqu;
 }
@@ -182,7 +182,7 @@ unsync_run_node_tasklet_mom (struct mom_item_st * tkitm,
   struct mom_item_st *connsigitm = NULL;
   mom_item_lock (connitm);
   connfun = connitm->itm_payldata;
-  connsigitm = connitm->itm_paylsig;
+  connsigitm = connitm->itm_paylkind;
   mom_item_unlock (connitm);
   if (connsigitm == MOM_PREDEFITM (signature_tasklet) && connfun)
     {
@@ -299,14 +299,14 @@ push_frame_tasklet_mom (struct mom_item_st *tskitm,
   void *funptr = NULL;
   assert (connitm != NULL && connitm->va_itype == MOMITY_ITEM);
   mom_item_lock (connitm);
-  funptr = connitm->itm_funptr;
+  funptr = connitm->itm_payldata;
   if (funptr)
     {
-      sigitm = connitm->itm_funsig;
+      sigitm = connitm->itm_paylkind;
       if (sigitm != MOM_PREDEFITM (signature_nanotaskstep))
         funptr = NULL;
       else
-        tstep = mom_dyncast_taskstepper (connitm->itm_payload);
+        tstep = mom_dyncast_taskstepper (connitm->itm_payldata);
     }
   mom_item_unlock (connitm);
   if (tstep && funptr)
@@ -404,9 +404,8 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
       void *nodfunptr = NULL;
       {
         mom_item_lock (noditm);
-        nodsigitm = noditm->itm_funsig;
-        nodstepper = (const void *) noditm->itm_payload;
-        nodfunptr = noditm->itm_funptr;
+        nodsigitm = noditm->itm_paylkind;
+        nodstepper = (const void *) noditm->itm_payldata;
         mom_item_unlock (noditm);
       }
       if (MOM_UNLIKELY (nodsigitm != MOM_PREDEFITM (signature_nanotaskstep)
@@ -449,7 +448,7 @@ unsync_run_stack_tasklet_mom (struct mom_item_st * tkitm,
               assert (excitm && excitm->va_itype == MOMITY_ITEM);
               {
                 mom_item_lock (excitm);
-                excsigitm = excitm->itm_funsig;
+                excsigitm = excitm->itm_paylkind;
                 if (excsigitm == MOM_PREDEFITM (signature_nanotaskexception))
                   excfun = excitm->itm_funptr;
                 mom_item_unlock (excitm);

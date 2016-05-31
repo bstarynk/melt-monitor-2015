@@ -186,7 +186,7 @@ mom_unsync_websocket_printf (struct mom_item_st *sessitm,
       || sessitm->va_itype != MOMITY_ITEM)
     return;
   struct mom_websession_st *ws = NULL;
-  if (sessitm->itm_paylsig == MOM_PREDEFITM (web_session)
+  if (sessitm->itm_paylkind == MOM_PREDEFITM (web_session)
       && mom_itype (sessitm->itm_payldata) == MOMITY_WEBSESSION)
     ws = sessitm->itm_payldata;
   if (!ws)
