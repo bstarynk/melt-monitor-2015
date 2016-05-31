@@ -2359,9 +2359,7 @@ momf_ldp_payload_vect (struct mom_item_st *itm,
     }
   ld->ld_kindcount[MOMITY_VECTVALDATA]++;
   itm->itm_payldata = (struct mom_anyvalue_st *) vec;
-#warning momf_ldp_payload_vect  should set payload kind to vector
-  MOM_WARNPRINTF ("momf_ldp_payload_vector should set kind of item %s",
-                  mom_item_cstring (itm));
+  itm->itm_paylkind = MOM_PREDEFITM(vector);
 }                               /* end of momf_ldp_payload_vect */
 
 
@@ -2447,9 +2445,7 @@ momf_ldp_payload_hashmap (struct mom_item_st *itm,
     }
   ld->ld_kindcount[MOMITY_HASHMAP]++;
   itm->itm_payldata = (struct mom_anyvalue_st *) hmap;
-#warning momf_ldp_payload_hashmap should set the kind to hashmap
-  MOM_WARNPRINTF ("momf_ldp_payload_hashmap itm %s should have hashmap kind",
-                  mom_item_cstring (itm));
+  itm->itm_paylkind = MOM_PREDEFITM(hashmap);
 }                               /* end of momf_ldp_payload_hashmap */
 
 
@@ -2687,8 +2683,19 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
       Dl_info dinf;
       memset (&dinf, 0, sizeof (dinf));
       int okdla = dladdr (payld, &dinf);
+      if (okdla && dinf.dli_saddr == payld)
+	fprintf(fout, "#function %s @%p", dinf.dli_sname, payld);
+      return;
     }
-#warning mom_unsync_item_output_payload a ameliorer
+  else  if (!strncmp (kindname, "data_", sizeof ("data_") - 1))
+    {
+      Dl_info dinf;
+      memset (&dinf, 0, sizeof (dinf));
+      int okdla = dladdr (payld, &dinf);
+      if (okdla && dinf.dli_saddr == payld)
+	fprintf(fout, "#data %s @%p", dinf.dli_sname, payld);
+      return;
+    }
   unsigned typayl = mom_itype (itm->itm_payldata);
   switch (typayl)
     {
