@@ -103,9 +103,8 @@ predefgc: $(OBJECTS)  predefgc.cmd
 	done
 	sort -u _listpredefs > _listpredefs.sorted
 	mv _listpredefs.sorted _listpredefs
-	cpp predefgc.cmd > _listpredefs.sh
-	#	echo >> _listpredefs.sh
-	bash _listpredefs.sh
+	$(LINK.cc) predefgc.cc -o predefgc.bin
+	./predefgc.bin _listpredefs
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@

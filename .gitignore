@@ -41,6 +41,7 @@ monimelt
 
 _listpredefs*
 
+predefgc.bin
 ## ignore core dumps
 core*
 
