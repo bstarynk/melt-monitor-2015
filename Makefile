@@ -45,7 +45,7 @@ MODULE_SOURCES= $(sort $(wildcard modules/momg_*.c))
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
 CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
-CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.cc)))
+CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*.cc)))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
 .PHONY: all tags modules plugins clean tests predefgc
@@ -55,6 +55,8 @@ all: monimelt
 clean:
 	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.orig README.html
 	$(RM) modules/*.so modules/*~ modules/*%
+	$(RM) _listpredef*
+	$(RM) *.bin
 	$(RM) _timestamp*
 	$(RM) core*
 	$(RM) *memo*
@@ -96,7 +98,7 @@ indent: .indent.pro
 	  $(ASTYLE)  $(ASTYLEFLAGS) $g ; \
 	done
 
-predefgc: $(OBJECTS)  predefgc.cmd
+predefgc: $(OBJECTS)  predefgc.cc
 	rm -f _listpredefs*; touch _listpredefs
 	for f in $(filter-out predefitems.o, $(OBJECTS)) ; do  \
 	   nm -u $$f | awk '/ mompredef_/{print $$2;}' | sed -n -e 's/^mompredef_//p' >> _listpredefs ; \

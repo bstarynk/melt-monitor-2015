@@ -42,7 +42,6 @@ int main(int argc, char**argv)
       fprintf(stderr, "cannot access %s (%m)\n", argv[1]);
       exit (EXIT_FAILURE);
   };
-  int nblin=0;
   std::ifstream inp(argv[1]);
   std::set<std::string> nameset;
   std::set<std::string> predefset;
@@ -61,8 +60,8 @@ int main(int argc, char**argv)
   } while (inp);
   inp.close();
   int nbuseless=0;
-  for (auto pnam: predefset)
-    if (nameset.find(pnam) == namset.end()) {
+  for (auto pnam : predefset)
+    if (nameset.find(pnam) == nameset.end()) {
       std::cout << pnam << std::endl;
       nbuseless++;
     };
