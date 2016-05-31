@@ -1,6 +1,6 @@
 ##
 ## file Makefile
-##   Copyright (C)  2015 Basile Starynkevitch (and FSF later)
+##   Copyright (C)  2015 - 2016 Basile Starynkevitch (and FSF later)
 ##  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
 ##  This file is part of GCC.
 ##
@@ -48,7 +48,7 @@ CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
 CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.cc)))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
-.PHONY: all tags modules plugins clean tests 
+.PHONY: all tags modules plugins clean tests predefgc
 all: monimelt
 
 
@@ -96,6 +96,16 @@ indent: .indent.pro
 	  $(ASTYLE)  $(ASTYLEFLAGS) $g ; \
 	done
 
+predefgc: $(OBJECTS)  predefgc.cmd
+	rm -f _listpredefs*; touch _listpredefs
+	for f in $(filter-out predefitems.o, $(OBJECTS)) ; do  \
+	   nm -u $$f | awk '/ mompredef_/{print $$2;}' | sed -n -e 's/^mompredef_//p' >> _listpredefs ; \
+	done
+	sort -u _listpredefs > _listpredefs.sorted
+	mv _listpredefs.sorted _listpredefs
+	cpp predefgc.cmd > _listpredefs.sh
+	#	echo >> _listpredefs.sh
+	bash _listpredefs.sh
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@

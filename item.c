@@ -1728,14 +1728,6 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
 
 
 ////////////////////////////////////////////////////////////////
-#define MOM_HAS_PREDEFINED(Nam,Hash)		\
-  struct mom_item_st mompredef_##Nam = {	\
-  .va_itype = MOMITY_ITEM,			\
-  .hva_hash = Hash,				\
-  .itm_hid = 0,					\
-  .itm_lid = 0,					\
-  };
-#include "_mom_predef.h"
 
 
 static struct mom_hashset_st *predef_hset_mom;

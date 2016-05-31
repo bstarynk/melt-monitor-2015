@@ -39,6 +39,8 @@ monimelt
 *.tmp*
 *.orig
 
+_listpredefs*
+
 ## ignore core dumps
 core*
 
