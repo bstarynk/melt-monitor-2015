@@ -321,31 +321,31 @@ momtok_tokenize (const char *filnam)
   return tovec;
 }                               /* end momtok_tokenize */
 
-void *
+const void *
 momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
 {
-  void *res = NULL;
+  const void *res = NULL;
   assert (tovec != NULL);
   assert (endposptr != NULL);
-  if (topos < 0 || topos >= tovec->mtv_len)
+  if (topos < 0 || topos >= (int)tovec->mtv_len)
     {
-      *endpostptr = -1;
+      *endposptr = -1;
       return NULL;
     }
   struct momtoken_st *curtok = tovec->mtv_arr + topos;
   switch (curtok->mtok_kind)
     {
-      case MOLEX_INT;
+    case MOLEX_INT:
       res = mom_boxint_make (curtok->mtok_int);
-      *endpostptr = topos + 1;
+      *endposptr = topos + 1;
       return res;
     case MOLEX_ITEM:
       res = curtok->mtok_itm;
-      *endpostptr = topos + 1;
+      *endposptr = topos + 1;
       return res;
     case MOLEX_STRING:
       res = curtok->mtok_str;
-      *endpostptr = topos + 1;
+      *endposptr = topos + 1;
       return res;
     default:
       break;
@@ -355,19 +355,19 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       int tolen = tovec->mtv_len;
       int ln = 0;
       for (int ix = topos + 1;
-           ix < tolen && tovec->mtv_arr[ix].mtok_kind == = MOLEX_ITEM; ix++)
+           ix < tolen && tovec->mtv_arr[ix].mtok_kind ==  MOLEX_ITEM; ix++)
         ln++;
-      if (topos + ln + 2 >= token
+      if (topos + ln + 2 >= tolen
           || tovec->mtv_arr[topos + ln + 1].mtok_kind != MOLEX_DELIM
           || tovec->mtv_arr[topos + ln + 1].mtok_delim != MODLM_RBRACE)
         MOM_FATAPRINTF ("invalid set starting line %d of file %s",
                         curtok->mtok_lin, tovec->mtv_filename);
-      struct mom_item_st **itemarr =
+      const struct mom_item_st **itemarr =
         mom_gc_alloc ((ln + 1) * sizeof (struct mom_item_st *));
       for (int ix = 0; ix < ln; ix++)
         itemarr[ix] = tovec->mtv_arr[topos + ix + 1].mtok_itm;
       res = mom_boxset_make_arr (ln, itemarr);
-      *endpostptr = topos + ln + 2;
+      *endposptr = topos + ln + 2;
       return res;
     }
 }                               // end momtok_parse
