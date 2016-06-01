@@ -1678,6 +1678,16 @@ comment
 
 
 
+*resize
+1464790967
+^mtime
+(
+comment
+"for resizing"_
+)attrs
+
+
+
 *reviter
 1457086941
 ^mtime
@@ -1759,6 +1769,7 @@ comment
 
 
 
+
 *signature_loader_paren
 1446020701
 ^mtime
@@ -1766,7 +1777,6 @@ comment
 comment
 "signature of load paren functions"_
 )attrs
-
 
 
 
@@ -2048,6 +2058,7 @@ comment
 
 
 
+
 *value
 1461749593
 ^mtime
@@ -2055,7 +2066,6 @@ comment
 comment
 "for value, e.g. edition"_
 )attrs
-
 
 
 

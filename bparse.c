@@ -594,7 +594,7 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           printf ("\n## display item %s from %s line %d\n",
                   mom_item_cstring (dispitm), tovec->mtv_filename,
                   curtok->mtok_lin);
-          fputs (stdout, mom_boxstring_cstr (msgv));
+          fputs (mom_boxstring_cstr (msgv), stdout);
           putchar ('\n');
           long lastnl = ftell (stdout);
           mom_item_lock (dispitm);
@@ -609,7 +609,7 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           printf ("\n## display value from %s line %d\n",
                   tovec->mtv_filename, curtok->mtok_lin);
           long lastnl = ftell (stdout);
-          fputs (stdout, mom_boxstring_cstr (msgv));
+          fputs (mom_boxstring_cstr (msgv), stdout);
           putchar ('\n');
           mom_output_value (stdout, &lastnl, 0,
                             (const struct mom_hashedvalue_st *) dispval);
@@ -619,6 +619,47 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
         }
       *endposptr = topos;
       return dispval;
+    }
+  if (curtok->mtok_kind == MOLEX_OPERITEM
+      && curtok->mtok_itm == MOM_PREDEFITM (resize))
+    {
+      topos++;
+      struct mom_item_st *gritm =
+        mom_dyncast_item (momtok_parse (tovec, topos, &topos));
+      if (!gritm)
+        MOM_FATAPRINTF ("bad item for ^resize at line %d of file %s",
+                        curtok->mtok_lin, tovec->mtv_filename);
+      int atsz = 0;
+      const void *atval = NULL;
+      if (topos < tolen && tovec->mtv_arr[topos].mtok_kind == MOLEX_INT)
+        {
+          atsz = tovec->mtv_arr[topos].mtok_int;
+          mom_item_lock (gritm);
+          gritm->itm_pcomp = mom_vectvaldata_resize (gritm->itm_pcomp, atsz);
+          mom_item_unlock (gritm);
+          *endposptr = topos;
+          return gritm;
+        }
+      else
+        atval = momtok_parse (tovec, topos, &topos);
+      unsigned atyp = mom_itype (atval);
+      if (atyp == MOMITY_BOXINT)
+        {
+          int rk = mom_boxint_val_def (atval, 0);
+          mom_item_lock (gritm);
+          gritm->itm_pcomp = mom_vectvaldata_resize (gritm->itm_pcomp, rk);
+          mom_item_unlock (gritm);
+          *endposptr = topos;
+          return gritm;
+        }
+      else if (atyp != MOMITY_NONE)
+        MOM_FATAPRINTF ("^resize of %s with bad argument %s at line %d of file %s",
+                        mom_item_cstring(gritm),
+			mom_value_cstring(atval),
+			curtok->mtok_lin, tovec->mtv_filename);
+          *endposptr = topos;
+          return gritm;
+	
     }
   MOM_FATAPRINTF ("syntax error line %d file %s", curtok->mtok_lin,
                   tovec->mtv_filename);
