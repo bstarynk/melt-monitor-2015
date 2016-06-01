@@ -224,7 +224,7 @@ momtok_tokenize (const char *filnam)
           MOM_DEBUGPRINTF (boot, "lineno#%d col#%d str %s",
                            lineno, (int) (ptok - linbuf),
                            mom_value_cstring ((const void *) bstr));
-          ptok = linbuf + (ftell (fil) - linoff);
+          ptok = linbuf + (ftell (fil) - linoff) + 1;
           fseek (fil, oldoff, SEEK_SET);
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
@@ -353,7 +353,7 @@ momtok_tokenize (const char *filnam)
       MOM_FATAPRINTF ("invalid token in file %s line %d near %s",
                       filnam, lineno, ptok);
     }
-  while (!feof (fil) && *ptok);
+  while (!feof (fil) && ptok);
   fclose (fil);
   return tovec;
 }                               /* end momtok_tokenize */
@@ -644,12 +644,17 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       topos++;
       const struct mom_boxstring_st *msgv = NULL;
       if (topos < tolen && tovec->mtv_arr[topos].mtok_kind == MOLEX_STRING)
-        msgv = tovec->mtv_arr[topos].mtok_str, topos++;
+        msgv = tovec->mtv_arr[topos].mtok_str;
       else
         MOM_FATAPRINTF
           ("^display at line %d of file %s not followed by message string",
            curtok->mtok_lin, tovec->mtv_filename);
+      MOM_DEBUGPRINTF (boot, "topos#%d msgv=%s", topos,
+                       mom_value_cstring ((void *) msgv));
+      topos++;
       const void *dispval = momtok_parse (tovec, topos, &topos);
+      MOM_DEBUGPRINTF (boot, "topos#%d dispval:%s", topos,
+                       mom_value_cstring (dispval));
       if (mom_itype (dispval) == MOMITY_ITEM)
         {
           struct mom_item_st *dispitm = mom_dyncast_item (dispval);
@@ -741,14 +746,18 @@ mom_boot_file (const char *path)
   struct momtokvect_st *tokvec = momtok_tokenize (path);
   assert (tokvec != NULL);
   int tolen = tokvec->mtv_len;
+  MOM_DEBUGPRINTF (boot, "mom_boot_file tolen=%d", tolen);
   int topos = 0;
   int nbval = 0;
   while (topos < tolen)
     {
-      MOM_DEBUGPRINTF (boot, "topos#%d before parse", topos);
-      (void) momtok_parse (tokvec, topos, &topos);
+      MOM_DEBUGPRINTF (boot, "mom_boot_file topos#%d before parse nbval#%d",
+                       topos, nbval);
+      const void *vp = momtok_parse (tokvec, topos, &topos);
+      MOM_DEBUGPRINTF (boot,
+                       "mom_boot_file topos#%d after parse nbval#%d vp:%s",
+                       topos, nbval, mom_value_cstring (vp));
       nbval++;
-      MOM_DEBUGPRINTF (boot, "topos#%d after parse nbval#%d", topos, nbval);
     };
   MOM_INFORMPRINTF ("booted file %s with %d tokens & %d values",
                     path, tolen, nbval);
