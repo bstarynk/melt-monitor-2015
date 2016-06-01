@@ -844,12 +844,6 @@ comment
 
 
 
-*nano_closure
-1464696999
-^mtime
-
-
-
 *no_assoc
 1455871773
 ^mtime
@@ -878,7 +872,6 @@ node_nth
 
 
 
-
 *node_arity
 1457430266
 ^mtime
@@ -886,6 +879,7 @@ node_nth
 comment
 "get the arity of a node, or else nil"_
 )attrs
+
 
 
 
@@ -1037,7 +1031,6 @@ comment
 
 
 
-
 *out_html
 1456812179
 ^mtime
@@ -1045,6 +1038,7 @@ comment
 comment
 "output HTML encoding"_
 )attrs
+
 
 
 
@@ -1218,7 +1212,6 @@ comment
 
 
 
-
 *payl_assovaldata_set_attrs
 1456833278
 ^mtime
@@ -1226,6 +1219,7 @@ comment
 comment
 "give the set of attributes in given item assocvaldata payload"_
 )attrs
+
 
 
 
@@ -1395,7 +1389,6 @@ comment
 
 
 
-
 *payl_hashmap_keyset
 1456897878
 ^mtime
@@ -1403,6 +1396,7 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
+
 
 
 
@@ -1564,7 +1558,6 @@ comment
 
 
 
-
 *payl_vectval_nth
 1456840222
 ^mtime
@@ -1572,6 +1565,7 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
+
 
 
 
@@ -1764,7 +1758,6 @@ comment
 
 
 
-
 *right_assoc
 1455871773
 ^mtime
@@ -1772,6 +1765,7 @@ comment
 comment
 "for right associative delimiters"_
 )attrs
+
 
 
 
@@ -1860,26 +1854,6 @@ comment
 
 
 
-*signature_closure_1int_to_void
-1453805064
-^mtime
-(
-comment
-"signature of closure with one integer formal & no results"_
-)attrs
-
-
-
-*signature_closure_void_to_void
-1453831944
-^mtime
-(
-comment
-"signature for void -> void closures"_
-)attrs
-
-
-
 *signature_displayer
 1452104741
 ^mtime
@@ -1906,35 +1880,12 @@ comment
 
 
 
-*signature_nanotaskexception
-1464696999
-^mtime
-
-
-
-*signature_nanotaskstep
-1464696999
-^mtime
-
-
-
-
 *signature_tasklet
 1446190348
 ^mtime
 (
 comment
 "signature of tasklet functions"_
-)attrs
-
-
-
-*signature_webhandler
-1461065100
-^mtime
-(
-comment
-"for quick webhandlers"_
 )attrs
 
 
@@ -1982,6 +1933,7 @@ is_string
 comment
 "to switch on items"_
 )attrs
+
 
 
 
@@ -2207,7 +2159,6 @@ comment
 
 
 
-
 *unequal
 1457365666
 ^mtime
@@ -2265,6 +2216,7 @@ comment
 comment
 "for verbatim"_
 )attrs
+
 
 
 
