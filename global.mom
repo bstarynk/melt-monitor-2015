@@ -93,16 +93,6 @@ comment
 
 
 
-*backslash_delim
-1458115026
-^mtime
-(
-comment
-"for backslash delimiter, e.g. for dive"_
-)attrs
-
-
-
 *be
 1455623664
 ^mtime
@@ -129,16 +119,6 @@ comment
 (
 comment
 "for cloning an item"_
-)attrs
-
-
-
-*comma_delim
-1453199017
-^mtime
-(
-comment
-"for , delimiter token"_
 )attrs
 
 
@@ -193,7 +173,6 @@ comment
 
 
 
-
 *dbg_red
 1457617248
 ^mtime
@@ -212,15 +191,6 @@ comment
 "for debug yellow"_
 )attrs
 
-
-
-*degree_delim
-1457522889
-^mtime
-(
-comment
-"for \u00b0, useful for verbatim"_
-)attrs
 
 
 
@@ -270,16 +240,6 @@ comment
 (
 comment
 "for diving into some item"_
-)attrs
-
-
-
-*dollar_delim
-1457958342
-^mtime
-(
-comment
-"for dollar sign"_
 )attrs
 
 
@@ -361,7 +321,6 @@ comment
 
 
 
-
 *fold_left
 1457090580
 ^mtime
@@ -399,6 +358,7 @@ comment
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 )attrs
+
 
 
 
@@ -533,7 +493,6 @@ is_scalar
 
 
 
-
 *is_atom
 1457360526
 ^mtime
@@ -571,6 +530,7 @@ comment
 comment
 "to test if argument is an integer"_
 )attrs
+
 
 
 
@@ -713,7 +673,6 @@ comment
 
 
 
-
 *iterix
 1457079401
 ^mtime
@@ -730,36 +689,6 @@ comment
 (
 comment
 "for left associative delimiters"_
-)attrs
-
-
-
-*left_brace_delim
-1453199148
-^mtime
-(
-comment
-"for { delimiter token"_
-)attrs
-
-
-
-*left_bracket_delim
-1453199107
-^mtime
-(
-comment
-"for [ delimiter token"_
-)attrs
-
-
-
-*left_paren_delim
-1453199017
-^mtime
-(
-comment
-"for ( delimiter token"_
 )attrs
 
 
@@ -781,6 +710,7 @@ comment
 comment
 "test for less or equal of two values"_
 )attrs
+
 
 
 
@@ -882,7 +812,6 @@ comment
 
 
 
-
 *node_connective
 1457430266
 ^mtime
@@ -948,6 +877,7 @@ comment
 comment
 "for disjunctions"_
 )attrs
+
 
 
 
@@ -1041,7 +971,6 @@ comment
 
 
 
-
 *out_indent
 1457095329
 ^mtime
@@ -1109,6 +1038,7 @@ comment
 comment
 "output a raw string or number"_
 )attrs
+
 
 
 
@@ -1222,7 +1152,6 @@ comment
 
 
 
-
 *payl_clear
 1456930351
 ^mtime
@@ -1298,6 +1227,7 @@ payl_hashassoc_remove
 payl_hashassoc_sorted_key_node
 )set
 )attrs
+
 
 
 
@@ -1399,7 +1329,6 @@ comment
 
 
 
-
 *payl_hashmap_put
 1456897878
 ^mtime
@@ -1475,6 +1404,7 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
+
 
 
 
@@ -1565,7 +1495,6 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
-
 
 
 
@@ -1678,22 +1607,13 @@ payl_filebuffer
 
 
 
+
 *payload_module
 1457332521
 ^mtime
 (
 comment
 "the payload module"_
-)attrs
-
-
-
-*percent_delim
-1453199017
-^mtime
-(
-comment
-"for % delimiter token"_
 )attrs
 
 
@@ -1768,53 +1688,12 @@ comment
 
 
 
-
-*right_brace_delim
-1453199148
-^mtime
-(
-comment
-"for } delimiter token"_
-)attrs
-
-
-
-*right_bracket_delim
-1453199107
-^mtime
-(
-comment
-"for ] delimiter token"_
-)attrs
-
-
-
-*right_paren_delim
-1453199017
-^mtime
-(
-comment
-"for ) delimiter token"_
-)attrs
-
-
-
 *same
 1457364041
 ^mtime
 (
 comment
 "test for identity of two values"_
-)attrs
-
-
-
-*semicolon_delim
-1453199107
-^mtime
-(
-comment
-"for ; delimiter token"_
 )attrs
 
 
@@ -1890,6 +1769,7 @@ comment
 
 
 
+
 *size
 1456761997
 ^mtime
@@ -1933,7 +1813,6 @@ is_string
 comment
 "to switch on items"_
 )attrs
-
 
 
 
@@ -2073,16 +1952,6 @@ node
 
 
 
-*tilde_delim
-1457101771
-^mtime
-(
-comment
-"for ~ delimiter, used for nil"_
-)attrs
-
-
-
 *transient
 1456994815
 ^mtime
@@ -2189,6 +2058,7 @@ comment
 
 
 
+
 *value_types
 1457963722
 ^mtime
@@ -2216,7 +2086,6 @@ comment
 comment
 "for verbatim"_
 )attrs
-
 
 
 
