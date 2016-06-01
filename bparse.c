@@ -27,18 +27,23 @@ enum momlexkind_en
   MOLEX_INT,
   MOLEX_STRING,
   MOLEX_ITEM,
+  MOLEX_OPERITEM,
 };
 
 enum momdelim_en
 {
   MODLM__NONE,
-  MODLM_LPAR, /// (
-  MODLM_RPAR, /// )
-  MODLM_LBRACE, /// {
-  MODLM_RBRACE, /// }
-  MODLM_LBRACKET, /// [
-  MODLM_RBRACKET, /// ]
-  MODLM_PERCENT, /// %
+  MODLM_LPAR,                   /// (
+  MODLM_RPAR,                   /// )
+  MODLM_LBRACE,                 /// {
+  MODLM_RBRACE,                 /// }
+  MODLM_LBRACKET,               /// [
+  MODLM_RBRACKET,               /// ]
+  MODLM_PERCENT,                /// %
+  MODLM_COMMA,                  /// ,
+  MODLM_COLON,                  /// :
+  MODLM_SLASH,                  /// /
+  MODLM_TILDE,                  /// ~
 };
 
 struct momtoken_st
@@ -56,6 +61,7 @@ struct momtoken_st
 
 struct momtokvect_st
 {
+  char *mtv_filename;
   unsigned mtv_size;
   unsigned mtv_len;
   struct momtoken_st mtv_arr[];
@@ -77,6 +83,7 @@ momtok_append (struct momtokvect_st *tvec, struct momtoken_st tok)
         mom_gc_alloc (sizeof (struct momtokvect_st) +
                       newsiz * sizeof (struct momtoken_st));
       newvec->mtv_size = newsiz;
+      newvec->mtv_filename = tvec->mtv_filename;
       if (len > 0)
         memcpy (newvec->mtv_arr, tvec->mtv_arr,
                 len * sizeof (struct momtoken_st));
@@ -114,6 +121,7 @@ momtok_tokenize (const char *filnam)
       mom_gc_alloc (sizeof (struct momtokvect_st) +
                     tosiz * sizeof (struct momtoken_st));
     tovec->mtv_size = tosiz;
+    tovec->mtv_filename = GC_STRDUP (filnam);
   }
   do
     {
@@ -172,6 +180,21 @@ momtok_tokenize (const char *filnam)
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
                                  .mtok_kind = MOLEX_ITEM,.mtok_lin =
+                                 lineno,.mtok_itm = itm});
+          continue;
+        }
+      if (*ptok == '^' && isalpha (ptok[1]))
+        {
+          const char *endnam = NULL;
+          struct mom_item_st *itm =
+            mom_find_item_from_string (ptok + 1, &endnam);
+          if (!itm)
+            MOM_FATAPRINTF ("invalid oper name near %s file %s line %d", ptok,
+                            filnam, lineno);
+          ptok = (char *) endnam;
+          tovec = momtok_append (tovec, (struct momtoken_st)
+                                 {
+                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
                                  lineno,.mtok_itm = itm});
           continue;
         }
@@ -260,6 +283,36 @@ momtok_tokenize (const char *filnam)
           ptok++;
           continue;
         }
+      if (*ptok == '/')
+        {
+          tovec =               //
+            momtok_append (tovec, (struct momtoken_st)
+                           {
+                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
+                           lineno,.mtok_delim = MODLM_SLASH});
+          ptok++;
+          continue;
+        }
+      if (*ptok == ':')
+        {
+          tovec =               //
+            momtok_append (tovec, (struct momtoken_st)
+                           {
+                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
+                           lineno,.mtok_delim = MODLM_COLON});
+          ptok++;
+          continue;
+        }
+      if (*ptok == '~')
+        {
+          tovec =               //
+            momtok_append (tovec, (struct momtoken_st)
+                           {
+                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
+                           lineno,.mtok_delim = MODLM_TILDE});
+          ptok++;
+          continue;
+        }
       MOM_FATAPRINTF ("invalid token in file %s line %d near %s",
                       filnam, lineno, ptok);
     }
@@ -267,3 +320,54 @@ momtok_tokenize (const char *filnam)
   fclose (fil);
   return tovec;
 }                               /* end momtok_tokenize */
+
+void *
+momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
+{
+  void *res = NULL;
+  assert (tovec != NULL);
+  assert (endposptr != NULL);
+  if (topos < 0 || topos >= tovec->mtv_len)
+    {
+      *endpostptr = -1;
+      return NULL;
+    }
+  struct momtoken_st *curtok = tovec->mtv_arr + topos;
+  switch (curtok->mtok_kind)
+    {
+      case MOLEX_INT;
+      res = mom_boxint_make (curtok->mtok_int);
+      *endpostptr = topos + 1;
+      return res;
+    case MOLEX_ITEM:
+      res = curtok->mtok_itm;
+      *endpostptr = topos + 1;
+      return res;
+    case MOLEX_STRING:
+      res = curtok->mtok_str;
+      *endpostptr = topos + 1;
+      return res;
+    default:
+      break;
+    }
+  if (curtok->mtok_kind == MOLEX_DELIM && curtok->mtok_delim == MODLM_LBRACE)
+    {
+      int tolen = tovec->mtv_len;
+      int ln = 0;
+      for (int ix = topos + 1;
+           ix < tolen && tovec->mtv_arr[ix].mtok_kind == = MOLEX_ITEM; ix++)
+        ln++;
+      if (topos + ln + 2 >= token
+          || tovec->mtv_arr[topos + ln + 1].mtok_kind != MOLEX_DELIM
+          || tovec->mtv_arr[topos + ln + 1].mtok_delim != MODLM_RBRACE)
+        MOM_FATAPRINTF ("invalid set starting line %d of file %s",
+                        curtok->mtok_lin, tovec->mtv_filename);
+      struct mom_item_st **itemarr =
+        mom_gc_alloc ((ln + 1) * sizeof (struct mom_item_st *));
+      for (int ix = 0; ix < ln; ix++)
+        itemarr[ix] = tovec->mtv_arr[topos + ix + 1].mtok_itm;
+      res = mom_boxset_make_arr (ln, itemarr);
+      *endpostptr = topos + ln + 2;
+      return res;
+    }
+}                               // end momtok_parse

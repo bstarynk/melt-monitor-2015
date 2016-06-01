@@ -1165,12 +1165,12 @@ mom_output_value (FILE *fout, long *plastnl,
         unsigned siz = mom_size (seq);
         for (unsigned ix = 0; ix < siz; ix++)
           {
-            if (ix > 0)
-              fputs (", ", fout);
             if (ftell (fout) > lastnl + 64)
               {
                 INDENTED_NEWLINE_MOM ();
               }
+            if (ix > 0)
+              fputc (' ', fout);
             if (ix > 0 && ix % 5 == 0)
               fputc (' ', fout);
             fputs (mom_item_cstring (seq->seqitem[ix]), fout);
@@ -1188,7 +1188,7 @@ mom_output_value (FILE *fout, long *plastnl,
           fputs (mom_item_cstring (nod->nod_connitm), fout);
           if (nod->nod_metaitem || nod->nod_metarank)
             {
-              fprintf (fout, "/%s#%ld", mom_item_cstring (nod->nod_metaitem),
+              fprintf (fout, "/%s:%ld", mom_item_cstring (nod->nod_metaitem),
                        (long) nod->nod_metarank);
             }
           if (depth > MOM_MAXDEPTH_OUT)
@@ -1199,12 +1199,12 @@ mom_output_value (FILE *fout, long *plastnl,
               unsigned siz = mom_size (nod);
               for (unsigned ix = 0; ix < siz; ix++)
                 {
-                  if (ix > 0)
-                    fputs (", ", fout);
                   if (ftell (fout) > lastnl + 64)
                     {
                       INDENTED_NEWLINE_MOM ();
                     }
+                  if (ix > 0)
+                    fputc (' ', fout);
                   if (ix > 0 && ix % 5 == 0)
                     fputc (' ', fout);
                   mom_output_value (fout, &lastnl, depth + 1,
