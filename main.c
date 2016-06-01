@@ -1,6 +1,6 @@
 // file main.c - main program and utilities
 
-/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -51,6 +51,10 @@ static unsigned count_added_predef_mom;
 #define MAX_UNPREDEF_MOM 24
 static const char *unpredefined_mom[MAX_UNPREDEF_MOM];
 static int count_unpredef_mom;
+
+#define MAX_BOOTFILE_MOM 32
+static const char *bootf_mom[MAX_BOOTFILE_MOM];
+static int count_bootf_mom;
 
 
 #define BASE_YEAR_MOM 2015
@@ -1083,6 +1087,7 @@ static const struct option mom_long_options[] = {
   {"load", required_argument, NULL, 'L'},
   {"web", required_argument, NULL, 'W'},
   {"jobs", required_argument, NULL, 'J'},
+  {"boot", required_argument, NULL, 'B'},
   {"dump", no_argument, NULL, 'd'},
   {"syslog", no_argument, NULL, 's'},
   {"skip-made-check", no_argument, NULL, xtraopt_skipmadecheck},
@@ -1109,6 +1114,7 @@ usage_mom (const char *argv0)
   printf ("Usage: %s\n", argv0);
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
+  printf ("\t -B | --boot <bootfile>" " \t# bootfile after load\n");
   printf ("\t -W | --web <webservice>"
           " \t# start a web service, e.g. localhost.localdomain:8085 or _:8085\n");
   printf ("\t -J | --jobs <nbjobs>"
@@ -1161,7 +1167,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char *commentstr = NULL;
   char *testargstr = NULL;
   char *suffix = NULL;
-  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:",
+  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:B:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -1208,6 +1214,15 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
                 ("bad number %d of jobs, should be at least 2 and less than %d",
                  n, MOM_JOB_MAX);
             mom_nbjobs = n;
+          }
+          break;
+        case 'B':              /* --boot <bootfile> */
+          {
+            if (!optarg)
+              MOM_FATAPRINTF ("--boot requires a <bootfile>");
+            if (count_bootf_mom >= MAX_BOOTFILE_MOM)
+              MOM_FATAPRINTF ("too many %d bootfiles", count_bootf_mom);
+            bootf_mom[count_bootf_mom++] = optarg;
           }
           break;
         case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
@@ -1413,6 +1428,16 @@ do_unpredefine_mom (void)
     }
 }                               /* end do_unpredefine_mom */
 
+MOM_PRIVATE void
+do_bootfile_mom (void)
+{
+  for (int ix = 0; ix < count_bootf_mom; ix++)
+    {
+      const char *booname = bootf_mom[ix];
+      mom_boot_file (booname);
+    }
+}                               /* end do_bootfile_mom */
+
 void
 momtest_comparesig (const char *arg)
 {
@@ -1535,6 +1560,8 @@ main (int argc_main, char **argv_main)
     do_add_predefined_mom ();
   if (count_unpredef_mom > 0)
     do_unpredefine_mom ();
+  if (count_bootf_mom > 0)
+    do_bootfile_mom ();
   if (outcont_count_mom > 0)
     {
       MOM_INFORMPRINTF ("will output content of %d items", outcont_count_mom);

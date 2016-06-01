@@ -2839,14 +2839,7 @@ struct mom_minedjs_st
     longjmp(_mj->miejs_jb,__LINE__);					\
   } while(0)
 
-// nanoedit related things
-struct mom_item_st *mom_nanoedit_wexitm (struct mom_item_st *taskitm);
-struct mom_item_st *mom_nanoedit_protowebstate (struct mom_item_st
-    *taskitm);
-struct mom_item_st *mom_nanoedit_thistate (struct mom_item_st *taskitm);
-
-struct mom_item_st *mom_nanoedit_delimiters (struct mom_item_st *taskitm);
-
+void mom_boot_file(const char*path);
 #ifdef __cplusplus
 };                              // end extern "C"
 #endif /*__cplusplus*/
