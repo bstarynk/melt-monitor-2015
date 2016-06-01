@@ -222,6 +222,7 @@ __attribute__ ((format (printf, 3, 4), noreturn));
   Dbg(low)					\
   Dbg(mutex)					\
   Dbg(run)					\
+  Dbg(boot)					\
   Dbg(blue)					\
   Dbg(green)					\
   Dbg(red)					\
