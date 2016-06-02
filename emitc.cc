@@ -62,10 +62,15 @@ bool mom_emit_c_code(struct mom_item_st*itm)
       return false;
     }
   MOM_DEBUGPRINTF(gencod, "mom_emit_c_code start itm=%s", mom_item_cstring(itm));
-  MomCEmitter cemit {itm};
+  errno = 0;
   try
     {
-      cemit.lock_item(itm);
+      MomCEmitter cemit {itm};
+      auto descitm = mom_unsync_item_descr(itm);
+      MOM_DEBUGPRINTF(gencod, "mom_emit_c_code descitm=%s", mom_item_cstring(descitm));
+      if (descitm != MOM_PREDEFITM(module))
+        throw MOM_RUNTIME_PRINTF("item %s has non-module descr: %s",
+                                 mom_item_cstring(itm), mom_item_cstring(descitm));
 #warning mom_emit_c_code incomplete
       MOM_FATAPRINTF("unimplemented mom_emit_c_code %s",
                      mom_item_cstring(itm));
@@ -99,6 +104,9 @@ MomCEmitter::MomCEmitter(struct mom_item_st*itm)
     _ce_vecitems {},
 _ce_setitems {}
 {
+  if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    throw MOM_RUNTIME_ERROR("non item");
+  lock_item(itm);
 } // end MomCEmitter::MomCEmitter
 
 MomCEmitter::~MomCEmitter()

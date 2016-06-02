@@ -1490,6 +1490,12 @@ int mom_item_cmp (const struct mom_item_st *itm1,
     return mom_assovaldata_get (attrs, itmat);
   }                             /* end of mom_unsync_item_get_phys_attr */
 
+  static inline struct mom_item_st*
+mom_unsync_item_descr(const struct mom_item_st *itm)
+  {
+    return mom_dyncast_item(mom_unsync_item_get_phys_attr(itm, MOM_PREDEFITM(descr)));
+  }
+
   void
   mom_unsync_item_output_payload (FILE *fout,
                                   const struct mom_item_st *itm);

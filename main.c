@@ -1491,7 +1491,7 @@ momtest_emitc (const char *arg)
         MOM_INFORMPRINTF ("momtest_emitc succeeded emitting C code for %s",
                           mom_item_cstring (itm));
       else
-        MOM_WARNPRINTF ("momtest_emitc failed emitting C code for %s",
+        MOM_FATAPRINTF ("momtest_emitc failed emitting C code for %s",
                         mom_item_cstring (itm));
     }
 }                               /* end momtest_emitc */
