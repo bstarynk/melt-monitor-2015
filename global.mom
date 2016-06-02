@@ -93,6 +93,16 @@ comment
 
 
 
+*at
+1464845393
+^mtime
+(
+comment
+"for giving something at somepoint"_
+)attrs
+
+
+
 *be
 1455623664
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *delimiter
 1452808377
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "for delimiter"_
 )attrs
-
 
 
 
@@ -351,6 +361,7 @@ comment
 
 
 
+
 *foldix_right
 1457090580
 ^mtime
@@ -358,7 +369,6 @@ comment
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 )attrs
-
 
 
 
@@ -523,6 +533,7 @@ comment
 
 
 
+
 *is_int
 1457358950
 ^mtime
@@ -530,7 +541,6 @@ comment
 comment
 "to test if argument is an integer"_
 )attrs
-
 
 
 
@@ -703,6 +713,7 @@ comment
 
 
 
+
 *less_or_equal
 1457365666
 ^mtime
@@ -710,7 +721,6 @@ comment
 comment
 "test for less or equal of two values"_
 )attrs
-
 
 
 
@@ -870,6 +880,7 @@ comment
 
 
 
+
 *or
 1455462876
 ^mtime
@@ -877,7 +888,6 @@ comment
 comment
 "for disjunctions"_
 )attrs
-
 
 
 
@@ -1031,6 +1041,7 @@ comment
 
 
 
+
 *out_raw
 1457501635
 ^mtime
@@ -1038,7 +1049,6 @@ comment
 comment
 "output a raw string or number"_
 )attrs
-
 
 
 
@@ -1212,6 +1222,7 @@ comment
 
 
 
+
 *payl_hashassoc
 1456904803
 ^mtime
@@ -1227,7 +1238,6 @@ payl_hashassoc_remove
 payl_hashassoc_sorted_key_node
 )set
 )attrs
-
 
 
 
@@ -1397,6 +1407,7 @@ comment
 
 
 
+
 *payl_hashset_remove_content
 1456855856
 ^mtime
@@ -1404,7 +1415,6 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1568,6 +1578,7 @@ comment
 
 
 
+
 *payload
 1456825494
 ^mtime
@@ -1604,7 +1615,6 @@ payl_file
 payl_filebuffer
 )tuple
 )attrs
-
 
 
 
@@ -1759,6 +1769,7 @@ comment
 
 
 
+
 *signature_loader_paren
 1446020701
 ^mtime
@@ -1766,7 +1777,6 @@ comment
 comment
 "signature of load paren functions"_
 )attrs
-
 
 
 
@@ -2048,6 +2058,7 @@ comment
 
 
 
+
 *value
 1461749593
 ^mtime
@@ -2055,7 +2066,6 @@ comment
 comment
 "for value, e.g. edition"_
 )attrs
-
 
 
 
