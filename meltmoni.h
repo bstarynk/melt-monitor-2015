@@ -2931,6 +2931,9 @@ void mom_boot_file(const char*path);
 // return true on successful emission of C code
 bool mom_emit_c_code(struct mom_item_st*itm);
 
+// return true on successful emission of JavaScript code
+bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*out);
+
 #ifdef __cplusplus
 };                              // end extern "C"
 #endif /*__cplusplus*/
