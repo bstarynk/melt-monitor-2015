@@ -27,7 +27,7 @@ static pthread_mutex_t radix_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutexattr_t item_mtxattr_mom;
 
 // radix_arr_mom is mom_gc_alloc-ed but each itemname is
-// mom_gc_alloc_atomic-ed
+// mom_gc_alloc_scalar-ed
 
 struct radixitems_mom_st;
 
@@ -255,7 +255,7 @@ put_name_radix_mom (int ix, const char *str)
   int len = (int) strlen (str);
   assert (radix_arr_mom[ix] == NULL);
   struct mom_itemname_tu *newnam =
-    mom_gc_alloc_atomic (((sizeof (struct mom_itemname_tu) + len +
+    mom_gc_alloc_scalar (((sizeof (struct mom_itemname_tu) + len +
                            2) | 3) + 1);
   newnam->itname_rank = ix;
   newnam->itname_string.va_itype = MOMITY_BOXSTRING;
@@ -1860,7 +1860,7 @@ mom_item_put_space (struct mom_item_st *itm, enum mom_space_en sp)
   if (!itm || itm == MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     return;
   pthread_mutex_lock (&itm->itm_mtx);
-  if (itm->va_ixv == (unsigned) sp)
+  if ((unsigned) itm->va_ixv == (unsigned) sp)
     goto end;
   enum mom_space_en oldsp = itm->va_ixv;
   itm->va_ixv = (uint16_t) sp;

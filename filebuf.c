@@ -213,7 +213,7 @@ mom_filebuffer_strdup (struct mom_filebuffer_st *mf, bool closeit)
   if (!b)
     return NULL;
   {
-    char *p = mom_gc_alloc_atomic (ln + 1);
+    char *p = mom_gc_alloc_scalar (ln + 1);
     memcpy (p, b, ln);
     bs = p;
   }

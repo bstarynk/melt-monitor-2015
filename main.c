@@ -441,7 +441,7 @@ mom_input_quoted_utf8 (FILE *f)
       if (MOM_UNLIKELY (bufoff + 9 >= bufsiz))
         {
           int newsiz = ((6 * bufsiz / 5 + 30) | 0x1f) + 1;
-          char *newbuf = mom_gc_alloc_atomic (newsiz);
+          char *newbuf = mom_gc_alloc_scalar (newsiz);
           memcpy (newbuf, bufzon, bufoff);
           if (bufzon != bufarr)
             GC_FREE (bufzon);
@@ -535,7 +535,7 @@ mom_input_quoted_utf8 (FILE *f)
         }
     }
   while (!feof (f));
-  char *res = mom_gc_alloc_atomic (bufoff + 1);
+  char *res = mom_gc_alloc_scalar (bufoff + 1);
   memcpy (res, bufzon, bufoff);
   if (bufzon != bufarr)
     GC_FREE (bufzon);

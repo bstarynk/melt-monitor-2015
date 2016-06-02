@@ -85,7 +85,7 @@ const struct mom_boxint_st *
 mom_boxint_make (intptr_t i)
 {
   struct mom_boxint_st *bi =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxint_st));
+    mom_gc_alloc_scalar (sizeof (struct mom_boxint_st));
   bi->va_itype = MOMITY_BOXINT;
   bi->hva_hash = mom_int_hash (i);
   bi->boxi_int = i;
@@ -101,7 +101,7 @@ mom_boxstring_make (const char *s)
   if (l >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too long %d boxed string %.60s", l, s);
   struct mom_boxstring_st *bs =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + l);
+    mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + l);
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_hsiz = l >> 16;
   bs->va_lsiz = l & 0xffff;
@@ -126,7 +126,7 @@ mom_boxstring_make_len (const char *s, int len)
         break;
       };
   struct mom_boxstring_st *bs =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxstring_st) + (len));
+    mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + (len));
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_hsiz = len >> 16;
   bs->va_lsiz = len & 0xffff;
@@ -187,7 +187,7 @@ const struct mom_boxdouble_st *
 mom_boxdouble_make (double x)
 {
   struct mom_boxdouble_st *bd =
-    mom_gc_alloc_atomic (sizeof (struct mom_boxdouble_st));
+    mom_gc_alloc_scalar (sizeof (struct mom_boxdouble_st));
   bd->va_itype = MOMITY_BOXDOUBLE;
   bd->hva_hash = mom_double_hash (x);
   bd->boxd_dbl = x;

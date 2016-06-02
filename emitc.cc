@@ -1,0 +1,101 @@
+// file emitc.cc - Emit C code
+
+/**   Copyright (C)  2016  Basile Starynkevitch and later the FSF
+    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+    This file is part of GCC.
+
+    GCC is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3, or (at your option)
+    any later version.
+
+    GCC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with GCC; see the file COPYING3.   If not see
+    <http://www.gnu.org/licenses/>.
+**/
+
+#include "meltmoni.h"
+
+#include <vector>
+#include <map>
+#include <set>
+#include <algorithm>
+#include <functional>
+#include <gc/gc_allocator.h>
+
+
+class MomCEmitter
+{
+  friend bool mom_emit_c_code(struct mom_item_st*itm);
+  static unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
+  const unsigned _ce_magic;			      // always MAGIC
+  struct mom_item_st* _ce_topitm;
+  std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_vecitems;
+  std::set<struct mom_item_st*,MomItemLess,traceable_allocator<struct mom_item_st*>> _ce_setitems;
+  void lock_item(struct mom_item_st*itm)
+  {
+    if (itm && itm != MOM_EMPTY_SLOT && itm->va_itype == MOMITY_ITEM
+        && _ce_setitems.find(itm)==_ce_setitems.end())
+      {
+        _ce_vecitems.push_back(itm);
+        _ce_setitems.insert(itm);
+        mom_item_lock(itm);
+      }
+  };
+public:
+  MomCEmitter(struct mom_item_st*itm);
+  MomCEmitter(const MomCEmitter&) = delete;
+  ~MomCEmitter();
+};				// end class MomCEmitter
+
+bool mom_emit_c_code(struct mom_item_st*itm)
+{
+  if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    {
+      MOM_WARNPRINTF("invalid item for mom_emit_c_code");
+      return false;
+    }
+  MomCEmitter cemit {itm};
+  try
+    {
+      cemit.lock_item(itm);
+#warning mom_emit_c_code incomplete
+      return true;
+    }
+  catch (const MomRuntimeErrorAt& e)
+    {
+      MOM_WARNPRINTF_AT(e.file(), e.lineno(),
+                        "mom_emit_c_code %s failed with MOM runtime exception %s",
+                        mom_item_cstring(itm), e.what());
+      return false;
+    }
+  catch (const std::exception& e)
+    {
+      MOM_WARNPRINTF("mom_emit_c_code %s failed with exception %s",
+                     mom_item_cstring(itm), e.what());
+      return false;
+    }
+  catch (...)
+    {
+      MOM_WARNPRINTF("mom_emit_c_code %s failed",
+                     mom_item_cstring(itm));
+      return false;
+    }
+} // end of mom_emit_c_code
+
+
+MomCEmitter::MomCEmitter(struct mom_item_st*itm)
+  : _ce_magic(MAGIC),
+    _ce_topitm(itm),
+    _ce_vecitems {},
+_ce_setitems {}
+{
+} // end MomCEmitter::MomCEmitter
+
+MomCEmitter::~MomCEmitter()
+{
+} // end MomCEmitter::~MomCEmitter
