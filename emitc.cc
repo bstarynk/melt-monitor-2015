@@ -57,6 +57,7 @@ public:
       }
   };
   void scan_top_module(void);
+  void scan_module_element(struct mom_item_st*itm);
   void todo(const todofun_t& tf)
   {
     _ce_todoque.push_back(tf);
@@ -223,6 +224,8 @@ _ce_setitems {}
   lock_item(itm);
 } // end MomEmitter::MomEmitter
 
+
+
 void MomEmitter::scan_top_module(void)
 {
   auto descitm = mom_unsync_item_descr(_ce_topitm);
@@ -233,7 +236,36 @@ void MomEmitter::scan_top_module(void)
   if (descitm != MOM_PREDEFITM(module))
     throw MOM_RUNTIME_PRINTF("item %s has non-module descr: %s",
                              mom_item_cstring(_ce_topitm), mom_item_cstring(descitm));
-}
+  auto modulev = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(module));
+  MOM_DEBUGPRINTF(gencod, "scan_top_module %s modulev %s",
+                  kindname(),
+                  mom_value_cstring(modulev));
+  auto modulseq = mom_dyncast_seqitems (modulev);
+  if (!modulseq)
+    throw MOM_RUNTIME_PRINTF("item %s with bad module:%s",
+                             mom_item_cstring(_ce_topitm), mom_value_cstring(modulev));
+  unsigned nbmodelem = mom_seqitems_length(modulseq);
+  auto itemsarr = mom_seqitems_arr(modulseq);
+  for (unsigned ix=0; ix<nbmodelem; ix++)
+    {
+      auto curitm = itemsarr[ix];
+      if (curitm==nullptr) continue;
+      assert (mom_itype(curitm)==MOMITY_ITEM);
+      lock_item(curitm);
+      todo([=](MomEmitter*em)
+      {
+        em->scan_module_element(curitm);
+      });
+    }
+} // end of MomEmitter::scan_top_module
+
+void MomEmitter::scan_module_element(struct mom_item_st*elitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s elitm=%s",
+                  kindname(),
+                  mom_item_cstring(_ce_topitm),
+                  mom_item_cstring(elitm));
+} // end of MomEmitter::scan_module_element
 
 MomEmitter::~MomEmitter()
 {

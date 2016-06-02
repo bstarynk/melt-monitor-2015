@@ -74,18 +74,6 @@ public:
     _mre_file=nullptr;
     _mre_line=0;
   };
-  virtual const char*what() const noexcept
-  {
-    std::string w = std::runtime_error::what();
-    w += (" (");
-    w += _mre_file?_mre_file:"??";
-    w += ":";
-    char libuf[16];
-    snprintf(libuf, sizeof(libuf), "%d", _mre_line);
-    w += libuf;
-    w += ")";
-    return GC_STRDUP(w.c_str());
-  };
 };
 #define MOM_RUNTIME_ERROR(Msg) MomRuntimeErrorAt(__FILE__,__LINE__,Msg)
 #define MOM_RUNTIME_LOG_AT_BIS(Fil,Lin,Log) MomRuntimeErrorAt(Fil,Lin,({std::ostringstream log_#Lin; log_#Lin<<Log; log_#Lin;}))
