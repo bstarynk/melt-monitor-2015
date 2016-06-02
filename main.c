@@ -33,6 +33,7 @@ volatile atomic_bool mom_should_run;
 #define MOM_DEFAULT_NB_JOBS 3
 unsigned mom_nbjobs = MOM_DEFAULT_NB_JOBS;
 static bool syslogging_mom;
+static bool should_run_mom;
 static bool should_dump_mom;
 static bool skipmadecheck_mom;
 static char *dir_after_load_mom;
@@ -1128,6 +1129,7 @@ usage_mom (const char *argv0)
     printf (" %s", mom_debug_names[ix]);
   putchar ('\n');
   printf ("\t -L | --load statefile" " \t#Load a state \n");
+  printf ("\t -R | --run" " \t#forcibly run\n");
   printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
   printf ("\t --chdir-after-load dirpath"
           " \t#Change directory after load\n");
@@ -1167,7 +1169,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char *commentstr = NULL;
   char *testargstr = NULL;
   char *suffix = NULL;
-  while ((opt = getopt_long (argc, argv, "hVdsD:L:W:J:B:",
+  while ((opt = getopt_long (argc, argv, "hVdsRD:L:W:J:B:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -1187,6 +1189,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           if (!optarg)
             MOM_FATAPRINTF ("missing web service");
           web_service_mom = optarg;
+          break;
+        case 'R':              /* --run */
+          should_run_mom = true;
           break;
         case 'd':              /* --dump */
           should_dump_mom = true;
@@ -1595,13 +1600,20 @@ main (int argc_main, char **argv_main)
         }
     }
   long nbwaitloop = 0;
-  while (atomic_load (&mom_should_run))
+  if (count_bootf_mom == 0 || should_run_mom)
     {
-      usleep ((MOM_IS_DEBUGGING (run) ? 4500 : 200) * 1000);
-      nbwaitloop++;
-      MOM_DEBUGPRINTF (run, "waiting while should run nbwaitloop=%ld",
-                       nbwaitloop);
+      MOM_INFORMPRINTF ("before running");
+      while (atomic_load (&mom_should_run))
+        {
+          usleep ((MOM_IS_DEBUGGING (run) ? 4500 : 200) * 1000);
+          nbwaitloop++;
+          MOM_DEBUGPRINTF (run, "waiting while should run nbwaitloop=%ld",
+                           nbwaitloop);
+        }
+      MOM_INFORMPRINTF ("after running %ld loops", nbwaitloop);
     }
+  else
+    MOM_INFORMPRINTF ("booted %d files and don't run", count_bootf_mom);
   usleep (10 * 1000);
   MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
   if (should_dump_mom)
