@@ -1582,7 +1582,7 @@ struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemname_tu
 static inline struct mom_item_st *mom_clone_item (const struct mom_item_st
     *itm)
 {
-  if (itm && itm != MOM_EMPTY_SLOT)
+  if (itm && itm != MOM_EMPTY_SLOT && itm->va_itype==MOMITY_ITEM)
     return mom_clone_item_from_radix (itm->itm_radix);
   return NULL;
 }

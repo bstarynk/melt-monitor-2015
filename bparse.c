@@ -67,6 +67,90 @@ struct momtokvect_st
   struct momtoken_st mtv_arr[];
 };
 
+const char *
+momtok_gcstr (struct momtoken_st *ptok)
+{
+  if (!ptok)
+    return "~";
+  if (ptok == MOM_EMPTY_SLOT)
+    return "??";
+  char *buf = NULL;
+  size_t bufsiz = 0;
+  FILE *f = open_memstream (&buf, &bufsiz);
+  if (MOM_UNLIKELY (!f))
+    MOM_FATAPRINTF ("open_memstream failed for momtok_cstr");
+  switch (ptok->mtok_kind)
+    {
+    case MOLEX__NONE:
+      MOM_FATAPRINTF ("bad ptok@%p", (void *) ptok);
+    case MOLEX_DELIM:
+      {
+        fprintf (f, "delim @%d ", ptok->mtok_lin);
+        switch (ptok->mtok_delim)
+          {
+          case MODLM__NONE:
+            MOM_FATAPRINTF ("no delim @%p", (void *) ptok);
+          case MODLM_LPAR:
+            fputs ("LPAR      (", f);
+            break;
+          case MODLM_RPAR:
+            fputs ("RPAR      )", f);
+            break;
+          case MODLM_LBRACE:
+            fputs ("LBRACE    {", f);
+            break;
+          case MODLM_RBRACE:
+            fputs ("RBRACE    }", f);
+            break;
+          case MODLM_LBRACKET:
+            fputs ("LBRACKET  [", f);
+            break;
+          case MODLM_RBRACKET:
+            fputs ("RBRACKET  ]", f);
+            break;
+          case MODLM_PERCENT:
+            fputs ("PERCENT   %", f);
+            break;
+          case MODLM_COMMA:
+            fputs ("COMMA     ,", f);
+            break;
+          case MODLM_COLON:
+            fputs ("COLON     :", f);
+            break;
+          case MODLM_SLASH:
+            fputs ("SLASH     /", f);
+            break;
+          case MODLM_TILDE:
+            fputs ("TILDE     ~", f);
+            break;
+          }
+      }
+      break;
+    case MOLEX_INT:
+      fprintf (f, "int @%d: %lld", ptok->mtok_lin,
+               (long long) ptok->mtok_int);
+      break;
+    case MOLEX_STRING:
+      fprintf (f, "string @%d: ", ptok->mtok_lin);
+      long lastnl = ftell (f);
+      mom_output_value (f, &lastnl, 0,
+                        (const struct mom_hashedvalue_st *) ptok->mtok_str);
+      break;
+    case MOLEX_ITEM:
+      fprintf (f, "item @%d: %s", ptok->mtok_lin,
+               mom_item_cstring (ptok->mtok_itm));
+      break;
+    case MOLEX_OPERITEM:
+      fprintf (f, "operitem @%d: %s", ptok->mtok_lin,
+               mom_item_cstring (ptok->mtok_itm));
+      break;
+    }
+  fflush (f);
+  char *res = GC_STRDUP (buf);
+  free (buf), buf = 0;
+  return res;
+}                               /* end of momtok_gcstr */
+
 struct momtokvect_st *
 momtok_append (struct momtokvect_st *tvec, struct momtoken_st tok)
 {
@@ -192,6 +276,28 @@ momtok_tokenize (const char *filnam)
                                  {
                                  .mtok_kind = MOLEX_ITEM,.mtok_lin =
                                  lineno,.mtok_itm = itm});
+          continue;
+        }
+      if (*ptok == '?' && isalpha (ptok[1]))
+        {
+          const char *endnam = NULL;
+          struct mom_item_st *itm =
+            mom_find_item_from_string (ptok + 1, &endnam);
+          MOM_DEBUGPRINTF (boot, "lineno#%d col#%d clone itm=%s",
+                           lineno, (int) (ptok - linbuf),
+                           mom_item_cstring (itm));
+          if (!itm)
+            MOM_FATAPRINTF ("invalid name to clone near %s file %s line %d",
+                            ptok, filnam, lineno);
+          ptok = (char *) endnam;
+          struct mom_item_st *clitm = mom_clone_item (itm);
+          MOM_DEBUGPRINTF (boot, "lineno#%d col#%d cloned itm=%s is %s",
+                           lineno, (int) (ptok - linbuf),
+                           mom_item_cstring (itm), mom_item_cstring (clitm));
+          tovec = momtok_append (tovec, (struct momtoken_st)
+                                 {
+                                 .mtok_kind = MOLEX_ITEM,.mtok_lin =
+                                 lineno,.mtok_itm = clitm});
           continue;
         }
       if (*ptok == '^' && isalpha (ptok[1]))
@@ -372,6 +478,8 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       return NULL;
     }
   struct momtoken_st *curtok = tovec->mtv_arr + topos;
+  MOM_DEBUGPRINTF (boot, "momtok_parse file %s topos#%d curtok: %s",
+                   tovec->mtv_filename, topos, momtok_gcstr (curtok));
   switch (curtok->mtok_kind)
     {
     case MOLEX_INT:
@@ -917,7 +1025,14 @@ mom_boot_file (const char *path)
   struct momtokvect_st *tokvec = momtok_tokenize (path);
   assert (tokvec != NULL);
   int tolen = tokvec->mtv_len;
-  MOM_DEBUGPRINTF (boot, "mom_boot_file tolen=%d", tolen);
+  MOM_DEBUGPRINTF (boot, "mom_boot_file file %s tolen=%d",
+                   tokvec->mtv_filename, tolen);
+  if (MOM_IS_DEBUGGING (boot))
+    {
+      for (int ix = 0; ix < tolen; ix++)
+        MOM_DEBUGPRINTF (boot, "token#%d: %s",
+                         ix, momtok_gcstr (tokvec->mtv_arr + ix));
+    }
   int topos = 0;
   int nbval = 0;
   while (topos < tolen)

@@ -52,6 +52,8 @@ public:
   ~MomCEmitter();
 };				// end class MomCEmitter
 
+
+
 bool mom_emit_c_code(struct mom_item_st*itm)
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)

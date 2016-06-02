@@ -1,0 +1,8 @@
+# file cmod0.mb -*- indented-text -*-
+
+^item !tiny_module (
+   ^at comment "our tiny_module from cmod0.mb"
+)
+
+
+^display "final tiny_module:" tiny_module
