@@ -61,6 +61,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
       MOM_WARNPRINTF("invalid item for mom_emit_c_code");
       return false;
     }
+  MOM_DEBUGPRINTF(gencod, "mom_emit_c_code start itm=%s", mom_item_cstring(itm));
   MomCEmitter cemit {itm};
   try
     {

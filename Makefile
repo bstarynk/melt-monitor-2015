@@ -112,4 +112,4 @@ modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
 
 tests: monimelt global.mom
-	./monimelt -Dboot,gencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
+	+ ./monimelt -Dboot,gencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
