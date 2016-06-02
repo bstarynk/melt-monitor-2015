@@ -87,7 +87,12 @@ public:
     return GC_STRDUP(w.c_str());
   };
 };
-#define MOM_RUNTIME_ERROR(X) MomRuntimeErrorAt(__FILE__,__LINE__,X)
+#define MOM_RUNTIME_ERROR(Msg) MomRuntimeErrorAt(__FILE__,__LINE__,Msg)
+#define MOM_RUNTIME_LOG_AT_BIS(Fil,Lin,Log) MomRuntimeErrorAt(Fil,Lin,({std::ostringstream log_#Lin; log_#Lin<<Log; log_#Lin;}))
+#define MOM_RUNTIME_LOG_AT(Fil,Lin,Log) \
+  MOM_RUNTIME_ERROR_LOG_AT_BIS(Fil,Lin,Log)
+#define MOM_RUNTIME_LOG(Log) MOM_RUNTIME_ERROR_LOG_AT(__FILE__,__LINE___,Log)
+#define MOM_RUNTIME_PRINTF(Fmt,...) MomRuntimeErrorAt(__FILE__,__LINE__,mom_gc_printf(Fmt,__VA_ARGS__))
 extern "C"
 {
 #else
@@ -725,6 +730,8 @@ int mom_item_cmp (const struct mom_item_st *itm1,
   __attribute__ ((format (printf, 1, 2)));
 
 
+  const char* mom_gc_printf(const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
 #define MOM_SEQITEMS_FIELDS						\
   MOM_HASHEDVALUE_FIELDS;						\
@@ -2915,6 +2922,7 @@ struct mom_minedjs_st
 
 void mom_boot_file(const char*path);
 
+// return true on successful emission of C code
 bool mom_emit_c_code(struct mom_item_st*itm);
 
 #ifdef __cplusplus

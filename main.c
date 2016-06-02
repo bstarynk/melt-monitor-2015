@@ -143,6 +143,29 @@ mom_output_gplv3_notice (FILE *out, const char *prefix, const char *suffix,
 
 
 
+const char *
+mom_gc_printf (const char *fmt, ...)
+{
+  char *buf = NULL;
+  const char *res = NULL;
+  char smallbuf[80];
+  memset (smallbuf, 0, sizeof (smallbuf));
+  va_list args;
+  va_start (args, fmt);
+  if (vsnprintf (smallbuf, sizeof (smallbuf), fmt, args)
+      < (int) sizeof (smallbuf))
+    res = GC_STRDUP (smallbuf);
+  else
+    vasprintf (&buf, fmt, args);
+  va_end (args);
+  if (!res && buf)
+    {
+      res = GC_STRDUP (buf);
+      free (buf);
+    }
+  return res;
+}                               /* end of mom_gc_printf */
+
 void
 mom_output_utf8_escaped (FILE *f, const char *str, int len,
                          mom_utf8escape_sig_t * rout, void *clientdata)
@@ -1450,6 +1473,28 @@ momtest_comparesig (const char *arg)
   MOM_FATAPRINTF ("missing momtest_comparesig arg=%s", arg);
 #warning momtest_comparesig missing
 }                               /* end of momtest_comparesig */
+
+
+void
+momtest_emitc (const char *arg)
+{
+  MOM_INFORMPRINTF ("start momtest_emitc arg=%s", arg);
+  struct mom_item_st *itm = mom_find_item_by_string (arg);
+  if (!itm)
+    MOM_WARNPRINTF ("momtest_emitc no item for arg=%s", arg);
+  else
+    {
+      MOM_INFORMPRINTF ("momtest_emitc before emitting C code for %s",
+                        mom_item_cstring (itm));
+      bool ok = mom_emit_c_code (itm);
+      if (ok)
+        MOM_INFORMPRINTF ("momtest_emitc succeeded emitting C code for %s",
+                          mom_item_cstring (itm));
+      else
+        MOM_WARNPRINTF ("momtest_emitc failed emitting C code for %s",
+                        mom_item_cstring (itm));
+    }
+}                               /* end momtest_emitc */
 
 
 MOM_PRIVATE void

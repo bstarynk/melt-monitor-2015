@@ -64,6 +64,8 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     {
       cemit.lock_item(itm);
 #warning mom_emit_c_code incomplete
+      MOM_FATAPRINTF("unimplemented mom_emit_c_code %s",
+                     mom_item_cstring(itm));
       return true;
     }
   catch (const MomRuntimeErrorAt& e)
@@ -98,4 +100,9 @@ _ce_setitems {}
 
 MomCEmitter::~MomCEmitter()
 {
+  int nbit = _ce_vecitems.size();
+  for (int ix=nbit-1; ix>=0; ix--)
+    mom_item_unlock(_ce_vecitems[ix]);
+  _ce_vecitems.clear();
+  _ce_setitems.clear();
 } // end MomCEmitter::~MomCEmitter
