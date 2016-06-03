@@ -129,6 +129,27 @@ public:
       };
     _ce_envstack.pop_back();
   }
+  /// for automatic push/pop of a fresh varenv, declare in a block :
+  ///    LocalVars lv{this};
+  /// or
+  ///    LocalVars lv{this,orig};
+  class LocalVars
+  {
+    MomEmitter* _locem;
+    LocalVars(MomEmitter*me,void*orig=nullptr) : _locem(me)
+    {
+      assert(me!=nullptr);
+      me->push_fresh_varenv(orig);
+    };
+    ~LocalVars()
+    {
+      assert (_locem != nullptr);
+      _locem->pop_varenv();
+      _locem=nullptr;
+    }
+    LocalVars(const LocalVars&) = delete;
+    LocalVars(LocalVars&&) = delete;
+  };
   EnvElem& top_varenv(int lin=0)
   {
     auto sz = _ce_envstack.size();
