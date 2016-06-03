@@ -3,6 +3,8 @@
 ^item !tiny_module (
    ^at comment "our tiny_module from cmod0.mb"
    ^at descr module
+   ^at module [
+   ]
 )
 
 

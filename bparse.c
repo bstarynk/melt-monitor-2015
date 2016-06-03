@@ -26,6 +26,7 @@ enum momlexkind_en
   MOLEX_DELIM,
   MOLEX_INT,
   MOLEX_STRING,
+  MOLEX_NAMESTR,
   MOLEX_ITEM,
   MOLEX_OPERITEM,
 };
@@ -62,6 +63,7 @@ struct momtoken_st
 struct momtokvect_st
 {
   char *mtv_filename;
+  struct mom_hashassoc_st *mtv_dict;
   unsigned mtv_size;
   unsigned mtv_len;
   struct momtoken_st mtv_arr[];
@@ -131,10 +133,20 @@ momtok_gcstr (struct momtoken_st *ptok)
                (long long) ptok->mtok_int);
       break;
     case MOLEX_STRING:
-      fprintf (f, "string @%d: ", ptok->mtok_lin);
-      long lastnl = ftell (f);
-      mom_output_value (f, &lastnl, 0,
-                        (const struct mom_hashedvalue_st *) ptok->mtok_str);
+      {
+        fprintf (f, "string @%d: ", ptok->mtok_lin);
+        long lastnl = ftell (f);
+        mom_output_value (f, &lastnl, 0,
+                          (const struct mom_hashedvalue_st *) ptok->mtok_str);
+      }
+      break;
+    case MOLEX_NAMESTR:
+      {
+        fprintf (f, "namestr @%d: ", ptok->mtok_lin);
+        long lastnl = ftell (f);
+        mom_output_value (f, &lastnl, 0,
+                          (const struct mom_hashedvalue_st *) ptok->mtok_str);
+      }
       break;
     case MOLEX_ITEM:
       fprintf (f, "item @%d: %s", ptok->mtok_lin,
@@ -243,7 +255,7 @@ momtok_tokenize (const char *filnam)
               continue;
             }
         };
-      if (isalpha (*ptok))
+      if (isalpha (*ptok))      /// 'foo1' is an item
         {
           const char *endnam = NULL;
           struct mom_item_st *itm = mom_find_item_from_string (ptok, &endnam);
@@ -260,7 +272,7 @@ momtok_tokenize (const char *filnam)
                                  lineno,.mtok_itm = itm});
           continue;
         }
-      if (*ptok == '!' && isalpha (ptok[1]))
+      if (*ptok == '!' && isalpha (ptok[1]))    /// '!foo2' is a made item
         {
           const char *endnam = NULL;
           struct mom_item_st *itm =
@@ -278,7 +290,27 @@ momtok_tokenize (const char *filnam)
                                  lineno,.mtok_itm = itm});
           continue;
         }
-      if (*ptok == '?' && isalpha (ptok[1]))
+      if (*ptok == '$' && isalpha (ptok[1]))    //// '$xy2z' is a name
+        {
+          const char *endnam = ptok + 1;
+          while (isalnum (*endnam))
+            endnam++;
+          MOM_DEBUGPRINTF (boot, "lineno#%d col#%d name '%*s'",
+                           lineno, (int) (ptok - linbuf),
+                           (int) (endnam - (ptok + 1)), ptok);
+          ptok = (char *) endnam;
+          tovec = momtok_append (tovec, (struct momtoken_st)
+                                 {
+                                 .mtok_kind = MOLEX_NAMESTR,    //
+                                 .mtok_lin = lineno,    //
+                                 .mtok_str = mom_boxstring_make_len (ptok + 1,
+                                                                     (int)
+                                                                     (endnam -
+                                                                      (ptok +
+                                                                       1)))});
+          continue;
+        }
+      if (*ptok == '?' && isalpha (ptok[1]))    //// '?abc1' is a cloned item
         {
           const char *endnam = NULL;
           struct mom_item_st *itm =
@@ -676,6 +708,17 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
                        mom_value_cstring (res));
       *endposptr = topos + 1;
       return res;
+    case MOLEX_NAMESTR:
+      {
+        res =
+          mom_hashassoc_get (tovec->mtv_dict,
+                             (const void *) curtok->mtok_str);
+        MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d name %s is %s", topos,
+                         mom_value_cstring ((const void *) curtok->mtok_str),
+                         mom_value_cstring (res));
+        *endposptr = topos + 1;
+        return res;
+      }
     default:
       break;
     }
@@ -860,6 +903,32 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
                         mom_value_cstring (atval));
       *endposptr = topos;
       return NULL;
+    }
+  if (curtok->mtok_kind == MOLEX_OPERITEM
+      && curtok->mtok_itm == MOM_PREDEFITM (name))
+    {
+      topos++;
+      const struct mom_boxstring_st *namstr = NULL;
+      if (topos < tolen && tovec->mtv_arr[topos].mtok_kind == MOLEX_NAMESTR)
+        namstr = tovec->mtv_arr[topos].mtok_str;
+      else
+        MOM_FATAPRINTF
+          ("bad ^name (expecting $SOMENAME) at line %d of file %s",
+           curtok->mtok_lin, tovec->mtv_filename);
+      topos++;
+      const void *nval = momtok_parse (tovec, topos, &topos);
+      if (!nval)
+        MOM_FATAPRINTF ("^name %s bound to nil at line %d of file %s",
+                        mom_value_cstring ((const void *) namstr),
+                        curtok->mtok_lin, tovec->mtv_filename);
+      tovec->mtv_dict =
+        mom_hashassoc_put (tovec->mtv_dict, (const void *) namstr, nval);
+      MOM_DEBUGPRINTF (boot,
+                       "momtok_parse bound name %s to value %s topos#%d",
+                       mom_value_cstring ((const void *) namstr),
+                       mom_value_cstring (nval), topos);
+      *endposptr = topos;
+      return nval;
     }
   if (curtok->mtok_kind == MOLEX_OPERITEM
       && curtok->mtok_itm == MOM_PREDEFITM (put))
