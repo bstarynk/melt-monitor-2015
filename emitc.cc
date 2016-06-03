@@ -34,8 +34,70 @@ class MomEmitter
 {
 public:
   typedef std::function<void(MomEmitter*)> todofun_t;
-  typedef std::set<struct mom_item_st*,MomItemLess,traceable_allocator<struct mom_item_st*>>
-        traced_set_items_t;
+  typedef std::set<const struct mom_item_st*,
+    MomItemLess,
+    traceable_allocator<struct mom_item_st*>>
+                                           traced_set_items_t;
+  struct vardef_st
+  {
+    const void* vd_role;
+    const void* vd_what;
+    intptr_t vd_rank;
+  };
+  typedef std::map<const struct mom_item_st*,
+    vardef_st,
+    MomItemLess,
+    traceable_allocator<struct mom_item_st*>>
+                                           traced_varmap_t;
+  class EnvElem
+  {
+  public:
+    traced_varmap_t _ee_map;
+    void* _ee_orig;
+    intptr_t _ee_rank;
+    EnvElem(void*orig=nullptr, intptr_t rank=0) : _ee_map {}, _ee_orig(orig), _ee_rank(rank) {};
+    EnvElem(const EnvElem&) = default;
+    EnvElem(EnvElem&&) = default;
+    ~EnvElem() = default;
+    bool is_bound(struct mom_item_st*itm) const
+    {
+      return mom_itype(itm) == MOMITY_ITEM && _ee_map.find(itm) != _ee_map.end();
+    };
+    void bind(struct mom_item_st*itm, const void*role, const void*what=nullptr, intptr_t rank=0)
+    {
+      if (mom_itype(itm) == MOMITY_ITEM)
+        _ee_map.emplace(itm,vardef_st {role,what,rank});
+    }
+    void bind(struct mom_item_st*itm, const vardef_st&def)
+    {
+      if (mom_itype(itm) == MOMITY_ITEM)
+        _ee_map.emplace(itm,def);
+    }
+    void unbind(struct mom_item_st*itm)
+    {
+      if (mom_itype(itm) == MOMITY_ITEM)
+        _ee_map.erase(itm);
+    }
+    const vardef_st* get_binding(struct mom_item_st*itm) const
+    {
+      if (mom_itype(itm) == MOMITY_ITEM)
+        {
+          auto it =  _ee_map.find(itm);
+          if (it == _ee_map.end())
+            return nullptr;
+          else return &it->second;
+        }
+      else return nullptr;
+    }
+    void*orig(void) const
+    {
+      return _ee_orig;
+    };
+    intptr_t rank(void) const
+    {
+      return _ee_rank;
+    };
+  }; // end class EnvElem
 private:
   const unsigned _ce_magic;
   struct mom_item_st* _ce_topitm;
@@ -53,8 +115,8 @@ protected:
 public:
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
-{
-    if (itm && itm != MOM_EMPTY_SLOT && itm->va_itype == MOMITY_ITEM
+  {
+    if (mom_itype(itm) == MOMITY_ITEM
         && _ce_setlockeditems.find(itm)==_ce_setlockeditems.end())
       {
         _ce_veclockeditems.push_back(itm);
@@ -62,6 +124,12 @@ public:
         mom_item_lock(itm);
       }
   };
+  bool is_locked_item(struct  mom_item_st*itm)
+  {
+    if (mom_itype(itm) == MOMITY_ITEM)
+      return _ce_setlockeditems.find(itm) != _ce_setlockeditems.end();
+    return false;
+  }
   void scan_top_module(void);
   void scan_module_element(struct mom_item_st*itm);
   void todo(const todofun_t& tf)
@@ -330,6 +398,7 @@ void
 MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
+  assert (is_locked_item(fuitm));
 #warning MomEmitter::scan_func_element unimplemented
   MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end  MomEmitter::scan_func_element

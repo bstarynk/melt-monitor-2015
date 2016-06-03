@@ -1,9 +1,15 @@
 # file cmod0.mb -*- indented-text -*-
 
+^item !tiny_func (
+   ^at comment "our tiny_func from cmod0.mb"
+   ^at descr func
+)
+
 ^item !tiny_module (
    ^at comment "our tiny_module from cmod0.mb"
    ^at descr module
    ^at module [
+     tiny_func
    ]
 )
 

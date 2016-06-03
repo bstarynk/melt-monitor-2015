@@ -520,7 +520,7 @@ int mom_item_cmp (const struct mom_item_st *itm1,
 #ifdef __cplusplus
   struct MomItemLess
   {
-    bool operator () (const struct mom_item_st*itm1, const struct mom_item_st*itm2)
+    bool operator () (const struct mom_item_st* itm1, const struct mom_item_st* itm2) const
     {
       return ::mom_item_cmp(itm1, itm2)<0;
     }
