@@ -259,13 +259,34 @@ void MomEmitter::scan_top_module(void)
     }
 } // end of MomEmitter::scan_top_module
 
+
 void MomEmitter::scan_module_element(struct mom_item_st*elitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s elitm=%s",
+  struct mom_item_st*descitm = mom_unsync_item_descr(elitm);
+  MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s elitm=%s descitm=%s",
                   kindname(),
                   mom_item_cstring(_ce_topitm),
-                  mom_item_cstring(elitm));
+                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+  if (!descitm)
+    throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
+#define NBMODELEMDESC_MOM 31
+#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
+	  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasedesc; foundcase_##Nam
+    switch (descitm->hva_hash % NBMODELEMDESC_MOM)
+      {
+      case CASE_DESCR_MOM (data):
+      case CASE_DESCR_MOM (func):
+      case CASE_DESCR_MOM (routine):
+      defaultcasedesc:
+      default:
+	throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
+				 mom_item_cstring(elitm), mom_item_cstring(descitm));
+      };
+    #undef NBMODELEMDESC_MOM
+    #undef CASE_DESCR_MOM
 } // end of MomEmitter::scan_module_element
+
 
 MomEmitter::~MomEmitter()
 {

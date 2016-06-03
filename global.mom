@@ -153,6 +153,16 @@ comment
 
 
 
+*data
+1464941668
+^mtime
+(
+comment
+"for raw data"_
+)attrs
+
+
+
 *dbg_blue
 1457617248
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *dbg_yellow
 1457617248
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "for debug yellow"_
 )attrs
-
 
 
 
@@ -351,6 +361,7 @@ comment
 
 
 
+
 *foldix_left
 1457090580
 ^mtime
@@ -358,7 +369,6 @@ comment
 comment
 "primitive for fold left with index (nodefun,inival,compval)"_
 )attrs
-
 
 
 
@@ -523,6 +533,7 @@ comment
 
 
 
+
 *is_double
 1457358950
 ^mtime
@@ -530,7 +541,6 @@ comment
 comment
 "to test if argument is a double"_
 )attrs
-
 
 
 
@@ -703,6 +713,7 @@ comment
 
 
 
+
 *less
 1457365666
 ^mtime
@@ -710,7 +721,6 @@ comment
 comment
 "test for less of two values"_
 )attrs
-
 
 
 
@@ -874,10 +884,10 @@ is_null
 
 
 
+
 *notice
 1446546422
 ^mtime
-
 
 
 
@@ -1031,6 +1041,7 @@ comment
 
 
 
+
 *out_outdent
 1457095329
 ^mtime
@@ -1038,7 +1049,6 @@ comment
 comment
 "output with less indentation"_
 )attrs
-
 
 
 
@@ -1212,6 +1222,7 @@ comment
 
 
 
+
 *payl_file_write
 1456929384
 ^mtime
@@ -1219,7 +1230,6 @@ comment
 comment
 "for written file payload"_
 )attrs
-
 
 
 
@@ -1397,6 +1407,7 @@ comment
 
 
 
+
 *payl_hashset_insert_content
 1456845046
 ^mtime
@@ -1404,7 +1415,6 @@ comment
 comment
 "insert some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1568,6 +1578,7 @@ payl_vectval_resize
 
 
 
+
 *payl_webexch
 1457031348
 ^mtime
@@ -1575,7 +1586,6 @@ payl_vectval_resize
 comment
 "Web exchange payload"_
 )attrs
-
 
 
 
@@ -1718,6 +1728,16 @@ comment
 
 
 
+*routine
+1464941643
+^mtime
+(
+comment
+"for raw routines"_
+)attrs
+
+
+
 *same
 1457364041
 ^mtime
@@ -1753,6 +1773,7 @@ is_set
 
 
 
+
 *signature
 1455623962
 ^mtime
@@ -1770,7 +1791,6 @@ comment
 comment
 "signature of displayer functions"_
 )attrs
-
 
 
 
@@ -2038,6 +2058,7 @@ node
 
 
 
+
 *type_error
 1455914086
 ^mtime
@@ -2055,7 +2076,6 @@ comment
 comment
 "for undefined result"_
 )attrs
-
 
 
 
