@@ -51,7 +51,7 @@ public:
     traceable_allocator<struct mom_item_st*>>
                                            traced_varmap_t;
   class EnvElem
-  {
+{
   public:
     traced_varmap_t _ee_map;
     void* _ee_orig;
@@ -577,7 +577,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
   if (desitm != MOM_PREDEFITM(block))
     throw MOM_RUNTIME_PRINTF("in %s block %s of bad descr %s",
                              mom_item_cstring(initm),
-			     mom_item_cstring(blkitm), mom_item_cstring(desitm));
+                             mom_item_cstring(blkitm), mom_item_cstring(desitm));
 #warning MomEmitter::scan_block unimplemented
   MOM_FATAPRINTF("scan_block unimplemented blkitm=%s initm=%s",
                  mom_item_cstring(blkitm), mom_item_cstring(initm));
