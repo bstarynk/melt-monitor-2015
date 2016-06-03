@@ -1,8 +1,25 @@
 # file cmod0.mb -*- indented-text -*-
 
+
+^item val0 (
+   ^at comment "val0 in cmod0.mb"
+   ^at descr formal
+   ^at type value
+)
+
+^item !signature_value_to_void (
+   ^at comment "signature: value -> void, in cmod0.mb"
+   ^at descr signature
+   ^at formals [ val0 ]
+   ^at result unit
+)
+
 ^item !tiny_func (
    ^at comment "our tiny_func from cmod0.mb"
    ^at descr func
+   ^at signature signature_value_to_void
+   ^at body [
+   ]
 )
 
 ^item !tiny_module (

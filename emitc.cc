@@ -539,6 +539,8 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s",
                   mom_item_cstring(fuitm), mom_item_cstring(sigitm));
+  if (sigitm == nullptr)
+    throw MOM_RUNTIME_PRINTF("missing signature in func %s", mom_item_cstring(fuitm));
   scan_signature(sigitm,fuitm);
 #warning MomEmitter::scan_func_element unimplemented
   MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));

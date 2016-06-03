@@ -113,6 +113,16 @@ comment
 
 
 
+*body
+1464963091
+^mtime
+(
+comment
+"for body of func&routine"_
+)attrs
+
+
+
 *clone
 1456922491
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *dbg_red
 1457617248
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "for debug red"_
 )attrs
-
 
 
 
@@ -351,6 +361,7 @@ comment
 
 
 
+
 *fold_right
 1457090580
 ^mtime
@@ -358,7 +369,6 @@ comment
 comment
 "primitive for fold right (nodefun,compval,inival)"_
 )attrs
-
 
 
 
@@ -378,6 +388,26 @@ comment
 (
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
+)attrs
+
+
+
+*formal
+1464962851
+^mtime
+(
+comment
+"for formal"_
+)attrs
+
+
+
+*formals
+1464963019
+^mtime
+(
+comment
+"for formals"_
 )attrs
 
 
@@ -496,6 +526,7 @@ comment
 
 
 
+
 *int
 1456146211
 ^mtime
@@ -530,7 +561,6 @@ comment
 comment
 "test if argument is a closure"_
 )attrs
-
 
 
 
@@ -683,6 +713,7 @@ comment
 
 
 
+
 *iter
 1457079401
 ^mtime
@@ -710,7 +741,6 @@ comment
 comment
 "for left associative delimiters"_
 )attrs
-
 
 
 
@@ -852,6 +882,7 @@ comment
 
 
 
+
 *node_nth
 1457430266
 ^mtime
@@ -881,7 +912,6 @@ comment
 notice
 is_null
 )attrs
-
 
 
 
@@ -1011,6 +1041,7 @@ comment
 
 
 
+
 *out_indentation
 1457095329
 ^mtime
@@ -1038,7 +1069,6 @@ comment
 comment
 "output an indented newline"_
 )attrs
-
 
 
 
@@ -1192,6 +1222,7 @@ comment
 
 
 
+
 *payl_dumper
 1457031326
 ^mtime
@@ -1219,7 +1250,6 @@ comment
 comment
 "file close operation"_
 )attrs
-
 
 
 
@@ -1369,6 +1399,7 @@ comment
 
 
 
+
 *payl_hashmap_remove
 1456897878
 ^mtime
@@ -1404,7 +1435,6 @@ payl_hashset_reserve
 comment
 "insert some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1538,6 +1568,7 @@ comment
 
 
 
+
 *payl_vectval_reserve
 1456840222
 ^mtime
@@ -1575,7 +1606,6 @@ payl_vectval_reserve
 payl_vectval_resize
 )set
 )attrs
-
 
 
 
@@ -1708,6 +1738,16 @@ comment
 
 
 
+*result
+1464962940
+^mtime
+(
+comment
+"for result"_
+)attrs
+
+
+
 *reviter
 1457086941
 ^mtime
@@ -1725,6 +1765,7 @@ comment
 comment
 "for right associative delimiters"_
 )attrs
+
 
 
 
@@ -1770,7 +1811,6 @@ is_sequence
 is_set
 )set
 )attrs
-
 
 
 
@@ -2002,6 +2042,7 @@ node
 
 
 
+
 *transient
 1456994815
 ^mtime
@@ -2058,7 +2099,6 @@ node
 
 
 
-
 *type_error
 1455914086
 ^mtime
@@ -2089,6 +2129,16 @@ comment
 
 
 
+*unit
+1464962940
+^mtime
+(
+comment
+"for unit or void"_
+)attrs
+
+
+
 *value
 1461749593
 ^mtime
@@ -2115,6 +2165,16 @@ comment
 (
 comment
 "hold the types of values"_
+)attrs
+
+
+
+*variable
+1464962851
+^mtime
+(
+comment
+"for variable"_
 )attrs
 
 
@@ -2156,6 +2216,7 @@ comment
 comment
 "hashassoc for web handlers"_
 )attrs
+
 
 
 
