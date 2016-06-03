@@ -196,7 +196,47 @@ momtok_tokenize (const char *filnam)
 {
   if (MOM_UNLIKELY (!filnam || !filnam[0]))
     MOM_FATAPRINTF ("bad filename to momtok_parse");
-  FILE *fil = fopen (filnam, "r");
+  FILE *fil = NULL;
+  char *inbuf = NULL;
+  if (!strcmp (filnam, "-"))
+    {
+      MOM_INFORMPRINTF ("tokenizing from stdin");
+      unsigned siz = 4001;
+      unsigned len = 0;
+      inbuf = calloc (1, siz);
+      if (!inbuf)
+        MOM_FATAPRINTF ("failed to allocate buffer of %d for stdin", siz);
+      int c = EOF;
+      do
+        {
+          c = getchar ();
+          if (c != EOF)
+            {
+              if (MOM_UNLIKELY (len + 2 >= siz))
+                {
+                  unsigned newsiz = mom_prime_above (4 * siz / 3 + 10);
+                  if (newsiz > MOM_SIZE_MAX)
+                    MOM_FATAPRINTF
+                      ("too big size %u for growing stding buffer", newsiz);
+                  char *newbuf = calloc (1, newsiz);
+                  if (!newbuf)
+                    MOM_FATAPRINTF ("failed to grow buffer of %d for stdin",
+                                    newsiz);
+                  memcpy (newbuf, inbuf, len);
+                  free (inbuf);
+                  inbuf = newbuf;
+                  siz = newsiz;
+                };
+              inbuf[len++] = c;
+            }
+        }
+      while (c != EOF);
+      fil = fmemopen (inbuf, len, "r");
+      if (!fil)
+        MOM_FATAPRINTF ("failed to fmemopen buffer of %d for stdin", len);
+    }
+  else
+    fil = fopen (filnam, "r");
   if (!fil)
     MOM_FATAPRINTF ("failed to open %s (%m)", filnam);
   struct stat fst = { };
@@ -493,6 +533,8 @@ momtok_tokenize (const char *filnam)
     }
   while (!feof (fil) && ptok);
   fclose (fil);
+  if (inbuf != NULL)
+    free (inbuf);
   return tovec;
 }                               /* end momtok_tokenize */
 

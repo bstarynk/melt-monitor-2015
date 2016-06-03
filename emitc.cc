@@ -34,11 +34,14 @@ class MomEmitter
 {
 public:
   typedef std::function<void(MomEmitter*)> todofun_t;
+  typedef std::set<struct mom_item_st*,MomItemLess,traceable_allocator<struct mom_item_st*>>
+        traced_set_items_t;
 private:
   const unsigned _ce_magic;
   struct mom_item_st* _ce_topitm;
-  std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_vecitems;
-  std::set<struct mom_item_st*,MomItemLess,traceable_allocator<struct mom_item_st*>> _ce_setitems;
+  std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_veclockeditems;
+  traced_set_items_t _ce_setlockeditems;
+  traced_set_items_t _ce_sigitems;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
@@ -50,12 +53,12 @@ protected:
 public:
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
-  {
+{
     if (itm && itm != MOM_EMPTY_SLOT && itm->va_itype == MOMITY_ITEM
-        && _ce_setitems.find(itm)==_ce_setitems.end())
+        && _ce_setlockeditems.find(itm)==_ce_setlockeditems.end())
       {
-        _ce_vecitems.push_back(itm);
-        _ce_setitems.insert(itm);
+        _ce_veclockeditems.push_back(itm);
+        _ce_setlockeditems.insert(itm);
         mom_item_lock(itm);
       }
   };
@@ -223,8 +226,9 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
 MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
   : _ce_magic(magic),
     _ce_topitm(itm),
-    _ce_vecitems {},
-_ce_setitems {}
+    _ce_veclockeditems {},
+                     _ce_setlockeditems {},
+_ce_sigitems {}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     throw MOM_RUNTIME_ERROR("non item");
@@ -340,11 +344,11 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
 
 MomEmitter::~MomEmitter()
 {
-  int nbit = _ce_vecitems.size();
+  int nbit = _ce_veclockeditems.size();
   for (int ix=nbit-1; ix>=0; ix--)
-    mom_item_unlock(_ce_vecitems[ix]);
-  _ce_vecitems.clear();
-  _ce_setitems.clear();
+    mom_item_unlock(_ce_veclockeditems[ix]);
+  _ce_veclockeditems.clear();
+  _ce_setlockeditems.clear();
 } // end MomEmitter::~MomEmitter
 
 
