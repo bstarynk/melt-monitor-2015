@@ -106,7 +106,7 @@ private:
   traced_set_items_t _ce_setlockeditems;
   traced_set_items_t _ce_sigitems;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
-  std::stack<EnvElem,std::vector<EnvElem,traceable_allocator<EnvElem>>> _ce_envstack;
+  std::vector<EnvElem,traceable_allocator<EnvElem>> _ce_envstack;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
@@ -118,7 +118,7 @@ public:
   void push_fresh_varenv (void*envorig=nullptr)
   {
     auto sz = _ce_envstack.size();
-    _ce_envstack.emplace(EnvElem {envorig,(intptr_t)sz});
+    _ce_envstack.emplace_back(EnvElem {envorig,(intptr_t)sz});
   }
   void pop_varenv(int lin=0)
   {
@@ -127,7 +127,7 @@ public:
       {
         throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,"empty varenv stack cannot be popped");
       };
-    _ce_envstack.pop();
+    _ce_envstack.pop_back();
   }
   EnvElem& top_varenv(int lin=0)
   {
@@ -136,8 +136,8 @@ public:
       {
         throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,"empty varenv stack has no top");
       };
-    return _ce_envstack.top();
-  }
+    return _ce_envstack[sz-1];
+  } // end top_varenv
   void bind_top_var(struct mom_item_st*itm, const void*role, int lin=0, const void*what=nullptr, intptr_t rank=0)
   {
     auto sz = _ce_envstack.size();
@@ -150,6 +150,10 @@ public:
       throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,
                               "varenv stack cannot bind non-item");
     top_varenv(lin).bind(itm,role,what,rank);
+  } // end bind_top_var
+  void bind_top_var(struct mom_item_st*itm, const void*role, const void*what=nullptr, intptr_t rank=0)
+  {
+    bind_top_var(itm,role,0,what,rank);  // end bind_top_var noline
   }
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
