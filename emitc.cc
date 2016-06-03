@@ -155,6 +155,42 @@ public:
   {
     bind_top_var(itm,role,0,what,rank);  // end bind_top_var noline
   }
+  bool bound_var(struct mom_item_st*itm) const
+  {
+    if (mom_itype(itm) != MOMITY_ITEM) return false;
+    auto sz = _ce_envstack.size();
+    if (sz==0) return false;
+    for (long ix= (long)(sz-1); ix>=0; ix--)
+      if (_ce_envstack[ix].is_bound(itm)) return true;
+    return false;
+  }
+  vardef_st*get_binding(struct mom_item_st*itm) const
+  {
+    if (mom_itype(itm) != MOMITY_ITEM) return nullptr;
+    auto sz = _ce_envstack.size();
+    if (sz==0) return nullptr;
+    for (long ix= (long)(sz-1); ix>=0; ix--)
+      {
+        auto p = _ce_envstack[ix].get_binding(itm);
+        if (p != nullptr) return const_cast<vardef_st*>(p);
+      }
+    return nullptr;
+  }
+  std::pair<vardef_st*,long> get_indexed_binding(struct mom_item_st*itm) const
+  {
+    if (mom_itype(itm) != MOMITY_ITEM) return {nullptr,0L};
+    auto sz = _ce_envstack.size();
+    if (sz==0) return {nullptr,0L};
+    for (long ix= (long)(sz-1); ix>=0; ix--)
+      {
+        vardef_st* p = const_cast<vardef_st*>(_ce_envstack[ix].get_binding(itm));
+        if (p != nullptr)
+          {
+            return {p, ix};
+          }
+      }
+    return {nullptr,0};
+  }
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
   {
