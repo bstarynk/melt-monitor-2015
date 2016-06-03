@@ -140,6 +140,7 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
+  void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
 public:
   void push_fresh_varenv (void*envorig=nullptr)
   {
@@ -535,11 +536,29 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   LocalVars lv {this,fuitm};
   bind_top_var(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
   bind_top_var(fuitm,MOM_PREDEFITM(func),fuitm);
+  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
+  MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm));
+  scan_signature(sigitm,fuitm);
 #warning MomEmitter::scan_func_element unimplemented
   MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end  MomEmitter::scan_func_element
 
 
+void
+MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_signature start sigitm=%s initm=%s",
+                  mom_item_cstring(sigitm), mom_item_cstring(initm));
+  struct mom_item_st*desitm = mom_unsync_item_descr(sigitm);
+  MOM_DEBUGPRINTF(gencod, "scan_signature desitm=%s", mom_item_cstring(desitm));
+  if (desitm != MOM_PREDEFITM(signature))
+    throw MOM_RUNTIME_PRINTF("in %s signature %s of bad descr %s",
+                             mom_item_cstring(initm), mom_item_cstring(sigitm), mom_item_cstring(desitm));
+#warning MomEmitter::scan_signature unimplemented
+  MOM_FATAPRINTF("scan_signature unimplemented sigitm=%s initm=%s",
+                 mom_item_cstring(sigitm), mom_item_cstring(initm));
+} // end MomEmitter::scan_signature
 
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
