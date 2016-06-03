@@ -28,7 +28,7 @@ mom_itype_str (const void *p)
     return "*nil*";
   else if (p == MOM_EMPTY_SLOT)
     return "*emptyslot*";
-  if ((intptr_t)p % 2 != 0)
+  if ((intptr_t) p % 2 != 0)
     return "*tagINT*";
   else
     {
@@ -86,9 +86,10 @@ mom_itype_str (const void *p)
 const void *
 mom_int_make (intptr_t i)
 {
-  if ((i >= 0 && i < INTPTR_MAX/4) || (i<0 && i> -INTPTR_MAX/4)) {
-    return (const void*) (((intptr_t) i << 1)|1);
-  }
+  if ((i >= 0 && i < INTPTR_MAX / 4) || (i < 0 && i > -INTPTR_MAX / 4))
+    {
+      return (const void *) (((intptr_t) i << 1) | 1);
+    }
   struct mom_boxint_st *bi =
     mom_gc_alloc_scalar (sizeof (struct mom_boxint_st));
   bi->va_itype = MOMITY_INT;
@@ -938,7 +939,7 @@ mom_dumpscan_value (struct mom_dumper_st *du,
   if (!val || val == MOM_EMPTY_SLOT)
     return;
   assert (du && du->va_itype == MOMITY_DUMPER);
-  switch (mom_itype(val))
+  switch (mom_itype (val))
     {
     case MOMITY_INT:
     case MOMITY_BOXDOUBLE:
@@ -1033,11 +1034,10 @@ mom_dumpemit_value (struct mom_dumper_st *du,
   assert (du->du_state == MOMDUMP_EMIT);
   FILE *femit = du->du_emitfile;
   assert (femit != NULL);
-  switch (mom_itype(val))
+  switch (mom_itype (val))
     {
     case MOMITY_INT:
-      fprintf (femit, "%lld_\n",
-               (long long) mom_int_val_def(val,0));
+      fprintf (femit, "%lld_\n", (long long) mom_int_val_def (val, 0));
       return;
     case MOMITY_BOXDOUBLE:
       {
@@ -1132,11 +1132,10 @@ mom_output_value (FILE *fout, long *plastnl,
       return;
     }
 #define INDENTED_NEWLINE_MOM() do { fputc('\n', fout); lastnl = ftell(fout); for (int ix=depth % 16; ix>0; ix--) fputc(' ', fout); } while(0);
-  switch (mom_itype(val))
+  switch (mom_itype (val))
     {
     case MOMITY_INT:
-      fprintf (fout, "%lld",
-               (long long) mom_int_val_def(val,0));
+      fprintf (fout, "%lld", (long long) mom_int_val_def (val, 0));
       break;
     case MOMITY_BOXDOUBLE:
       {
@@ -1339,20 +1338,20 @@ mom_hashedvalue_equal (const struct mom_hashedvalue_st * val1,
     return true;
   if (!val1 || !val2)
     return false;
-  unsigned typ1 = mom_itype(val1);
-  unsigned typ2 = mom_itype(val2);
+  unsigned typ1 = mom_itype (val1);
+  unsigned typ2 = mom_itype (val2);
   if (typ1 == 0 || typ1 >= MOMITY__LASTHASHED)
     return false;
   if (typ2 == 0 || typ2 >= MOMITY__LASTHASHED)
     return false;
   if (typ1 != typ2)
     return false;
-  if (mom_hash(val1) != mom_hash(val2))
+  if (mom_hash (val1) != mom_hash (val2))
     return false;
   switch (typ1)
     {
     case MOMITY_INT:
-      return mom_int_val_def(val1,0) == mom_int_val_def(val2,0);
+      return mom_int_val_def (val1, 0) == mom_int_val_def (val2, 0);
     case MOMITY_BOXDOUBLE:
       {
         double d1 = ((const struct mom_boxdouble_st *) val1)->boxd_dbl;
@@ -1430,10 +1429,12 @@ mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
     val2 = NULL;
   if (val1 == val2)
     return 0;
-  if (!val1) return -1;
-  if (!val2) return 1;
-  unsigned typ1 = mom_itype(val1);
-  unsigned typ2 = mom_itype(val2);
+  if (!val1)
+    return -1;
+  if (!val2)
+    return 1;
+  unsigned typ1 = mom_itype (val1);
+  unsigned typ2 = mom_itype (val2);
   if (typ1 == 0 || typ1 >= MOMITY__LASTHASHED)
     return -1;
   if (typ2 == 0 || typ2 >= MOMITY__LASTHASHED)
@@ -1443,15 +1444,15 @@ mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
   if (typ1 > typ2)
     return 1;
   if (MOM_UNLIKELY
-      (mom_hash(val1) == mom_hash(val2)
+      (mom_hash (val1) == mom_hash (val2)
        && mom_hashedvalue_equal (val1, val2)))
     return 0;
   switch (typ1)
     {
     case MOMITY_INT:
       {
-        intptr_t i1 = mom_int_val_def(val1,0);
-        intptr_t i2 = mom_int_val_def(val2,0);
+        intptr_t i1 = mom_int_val_def (val1, 0);
+        intptr_t i2 = mom_int_val_def (val2, 0);
         if (i1 < i2)
           return -1;
         else if (i1 > i2)

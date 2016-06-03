@@ -543,11 +543,12 @@ int mom_item_cmp (const struct mom_item_st *itm1,
 
   static inline unsigned mom_itype (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT) {
-      if ((intptr_t)p % 2 == 0)
-      return ((const struct mom_anyvalue_st *) p)->va_itype;
-      else return MOMITY_INT;
-    }
+    if (p && p != MOM_EMPTY_SLOT)
+      {
+        if ((intptr_t)p % 2 == 0)
+          return ((const struct mom_anyvalue_st *) p)->va_itype;
+        else return MOMITY_INT;
+      }
     return 0;
   }
 
@@ -592,17 +593,18 @@ int mom_item_cmp (const struct mom_item_st *itm1,
   bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
                               const struct mom_hashedvalue_st *val2);
 
-static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
+  static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline momhash_t mom_hash (const void *p)
   {
     unsigned t = mom_itype(p);
     if (t > MOMITY_INT
         && t <  MOMITY__LASTHASHED)
       return ((const struct mom_hashedvalue_st *) p)->hva_hash;
-    else if (t==MOMITY_INT) {
-      intptr_t i= mom_int_val_def(p,0);
-      return i % 1000001137 + 1;
-    }
+    else if (t==MOMITY_INT)
+      {
+        intptr_t i= mom_int_val_def(p,0);
+        return i % 1000001137 + 1;
+      }
     return 0;
   }
 
@@ -631,11 +633,12 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   };
   static inline intptr_t mom_int_val_def (const void *p, intptr_t def)
   {
-    if (mom_itype(p) == MOMITY_INT) {
-      if ((intptr_t)p % 2 == 0) 
-	return ((const struct mom_boxint_st*)p)->boxi_int;
-      else return ((intptr_t)p >> 1);
-    }
+    if (mom_itype(p) == MOMITY_INT)
+      {
+        if ((intptr_t)p % 2 == 0)
+          return ((const struct mom_boxint_st*)p)->boxi_int;
+        else return ((intptr_t)p >> 1);
+      }
     return def;
   }
 
@@ -652,7 +655,8 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 
 
   const void *mom_int_make (intptr_t i);
-  static inline const void*mom_dyncast_int (const void*p) {
+  static inline const void*mom_dyncast_int (const void*p)
+  {
     if (mom_itype(p) == MOMITY_INT) return p;
     return NULL;
   };
@@ -667,8 +671,7 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline const struct mom_boxdouble_st *mom_dyncast_boxdouble (const
       void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_BOXDOUBLE)
+    if (mom_itype(p) == MOMITY_BOXDOUBLE)
       return (const struct mom_boxdouble_st *) p;
     return NULL;
   }
@@ -697,8 +700,7 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline const struct mom_boxstring_st *mom_dyncast_boxstring (const
       void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_BOXSTRING)
+    if (mom_itype(p) == MOMITY_BOXSTRING)
       return (const struct mom_boxstring_st *) p;
     return NULL;
   }
@@ -746,12 +748,9 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline const struct mom_seqitems_st *mom_dyncast_seqitems (const void
       *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
-      {
-        uint8_t ityp = ((const struct mom_anyvalue_st *) p)->va_itype;
-        if (ityp == MOMITY_TUPLE || ityp == MOMITY_SET)
-          return (const struct mom_seqitems_st *) p;
-      }
+    uint8_t ityp = mom_itype(p);
+    if (ityp == MOMITY_TUPLE || ityp == MOMITY_SET)
+      return (const struct mom_seqitems_st *) p;
     return NULL;
   }
 
@@ -789,16 +788,14 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline const struct mom_boxtuple_st *mom_dyncast_tuple (const void
       *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_TUPLE)
+    if (mom_itype(p) == MOMITY_TUPLE)
       return (const struct mom_boxtuple_st *) p;
     return NULL;
   }
 
   static inline const struct mom_boxset_st *mom_dyncast_set (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_SET)
+    if (mom_itype(p) == MOMITY_SET)
       return (const struct mom_boxset_st *) p;
     return NULL;
   }
@@ -918,8 +915,7 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   };
   static inline const struct mom_boxnode_st *mom_dyncast_node (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_anyvalue_st *) p)->va_itype == MOMITY_NODE)
+    if (mom_itype(p) == MOMITY_NODE)
       return (const struct mom_boxnode_st *) p;
     return NULL;
   }
@@ -1019,11 +1015,10 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline const struct mom_assovaldata_st
 *mom_assovaldata_dyncast (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
+    if (mom_itype(p) == MOMITY_ASSOVALDATA)
       {
         const struct mom_assovaldata_st *ass = (const struct mom_assovaldata_st *)p;
-        if (ass->va_itype == MOMITY_ASSOVALDATA)
-          return ass;
+        return ass;
       }
     return NULL;
   }                             /* end mom_assovaldata_dyncast */
@@ -1075,12 +1070,8 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 
   static inline struct mom_vectvaldata_st *mom_vectvaldata_dyncast (void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
-      {
-        struct mom_vectvaldata_st *v = (struct mom_vectvaldata_st *)p;
-        if (v->va_itype == MOMITY_VECTVALDATA)
-          return v;
-      }
+    if (mom_itype(p) == MOMITY_VECTVALDATA)
+      return (struct mom_vectvaldata_st*)p;
     return NULL;
   }
 
@@ -1162,11 +1153,10 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 
   static inline struct mom_hashset_st *mom_hashset_dyncast (void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
+    if (mom_itype(p)== MOMITY_HASHSET)
       {
         struct mom_hashset_st *hset = (struct mom_hashset_st *)p;
-        if (hset->va_itype == MOMITY_HASHSET)
-          return hset;
+        return hset;
       }
     return NULL;
   }                             /* end mom_hashset_dyncast */
@@ -1211,12 +1201,8 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 
   static inline struct mom_hashmap_st *mom_hashmap_dyncast (void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
-      {
-        struct mom_hashmap_st *hmap = (struct mom_hashmap_st *)p;
-        if (hmap->va_itype == MOMITY_HASHMAP)
-          return hmap;
-      }
+    if (mom_itype(p) ==  MOMITY_HASHMAP)
+      return (struct mom_hashmap_st *)p;
     return NULL;
   }                             /* end mom_hashmap_dyncast */
 
@@ -1267,12 +1253,8 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   };
   static inline struct mom_hashassoc_st *mom_hashassoc_dyncast (void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
-      {
-        struct mom_hashassoc_st *hass = (struct mom_hashassoc_st *)p;
-        if (hass->va_itype == MOMITY_HASHASSOC)
-          return hass;
-      }
+    if (mom_itype(p) == MOMITY_HASHASSOC)
+      return (struct mom_hashassoc_st *)p;
     return NULL;
   }                             /* end mom_hashassoc_dyncast */
 
@@ -1366,11 +1348,16 @@ static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 
   const struct mom_boxset_st *mom_predefined_items_boxset (void);
   void mom_item_put_space (struct mom_item_st *itm, enum mom_space_en spix);
+  static inline unsigned mom_item_space(struct mom_item_st*itm)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      return MOMSPA_NONE;
+    return atomic_load (&itm->va_ixv);
+  } /* end of mom_item_space */
 
   static inline struct mom_item_st *mom_dyncast_item (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_ITEM)
+    if (mom_itype(p) == MOMITY_ITEM)
       return (struct mom_item_st *) p;
     return NULL;
   }
@@ -1986,8 +1973,7 @@ mom_loader_top (struct mom_loader_st *ld, unsigned topoff)
 
   static inline struct mom_queue_st *mom_dyncast_queue (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_QUEUE)
+    if (mom_itype(p) == MOMITY_QUEUE)
       return (struct mom_queue_st *) p;
     return NULL;
   }
@@ -2511,11 +2497,8 @@ void mom_dumpemit_taskstepper (struct mom_dumper_st *du,
 static inline const struct mom_taskstepper_st
 *mom_dyncast_taskstepper (const void *p)
 {
-  if (!p || p == MOM_EMPTY_SLOT)
-    return NULL;
-  const struct mom_taskstepper_st *tstep = (const struct mom_taskstepper_st *)p;
-  if (tstep->va_itype == MOMITY_TASKSTEPPER)
-    return tstep;
+  if (mom_itype(p) == MOMITY_TASKSTEPPER)
+    return (const struct mom_taskstepper_st*)p;
   return NULL;
 }                             /* end of mom_taskstepper_dyncast */
 
@@ -2611,11 +2594,7 @@ void mom_tasklet_reserve (struct mom_tasklet_st *tkl, unsigned nbframes,
 
 static inline struct mom_tasklet_st *mom_dyncast_tasklet (const void *p)
 {
-  if (!p || p == MOM_EMPTY_SLOT)
-    return NULL;
-  struct mom_tasklet_st *tkl = (struct mom_tasklet_st *) p;
-  if (tkl->va_itype != MOMITY_TASKLET)
-    return tkl;
+  if (mom_itype(p) == MOMITY_TASKLET) return (struct mom_tasklet_st*)p;
   return NULL;
 }                             /* mom_dyncast_tasklet */
 

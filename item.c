@@ -2043,7 +2043,7 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           MOM_DEBUGPRINTF
             (dump, "dumpemit_item_content itm:%s kind:%s paylv@%p [%s]",
              mom_item_cstring (itm), kindname, payld, mom_itype_str (payld));
-          switch (mom_itype(payld))
+          switch (mom_itype (payld))
             {
             case MOMITY_INT:
             case MOMITY_BOXDOUBLE:
