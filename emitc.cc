@@ -44,6 +44,9 @@ protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
+  virtual void scan_data_element(struct mom_item_st*itm);
+  virtual void scan_func_element(struct mom_item_st*itm);
+  virtual void scan_routine_element(struct mom_item_st*itm);
 public:
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
@@ -114,6 +117,10 @@ public:
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
+  virtual void scan_routine_element(struct mom_item_st*elitm)
+  {
+    throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
+  };
   virtual const char*kindname() const
   {
     return "JavaScript-emitter";
@@ -273,20 +280,63 @@ void MomEmitter::scan_module_element(struct mom_item_st*elitm)
 #define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
 	  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
 	  goto defaultcasedesc; foundcase_##Nam
-    switch (descitm->hva_hash % NBMODELEMDESC_MOM)
+  switch (descitm->hva_hash % NBMODELEMDESC_MOM)
+    {
+    case CASE_DESCR_MOM (data):
+      todo([=](MomEmitter*thisemit)
       {
-      case CASE_DESCR_MOM (data):
-      case CASE_DESCR_MOM (func):
-      case CASE_DESCR_MOM (routine):
-      defaultcasedesc:
-      default:
-	throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
-				 mom_item_cstring(elitm), mom_item_cstring(descitm));
-      };
-    #undef NBMODELEMDESC_MOM
-    #undef CASE_DESCR_MOM
+        thisemit->scan_data_element(elitm);
+      });
+      break;
+    case CASE_DESCR_MOM (func):
+      todo([=](MomEmitter*thisemit)
+      {
+        thisemit->scan_func_element(elitm);
+      });
+      break;
+    case CASE_DESCR_MOM (routine):
+      todo([=](MomEmitter*thisemit)
+      {
+        thisemit->scan_routine_element(elitm);
+      });
+      break;
+defaultcasedesc:
+    default:
+      throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
+                               mom_item_cstring(elitm), mom_item_cstring(descitm));
+    };
+#undef NBMODELEMDESC_MOM
+#undef CASE_DESCR_MOM
 } // end of MomEmitter::scan_module_element
 
+
+
+////////////////
+void
+MomEmitter::scan_data_element(struct mom_item_st*daitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_data_element start daitm=%s", mom_item_cstring(daitm));
+#warning MomEmitter::scan_data_element unimplemented
+  MOM_FATAPRINTF("unimplemented scan_data_element daitm=%s", mom_item_cstring(daitm));
+} // end  MomEmitter::scan_data_element
+
+
+
+void
+MomEmitter::scan_func_element(struct mom_item_st*fuitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
+#warning MomEmitter::scan_func_element unimplemented
+  MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
+} // end  MomEmitter::scan_func_element
+
+
+
+void
+MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm=%s", mom_item_cstring(rtitm));
+} // end  MomEmitter::scan_routine_element
 
 MomEmitter::~MomEmitter()
 {
@@ -297,6 +347,8 @@ MomEmitter::~MomEmitter()
   _ce_setitems.clear();
 } // end MomEmitter::~MomEmitter
 
+
+////////////////////////////////////////////////////////////////
 MomCEmitter::~MomCEmitter()
 {
   MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
