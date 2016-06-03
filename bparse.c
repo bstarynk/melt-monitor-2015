@@ -524,9 +524,9 @@ momtok_inside_item (struct mom_item_st *itm,
             {
               atval = momtok_parse (tovec, topos, &topos);
               unsigned atyp = mom_itype (atval);
-              if (atyp == MOMITY_BOXINT)
+              if (atyp == MOMITY_INT)
                 {
-                  atrk = mom_boxint_val_def (atval, 0);
+                  atrk = mom_int_val_def (atval, 0);
                   atindex = true;
                 }
               else if (atyp == MOMITY_ITEM)
@@ -659,7 +659,7 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
   switch (curtok->mtok_kind)
     {
     case MOLEX_INT:
-      res = mom_boxint_make (curtok->mtok_int);
+      res = mom_int_make (curtok->mtok_int);
       MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d int %s", topos,
                        mom_value_cstring (res));
       *endposptr = topos + 1;
@@ -831,9 +831,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
         }
       const void *atval = momtok_parse (tovec, topos, &topos);
       unsigned atyp = mom_itype (atval);
-      if (atyp == MOMITY_BOXINT)
+      if (atyp == MOMITY_INT)
         {
-          int rk = mom_boxint_val_def (atval, 0);
+          int rk = mom_int_val_def (atval, 0);
           mom_item_lock (fromitm);
           res = mom_vectvaldata_nth (fromitm->itm_pcomp, rk);
           mom_item_unlock (fromitm);
@@ -892,9 +892,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           return fromitm;
         }
       unsigned atyp = mom_itype (atval);
-      if (atyp == MOMITY_BOXINT)
+      if (atyp == MOMITY_INT)
         {
-          int rk = mom_boxint_val_def (atval, 0);
+          int rk = mom_int_val_def (atval, 0);
           mom_item_lock (fromitm);
           mom_vectvaldata_put_nth (fromitm->itm_pcomp, rk, newval);
           fromitm->itm_mtime = time (NULL);
@@ -1002,9 +1002,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       else
         atval = momtok_parse (tovec, topos, &topos);
       unsigned atyp = mom_itype (atval);
-      if (atyp == MOMITY_BOXINT)
+      if (atyp == MOMITY_INT)
         {
-          int rk = mom_boxint_val_def (atval, 0);
+          int rk = mom_int_val_def (atval, 0);
           mom_item_lock (gritm);
           gritm->itm_pcomp = mom_vectvaldata_resize (gritm->itm_pcomp, rk);
           gritm->itm_mtime = time (NULL);

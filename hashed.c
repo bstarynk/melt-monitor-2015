@@ -779,8 +779,8 @@ mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,     //
         continue;
       if (!curkey)
         return NULL;
-      if (curkey->va_itype == MOMITY_BOXINT
-          && ((struct mom_boxint_st *) curkey)->boxi_int == num)
+      if (mom_itype(curkey) == MOMITY_INT
+          && mom_int_val_def(curkey,0) == num)
         return hass->hass_ents[ix].hass_val;
     }
   for (unsigned ix = 0; ix < startix; ix++)
@@ -790,8 +790,8 @@ mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,     //
         continue;
       if (!curkey)
         return NULL;
-      if (curkey->va_itype == MOMITY_BOXINT
-          && ((struct mom_boxint_st *) curkey)->boxi_int == num)
+      if (mom_itype(curkey) == MOMITY_INT
+          && mom_int_val_def(curkey,0) == num)
         return hass->hass_ents[ix].hass_val;
     }
   return NULL;

@@ -346,8 +346,8 @@ second_pass_loader_mom (struct mom_loader_st *ld)
                   mom_loader_push
                     (ld,
                      mom_ldstate_make_val ((const struct mom_hashedvalue_st *)
-                                           mom_boxint_make (ll)));
-                  ld->ld_kindcount[MOMITY_BOXINT]++;
+                                           mom_int_make (ll)));
+                  ld->ld_kindcount[MOMITY_INT]++;
                 }
               else
                 mom_loader_push (ld, mom_ldstate_make_int (ll));
@@ -660,7 +660,7 @@ mom_load_state (const char *statepath)
   MOM_INFORMPRINTF
     ("loaded %ld nils, %ld ints, %ld strings, %ld items, %ld tuples, %ld sets, %ld nodes",
      mom_loader->ld_kindcount[MOMITY_NONE],
-     mom_loader->ld_kindcount[MOMITY_BOXINT],
+     mom_loader->ld_kindcount[MOMITY_INT],
      mom_loader->ld_kindcount[MOMITY_BOXSTRING],
      mom_loader->ld_kindcount[MOMITY_ITEM],
      mom_loader->ld_kindcount[MOMITY_TUPLE],

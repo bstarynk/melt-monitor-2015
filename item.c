@@ -2042,10 +2042,10 @@ mom_dumpemit_item_content (struct mom_dumper_st *du,
           struct mom_anyvalue_st *paylv = payld;
           MOM_DEBUGPRINTF
             (dump, "dumpemit_item_content itm:%s kind:%s paylv@%p [%s]",
-             mom_item_cstring (itm), kindname, payld, mom_itype_str (paylv));
-          switch (paylv->va_itype)
+             mom_item_cstring (itm), kindname, payld, mom_itype_str (payld));
+          switch (mom_itype(payld))
             {
-            case MOMITY_BOXINT:
+            case MOMITY_INT:
             case MOMITY_BOXDOUBLE:
             case MOMITY_BOXSTRING:
             case MOMITY_TUPLE:
@@ -2699,7 +2699,7 @@ mom_unsync_item_output_payload (FILE *fout, const struct mom_item_st *itm)
   unsigned typayl = mom_itype (itm->itm_payldata);
   switch (typayl)
     {
-    case MOMITY_BOXINT:
+    case MOMITY_INT:
     case MOMITY_BOXDOUBLE:
     case MOMITY_BOXSTRING:
     case MOMITY_ITEM:

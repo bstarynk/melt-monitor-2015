@@ -462,7 +462,7 @@ typedef unsigned __int128 mom_uint128_t;
 enum momitype_en
 {
   MOMITY_NONE,
-  MOMITY_BOXINT,              /// see `int` predefined
+  MOMITY_INT,                 /// see `int` predefined
   MOMITY_BOXDOUBLE,           /// see `double` predefined
   MOMITY_BOXSTRING,           /// see `string` predefined
   MOMITY_ITEM,                /// see `item` predefined
@@ -543,8 +543,11 @@ int mom_item_cmp (const struct mom_item_st *itm1,
 
   static inline unsigned mom_itype (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT)
+    if (p && p != MOM_EMPTY_SLOT) {
+      if ((intptr_t)p % 2 == 0)
       return ((const struct mom_anyvalue_st *) p)->va_itype;
+      else return MOMITY_INT;
+    }
     return 0;
   }
 
@@ -552,23 +555,21 @@ int mom_item_cmp (const struct mom_item_st *itm1,
 
   static inline unsigned mom_raw_size (const void *p)
   {
-    assert (p != NULL && p != MOM_EMPTY_SLOT);
+    assert (p != NULL && p != MOM_EMPTY_SLOT && (intptr_t)p % 2 == 0);
     return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
            (((const struct mom_anyvalue_st *) p)->va_lsiz);
   }
 
   static inline unsigned mom_size (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_anyvalue_st *) p)->va_itype > 0)
+    if (mom_itype(p) > MOMITY_INT)
       return mom_raw_size (p);
     return 0;
   }
 
   static inline void mom_put_size (void *p, unsigned sz)
   {
-    if (!p || p == MOM_EMPTY_SLOT
-        || ((const struct mom_anyvalue_st *) p)->va_itype == 0)
+    if (mom_itype(p) <= MOMITY_INT)
       return;
     if (sz >= MOM_SIZE_MAX)
       MOM_FATAPRINTF ("too big size %u", sz);
@@ -591,22 +592,25 @@ int mom_item_cmp (const struct mom_item_st *itm1,
   bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
                               const struct mom_hashedvalue_st *val2);
 
+static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
   static inline momhash_t mom_hash (const void *p)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_hashedvalue_st *) p)->va_itype > 0
-        && ((const struct mom_hashedvalue_st *) p)->va_itype <
-        MOMITY__LASTHASHED)
+    unsigned t = mom_itype(p);
+    if (t > MOMITY_INT
+        && t <  MOMITY__LASTHASHED)
       return ((const struct mom_hashedvalue_st *) p)->hva_hash;
+    else if (t==MOMITY_INT) {
+      intptr_t i= mom_int_val_def(p,0);
+      return i % 1000001137 + 1;
+    }
     return 0;
   }
 
   static inline void mom_put_hash (void *p, momhash_t h)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((const struct mom_hashedvalue_st *) p)->va_itype > 0
-        && ((const struct mom_hashedvalue_st *) p)->va_itype <
-        MOMITY__LASTHASHED)
+    unsigned t = mom_itype(p);
+    if (t > MOMITY_INT
+        && t <  MOMITY__LASTHASHED)
       {
         if (((struct mom_hashedvalue_st *) p)->hva_hash == 0)
           ((struct mom_hashedvalue_st *) p)->hva_hash = h;
@@ -625,15 +629,17 @@ int mom_item_cmp (const struct mom_item_st *itm1,
     // here field
     intptr_t boxi_int;
   };
-
-
-  static inline const struct mom_boxint_st *mom_dyncast_boxint (const void *p)
+  static inline intptr_t mom_int_val_def (const void *p, intptr_t def)
   {
-    if (p && p != MOM_EMPTY_SLOT
-        && ((struct mom_anyvalue_st *) p)->va_itype == MOMITY_BOXINT)
-      return (const struct mom_boxint_st *) p;
-    return NULL;
+    if (mom_itype(p) == MOMITY_INT) {
+      if ((intptr_t)p % 2 == 0) 
+	return ((const struct mom_boxint_st*)p)->boxi_int;
+      else return ((intptr_t)p >> 1);
+    }
+    return def;
   }
+
+
 
   static inline momhash_t mom_int_hash (intptr_t i)
   {
@@ -644,15 +650,12 @@ int mom_item_cmp (const struct mom_item_st *itm1,
     return h;
   }
 
-  static inline intptr_t mom_boxint_val_def (const void *p, intptr_t def)
-  {
-    const struct mom_boxint_st *bi = mom_dyncast_boxint (p);
-    if (bi)
-      return bi->boxi_int;
-    return def;
-  }
 
-  const struct mom_boxint_st *mom_boxint_make (intptr_t i);
+  const void *mom_int_make (intptr_t i);
+  static inline const void*mom_dyncast_int (const void*p) {
+    if (mom_itype(p) == MOMITY_INT) return p;
+    return NULL;
+  };
 
   struct mom_boxdouble_st
   {
@@ -1800,12 +1803,12 @@ mom_ldstate_make_item (const struct mom_item_st *itm)
   }
 
 
-  static inline const struct mom_boxint_st *mom_ldstate_dynboxint (const
+  static inline const void *mom_ldstate_dynboxint (const
       struct
       mom_statelem_st
       se)
   {
-    return mom_dyncast_boxint (mom_ldstate_val (se));
+    return mom_dyncast_int (mom_ldstate_val (se));
   };
 
   static inline struct mom_statelem_st
