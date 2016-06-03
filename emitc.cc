@@ -141,6 +141,7 @@ protected:
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
   void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
+  void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
 public:
   void push_fresh_varenv (void*envorig=nullptr)
   {
@@ -537,11 +538,15 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   bind_top_var(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
   bind_top_var(fuitm,MOM_PREDEFITM(func),fuitm);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
-  MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s",
-                  mom_item_cstring(fuitm), mom_item_cstring(sigitm));
+  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s bdyitm=%s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
   if (sigitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing signature in func %s", mom_item_cstring(fuitm));
   scan_signature(sigitm,fuitm);
+  if (bdyitm == nullptr)
+    throw MOM_RUNTIME_PRINTF("missing body in func %s", mom_item_cstring(fuitm));
+  scan_block(bdyitm,fuitm);
 #warning MomEmitter::scan_func_element unimplemented
   MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end  MomEmitter::scan_func_element
@@ -561,6 +566,22 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   MOM_FATAPRINTF("scan_signature unimplemented sigitm=%s initm=%s",
                  mom_item_cstring(sigitm), mom_item_cstring(initm));
 } // end MomEmitter::scan_signature
+
+void
+MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_block start blkitm=%s initm=%s",
+                  mom_item_cstring(blkitm), mom_item_cstring(initm));
+  struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
+  MOM_DEBUGPRINTF(gencod, "scan_block desitm=%s", mom_item_cstring(desitm));
+  if (desitm != MOM_PREDEFITM(block))
+    throw MOM_RUNTIME_PRINTF("in %s block %s of bad descr %s",
+                             mom_item_cstring(initm),
+			     mom_item_cstring(blkitm), mom_item_cstring(desitm));
+#warning MomEmitter::scan_block unimplemented
+  MOM_FATAPRINTF("scan_block unimplemented blkitm=%s initm=%s",
+                 mom_item_cstring(blkitm), mom_item_cstring(initm));
+} // end MomEmitter::scan_block
 
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
