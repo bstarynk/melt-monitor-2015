@@ -195,7 +195,7 @@ const char *mom_hostname (void);
 // A non nil address which is *never* dereferencable and can be used
 // as an empty placeholder; in practice all Unix & POSIX systems dont
 // use that address
-#define MOM_EMPTY_SLOT ((void*)-1)
+#define MOM_EMPTY_SLOT ((void*)(2*sizeof(void*)))
 // maximum number of threads
 #define MOM_JOB_MAX 16
 extern __thread int mom_worker_num;
