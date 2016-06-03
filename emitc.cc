@@ -41,9 +41,9 @@ public:
                                            traced_set_items_t;
   struct vardef_st
   {
-    const void* vd_role;
+    struct mom_item_st* vd_rolitm;
     const void* vd_what;
-    intptr_t vd_rank;
+    long vd_rank;
   };
   typedef std::map<const struct mom_item_st*,
     vardef_st,
@@ -55,8 +55,8 @@ public:
   public:
     traced_varmap_t _ee_map;
     void* _ee_orig;
-    intptr_t _ee_rank;
-    EnvElem(void*orig=nullptr, intptr_t rank=0) : _ee_map {}, _ee_orig(orig), _ee_rank(rank) {};
+    long _ee_level;
+    EnvElem(void*orig=nullptr, intptr_t level=0) : _ee_map {}, _ee_orig(orig), _ee_level(level) {};
     EnvElem(const EnvElem&) = default;
     EnvElem(EnvElem&&) = default;
     ~EnvElem() = default;
@@ -64,20 +64,46 @@ public:
     {
       return mom_itype(itm) == MOMITY_ITEM && _ee_map.find(itm) != _ee_map.end();
     };
-    void bind(struct mom_item_st*itm, const void*role, const void*what=nullptr, intptr_t rank=0)
+    void bind(struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what=nullptr, intptr_t rank=0)
     {
+      assert (mom_itype (rolitm) == MOMITY_ITEM);
       if (mom_itype(itm) == MOMITY_ITEM)
-        _ee_map.emplace(itm,vardef_st {role,what,rank});
+        {
+          if (rolitm == MOM_PREDEFITM(data))
+            MOM_DEBUGPRINTF(gencod,"bind %s data role rank %ld level#%ld", mom_item_cstring(itm),
+                            (long)rank, _ee_level);
+          else
+            MOM_DEBUGPRINTF(gencod,"bind %s role %s what %s rank %ld level#%ld",
+                            mom_item_cstring(itm), mom_item_cstring(rolitm),
+                            mom_value_cstring((const mom_hashedvalue_st*)what), (long)rank, _ee_level);
+          _ee_map.emplace(itm,vardef_st {rolitm,what,rank});
+        }
     }
     void bind(struct mom_item_st*itm, const vardef_st&def)
     {
       if (mom_itype(itm) == MOMITY_ITEM)
-        _ee_map.emplace(itm,def);
+        {
+          auto rolitm = def.vd_rolitm;
+          assert (mom_itype (rolitm) == MOMITY_ITEM);
+          auto what = def.vd_what;
+          auto rank = def.vd_rank;
+          if (rolitm == MOM_PREDEFITM(data))
+            MOM_DEBUGPRINTF(gencod,"bind %s data role rank %ld level#%ld", mom_item_cstring(itm),
+                            (long)rank, _ee_level);
+          else
+            MOM_DEBUGPRINTF(gencod,"bind %s role %s what %s rank %ld level#%ld",
+                            mom_item_cstring(itm), mom_item_cstring(rolitm),
+                            mom_value_cstring((struct mom_hashedvalue_st*)what), (long)rank, _ee_level);
+          _ee_map.emplace(itm,def);
+        }
     }
     void unbind(struct mom_item_st*itm)
     {
       if (mom_itype(itm) == MOMITY_ITEM)
-        _ee_map.erase(itm);
+        {
+          MOM_DEBUGPRINTF(gencod, "unbind %s level#%ld", mom_item_cstring(itm), _ee_level);
+          _ee_map.erase(itm);
+        }
     }
     const vardef_st* get_binding(struct mom_item_st*itm) const
     {
@@ -94,9 +120,9 @@ public:
     {
       return _ee_orig;
     };
-    intptr_t rank(void) const
+    intptr_t level(void) const
     {
-      return _ee_rank;
+      return _ee_level;
     };
   }; // end class EnvElem
 private:
@@ -136,6 +162,7 @@ public:
   class LocalVars
   {
     MomEmitter* _locem;
+  public:
     LocalVars(MomEmitter*me,void*orig=nullptr) : _locem(me)
     {
       assert(me!=nullptr);
@@ -147,6 +174,7 @@ public:
       _locem->pop_varenv();
       _locem=nullptr;
     }
+  private:
     LocalVars(const LocalVars&) = delete;
     LocalVars(LocalVars&&) = delete;
   };
@@ -159,8 +187,11 @@ public:
       };
     return _ce_envstack[sz-1];
   } // end top_varenv
-  void bind_top_var(struct mom_item_st*itm, const void*role, int lin=0, const void*what=nullptr, intptr_t rank=0)
+  void bind_top_var(struct mom_item_st*itm, struct mom_item_st*rolitm, int lin=0, const void*what=nullptr, intptr_t rank=0)
   {
+    if (mom_itype(rolitm) != MOMITY_ITEM) /// should never happen
+      MOM_FATAPRINTF("invalid rolitm %s for binding itm %s from lin#%d",
+                     mom_value_cstring((struct mom_hashedvalue_st*)rolitm), mom_item_cstring(itm), lin);
     auto sz = _ce_envstack.size();
     if (sz == 0)
       {
@@ -170,11 +201,11 @@ public:
     if (mom_itype(itm) != MOMITY_ITEM)
       throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,
                               "varenv stack cannot bind non-item");
-    top_varenv(lin).bind(itm,role,what,rank);
+    top_varenv(lin).bind(itm,rolitm,what,rank);
   } // end bind_top_var
-  void bind_top_var(struct mom_item_st*itm, const void*role, const void*what=nullptr, intptr_t rank=0)
+  void bind_top_var(struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what=nullptr, intptr_t rank=0)
   {
-    bind_top_var(itm,role,0,what,rank);  // end bind_top_var noline
+    bind_top_var(itm,rolitm,0,what,rank);  // end bind_top_var noline
   }
   bool bound_var(struct mom_item_st*itm) const
   {
@@ -422,6 +453,8 @@ void MomEmitter::scan_top_module(void)
   if (!modulseq)
     throw MOM_RUNTIME_PRINTF("item %s with bad module:%s",
                              mom_item_cstring(_ce_topitm), mom_value_cstring(modulev));
+  LocalVars mv {this,_ce_topitm};
+  bind_top_var(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm);
   unsigned nbmodelem = mom_seqitems_length(modulseq);
   auto itemsarr = mom_seqitems_arr(modulseq);
   for (unsigned ix=0; ix<nbmodelem; ix++)
@@ -434,6 +467,7 @@ void MomEmitter::scan_top_module(void)
       {
         em->scan_module_element(curitm);
       });
+      flush_todo_list(__LINE__);
     }
 } // end of MomEmitter::scan_top_module
 
@@ -498,6 +532,9 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
   assert (is_locked_item(fuitm));
+  LocalVars lv {this,fuitm};
+  bind_top_var(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
+  bind_top_var(fuitm,MOM_PREDEFITM(func),fuitm);
 #warning MomEmitter::scan_func_element unimplemented
   MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end  MomEmitter::scan_func_element
