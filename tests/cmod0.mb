@@ -1,7 +1,7 @@
 # file cmod0.mb -*- indented-text -*-
 
 
-^item val0 (
+^item !val0 (
    ^at comment "val0 in cmod0.mb"
    ^at descr formal
    ^at type value

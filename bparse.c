@@ -303,8 +303,8 @@ momtok_tokenize (const char *filnam)
                            lineno, (int) (ptok - linbuf),
                            mom_item_cstring (itm));
           if (!itm)
-            MOM_FATAPRINTF ("invalid name near %s file %s line %d", ptok,
-                            filnam, lineno);
+            MOM_FATAPRINTF ("invalid or missing name near %s file %s line %d",
+                            ptok, filnam, lineno);
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
