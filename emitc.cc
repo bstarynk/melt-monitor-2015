@@ -96,13 +96,32 @@ public:
     else
       MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s rank#%ld",
                       mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
-                      mom_value_cstring((struct mom_hashedvalue_st*)vd.vd_what),
+                      mom_value_cstring(vd.vd_what),
                       vd.vd_rank);
     _ce_globalvarmap[itm] = vd;
   }
   void bind_global(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, long rank=0)
   {
     bind_global(itm,vardef_st {rolitm,what,rank});
+  }
+  void bind_local(const struct mom_item_st*itm, const vardef_st& vd)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      throw MOM_RUNTIME_ERROR("local binding non-item");
+    if (vd.vd_rolitm == MOM_PREDEFITM(data))
+      MOM_DEBUGPRINTF(gencod, "local binding %s to data @%p rank#%ld",
+                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
+
+    else
+      MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s rank#%ld",
+                      mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
+                      mom_value_cstring(vd.vd_what),
+                      vd.vd_rank);
+    _ce_localvarmap[itm] = vd;
+  }
+  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, long rank=0)
+  {
+    bind_local(itm,vardef_st {rolitm,what,rank});
   }
   void unbind(const struct mom_item_st*itm)
   {
@@ -441,6 +460,40 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   if (desitm != MOM_PREDEFITM(signature))
     throw MOM_RUNTIME_PRINTF("in %s signature %s of bad descr %s",
                              mom_item_cstring(initm), mom_item_cstring(sigitm), mom_item_cstring(desitm));
+  bind_local(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm);
+  auto formtup =
+    mom_dyncast_tuple(mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(formals)));
+  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s formtup=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup));
+  if (formtup == nullptr)
+    throw MOM_RUNTIME_PRINTF("missing formals in signature %s", mom_item_cstring(sigitm));
+  bind_local(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup);
+  unsigned nbformals = mom_boxtuple_length(formtup);
+  for (unsigned ix=0; ix<nbformals; ix++)
+    {
+      struct mom_item_st*curformitm = mom_boxtuple_nth(formtup,ix);
+      if (!curformitm)
+        throw MOM_RUNTIME_PRINTF("missing formal#%d in signature %s",
+                                 ix, mom_item_cstring(sigitm));
+      lock_item(curformitm);
+      MOM_DEBUGPRINTF(gencod, "formal#%d in signature %s is %s",
+                      ix, mom_item_cstring(sigitm),
+                      mom_item_cstring(curformitm));
+      if (mom_unsync_item_descr(curformitm) != MOM_PREDEFITM(formal))
+        throw MOM_RUNTIME_PRINTF("bad formal#%d %s in signature %s",
+                                 ix, mom_item_cstring(curformitm),
+                                 mom_item_cstring(sigitm));
+      struct mom_item_st*typfitm =
+      mom_dyncast_item(mom_unsync_item_get_phys_attr(curformitm,MOM_PREDEFITM(type)));
+      MOM_DEBUGPRINTF(gencod, "formal#%d %s has type %s",
+                      ix, mom_item_cstring(curformitm), mom_item_cstring(typfitm));
+      if (!typfitm)
+        throw MOM_RUNTIME_PRINTF("untyped formal#%d %s in signature %s",
+                                 ix, mom_item_cstring(curformitm),
+                                 mom_item_cstring(sigitm));
+      lock_item(typfitm);
+      bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, ix);
+    }
 #warning MomEmitter::scan_signature unimplemented
   MOM_FATAPRINTF("scan_signature unimplemented sigitm=%s initm=%s",
                  mom_item_cstring(sigitm), mom_item_cstring(initm));
