@@ -1301,11 +1301,11 @@ mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
 
 
 const char *
-mom_value_cstring (const struct mom_hashedvalue_st *val)
+mom_value_cstring (const void *val)
 {
   if (!val || val == MOM_EMPTY_SLOT)
     return "~";
-  if (val->va_itype == MOMITY_ITEM)
+  if (mom_itype (val) == MOMITY_ITEM)
     return mom_item_cstring ((const struct mom_item_st *) val);
   size_t outsiz = 80;
   char *outbuf = malloc (outsiz);
