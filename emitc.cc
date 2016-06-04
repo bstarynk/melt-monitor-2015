@@ -50,81 +50,6 @@ public:
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
                                            traced_varmap_t;
-  class EnvElem
-{
-  public:
-    traced_varmap_t _ee_map;
-    void* _ee_orig;
-    long _ee_level;
-    EnvElem(void*orig=nullptr, intptr_t level=0) : _ee_map {}, _ee_orig(orig), _ee_level(level) {};
-    EnvElem(const EnvElem&) = default;
-    EnvElem(EnvElem&&) = default;
-    ~EnvElem() = default;
-    bool is_bound(struct mom_item_st*itm) const
-    {
-      return mom_itype(itm) == MOMITY_ITEM && _ee_map.find(itm) != _ee_map.end();
-    };
-    void bind(struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what=nullptr, intptr_t rank=0)
-    {
-      assert (mom_itype (rolitm) == MOMITY_ITEM);
-      if (mom_itype(itm) == MOMITY_ITEM)
-        {
-          if (rolitm == MOM_PREDEFITM(data))
-            MOM_DEBUGPRINTF(gencod,"bind %s data role rank %ld level#%ld", mom_item_cstring(itm),
-                            (long)rank, _ee_level);
-          else
-            MOM_DEBUGPRINTF(gencod,"bind %s role %s what %s rank %ld level#%ld",
-                            mom_item_cstring(itm), mom_item_cstring(rolitm),
-                            mom_value_cstring((const mom_hashedvalue_st*)what), (long)rank, _ee_level);
-          _ee_map.emplace(itm,vardef_st {rolitm,what,rank});
-        }
-    }
-    void bind(struct mom_item_st*itm, const vardef_st&def)
-    {
-      if (mom_itype(itm) == MOMITY_ITEM)
-        {
-          auto rolitm = def.vd_rolitm;
-          assert (mom_itype (rolitm) == MOMITY_ITEM);
-          auto what = def.vd_what;
-          auto rank = def.vd_rank;
-          if (rolitm == MOM_PREDEFITM(data))
-            MOM_DEBUGPRINTF(gencod,"bind %s data role rank %ld level#%ld", mom_item_cstring(itm),
-                            (long)rank, _ee_level);
-          else
-            MOM_DEBUGPRINTF(gencod,"bind %s role %s what %s rank %ld level#%ld",
-                            mom_item_cstring(itm), mom_item_cstring(rolitm),
-                            mom_value_cstring((struct mom_hashedvalue_st*)what), (long)rank, _ee_level);
-          _ee_map.emplace(itm,def);
-        }
-    }
-    void unbind(struct mom_item_st*itm)
-    {
-      if (mom_itype(itm) == MOMITY_ITEM)
-        {
-          MOM_DEBUGPRINTF(gencod, "unbind %s level#%ld", mom_item_cstring(itm), _ee_level);
-          _ee_map.erase(itm);
-        }
-    }
-    const vardef_st* get_binding(struct mom_item_st*itm) const
-    {
-      if (mom_itype(itm) == MOMITY_ITEM)
-        {
-          auto it =  _ee_map.find(itm);
-          if (it == _ee_map.end())
-            return nullptr;
-          else return &it->second;
-        }
-      else return nullptr;
-    }
-    void*orig(void) const
-    {
-      return _ee_orig;
-    };
-    intptr_t level(void) const
-    {
-      return _ee_level;
-    };
-  }; // end class EnvElem
 private:
   const unsigned _ce_magic;
   struct mom_item_st* _ce_topitm;
@@ -132,7 +57,8 @@ private:
   traced_set_items_t _ce_setlockeditems;
   traced_set_items_t _ce_sigitems;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
-  std::vector<EnvElem,traceable_allocator<EnvElem>> _ce_envstack;
+  traced_varmap_t _ce_globalvarmap;
+  traced_varmap_t _ce_localvarmap;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
@@ -143,107 +69,62 @@ protected:
   void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
 public:
-  void push_fresh_varenv (void*envorig=nullptr)
-  {
-    auto sz = _ce_envstack.size();
-    _ce_envstack.emplace_back(EnvElem {envorig,(intptr_t)sz});
-  }
-  void pop_varenv(int lin=0)
-  {
-    auto sz = _ce_envstack.size();
-    if (sz == 0)
-      {
-        throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,"empty varenv stack cannot be popped");
-      };
-    _ce_envstack.pop_back();
-  }
-  /// for automatic push/pop of a fresh varenv, declare in a block :
-  ///    LocalVars lv{this};
-  /// or
-  ///    LocalVars lv{this,orig};
-  class LocalVars
-  {
-    MomEmitter* _locem;
-  public:
-    LocalVars(MomEmitter*me,void*orig=nullptr) : _locem(me)
-    {
-      assert(me!=nullptr);
-      me->push_fresh_varenv(orig);
-    };
-    ~LocalVars()
-    {
-      assert (_locem != nullptr);
-      _locem->pop_varenv();
-      _locem=nullptr;
-    }
-  private:
-    LocalVars(const LocalVars&) = delete;
-    LocalVars(LocalVars&&) = delete;
-  };
-  EnvElem& top_varenv(int lin=0)
-  {
-    auto sz = _ce_envstack.size();
-    if (sz == 0)
-      {
-        throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,"empty varenv stack has no top");
-      };
-    return _ce_envstack[sz-1];
-  } // end top_varenv
-  void bind_top_var(struct mom_item_st*itm, struct mom_item_st*rolitm, int lin=0, const void*what=nullptr, intptr_t rank=0)
-  {
-    if (mom_itype(rolitm) != MOMITY_ITEM) /// should never happen
-      MOM_FATAPRINTF("invalid rolitm %s for binding itm %s from lin#%d",
-                     mom_value_cstring((struct mom_hashedvalue_st*)rolitm), mom_item_cstring(itm), lin);
-    auto sz = _ce_envstack.size();
-    if (sz == 0)
-      {
-        throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,
-                                mom_gc_printf("empty varenv stack cannot bind item %s", mom_item_cstring(itm)));
-      }
-    if (mom_itype(itm) != MOMITY_ITEM)
-      throw MomRuntimeErrorAt(__FILE__,lin?lin:__LINE__,
-                              "varenv stack cannot bind non-item");
-    top_varenv(lin).bind(itm,rolitm,what,rank);
-  } // end bind_top_var
-  void bind_top_var(struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what=nullptr, intptr_t rank=0)
-  {
-    bind_top_var(itm,rolitm,0,what,rank);  // end bind_top_var noline
-  }
-  bool bound_var(struct mom_item_st*itm) const
-  {
-    if (mom_itype(itm) != MOMITY_ITEM) return false;
-    auto sz = _ce_envstack.size();
-    if (sz==0) return false;
-    for (long ix= (long)(sz-1); ix>=0; ix--)
-      if (_ce_envstack[ix].is_bound(itm)) return true;
-    return false;
-  }
-  vardef_st*get_binding(struct mom_item_st*itm) const
-  {
+  vardef_st*get_binding(const struct mom_item_st*itm) const
+{
     if (mom_itype(itm) != MOMITY_ITEM) return nullptr;
-    auto sz = _ce_envstack.size();
-    if (sz==0) return nullptr;
-    for (long ix= (long)(sz-1); ix>=0; ix--)
-      {
-        auto p = _ce_envstack[ix].get_binding(itm);
-        if (p != nullptr) return const_cast<vardef_st*>(p);
-      }
+    auto it = _ce_localvarmap.find(itm);
+    if (it != _ce_localvarmap.end())
+      return const_cast<vardef_st*>(&it->second);
+    it = _ce_globalvarmap.find(itm);
+    if (it != _ce_globalvarmap.end())
+      return const_cast<vardef_st*>(&it->second);
     return nullptr;
   }
-  std::pair<vardef_st*,long> get_indexed_binding(struct mom_item_st*itm) const
+  bool is_bound(const struct mom_item_st*itm) const
   {
-    if (mom_itype(itm) != MOMITY_ITEM) return {nullptr,0L};
-    auto sz = _ce_envstack.size();
-    if (sz==0) return {nullptr,0L};
-    for (long ix= (long)(sz-1); ix>=0; ix--)
+    return _ce_localvarmap.find(itm) != _ce_localvarmap.end()
+           || _ce_globalvarmap.find(itm) != _ce_globalvarmap.end();
+  };
+  void bind_global(const struct mom_item_st*itm, const vardef_st& vd)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      throw MOM_RUNTIME_ERROR("global binding non-item");
+    if (vd.vd_rolitm == MOM_PREDEFITM(data))
+      MOM_DEBUGPRINTF(gencod, "global binding %s to data @%p rank#%ld",
+                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
+
+    else
+      MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s rank#%ld",
+                      mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
+                      mom_value_cstring((struct mom_hashedvalue_st*)vd.vd_what),
+                      vd.vd_rank);
+    _ce_globalvarmap[itm] = vd;
+  }
+  void bind_global(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, long rank=0)
+  {
+    bind_global(itm,vardef_st {rolitm,what,rank});
+  }
+  void unbind(const struct mom_item_st*itm)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      throw MOM_RUNTIME_ERROR("unbinding non-item");
+    auto itglo = _ce_globalvarmap.find(itm);
+    if (itglo != _ce_globalvarmap.end())
       {
-        vardef_st* p = const_cast<vardef_st*>(_ce_envstack[ix].get_binding(itm));
-        if (p != nullptr)
-          {
-            return {p, ix};
-          }
+        MOM_DEBUGPRINTF(gencod, "unbinding global %s role %s",
+                        mom_item_cstring(itm), mom_item_cstring(itglo->second.vd_rolitm));
+        _ce_globalvarmap.erase(itglo);
+        return;
+      };
+    auto itloc = _ce_localvarmap.find(itm);
+    if (itloc != _ce_localvarmap.end())
+      {
+        MOM_DEBUGPRINTF(gencod, "unbinding local %s role %s",
+                        mom_item_cstring(itm), mom_item_cstring(itglo->second.vd_rolitm));
+        _ce_localvarmap.erase(itloc);
+        return;
       }
-    return {nullptr,0};
+    throw MOM_RUNTIME_PRINTF("unbinding unbound item %s", mom_item_cstring(itm));
   }
   virtual const char*kindname() const =0;
   void lock_item(struct mom_item_st*itm)
@@ -455,8 +336,7 @@ void MomEmitter::scan_top_module(void)
   if (!modulseq)
     throw MOM_RUNTIME_PRINTF("item %s with bad module:%s",
                              mom_item_cstring(_ce_topitm), mom_value_cstring(modulev));
-  LocalVars mv {this,_ce_topitm};
-  bind_top_var(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm);
+  bind_global(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm);
   unsigned nbmodelem = mom_seqitems_length(modulseq);
   auto itemsarr = mom_seqitems_arr(modulseq);
   for (unsigned ix=0; ix<nbmodelem; ix++)
@@ -534,9 +414,8 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
   assert (is_locked_item(fuitm));
-  LocalVars lv {this,fuitm};
-  bind_top_var(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
-  bind_top_var(fuitm,MOM_PREDEFITM(func),fuitm);
+  bind_global(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
+  bind_global(fuitm,MOM_PREDEFITM(func),fuitm);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s bdyitm=%s",
