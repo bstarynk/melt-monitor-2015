@@ -43,6 +43,7 @@ public:
   {
     struct mom_item_st* vd_rolitm;
     const void* vd_what;
+    const void* vd_detail;
     long vd_rank;
   };
   typedef std::map<const struct mom_item_st*,
@@ -68,6 +69,7 @@ protected:
   virtual void scan_routine_element(struct mom_item_st*itm);
   void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
+  void scan_type(struct mom_item_st*typitm);
 public:
   vardef_st*get_binding(const struct mom_item_st*itm) const
 {
@@ -94,15 +96,17 @@ public:
                       mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
 
     else
-      MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s rank#%ld",
+      MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s detail %s rank#%ld",
                       mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
                       mom_value_cstring(vd.vd_what),
+                      mom_value_cstring(vd.vd_detail),
                       vd.vd_rank);
     _ce_globalvarmap[itm] = vd;
   }
-  void bind_global(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, long rank=0)
+  void bind_global(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what,
+                   const void*detail=nullptr, long rank=0)
   {
-    bind_global(itm,vardef_st {rolitm,what,rank});
+    bind_global(itm,vardef_st {rolitm,what,detail,rank});
   }
   void bind_local(const struct mom_item_st*itm, const vardef_st& vd)
   {
@@ -113,15 +117,16 @@ public:
                       mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
 
     else
-      MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s rank#%ld",
+      MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s detail %s rank#%ld",
                       mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
                       mom_value_cstring(vd.vd_what),
+                      mom_value_cstring(vd.vd_detail),
                       vd.vd_rank);
     _ce_localvarmap[itm] = vd;
   }
-  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, long rank=0)
+  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what,   const void*detail=nullptr, long rank=0)
   {
-    bind_local(itm,vardef_st {rolitm,what,rank});
+    bind_local(itm,vardef_st {rolitm,what,detail,rank});
   }
   void unbind(const struct mom_item_st*itm)
   {
@@ -450,6 +455,17 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 } // end  MomEmitter::scan_func_element
 
 
+////////////////
+void
+MomEmitter::scan_type(struct mom_item_st*typitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_type start typitm=%s", mom_item_cstring(typitm));
+#warning MomEmitter::scan_type unimplemented
+  MOM_FATAPRINTF("unimplemented scan_type typitm=%s", mom_item_cstring(typitm));
+} // end  MomEmitter::scan_type
+
+
+
 void
 MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
 {
@@ -492,7 +508,8 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
                                  ix, mom_item_cstring(curformitm),
                                  mom_item_cstring(sigitm));
       lock_item(typfitm);
-      bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, ix);
+      scan_type(typfitm);
+      bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, typfitm, ix);
     }
 #warning MomEmitter::scan_signature unimplemented
   MOM_FATAPRINTF("scan_signature unimplemented sigitm=%s initm=%s",
