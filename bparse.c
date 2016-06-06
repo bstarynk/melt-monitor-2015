@@ -270,9 +270,17 @@ momtok_tokenize (const char *filnam)
       if (!linbuf || *ptok == (char) 0)
         {
           linoff = ftell (fil);
+          if (linsiz > 0)
+            memset (linbuf, 0, linsiz);
           linlen = getline (&linbuf, &linsiz, fil);
           if (linlen >= 0)
-            lineno++;
+            {
+              lineno++;
+              MOM_DEBUGPRINTF (boot, "filnam=%s line#%d: %s", filnam, lineno,
+                               linbuf);
+            }
+          else
+            break;
           ptok = linbuf;
         };
       while (isspace (*ptok))
@@ -983,6 +991,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       topos++;
       struct mom_item_st *fromitm =
         mom_dyncast_item (momtok_parse (tovec, topos, &topos));
+      MOM_DEBUGPRINTF (boot,
+                       "momtok_parse ^put fromitm=%s topos#%d",
+                       mom_item_cstring (fromitm), topos);
       if (!fromitm)
         MOM_FATAPRINTF ("bad from for ^put at line %d of file %s",
                         curtok->mtok_lin, tovec->mtv_filename);
@@ -997,7 +1008,14 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
         }
       else
         atval = momtok_parse (tovec, topos, &topos);
+      MOM_DEBUGPRINTF (boot,
+                       "momtok_parse ^put atval=%s atrk#%d atindex %s topos#%d",
+                       mom_value_cstring (atval), atrk,
+                       atindex ? "true" : "false", topos);
       newval = momtok_parse (tovec, topos, &topos);
+      MOM_DEBUGPRINTF (boot,
+                       "momtok_parse ^put newval=%s topos#%d",
+                       mom_value_cstring (newval), topos);
       if (atindex)
         {
           mom_item_lock (fromitm);
