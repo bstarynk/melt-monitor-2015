@@ -460,6 +460,8 @@ void
 MomEmitter::scan_type(struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_type start typitm=%s", mom_item_cstring(typitm));
+  struct mom_item_st*desitm = mom_unsync_item_descr(typitm);
+
 #warning MomEmitter::scan_type unimplemented
   MOM_FATAPRINTF("unimplemented scan_type typitm=%s", mom_item_cstring(typitm));
 } // end  MomEmitter::scan_type

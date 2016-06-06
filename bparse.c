@@ -197,6 +197,7 @@ momtok_tokenize (const char *filnam)
   if (MOM_UNLIKELY (!filnam || !filnam[0]))
     MOM_FATAPRINTF ("bad filename to momtok_parse");
   FILE *fil = NULL;
+  size_t fsz = 0;
   char *inbuf = NULL;
   if (!strcmp (filnam, "-"))
     {
@@ -234,16 +235,20 @@ momtok_tokenize (const char *filnam)
       fil = fmemopen (inbuf, len, "r");
       if (!fil)
         MOM_FATAPRINTF ("failed to fmemopen buffer of %d for stdin", len);
+      fsz = len;
     }
   else
-    fil = fopen (filnam, "r");
-  if (!fil)
-    MOM_FATAPRINTF ("failed to open %s (%m)", filnam);
-  struct stat fst = { };
-  memset (&fst, 0, sizeof (fst));
-  if (fstat (fileno (fil), &fst))
-    MOM_FATAPRINTF ("failed to fstat %s fd#%d (%m)", filnam, fileno (fil));
-  size_t fsz = fst.st_size;
+    {
+      fil = fopen (filnam, "r");
+      if (!fil)
+        MOM_FATAPRINTF ("failed to open %s (%m)", filnam);
+      struct stat fst = { };
+      memset (&fst, 0, sizeof (fst));
+      if (fstat (fileno (fil), &fst))
+        MOM_FATAPRINTF ("failed to fstat %s fd#%d (%m)", filnam,
+                        fileno (fil));
+      fsz = fst.st_size;
+    }
   struct momtokvect_st *tovec = NULL;
   char *linbuf = NULL;
   size_t linsiz = 0;
