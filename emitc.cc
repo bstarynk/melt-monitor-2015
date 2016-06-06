@@ -57,6 +57,7 @@ private:
   std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_veclockeditems;
   traced_set_items_t _ce_setlockeditems;
   traced_set_items_t _ce_sigitems;
+  traced_set_items_t _ce_typitems;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
   traced_varmap_t _ce_globalvarmap;
   traced_varmap_t _ce_localvarmap;
@@ -333,7 +334,11 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
     _ce_topitm(itm),
     _ce_veclockeditems {},
                      _ce_setlockeditems {},
-_ce_sigitems {}
+                     _ce_sigitems {},
+                     _ce_typitems {},
+                     _ce_todoque {},
+                     _ce_globalvarmap {},
+_ce_localvarmap {}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     throw MOM_RUNTIME_ERROR("non item");
@@ -461,9 +466,10 @@ MomEmitter::scan_type(struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_type start typitm=%s", mom_item_cstring(typitm));
   struct mom_item_st*desitm = mom_unsync_item_descr(typitm);
-
-#warning MomEmitter::scan_type unimplemented
-  MOM_FATAPRINTF("unimplemented scan_type typitm=%s", mom_item_cstring(typitm));
+  if (desitm != MOM_PREDEFITM(type))
+    throw MOM_RUNTIME_PRINTF("type %s has bad descr %s",
+                             mom_item_cstring(typitm), mom_item_cstring(desitm));
+  _ce_typitems.insert(typitm);
 } // end  MomEmitter::scan_type
 
 
@@ -513,10 +519,37 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
       scan_type(typfitm);
       bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, typfitm, ix);
     }
-#warning MomEmitter::scan_signature unimplemented
-  MOM_FATAPRINTF("scan_signature unimplemented sigitm=%s initm=%s",
-                 mom_item_cstring(sigitm), mom_item_cstring(initm));
+  auto resv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(result));
+  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s resv=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(resv));
+  unsigned restyp = mom_itype(resv);
+  if (restyp == MOMITY_ITEM)
+    {
+      auto restypitm = reinterpret_cast<struct mom_item_st*>((void*)resv);
+      lock_item(restypitm);
+      scan_type(restypitm);
+    }
+  else if (restyp == MOMITY_TUPLE)
+    {
+      auto restytup = reinterpret_cast<const struct mom_boxtuple_st*>(resv);
+      unsigned nbresults = mom_boxtuple_length(restytup);
+      for (unsigned rix=0; rix<nbresults; rix++)
+        {
+          struct mom_item_st*curtyitm = mom_boxtuple_nth(restytup,rix);
+          if (!curtyitm || curtyitm==MOM_PREDEFITM(unit))
+            throw MOM_RUNTIME_PRINTF("missing type#%d in result %s of signature %s",
+                                     rix, mom_value_cstring(resv), mom_item_cstring(sigitm));
+          lock_item(curtyitm);
+          scan_type(curtyitm);
+        }
+    }
+  else if (restyp != MOMITY_NONE)
+    throw  MOM_RUNTIME_PRINTF("invalid result %s for signature %s",
+                              mom_value_cstring(resv), mom_item_cstring(sigitm));
+  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s done",
+                  mom_item_cstring(sigitm));
 } // end MomEmitter::scan_signature
+
 
 void
 MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
