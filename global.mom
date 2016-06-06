@@ -794,6 +794,26 @@ comment
 
 
 
+*locals
+1465201575
+^mtime
+(
+comment
+"for local variables inside blocks"_
+)attrs
+
+
+
+*loop
+1465200679
+^mtime
+(
+comment
+"for looping blocks or loops"_
+)attrs
+
+
+
 *main_module
 1458208784
 ^mtime
@@ -854,6 +874,7 @@ comment
 
 
 
+
 *node
 1456146211
 ^mtime
@@ -879,7 +900,6 @@ node_nth
 comment
 "get the arity of a node, or else nil"_
 )attrs
-
 
 
 
@@ -1021,6 +1041,7 @@ comment
 
 
 
+
 *out_hexa
 1456812179
 ^mtime
@@ -1038,7 +1059,6 @@ comment
 comment
 "output HTML encoding"_
 )attrs
-
 
 
 
@@ -1202,6 +1222,7 @@ comment
 
 
 
+
 *payl_assovaldata_remove
 1456833278
 ^mtime
@@ -1219,7 +1240,6 @@ comment
 comment
 "give the set of attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1379,6 +1399,7 @@ comment
 
 
 
+
 *payl_hashmap_get
 1456897878
 ^mtime
@@ -1396,7 +1417,6 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -1548,6 +1568,7 @@ comment
 
 
 
+
 *payl_vectval_node
 1456840222
 ^mtime
@@ -1565,7 +1586,6 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
-
 
 
 
@@ -1748,6 +1768,7 @@ comment
 
 
 
+
 *result
 1464962940
 ^mtime
@@ -1765,7 +1786,6 @@ comment
 comment
 "to reverse iterate a function on a composite value"_
 )attrs
-
 
 
 
@@ -1916,6 +1936,7 @@ comment
 
 
 
+
 *tasklet
 1464078294
 ^mtime
@@ -1935,7 +1956,6 @@ comment
 )attrs
 (
 )payload_queue
-
 
 
 
@@ -2201,6 +2221,7 @@ comment
 
 
 
+
 *verbatim
 1455468628
 ^mtime
@@ -2218,7 +2239,6 @@ comment
 comment
 "current web exchange"_
 )attrs
-
 
 
 

@@ -71,6 +71,9 @@ protected:
   void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
   void scan_type(struct mom_item_st*typitm);
+  void scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm);
+  void scan_expr(const void*expv, struct mom_item_st*insitm, int depth);
+  void scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm);
 public:
   vardef_st*get_binding(const struct mom_item_st*itm) const
 {
@@ -465,6 +468,7 @@ void
 MomEmitter::scan_type(struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_type start typitm=%s", mom_item_cstring(typitm));
+  assert (is_locked_item(typitm));
   struct mom_item_st*desitm = mom_unsync_item_descr(typitm);
   if (desitm != MOM_PREDEFITM(type))
     throw MOM_RUNTIME_PRINTF("type %s has bad descr %s",
@@ -479,6 +483,7 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_signature start sigitm=%s initm=%s",
                   mom_item_cstring(sigitm), mom_item_cstring(initm));
+  assert (is_locked_item(sigitm));
   struct mom_item_st*desitm = mom_unsync_item_descr(sigitm);
   MOM_DEBUGPRINTF(gencod, "scan_signature desitm=%s", mom_item_cstring(desitm));
   if (desitm != MOM_PREDEFITM(signature))
@@ -500,6 +505,9 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
         throw MOM_RUNTIME_PRINTF("missing formal#%d in signature %s",
                                  ix, mom_item_cstring(sigitm));
       lock_item(curformitm);
+      if (is_bound(curformitm))
+        throw MOM_RUNTIME_PRINTF("already bound formal#%d %s in signature %s",
+                                 ix, mom_item_cstring(curformitm), mom_item_cstring(sigitm));
       MOM_DEBUGPRINTF(gencod, "formal#%d in signature %s is %s",
                       ix, mom_item_cstring(sigitm),
                       mom_item_cstring(curformitm));
@@ -556,16 +564,49 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_block start blkitm=%s initm=%s",
                   mom_item_cstring(blkitm), mom_item_cstring(initm));
+  assert (is_locked_item(blkitm));
   struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
   MOM_DEBUGPRINTF(gencod, "scan_block desitm=%s", mom_item_cstring(desitm));
-  if (desitm != MOM_PREDEFITM(block))
+  if (desitm != MOM_PREDEFITM(sequence) && desitm != MOM_PREDEFITM(loop))
     throw MOM_RUNTIME_PRINTF("in %s block %s of bad descr %s",
                              mom_item_cstring(initm),
                              mom_item_cstring(blkitm), mom_item_cstring(desitm));
+  if (is_bound(blkitm))
+    throw MOM_RUNTIME_PRINTF("in %s block %s already bound",
+                             mom_item_cstring(initm),
+                             mom_item_cstring(blkitm));
 #warning MomEmitter::scan_block unimplemented
   MOM_FATAPRINTF("scan_block unimplemented blkitm=%s initm=%s",
                  mom_item_cstring(blkitm), mom_item_cstring(initm));
 } // end MomEmitter::scan_block
+
+
+void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_instr start insitm=%s rk#%d blkitm=%s",
+                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+#warning MomEmitter::scan_instr unimplemented
+  MOM_FATAPRINTF("unimplemented scan_instr insitm=%s rk#%d blkitm=%s",
+                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+} // end of MomEmitter::scan_instr
+
+void MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d",
+                  mom_value_cstring(expv), mom_item_cstring(insitm), depth);
+#warning MomEmitter::scan_expr unimplemented
+  MOM_FATAPRINTF("unimplemented scan_expr expv=%s insitm=%s depth#%d",
+                 mom_value_cstring(expv), mom_item_cstring(insitm), depth);
+} // end of MomEmitter::scan_expr
+
+void MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s",
+                  mom_item_cstring(varitm), mom_item_cstring(insitm));
+#warning MomEmitter::scan_var unimplemented
+  MOM_FATAPRINTF("unimplemented scan_var varitm=%s insitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm));
+} // end of MomEmitter::scan_var
 
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
