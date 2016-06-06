@@ -131,7 +131,7 @@ public:
                       vd.vd_rank);
     _ce_localvarmap[itm] = vd;
   }
-  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what,   const void*detail=nullptr, long rank=0)
+  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, const void*detail=nullptr, long rank=0)
   {
     bind_local(itm,vardef_st {rolitm,what,detail,rank});
   }
@@ -575,6 +575,13 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                              mom_item_cstring(initm),
                              mom_item_cstring(blkitm));
   auto whilexpv =  mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
+  auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "scan_block blkitm=%s whilexpv=%s bodytup=%s",
+                  mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup));
+  if (bodytup == nullptr)
+    throw  MOM_RUNTIME_PRINTF("in %s block %s without body",
+                              mom_item_cstring(initm),
+                              mom_item_cstring(blkitm));
   if (desitm ==  MOM_PREDEFITM(sequence))
     {
       if (whilexpv != nullptr)
@@ -582,18 +589,31 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                  mom_item_cstring(initm),
                                  mom_item_cstring(blkitm),
                                  mom_value_cstring(whilexpv));
+      bind_local(blkitm, MOM_PREDEFITM(sequence), initm);
     }
   else if (desitm == MOM_PREDEFITM(loop))
     {
+      bind_local(blkitm, MOM_PREDEFITM(loop), initm);
+      if (whilexpv)
+        scan_expr(whilexpv,blkitm,0);
     }
   else
     throw MOM_RUNTIME_PRINTF("in %s block %s of bad descr %s",
                              mom_item_cstring(initm),
                              mom_item_cstring(blkitm), mom_item_cstring(desitm));
   flush_todo_list(__LINE__);
-#warning MomEmitter::scan_block unimplemented
-  MOM_FATAPRINTF("scan_block unimplemented blkitm=%s initm=%s",
-                 mom_item_cstring(blkitm), mom_item_cstring(initm));
+  unsigned bodylen = mom_boxtuple_length(bodytup);
+  for (unsigned ix=0; ix<bodylen; ix++)
+    {
+      struct mom_item_st*insitm = mom_boxtuple_nth(bodytup,ix);
+      if (mom_itype(insitm) != MOMITY_ITEM)
+        throw  MOM_RUNTIME_PRINTF("in %s block %s has bad instr#%d",
+                                  mom_item_cstring(initm),
+                                  mom_item_cstring(blkitm), ix);
+      lock_item(insitm);
+      scan_instr(insitm, (int)ix, blkitm);
+    }
+  flush_todo_list(__LINE__);
 } // end MomEmitter::scan_block
 
 
