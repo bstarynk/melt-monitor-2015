@@ -585,14 +585,56 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
   if (desitm ==  MOM_PREDEFITM(sequence))
     {
       if (whilexpv != nullptr)
-        throw MOM_RUNTIME_PRINTF("in %s sequence block %s with while:%s",
+        throw MOM_RUNTIME_PRINTF("in %s sequence %s with while:%s",
                                  mom_item_cstring(initm),
                                  mom_item_cstring(blkitm),
                                  mom_value_cstring(whilexpv));
       bind_local(blkitm, MOM_PREDEFITM(sequence), initm);
+      auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
+      unsigned nblocals = mom_seqitems_length(localseq);
+      MOM_DEBUGPRINTF(gencod, "scan_block blkitm=%s localseq=%s", mom_item_cstring(blkitm), mom_value_cstring(localseq));
+      for (unsigned locix=0; locix<nblocals; locix++)
+        {
+          auto curlocitm = const_cast<struct mom_item_st*>(mom_seqitems_nth(localseq, locix));
+          MOM_DEBUGPRINTF(gencod, "local#%d in sequence %s is %s", locix, mom_item_cstring(blkitm), mom_item_cstring(curlocitm));
+          if (mom_itype(curlocitm) != MOMITY_ITEM)
+            throw MOM_RUNTIME_PRINTF("in %s sequence %s with bad local#%d from %s",
+                                     mom_item_cstring(initm),
+                                     mom_item_cstring(blkitm),
+                                     locix, mom_value_cstring(localseq));
+          lock_item(curlocitm);
+          if (is_bound(curlocitm))
+            throw MOM_RUNTIME_PRINTF("in %s sequence %s with already bound local#%d %s",
+                                     mom_item_cstring(initm),
+                                     mom_item_cstring(blkitm),
+                                     locix, mom_item_cstring(curlocitm));
+          auto deslocitm =  mom_unsync_item_descr(curlocitm);
+          if (deslocitm != MOM_PREDEFITM(variable))
+            throw MOM_RUNTIME_PRINTF("in %s sequence %s with local#%d %s non-variable",
+                                     mom_item_cstring(initm),
+                                     mom_item_cstring(blkitm),
+                                     locix, mom_item_cstring(curlocitm));
+          struct mom_item_st*typlocitm =
+          mom_dyncast_item(mom_unsync_item_get_phys_attr(curlocitm,MOM_PREDEFITM(type)));
+          MOM_DEBUGPRINTF(gencod, "local %s has type %s", mom_item_cstring(curlocitm), mom_item_cstring(typlocitm));
+          if (!typlocitm)
+            throw  MOM_RUNTIME_PRINTF("in %s sequence %s with local#%d %s without type",
+                                      mom_item_cstring(initm),
+                                      mom_item_cstring(blkitm),
+                                      locix, mom_item_cstring(curlocitm));
+          lock_item(typlocitm);
+          scan_type(typlocitm);
+          bind_local(curlocitm, MOM_PREDEFITM(variable), blkitm, typlocitm, locix);
+        }
     }
   else if (desitm == MOM_PREDEFITM(loop))
     {
+      auto localsv = mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals));
+      if (localsv)
+        throw MOM_RUNTIME_PRINTF("in %s loop %s with locals %s",
+                                 mom_item_cstring(initm),
+                                 mom_item_cstring(blkitm),
+                                 mom_value_cstring(localsv));
       bind_local(blkitm, MOM_PREDEFITM(loop), initm);
       if (whilexpv)
         scan_expr(whilexpv,blkitm,0);
@@ -621,6 +663,31 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
 {
   MOM_DEBUGPRINTF(gencod, "scan_instr start insitm=%s rk#%d blkitm=%s",
                   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+  assert (is_locked_item(insitm));
+  struct mom_item_st*desitm = mom_unsync_item_descr(insitm);
+  MOM_DEBUGPRINTF(gencod, "scan_instr insitm=%s desitm=%s", mom_item_cstring(insitm),  mom_item_cstring(desitm));
+  if (!desitm)
+    throw MOM_RUNTIME_PRINTF("instr %s #%d of %s without descr",
+                             mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+#define NBMODOPER_MOM 97
+#define CASE_OPER_MOM(Nam) momhashpredef_##Nam % NBMODOPER_MOM:		\
+	  if (desitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasedesc; foundcase_##Nam
+  switch (desitm->hva_hash % NBMODOPER_MOM)
+    {
+    case CASE_OPER_MOM(assign):
+      {
+      }
+    break;
+    default:
+defaultcasedesc:
+      throw MOM_RUNTIME_PRINTF("instr %s #%d of %s with unexpected descr %s",
+                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                               mom_item_cstring(desitm));
+#undef CASE_OPER_MOM
+#undef NBMODOPER_MOM
+    }
+
 #warning MomEmitter::scan_instr unimplemented
   MOM_FATAPRINTF("unimplemented scan_instr insitm=%s rk#%d blkitm=%s",
                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
