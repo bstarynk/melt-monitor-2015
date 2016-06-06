@@ -676,8 +676,8 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
   switch (desitm->hva_hash % NBMODOPER_MOM)
     {
     case CASE_OPER_MOM(assign):
-      {
-      }
+    {
+    }
     break;
     default:
 defaultcasedesc:
@@ -776,7 +776,7 @@ void MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, 
   MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s typitm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
 #warning MomEmitter::scan_var unimplemented
-  MOM_FATAPRINTF("unimplemented scan_var varitm=%s insitm=%s",
+  MOM_FATAPRINTF("unimplemented scan_var varitm=%s insitm=%s typitm=%s",
                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
 } // end of MomEmitter::scan_var
 
