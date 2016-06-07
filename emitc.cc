@@ -70,16 +70,17 @@ protected:
   virtual void scan_routine_element(struct mom_item_st*itm);
   void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
-  void scan_type(struct mom_item_st*typitm);
   void scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm);
-  void scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=0);
-  void scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=0);
-  void scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=0);
-  void scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=0);
+  void scan_type(struct mom_item_st*typitm);
+  // scanning of expressions & variables return their type item
+struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
 public:
   static int constexpr MAX_DEPTH_EXPR=128;
   vardef_st*get_binding(const struct mom_item_st*itm) const
-{
+  {
     if (mom_itype(itm) != MOMITY_ITEM) return nullptr;
     auto it = _ce_localvarmap.find(itm);
     if (it != _ce_localvarmap.end())
@@ -637,7 +638,14 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                  mom_value_cstring(localsv));
       bind_local(blkitm, MOM_PREDEFITM(loop), initm);
       if (whilexpv)
-        scan_expr(whilexpv,blkitm,0);
+        {
+          auto whiltypitm = scan_expr(whilexpv,blkitm,0);
+          if (whiltypitm == nullptr || whiltypitm == MOM_PREDEFITM(unit))
+            throw MOM_RUNTIME_PRINTF("in %s loop %s has bad while type %s",
+                                     mom_item_cstring(initm),
+                                     mom_item_cstring(blkitm),
+                                     mom_item_cstring(whiltypitm));
+        }
     }
   else
     throw MOM_RUNTIME_PRINTF("in %s block %s of bad descr %s",
@@ -694,7 +702,8 @@ defaultcasedesc:
 } // end of MomEmitter::scan_instr
 
 
-void MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
+struct mom_item_st*
+MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d typitm=%s",
                   mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
@@ -710,46 +719,42 @@ void MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth
   switch (typexp)
     {
     case MOMITY_NONE:
-      break;
+      return MOM_PREDEFITM(unit);
     case MOMITY_INT:
       if (typitm && typitm != MOM_PREDEFITM(int) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("int.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-      break;
+      return typitm?typitm:MOM_PREDEFITM(int);
     case MOMITY_BOXSTRING:
       if (typitm && typitm != MOM_PREDEFITM(string) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("string.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-      break;
+      return typitm?typitm:MOM_PREDEFITM(string);
     case MOMITY_BOXDOUBLE:
       if (typitm && typitm != MOM_PREDEFITM(double) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("double.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-      break;
+      return typitm?typitm:MOM_PREDEFITM(double);
     case MOMITY_ITEM:
     {
       auto itmexp = (struct mom_item_st*)expv;
       lock_item(itmexp);
-      scan_item_expr(itmexp,insitm,depth,typitm);
-      break;
+      return scan_item_expr(itmexp,insitm,depth,typitm);
+      ;
     }
     case MOMITY_NODE:
     {
       auto nodexp = (const struct mom_boxnode_st*)expv;
-      scan_node_expr(nodexp,insitm,depth,typitm);
-      break;
+      return scan_node_expr(nodexp,insitm,depth,typitm);
     }
     default:
       throw MOM_RUNTIME_PRINTF("unexpected expr %s in instr %s with type %s",
                                mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
     }
-#warning MomEmitter::scan_expr unimplemented
-  MOM_FATAPRINTF("unimplemented scan_expr expv=%s insitm=%s depth#%d typitm=%s",
-                 mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
 } // end of MomEmitter::scan_expr
 
 
-void
+struct mom_item_st*
 MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
@@ -760,7 +765,8 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 } // end of MomEmitter::scan_node_expr
 
 
-void
+
+struct mom_item_st*
 MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
@@ -771,7 +777,9 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
 } // end of MomEmitter::scan_node_expr
 
 
-void MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
+
+struct mom_item_st*
+MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s typitm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
