@@ -45,5 +45,6 @@ predefgc.bin
 ## ignore core dumps
 core*
 
-## ignore the HTML version of README.md
+## ignore the HTML version of README.md and other markdown files
 README.html
+CodeGen.html
