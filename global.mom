@@ -577,6 +577,16 @@ comment
 
 
 
+*instruction
+1465307584
+^mtime
+(
+comment
+"for instructions"_
+)attrs
+
+
+
 *int
 1456146211
 ^mtime
@@ -688,6 +698,7 @@ comment
 
 
 
+
 *is_sequence
 1457361164
 ^mtime
@@ -700,7 +711,6 @@ set
 tuple
 )set
 )attrs
-
 
 
 
@@ -864,6 +874,7 @@ comment
 
 
 
+
 *map
 1457082461
 ^mtime
@@ -871,7 +882,6 @@ comment
 comment
 "primitive to map a function to a value with a connective"_
 )attrs
-
 
 
 
@@ -1031,6 +1041,7 @@ comment
 
 
 
+
 *out_content
 1458122116
 ^mtime
@@ -1038,7 +1049,6 @@ comment
 comment
 "for output of item content"_
 )attrs
-
 
 
 
@@ -1201,6 +1211,7 @@ out_puts
 
 
 
+
 *parent
 1454575823
 ^mtime
@@ -1208,7 +1219,6 @@ out_puts
 comment
 "attribute giving parent"_
 )attrs
-
 
 
 
@@ -1381,6 +1391,7 @@ comment
 
 
 
+
 *payl_hashassoc_put
 1456910539
 ^mtime
@@ -1388,7 +1399,6 @@ comment
 comment
 "put in an hashassoc item"_
 )attrs
-
 
 
 
@@ -1558,6 +1568,7 @@ comment
 
 
 
+
 *payl_loader
 1457031316
 ^mtime
@@ -1565,7 +1576,6 @@ comment
 comment
 "loader payload"_
 )attrs
-
 
 
 
@@ -1758,6 +1768,7 @@ comment
 
 
 
+
 *precedence
 1455805494
 ^mtime
@@ -1765,7 +1776,6 @@ comment
 comment
 "for precedence"_
 )attrs
-
 
 
 
@@ -1920,6 +1930,7 @@ comment
 
 
 
+
 *signature_tasklet
 1446190348
 ^mtime
@@ -1927,7 +1938,6 @@ comment
 comment
 "signature of tasklet functions"_
 )attrs
-
 
 
 
@@ -2209,6 +2219,7 @@ comment
 
 
 
+
 *unequal
 1457365666
 ^mtime
@@ -2216,7 +2227,6 @@ comment
 comment
 "test for inequality of two values"_
 )attrs
-
 
 
 
