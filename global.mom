@@ -442,6 +442,16 @@ comment
 
 
 
+*global
+1465299099
+^mtime
+(
+comment
+"for global variables"_
+)attrs
+
+
+
 *greater
 1457365666
 ^mtime
@@ -516,6 +526,7 @@ parenthesis
 
 
 
+
 *included_files
 1457031973
 ^mtime
@@ -523,7 +534,6 @@ parenthesis
 comment
 "for included header files"_
 )attrs
-
 
 
 
@@ -697,6 +707,7 @@ tuple
 
 
 
+
 *item
 1454653045
 ^mtime
@@ -710,7 +721,6 @@ is_atom
 is_item
 )set
 )attrs
-
 
 
 
@@ -864,6 +874,7 @@ comment
 
 
 
+
 *no_assoc
 1455871773
 ^mtime
@@ -871,7 +882,6 @@ comment
 comment
 "for non-associative delimiters"_
 )attrs
-
 
 
 
@@ -1031,6 +1041,7 @@ comment
 
 
 
+
 *out_gplv3_notice
 1456930526
 ^mtime
@@ -1038,7 +1049,6 @@ comment
 comment
 "output the GPLv3 notice"_
 )attrs
-
 
 
 
@@ -1212,6 +1222,7 @@ comment
 
 
 
+
 *payl_assovaldata_put
 1456833278
 ^mtime
@@ -1219,7 +1230,6 @@ comment
 comment
 "put attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1389,6 +1399,7 @@ payl_hashmap_remove
 
 
 
+
 *payl_hashmap_count
 1456897878
 ^mtime
@@ -1396,7 +1407,6 @@ payl_hashmap_remove
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -1558,6 +1568,7 @@ comment
 
 
 
+
 *payl_vectval_count
 1456840222
 ^mtime
@@ -1565,7 +1576,6 @@ comment
 comment
 "count in a vector of values"_
 )attrs
-
 
 
 
@@ -1758,6 +1768,7 @@ comment
 
 
 
+
 *resize
 1464790967
 ^mtime
@@ -1765,7 +1776,6 @@ comment
 comment
 "for resizing"_
 )attrs
-
 
 
 
@@ -1926,6 +1936,7 @@ is_string
 
 
 
+
 *switch_item
 1457337792
 ^mtime
@@ -1933,7 +1944,6 @@ is_string
 comment
 "to switch on items"_
 )attrs
-
 
 
 
@@ -2073,6 +2083,16 @@ node
 
 
 
+*thread_local
+1465299099
+^mtime
+(
+comment
+"for thread-local variables"_
+)attrs
+
+
+
 *transient
 1456994815
 ^mtime
@@ -2201,6 +2221,7 @@ comment
 
 
 
+
 *variable
 1464962851
 ^mtime
@@ -2218,7 +2239,6 @@ comment
 comment
 "for vector payload"_
 )attrs
-
 
 
 
