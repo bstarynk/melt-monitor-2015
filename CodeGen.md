@@ -46,9 +46,11 @@ An *instruction-item* is one of:
   *variable-item*, `from`: some *expression* of compatible type. A
   missing `from` is taken as a null or cleared value.
 
-* a *break-item* with `descr`: `break` and `break`: some enclosing *block-item*
+* a *break-item* with `descr`: `break` and `block`: some enclosing *block-item*
 
-* a *continue-item* with  `descr`: `continue` and `continue`: some enclosing *loop-item*
+* a *continue-item* with  `descr`: `continue` and `loop`: some enclosing *loop-item*
+
+* a nested fresh *block-item* 
 
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 

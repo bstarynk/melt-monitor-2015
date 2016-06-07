@@ -51,6 +51,8 @@ public:
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
                                            traced_varmap_t;
+  static const unsigned constexpr NB_MAX_BLOCKS = 65536;
+  static const unsigned constexpr NB_MAX_INSTRS = 1048576;
 private:
   const unsigned _ce_magic;
   struct mom_item_st* _ce_topitm;
@@ -58,9 +60,12 @@ private:
   traced_set_items_t _ce_setlockeditems;
   traced_set_items_t _ce_sigitems;
   traced_set_items_t _ce_typitems;
+  traced_set_items_t _ce_blockitems;
+  traced_set_items_t _ce_instritems;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
   traced_varmap_t _ce_globalvarmap;
   traced_varmap_t _ce_localvarmap;
+  struct mom_item_st*_ce_curfunctionitm;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
@@ -68,12 +73,28 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
-  void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm);
+  void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
+  void scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
+{
+    scan_signature(sigitm,initm,true);
+  }
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
   void scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm);
+  virtual void scan_special_instr(struct mom_item_st*insitm, struct mom_item_st*desitm, int rk, struct mom_item_st*blkitm)
+  {
+    throw MOM_RUNTIME_PRINTF("unexpected special instruction %s of descriptor %s rank#%d in block %s",
+                             mom_item_cstring(insitm),
+                             mom_item_cstring(desitm),
+                             rk,
+                             mom_item_cstring(blkitm));
+  }
   void scan_type(struct mom_item_st*typitm);
+  struct mom_item_st*current_function(void) const
+  {
+    return _ce_curfunctionitm;
+  };
   // scanning of expressions & variables return their type item
-struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
@@ -90,11 +111,35 @@ public:
       return const_cast<vardef_st*>(&it->second);
     return nullptr;
   }
+  vardef_st*get_local_binding(const struct mom_item_st*itm) const
+  {
+    if (mom_itype(itm) != MOMITY_ITEM) return nullptr;
+    auto it = _ce_localvarmap.find(itm);
+    if (it != _ce_localvarmap.end())
+      return const_cast<vardef_st*>(&it->second);
+    return nullptr;
+  }
+  vardef_st*get_global_binding(const struct mom_item_st*itm) const
+  {
+    if (mom_itype(itm) != MOMITY_ITEM) return nullptr;
+    auto it = _ce_globalvarmap.find(itm);
+    if (it != _ce_globalvarmap.end())
+      return const_cast<vardef_st*>(&it->second);
+    return nullptr;
+  }
   bool is_bound(const struct mom_item_st*itm) const
   {
     return _ce_localvarmap.find(itm) != _ce_localvarmap.end()
            || _ce_globalvarmap.find(itm) != _ce_globalvarmap.end();
   };
+  bool is_locally_bound(const struct mom_item_st*itm) const
+  {
+    return _ce_localvarmap.find(itm) != _ce_localvarmap.end();
+  }
+  bool is_globally_bound(const struct mom_item_st*itm) const
+  {
+    return _ce_globalvarmap.find(itm) != _ce_globalvarmap.end();
+  }
   void bind_global(const struct mom_item_st*itm, const vardef_st& vd)
   {
     if (mom_itype(itm) != MOMITY_ITEM)
@@ -187,6 +232,7 @@ public:
   };
   void flush_todo_list(int lin=0)
   {
+    long count = 0;
     if (lin)
       MOM_DEBUGPRINTF_AT(__FILE__,lin,gencod,"flush_todo_list %s with %ld todos",
                          kindname(), nb_todos());
@@ -198,8 +244,15 @@ public:
         auto tf = _ce_todoque.front();
         _ce_todoque.pop_front();
         tf(this);
+        count++;
       }
     _ce_todoque.shrink_to_fit();
+    if (lin)
+      MOM_DEBUGPRINTF_AT(__FILE__,lin,gencod,"flush_todo_list %s done %ld todos",
+                         kindname(), count);
+    else
+      MOM_DEBUGPRINTF(gencod,"flush_todo_list %s done %ld todos",
+                      kindname(), count);
   };
   unsigned magic() const
   {
@@ -212,8 +265,8 @@ public:
 class MomCEmitter final :public MomEmitter
 {
   friend bool mom_emit_c_code(struct mom_item_st*itm);
-  static unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
 public:
+  static unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   MomCEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
@@ -228,8 +281,8 @@ public:
 class MomJavascriptEmitter final : public MomEmitter
 {
   friend bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*out);
-  static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
 public:
+  static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
@@ -255,9 +308,9 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     }
   MOM_DEBUGPRINTF(gencod, "mom_emit_c_code start itm=%s", mom_item_cstring(itm));
   errno = 0;
+  MomCEmitter cemit {itm};
   try
     {
-      MomCEmitter cemit {itm};
       cemit.scan_top_module();
       cemit.flush_todo_list(__LINE__);
 #warning mom_emit_c_code incomplete
@@ -268,20 +321,20 @@ bool mom_emit_c_code(struct mom_item_st*itm)
   catch (const MomRuntimeErrorAt& e)
     {
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
-                        "mom_emit_c_code %s failed with MOM runtime exception %s",
-                        mom_item_cstring(itm), e.what());
+                        "mom_emit_c_code %s failed with MOM runtime exception %s in %s",
+                        mom_item_cstring(itm), e.what(), mom_item_cstring(cemit.current_function()));
       return false;
     }
   catch (const std::exception& e)
     {
-      MOM_WARNPRINTF("mom_emit_c_code %s failed with exception %s",
-                     mom_item_cstring(itm), e.what());
+      MOM_WARNPRINTF("mom_emit_c_code %s failed with exception %s in %s",
+                     mom_item_cstring(itm), e.what(), mom_item_cstring(cemit.current_function()));
       return false;
     }
   catch (...)
     {
-      MOM_WARNPRINTF("mom_emit_c_code %s failed",
-                     mom_item_cstring(itm));
+      MOM_WARNPRINTF("mom_emit_c_code %s failed in %s",
+                     mom_item_cstring(itm), mom_item_cstring(cemit.current_function()));
       return false;
     }
 } // end of mom_emit_c_code
@@ -304,9 +357,9 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
     }
   MOM_DEBUGPRINTF(gencod, "mom_emit_javascript_code start itm=%s", mom_item_cstring(itm));
   errno = 0;
+  MomJavascriptEmitter jsemit {itm};
   try
     {
-      MomJavascriptEmitter jsemit {itm};
       jsemit.scan_top_module();
       jsemit.flush_todo_list(__LINE__);
 #warning mom_emit_javascript_code incomplete
@@ -316,20 +369,20 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
   catch (const MomRuntimeErrorAt& e)
     {
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
-                        "mom_emit_javascript_code %s failed with MOM runtime exception %s",
-                        mom_item_cstring(itm), e.what());
+                        "mom_emit_javascript_code %s failed with MOM runtime exception %s in %s",
+                        mom_item_cstring(itm), e.what(), mom_item_cstring(jsemit.current_function()));
       return false;
     }
   catch (const std::exception& e)
     {
-      MOM_WARNPRINTF("mom_emit_javascript_code %s failed with exception %s",
-                     mom_item_cstring(itm), e.what());
+      MOM_WARNPRINTF("mom_emit_javascript_code %s failed with exception %s in %s",
+                     mom_item_cstring(itm), e.what(), mom_item_cstring(jsemit.current_function()));
       return false;
     }
   catch (...)
     {
-      MOM_WARNPRINTF("mom_emit_javascript_code %s failed",
-                     mom_item_cstring(itm));
+      MOM_WARNPRINTF("mom_emit_javascript_code %s failed in %s",
+                     mom_item_cstring(itm), mom_item_cstring(jsemit.current_function()));
       return false;
     }
 } // end mom_emit_javascript_code
@@ -343,9 +396,12 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_setlockeditems {},
                      _ce_sigitems {},
                      _ce_typitems {},
+                     _ce_blockitems {},
+                     _ce_instritems {},
                      _ce_todoque {},
                      _ce_globalvarmap {},
-_ce_localvarmap {}
+                     _ce_localvarmap {},
+_ce_curfunctionitm {nullptr}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     throw MOM_RUNTIME_ERROR("non item");
@@ -383,9 +439,14 @@ void MomEmitter::scan_top_module(void)
       lock_item(curitm);
       todo([=](MomEmitter*em)
       {
+        MOM_DEBUGPRINTF(gencod, "before scanning module element %s #%d from top module %s",
+                        mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
         em->scan_module_element(curitm);
+        MOM_DEBUGPRINTF(gencod, "after scanning module element %s #%d from top module %s",
+                        mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
       });
       flush_todo_list(__LINE__);
+      _ce_curfunctionitm = nullptr;
     }
 } // end of MomEmitter::scan_top_module
 
@@ -405,6 +466,8 @@ void MomEmitter::scan_module_element(struct mom_item_st*elitm)
 	  goto defaultcasedesc; foundcase_##Nam
   switch (descitm->hva_hash % NBMODELEMDESC_MOM)
     {
+    case CASE_DESCR_MOM (global):
+    case CASE_DESCR_MOM (thread_local):
     case CASE_DESCR_MOM (data):
       todo([=](MomEmitter*thisemit)
       {
@@ -450,6 +513,7 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
   assert (is_locked_item(fuitm));
+  _ce_curfunctionitm = fuitm;
   bind_global(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
   bind_global(fuitm,MOM_PREDEFITM(func),fuitm);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
@@ -462,8 +526,7 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing body in func %s", mom_item_cstring(fuitm));
   scan_block(bdyitm,fuitm);
-#warning MomEmitter::scan_func_element unimplemented
-  MOM_FATAPRINTF("unimplemented scan_func_element fuitm=%s", mom_item_cstring(fuitm));
+  _ce_curfunctionitm = nullptr;
 } // end  MomEmitter::scan_func_element
 
 
@@ -483,24 +546,24 @@ MomEmitter::scan_type(struct mom_item_st*typitm)
 
 
 void
-MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
+MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_signature start sigitm=%s initm=%s",
-                  mom_item_cstring(sigitm), mom_item_cstring(initm));
+  MOM_DEBUGPRINTF(gencod, "scan_signature start sigitm=%s initm=%s nobind %s",
+                  mom_item_cstring(sigitm), mom_item_cstring(initm), nobind?"true":"false");
   assert (is_locked_item(sigitm));
   struct mom_item_st*desitm = mom_unsync_item_descr(sigitm);
   MOM_DEBUGPRINTF(gencod, "scan_signature desitm=%s", mom_item_cstring(desitm));
   if (desitm != MOM_PREDEFITM(signature))
     throw MOM_RUNTIME_PRINTF("in %s signature %s of bad descr %s",
                              mom_item_cstring(initm), mom_item_cstring(sigitm), mom_item_cstring(desitm));
-  bind_local(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm);
+  if (!nobind) bind_local(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm);
   auto formtup =
     mom_dyncast_tuple(mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(formals)));
   MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s formtup=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtup));
   if (formtup == nullptr)
     throw MOM_RUNTIME_PRINTF("missing formals in signature %s", mom_item_cstring(sigitm));
-  bind_local(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup);
+  if (!nobind) bind_local(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup);
   unsigned nbformals = mom_boxtuple_length(formtup);
   for (unsigned ix=0; ix<nbformals; ix++)
     {
@@ -529,7 +592,7 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
                                  mom_item_cstring(sigitm));
       lock_item(typfitm);
       scan_type(typfitm);
-      bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, typfitm, ix);
+      if (!nobind) bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, typfitm, ix);
     }
   auto resv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(result));
   MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s resv=%s",
@@ -569,8 +632,13 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
   MOM_DEBUGPRINTF(gencod, "scan_block start blkitm=%s initm=%s",
                   mom_item_cstring(blkitm), mom_item_cstring(initm));
   assert (is_locked_item(blkitm));
+  if (_ce_blockitems.size() >= NB_MAX_BLOCKS)
+    throw  MOM_RUNTIME_PRINTF("in %s block %s overflowing %d",
+                              mom_item_cstring(initm),
+                              mom_item_cstring(blkitm),
+                              (int) (_ce_blockitems.size()));
   struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
-  MOM_DEBUGPRINTF(gencod, "scan_block desitm=%s", mom_item_cstring(desitm));
+  MOM_DEBUGPRINTF(gencod, "scan_block  blkitm=%s desitm=%s",  mom_item_cstring(blkitm), mom_item_cstring(desitm));
   if (is_bound(blkitm))
     throw MOM_RUNTIME_PRINTF("in %s block %s already bound",
                              mom_item_cstring(initm),
@@ -583,6 +651,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
     throw  MOM_RUNTIME_PRINTF("in %s block %s without body",
                               mom_item_cstring(initm),
                               mom_item_cstring(blkitm));
+  _ce_blockitems.insert(blkitm);
   if (desitm ==  MOM_PREDEFITM(sequence))
     {
       if (whilexpv != nullptr)
@@ -664,6 +733,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
       scan_instr(insitm, (int)ix, blkitm);
     }
   flush_todo_list(__LINE__);
+  unbind(blkitm);
 } // end MomEmitter::scan_block
 
 
@@ -677,6 +747,17 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
   if (!desitm)
     throw MOM_RUNTIME_PRINTF("instr %s #%d of %s without descr",
                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+  if (_ce_instritems.size() >= NB_MAX_INSTRS)
+    throw  MOM_RUNTIME_PRINTF("instr %s #%d of %s overflowing %d",
+                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                              (int)(_ce_instritems.size()));
+  {
+    auto insbind = get_binding(insitm);
+    if (insbind)
+      throw MOM_RUNTIME_PRINTF("instr %s #%d of %s already bound with role %s",
+                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm), insbind->vd_rolitm);
+    bind_local(insitm, MOM_PREDEFITM(instruction), blkitm, desitm, rk)
+  }
 #define NBMODOPER_MOM 97
 #define CASE_OPER_MOM(Nam) momhashpredef_##Nam % NBMODOPER_MOM:		\
 	  if (desitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
@@ -685,20 +766,109 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     {
     case CASE_OPER_MOM(assign):
     {
+      auto tovaritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(to)));
+      auto fromexp = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(from));
+      if (insitm->itm_pcomp && mom_vectvaldata_count(insitm->itm_pcomp)>0)
+        throw  MOM_RUNTIME_PRINTF("assign %s #%d in block %s with unexpected %d components",
+                                  mom_item_cstring(insitm), rk,
+                                  mom_item_cstring(blkitm),
+                                  mom_vectvaldata_count(insitm->itm_pcomp));
+      if (!tovaritm)
+        throw  MOM_RUNTIME_PRINTF("assign %s #%d in block %s of %s without `to`",
+                                  mom_item_cstring(insitm), rk,
+                                  mom_item_cstring(blkitm), mom_item_cstring(blkitm));
+      auto totypitm = scan_var(tovaritm,insitm);
+      auto fromtypitm = fromexp?scan_expr(fromexp,insitm,0,totypitm):totypitm;
+      if (!fromtypitm)
+        throw MOM_RUNTIME_PRINTF("assign %s #%d in block %s with untypable `from` %s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm), mom_value_cstring(fromexp));
+      if (totypitm != fromtypitm)
+        throw MOM_RUNTIME_PRINTF("assign %s #%d in block %s with incompatible types from type %s to type %s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm), mom_item_cstring(fromtypitm), mom_item_cstring(totypitm));
+    }
+    break;
+    case CASE_OPER_MOM(break):
+    {
+      auto outblkitm= mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(block)));
+      if (!outblkitm)
+        throw MOM_RUNTIME_PRINTF("break %s #%d in block %s without `block`",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm));
+      if (insitm->itm_pcomp && mom_vectvaldata_count(insitm->itm_pcomp)>0)
+        throw  MOM_RUNTIME_PRINTF("break %s #%d in block %s with unexpected %d components",
+                                  mom_item_cstring(insitm), rk,
+                                  mom_item_cstring(blkitm),
+                                  mom_vectvaldata_count(insitm->itm_pcomp));
+      auto blkbind = get_local_binding(outblkitm);
+      if (!blkbind)
+        throw MOM_RUNTIME_PRINTF("break %s #%d in block %s from non-nested out `block`:%s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm),
+                                 mom_item_cstring(outblkitm));
+      if (blkbind->vd_rolitm != MOM_PREDEFITM(loop) && blkbind->vd_rolitm != MOM_PREDEFITM(sequence))
+        throw MOM_RUNTIME_PRINTF("break %s #%d in block %s from `block`:%s with strange role %s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm),
+                                 mom_item_cstring(outblkitm),
+                                 mom_item_cstring(blkbind->vd_rolitm));
+    }
+    break;
+    case CASE_OPER_MOM(continue):
+    {
+      auto loopitm= mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(loop)));
+      if (!loopitm)
+        throw MOM_RUNTIME_PRINTF("continue %s #%d in block %s without `loop`",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm));
+      if (insitm->itm_pcomp && mom_vectvaldata_count(insitm->itm_pcomp)>0)
+        throw  MOM_RUNTIME_PRINTF("continue %s #%d in block %s with unexpected %d components",
+                                  mom_item_cstring(insitm), rk,
+                                  mom_item_cstring(blkitm),
+                                  mom_vectvaldata_count(insitm->itm_pcomp));
+      auto loopbind = get_local_binding(loopitm);
+      if (!loopbind)
+        throw MOM_RUNTIME_PRINTF("continue %s #%d in block %s from non-nested out `loop`:%s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm),
+                                 mom_item_cstring(loopitm));
+      if (loopbind->vd_rolitm != MOM_PREDEFITM(loop))
+        throw MOM_RUNTIME_PRINTF("continue %s #%d in block %s from `loop`:%s with strange role %s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm),
+                                 mom_item_cstring(loopitm),
+                                 mom_item_cstring(loopbind->vd_rolitm));
+    }
+    break;
+    case CASE_OPER_MOM(loop):
+    case CASE_OPER_MOM(sequence):
+    {
+      MOM_DEBUGPRINTF(gencod, "scan_instr nested block insitm=%s rk#%d blkitm=%s",
+                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      todo([=](MomEmitter*em)
+      {
+        MOM_DEBUGPRINTF(gencod, "before scanning nested block insitm=%s rk#%d blkitm=%s",
+                        mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+        em->scan_block(insitm, blkitm);
+        MOM_DEBUGPRINTF(gencod, "after scanning nested block insitm=%s rk#%d blkitm=%s",
+                        mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      });
     }
     break;
     default:
 defaultcasedesc:
-      throw MOM_RUNTIME_PRINTF("instr %s #%d of %s with unexpected descr %s",
-                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                               mom_item_cstring(desitm));
+      {
+        MOM_DEBUGPRINTF(gencod, "scan_instr special before insitm=%s desitm=%s rk#%d blkitm %s",
+                        mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
+        scan_special_instr(insitm, desitm, rk, blkitm);
+        MOM_DEBUGPRINTF(gencod, "scan_instr special after insitm=%s desitm=%s rk#%d blkitm %s",
+                        mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
+      }
+      break;
 #undef CASE_OPER_MOM
 #undef NBMODOPER_MOM
     }
-
-#warning MomEmitter::scan_instr unimplemented
-  MOM_FATAPRINTF("unimplemented scan_instr insitm=%s rk#%d blkitm=%s",
-                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
 } // end of MomEmitter::scan_instr
 
 
@@ -759,7 +929,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 {
   MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
                   mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-#warning MomEmitter::scan_var unimplemented
+#warning MomEmitter::scan_node_expr unimplemented
   MOM_FATAPRINTF("unimplemented scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
 } // end of MomEmitter::scan_node_expr
@@ -771,6 +941,32 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
 {
   MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
                   mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  assert (is_locked_item(expitm));
+  assert (is_locked_item(insitm));
+  auto desitm =  mom_unsync_item_descr(expitm);
+  if (desitm == MOM_PREDEFITM(variable) || desitm == MOM_PREDEFITM(global)
+      || desitm == MOM_PREDEFITM(thread_local) || desitm == MOM_PREDEFITM(formal))
+    return scan_var(expitm,insitm,typitm);
+  auto typexpitm =
+    mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
+                  mom_item_cstring(expitm), mom_item_cstring(typexpitm), mom_item_cstring(desitm));
+  if (desitm == MOM_PREDEFITM(formal))
+    {
+      if (!typexpitm)
+        throw MOM_RUNTIME_PRINTF("formal %s used in instruction %s is missing a `type`",
+                                 mom_item_cstring(expitm), mom_item_cstring(insitm));
+      if (!typitm)
+        typitm = typexpitm;
+      else if (typitm != typexpitm)
+        throw  MOM_RUNTIME_PRINTF("formal %s used in instruction %s has type %s but expecting %s",
+                                  mom_item_cstring(expitm), mom_item_cstring(insitm),
+                                  mom_item_cstring(typexpitm), mom_item_cstring(typitm));
+      auto formbind = get_binding(expitm);
+      if (!formbind || formbind->vd_rolitm != MOM_PREDEFITM(formal))
+        throw MOM_RUNTIME_PRINTF("unexpected formal %s in instruction %s",
+                                 mom_item_cstring(expitm), mom_item_cstring(insitm));
+    }
 #warning MomEmitter::scan_item_expr unimplemented
   MOM_FATAPRINTF("unimplemented scan_item_expr expitm=%s insitm=%s depth#%d typitm=%s",
                  mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
@@ -783,15 +979,103 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
 {
   MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s typitm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
-#warning MomEmitter::scan_var unimplemented
-  MOM_FATAPRINTF("unimplemented scan_var varitm=%s insitm=%s typitm=%s",
-                 mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
+  assert (is_locked_item(varitm));
+  auto desvaritm =  mom_unsync_item_descr(varitm);
+  if (!desvaritm)
+    throw MOM_RUNTIME_PRINTF("variable %s in instruction %s without descr",
+                             mom_item_cstring(varitm), mom_item_cstring(insitm));
+  struct mom_item_st*typvaritm =
+  mom_dyncast_item(mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type)));
+  if (!typvaritm)
+    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
+                              mom_item_cstring(varitm), mom_item_cstring(insitm));
+  if (!typitm)
+    typitm = typvaritm;
+  else if (typitm != typvaritm)
+    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
+                              mom_item_cstring(varitm), mom_item_cstring(insitm),
+                              mom_item_cstring(typvaritm), mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
+                  mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
+#define NBVARDESC_MOM 43
+#define CASE_VARDESCR_MOM(Nam) momhashpredef_##Nam % NBVARDESC_MOM:	\
+	  if (desvaritm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultvardesc; foundcase_##Nam
+  switch (desvaritm->hva_hash % NBVARDESC_MOM)
+    {
+    case CASE_VARDESCR_MOM(variable):
+    {
+      auto locvarbind = get_local_binding(varitm);
+      if (!locvarbind)
+        throw MOM_RUNTIME_PRINTF("variable %s in instruction %s is not locally bound",
+                                 mom_item_cstring(varitm), mom_item_cstring(insitm));
+      assert (!is_globally_bound(varitm));
+      if (locvarbind->vd_rolitm != MOM_PREDEFITM(variable) && locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
+        throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
+      return typitm;
+    }
+    break;
+    case CASE_VARDESCR_MOM(global):
+    {
+      assert (!is_locally_bound(varitm));
+      auto globvarbind = get_global_binding(varitm);
+      if (!globvarbind)
+        {
+          bind_global(varitm, MOM_PREDEFITM(global), typitm);
+        }
+      else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(global))
+        throw  MOM_RUNTIME_PRINTF("global %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(globvarbind->vd_rolitm));
+    }
+    break;
+    case CASE_VARDESCR_MOM(thread_local):
+    {
+      assert (!is_locally_bound(varitm));
+      auto globvarbind = get_global_binding(varitm);
+      if (!globvarbind)
+        {
+          if (magic() == MomJavascriptEmitter::MAGIC)
+            throw MOM_RUNTIME_PRINTF("JavaScript forbids thread_local %s in instruction %s",
+                                     mom_item_cstring(varitm), mom_item_cstring(insitm));
+          bind_global(varitm, MOM_PREDEFITM(thread_local), typitm);
+        }
+      else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(thread_local))
+        throw  MOM_RUNTIME_PRINTF("thread_local %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(globvarbind->vd_rolitm));
+    }
+    break;
+    case CASE_VARDESCR_MOM(formal):
+    {
+      assert (!is_globally_bound(varitm));
+      auto locvarbind = get_local_binding(varitm);
+      if (!locvarbind || locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
+        throw  MOM_RUNTIME_PRINTF("formal %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
+    }
+    break;
+    default:
+defaultvardesc:
+      throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has unexpected descr %s",
+                                mom_item_cstring(varitm), mom_item_cstring(insitm),
+                                mom_item_cstring(desvaritm));
+    }
+#undef NBVARDESC_MOM
+#undef CASE_VARDESCR_MOM
+  return typitm;
 } // end of MomEmitter::scan_var
+
+
+
 
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm=%s", mom_item_cstring(rtitm));
+  _ce_curfunctionitm = rtitm;
+#warning unimplemented MomEmitter::scan_routine_element
+  MOM_FATAPRINTF("unimplemented scan_routine_element %s", mom_item_cstring(rtitm));
+  _ce_curfunctionitm = nullptr;
 } // end  MomEmitter::scan_routine_element
 
 MomEmitter::~MomEmitter()
