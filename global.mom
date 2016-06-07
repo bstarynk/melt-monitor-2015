@@ -133,6 +133,16 @@ comment
 
 
 
+*break
+1465304130
+^mtime
+(
+comment
+"for break statements"_
+)attrs
+
+
+
 *clone
 1456922491
 ^mtime
@@ -163,6 +173,16 @@ comment
 
 
 
+*continue
+1465304130
+^mtime
+(
+comment
+"for continue statements"_
+)attrs
+
+
+
 *cooked
 1452095862
 ^mtime
@@ -170,6 +190,7 @@ comment
 comment
 "for cooked display"_
 )attrs
+
 
 
 
@@ -190,7 +211,6 @@ comment
 comment
 "for debug blue"_
 )attrs
-
 
 
 
@@ -341,6 +361,7 @@ comment
 
 
 
+
 *first
 1456995334
 ^mtime
@@ -358,7 +379,6 @@ comment
 comment
 "to make a node, but flattening some arguments"_
 )attrs
-
 
 
 
@@ -502,6 +522,7 @@ comment
 
 
 
+
 *hashmap
 1464719561
 ^mtime
@@ -519,7 +540,6 @@ comment
 comment
 "hashed set"_
 )attrs
-
 
 
 
@@ -683,6 +703,7 @@ tuple
 
 
 
+
 *is_set
 1457361412
 ^mtime
@@ -702,7 +723,6 @@ set
 comment
 "to test if argument is string"_
 )attrs
-
 
 
 
@@ -854,6 +874,7 @@ comment
 
 
 
+
 *mapix
 1457082461
 ^mtime
@@ -871,7 +892,6 @@ comment
 comment
 "for modules"_
 )attrs
-
 
 
 
@@ -1021,6 +1041,7 @@ comment
 
 
 
+
 *out_decimal
 1456812179
 ^mtime
@@ -1038,7 +1059,6 @@ comment
 comment
 "output a filebuffer"_
 )attrs
-
 
 
 
@@ -1191,6 +1211,7 @@ comment
 
 
 
+
 *parenthesis
 1456309596
 ^mtime
@@ -1219,7 +1240,6 @@ payl_assovaldata_remove
 payl_assovaldata_set_attrs
 )set
 )attrs
-
 
 
 
@@ -1371,6 +1391,7 @@ comment
 
 
 
+
 *payl_hashassoc_remove
 1456910539
 ^mtime
@@ -1388,7 +1409,6 @@ comment
 comment
 "get a node with sorted keys"_
 )attrs
-
 
 
 
@@ -1548,6 +1568,7 @@ comment
 
 
 
+
 *payl_queue
 1457031308
 ^mtime
@@ -1565,7 +1586,6 @@ comment
 comment
 "tasklet payload"_
 )attrs
-
 
 
 
@@ -1748,6 +1768,7 @@ comment
 
 
 
+
 *put
 1455358475
 ^mtime
@@ -1765,7 +1786,6 @@ comment
 comment
 "for queues"_
 )attrs
-
 
 
 
@@ -1910,6 +1930,7 @@ comment
 
 
 
+
 *size
 1456761997
 ^mtime
@@ -1927,7 +1948,6 @@ comment
 comment
 "for steps, e.g. limits"_
 )attrs
-
 
 
 
@@ -2199,6 +2219,7 @@ comment
 
 
 
+
 *unit
 1464962940
 ^mtime
@@ -2218,7 +2239,6 @@ comment
 descr
 type
 )attrs
-
 
 
 

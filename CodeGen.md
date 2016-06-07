@@ -34,11 +34,21 @@ a `body` : *instructions-tuple* which is a tuple made of
 An *instructionseq-item* has `descr` : `sequence` (and of course some
 `body` but no `while`) and may have a `locals` : *locals-tuple* made of
 *variable-item*s (implicitly cleared). Each *variable-item* has a
-`type` : *type-item*.
+`type` : *type-item* and `descr`: `variable`
 
 A *loop-item* has `descr` : `loop` (and of course some `body`, but no
 `locals`) and may have a `while` : *expr* (whose computed type cannot
 be `unit` or nil).
+
+An *instruction-item* is one of:
+
+* an *assignment-item* with `descr`: `assign`, `to`: some
+  *variable-item*, `from`: some *expression* of compatible type. A
+  missing `from` is taken as a null or cleared value.
+
+* a *break-item* with `descr`: `break` and `break`: some enclosing *block-item*
+
+* a *continue-item* with  `descr`: `continue` and `continue`: some enclosing *loop-item*
 
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 
