@@ -52,5 +52,8 @@ An *instruction-item* is one of:
 
 * a nested fresh *block-item* 
 
+* a *condition-item* with `descr` : `cond` and `cond`: a tuple of
+*test-item*s ; each *test-item* has `descr`: `test`
+
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 

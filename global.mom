@@ -1997,6 +1997,16 @@ comment
 
 
 
+*test
+1465564616
+^mtime
+(
+comment
+"for tests"_
+)attrs
+
+
+
 *the_agenda
 1458227320
 ^mtime
@@ -2123,6 +2133,16 @@ node
 
 
 
+*then
+1465566569
+^mtime
+(
+comment
+"in tests"_
+)attrs
+
+
+
 *thread_local
 1465299099
 ^mtime
@@ -2199,6 +2219,7 @@ node
 
 
 
+
 *type_error
 1455914086
 ^mtime
@@ -2216,7 +2237,6 @@ comment
 comment
 "for undefined result"_
 )attrs
-
 
 
 
@@ -2359,6 +2379,7 @@ comment
 comment
 "for unknown words"_
 )attrs
+
 
 
 ### eof global.mom

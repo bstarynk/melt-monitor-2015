@@ -755,8 +755,9 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     auto insbind = get_binding(insitm);
     if (insbind)
       throw MOM_RUNTIME_PRINTF("instr %s #%d of %s already bound with role %s",
-                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm), insbind->vd_rolitm);
-    bind_local(insitm, MOM_PREDEFITM(instruction), blkitm, desitm, rk)
+                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                               mom_item_cstring(insbind->vd_rolitm));
+    bind_local(insitm, MOM_PREDEFITM(instruction), blkitm, desitm, rk);
   }
 #define NBMODOPER_MOM 97
 #define CASE_OPER_MOM(Nam) momhashpredef_##Nam % NBMODOPER_MOM:		\
@@ -858,10 +859,76 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     break;
     case CASE_OPER_MOM(cond):
     {
-#warning MomEmitter::scan_instr should handle cond
-      MOM_FATAPRINTF("unimplemented cond for  %s #%d in block %s",
-                     mom_item_cstring(insitm), rk,
-                     mom_item_cstring(blkitm));
+      auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(loop)));
+      if (!condtup)
+        throw MOM_RUNTIME_PRINTF("cond %s #%d in block %s without `cond`",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm));
+      unsigned nbcond = mom_raw_size(condtup);
+      for (unsigned ix=0; ix<nbcond; ix++)
+        {
+          auto testitm = condtup->seqitem[ix];
+          if (!testitm || mom_itype(testitm) != MOMITY_ITEM)
+            throw
+            MOM_RUNTIME_PRINTF("cond %s #%d in block %s missing test#%d",
+                               mom_item_cstring(insitm), rk,
+                               mom_item_cstring(blkitm),
+                               ix);
+          lock_item(testitm);
+          {
+            struct mom_item_st*destestitm = mom_unsync_item_descr(testitm);
+            if (destestitm != MOM_PREDEFITM(test))
+              throw
+              MOM_RUNTIME_PRINTF("cond %s #%d in block %s with test#%d %s having bad descr %s",
+                                 mom_item_cstring(insitm), rk,
+                                 mom_item_cstring(blkitm),
+                                 ix,
+                                 mom_item_cstring(testitm),
+                                 mom_item_cstring(destestitm));
+          }
+          auto testexp = mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(test));
+          if ((testexp == nullptr
+               || reinterpret_cast<const mom_item_st*>(testexp)==MOM_PREDEFITM(unit)))
+            {
+              if (ix+1<nbcond)
+                MOM_WARNPRINTF("cond %s #%d in block %s with non-last trivially false test#%d %s",
+                               mom_item_cstring(insitm), rk,
+                               mom_item_cstring(blkitm),
+                               ix,
+                               mom_item_cstring(testitm));
+            }
+          else
+            {
+              auto testypitm = scan_expr(testexp,insitm,1);
+              if (!testypitm)
+                throw
+                MOM_RUNTIME_PRINTF("cond %s #%d in block %s with untypable test#%d %s",
+                                   mom_item_cstring(insitm), rk,
+                                   mom_item_cstring(blkitm),
+                                   ix,
+                                   mom_item_cstring(testitm));
+            }
+          auto thenitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(test)));
+          if (thenitm == nullptr)
+            throw
+            MOM_RUNTIME_PRINTF("cond %s #%d in block %s with test#%d %s without `then`",
+                               mom_item_cstring(insitm), rk,
+                               mom_item_cstring(blkitm),
+                               ix,
+                               mom_item_cstring(testitm));
+          lock_item(thenitm);
+          todo([=](MomEmitter*em)
+          {
+            MOM_DEBUGPRINTF(gencod, "before scanning thenitm=%s from insitm=%s rk#%d blkitm=%s",
+                            mom_item_cstring(thenitm),
+                            mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+            em->scan_block(thenitm, blkitm);
+            MOM_DEBUGPRINTF(gencod, "after scanning thenitm=%s insitm=%s rk#%d blkitm=%s",
+                            mom_item_cstring(thenitm),
+                            mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+          });
+        }
     }
     break;
     default:
