@@ -856,6 +856,14 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
       });
     }
     break;
+    case CASE_OPER_MOM(cond):
+    {
+#warning MomEmitter::scan_instr should handle cond
+      MOM_FATAPRINTF("unimplemented cond for  %s #%d in block %s",
+                     mom_item_cstring(insitm), rk,
+                     mom_item_cstring(blkitm));
+    }
+    break;
     default:
 defaultcasedesc:
       {
