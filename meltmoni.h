@@ -512,17 +512,33 @@ enum
 #define MOM_HEADER_PREDEF "_mom_predef.h"
 #define MOM_GLOBAL_STATE "global.mom"
 
+struct mom_hashedvalue_st;
 const char *mom_item_cstring (const struct mom_item_st *itm);
 
 int mom_item_cmp (const struct mom_item_st *itm1,
                   const struct mom_item_st *itm2);
 
+int mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
+                         const struct mom_hashedvalue_st *val2);
+
+bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
+                            const struct mom_hashedvalue_st *val2);
 #ifdef __cplusplus
 struct MomItemLess
 {
   bool operator () (const struct mom_item_st* itm1, const struct mom_item_st* itm2) const
   {
     return ::mom_item_cmp(itm1, itm2)<0;
+  }
+};
+
+struct MomValueLess
+{
+  bool operator () (const void*v1, const void*v2)
+  {
+    return ::mom_hashedvalue_cmp((const struct mom_hashedvalue_st *)v1,
+                                 (const struct mom_hashedvalue_st *)v2)
+           <0;
   }
 };
 #endif /*__cplusplus*/
@@ -587,11 +603,6 @@ struct mom_hashedvalue_st
   MOM_HASHEDVALUE_FIELDS;
 };
 
-int mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
-                         const struct mom_hashedvalue_st *val2);
-
-bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
-                            const struct mom_hashedvalue_st *val2);
 
 static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
 static inline momhash_t mom_hash (const void *p)
