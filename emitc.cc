@@ -39,6 +39,10 @@ public:
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
                                            traced_set_items_t;
+  typedef std::set<const void*,
+          MomValueLess,
+          traceable_allocator<struct mom_item_st*>>
+            traced_set_values_t;
   struct vardef_st
   {
     struct mom_item_st* vd_rolitm;
@@ -65,6 +69,7 @@ private:
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
   traced_varmap_t _ce_globalvarmap;
   traced_varmap_t _ce_localvarmap;
+  traced_set_values_t _ce_localvalueset;
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
@@ -1004,6 +1009,113 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 {
   MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
                   mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
+  auto connitm = expnod->nod_connitm;
+  assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
+  unsigned nodarity = mom_size(expnod);
+  lock_item(connitm);
+#define NBEXPCONN_MOM 131
+#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
+	  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;	\
+	  goto defaultcaseconn; foundcaseconn_##Nam
+  switch (connitm->hva_hash % NBEXPCONN_MOM)
+    {
+    case CASE_EXPCONN_MOM(verbatim):
+    {
+      if (nodarity != 1)
+        throw MOM_RUNTIME_PRINTF("verbatim expr %s of bad arity in instr %s with type %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+      auto quotval = expnod->nod_sons[0];
+      if (typitm == nullptr)
+        typitm = MOM_PREDEFITM(value);
+      else if (typitm == MOM_PREDEFITM(item))
+        {
+          if (mom_itype(quotval) != MOMITY_ITEM)
+            throw MOM_RUNTIME_PRINTF("verbatim expr %s is not an item in instr %s with type %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm),
+                                     mom_item_cstring(typitm));
+          _ce_localvalueset.insert(quotval);
+        }
+      else if (typitm == MOM_PREDEFITM(value))
+        _ce_localvalueset.insert(quotval);
+      else
+        throw MOM_RUNTIME_PRINTF("verbatim expr %s is of type %s in instr %s with type %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(typitm),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+    }
+    break;
+    case CASE_EXPCONN_MOM(and):
+    case CASE_EXPCONN_MOM(or):
+    {
+      if (nodarity == 0)
+        {
+          if (!typitm)
+            throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          return typitm;
+        }
+      for (unsigned ix=0; ix<nodarity; ix++)
+        {
+          auto subexpv = expnod->nod_sons[ix];
+          auto newtypitm = scan_expr(subexpv, insitm, depth+1, typitm);
+          if (!newtypitm)
+            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is typeless in instr %s",
+                                     ix, mom_value_cstring(subexpv),
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          else if (typitm==nullptr)
+            typitm = newtypitm;
+          else if (newtypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is badly typed %s expecting %s in instr %s",
+                                     ix, mom_value_cstring(subexpv),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                     mom_item_cstring(insitm));
+        }
+      return typitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(sequence):
+    {
+      if (nodarity == 0)
+        if (!typitm)
+          throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
+        else
+          {
+            for (int ix=0; ix<(int)nodarity-1; ix++)
+              {
+                auto subexpv = expnod->nod_sons[ix];
+                (void) scan_expr(subexpv, insitm, depth+1, nullptr);
+              }
+            auto lastsubexpv = expnod->nod_sons[nodarity-1];
+            auto newtypitm = scan_expr(lastsubexpv, insitm, depth+1, typitm);
+            if (!typitm) return newtypitm;
+            else if (!newtypitm)
+              throw MOM_RUNTIME_PRINTF("typeless last %s sub-expr of %s in instr %s",
+                                       mom_value_cstring(lastsubexpv),
+                                       mom_value_cstring(expnod), mom_item_cstring(insitm));
+            else if (typitm != newtypitm)
+              throw MOM_RUNTIME_PRINTF("last son %s of %s is badly typed %s expecting %s in instr %s",
+                                       mom_value_cstring(lastsubexpv),
+                                       mom_value_cstring(expnod),
+                                       mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                       mom_item_cstring(insitm));
+
+          }
+      return typitm;
+    }
+    break;
+    default:
+defaultcaseconn:
+#warning MomEmitter::scan_node_expr unimplemented default case
+      MOM_FATAPRINTF("unimplemented default scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
+                     mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+
+    } // end switch connitm
+#undef NBEXPCONN_MOM
+#undef CASE_EXPCONN_MOM
 #warning MomEmitter::scan_node_expr unimplemented
   MOM_FATAPRINTF("unimplemented scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
