@@ -102,6 +102,10 @@ protected:
   // scanning of expressions & variables return their type item
   struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
+						struct mom_item_st*desconnitm,
+						struct mom_item_st*insitm,
+						int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_closed(struct mom_item_st*varitm, struct mom_item_st*insitm);
@@ -1007,7 +1011,6 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
 
 
 
-
 struct mom_item_st*
 MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm,
                            int depth, struct mom_item_st*typitm)
@@ -1184,6 +1187,17 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     break;
     default:
 defaultcaseconn:
+      {
+	lock_item(connitm);
+	auto desconnitm = mom_unsync_item_descr(connitm);
+	if (desconnitm == nullptr)
+	  throw MOM_RUNTIME_PRINTF("connective %s without `descr` in expr %s in instr %s",
+				   mom_item_cstring(connitm),
+				   mom_value_cstring(expnod),
+				   mom_item_cstring(insitm));
+	lock_item(desconnitm);
+	return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm);
+      }
 #warning MomEmitter::scan_node_expr unimplemented default case
       MOM_FATAPRINTF("unimplemented default scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                      mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
@@ -1195,6 +1209,19 @@ defaultcaseconn:
   MOM_FATAPRINTF("unimplemented scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
 } // end of MomEmitter::scan_node_expr
+
+
+struct mom_item_st*
+MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
+				      struct mom_item_st*desconnitm,
+				      struct mom_item_st*insitm,
+				      int depth, struct mom_item_st*typitm)
+{
+#warning MomEmitter::scan_node_descr_conn_expr unimplemented
+  MOM_FATAPRINTF("unimplemented scan_node_desc_conn_expr expnod=%s desconnitm=%s insitm=%s depth#%d typitm=%s",
+                 mom_value_cstring(expnod), mom_value_cstring(desconnitm),
+		 mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+} // end of MomEmitter::scan_node_descr_conn_expr
 
 
 
