@@ -153,6 +153,16 @@ comment
 
 
 
+*closed
+1465724985
+^mtime
+(
+comment
+"for closed variables"_
+)attrs
+
+
+
 *comment
 1445968873
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *cooked
 1452095862
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "for cooked display"_
 )attrs
-
 
 
 
@@ -294,6 +304,16 @@ comment
 
 
 
+*div
+1465727643
+^mtime
+(
+comment
+"for quotient of two numbers"_
+)attrs
+
+
+
 *dive
 1458107663
 ^mtime
@@ -341,6 +361,7 @@ comment
 
 
 
+
 *expression
 1453445242
 ^mtime
@@ -358,7 +379,6 @@ comment
 comment
 "throw a failure"_
 )attrs
-
 
 
 
@@ -502,6 +522,7 @@ comment
 
 
 
+
 *hackc
 1446033098
 ^mtime
@@ -519,7 +540,6 @@ comment
 comment
 "payload signature of hashassocs"_
 )attrs
-
 
 
 
@@ -678,6 +698,7 @@ not
 
 
 
+
 *is_number
 1457359776
 ^mtime
@@ -695,7 +716,6 @@ comment
 comment
 "to test if argument is scalar"_
 )attrs
-
 
 
 
@@ -854,6 +874,7 @@ comment
 
 
 
+
 *loop
 1465200679
 ^mtime
@@ -871,7 +892,6 @@ comment
 comment
 "the main module"_
 )attrs
-
 
 
 
@@ -901,6 +921,16 @@ comment
 (
 comment
 "for modules"_
+)attrs
+
+
+
+*mult
+1465726736
+^mtime
+(
+comment
+"for products of numbers"_
 )attrs
 
 
@@ -1011,6 +1041,7 @@ comment
 
 
 
+
 *or
 1455462876
 ^mtime
@@ -1038,7 +1069,6 @@ comment
 comment
 "apply a function to the output"_
 )attrs
-
 
 
 
@@ -1172,6 +1202,7 @@ comment
 
 
 
+
 *out_raw
 1457501635
 ^mtime
@@ -1208,7 +1239,6 @@ out_outdent
 out_puts
 )set
 )attrs
-
 
 
 
@@ -1353,6 +1383,7 @@ comment
 
 
 
+
 *payl_hashassoc
 1456904803
 ^mtime
@@ -1388,7 +1419,6 @@ comment
 comment
 "get in an hashassoc item"_
 )attrs
-
 
 
 
@@ -1538,6 +1568,7 @@ comment
 
 
 
+
 *payl_hashset_remove_content
 1456855856
 ^mtime
@@ -1565,7 +1596,6 @@ comment
 comment
 "JSON payload"_
 )attrs
-
 
 
 
@@ -1709,6 +1739,7 @@ comment
 
 
 
+
 *payload
 1456825494
 ^mtime
@@ -1766,6 +1797,15 @@ comment
 "for persistent item-making expressions"_
 )attrs
 
+
+
+*plus
+1465726736
+^mtime
+(
+comment
+"for addition of numbers"_
+)attrs
 
 
 
@@ -1894,6 +1934,7 @@ is_set
 
 
 
+
 *signature
 1455623962
 ^mtime
@@ -1927,7 +1968,6 @@ comment
 comment
 "signature of load paren functions"_
 )attrs
-
 
 
 
@@ -1973,6 +2013,16 @@ is_atom
 is_scalar
 is_string
 )set
+)attrs
+
+
+
+*sub
+1465727643
+^mtime
+(
+comment
+"for difference of two numbers"_
 )attrs
 
 
@@ -2153,6 +2203,7 @@ comment
 
 
 
+
 *to
 1465302282
 ^mtime
@@ -2216,7 +2267,6 @@ set
 node
 )tuple
 )attrs
-
 
 
 
@@ -2332,6 +2382,7 @@ comment
 
 
 
+
 *web_handlers
 1446061228
 ^mtime
@@ -2379,7 +2430,6 @@ comment
 comment
 "for unknown words"_
 )attrs
-
 
 
 ### eof global.mom

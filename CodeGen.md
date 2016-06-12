@@ -56,5 +56,30 @@ An *instruction-item* is one of:
 non-nil *test-item*s ; each *test-item* has `descr`: `test`, `test`:
 *expression*, `then`: *instruction-item*
 
+
+An *expression* is one of:
+
+* a literal *int*, or *double*, or *string*
+
+* a *variable-item*, if it has a `descr` : `variable`, `global`, `thread_local`, `formal`
+
+* a *closed-item* if it has a `descr` : `closed` (all closed items are
+  of type `value`).
+
+* any other item is considered literally (as a constant)
+
+* a *node*, see below.
+
+
+A node expression is handled according to its connective. In particular:
+
+* The `verbatim` connective requires one argument, handled as a "quoted" constant
+
+* The `and` & `or` connectives are for *and-then* (like `&&` in C) or
+  *or-else* (like `||` in C) expressions
+
+* The `sequence` connective requires at least one son. It is like `progn` in Lisp or comma operator in C
+
+
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 
