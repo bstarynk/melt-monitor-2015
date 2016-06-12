@@ -2204,6 +2204,20 @@ comment
 
 
 
+*this_closure
+1465746870
+^mtime
+(
+comment
+"should be the first argument of closure-function"_
+descr
+formal
+type
+value
+)attrs
+
+
+
 *thread_local
 1465299099
 ^mtime
@@ -2372,6 +2386,7 @@ comment
 
 
 
+
 *verbatim
 1455468628
 ^mtime
@@ -2379,7 +2394,6 @@ comment
 comment
 "for verbatim"_
 )attrs
-
 
 
 
