@@ -1084,31 +1084,33 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(sequence):
     {
       if (nodarity == 0)
-        if (!typitm)
-          throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-        else
-          {
-            for (int ix=0; ix<(int)nodarity-1; ix++)
-              {
-                auto subexpv = expnod->nod_sons[ix];
-                (void) scan_expr(subexpv, insitm, depth+1, nullptr);
-              }
-            auto lastsubexpv = expnod->nod_sons[nodarity-1];
-            auto newtypitm = scan_expr(lastsubexpv, insitm, depth+1, typitm);
-            if (!typitm) return newtypitm;
-            else if (!newtypitm)
-              throw MOM_RUNTIME_PRINTF("typeless last %s sub-expr of %s in instr %s",
-                                       mom_value_cstring(lastsubexpv),
-                                       mom_value_cstring(expnod), mom_item_cstring(insitm));
-            else if (typitm != newtypitm)
-              throw MOM_RUNTIME_PRINTF("last son %s of %s is badly typed %s expecting %s in instr %s",
-                                       mom_value_cstring(lastsubexpv),
-                                       mom_value_cstring(expnod),
-                                       mom_item_cstring(newtypitm), mom_item_cstring(typitm),
-                                       mom_item_cstring(insitm));
+        {
+          if (!typitm)
+            throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+        }
+      else
+        {
+          for (int ix=0; ix<(int)nodarity-1; ix++)
+            {
+              auto subexpv = expnod->nod_sons[ix];
+              (void) scan_expr(subexpv, insitm, depth+1, nullptr);
+            }
+          auto lastsubexpv = expnod->nod_sons[nodarity-1];
+          auto newtypitm = scan_expr(lastsubexpv, insitm, depth+1, typitm);
+          if (!typitm) return newtypitm;
+          else if (!newtypitm)
+            throw MOM_RUNTIME_PRINTF("typeless last %s sub-expr of %s in instr %s",
+                                     mom_value_cstring(lastsubexpv),
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          else if (typitm != newtypitm)
+            throw MOM_RUNTIME_PRINTF("last son %s of %s is badly typed %s expecting %s in instr %s",
+                                     mom_value_cstring(lastsubexpv),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                     mom_item_cstring(insitm));
 
-          }
+        }
       return typitm;
     }
     break;
@@ -1145,6 +1147,27 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
                                  mom_value_cstring(expnod), mom_item_cstring(insitm));
       auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
       if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
+        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                  mom_item_cstring(insitm));
+      auto rightexp = expnod->nod_sons[1];
+      auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
+      if (rightypitm != firstypitm)
+        throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
+                                 mom_item_cstring(firstypitm),
+                                 mom_value_cstring(rightexp),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      return firstypitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(mod):
+    {
+      if (nodarity != 2)
+        throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+      if (firstypitm != MOM_PREDEFITM(int))
         throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
                                   mom_item_cstring(firstypitm), mom_value_cstring(expnod),
                                   mom_item_cstring(insitm));

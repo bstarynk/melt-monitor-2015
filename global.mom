@@ -915,6 +915,16 @@ comment
 
 
 
+*mod
+1465738210
+^mtime
+(
+comment
+"for modulus of two numbers"_
+)attrs
+
+
+
 *module
 1464869956
 ^mtime
@@ -1031,6 +1041,7 @@ is_null
 
 
 
+
 *operator
 1455881447
 ^mtime
@@ -1038,7 +1049,6 @@ is_null
 comment
 "for operator in delimiters, etc..."_
 )attrs
-
 
 
 
@@ -1192,6 +1202,7 @@ comment
 
 
 
+
 *out_puts
 1457095329
 ^mtime
@@ -1199,7 +1210,6 @@ comment
 comment
 "put to output arg0 the string arg1"_
 )attrs
-
 
 
 
@@ -1373,6 +1383,7 @@ comment
 
 
 
+
 *payl_filebuffer
 1456929384
 ^mtime
@@ -1380,7 +1391,6 @@ comment
 comment
 "for file buffer payload"_
 )attrs
-
 
 
 
@@ -1558,6 +1568,7 @@ comment
 
 
 
+
 *payl_hashset_remove
 1456855856
 ^mtime
@@ -1565,7 +1576,6 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1729,6 +1739,7 @@ comment
 
 
 
+
 *payl_websession
 1457031373
 ^mtime
@@ -1736,7 +1747,6 @@ comment
 comment
 "web session payload"_
 )attrs
-
 
 
 
@@ -1919,6 +1929,7 @@ comment
 
 
 
+
 *set
 1456146211
 ^mtime
@@ -1931,7 +1942,6 @@ is_sequence
 is_set
 )set
 )attrs
-
 
 
 
@@ -2193,6 +2203,7 @@ comment
 
 
 
+
 *thread_local
 1465299099
 ^mtime
@@ -2200,7 +2211,6 @@ comment
 comment
 "for thread-local variables"_
 )attrs
-
 
 
 
@@ -2372,6 +2382,7 @@ comment
 
 
 
+
 *web_exchange
 1456934574
 ^mtime
@@ -2379,7 +2390,6 @@ comment
 comment
 "current web exchange"_
 )attrs
-
 
 
 
