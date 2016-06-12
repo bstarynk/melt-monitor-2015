@@ -1228,6 +1228,30 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                                       struct mom_item_st*insitm,
                                       int depth, struct mom_item_st*typitm)
 {
+  MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s insitm=%s depth#%d typitm=%s",
+                  mom_value_cstring(expnod), mom_value_cstring(desconnitm),
+                  mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  auto connitm = expnod->nod_connitm;
+  assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
+  unsigned nodarity = mom_size(expnod);
+  assert (is_locked_item(connitm));
+  assert (is_locked_item(desconnitm));
+#define NBDESCONN_MOM 79
+#define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
+	  if (connitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
+	  goto defaultdesconn; foundesconn_##Nam
+  switch (desconnitm->hva_hash % NBDESCONN_MOM)
+    {
+    case CASE_DESCONN_MOM(signature):
+      { // a closure application
+      }
+      break;
+    defaultdesconn:
+      break;
+    }
+#undef CASE_DESCONN_MOM
+#undef NBDESCONN_MOM
+
 #warning MomEmitter::scan_node_descr_conn_expr unimplemented
   MOM_FATAPRINTF("unimplemented scan_node_desc_conn_expr expnod=%s desconnitm=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_value_cstring(desconnitm),

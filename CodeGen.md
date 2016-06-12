@@ -80,6 +80,7 @@ A node expression is handled according to its connective. In particular:
 
 * The `sequence` connective requires at least one son. It is like `progn` in Lisp or comma operator in C
 
+* If the connective is some *signature-item*, the expression is a closure application.
 
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 
