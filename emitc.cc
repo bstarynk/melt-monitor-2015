@@ -36,8 +36,8 @@ class MomEmitter
 public:
   typedef std::function<void(MomEmitter*)> todofun_t;
   typedef std::vector<const void*,
-		      traceable_allocator<const void*> >
-  traced_vector_values_t;
+          traceable_allocator<const void*> >
+          traced_vector_values_t;
   typedef std::set<const struct mom_item_st*,
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
@@ -95,10 +95,10 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
-  virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
+virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
-struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
+  struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
   struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   {
     return scan_signature(sigitm,initm,true);
@@ -441,6 +441,9 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_todoque {},
                      _ce_globalvarmap {},
                      _ce_localvarmap {},
+                     _ce_localvalueset {},
+                     _ce_localcloseditems {},
+                     _ce_localnodetypecache {},
 _ce_curfunctionitm {nullptr}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
@@ -490,39 +493,45 @@ MomEmitter::transform_top_module(void)
       });
       flush_todo_list(__LINE__);
       todo([=, &vecval](MomEmitter*em)
-	   {
-	     MOM_DEBUGPRINTF(gencod, "transform_top_module before transforming"
-			     " module element %s #%d from top module %s",
-			     mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
-	     auto nodelem = em->transform_module_element(curitm);
-	     MOM_DEBUGPRINTF(gencod, "transform_top_module after transforming"
-			     " module element %s #%d from top module %s;\n"
-			     " got %s",
-			     mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm),
-			     mom_value_cstring(nodelem));	     			     
-	     if (nodelem==nullptr)
-	       throw MOM_RUNTIME_PRINTF("failed to transform element %s", mom_item_cstring(curitm));
-	     assert (mom_itype(nodelem) == MOMITY_NODE);
-	     const struct mom_item_st*nodconnitm = nodelem->nod_connitm;
-	     assert (mom_itype(nodconnitm) == MOMITY_ITEM);
-	     if (nodconnitm == MOM_PREDEFITM(sequence)) {
-	       unsigned ln = mom_size(nodelem);
-	       vecval.reserve(ln+3);
-	       for (unsigned ix=0; ix<ln; ix++)
-		 vecval.push_back(nodelem->nod_sons[ix]);
-	     }
-	     else {
-	       vecval.push_back(nodelem);
-	     }
-	   });
+      {
+        MOM_DEBUGPRINTF(gencod, "transform_top_module before transforming"
+                        " module element %s #%d from top module %s",
+                        mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
+        auto nodelem = em->transform_module_element(curitm);
+        MOM_DEBUGPRINTF(gencod, "transform_top_module after transforming"
+                        " module element %s #%d from top module %s;\n"
+                        " got %s",
+                        mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm),
+                        mom_value_cstring(nodelem));
+        if (nodelem==nullptr)
+          throw MOM_RUNTIME_PRINTF("failed to transform element %s", mom_item_cstring(curitm));
+        assert (mom_itype(nodelem) == MOMITY_NODE);
+        const struct mom_item_st*nodconnitm = nodelem->nod_connitm;
+        assert (mom_itype(nodconnitm) == MOMITY_ITEM);
+        if (nodconnitm == MOM_PREDEFITM(sequence))
+          {
+            unsigned ln = mom_size(nodelem);
+            vecval.reserve(ln+3);
+            for (unsigned ix=0; ix<ln; ix++)
+              vecval.push_back(nodelem->nod_sons[ix]);
+          }
+        else
+          {
+            vecval.push_back(nodelem);
+          }
+      });
       flush_todo_list(__LINE__);
+      _ce_localvarmap.clear();
+      _ce_localvarmap.clear();
+      _ce_localcloseditems.clear();
+      _ce_localnodetypecache.clear();
       _ce_curfunctionitm = nullptr;
     }
   auto modnod = mom_boxnode_make(MOM_PREDEFITM(module),vecval.size(),
-				 (const struct mom_hashedvalue_st**)vecval.data());
+                                 (const struct mom_hashedvalue_st**)vecval.data());
   vecval.clear();
   MOM_DEBUGPRINTF(gencod, "transform_top_module from top module %s gives modnod\n.. %s",
-		  mom_item_cstring(_ce_topitm), mom_value_cstring(modnod));
+                  mom_item_cstring(_ce_topitm), mom_value_cstring(modnod));
   return modnod;
 } // end of MomEmitter::transform_top_module
 
@@ -593,10 +602,10 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (global):
     case CASE_DESCR_MOM (thread_local):
     case CASE_DESCR_MOM (data):
-        resnod = transform_data_element(elitm);
+      resnod = transform_data_element(elitm);
       break;
     case CASE_DESCR_MOM (func):
-        resnod = transform_func_element(elitm);
+      resnod = transform_func_element(elitm);
       break;
     case CASE_DESCR_MOM (routine):
       resnod = transform_routine_element(elitm);
@@ -611,7 +620,7 @@ defaultcasedesc:
   MOM_DEBUGPRINTF(gencod, "transform_module_element topitm=%s elitm=%s\n.. resnod=%s",
                   mom_item_cstring(_ce_topitm),
                   mom_item_cstring(elitm),
-		  mom_value_cstring(resnod));
+                  mom_value_cstring(resnod));
   return resnod;
 } // end of MomEmitter::transform_module_element
 
