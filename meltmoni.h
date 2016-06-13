@@ -523,6 +523,8 @@ int mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
 
 bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
                             const struct mom_hashedvalue_st *val2);
+static inline momhash_t mom_hash (const void *p);
+
 #ifdef __cplusplus
   struct MomItemLess
   {
@@ -534,11 +536,26 @@ bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
 
   struct MomValueLess
   {
-    bool operator () (const void*v1, const void*v2)
+    bool operator () (const void*v1, const void*v2) const
     {
       return ::mom_hashedvalue_cmp((const struct mom_hashedvalue_st *)v1,
                                    (const struct mom_hashedvalue_st *)v2)
              <0;
+    }
+  };
+  struct MomValueEqual
+  {
+    bool operator () (const void*v1, const void*v2) const
+    {
+      return ::mom_hashedvalue_equal((const struct mom_hashedvalue_st *)v1,
+                                     (const struct mom_hashedvalue_st *)v2);
+    }
+  };
+  struct MomValueHash
+  {
+    bool operator () (const void*v) const
+    {
+      return ::mom_hash(v);
     }
   };
 #endif /*__cplusplus*/
