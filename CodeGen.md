@@ -71,16 +71,27 @@ An *expression* is one of:
 * a *node*, see below.
 
 
-A node expression is handled according to its connective. In particular:
+A node expression is handled according to its connective. Most node
+expressions are of fixed arity, with variadic expressions being the
+exception. In particular:
 
 * The `verbatim` connective requires one argument, handled as a "quoted" constant
 
 * The `and` & `or` connectives are for *and-then* (like `&&` in C) or
-  *or-else* (like `||` in C) expressions
+  *or-else* (like `||` in C) variadic expressions
 
-* The `sequence` connective requires at least one son. It is like `progn` in Lisp or comma operator in C
+* The `sequence` connective requires at least one son. It is like `progn` in Lisp or comma operator in C, so is variadic
+
+* The `tuple` and `set` connectives are variadic expressions to build
+  tuples and sets from item arguments.
 
 * If the connective is some *signature-item*, the expression is a closure application.
+
+* If the connective is some *routine-item*, the expression is a routine call. Arguments should obey the type of its `signature`
+
+* If the connective is a *primitive-item* of `descr` : `primitive` and
+  `signature` : *signature-item*, the expression is a primitive
+  invocation.  Arguments should obey the type of its *signature-item*
 
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 

@@ -1206,6 +1206,28 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
       return firstypitm;
     }
     break;
+    case CASE_EXPCONN_MOM(node):
+      if (nodarity==0)
+        throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      // failthru
+    case CASE_EXPCONN_MOM(set):
+    case CASE_EXPCONN_MOM(tuple):
+    {
+      for (unsigned ix=0; ix<nodarity; ix++)
+        {
+          auto subexpv = expnod->nod_sons[ix];
+          auto subtypitm = scan_expr(subexpv, insitm, depth+1);
+          if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
+            throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
+                                     ix, mom_item_cstring(connitm),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(insitm));
+        }
+      return MOM_PREDEFITM(value);
+    }
+    break;
     default:
 defaultcaseconn:
       {
@@ -1219,15 +1241,10 @@ defaultcaseconn:
         lock_item(desconnitm);
         return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm);
       }
-#warning MomEmitter::scan_node_expr unimplemented default case
-      MOM_FATAPRINTF("unimplemented default scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
-                     mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-
     } // end switch connitm
 #undef NBEXPCONN_MOM
 #undef CASE_EXPCONN_MOM
-#warning MomEmitter::scan_node_expr unimplemented
-  MOM_FATAPRINTF("unimplemented scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
+  MOM_FATAPRINTF("impossible scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
 } // end of MomEmitter::scan_node_expr
 
