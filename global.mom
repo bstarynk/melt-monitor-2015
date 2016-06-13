@@ -1829,6 +1829,16 @@ comment
 
 
 
+*primitive
+1465807699
+^mtime
+(
+comment
+"for primitives (operations)"_
+)attrs
+
+
+
 *put
 1455358475
 ^mtime
@@ -1919,6 +1929,7 @@ comment
 
 
 
+
 *sequence
 1452422570
 ^mtime
@@ -1926,7 +1937,6 @@ comment
 comment
 "for sequences"_
 )attrs
-
 
 
 
@@ -2193,6 +2203,7 @@ node
 
 
 
+
 *then
 1465566569
 ^mtime
@@ -2200,7 +2211,6 @@ node
 comment
 "in tests"_
 )attrs
-
 
 
 
@@ -2376,6 +2386,7 @@ comment
 
 
 
+
 *vector
 1464719561
 ^mtime
@@ -2383,7 +2394,6 @@ comment
 comment
 "for vector payload"_
 )attrs
-
 
 
 

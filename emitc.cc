@@ -1315,6 +1315,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     }
     break;
     case CASE_DESCONN_MOM(routine):
+    case CASE_DESCONN_MOM(primitive):
     {
       // a known routine application
       auto routsigitm =
@@ -1322,7 +1323,8 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                          (connitm,
                           MOM_PREDEFITM(signature)));
       if (routsigitm==nullptr)
-        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s without signature",
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
+                                 mom_item_cstring(desconnitm),
                                  mom_item_cstring(connitm),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
@@ -1335,15 +1337,17 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
         restypitm=mom_dyncast_item(sigr.sig_result);
       }
       if (formaltup==nullptr || restypitm==nullptr)
-        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s with bad signature %s",
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s with bad signature %s",
+                                 mom_item_cstring(desconnitm),
                                  mom_item_cstring(connitm),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm),
                                  mom_item_cstring(routsigitm));
       unsigned nbformals = mom_boxtuple_length(formaltup);
       if (nbformals != nodarity)
-        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
                                  " with wrong %d number of arguments (%d expected from signature %s)",
+                                 mom_item_cstring(desconnitm),
                                  mom_item_cstring(connitm),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm),
@@ -1356,8 +1360,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
           assert (is_locked_item(curformalitm));
           auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
           if (curtypitm == nullptr)
-            throw  MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
                                       " with signature %s of untyped formal#%d %s",
+                                      mom_item_cstring(desconnitm),
                                       mom_item_cstring(connitm),
                                       mom_value_cstring(expnod),
                                       mom_item_cstring(insitm),
@@ -1366,8 +1371,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
           lock_item(curtypitm);
           auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
           if (exptypitm != curtypitm)
-            throw  MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
                                       " with signature %s type mismatch for #%d (formal %s)",
+                                      mom_item_cstring(desconnitm),
                                       mom_item_cstring(connitm),
                                       mom_value_cstring(expnod),
                                       mom_item_cstring(insitm),
@@ -1375,8 +1381,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                                       ix,  mom_item_cstring(curformalitm));
         };
       if (typitm != nullptr && typitm != restypitm)
-        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
                                  " with signature %s result type mismatch (expecting %s got %s)",
+                                 mom_item_cstring(desconnitm),
                                  mom_item_cstring(connitm),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm),
