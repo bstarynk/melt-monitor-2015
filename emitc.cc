@@ -50,6 +50,11 @@ public:
     const void* vd_detail;
     long vd_rank;
   };
+  struct sigdef_st
+  {
+    const struct mom_boxtuple_st* sig_formals;
+    const void*sig_result;
+  };
   typedef std::map<const struct mom_item_st*,
     vardef_st,
     MomItemLess,
@@ -79,10 +84,10 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
-  void scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
-  void scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
-{
-    scan_signature(sigitm,initm,true);
+struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
+  struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
+  {
+    return scan_signature(sigitm,initm,true);
   }
   void scan_block(struct mom_item_st*blockitm, struct mom_item_st*initm);
   void scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm);
@@ -534,16 +539,20 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   if (sigitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing signature in func %s", mom_item_cstring(fuitm));
   lock_item(sigitm);
-  scan_signature(sigitm,fuitm);
   {
-    auto formalv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals));
-    auto formaltup = mom_dyncast_tuple(formalv);
+    auto sigr=scan_signature(sigitm,fuitm);
+    auto formaltup = sigr.sig_formals;
     if (mom_boxtuple_length(formaltup)==0
         || mom_boxtuple_nth(formaltup, 0) != MOM_PREDEFITM(this_closure))
       throw MOM_RUNTIME_PRINTF("func %s with signature %s of formals %s not starting with `this_closure`",
                                mom_item_cstring(fuitm),
                                mom_item_cstring(sigitm),
-                               mom_value_cstring(formalv));
+                               mom_value_cstring(formaltup));
+    if (sigr.sig_result != MOM_PREDEFITM(value))
+      throw  MOM_RUNTIME_PRINTF("func %s with signature %s of non-value result type %s",
+                                mom_item_cstring(fuitm),
+                                mom_item_cstring(sigitm),
+                                mom_value_cstring(sigr.sig_result));
   }
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing body in func %s", mom_item_cstring(fuitm));
@@ -567,7 +576,7 @@ MomEmitter::scan_type(struct mom_item_st*typitm)
 
 
 
-void
+MomEmitter::sigdef_st
 MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind)
 {
   MOM_DEBUGPRINTF(gencod, "scan_signature start sigitm=%s initm=%s nobind %s",
@@ -643,8 +652,9 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
   else if (restyp != MOMITY_NONE)
     throw  MOM_RUNTIME_PRINTF("invalid result %s for signature %s",
                               mom_value_cstring(resv), mom_item_cstring(sigitm));
-  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s done",
-                  mom_item_cstring(sigitm));
+  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s done formals=%s result=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(resv));
+  return {formtup,resv};
 } // end MomEmitter::scan_signature
 
 
@@ -1228,7 +1238,8 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                                       struct mom_item_st*insitm,
                                       int depth, struct mom_item_st*typitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s insitm=%s depth#%d typitm=%s",
+  MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s"
+                  " insitm=%s depth#%d typitm=%s",
                   mom_value_cstring(expnod), mom_value_cstring(desconnitm),
                   mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
   auto connitm = expnod->nod_connitm;
@@ -1243,11 +1254,68 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
   switch (desconnitm->hva_hash % NBDESCONN_MOM)
     {
     case CASE_DESCONN_MOM(signature):
-      { // a closure application
+    {
+      // a closure application
+      auto sigr=scan_nonbinding_signature(connitm,insitm);
+      auto sformaltup = sigr.sig_formals;
+      auto sresultv = sigr.sig_result;
+      unsigned lnformals = mom_boxtuple_length(sformaltup);
+      if (lnformals<1 || mom_boxtuple_nth(sformaltup, 0) != MOM_PREDEFITM(this_closure))
+        throw MOM_RUNTIME_PRINTF("bad formals %s of applied signature %s expnod %s instr %s",
+                                 mom_value_cstring(sformaltup),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      if (typitm == nullptr)
+        typitm = MOM_PREDEFITM(value);
+      else if (typitm != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                 " incompatible with non-value type %s",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+      if (lnformals != nodarity)
+        throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                 " has mismatched arity (%d formals, arity %d)",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 lnformals, nodarity);
+      if (sresultv != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                 " with non-value result type %s",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_value_cstring(sresultv));
+      {
+        auto funtypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, MOM_PREDEFITM(value));
+        if (funtypitm != MOM_PREDEFITM(value))
+          throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                   " has badly typed %s function argument",
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm),
+                                   mom_item_cstring(funtypitm));
       }
-      break;
-    defaultdesconn:
-      break;
+      for (unsigned ix=1; ix<nodarity; ix++)
+        {
+          auto curtypitm =  mom_boxtuple_nth(sformaltup, ix);
+          auto argtypitm = scan_expr(expnod->nod_sons[ix], insitm, depth+1, curtypitm);
+          if (curtypitm != argtypitm)
+            throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                     " type mismatch for arg#%d, expecting %s",
+                                     mom_item_cstring(connitm),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(insitm),
+                                     ix, mom_item_cstring(curtypitm));
+        }
+      return MOM_PREDEFITM(value);
+    }
+    break;
+defaultdesconn:
+    break;
     }
 #undef CASE_DESCONN_MOM
 #undef NBDESCONN_MOM
