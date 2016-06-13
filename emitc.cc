@@ -60,6 +60,13 @@ public:
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
                                            traced_varmap_t;
+  typedef std::unordered_map
+  <const struct mom_boxnode_st*,
+    struct mom_item_st*,
+    MomValueHash,
+    MomValueEqual,
+    traceable_allocator<std::pair<const struct mom_boxnode_st*,struct mom_item_st*> > >
+    traced_node2itemhashmap_t;
   static const unsigned constexpr NB_MAX_BLOCKS = 65536;
   static const unsigned constexpr NB_MAX_INSTRS = 1048576;
 private:
@@ -76,6 +83,7 @@ private:
   traced_varmap_t _ce_localvarmap;
   traced_set_values_t _ce_localvalueset;
   traced_set_items_t _ce_localcloseditems;
+  traced_node2itemhashmap_t _ce_localnodetypecache;
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
@@ -1017,12 +1025,34 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
       auto itmexp = (struct mom_item_st*)expv;
       lock_item(itmexp);
       return scan_item_expr(itmexp,insitm,depth,typitm);
-      ;
     }
     case MOMITY_NODE:
     {
       auto nodexp = (const struct mom_boxnode_st*)expv;
-      return scan_node_expr(nodexp,insitm,depth,typitm);
+      auto it =_ce_localnodetypecache.find(nodexp);
+      if (it == _ce_localnodetypecache.end())
+        {
+          auto ntypitm = scan_node_expr(nodexp,insitm,depth,typitm);
+          if (typitm && ntypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm),
+                                     mom_item_cstring(ntypitm), mom_item_cstring(typitm));
+          if (ntypitm == nullptr)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s is untypable",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm));
+          _ce_localnodetypecache[nodexp] = ntypitm;
+          return ntypitm;
+        }
+      else
+        {
+          auto nodtypitm = it->second;
+          assert (nodtypitm != nullptr && nodtypitm->va_itype == MOMITY_ITEM);
+          if (typitm && nodtypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm),
+                                     mom_item_cstring(nodtypitm), mom_item_cstring(typitm));
+          return nodtypitm;
+        }
     }
     default:
       throw MOM_RUNTIME_PRINTF("unexpected expr %s in instr %s with type %s",
@@ -1414,11 +1444,9 @@ defaultdesconn:
     }
 #undef CASE_DESCONN_MOM
 #undef NBDESCONN_MOM
-
-#warning MomEmitter::scan_node_descr_conn_expr unimplemented
-  MOM_FATAPRINTF("unimplemented scan_node_desc_conn_expr expnod=%s desconnitm=%s insitm=%s depth#%d typitm=%s",
-                 mom_value_cstring(expnod), mom_value_cstring(desconnitm),
-                 mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in instr %s depth %d",
+                            mom_value_cstring(expnod), mom_item_cstring(connitm),
+                            mom_item_cstring(desconnitm), mom_value_cstring(insitm), depth);
 } // end of MomEmitter::scan_node_descr_conn_expr
 
 
@@ -1440,9 +1468,26 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
                   mom_item_cstring(expitm), mom_item_cstring(typexpitm), mom_item_cstring(desitm));
-#warning MomEmitter::scan_item_expr unimplemented
-  MOM_FATAPRINTF("unimplemented scan_item_expr expitm=%s insitm=%s depth#%d typitm=%s",
-                 mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  if (typexpitm)
+    {
+      if (typitm && typexpitm != typitm)
+        throw  MOM_RUNTIME_PRINTF("item %s in instr %s has type %s but expecting %s",
+                                  mom_item_cstring(expitm),
+                                  mom_item_cstring(insitm),
+                                  mom_item_cstring(typexpitm),
+                                  mom_item_cstring(typitm));
+      return typexpitm;
+    }
+  _ce_localvalueset.insert(expitm);
+  if (typitm == MOM_PREDEFITM(item))
+    return typitm;
+  else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
+    return MOM_PREDEFITM(value);
+  else
+    throw  MOM_RUNTIME_PRINTF("item %s in instr %s, expecting type %s",
+                              mom_item_cstring(expitm),
+                              mom_item_cstring(insitm),
+                              mom_item_cstring(typitm));
 } // end of MomEmitter::scan_item_expr
 
 
@@ -1499,7 +1544,8 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
         }
       else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(global))
         throw  MOM_RUNTIME_PRINTF("global %s in instruction %s is strangely %s locally bound",
-                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(globvarbind->vd_rolitm));
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm),
+                                  mom_item_cstring(globvarbind->vd_rolitm));
     }
     break;
     case CASE_VARDESCR_MOM(thread_local):
