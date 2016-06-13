@@ -978,8 +978,7 @@ mom_boxset_nth (const struct    mom_boxset_st *bset,
       mom_item_st
       *conn,
       int size,
-      const struct
-      mom_hashedvalue_st
+      const struct  mom_hashedvalue_st
       **sons)
   {
     return mom_boxnode_make_meta (conn, size, sons, NULL, 0);

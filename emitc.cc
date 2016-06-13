@@ -35,6 +35,9 @@ class MomEmitter
 {
 public:
   typedef std::function<void(MomEmitter*)> todofun_t;
+  typedef std::vector<const void*,
+		      traceable_allocator<const void*> >
+  traced_vector_values_t;
   typedef std::set<const struct mom_item_st*,
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
@@ -92,6 +95,9 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
+  virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
+  virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
 struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
   struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   {
@@ -244,8 +250,9 @@ public:
       return _ce_setlockeditems.find(itm) != _ce_setlockeditems.end();
     return false;
   }
-  void scan_top_module(void);
+  const struct mom_boxnode_st*transform_top_module(void);
   void scan_module_element(struct mom_item_st*itm);
+  const struct mom_boxnode_st*transform_module_element(struct mom_item_st*itm);
   void todo(const todofun_t& tf)
   {
     _ce_todoque.push_back(tf);
@@ -294,6 +301,9 @@ public:
   MomCEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
+  virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   virtual const char*kindname() const
   {
     return "C-emitter";
@@ -311,6 +321,12 @@ public:
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
   virtual void scan_routine_element(struct mom_item_st*elitm)
+  {
+    throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
+  };
+  virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm)
   {
     throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
   };
@@ -335,7 +351,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
   MomCEmitter cemit {itm};
   try
     {
-      cemit.scan_top_module();
+      auto nod = cemit.transform_top_module();
       cemit.flush_todo_list(__LINE__);
 #warning mom_emit_c_code incomplete
       MOM_FATAPRINTF("unimplemented mom_emit_c_code %s",
@@ -384,7 +400,7 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
   MomJavascriptEmitter jsemit {itm};
   try
     {
-      jsemit.scan_top_module();
+      auto nod = jsemit.transform_top_module();
       jsemit.flush_todo_list(__LINE__);
 #warning mom_emit_javascript_code incomplete
       MOM_FATAPRINTF("unimplemented mom_emit_javascript_code %s",
@@ -434,10 +450,12 @@ _ce_curfunctionitm {nullptr}
 
 
 
-void MomEmitter::scan_top_module(void)
+const struct mom_boxnode_st*
+MomEmitter::transform_top_module(void)
 {
   auto descitm = mom_unsync_item_descr(_ce_topitm);
-  MOM_DEBUGPRINTF(gencod, "scan_top_module %s topitm=%s descitm=%s",
+  traced_vector_values_t vecval;
+  MOM_DEBUGPRINTF(gencod, "transform_top_module %s topitm=%s descitm=%s",
                   kindname(),
                   mom_item_cstring(_ce_topitm),
                   mom_item_cstring(descitm));
@@ -445,7 +463,7 @@ void MomEmitter::scan_top_module(void)
     throw MOM_RUNTIME_PRINTF("item %s has non-module descr: %s",
                              mom_item_cstring(_ce_topitm), mom_item_cstring(descitm));
   auto modulev = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(module));
-  MOM_DEBUGPRINTF(gencod, "scan_top_module %s modulev %s",
+  MOM_DEBUGPRINTF(gencod, "transform_top_module %s modulev %s",
                   kindname(),
                   mom_value_cstring(modulev));
   auto modulseq = mom_dyncast_seqitems (modulev);
@@ -454,6 +472,7 @@ void MomEmitter::scan_top_module(void)
                              mom_item_cstring(_ce_topitm), mom_value_cstring(modulev));
   bind_global(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm);
   unsigned nbmodelem = mom_seqitems_length(modulseq);
+  vecval.reserve(nbmodelem);
   auto itemsarr = mom_seqitems_arr(modulseq);
   for (unsigned ix=0; ix<nbmodelem; ix++)
     {
@@ -463,19 +482,53 @@ void MomEmitter::scan_top_module(void)
       lock_item(curitm);
       todo([=](MomEmitter*em)
       {
-        MOM_DEBUGPRINTF(gencod, "before scanning module element %s #%d from top module %s",
+        MOM_DEBUGPRINTF(gencod, "transform_top_module before scanning module element %s #%d from top module %s",
                         mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
         em->scan_module_element(curitm);
-        MOM_DEBUGPRINTF(gencod, "after scanning module element %s #%d from top module %s",
+        MOM_DEBUGPRINTF(gencod, "transform_top_module after scanning module element %s #%d from top module %s",
                         mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
       });
       flush_todo_list(__LINE__);
+      todo([=, &vecval](MomEmitter*em)
+	   {
+	     MOM_DEBUGPRINTF(gencod, "transform_top_module before transforming"
+			     " module element %s #%d from top module %s",
+			     mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
+	     auto nodelem = em->transform_module_element(curitm);
+	     MOM_DEBUGPRINTF(gencod, "transform_top_module after transforming"
+			     " module element %s #%d from top module %s;\n"
+			     " got %s",
+			     mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm),
+			     mom_value_cstring(nodelem));	     			     
+	     if (nodelem==nullptr)
+	       throw MOM_RUNTIME_PRINTF("failed to transform element %s", mom_item_cstring(curitm));
+	     assert (mom_itype(nodelem) == MOMITY_NODE);
+	     const struct mom_item_st*nodconnitm = nodelem->nod_connitm;
+	     assert (mom_itype(nodconnitm) == MOMITY_ITEM);
+	     if (nodconnitm == MOM_PREDEFITM(sequence)) {
+	       unsigned ln = mom_size(nodelem);
+	       vecval.reserve(ln+3);
+	       for (unsigned ix=0; ix<ln; ix++)
+		 vecval.push_back(nodelem->nod_sons[ix]);
+	     }
+	     else {
+	       vecval.push_back(nodelem);
+	     }
+	   });
+      flush_todo_list(__LINE__);
       _ce_curfunctionitm = nullptr;
     }
-} // end of MomEmitter::scan_top_module
+  auto modnod = mom_boxnode_make(MOM_PREDEFITM(module),vecval.size(),
+				 (const struct mom_hashedvalue_st**)vecval.data());
+  vecval.clear();
+  MOM_DEBUGPRINTF(gencod, "transform_top_module from top module %s gives modnod\n.. %s",
+		  mom_item_cstring(_ce_topitm), mom_value_cstring(modnod));
+  return modnod;
+} // end of MomEmitter::transform_top_module
 
 
-void MomEmitter::scan_module_element(struct mom_item_st*elitm)
+void
+MomEmitter::scan_module_element(struct mom_item_st*elitm)
 {
   struct mom_item_st*descitm = mom_unsync_item_descr(elitm);
   MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s elitm=%s descitm=%s",
@@ -518,6 +571,49 @@ defaultcasedesc:
 #undef NBMODELEMDESC_MOM
 #undef CASE_DESCR_MOM
 } // end of MomEmitter::scan_module_element
+
+
+const struct mom_boxnode_st*
+MomEmitter::transform_module_element(struct mom_item_st*elitm)
+{
+  const struct mom_boxnode_st*resnod = nullptr;
+  struct mom_item_st*descitm = mom_unsync_item_descr(elitm);
+  MOM_DEBUGPRINTF(gencod, "transform_module_element %s topitm=%s elitm=%s descitm=%s",
+                  kindname(),
+                  mom_item_cstring(_ce_topitm),
+                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+  if (!descitm)
+    throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
+#define NBMODELEMDESC_MOM 31
+#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
+	  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasedesc; foundcase_##Nam
+  switch (descitm->hva_hash % NBMODELEMDESC_MOM)
+    {
+    case CASE_DESCR_MOM (global):
+    case CASE_DESCR_MOM (thread_local):
+    case CASE_DESCR_MOM (data):
+        resnod = transform_data_element(elitm);
+      break;
+    case CASE_DESCR_MOM (func):
+        resnod = transform_func_element(elitm);
+      break;
+    case CASE_DESCR_MOM (routine):
+      resnod = transform_routine_element(elitm);
+      break;
+defaultcasedesc:
+    default:
+      throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
+                               mom_item_cstring(elitm), mom_item_cstring(descitm));
+    };
+#undef NBMODELEMDESC_MOM
+#undef CASE_DESCR_MOM
+  MOM_DEBUGPRINTF(gencod, "transform_module_element topitm=%s elitm=%s\n.. resnod=%s",
+                  mom_item_cstring(_ce_topitm),
+                  mom_item_cstring(elitm),
+		  mom_value_cstring(resnod));
+  return resnod;
+} // end of MomEmitter::transform_module_element
 
 
 
@@ -1622,6 +1718,47 @@ MomCEmitter::~MomCEmitter()
 {
   MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
 } // end MomCEmitter::~MomCEmitter
+
+const struct mom_boxnode_st*
+MomCEmitter::transform_data_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomCEmitter::transform_data_element
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+} // end MomCEmitter::transform_data_element
+
+
+const struct mom_boxnode_st*
+MomCEmitter::transform_func_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomCEmitter::transform_func_element
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+} // end MomCEmitter::transform_func_element
+
+
+
+const struct mom_boxnode_st*
+MomCEmitter::transform_routine_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomCEmitter::transform_routine_element
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
+} // end MomCEmitter::transform_routine_element
+
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomJavascriptEmitter::transform_data_element
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+} // end MomJavascriptEmitter::transform_data_element
+
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_func_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomJavascriptEmitter::transform_func_element
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+} // end MomJavascriptEmitter::transform_func_element
+
 
 MomJavascriptEmitter::~MomJavascriptEmitter()
 {
