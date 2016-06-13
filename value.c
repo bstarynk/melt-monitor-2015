@@ -322,7 +322,7 @@ mom_boxtuple_make_va (unsigned siz, ...)
   tup->va_lsiz = siz & 0xffff;
   va_start (args, siz);
   for (unsigned ix = 0; ix < siz; ix++)
-    tup->seqitem[ix] = va_arg (args, struct mom_item_st *);
+    tup->seqitem[ix] = mom_dyncast_item (va_arg (args, struct mom_item_st *));
   seqitem_hash_compute_mom ((struct mom_seqitems_st *) tup);
   return tup;
 }                               /* end mom_boxtuple_make_va */
@@ -345,7 +345,8 @@ mom_boxtuple_make_sentinel_va (struct mom_item_st *itm1, ...)
   va_start (args, itm1);
   for (unsigned ix = 0; ix < siz; ix++)
     {
-      struct mom_item_st *curitm = va_arg (args, struct mom_item_st *);
+      struct mom_item_st *curitm =
+        mom_dyncast_item (va_arg (args, struct mom_item_st *));
       if (curitm && curitm != MOM_EMPTY_SLOT)
         arr[ix] = curitm;
       else
@@ -440,7 +441,8 @@ mom_boxset_make_va (unsigned siz, ...)
   unsigned cnt = 0;
   for (unsigned ix = 0; ix < siz; ix++)
     {
-      struct mom_item_st *curitm = va_arg (args, struct mom_item_st *);
+      struct mom_item_st *curitm =
+        mom_dyncast_item (va_arg (args, struct mom_item_st *));
       if (!curitm || curitm == MOM_EMPTY_SLOT)
         continue;
       arr[cnt++] = curitm;
