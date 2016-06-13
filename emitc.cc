@@ -1255,7 +1255,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     {
     case CASE_DESCONN_MOM(signature):
     {
-      // a closure application
+      // an unknown closure application
       auto sigr=scan_nonbinding_signature(connitm,insitm);
       auto sformaltup = sigr.sig_formals;
       auto sresultv = sigr.sig_result;
@@ -1312,6 +1312,77 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                                      ix, mom_item_cstring(curtypitm));
         }
       return MOM_PREDEFITM(value);
+    }
+    break;
+    case CASE_DESCONN_MOM(routine):
+    {
+      // a known routine application
+      auto routsigitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr
+                         (connitm,
+                          MOM_PREDEFITM(signature)));
+      if (routsigitm==nullptr)
+        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s without signature",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      lock_item(routsigitm);
+      const struct mom_boxtuple_st* formaltup=nullptr;
+      struct mom_item_st*restypitm=nullptr;
+      {
+        auto sigr=scan_nonbinding_signature(routsigitm,insitm);
+        formaltup=sigr.sig_formals;
+        restypitm=mom_dyncast_item(sigr.sig_result);
+      }
+      if (formaltup==nullptr || restypitm==nullptr)
+        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s with bad signature %s",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(routsigitm));
+      unsigned nbformals = mom_boxtuple_length(formaltup);
+      if (nbformals != nodarity)
+        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+                                 " with wrong %d number of arguments (%d expected from signature %s)",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 nodarity, nbformals,
+                                 mom_item_cstring(routsigitm));
+      for (unsigned ix=0; ix<nbformals; ix++)
+        {
+          auto sonexpv = expnod->nod_sons[ix];
+          auto curformalitm = mom_boxtuple_nth(formaltup, ix);
+          assert (is_locked_item(curformalitm));
+          auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
+          if (curtypitm == nullptr)
+            throw  MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+                                      " with signature %s of untyped formal#%d %s",
+                                      mom_item_cstring(connitm),
+                                      mom_value_cstring(expnod),
+                                      mom_item_cstring(insitm),
+                                      mom_item_cstring(routsigitm),
+                                      ix, mom_item_cstring(curformalitm));
+          lock_item(curtypitm);
+          auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
+          if (exptypitm != curtypitm)
+            throw  MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+                                      " with signature %s type mismatch for #%d (formal %s)",
+                                      mom_item_cstring(connitm),
+                                      mom_value_cstring(expnod),
+                                      mom_item_cstring(insitm),
+                                      mom_item_cstring(routsigitm),
+                                      ix,  mom_item_cstring(curformalitm));
+        };
+      if (typitm != nullptr && typitm != restypitm)
+        throw MOM_RUNTIME_PRINTF("applied routine %s in expnod %s instr %s"
+                                 " with signature %s result type mismatch (expecting %s got %s)",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(routsigitm),
+                                 mom_item_cstring(typitm), mom_item_cstring(restypitm));
+      return restypitm;
     }
     break;
 defaultdesconn:
