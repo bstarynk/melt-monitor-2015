@@ -1497,6 +1497,42 @@ momtest_emitc (const char *arg)
 }                               /* end momtest_emitc */
 
 
+void
+momtest_emitjs (const char *arg)
+{
+  MOM_INFORMPRINTF ("start momtest_emitjs arg=%s", arg);
+  struct mom_item_st *itm = mom_find_item_by_string (arg);
+  if (!itm)
+    MOM_WARNPRINTF ("momtest_emitjs no item for arg=%s", arg);
+  else
+    {
+      MOM_INFORMPRINTF
+        ("momtest_emitjs before emitting JavaScript code for %s",
+         mom_item_cstring (itm));
+      errno = 0;
+      char nambuf[256];
+      memset (nambuf, 0, sizeof (nambuf));
+      snprintf (nambuf, sizeof (nambuf), "webroot/tmp_%s.js",
+                mom_item_cstring (itm));
+      FILE *fil = fopen (nambuf, "w");
+      if (!fil)
+        MOM_FATAPRINTF ("momtest_emitjs failed to open %s", nambuf);
+      fprintf (fil, "// generated file %s -*- JavaScript -*-\n\n", nambuf);
+      bool ok = mom_emit_javascript_code (itm, fil);
+      if (ok)
+        MOM_INFORMPRINTF
+          ("momtest_emitjs succeeded emitting JavaScript code for %s",
+           mom_item_cstring (itm));
+      else
+        MOM_FATAPRINTF
+          ("momtest_emitjs failed emitting JavaScript code for %s",
+           mom_item_cstring (itm));
+      fprintf (fil, "\n// end of generated file %s\n", nambuf);
+      fclose (fil);
+    }
+}                               /* end momtest_emitjs */
+
+
 MOM_PRIVATE void
 do_run_tests_mom (void)
 {
