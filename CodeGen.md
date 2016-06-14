@@ -56,6 +56,17 @@ An *instruction-item* is one of:
 non-nil *test-item*s ; each *test-item* has `descr`: `test`, `test`:
 *expression*, `then`: *instruction-item*
 
+a *call-item* with `descr` : `call`, `func` : an expression giving the
+function to call, an optional `result` : a variable item or tuple of
+variables; the arguments are the components of the instruction.
+
+a *run-item* with `descr` : `run`, `run` : a node whose connective
+is a primitive, and optional `result` as before.
+
+a *switch-item* with `descr` : `switch`, `type` : `int` or `item` or
+`string`, `switch` : an expression, and `case` : a tuple or set of
+*case-item*s, optionally `otherwise` : a block or instruction
+
 
 An *expression* is one of:
 

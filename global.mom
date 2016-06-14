@@ -143,6 +143,26 @@ comment
 
 
 
+*call
+1465882737
+^mtime
+(
+comment
+"for function call instructions"_
+)attrs
+
+
+
+*case
+1465882737
+^mtime
+(
+comment
+"for cases"_
+)attrs
+
+
+
 *clone
 1456922491
 ^mtime
@@ -173,6 +193,7 @@ comment
 
 
 
+
 *cond
 1455462590
 ^mtime
@@ -190,7 +211,6 @@ comment
 comment
 "for continue statements"_
 )attrs
-
 
 
 
@@ -341,6 +361,7 @@ is_scalar
 
 
 
+
 *empty
 1463643263
 ^mtime
@@ -358,7 +379,6 @@ comment
 comment
 "test for equality of two values"_
 )attrs
-
 
 
 
@@ -502,6 +522,7 @@ comment
 
 
 
+
 *greater
 1457365666
 ^mtime
@@ -519,7 +540,6 @@ comment
 comment
 "test for greater or equal of two values"_
 )attrs
-
 
 
 
@@ -676,6 +696,7 @@ item
 
 
 
+
 *is_node
 1457361540
 ^mtime
@@ -695,7 +716,6 @@ comment
 notice
 not
 )attrs
-
 
 
 
@@ -854,6 +874,7 @@ comment
 
 
 
+
 *letrec
 1455623664
 ^mtime
@@ -871,7 +892,6 @@ comment
 comment
 "for local variables inside blocks"_
 )attrs
-
 
 
 
@@ -1023,6 +1043,7 @@ comment
 
 
 
+
 *not
 1457428465
 ^mtime
@@ -1038,7 +1059,6 @@ is_null
 *notice
 1446546422
 ^mtime
-
 
 
 
@@ -1068,6 +1088,16 @@ comment
 (
 comment
 "list some other modules"_
+)attrs
+
+
+
+*otherwise
+1465882737
+^mtime
+(
+comment
+"otherwise case in switches"_
 )attrs
 
 
@@ -1172,6 +1202,7 @@ comment
 
 
 
+
 *out_last_line_width
 1457095329
 ^mtime
@@ -1199,7 +1230,6 @@ comment
 comment
 "output with less indentation"_
 )attrs
-
 
 
 
@@ -1353,6 +1383,7 @@ comment
 
 
 
+
 *payl_file
 1457031403
 ^mtime
@@ -1380,7 +1411,6 @@ comment
 comment
 "for written file payload"_
 )attrs
-
 
 
 
@@ -1530,6 +1560,7 @@ comment
 
 
 
+
 *payl_hashset
 1456841456
 ^mtime
@@ -1565,7 +1596,6 @@ comment
 comment
 "insert some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1699,6 +1729,7 @@ comment
 
 
 
+
 *payl_vectval_resize
 1456840222
 ^mtime
@@ -1736,7 +1767,6 @@ payl_vectval_resize
 comment
 "Web exchange payload"_
 )attrs
-
 
 
 
@@ -1899,6 +1929,7 @@ comment
 
 
 
+
 *right_assoc
 1455871773
 ^mtime
@@ -1919,6 +1950,16 @@ comment
 
 
 
+*run
+1465882737
+^mtime
+(
+comment
+"for run instructions"_
+)attrs
+
+
+
 *same
 1457364041
 ^mtime
@@ -1926,7 +1967,6 @@ comment
 comment
 "test for identity of two values"_
 )attrs
-
 
 
 
@@ -2044,6 +2084,17 @@ is_string
 comment
 "for difference of two numbers"_
 )attrs
+
+
+
+*switch
+1465882737
+^mtime
+(
+comment
+"for switch instructions"_
+)attrs
+
 
 
 
@@ -2203,7 +2254,6 @@ node
 
 
 
-
 *then
 1465566569
 ^mtime
@@ -2334,6 +2384,7 @@ comment
 
 
 
+
 *unit
 1464962940
 ^mtime
@@ -2383,7 +2434,6 @@ comment
 comment
 "for variable"_
 )attrs
-
 
 
 
