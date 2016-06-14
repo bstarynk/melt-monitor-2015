@@ -1078,9 +1078,106 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     break;
     case CASE_OPER_MOM(call):
     {
-      MOM_FATAPRINTF("unimplemented call insitm=%d rk#%d blkitm=%s",
-                     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-#warning unimplemented call instruction in scan_instr
+      auto callsigitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(call)));
+      if (!callsigitm)
+        throw MOM_RUNTIME_PRINTF("missing call signature in call instr %s rk#%d in block %s",
+                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      auto resultv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(result));
+      lock_item (callsigitm);
+      auto sigr = scan_nonbinding_signature(callsigitm, insitm);
+      auto sformaltup = sigr.sig_formals;
+      auto sresultv = sigr.sig_result;
+      unsigned sigarity = mom_boxtuple_length(sformaltup);
+      auto comps = insitm->itm_pcomp;
+      unsigned nbcomp = mom_vectvaldata_count(comps);
+      if (nbcomp != sigarity)
+        throw MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s with wrong arity,"
+                                 " got %d expecting %d for signature %s",
+                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                 nbcomp, sigarity, mom_item_cstring(callsigitm));
+      auto funv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(func));
+      if (funv == nullptr)
+        throw MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s without func",
+                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      if (scan_expr(funv, insitm, 1, MOM_PREDEFITM(value)) != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s with bad non-value func %s",
+                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                 mom_value_cstring(funv));
+      for (unsigned ix=0; ix<nbcomp; ix++)
+        {
+          auto curformitm = mom_boxtuple_nth(sformaltup, ix);
+          assert (curformitm != nullptr);
+          assert (is_locked_item(curformitm));
+          auto curtypitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(curformitm, MOM_PREDEFITM(type)));
+          assert (curtypitm != nullptr);
+          assert (is_locked_item(curtypitm));
+          auto curargv = mom_vectvaldata_nth(comps,ix);
+          if (scan_expr(curargv, insitm, 1, curtypitm) != curtypitm)
+            throw MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                     "with mistyped arg#%d %s (expecting %s)",
+                                     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                     rk, mom_value_cstring(curargv),
+                                     mom_item_cstring(curtypitm));
+        };
+      auto resity = mom_itype(resultv);
+      if (resity == MOMITY_ITEM)
+        {
+          auto formresitm = mom_dyncast_item(sresultv);
+          if (formresitm == nullptr)
+            throw  MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                      "with signature %s of non-item result %s",
+                                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                      mom_item_cstring(callsigitm), mom_value_cstring(resultv));
+          assert (is_locked_item(formresitm));
+          auto formrestypitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(formresitm, MOM_PREDEFITM(type)));
+          assert (formrestypitm != nullptr);
+          assert (is_locked_item(formrestypitm));
+          auto resvaritm = (struct mom_item_st*)resultv;
+          lock_item(resvaritm);
+          if (scan_var(resvaritm, insitm, formrestypitm) != formrestypitm)
+            throw  MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                      "with mistyped result %s, expecting %s",
+                                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                      mom_item_cstring(resvaritm), mom_item_cstring(formrestypitm));
+
+        }
+      else if (resity == MOMITY_TUPLE)
+        {
+          const struct mom_boxtuple_st * formrestup = mom_dyncast_tuple(sresultv);
+          const struct mom_boxtuple_st*resultup = (const struct mom_boxtuple_st*)resultv;
+          unsigned nbformresults = mom_size(formrestup);
+          unsigned nbresults = mom_size(resultup);
+          if (nbformresults != nbresults)
+            throw  MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                      "with %d results, expecting %d from signature %s",
+                                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                      nbresults, nbformresults, mom_item_cstring(callsigitm));
+          for (unsigned resix=0; resix < nbresults; resix++)
+            {
+              struct mom_item_st* curformresitm = ::mom_boxtuple_nth(formrestup, resix);
+              struct mom_item_st* curesvaritm = ::mom_boxtuple_nth(resultup, resix);
+              lock_item(curesvaritm);
+              assert (is_locked_item(curformresitm));
+              auto curformrestypitm =
+                mom_dyncast_item(mom_unsync_item_get_phys_attr(curformresitm, MOM_PREDEFITM(type)));
+              assert (curformrestypitm != nullptr);
+              assert (is_locked_item(curformrestypitm));
+              if (scan_var (curesvaritm, insitm, curformrestypitm) != curformrestypitm)
+                throw MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                         "with mistyped result#%d %s, expecting type %s from signature %s",
+                                         mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                         resix, mom_item_cstring(curesvaritm),
+                                         mom_item_cstring(curformrestypitm), mom_item_cstring(callsigitm));
+            }
+        }
+      else if (resity != MOMITY_NONE)
+        throw  MOM_RUNTIME_PRINTF("call instr %s rk#%d in block %s "
+                                  "with bad result %s",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                  mom_value_cstring(resultv));
     }
     break;
     case CASE_OPER_MOM(run):
@@ -1092,7 +1189,7 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     break;
     case CASE_OPER_MOM(switch):
     {
-      MOM_FATAPRINTF("unimplemented switch insitm=%d rk#%d blkitm=%s",
+      MOM_FATAPRINTF("unimplemented switch insitm=%s rk#%d blkitm=%s",
                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
 #warning unimplemented switch instruction in scan_instr
     }
@@ -1367,7 +1464,7 @@ switch (connitm->hva_hash % NBEXPCONN_MOM)
       throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                mom_value_cstring(expnod),
                                mom_item_cstring(insitm));
-  // failthru
+    // failthru
   case CASE_EXPCONN_MOM(set):
   case CASE_EXPCONN_MOM(tuple):
   {
