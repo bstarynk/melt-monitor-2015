@@ -1288,9 +1288,54 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     break;
     case CASE_OPER_MOM(switch):
     {
+      auto swtypitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(switch)));
+      if (swtypitm != MOM_PREDEFITM(int) && swtypitm != MOM_PREDEFITM(string)
+          && swtypitm != MOM_PREDEFITM(item))
+        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                  "with bad switch type %s",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                  mom_item_cstring(swtypitm));
+      auto argv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(arg));
+      if (argv==nullptr)
+        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                  "with missing arg",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      auto caseseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(case)));
+      if (caseseq==nullptr)
+        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                  "with missing case",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      auto otherwv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(otherwise));
+      auto argtypitm = scan_expr(argv,insitm,1);
+      if (!argtypitm)
+        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                  "with untypeable arg",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+      if (argtypitm != swtypitm && argtypitm != MOM_PREDEFITM(value))
+        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                  "with arg of incompatible type %s for %s",
+                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                  mom_item_cstring(argtypitm), mom_item_cstring(swtypitm));
+      unsigned nbcases = mom_seqitems_length(caseseq);
+      for (unsigned casix=0; casix<nbcases; casix++)
+        {
+          auto curcasitm = mom_seqitems_nth(caseseq, casix);
+          if (!curcasitm)
+            throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                      "without case#%d",
+                                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                      casix);
+          lock_item(curcasitm);
+          if (mom_unsync_item_descr(curcasitm) != MOM_PREDEFITM(case))
+            throw MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                     "with bad case#%d : %s",
+                                     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                     casix, mom_item_cstring(curcasitm));
+        }
+#warning unimplemented switch instruction in scan_instr
       MOM_FATAPRINTF("unimplemented switch insitm=%s rk#%d blkitm=%s",
                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-#warning unimplemented switch instruction in scan_instr
     }
     break;
   default:
@@ -1563,7 +1608,7 @@ switch (connitm->hva_hash % NBEXPCONN_MOM)
       throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                mom_value_cstring(expnod),
                                mom_item_cstring(insitm));
-    // failthru
+  // failthru
   case CASE_EXPCONN_MOM(set):
   case CASE_EXPCONN_MOM(tuple):
   {

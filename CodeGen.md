@@ -64,8 +64,8 @@ components of the instruction.
 a *run-item* with `descr` : `run`, `run` : a node whose connective
 is a primitive, and optional `result` as before.
 
-a *switch-item* with `descr` : `switch`, `type` : `int` or `item` or
-`string`, `switch` : an expression, and `case` : a tuple or set of
+a *switch-item* with `descr` : `switch`, `switch` : `int` or `item` or
+`string`, `arg` : an expression, and `case` : a tuple or set of
 *case-item*s, optionally `otherwise` : a block or instruction
 
 
