@@ -98,6 +98,7 @@ protected:
 virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
+  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
   struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
   struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   {
@@ -304,6 +305,7 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
+  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const char*kindname() const
   {
     return "C-emitter";
@@ -326,6 +328,7 @@ public:
   };
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
+  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm)
   {
     throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
@@ -1290,12 +1293,7 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     {
       auto swtypitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(switch)));
-      if (swtypitm != MOM_PREDEFITM(int) && swtypitm != MOM_PREDEFITM(string)
-          && swtypitm != MOM_PREDEFITM(item))
-        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                                  "with bad switch type %s",
-                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                                  mom_item_cstring(swtypitm));
+      auto casehdr = case_scanner(swtypitm,insitm,rk,blkitm);
       auto argv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(arg));
       if (argv==nullptr)
         throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
@@ -1352,6 +1350,7 @@ defaultcasedesc:
 #undef NBMODOPER_MOM
   }
 } // end of MomEmitter::scan_instr
+
 
 
 struct mom_item_st*
@@ -1608,7 +1607,7 @@ switch (connitm->hva_hash % NBEXPCONN_MOM)
       throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                mom_value_cstring(expnod),
                                mom_item_cstring(insitm));
-  // failthru
+    // failthru
   case CASE_EXPCONN_MOM(set):
   case CASE_EXPCONN_MOM(tuple):
   {
@@ -2015,6 +2014,32 @@ MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mo
 } // end MomCEmitter::transform_routine_element
 
 
+std::function<void(struct mom_item_st*)>
+MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+assert (is_locked_item(swtypitm));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+  {
+  case CASE_SWTYPE_MOM(int):
+  case CASE_SWTYPE_MOM(string):
+  case CASE_SWTYPE_MOM(item):
+defaultcaseswtyp:
+#warning incomplete MomCEmitter::case_scanner
+  default:
+    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                              "with bad switch type %s",
+                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                              mom_item_cstring(swtypitm));
+  }
+#undef NBSWTYPE_MOM
+#undef CASE_SWTYPE_MOM
+} // end of MomCEmitter::case_scanner
+
+
 const struct mom_boxnode_st*
 MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
 {
@@ -2030,6 +2055,32 @@ MomJavascriptEmitter::transform_func_element(struct mom_item_st*itm)
 MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
 } // end MomJavascriptEmitter::transform_func_element
 
+
+
+std::function<void(struct mom_item_st*)>
+MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+assert (is_locked_item(swtypitm));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+  {
+  case CASE_SWTYPE_MOM(int):
+  case CASE_SWTYPE_MOM(string):
+  case CASE_SWTYPE_MOM(item):
+defaultcaseswtyp:
+#warning incomplete MomJavascriptEmitter::case_scanner
+  default:
+    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                              "with bad switch type %s",
+                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                              mom_item_cstring(swtypitm));
+  }
+#undef NBSWTYPE_MOM
+#undef CASE_SWTYPE_MOM
+} // end of MomJavascriptEmitter::case_scanner
 
 MomJavascriptEmitter::~MomJavascriptEmitter()
 {

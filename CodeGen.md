@@ -56,18 +56,25 @@ An *instruction-item* is one of:
 non-nil *test-item*s ; each *test-item* has `descr`: `test`, `test`:
 *expression*, `then`: *instruction-item*
 
-a *call-item* with `descr` : `call`, `call`: *signature-item*, `func`
+* a *call-item* with `descr` : `call`, `call`: *signature-item*, `func`
 : an expression giving the function to call, an optional `result` : a
 variable item or tuple of variables; the call arguments are the
 components of the instruction.
 
-a *run-item* with `descr` : `run`, `run` : a node whose connective
+* a *run-item* with `descr` : `run`, `run` : a node whose connective
 is a primitive, and optional `result` as before.
 
-a *switch-item* with `descr` : `switch`, `switch` : `int` or `item` or
+* a *switch-item* with `descr` : `switch`, `switch` : `int` or `item` or
 `string`, `arg` : an expression, and `case` : a tuple or set of
 *case-item*s, optionally `otherwise` : a block or instruction
 
+A *case-item* has `descr` : `case`, `case` : *current-case*, `run` :
+*instruction-item* (often some block). Inside an `int` switch, the
+*current-case* can be an integer, or some %`set` node with integer
+sons, or some %`range` node with two integers (the first being less or
+equal to the second one). Inside a `string` switch, the *current-case*
+can be a string, or some %`set` node with string sons. Inside an
+`item` switch, the *current-case* should be an item or a set of items.
 
 An *expression* is one of:
 
