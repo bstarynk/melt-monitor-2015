@@ -1889,6 +1889,16 @@ comment
 
 
 
+*range
+1465978097
+^mtime
+(
+comment
+"for ranges in cases"_
+)attrs
+
+
+
 *raw
 1452095862
 ^mtime
@@ -1919,6 +1929,7 @@ comment
 
 
 
+
 *reviter
 1457086941
 ^mtime
@@ -1926,7 +1937,6 @@ comment
 comment
 "to reverse iterate a function on a composite value"_
 )attrs
-
 
 
 
@@ -2087,6 +2097,7 @@ comment
 
 
 
+
 *switch
 1465882737
 ^mtime
@@ -2094,7 +2105,6 @@ comment
 comment
 "for switch instructions"_
 )attrs
-
 
 
 
@@ -2374,6 +2384,7 @@ comment
 
 
 
+
 *unequal
 1457365666
 ^mtime
@@ -2381,7 +2392,6 @@ comment
 comment
 "test for inequality of two values"_
 )attrs
-
 
 
 
