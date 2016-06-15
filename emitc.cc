@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <gc/gc_allocator.h>
 
 class MomEmitter
@@ -43,13 +44,13 @@ public:
     traceable_allocator<struct mom_item_st*>>
                                            traced_set_items_t;
   typedef std::map<const struct mom_item_st*,struct mom_item_st*,
-		   MomItemLess,
-		   traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
-                                           traced_map_item2item_t;
+    MomItemLess,
+    traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
+    traced_map_item2item_t;
   typedef std::set<const void*,
           MomValueLess,
-          traceable_allocator<struct mom_item_st*>>
-            traced_set_values_t;
+          traceable_allocator<void*>>
+          traced_set_values_t;
   struct vardef_st
   {
     struct mom_item_st* vd_rolitm;
@@ -93,40 +94,102 @@ private:
   traced_node2itemhashmap_t _ce_localnodetypecache;
   struct mom_item_st*_ce_curfunctionitm;
 protected:
-  class CaseScannerData {
+  class CaseScannerData
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
     struct mom_item_st*cas_insitm;
     struct mom_item_st*cas_blkitm;
     unsigned cas_rank;
+    traced_set_items_t cas_runset;
   public:
-    MomEmitter*emitter() const { return cas_emitter; };
-    struct mom_item_st*swtypitm() const { return cas_swtypitm; };
-    struct mom_item_st*insitm() const { return cas_insitm; };
-    struct mom_item_st*blkitm() const { return cas_blkitm; };
-    unsigned rank() const { return cas_rank; };
+    virtual const char*name() const=0;
+    MomEmitter*emitter() const
+    {
+      return cas_emitter;
+    };
+    struct mom_item_st*swtypitm() const
+    {
+      return cas_swtypitm;
+    };
+    struct mom_item_st*insitm() const
+    {
+      return cas_insitm;
+    };
+    struct mom_item_st*blkitm() const
+    {
+      return cas_blkitm;
+    };
+    unsigned rank() const
+    {
+      return cas_rank;
+    };
+    bool has_runitm(struct mom_item_st*itm) const
+    {
+      return itm!=nullptr && cas_runset.find(itm) != cas_runset.end();
+    };
+    void add_runitm(struct mom_item_st*itm)
+    {
+      assert (mom_itype(itm) == MOMITY_ITEM);
+      cas_runset.insert(itm);
+    };
     CaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
-      : cas_emitter(em), cas_swtypitm(swtypitm), cas_insitm(insitm), cas_blkitm(blkitm), cas_rank(rank) {};
-    virtual ~CaseScannerData() { cas_emitter=nullptr; cas_swtypitm=nullptr; cas_insitm=nullptr; cas_blkitm=nullptr; cas_rank=0; };
+      : cas_emitter(em), cas_swtypitm(swtypitm), cas_insitm(insitm), cas_blkitm(blkitm), cas_rank(rank), cas_runset() {};
+    virtual ~CaseScannerData()
+    {
+      cas_emitter=nullptr;
+      cas_swtypitm=nullptr;
+      cas_insitm=nullptr;
+      cas_blkitm=nullptr;
+      cas_rank=0;
+      cas_runset.clear();
+    };
   };				// end class CaseScannerData
-  class IntCaseScannerData  final : public CaseScannerData {
+  class IntCaseScannerData  final : public CaseScannerData
+  {
+    std::map<long,struct mom_item_st*,traceable_allocator<long>> cas_num2casemap;
+  public:
+    const char*name() const
+    {
+      return "IntCaseScannerData";
+    };
+    IntCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
+      : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_num2casemap() {};
+    virtual ~IntCaseScannerData()
+    {
+      cas_num2casemap.clear();
+    };
   };				// end class IntCaseScannerData
-  class StringCaseScannerData final : public CaseScannerData {
+  class StringCaseScannerData final : public CaseScannerData
+  {
     std::map<std::string,struct mom_item_st*,traceable_allocator<std::string>> cas_string2casemap;
   public:
+    const char*name() const
+    {
+      return "StringCaseScannerData";
+    };
     StringCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
       : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_string2casemap() {};
-    virtual ~StringCaseScannerData() {
+    virtual ~StringCaseScannerData()
+    {
       cas_string2casemap.clear();
     };
   };				// end class StringCaseScannerData
-  class ItemCaseScannerData final : public CaseScannerData  {
+  class ItemCaseScannerData final : public CaseScannerData
+  {
     traced_map_item2item_t cas_item2casemap;
   public:
+    const char*name() const
+    {
+      return "ItemCaseScannerData";
+    };
     ItemCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
       : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_item2casemap() {};
-    virtual ~ItemCaseScannerData() { cas_item2casemap.clear(); };
+    virtual ~ItemCaseScannerData()
+    {
+      cas_item2casemap.clear();
+    };
   };
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
@@ -134,11 +197,11 @@ protected:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
-virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
+  virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
-  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
-  virtual std::function<void(struct mom_item_st*, CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
+  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual std::function<void(struct mom_item_st*, unsigned, CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
   struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
   struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   {
@@ -345,8 +408,8 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
-  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
-  virtual std::function<void(struct mom_item_st*,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const char*kindname() const
   {
     return "C-emitter";
@@ -369,8 +432,9 @@ public:
   };
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
-  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
-  virtual std::function<void(struct mom_item_st*,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual MomEmitter::CaseScannerData*
+  make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm)
   {
     throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
@@ -1357,6 +1421,9 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
                                   "with arg of incompatible type %s for %s",
                                   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                   mom_item_cstring(argtypitm), mom_item_cstring(swtypitm));
+      std::unique_ptr<CaseScannerData> casdata {make_case_scanner_data(swtypitm,insitm,rk,blkitm)};
+      assert (casdata != nullptr);
+      auto casescan = case_scanner(swtypitm,insitm,rk,blkitm);
       unsigned nbcases = mom_seqitems_length(caseseq);
       for (unsigned casix=0; casix<nbcases; casix++)
         {
@@ -1372,25 +1439,23 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
                                      "with bad case#%d : %s",
                                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                      casix, mom_item_cstring(curcasitm));
+          casescan(curcasitm,casix,casdata.get());
         }
-#warning unimplemented switch instruction in scan_instr
-      MOM_FATAPRINTF("unimplemented switch insitm=%s rk#%d blkitm=%s",
-                     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
     }
     break;
-  default:
+    default:
 defaultcasedesc:
-    {
-      MOM_DEBUGPRINTF(gencod, "scan_instr special before insitm=%s desitm=%s rk#%d blkitm %s",
-                      mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
-      scan_special_instr(insitm, desitm, rk, blkitm);
-      MOM_DEBUGPRINTF(gencod, "scan_instr special after insitm=%s desitm=%s rk#%d blkitm %s",
-                      mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
-    }
-    break;
+      {
+        MOM_DEBUGPRINTF(gencod, "scan_instr special before insitm=%s desitm=%s rk#%d blkitm %s",
+                        mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
+        scan_special_instr(insitm, desitm, rk, blkitm);
+        MOM_DEBUGPRINTF(gencod, "scan_instr special after insitm=%s desitm=%s rk#%d blkitm %s",
+                        mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
+      }
+      break;
 #undef CASE_OPER_MOM
 #undef NBMODOPER_MOM
-  }
+    }
 } // end of MomEmitter::scan_instr
 
 
@@ -1398,463 +1463,463 @@ defaultcasedesc:
 struct mom_item_st*
 MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d typitm=%s",
-                mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-if (depth >= MAX_DEPTH_EXPR)
-  throw  MOM_RUNTIME_PRINTF("expr %s in instr %s is too deep (%d)",
-                            mom_value_cstring(expv), mom_item_cstring(insitm), depth);
-if (typitm)
-  {
-    lock_item(typitm);
-    scan_type(typitm);
-  }
-unsigned typexp = mom_itype(expv);
-switch (typexp)
-  {
-  case MOMITY_NONE:
-    return MOM_PREDEFITM(unit);
-  case MOMITY_INT:
-    if (typitm && typitm != MOM_PREDEFITM(int) && typitm != MOM_PREDEFITM(value))
-      throw MOM_RUNTIME_PRINTF("int.expr %s in instr %s with type mismatch for %s",
+  MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d typitm=%s",
+                  mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  if (depth >= MAX_DEPTH_EXPR)
+    throw  MOM_RUNTIME_PRINTF("expr %s in instr %s is too deep (%d)",
+                              mom_value_cstring(expv), mom_item_cstring(insitm), depth);
+  if (typitm)
+    {
+      lock_item(typitm);
+      scan_type(typitm);
+    }
+  unsigned typexp = mom_itype(expv);
+  switch (typexp)
+    {
+    case MOMITY_NONE:
+      return MOM_PREDEFITM(unit);
+    case MOMITY_INT:
+      if (typitm && typitm != MOM_PREDEFITM(int) && typitm != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("int.expr %s in instr %s with type mismatch for %s",
+                                 mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
+      return typitm?typitm:MOM_PREDEFITM(int);
+    case MOMITY_BOXSTRING:
+      if (typitm && typitm != MOM_PREDEFITM(string) && typitm != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("string.expr %s in instr %s with type mismatch for %s",
+                                 mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
+      return typitm?typitm:MOM_PREDEFITM(string);
+    case MOMITY_BOXDOUBLE:
+      if (typitm && typitm != MOM_PREDEFITM(double) && typitm != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("double.expr %s in instr %s with type mismatch for %s",
+                                 mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
+      return typitm?typitm:MOM_PREDEFITM(double);
+    case MOMITY_ITEM:
+    {
+      auto itmexp = (struct mom_item_st*)expv;
+      lock_item(itmexp);
+      return scan_item_expr(itmexp,insitm,depth,typitm);
+    }
+    case MOMITY_NODE:
+    {
+      auto nodexp = (const struct mom_boxnode_st*)expv;
+      auto it =_ce_localnodetypecache.find(nodexp);
+      if (it == _ce_localnodetypecache.end())
+        {
+          auto ntypitm = scan_node_expr(nodexp,insitm,depth,typitm);
+          if (typitm && ntypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm),
+                                     mom_item_cstring(ntypitm), mom_item_cstring(typitm));
+          if (ntypitm == nullptr)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s is untypable",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm));
+          _ce_localnodetypecache[nodexp] = ntypitm;
+          return ntypitm;
+        }
+      else
+        {
+          auto nodtypitm = it->second;
+          assert (nodtypitm != nullptr && nodtypitm->va_itype == MOMITY_ITEM);
+          if (typitm && nodtypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
+                                     mom_value_cstring(nodexp), mom_item_cstring(insitm),
+                                     mom_item_cstring(nodtypitm), mom_item_cstring(typitm));
+          return nodtypitm;
+        }
+    }
+    default:
+      throw MOM_RUNTIME_PRINTF("unexpected expr %s in instr %s with type %s",
                                mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-    return typitm?typitm:MOM_PREDEFITM(int);
-  case MOMITY_BOXSTRING:
-    if (typitm && typitm != MOM_PREDEFITM(string) && typitm != MOM_PREDEFITM(value))
-      throw MOM_RUNTIME_PRINTF("string.expr %s in instr %s with type mismatch for %s",
-                               mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-    return typitm?typitm:MOM_PREDEFITM(string);
-  case MOMITY_BOXDOUBLE:
-    if (typitm && typitm != MOM_PREDEFITM(double) && typitm != MOM_PREDEFITM(value))
-      throw MOM_RUNTIME_PRINTF("double.expr %s in instr %s with type mismatch for %s",
-                               mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-    return typitm?typitm:MOM_PREDEFITM(double);
-  case MOMITY_ITEM:
-  {
-    auto itmexp = (struct mom_item_st*)expv;
-    lock_item(itmexp);
-    return scan_item_expr(itmexp,insitm,depth,typitm);
-  }
-  case MOMITY_NODE:
-  {
-    auto nodexp = (const struct mom_boxnode_st*)expv;
-    auto it =_ce_localnodetypecache.find(nodexp);
-    if (it == _ce_localnodetypecache.end())
-      {
-        auto ntypitm = scan_node_expr(nodexp,insitm,depth,typitm);
-        if (typitm && ntypitm != typitm)
-          throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
-                                   mom_value_cstring(nodexp), mom_item_cstring(insitm),
-                                   mom_item_cstring(ntypitm), mom_item_cstring(typitm));
-        if (ntypitm == nullptr)
-          throw MOM_RUNTIME_PRINTF("node expr %s in instr %s is untypable",
-                                   mom_value_cstring(nodexp), mom_item_cstring(insitm));
-        _ce_localnodetypecache[nodexp] = ntypitm;
-        return ntypitm;
-      }
-    else
-      {
-        auto nodtypitm = it->second;
-        assert (nodtypitm != nullptr && nodtypitm->va_itype == MOMITY_ITEM);
-        if (typitm && nodtypitm != typitm)
-          throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
-                                   mom_value_cstring(nodexp), mom_item_cstring(insitm),
-                                   mom_item_cstring(nodtypitm), mom_item_cstring(typitm));
-        return nodtypitm;
-      }
-  }
-  default:
-    throw MOM_RUNTIME_PRINTF("unexpected expr %s in instr %s with type %s",
-                             mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
-  }
+    }
 } // end of MomEmitter::scan_expr
 
 
 
 struct mom_item_st*
 MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm,
-                         int depth, struct mom_item_st*typitm)
+                           int depth, struct mom_item_st*typitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
-                mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
-auto connitm = expnod->nod_connitm;
-assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
-unsigned nodarity = mom_size(expnod);
-lock_item(connitm);
+  MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
+  auto connitm = expnod->nod_connitm;
+  assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
+  unsigned nodarity = mom_size(expnod);
+  lock_item(connitm);
 #define NBEXPCONN_MOM 131
 #define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;	\
  goto defaultcaseconn; foundcaseconn_##Nam
-switch (connitm->hva_hash % NBEXPCONN_MOM)
-  {
-  case CASE_EXPCONN_MOM(verbatim):
-  {
-    if (nodarity != 1)
-      throw MOM_RUNTIME_PRINTF("verbatim expr %s of bad arity in instr %s with type %s",
-                               mom_value_cstring(expnod), mom_item_cstring(insitm),
-                               mom_item_cstring(typitm));
-    auto quotval = expnod->nod_sons[0];
-    if (typitm == nullptr)
-      typitm = MOM_PREDEFITM(value);
-    else if (typitm == MOM_PREDEFITM(item))
-      {
-        if (mom_itype(quotval) != MOMITY_ITEM)
-          throw MOM_RUNTIME_PRINTF("verbatim expr %s is not an item in instr %s with type %s",
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm),
-                                   mom_item_cstring(typitm));
-        _ce_localvalueset.insert(quotval);
-      }
-    else if (typitm == MOM_PREDEFITM(value))
-      _ce_localvalueset.insert(quotval);
-    else
-      throw MOM_RUNTIME_PRINTF("verbatim expr %s is of type %s in instr %s with type %s",
-                               mom_value_cstring(expnod), mom_item_cstring(typitm),
-                               mom_item_cstring(insitm),
-                               mom_item_cstring(typitm));
-  }
-  break;
-  case CASE_EXPCONN_MOM(and):
-  case CASE_EXPCONN_MOM(or):
-  {
-    if (nodarity == 0)
-      {
-        if (!typitm)
-          throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-        return typitm;
-      }
-    for (unsigned ix=0; ix<nodarity; ix++)
-      {
-        auto subexpv = expnod->nod_sons[ix];
-        auto newtypitm = scan_expr(subexpv, insitm, depth+1, typitm);
-        if (!newtypitm)
-          throw MOM_RUNTIME_PRINTF("son#%d %s of %s is typeless in instr %s",
-                                   ix, mom_value_cstring(subexpv),
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-        else if (typitm==nullptr)
-          typitm = newtypitm;
-        else if (newtypitm != typitm)
-          throw MOM_RUNTIME_PRINTF("son#%d %s of %s is badly typed %s expecting %s in instr %s",
-                                   ix, mom_value_cstring(subexpv),
-                                   mom_value_cstring(expnod),
-                                   mom_item_cstring(newtypitm), mom_item_cstring(typitm),
-                                   mom_item_cstring(insitm));
-      }
-    return typitm;
-  }
-  break;
-  case CASE_EXPCONN_MOM(sequence):
-  {
-    if (nodarity == 0)
-      {
-        if (!typitm)
-          throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-      }
-    else
-      {
-        for (int ix=0; ix<(int)nodarity-1; ix++)
-          {
-            auto subexpv = expnod->nod_sons[ix];
-            (void) scan_expr(subexpv, insitm, depth+1, nullptr);
-          }
-        auto lastsubexpv = expnod->nod_sons[nodarity-1];
-        auto newtypitm = scan_expr(lastsubexpv, insitm, depth+1, typitm);
-        if (!typitm) return newtypitm;
-        else if (!newtypitm)
-          throw MOM_RUNTIME_PRINTF("typeless last %s sub-expr of %s in instr %s",
-                                   mom_value_cstring(lastsubexpv),
-                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-        else if (typitm != newtypitm)
-          throw MOM_RUNTIME_PRINTF("last son %s of %s is badly typed %s expecting %s in instr %s",
-                                   mom_value_cstring(lastsubexpv),
-                                   mom_value_cstring(expnod),
-                                   mom_item_cstring(newtypitm), mom_item_cstring(typitm),
-                                   mom_item_cstring(insitm));
-
-      }
-    return typitm;
-  }
-  break;
-  case CASE_EXPCONN_MOM(plus):
-  case CASE_EXPCONN_MOM(mult):
-  {
-    if (nodarity == 0)
-      throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
-                               mom_value_cstring(expnod), mom_item_cstring(insitm));
-    auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
-    if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
-      throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
-                                mom_item_cstring(firstypitm), mom_value_cstring(expnod),
-                                mom_item_cstring(insitm));
-    for (unsigned ix=1; ix<nodarity; ix++)
-      {
-        auto curson = expnod->nod_sons[ix];
-        auto curtypitm = scan_expr(curson, insitm, depth+1, firstypitm);
-        if (curtypitm != firstypitm)
-          throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for son#%d %s of expr %s in instr %s",
-                                   mom_item_cstring(firstypitm),
-                                   ix, mom_value_cstring(curson),
-                                   mom_value_cstring(expnod),
-                                   mom_item_cstring(insitm));
-      }
-    return firstypitm;
-  }
-  break;
-  case CASE_EXPCONN_MOM(sub):
-  case CASE_EXPCONN_MOM(div):
-  {
-    if (nodarity != 2)
-      throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
-                               mom_value_cstring(expnod), mom_item_cstring(insitm));
-    auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
-    if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
-      throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
-                                mom_item_cstring(firstypitm), mom_value_cstring(expnod),
-                                mom_item_cstring(insitm));
-    auto rightexp = expnod->nod_sons[1];
-    auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
-    if (rightypitm != firstypitm)
-      throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
-                               mom_item_cstring(firstypitm),
-                               mom_value_cstring(rightexp),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm));
-    return firstypitm;
-  }
-  break;
-  case CASE_EXPCONN_MOM(mod):
-  {
-    if (nodarity != 2)
-      throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
-                               mom_value_cstring(expnod), mom_item_cstring(insitm));
-    auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
-    if (firstypitm != MOM_PREDEFITM(int))
-      throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
-                                mom_item_cstring(firstypitm), mom_value_cstring(expnod),
-                                mom_item_cstring(insitm));
-    auto rightexp = expnod->nod_sons[1];
-    auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
-    if (rightypitm != firstypitm)
-      throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
-                               mom_item_cstring(firstypitm),
-                               mom_value_cstring(rightexp),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm));
-    return firstypitm;
-  }
-  break;
-  case CASE_EXPCONN_MOM(node):
-    if (nodarity==0)
-      throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm));
-    // failthru
-  case CASE_EXPCONN_MOM(set):
-  case CASE_EXPCONN_MOM(tuple):
-  {
-    for (unsigned ix=0; ix<nodarity; ix++)
-      {
-        auto subexpv = expnod->nod_sons[ix];
-        auto subtypitm = scan_expr(subexpv, insitm, depth+1);
-        if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
-          throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
-                                   ix, mom_item_cstring(connitm),
-                                   mom_value_cstring(expnod),
-                                   mom_item_cstring(insitm));
-      }
-    return MOM_PREDEFITM(value);
-  }
-  break;
-  default:
-defaultcaseconn:
+  switch (connitm->hva_hash % NBEXPCONN_MOM)
     {
-      lock_item(connitm);
-      auto desconnitm = mom_unsync_item_descr(connitm);
-      if (desconnitm == nullptr)
-        throw MOM_RUNTIME_PRINTF("connective %s without `descr` in expr %s in instr %s",
-                                 mom_item_cstring(connitm),
+    case CASE_EXPCONN_MOM(verbatim):
+    {
+      if (nodarity != 1)
+        throw MOM_RUNTIME_PRINTF("verbatim expr %s of bad arity in instr %s with type %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+      auto quotval = expnod->nod_sons[0];
+      if (typitm == nullptr)
+        typitm = MOM_PREDEFITM(value);
+      else if (typitm == MOM_PREDEFITM(item))
+        {
+          if (mom_itype(quotval) != MOMITY_ITEM)
+            throw MOM_RUNTIME_PRINTF("verbatim expr %s is not an item in instr %s with type %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm),
+                                     mom_item_cstring(typitm));
+          _ce_localvalueset.insert(quotval);
+        }
+      else if (typitm == MOM_PREDEFITM(value))
+        _ce_localvalueset.insert(quotval);
+      else
+        throw MOM_RUNTIME_PRINTF("verbatim expr %s is of type %s in instr %s with type %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(typitm),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+    }
+    break;
+    case CASE_EXPCONN_MOM(and):
+    case CASE_EXPCONN_MOM(or):
+    {
+      if (nodarity == 0)
+        {
+          if (!typitm)
+            throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          return typitm;
+        }
+      for (unsigned ix=0; ix<nodarity; ix++)
+        {
+          auto subexpv = expnod->nod_sons[ix];
+          auto newtypitm = scan_expr(subexpv, insitm, depth+1, typitm);
+          if (!newtypitm)
+            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is typeless in instr %s",
+                                     ix, mom_value_cstring(subexpv),
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          else if (typitm==nullptr)
+            typitm = newtypitm;
+          else if (newtypitm != typitm)
+            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is badly typed %s expecting %s in instr %s",
+                                     ix, mom_value_cstring(subexpv),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                     mom_item_cstring(insitm));
+        }
+      return typitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(sequence):
+    {
+      if (nodarity == 0)
+        {
+          if (!typitm)
+            throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+        }
+      else
+        {
+          for (int ix=0; ix<(int)nodarity-1; ix++)
+            {
+              auto subexpv = expnod->nod_sons[ix];
+              (void) scan_expr(subexpv, insitm, depth+1, nullptr);
+            }
+          auto lastsubexpv = expnod->nod_sons[nodarity-1];
+          auto newtypitm = scan_expr(lastsubexpv, insitm, depth+1, typitm);
+          if (!typitm) return newtypitm;
+          else if (!newtypitm)
+            throw MOM_RUNTIME_PRINTF("typeless last %s sub-expr of %s in instr %s",
+                                     mom_value_cstring(lastsubexpv),
+                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
+          else if (typitm != newtypitm)
+            throw MOM_RUNTIME_PRINTF("last son %s of %s is badly typed %s expecting %s in instr %s",
+                                     mom_value_cstring(lastsubexpv),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                     mom_item_cstring(insitm));
+
+        }
+      return typitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(plus):
+    case CASE_EXPCONN_MOM(mult):
+    {
+      if (nodarity == 0)
+        throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+      if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
+        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                  mom_item_cstring(insitm));
+      for (unsigned ix=1; ix<nodarity; ix++)
+        {
+          auto curson = expnod->nod_sons[ix];
+          auto curtypitm = scan_expr(curson, insitm, depth+1, firstypitm);
+          if (curtypitm != firstypitm)
+            throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for son#%d %s of expr %s in instr %s",
+                                     mom_item_cstring(firstypitm),
+                                     ix, mom_value_cstring(curson),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(insitm));
+        }
+      return firstypitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(sub):
+    case CASE_EXPCONN_MOM(div):
+    {
+      if (nodarity != 2)
+        throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+      if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
+        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                  mom_item_cstring(insitm));
+      auto rightexp = expnod->nod_sons[1];
+      auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
+      if (rightypitm != firstypitm)
+        throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
+                                 mom_item_cstring(firstypitm),
+                                 mom_value_cstring(rightexp),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      lock_item(desconnitm);
-      return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm);
+      return firstypitm;
     }
-  } // end switch connitm
+    break;
+    case CASE_EXPCONN_MOM(mod):
+    {
+      if (nodarity != 2)
+        throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
+                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+      if (firstypitm != MOM_PREDEFITM(int))
+        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                  mom_item_cstring(insitm));
+      auto rightexp = expnod->nod_sons[1];
+      auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
+      if (rightypitm != firstypitm)
+        throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
+                                 mom_item_cstring(firstypitm),
+                                 mom_value_cstring(rightexp),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      return firstypitm;
+    }
+    break;
+    case CASE_EXPCONN_MOM(node):
+      if (nodarity==0)
+        throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      // failthru
+    case CASE_EXPCONN_MOM(set):
+    case CASE_EXPCONN_MOM(tuple):
+    {
+      for (unsigned ix=0; ix<nodarity; ix++)
+        {
+          auto subexpv = expnod->nod_sons[ix];
+          auto subtypitm = scan_expr(subexpv, insitm, depth+1);
+          if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
+            throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
+                                     ix, mom_item_cstring(connitm),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(insitm));
+        }
+      return MOM_PREDEFITM(value);
+    }
+    break;
+    default:
+defaultcaseconn:
+      {
+        lock_item(connitm);
+        auto desconnitm = mom_unsync_item_descr(connitm);
+        if (desconnitm == nullptr)
+          throw MOM_RUNTIME_PRINTF("connective %s without `descr` in expr %s in instr %s",
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm));
+        lock_item(desconnitm);
+        return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm);
+      }
+    } // end switch connitm
 #undef NBEXPCONN_MOM
 #undef CASE_EXPCONN_MOM
-MOM_FATAPRINTF("impossible scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
-               mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  MOM_FATAPRINTF("impossible scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
+                 mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
 } // end of MomEmitter::scan_node_expr
 
 
 struct mom_item_st*
 MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
-                                    struct mom_item_st*desconnitm,
-                                    struct mom_item_st*insitm,
-                                    int depth, struct mom_item_st*typitm)
+                                      struct mom_item_st*desconnitm,
+                                      struct mom_item_st*insitm,
+                                      int depth, struct mom_item_st*typitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s"
-                " insitm=%s depth#%d typitm=%s",
-                mom_value_cstring(expnod), mom_value_cstring(desconnitm),
-                mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-auto connitm = expnod->nod_connitm;
-assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
-unsigned nodarity = mom_size(expnod);
-assert (is_locked_item(connitm));
-assert (is_locked_item(desconnitm));
+  MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s"
+                  " insitm=%s depth#%d typitm=%s",
+                  mom_value_cstring(expnod), mom_value_cstring(desconnitm),
+                  mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  auto connitm = expnod->nod_connitm;
+  assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
+  unsigned nodarity = mom_size(expnod);
+  assert (is_locked_item(connitm));
+  assert (is_locked_item(desconnitm));
 #define NBDESCONN_MOM 79
 #define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
  if (connitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
  goto defaultdesconn; foundesconn_##Nam
-switch (desconnitm->hva_hash % NBDESCONN_MOM)
-  {
-  case CASE_DESCONN_MOM(signature):
-  {
-    // an unknown closure application
-    auto sigr=scan_nonbinding_signature(connitm,insitm);
-    auto sformaltup = sigr.sig_formals;
-    auto sresultv = sigr.sig_result;
-    unsigned lnformals = mom_boxtuple_length(sformaltup);
-    if (lnformals<1 || mom_boxtuple_nth(sformaltup, 0) != MOM_PREDEFITM(this_closure))
-      throw MOM_RUNTIME_PRINTF("bad formals %s of applied signature %s expnod %s instr %s",
-                               mom_value_cstring(sformaltup),
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm));
-    if (typitm == nullptr)
-      typitm = MOM_PREDEFITM(value);
-    else if (typitm != MOM_PREDEFITM(value))
-      throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
-                               " incompatible with non-value type %s",
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               mom_item_cstring(typitm));
-    if (lnformals != nodarity)
-      throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
-                               " has mismatched arity (%d formals, arity %d)",
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               lnformals, nodarity);
-    if (sresultv != MOM_PREDEFITM(value))
-      throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
-                               " with non-value result type %s",
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               mom_value_cstring(sresultv));
+  switch (desconnitm->hva_hash % NBDESCONN_MOM)
     {
-      auto funtypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, MOM_PREDEFITM(value));
-      if (funtypitm != MOM_PREDEFITM(value))
+    case CASE_DESCONN_MOM(signature):
+    {
+      // an unknown closure application
+      auto sigr=scan_nonbinding_signature(connitm,insitm);
+      auto sformaltup = sigr.sig_formals;
+      auto sresultv = sigr.sig_result;
+      unsigned lnformals = mom_boxtuple_length(sformaltup);
+      if (lnformals<1 || mom_boxtuple_nth(sformaltup, 0) != MOM_PREDEFITM(this_closure))
+        throw MOM_RUNTIME_PRINTF("bad formals %s of applied signature %s expnod %s instr %s",
+                                 mom_value_cstring(sformaltup),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      if (typitm == nullptr)
+        typitm = MOM_PREDEFITM(value);
+      else if (typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
-                                 " has badly typed %s function argument",
+                                 " incompatible with non-value type %s",
                                  mom_item_cstring(connitm),
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm),
-                                 mom_item_cstring(funtypitm));
-    }
-    for (unsigned ix=1; ix<nodarity; ix++)
+                                 mom_item_cstring(typitm));
+      if (lnformals != nodarity)
+        throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                 " has mismatched arity (%d formals, arity %d)",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 lnformals, nodarity);
+      if (sresultv != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                 " with non-value result type %s",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_value_cstring(sresultv));
       {
-        auto curtypitm =  mom_boxtuple_nth(sformaltup, ix);
-        auto argtypitm = scan_expr(expnod->nod_sons[ix], insitm, depth+1, curtypitm);
-        if (curtypitm != argtypitm)
+        auto funtypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, MOM_PREDEFITM(value));
+        if (funtypitm != MOM_PREDEFITM(value))
           throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
-                                   " type mismatch for arg#%d, expecting %s",
+                                   " has badly typed %s function argument",
                                    mom_item_cstring(connitm),
                                    mom_value_cstring(expnod),
                                    mom_item_cstring(insitm),
-                                   ix, mom_item_cstring(curtypitm));
+                                   mom_item_cstring(funtypitm));
       }
-    return MOM_PREDEFITM(value);
-  }
-  break;
-  case CASE_DESCONN_MOM(routine):
-  case CASE_DESCONN_MOM(primitive):
-  {
-    // a known routine application
-    auto routsigitm =
-      mom_dyncast_item(mom_unsync_item_get_phys_attr
-                       (connitm,
-                        MOM_PREDEFITM(signature)));
-    if (routsigitm==nullptr)
-      throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
-                               mom_item_cstring(desconnitm),
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm));
-    lock_item(routsigitm);
-    const struct mom_boxtuple_st* formaltup=nullptr;
-    struct mom_item_st*restypitm=nullptr;
-    {
-      auto sigr=scan_nonbinding_signature(routsigitm,insitm);
-      formaltup=sigr.sig_formals;
-      restypitm=mom_dyncast_item(sigr.sig_result);
+      for (unsigned ix=1; ix<nodarity; ix++)
+        {
+          auto curtypitm =  mom_boxtuple_nth(sformaltup, ix);
+          auto argtypitm = scan_expr(expnod->nod_sons[ix], insitm, depth+1, curtypitm);
+          if (curtypitm != argtypitm)
+            throw MOM_RUNTIME_PRINTF("application of signature %s in expnod %s instr %s"
+                                     " type mismatch for arg#%d, expecting %s",
+                                     mom_item_cstring(connitm),
+                                     mom_value_cstring(expnod),
+                                     mom_item_cstring(insitm),
+                                     ix, mom_item_cstring(curtypitm));
+        }
+      return MOM_PREDEFITM(value);
     }
-    if (formaltup==nullptr || restypitm==nullptr)
-      throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s with bad signature %s",
-                               mom_item_cstring(desconnitm),
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               mom_item_cstring(routsigitm));
-    unsigned nbformals = mom_boxtuple_length(formaltup);
-    if (nbformals != nodarity)
-      throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                               " with wrong %d number of arguments (%d expected from signature %s)",
-                               mom_item_cstring(desconnitm),
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               nodarity, nbformals,
-                               mom_item_cstring(routsigitm));
-    for (unsigned ix=0; ix<nbformals; ix++)
+    break;
+    case CASE_DESCONN_MOM(routine):
+    case CASE_DESCONN_MOM(primitive):
+    {
+      // a known routine application
+      auto routsigitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr
+                         (connitm,
+                          MOM_PREDEFITM(signature)));
+      if (routsigitm==nullptr)
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
+                                 mom_item_cstring(desconnitm),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
+      lock_item(routsigitm);
+      const struct mom_boxtuple_st* formaltup=nullptr;
+      struct mom_item_st*restypitm=nullptr;
       {
-        auto sonexpv = expnod->nod_sons[ix];
-        auto curformalitm = mom_boxtuple_nth(formaltup, ix);
-        assert (is_locked_item(curformalitm));
-        auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
-        if (curtypitm == nullptr)
-          throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                    " with signature %s of untyped formal#%d %s",
-                                    mom_item_cstring(desconnitm),
-                                    mom_item_cstring(connitm),
-                                    mom_value_cstring(expnod),
-                                    mom_item_cstring(insitm),
-                                    mom_item_cstring(routsigitm),
-                                    ix, mom_item_cstring(curformalitm));
-        lock_item(curtypitm);
-        auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
-        if (exptypitm != curtypitm)
-          throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                    " with signature %s type mismatch for #%d (formal %s)",
-                                    mom_item_cstring(desconnitm),
-                                    mom_item_cstring(connitm),
-                                    mom_value_cstring(expnod),
-                                    mom_item_cstring(insitm),
-                                    mom_item_cstring(routsigitm),
-                                    ix,  mom_item_cstring(curformalitm));
-      };
-    if (typitm != nullptr && typitm != restypitm)
-      throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                               " with signature %s result type mismatch (expecting %s got %s)",
-                               mom_item_cstring(desconnitm),
-                               mom_item_cstring(connitm),
-                               mom_value_cstring(expnod),
-                               mom_item_cstring(insitm),
-                               mom_item_cstring(routsigitm),
-                               mom_item_cstring(typitm), mom_item_cstring(restypitm));
-    return restypitm;
-  }
-  break;
+        auto sigr=scan_nonbinding_signature(routsigitm,insitm);
+        formaltup=sigr.sig_formals;
+        restypitm=mom_dyncast_item(sigr.sig_result);
+      }
+      if (formaltup==nullptr || restypitm==nullptr)
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s with bad signature %s",
+                                 mom_item_cstring(desconnitm),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(routsigitm));
+      unsigned nbformals = mom_boxtuple_length(formaltup);
+      if (nbformals != nodarity)
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                 " with wrong %d number of arguments (%d expected from signature %s)",
+                                 mom_item_cstring(desconnitm),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 nodarity, nbformals,
+                                 mom_item_cstring(routsigitm));
+      for (unsigned ix=0; ix<nbformals; ix++)
+        {
+          auto sonexpv = expnod->nod_sons[ix];
+          auto curformalitm = mom_boxtuple_nth(formaltup, ix);
+          assert (is_locked_item(curformalitm));
+          auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
+          if (curtypitm == nullptr)
+            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                      " with signature %s of untyped formal#%d %s",
+                                      mom_item_cstring(desconnitm),
+                                      mom_item_cstring(connitm),
+                                      mom_value_cstring(expnod),
+                                      mom_item_cstring(insitm),
+                                      mom_item_cstring(routsigitm),
+                                      ix, mom_item_cstring(curformalitm));
+          lock_item(curtypitm);
+          auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
+          if (exptypitm != curtypitm)
+            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                      " with signature %s type mismatch for #%d (formal %s)",
+                                      mom_item_cstring(desconnitm),
+                                      mom_item_cstring(connitm),
+                                      mom_value_cstring(expnod),
+                                      mom_item_cstring(insitm),
+                                      mom_item_cstring(routsigitm),
+                                      ix,  mom_item_cstring(curformalitm));
+        };
+      if (typitm != nullptr && typitm != restypitm)
+        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                 " with signature %s result type mismatch (expecting %s got %s)",
+                                 mom_item_cstring(desconnitm),
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(routsigitm),
+                                 mom_item_cstring(typitm), mom_item_cstring(restypitm));
+      return restypitm;
+    }
+    break;
 defaultdesconn:
-  break;
-  }
+    break;
+    }
 #undef CASE_DESCONN_MOM
 #undef NBDESCONN_MOM
-throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in instr %s depth %d",
-                          mom_value_cstring(expnod), mom_item_cstring(connitm),
-                          mom_item_cstring(desconnitm), mom_value_cstring(insitm), depth);
+  throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in instr %s depth %d",
+                            mom_value_cstring(expnod), mom_item_cstring(connitm),
+                            mom_item_cstring(desconnitm), mom_value_cstring(insitm), depth);
 } // end of MomEmitter::scan_node_descr_conn_expr
 
 
@@ -1862,40 +1927,40 @@ throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in
 struct mom_item_st*
 MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
-                mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
-assert (is_locked_item(expitm));
-assert (is_locked_item(insitm));
-auto desitm =  mom_unsync_item_descr(expitm);
-if (desitm == MOM_PREDEFITM(variable) || desitm == MOM_PREDEFITM(global)
-    || desitm == MOM_PREDEFITM(thread_local) || desitm == MOM_PREDEFITM(formal))
-  return scan_var(expitm,insitm,typitm);
-else if (desitm == MOM_PREDEFITM(closed))
-  return scan_closed(expitm,insitm);
-auto typexpitm =
-  mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
-MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
-                mom_item_cstring(expitm), mom_item_cstring(typexpitm), mom_item_cstring(desitm));
-if (typexpitm)
-  {
-    if (typitm && typexpitm != typitm)
-      throw  MOM_RUNTIME_PRINTF("item %s in instr %s has type %s but expecting %s",
-                                mom_item_cstring(expitm),
-                                mom_item_cstring(insitm),
-                                mom_item_cstring(typexpitm),
-                                mom_item_cstring(typitm));
-    return typexpitm;
-  }
-_ce_localvalueset.insert(expitm);
-if (typitm == MOM_PREDEFITM(item))
-  return typitm;
-else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
-  return MOM_PREDEFITM(value);
-else
-  throw  MOM_RUNTIME_PRINTF("item %s in instr %s, expecting type %s",
-                            mom_item_cstring(expitm),
-                            mom_item_cstring(insitm),
-                            mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
+                  mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  assert (is_locked_item(expitm));
+  assert (is_locked_item(insitm));
+  auto desitm =  mom_unsync_item_descr(expitm);
+  if (desitm == MOM_PREDEFITM(variable) || desitm == MOM_PREDEFITM(global)
+      || desitm == MOM_PREDEFITM(thread_local) || desitm == MOM_PREDEFITM(formal))
+    return scan_var(expitm,insitm,typitm);
+  else if (desitm == MOM_PREDEFITM(closed))
+    return scan_closed(expitm,insitm);
+  auto typexpitm =
+    mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
+                  mom_item_cstring(expitm), mom_item_cstring(typexpitm), mom_item_cstring(desitm));
+  if (typexpitm)
+    {
+      if (typitm && typexpitm != typitm)
+        throw  MOM_RUNTIME_PRINTF("item %s in instr %s has type %s but expecting %s",
+                                  mom_item_cstring(expitm),
+                                  mom_item_cstring(insitm),
+                                  mom_item_cstring(typexpitm),
+                                  mom_item_cstring(typitm));
+      return typexpitm;
+    }
+  _ce_localvalueset.insert(expitm);
+  if (typitm == MOM_PREDEFITM(item))
+    return typitm;
+  else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
+    return MOM_PREDEFITM(value);
+  else
+    throw  MOM_RUNTIME_PRINTF("item %s in instr %s, expecting type %s",
+                              mom_item_cstring(expitm),
+                              mom_item_cstring(insitm),
+                              mom_item_cstring(typitm));
 } // end of MomEmitter::scan_item_expr
 
 
@@ -1903,139 +1968,139 @@ else
 struct mom_item_st*
 MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s typitm=%s",
-                mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
-assert (is_locked_item(varitm));
-auto desvaritm =  mom_unsync_item_descr(varitm);
-if (!desvaritm)
-  throw MOM_RUNTIME_PRINTF("variable %s in instruction %s without descr",
-                           mom_item_cstring(varitm), mom_item_cstring(insitm));
-struct mom_item_st*typvaritm =
-mom_dyncast_item(mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type)));
-if (!typvaritm)
-  throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
-                            mom_item_cstring(varitm), mom_item_cstring(insitm));
-if (!typitm)
-  typitm = typvaritm;
-else if (typitm != typvaritm)
-  throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
-                            mom_item_cstring(varitm), mom_item_cstring(insitm),
-                            mom_item_cstring(typvaritm), mom_item_cstring(typitm));
-MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
-                mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
+  MOM_DEBUGPRINTF(gencod, "scan_var start varitm=%s insitm=%s typitm=%s",
+                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
+  assert (is_locked_item(varitm));
+  auto desvaritm =  mom_unsync_item_descr(varitm);
+  if (!desvaritm)
+    throw MOM_RUNTIME_PRINTF("variable %s in instruction %s without descr",
+                             mom_item_cstring(varitm), mom_item_cstring(insitm));
+  struct mom_item_st*typvaritm =
+  mom_dyncast_item(mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type)));
+  if (!typvaritm)
+    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
+                              mom_item_cstring(varitm), mom_item_cstring(insitm));
+  if (!typitm)
+    typitm = typvaritm;
+  else if (typitm != typvaritm)
+    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
+                              mom_item_cstring(varitm), mom_item_cstring(insitm),
+                              mom_item_cstring(typvaritm), mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
+                  mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
 #define NBVARDESC_MOM 43
 #define CASE_VARDESCR_MOM(Nam) momhashpredef_##Nam % NBVARDESC_MOM:	\
  if (desvaritm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
  goto defaultvardesc; foundcase_##Nam
-switch (desvaritm->hva_hash % NBVARDESC_MOM)
-  {
-  case CASE_VARDESCR_MOM(variable):
-  {
-    auto locvarbind = get_local_binding(varitm);
-    if (!locvarbind)
-      throw MOM_RUNTIME_PRINTF("variable %s in instruction %s is not locally bound",
-                               mom_item_cstring(varitm), mom_item_cstring(insitm));
-    assert (!is_globally_bound(varitm));
-    if (locvarbind->vd_rolitm != MOM_PREDEFITM(variable) && locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
-      throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s is strangely %s locally bound",
-                                mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
-    return typitm;
-  }
-  break;
-  case CASE_VARDESCR_MOM(global):
-  {
-    assert (!is_locally_bound(varitm));
-    auto globvarbind = get_global_binding(varitm);
-    if (!globvarbind)
-      {
-        bind_global(varitm, MOM_PREDEFITM(global), typitm);
-      }
-    else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(global))
-      throw  MOM_RUNTIME_PRINTF("global %s in instruction %s is strangely %s locally bound",
-                                mom_item_cstring(varitm), mom_item_cstring(insitm),
-                                mom_item_cstring(globvarbind->vd_rolitm));
-  }
-  break;
-  case CASE_VARDESCR_MOM(thread_local):
-  {
-    assert (!is_locally_bound(varitm));
-    auto globvarbind = get_global_binding(varitm);
-    if (!globvarbind)
-      {
-        if (magic() == MomJavascriptEmitter::MAGIC)
-          throw MOM_RUNTIME_PRINTF("JavaScript forbids thread_local %s in instruction %s",
-                                   mom_item_cstring(varitm), mom_item_cstring(insitm));
-        bind_global(varitm, MOM_PREDEFITM(thread_local), typitm);
-      }
-    else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(thread_local))
-      throw  MOM_RUNTIME_PRINTF("thread_local %s in instruction %s is strangely %s locally bound",
-                                mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(globvarbind->vd_rolitm));
-  }
-  break;
-  case CASE_VARDESCR_MOM(formal):
-  {
-    assert (!is_globally_bound(varitm));
-    auto locvarbind = get_local_binding(varitm);
-    if (!locvarbind || locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
-      throw  MOM_RUNTIME_PRINTF("formal %s in instruction %s is strangely %s locally bound",
-                                mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
-  }
-  break;
-  default:
+  switch (desvaritm->hva_hash % NBVARDESC_MOM)
+    {
+    case CASE_VARDESCR_MOM(variable):
+    {
+      auto locvarbind = get_local_binding(varitm);
+      if (!locvarbind)
+        throw MOM_RUNTIME_PRINTF("variable %s in instruction %s is not locally bound",
+                                 mom_item_cstring(varitm), mom_item_cstring(insitm));
+      assert (!is_globally_bound(varitm));
+      if (locvarbind->vd_rolitm != MOM_PREDEFITM(variable) && locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
+        throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
+      return typitm;
+    }
+    break;
+    case CASE_VARDESCR_MOM(global):
+    {
+      assert (!is_locally_bound(varitm));
+      auto globvarbind = get_global_binding(varitm);
+      if (!globvarbind)
+        {
+          bind_global(varitm, MOM_PREDEFITM(global), typitm);
+        }
+      else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(global))
+        throw  MOM_RUNTIME_PRINTF("global %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm),
+                                  mom_item_cstring(globvarbind->vd_rolitm));
+    }
+    break;
+    case CASE_VARDESCR_MOM(thread_local):
+    {
+      assert (!is_locally_bound(varitm));
+      auto globvarbind = get_global_binding(varitm);
+      if (!globvarbind)
+        {
+          if (magic() == MomJavascriptEmitter::MAGIC)
+            throw MOM_RUNTIME_PRINTF("JavaScript forbids thread_local %s in instruction %s",
+                                     mom_item_cstring(varitm), mom_item_cstring(insitm));
+          bind_global(varitm, MOM_PREDEFITM(thread_local), typitm);
+        }
+      else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(thread_local))
+        throw  MOM_RUNTIME_PRINTF("thread_local %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(globvarbind->vd_rolitm));
+    }
+    break;
+    case CASE_VARDESCR_MOM(formal):
+    {
+      assert (!is_globally_bound(varitm));
+      auto locvarbind = get_local_binding(varitm);
+      if (!locvarbind || locvarbind->vd_rolitm != MOM_PREDEFITM(formal))
+        throw  MOM_RUNTIME_PRINTF("formal %s in instruction %s is strangely %s locally bound",
+                                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(locvarbind->vd_rolitm));
+    }
+    break;
+    default:
 defaultvardesc:
-    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has unexpected descr %s",
-                              mom_item_cstring(varitm), mom_item_cstring(insitm),
-                              mom_item_cstring(desvaritm));
-  }
+      throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has unexpected descr %s",
+                                mom_item_cstring(varitm), mom_item_cstring(insitm),
+                                mom_item_cstring(desvaritm));
+    }
 #undef NBVARDESC_MOM
 #undef CASE_VARDESCR_MOM
-return typitm;
+  return typitm;
 } // end of MomEmitter::scan_var
 
 
 struct mom_item_st*
 MomEmitter::scan_closed(struct mom_item_st*cloitm, struct mom_item_st*insitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_closed start cloitm=%s insitm=%s",
-                mom_item_cstring(cloitm), mom_item_cstring(insitm));
-assert (is_locked_item(cloitm));
-assert (mom_unsync_item_descr(cloitm)==MOM_PREDEFITM(closed));
-_ce_localcloseditems.insert(cloitm);
-return MOM_PREDEFITM(value);
+  MOM_DEBUGPRINTF(gencod, "scan_closed start cloitm=%s insitm=%s",
+                  mom_item_cstring(cloitm), mom_item_cstring(insitm));
+  assert (is_locked_item(cloitm));
+  assert (mom_unsync_item_descr(cloitm)==MOM_PREDEFITM(closed));
+  _ce_localcloseditems.insert(cloitm);
+  return MOM_PREDEFITM(value);
 } // end MomEmitter::scan_closed
 
 
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
 {
-MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm=%s", mom_item_cstring(rtitm));
-_ce_curfunctionitm = rtitm;
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm=%s", mom_item_cstring(rtitm));
+  _ce_curfunctionitm = rtitm;
 #warning unimplemented MomEmitter::scan_routine_element
-MOM_FATAPRINTF("unimplemented scan_routine_element %s", mom_item_cstring(rtitm));
-_ce_curfunctionitm = nullptr;
+  MOM_FATAPRINTF("unimplemented scan_routine_element %s", mom_item_cstring(rtitm));
+  _ce_curfunctionitm = nullptr;
 } // end  MomEmitter::scan_routine_element
 
 MomEmitter::~MomEmitter()
 {
-int nbit = _ce_veclockeditems.size();
-for (int ix=nbit-1; ix>=0; ix--)
-  mom_item_unlock(_ce_veclockeditems[ix]);
-_ce_veclockeditems.clear();
-_ce_setlockeditems.clear();
+  int nbit = _ce_veclockeditems.size();
+  for (int ix=nbit-1; ix>=0; ix--)
+    mom_item_unlock(_ce_veclockeditems[ix]);
+  _ce_veclockeditems.clear();
+  _ce_setlockeditems.clear();
 } // end MomEmitter::~MomEmitter
 
 
 ////////////////////////////////////////////////////////////////
 MomCEmitter::~MomCEmitter()
 {
-MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
+  MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
 } // end MomCEmitter::~MomCEmitter
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_data_element(struct mom_item_st*itm)
 {
 #warning unimplemented MomCEmitter::transform_data_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
 } // end MomCEmitter::transform_data_element
 
 
@@ -2043,7 +2108,7 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_func_element(struct mom_item_st*itm)
 {
 #warning unimplemented MomCEmitter::transform_func_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
 } // end MomCEmitter::transform_func_element
 
 
@@ -2052,40 +2117,76 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_routine_element(struct mom_item_st*itm)
 {
 #warning unimplemented MomCEmitter::transform_routine_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
 } // end MomCEmitter::transform_routine_element
+
+
+MomEmitter::CaseScannerData*
+MomEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+  assert (is_locked_item(swtypitm));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+    case CASE_SWTYPE_MOM(int):
+      return new IntCaseScannerData(this,swtypitm,insitm,blkitm,rk);
+    case CASE_SWTYPE_MOM(string):
+      return new StringCaseScannerData(this,swtypitm,insitm,blkitm,rk);
+defaultcaseswtyp:
+    default:
+      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                "with bad switch type %s",
+                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                mom_item_cstring(swtypitm));
+    }
+#undef NBSWTYPE_MOM
+#undef CASE_SWTYPE_MOM
+} // end MomEmitter::make_case_scanner_data
 
 
 MomEmitter::CaseScannerData*
 MomCEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
-#warning unimplemented MomCEmitter::make_case_scanner_data
-MOM_FATAPRINTF("unimplemented MomCEmitter::make_case_scanner_data swtypitm=%s insitm=%s",
-	       mom_item_cstring(swtypitm), mom_item_cstring(insitm));
-} // end MomCEmitter::make_case_scanner_data
+  assert (is_locked_item(swtypitm));
+  if (swtypitm == MOM_PREDEFITM(item))
+    return new ItemCaseScannerData(this,swtypitm,insitm,blkitm,rk);
+  else
+    return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
+} // end MomEmitter::make_case_scanner_data
 
 
-std::function<void(struct mom_item_st*,MomEmitter::CaseScannerData*)>
+std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
 MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
-assert (is_locked_item(swtypitm));
+  assert (is_locked_item(swtypitm));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
  goto defaultcaseswtyp; foundcaseswtyp_##Nam
-switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-  {
-  case CASE_SWTYPE_MOM(int):
-  case CASE_SWTYPE_MOM(string):
-  case CASE_SWTYPE_MOM(item):
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+    case CASE_SWTYPE_MOM(int):
+      return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
+      {
+        MOM_DEBUGPRINTF(gencod, "intcase %s casix %d casdata@%p (%s)",
+                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name());
+        auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
+        assert (intcasdata != nullptr);
+	#warning should handle int case in  MomCEmitter::case_scanner
+      };
+    case CASE_SWTYPE_MOM(string):
+    case CASE_SWTYPE_MOM(item):
 defaultcaseswtyp:
 #warning incomplete MomCEmitter::case_scanner
-  default:
-    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                              "with bad switch type %s",
-                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                              mom_item_cstring(swtypitm));
-  }
+    default:
+      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                "with bad switch type %s",
+                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                mom_item_cstring(swtypitm));
+    }
 #undef NBSWTYPE_MOM
 #undef CASE_SWTYPE_MOM
 } // end of MomCEmitter::case_scanner
@@ -2095,7 +2196,7 @@ const struct mom_boxnode_st*
 MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
 {
 #warning unimplemented MomJavascriptEmitter::transform_data_element
-MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
 } // end MomJavascriptEmitter::transform_data_element
 
 
@@ -2103,46 +2204,48 @@ const struct mom_boxnode_st*
 MomJavascriptEmitter::transform_func_element(struct mom_item_st*itm)
 {
 #warning unimplemented MomJavascriptEmitter::transform_func_element
-MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
 } // end MomJavascriptEmitter::transform_func_element
 
 
 MomEmitter::CaseScannerData*
 MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
-#warning unimplemented MomJavascriptEmitter::make_case_scanner_data
-MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::make_case_scanner_data swtypitm=%s insitm=%s",
-	       mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+  if (swtypitm == MOM_PREDEFITM(item))
+    throw   MOM_RUNTIME_PRINTF("JavaScript switch instr %s rk#%d in block %s "
+                               "with bad switch type item",
+                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+  return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
 } // end MomJavascriptEmitter::make_case_scanner_data
 
 
 
-std::function<void(struct mom_item_st*,MomEmitter::CaseScannerData*)>
+std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
 MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
-assert (is_locked_item(swtypitm));
+  assert (is_locked_item(swtypitm));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
  goto defaultcaseswtyp; foundcaseswtyp_##Nam
-switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-  {
-  case CASE_SWTYPE_MOM(int):
-  case CASE_SWTYPE_MOM(string):
-  case CASE_SWTYPE_MOM(item):
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+    case CASE_SWTYPE_MOM(int):
+    case CASE_SWTYPE_MOM(string):
+    case CASE_SWTYPE_MOM(item):
 defaultcaseswtyp:
 #warning incomplete MomJavascriptEmitter::case_scanner
-  default:
-    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                              "with bad switch type %s",
-                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                              mom_item_cstring(swtypitm));
-  }
+    default:
+      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                "with bad switch type %s",
+                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                mom_item_cstring(swtypitm));
+    }
 #undef NBSWTYPE_MOM
 #undef CASE_SWTYPE_MOM
 } // end of MomJavascriptEmitter::case_scanner
 
 MomJavascriptEmitter::~MomJavascriptEmitter()
 {
-MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
+  MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
 } // end MomJavascriptEmitter::~MomJavascriptEmitter
