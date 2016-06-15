@@ -42,6 +42,10 @@ public:
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
                                            traced_set_items_t;
+  typedef std::map<const struct mom_item_st*,struct mom_item_st*,
+		   MomItemLess,
+		   traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
+                                           traced_map_item2item_t;
   typedef std::set<const void*,
           MomValueLess,
           traceable_allocator<struct mom_item_st*>>
@@ -89,6 +93,41 @@ private:
   traced_node2itemhashmap_t _ce_localnodetypecache;
   struct mom_item_st*_ce_curfunctionitm;
 protected:
+  class CaseScannerData {
+  protected:
+    MomEmitter*cas_emitter;
+    struct mom_item_st*cas_swtypitm;
+    struct mom_item_st*cas_insitm;
+    struct mom_item_st*cas_blkitm;
+    unsigned cas_rank;
+  public:
+    MomEmitter*emitter() const { return cas_emitter; };
+    struct mom_item_st*swtypitm() const { return cas_swtypitm; };
+    struct mom_item_st*insitm() const { return cas_insitm; };
+    struct mom_item_st*blkitm() const { return cas_blkitm; };
+    unsigned rank() const { return cas_rank; };
+    CaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
+      : cas_emitter(em), cas_swtypitm(swtypitm), cas_insitm(insitm), cas_blkitm(blkitm), cas_rank(rank) {};
+    virtual ~CaseScannerData() { cas_emitter=nullptr; cas_swtypitm=nullptr; cas_insitm=nullptr; cas_blkitm=nullptr; cas_rank=0; };
+  };				// end class CaseScannerData
+  class IntCaseScannerData  final : public CaseScannerData {
+  };				// end class IntCaseScannerData
+  class StringCaseScannerData final : public CaseScannerData {
+    std::map<std::string,struct mom_item_st*,traceable_allocator<std::string>> cas_string2casemap;
+  public:
+    StringCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
+      : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_string2casemap() {};
+    virtual ~StringCaseScannerData() {
+      cas_string2casemap.clear();
+    };
+  };				// end class StringCaseScannerData
+  class ItemCaseScannerData final : public CaseScannerData  {
+    traced_map_item2item_t cas_item2casemap;
+  public:
+    ItemCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
+      : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_item2casemap() {};
+    virtual ~ItemCaseScannerData() { cas_item2casemap.clear(); };
+  };
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
@@ -98,7 +137,8 @@ protected:
 virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
-  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
+  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
+  virtual std::function<void(struct mom_item_st*, CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
   struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
   struct sigdef_st scan_nonbinding_signature(struct mom_item_st*sigitm, struct mom_item_st*initm)
   {
@@ -305,7 +345,8 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
-  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual std::function<void(struct mom_item_st*,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const char*kindname() const
   {
     return "C-emitter";
@@ -328,7 +369,8 @@ public:
   };
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
-  virtual std::function<void(struct mom_item_st*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  virtual std::function<void(struct mom_item_st*,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm)
   {
     throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
@@ -2014,7 +2056,16 @@ MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mo
 } // end MomCEmitter::transform_routine_element
 
 
-std::function<void(struct mom_item_st*)>
+MomEmitter::CaseScannerData*
+MomCEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+#warning unimplemented MomCEmitter::make_case_scanner_data
+MOM_FATAPRINTF("unimplemented MomCEmitter::make_case_scanner_data swtypitm=%s insitm=%s",
+	       mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+} // end MomCEmitter::make_case_scanner_data
+
+
+std::function<void(struct mom_item_st*,MomEmitter::CaseScannerData*)>
 MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
 assert (is_locked_item(swtypitm));
@@ -2056,8 +2107,17 @@ MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%
 } // end MomJavascriptEmitter::transform_func_element
 
 
+MomEmitter::CaseScannerData*
+MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+#warning unimplemented MomJavascriptEmitter::make_case_scanner_data
+MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::make_case_scanner_data swtypitm=%s insitm=%s",
+	       mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+} // end MomJavascriptEmitter::make_case_scanner_data
 
-std::function<void(struct mom_item_st*)>
+
+
+std::function<void(struct mom_item_st*,MomEmitter::CaseScannerData*)>
 MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
 assert (is_locked_item(swtypitm));
