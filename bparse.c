@@ -29,6 +29,7 @@ enum momlexkind_en
   MOLEX_NAMESTR,
   MOLEX_ITEM,
   MOLEX_OPERITEM,
+  MOLEX_CODECHUNK,
 };
 
 enum momdelim_en
@@ -57,6 +58,7 @@ struct momtoken_st
     enum momdelim_en mtok_delim;
     struct mom_item_st *mtok_itm;
     const struct mom_boxstring_st *mtok_str;
+    const struct mom_boxnode_st *mtok_chunk;
   };
 };
 
@@ -155,6 +157,14 @@ momtok_gcstr (struct momtoken_st *ptok)
     case MOLEX_OPERITEM:
       fprintf (f, "operitem @%d: ^%s", ptok->mtok_lin,
                mom_item_cstring (ptok->mtok_itm));
+      break;
+    case MOLEX_CODECHUNK:
+      {
+        fprintf (f, "codechunk @%d:\n", ptok->mtok_lin);
+        long nl = ftell (f);
+        mom_output_value (f, &nl, 0, (const void *) ptok->mtok_chunk);
+        fprintf (f, "\n#end chunk @%d\n", ptok->mtok_lin);
+      }
       break;
     }
   fflush (f);
@@ -540,6 +550,13 @@ momtok_tokenize (const char *filnam)
                            lineno,.mtok_delim = MODLM_TILDE});
           ptok++;
           continue;
+        }
+      if (*ptok == '$' && ptok[1] == '{')
+        {
+#warning should parse code chunk in momtok_tokenize
+          MOM_FATAPRINTF
+            ("unimplemented code chunk parsing in file %s line %d near %s",
+             filnam, lineno, ptok);
         }
       MOM_FATAPRINTF ("invalid token in file %s line %d near %s",
                       filnam, lineno, ptok);

@@ -95,7 +95,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -1718,7 +1718,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      // failthru
+    // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2225,7 +2225,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2279,7 +2279,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {

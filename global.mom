@@ -143,6 +143,26 @@ comment
 
 
 
+*c_code
+1466095212
+^mtime
+(
+comment
+"give C code"_
+)attrs
+
+
+
+*c_expansion
+1466095212
+^mtime
+(
+comment
+"give the c expansion in a primitive"_
+)attrs
+
+
+
 *call
 1465882737
 ^mtime
@@ -173,12 +193,23 @@ comment
 
 
 
+
 *closed
 1465724985
 ^mtime
 (
 comment
 "for closed variables"_
+)attrs
+
+
+
+*code_chunk
+1466095429
+^mtime
+(
+comment
+"for code chunks"_
 )attrs
 
 
@@ -190,7 +221,6 @@ comment
 comment
 "comment in items"_
 )attrs
-
 
 
 
@@ -324,6 +354,7 @@ comment
 
 
 
+
 *div
 1465727643
 ^mtime
@@ -358,7 +389,6 @@ is_number
 is_scalar
 )set
 )attrs
-
 
 
 
@@ -492,6 +522,7 @@ comment
 
 
 
+
 *func
 1455800324
 ^mtime
@@ -519,7 +550,6 @@ comment
 comment
 "for global variables"_
 )attrs
-
 
 
 
@@ -664,6 +694,7 @@ comment
 
 
 
+
 *is_double
 1457358950
 ^mtime
@@ -693,7 +724,6 @@ comment
 notice
 item
 )attrs
-
 
 
 
@@ -844,6 +874,7 @@ comment
 
 
 
+
 *less
 1457365666
 ^mtime
@@ -871,7 +902,6 @@ comment
 comment
 "let keyword"_
 )attrs
-
 
 
 
@@ -1013,6 +1043,7 @@ comment
 
 
 
+
 *node_connective
 1457430266
 ^mtime
@@ -1040,7 +1071,6 @@ comment
 comment
 "pseudo type for nil"_
 )attrs
-
 
 
 
@@ -1172,6 +1202,7 @@ comment
 
 
 
+
 *out_html
 1456812179
 ^mtime
@@ -1199,7 +1230,6 @@ comment
 comment
 "give the indentation of some output"_
 )attrs
-
 
 
 
@@ -1353,6 +1383,7 @@ comment
 
 
 
+
 *payl_assovaldata_set_attrs
 1456833278
 ^mtime
@@ -1380,7 +1411,6 @@ comment
 comment
 "dumper payload"_
 )attrs
-
 
 
 
@@ -1530,6 +1560,7 @@ comment
 
 
 
+
 *payl_hashmap_keyset
 1456897878
 ^mtime
@@ -1557,7 +1588,6 @@ comment
 comment
 "operation to remove a key in an hashmap"_
 )attrs
-
 
 
 
@@ -1699,6 +1729,7 @@ comment
 
 
 
+
 *payl_vectval_nth
 1456840222
 ^mtime
@@ -1726,7 +1757,6 @@ comment
 comment
 "reserve in a vector of values"_
 )attrs
-
 
 
 
@@ -1899,6 +1929,7 @@ comment
 
 
 
+
 *raw
 1452095862
 ^mtime
@@ -1926,7 +1957,6 @@ comment
 comment
 "for result"_
 )attrs
-
 
 
 
@@ -2061,6 +2091,7 @@ comment
 
 
 
+
 *step
 1454531512
 ^mtime
@@ -2094,7 +2125,6 @@ is_string
 comment
 "for difference of two numbers"_
 )attrs
-
 
 
 
@@ -2343,6 +2373,7 @@ is_tuple
 
 
 
+
 *type
 1456146499
 ^mtime
@@ -2381,7 +2412,6 @@ comment
 comment
 "for undefined result"_
 )attrs
-
 
 
 
@@ -2514,6 +2544,7 @@ comment
 comment
 "for while"_
 )attrs
+
 
 
 

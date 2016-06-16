@@ -113,3 +113,4 @@ modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 
 tests: monimelt global.mom $(wildcard tests/*.mb)
 	+ ./monimelt -Dboot,gencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
+
