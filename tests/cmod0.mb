@@ -33,6 +33,10 @@
   ^at comment "primitive to show a value with a message"
   ^at descr primitive
   ^at signature signature_string_value_to_void
+  ^at c_expansion %chunk(
+  "do {long _nl=ftell(stdout); fputs(mom_boxstring_cstr("  str0  "), stdout);\n"
+  "mom_output_value(stdout,&_nl,0, ("  val0  "));}while(0)\n"
+  )
 )
 
 ^item !tiny_func (
@@ -40,6 +44,15 @@
    ^at descr func
    ^at signature signature_value_to_void
    ^at body [
+    ^item ?run (
+      ^at descr run
+      ^at comment "show the val0 using show_msg_value_prim"
+      ^at run show_msg_value_prim
+      ^sequence (
+        "tiny-showing: "
+	val0
+      )
+    )
    ]
 )
 
