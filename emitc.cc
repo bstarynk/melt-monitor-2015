@@ -148,8 +148,9 @@ protected:
   };				// end class CaseScannerData
   class IntCaseScannerData  final : public CaseScannerData
   {
-    std::map<long,struct mom_item_st*,traceable_allocator<long>> cas_num2casemap;
+    std::map<long,struct mom_item_st*,std::less<long>,traceable_allocator<long>> cas_num2casemap;
   public:
+    void process_intcase(const void*expv, struct mom_item_st*casitm, struct mom_item_st*runitm);
     const char*name() const
     {
       return "IntCaseScannerData";
@@ -194,6 +195,7 @@ protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
+public:
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
@@ -2171,11 +2173,55 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
     case CASE_SWTYPE_MOM(int):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
-        MOM_DEBUGPRINTF(gencod, "intcase %s casix %d casdata@%p (%s)",
-                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name());
+        assert (is_locked_item(casitm));
+        auto runitm =
+          mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+        auto casev =
+          mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+        MOM_DEBUGPRINTF(gencod, "intcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+                        mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+        if (runitm==nullptr)
+          throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `run` "
+                                    "in switch instr %s #%d in block %s",
+                                    casix, mom_item_cstring(casitm),
+                                    mom_item_cstring(insitm),
+                                    rk, mom_item_cstring(blkitm));
+        if (casev==nullptr)
+          throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `case` "
+                                    "in switch instr %s #%d in block %s",
+                                    casix, mom_item_cstring(casitm),
+                                    mom_item_cstring(insitm),
+                                    rk, mom_item_cstring(blkitm));
         auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
         assert (intcasdata != nullptr);
-	#warning should handle int case in  MomCEmitter::case_scanner
+        if (intcasdata->has_runitm(runitm))
+          throw  MOM_RUNTIME_PRINTF("intcase#%d %s with reused run %s "
+                                    "in switch instr %s #%d in block %s",
+                                    casix, mom_item_cstring(casitm),
+                                    mom_item_cstring(runitm),
+                                    mom_item_cstring(insitm),
+                                    rk, mom_item_cstring(blkitm));
+        intcasdata->process_intcase(casev,casitm,runitm);
+        todo([=](MomEmitter*em)
+        {
+          MOM_DEBUGPRINTF(gencod,
+                          "C-case_scanner before intcase#%d %s run %s "
+                          "in switch instr %s #%d in block %s",
+                          casix, mom_item_cstring(casitm),
+                          mom_item_cstring(runitm),
+                          mom_item_cstring(insitm),
+                          rk, mom_item_cstring(blkitm));
+          em->scan_instr(runitm,casix,insitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "C-case_scanner after intcase#%d %s run %s "
+                          "in switch instr %s #%d in block %s",
+                          casix, mom_item_cstring(casitm),
+                          mom_item_cstring(runitm),
+                          mom_item_cstring(insitm),
+                          rk, mom_item_cstring(blkitm));
+        });
+        intcasdata->add_runitm(runitm);
       };
     case CASE_SWTYPE_MOM(string):
     case CASE_SWTYPE_MOM(item):
@@ -2191,6 +2237,99 @@ defaultcaseswtyp:
 #undef CASE_SWTYPE_MOM
 } // end of MomCEmitter::case_scanner
 
+
+void
+MomEmitter::IntCaseScannerData::process_intcase(const void*expv,
+    struct mom_item_st*casitm,
+    struct mom_item_st*runitm)
+{
+  const long constexpr maxrangewidth = 65536;
+  const long constexpr maxsize = 16*maxrangewidth;
+  unsigned expty = mom_itype(expv);
+  assert (cas_emitter->is_locked_item(casitm));
+  assert (cas_emitter->is_locked_item(runitm));
+  if (cas_num2casemap.size() > maxsize)
+    throw  MOM_RUNTIME_PRINTF("too many %ld int cases in case item %s"
+                              " run item %s insitm %s #%d blkitm %s",
+                              (long)cas_num2casemap.size(), mom_item_cstring(casitm),
+                              mom_item_cstring(runitm),
+                              mom_item_cstring(cas_insitm),
+                              cas_rank, mom_item_cstring(cas_blkitm));
+
+  if (expty == MOMITY_INT)
+    {
+      auto iv = mom_int_val_def(expv,0);
+      if (cas_num2casemap.find(iv) != cas_num2casemap.end())
+        throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
+                                  " run item %s insitm %s #%d blkitm %s",
+                                  (long)iv, mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(cas_insitm),
+                                  cas_rank, mom_item_cstring(cas_blkitm));
+      cas_num2casemap[iv] = casitm;
+      return;
+    }
+  else if (expty != MOMITY_NODE)
+    throw  MOM_RUNTIME_PRINTF("non-node int case %s in case item %s"
+                              " run item %s insitm %s #%d blkitm %s",
+                              mom_value_cstring(expv), mom_item_cstring(casitm),
+                              mom_item_cstring(runitm),
+                              mom_item_cstring(cas_insitm),
+                              cas_rank, mom_item_cstring(cas_blkitm));
+  auto nodexp = (const struct mom_boxnode_st*)expv;
+  auto connitm = nodexp->nod_connitm;
+  unsigned arity = mom_raw_size(nodexp);
+  assert (mom_itype(connitm) == MOMITY_ITEM);
+  if (connitm==MOM_PREDEFITM(or))
+    {
+      for (unsigned ix=0; ix<arity; ix++)
+        process_intcase(nodexp->nod_sons[ix],casitm,runitm);
+    }
+  else if (connitm==MOM_PREDEFITM(range))
+    {
+      const void*leftv=nullptr;
+      const void* rightv=nullptr;
+      long leftnum=0, rightnum=0;
+      if (arity != 2
+          || (leftv = nodexp->nod_sons[0]) == nullptr
+          || mom_itype(leftv) != MOMITY_INT
+          || (rightv = nodexp->nod_sons[1]) == nullptr
+          || mom_itype(rightv) != MOMITY_INT
+          || ((leftnum = mom_int_val_def(leftv,0))
+              > (rightnum = mom_int_val_def(rightv,0))))
+        throw  MOM_RUNTIME_PRINTF("bad range int case %s in case item %s"
+                                  " run item %s insitm %s #%d blkitm %s",
+                                  mom_value_cstring(expv), mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(cas_insitm),
+                                  cas_rank, mom_item_cstring(cas_blkitm));
+      if (leftnum + maxrangewidth < rightnum)
+        throw  MOM_RUNTIME_PRINTF("too wide range int case %s in case item %s"
+                                  " run item %s insitm %s #%d blkitm %s",
+                                  mom_value_cstring(expv), mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(cas_insitm),
+                                  cas_rank, mom_item_cstring(cas_blkitm));
+      for (long ix=leftnum; ix<=rightnum; ix++)
+        {
+          if (cas_num2casemap.find(ix) != cas_num2casemap.end())
+            throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
+                                      " run item %s insitm %s #%d blkitm %s",
+                                      (long)ix, mom_item_cstring(casitm),
+                                      mom_item_cstring(runitm),
+                                      mom_item_cstring(cas_insitm),
+                                      cas_rank, mom_item_cstring(cas_blkitm));
+          cas_num2casemap[ix] = casitm;
+        }
+    }
+  else
+    throw  MOM_RUNTIME_PRINTF("bad node int case %s in case item %s"
+                              " run item %s insitm %s #%d blkitm %s",
+                              mom_value_cstring(expv), mom_item_cstring(casitm),
+                              mom_item_cstring(runitm),
+                              mom_item_cstring(cas_insitm),
+                              cas_rank, mom_item_cstring(cas_blkitm));
+} // end MomEmitter::IntCaseScannerData::process_intcase
 
 const struct mom_boxnode_st*
 MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)

@@ -70,11 +70,12 @@ is a primitive, and optional `result` as before.
 
 A *case-item* has `descr` : `case`, `case` : *current-case*, `run` :
 *instruction-item* (often some block). Inside an `int` switch, the
-*current-case* can be an integer, or some %`set` node with integer
-sons, or some %`range` node with two integers (the first being less or
-equal to the second one). Inside a `string` switch, the *current-case*
-can be a string, or some %`set` node with string sons. Inside an
-`item` switch, the *current-case* should be an item or a set of items.
+*current-case* can be an integer, or some %`range` node with two
+integers (the first being less or equal to the second one), or some
+%`or` node with *current-case* sons. Each integer should be mentioned
+at most once. Inside a `string` switch, the *current-case* can be a
+string, or some %`set` node with string sons. Inside an `item` switch,
+the *current-case* should be an item or a set of items.
 
 An *expression* is one of:
 
