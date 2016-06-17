@@ -182,7 +182,7 @@ momtok_gcstr (const struct momtoken_st *ptok)
       break;
     }
   fflush (f);
-  char *res = GC_STRDUP (buf);
+  char *res = mom_gc_strdup (buf);
   free (buf), buf = 0;
   return res;
 }                               /* end of momtok_gcstr */
@@ -286,7 +286,7 @@ momtok_tokenize (const char *filnam)
       mom_gc_alloc (sizeof (struct momtokvect_st) +
                     tosiz * sizeof (struct momtoken_st));
     tovec->mtv_size = tosiz;
-    tovec->mtv_filename = GC_STRDUP (filnam);
+    tovec->mtv_filename = mom_gc_strdup (filnam);
     MOM_DEBUGPRINTF (boot, "filnam=%s tosiz=%u", filnam, tosiz);
   }
   do

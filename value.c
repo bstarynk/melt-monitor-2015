@@ -20,6 +20,91 @@
 
 #include "meltmoni.h"
 
+void *
+mom_gc_alloc_at (size_t sz, const char *fil, int lin)
+{
+  void *ptr = NULL;
+#ifdef GC_DEBUG
+  ptr = GC_debug_malloc (sz, fil, lin);
+#else
+  ptr = GC_MALLOC (sz);
+#endif /* GC_DEBUG */
+  memset (ptr, 0, sz);
+  MOM_DEBUGPRINTF_AT (fil, lin, garbcoll, "mom_gc_alloc(%ld) -> %p-%p",
+                      (long) sz, ptr, (char *) ptr + sz);
+  return ptr;
+}                               /* end mom_gc_alloc_at */
+
+
+void *
+mom_gc_alloc_scalar_at (size_t sz, const char *fil, int lin)
+{
+  void *ptr = NULL;
+#ifdef GC_DEBUG
+  ptr = GC_debug_malloc_atomic (sz, fil, lin);
+#else
+  ptr = GC_MALLOC_ATOMIC (sz);
+#endif /* GC_DEBUG */
+  memset (ptr, 0, sz);
+  MOM_DEBUGPRINTF_AT (fil, lin, garbcoll, "mom_gc_alloc_scalar(%zd) -> %p-%p",
+                      sz, ptr, (char *) ptr + sz);
+  return ptr;
+}                               /* end mom_gc_alloc_scalar_at */
+
+
+void *
+mom_gc_calloc_at (size_t nmemb, size_t sizel, const char *fil, int lin)
+{
+  void *ptr = NULL;
+  size_t totsz = 0;
+  if (nmemb > INT32_MAX / 3 || sizel > INT32_MAX / 3
+      || (totsz = nmemb * sizel) > INT32_MAX)
+    MOM_FATAPRINTF_AT (fil, lin,
+                       "too big nmemb=%zd or sizel=%zd for mom_gc_calloc",
+                       nmemb, sizel);
+#ifdef GC_DEBUG
+  ptr = GC_debug_malloc (totsz, fil, lin);
+#else
+  ptr = GC_MALLOC (totsz);
+#endif /* GC_DEBUG */
+  memset (ptr, 0, totsz);
+  MOM_DEBUGPRINTF_AT (fil, lin, garbcoll,
+                      "mom_gc_calloc(nmemb=%zd,sizel=%zd;totsz=%zd) -> %p-%p",
+                      nmemb, sizel, totsz, ptr, (char *) ptr + totsz);
+  return ptr;
+}                               /* end mom_gc_calloc_at */
+
+
+void *
+mom_gc_alloc_uncollectable_at (size_t sz, const char *fil, int lin)
+{
+  void *ptr = NULL;
+#ifdef GC_DEBUG
+  ptr = GC_debug_malloc_uncollectable (sz, fil, lin);
+#else
+  ptr = GC_MALLOC_UNCOLLECTABLE (sz);
+#endif /* GC_DEBUG */
+  memset (ptr, 0, sz);
+  MOM_DEBUGPRINTF_AT (fil, lin, garbcoll,
+                      "mom_gc_alloc_uncollectable(%zd) -> %p-%p", sz, ptr,
+                      (char *) ptr + sz);
+  return ptr;
+}                               /* end mom_gc_alloc_uncollectable_at */
+
+char *
+mom_gc_strdup_at (const char *str, const char *fil, int lin)
+{
+  void *ptr = NULL;
+#ifdef GC_DEBUG
+  ptr = GC_debug_strdup (str, fil, lin);
+#else
+  ptr = GC_STRDUP (str);
+#endif /* GC_DEBUG */
+  MOM_DEBUGPRINTF_AT (fil, lin, garbcoll,
+                      "mom_gc_strdup('%s'@%p) -> %p-%p", str, str, ptr,
+                      (char *) ptr + strlen (str));
+  return ptr;
+}                               /* end mom_gc_alloc_uncollectable_at */
 
 const char *
 mom_itype_str (const void *p)
@@ -79,7 +164,7 @@ mom_itype_str (const void *p)
       char tybuf[32];
       memset (tybuf, 0, sizeof (tybuf));
       snprintf (tybuf, sizeof (tybuf), "?Ityp#%u?", ty);
-      return GC_STRDUP (tybuf);
+      return mom_gc_strdup (tybuf);
     }
 }                               /* end of mom_itype_str */
 
@@ -1334,7 +1419,7 @@ mom_value_cstring (const void *val)
   fflush (fout);
   long siz = ftell (fout);
   outbuf[siz] = (char) 0;
-  char *res = GC_STRDUP (outbuf);
+  char *res = mom_gc_strdup (outbuf);
   free (outbuf), outbuf = NULL;
   return res;
 }

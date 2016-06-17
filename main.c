@@ -154,13 +154,13 @@ mom_gc_printf (const char *fmt, ...)
   va_start (args, fmt);
   if (vsnprintf (smallbuf, sizeof (smallbuf), fmt, args)
       < (int) sizeof (smallbuf))
-    res = GC_STRDUP (smallbuf);
+    res = mom_gc_strdup (smallbuf);
   else
     vasprintf (&buf, fmt, args);
   va_end (args);
   if (!res && buf)
     {
-      res = GC_STRDUP (buf);
+      res = mom_gc_strdup (buf);
       free (buf);
     }
   return res;
@@ -854,6 +854,7 @@ mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
 
 
 ////////////////
+#ifndef mom_gc_calloc
 void *
 mom_gc_calloc (size_t nmemb, size_t size)
 {
@@ -866,6 +867,7 @@ mom_gc_calloc (size_t nmemb, size_t size)
                     nmemb, size);
   return mom_gc_alloc (totsz);
 }
+#endif /*undefined mom_gc_calloc */
 
 
 static int randomfd_mom;
@@ -1283,7 +1285,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
             if (stat (optarg, &stdir) || (stdir.st_mode & S_IFMT) != S_IFDIR)
               MOM_WARNPRINTF ("%s is not a directory for --chdir-after-load",
                               optarg);
-            dir_after_load_mom = GC_STRDUP (optarg);
+            dir_after_load_mom = mom_gc_strdup (optarg);
           }
           break;
         case xtraopt_skipmadecheck:
@@ -1367,7 +1369,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
             if (!optarg)
               MOM_FATAPRINTF ("missing --webdir");
             char *rwdirpath = realpath (optarg, NULL);
-            char *rwdirdup = GC_STRDUP (rwdirpath);
+            char *rwdirdup = mom_gc_strdup (rwdirpath);
             struct stat rwdirstat = { 0 };
             free (rwdirpath), rwdirpath = NULL;
             int olderrno = errno;
@@ -1624,7 +1626,7 @@ main (int argc_main, char **argv_main)
               && (webstat.st_mode & S_IFMT) == S_IFDIR)
             {
               char *rwdirpath = realpath (webuf, NULL);
-              char *rwdirdup = GC_STRDUP (rwdirpath);
+              char *rwdirdup = mom_gc_strdup (rwdirpath);
               free (rwdirpath), rwdirpath = NULL;
               int wix = -1;
               for (int ix = 0; ix < MOM_MAX_WEBDIR; ix++)

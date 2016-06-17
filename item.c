@@ -1189,7 +1189,7 @@ mom_item_cstring (const struct mom_item_st *itm)
                                   mom_item_hi_lo_suffix (bufnum, itm))
                         >= (int) sizeof (buf)))
         MOM_FATAPRINTF ("too long item name %s", buf);
-      return GC_STRDUP (buf);
+      return mom_gc_strdup (buf);
     }
 }                               /* end mom_item_cstring */
 

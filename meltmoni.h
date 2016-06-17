@@ -211,6 +211,7 @@ static inline pid_t mom_gettid (void)
 void mom_output_gplv3_notice (FILE *out, const char *prefix,
                               const char *suffix, const char *filename);
 
+#if defined(NDEBUG) || !defined(MOM_GCDEBUG)
 static inline void *mom_gc_alloc (size_t sz)
 {
   void *p = GC_MALLOC (sz);
@@ -218,8 +219,6 @@ static inline void *mom_gc_alloc (size_t sz)
     memset (p, 0, sz);
   return p;
 }
-
-void *mom_gc_calloc (size_t nmemb, size_t size);
 
 static inline void *mom_gc_alloc_scalar (size_t sz)
 {
@@ -229,6 +228,8 @@ static inline void *mom_gc_alloc_scalar (size_t sz)
   return p;
 }
 
+
+void *mom_gc_calloc (size_t nmemb, size_t size);
 
 static inline void *mom_gc_alloc_uncollectable (size_t sz)
 {
@@ -242,6 +243,19 @@ static inline char *mom_gc_strdup (const char *s)
 {
   return GC_STRDUP (s);
 }
+#else // !NDEBUG or MOM_GCDEBUG
+#warning garbcoll debugging enabled
+extern void *mom_gc_alloc_at (size_t sz, const char*fil, int lin);
+#define mom_gc_alloc(Sz) mom_gc_alloc_at((Sz),__FILE__,__LINE__)
+extern void *mom_gc_alloc_scalar_at (size_t sz, const char*fil, int lin);
+#define mom_gc_alloc_scalar(Sz) mom_gc_alloc_scalar_at((Sz),__FILE__,__LINE__)
+extern void *mom_gc_calloc_at (size_t nmemb, size_t size, const char*fil, int lin);
+#define mom_gc_calloc(Nb,Siz) mom_gc_calloc_at((Nb),(Siz),__FILE__,__LINE__)
+extern void *mom_gc_alloc_uncollectable_at(size_t sz, const char*fil, int lin);
+#define mom_gc_alloc_uncollectable(Sz) mom_gc_alloc_uncollectable_at((Sz),__FILE__,__LINE__)
+extern char* mom_gc_strdup_at(const char*str, const char*fil, int lin);
+#define mom_gc_strdup(Str) mom_gc_strdup_at((Str),__FILE__,__LINE__)
+#endif // NDEBBUG or MOM_GCDEBUG
 
 void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
@@ -263,6 +277,7 @@ __attribute__ ((format (printf, 3, 4), noreturn));
 // for debugging; the color level are user-definable:
 #define MOM_DEBUG_LIST_OPTIONS(Dbg)		\
   Dbg(cmd)					\
+  Dbg(garbcoll)					\
   Dbg(dump)					\
   Dbg(gencod)					\
   Dbg(item)					\

@@ -75,7 +75,7 @@ mom_ldstate_cstring (const struct mom_statelem_st se)
   mom_fprint_ldstate (f, se);
   fflush (f);
   if (buf)
-    res = GC_STRDUP (buf);
+    res = mom_gc_strdup (buf);
   fclose (f);
   free (buf);
   return res;
@@ -223,7 +223,7 @@ initialize_load_state_mom (const char *statepath)
   }
   mom_loader->ld_magic = MOM_LOADER_MAGIC;
   mom_loader->ld_file = f;
-  mom_loader->ld_path = GC_STRDUP (statepath);
+  mom_loader->ld_path = mom_gc_strdup (statepath);
   MOM_DEBUGPRINTF (load, "ld_path=%s fisiz=%ld", mom_loader->ld_path, fisiz);
 }                               // end initialize_load_state_mom 
 
