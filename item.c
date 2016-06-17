@@ -1310,6 +1310,7 @@ remove_at_md:
       unsigned newsiz = mom_prime_above ((4 * cnt) / 3 + 3);
       if (newsiz < siz)
         {
+          assert (newsiz > 3);
           struct mom_assovaldata_st *newasso
             = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
                             + (newsiz -

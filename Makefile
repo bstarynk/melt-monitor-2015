@@ -21,6 +21,7 @@
 ## Boehm GC is from http://www.hboehm.info/gc/
 CC=gcc
 CXX=g++
+## see http://stackoverflow.com/a/14868153/841108
 DISABLE_ASLR= setarch $(shell uname -m) -R
 WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
 CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)

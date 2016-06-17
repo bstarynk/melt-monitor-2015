@@ -391,7 +391,7 @@ mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st *const *arr)
     return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
-                  (siz > 0) ? ((siz - 1) * sizeof (void *)) : 0);
+                  ((siz > 0) ? ((siz - 1) * sizeof (void *)) : 0));
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = siz >> 16;
   tup->va_lsiz = siz & 0xffff;
@@ -414,7 +414,7 @@ mom_boxtuple_make_va (unsigned siz, ...)
     return &empty_boxtuple_mom;
   struct mom_boxtuple_st *tup =
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
-                  (siz > 0) ? ((siz - 1) * sizeof (void *)) : 0);
+                  ((siz > 0) ? ((siz - 1) * sizeof (void *)) : 0));
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = siz >> 16;
   tup->va_lsiz = siz & 0xffff;
@@ -484,7 +484,7 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
     MOM_FATAPRINTF ("too big set from siz1=%d, siz2=%d", siz1, siz2);
   struct mom_boxset_st *set =
     mom_gc_alloc (sizeof (struct mom_boxset_st) +
-                  (tsiz > 0) ? ((tsiz - 1) * sizeof (void *)) : 0);
+                  ((tsiz > 0) ? ((tsiz - 1) * sizeof (void *)) : 0));
   set->va_itype = MOMITY_SET;
   unsigned cnt = 0;
   for (unsigned ix = 0; ix < siz1; ix++)
@@ -513,7 +513,7 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
       struct mom_boxset_st *oldset = set;
       struct mom_boxset_st *newset =
         mom_gc_alloc (sizeof (struct mom_boxset_st) +
-                      (cnt > 0) ? ((cnt - 1) * sizeof (void *)) : 0);
+                      ((cnt > 0) ? ((cnt - 1) * sizeof (void *)) : 0));
       newset->va_itype = MOMITY_SET;
       if (tsiz > 10)
         GC_FREE (oldset);
@@ -767,7 +767,7 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
                     size, mom_item_cstring (conn));
   struct mom_boxnode_st *nod =
     mom_gc_alloc (sizeof (*nod) +
-                  (size > 0) ? ((size - 1) * sizeof (void *)) : 0);
+                  ((size > 0) ? ((size - 1) * sizeof (void *)) : 0));
   nod->va_itype = MOMITY_NODE;
   nod->va_hsiz = size >> 16;
   nod->va_lsiz = size & 0xffff;
