@@ -224,33 +224,36 @@ seqitem_hash_compute_mom (struct mom_seqitems_st *si)
   assert (si);
   assert (si->hva_hash == 0);
   assert (si->va_itype == MOMITY_TUPLE || si->va_itype == MOMITY_SET);
-  unsigned l = ((si->va_hsiz << 16) + si->va_lsiz);
+  unsigned l = mom_raw_size (si);
   momhash_t h = 17 * l + SEQITEM_EMPTY_HASH_MOM (si->va_itype);
-  for (unsigned ix = 0; ix < l; ix++)
+  if (l > 0)
     {
-      const struct mom_item_st *curitm = si->seqitem[ix];
-      if (ix % 2 != 0)
+      for (unsigned ix = 0; ix < l; ix++)
         {
-          if (curitm != NULL)
+          const struct mom_item_st *curitm = si->seqitem[ix];
+          if (ix % 2 != 0)
             {
-              assert (mom_itype (curitm) == MOMITY_ITEM);
-              h = (1667 * curitm->hva_hash) ^ (31 * h + ix);
+              if (curitm != NULL)
+                {
+                  assert (mom_itype (curitm) == MOMITY_ITEM);
+                  h = (1667 * curitm->hva_hash) ^ (31 * h + ix);
+                }
+              else
+                h = 1709 * h + ix;
             }
           else
-            h = 1709 * h + ix;
-        }
-      else
-        {
-          if (curitm != NULL)
             {
-              assert (mom_itype (curitm) == MOMITY_ITEM);
-              h = (1783 * curitm->hva_hash) ^ (11 * h - 13 * ix);
+              if (curitm != NULL)
+                {
+                  assert (mom_itype (curitm) == MOMITY_ITEM);
+                  h = (1783 * curitm->hva_hash) ^ (11 * h - 13 * ix);
+                }
+              else
+                h = 139 * h + 31 * ix;
             }
-          else
-            h = 139 * h + 5 * ix;
-        }
+        };
     };
-  if (!h)
+  if (MOM_UNLIKELY (h == 0))
     h = (0xffff & l) + 30 + 3 * si->va_itype;
   si->hva_hash = h;
 }                               /* end seqitem_hash_compute_mom  */
@@ -307,6 +310,7 @@ mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st *const *arr)
   tup->va_itype = MOMITY_TUPLE;
   tup->va_hsiz = siz >> 16;
   tup->va_lsiz = siz & 0xffff;
+  assert (mom_raw_size (tup) == siz);
   for (unsigned ix = 0; ix < siz; ix++)
     tup->seqitem[ix] = (struct mom_item_st *) (arr[ix]);
   seqitem_hash_compute_mom ((struct mom_seqitems_st *) tup);
