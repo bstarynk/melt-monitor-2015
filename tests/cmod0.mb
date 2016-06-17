@@ -14,14 +14,14 @@
    ^at type string
 )
 
-^item !signature_value_to_void (
-   ^at comment "signature: value -> void, in cmod0.mb"
+^item !signature_func_value_to_void (
+   ^at comment "func signature: value -> void, in cmod0.mb"
    ^at descr signature
-   ^at formals [ val0 ]
+   ^at formals [ this_closure val0 ]
    ^at result unit
 )
 
-^display "sig value->void:" signature_value_to_void
+^display "funcsig value->void:" signature_func_value_to_void
 
 ^item !signature_string_value_to_void (
    ^at comment "signature: string, value -> void, in cmod0.mb"
@@ -45,7 +45,7 @@
 ^item !tiny_func (
    ^at comment "our tiny_func from cmod0.mb"
    ^at descr func
-   ^at signature signature_value_to_void
+   ^at signature signature_func_value_to_void
    ^at body [
     ^item ?run (
       ^at descr run
