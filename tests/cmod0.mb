@@ -21,6 +21,7 @@
    ^at result unit
 )
 
+^display "sig value->void:" signature_value_to_void
 
 ^item !signature_string_value_to_void (
    ^at comment "signature: string, value -> void, in cmod0.mb"
@@ -28,6 +29,8 @@
    ^at formals [ str0 val0 ]
    ^at result unit
 )
+
+^display "sig str,value->void:" signature_string_value_to_void
 
 ^item !show_msg_value_prim (
   ^at comment "primitive to show a value with a message"

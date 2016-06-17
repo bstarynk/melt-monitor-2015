@@ -95,7 +95,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -814,10 +814,11 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
     throw MOM_RUNTIME_PRINTF("in %s signature %s of bad descr %s",
                              mom_item_cstring(initm), mom_item_cstring(sigitm), mom_item_cstring(desitm));
   if (!nobind) bind_local(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm);
+  auto formv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(formals));
   auto formtup =
-    mom_dyncast_tuple(mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(formals)));
-  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s formtup=%s",
-                  mom_item_cstring(sigitm), mom_value_cstring(formtup));
+    mom_dyncast_tuple(formv);
+  MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s formtup=%s formv=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(formv));
   if (formtup == nullptr)
     throw MOM_RUNTIME_PRINTF("missing formals in signature %s", mom_item_cstring(sigitm));
   if (!nobind) bind_local(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup);
@@ -1718,7 +1719,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      // failthru
+    // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2225,7 +2226,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2279,7 +2280,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {

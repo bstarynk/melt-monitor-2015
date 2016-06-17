@@ -313,7 +313,7 @@ mom_make_name_radix (const char *str)
     assert (radix_cnt_mom <= radix_siz_mom);
   if (MOM_UNLIKELY (radix_cnt_mom + 2 >= radix_siz_mom))
     {
-      unsigned newsiz = ((5 * radix_cnt_mom / 4 + 10) | 0xf) + 1;
+      unsigned newsiz = (((5 * radix_cnt_mom) / 4 + 10) | 0xf) + 1;
       assert (newsiz > radix_siz_mom);
       struct radix_mom_st **newarr =
         mom_gc_alloc (newsiz * sizeof (struct radix_mom_st *));
@@ -1307,7 +1307,7 @@ remove_at_md:
   assert (cnt > 0);
   if (MOM_UNLIKELY (siz > 10 && cnt < siz / 3))
     {
-      unsigned newsiz = mom_prime_above (4 * cnt / 3 + 3);
+      unsigned newsiz = mom_prime_above ((4 * cnt) / 3 + 3);
       if (newsiz < siz)
         {
           struct mom_assovaldata_st *newasso
@@ -1448,7 +1448,7 @@ mom_assovaldata_put (struct mom_assovaldata_st *asso,
     {
       assert (cnt == siz);
       unsigned newsiz =
-        mom_prime_above (5 * cnt / 4 + ((cnt > 32) ? (cnt / 32) : 1) + 2);
+        mom_prime_above ((5 * cnt) / 4 + ((cnt > 32) ? (cnt / 32) : 1) + 2);
       assert (newsiz > siz);
       struct mom_assovaldata_st *newasso
         = mom_gc_alloc (sizeof (struct mom_assovaldata_st)
@@ -1583,7 +1583,7 @@ mom_vectvaldata_reserve (struct mom_vectvaldata_st *vec, unsigned gap)
     MOM_FATAPRINTF ("too big gap %u", gap);
   if (!vec || vec->va_itype != MOMITY_VECTVALDATA)
     {
-      unsigned siz = mom_prime_above (gap + gap / 16 + 2);
+      unsigned siz = mom_prime_above (gap + gap / 16 + 3);
       vec = mom_gc_alloc (sizeof (*vec) + (siz - 1) * sizeof (void *));
       vec->va_itype = MOMITY_VECTVALDATA;
       mom_put_size (vec, siz);
@@ -1703,7 +1703,7 @@ mom_vectvaldata_append (struct mom_vectvaldata_st *vec, const void *data)
     {
       assert (cnt == siz);
       unsigned newsiz =
-        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 2);
+        mom_prime_above ((4 * cnt) / 3 + ((cnt > 100) ? (cnt / 32) : 1) + 2);
       struct mom_vectvaldata_st *newvec =
         mom_gc_alloc (sizeof (*vec) + (newsiz - 1) * sizeof (void *));
       newvec->va_itype = MOMITY_VECTVALDATA;
@@ -1770,7 +1770,7 @@ mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
   if (MOM_UNLIKELY (4 * cnt + 3 >= 5 * sz))
     {
       unsigned newsiz =
-        mom_prime_above (4 * cnt / 3 + 10 +
+        mom_prime_above ((4 * cnt) / 3 + 10 +
                          (((cnt > 100) ? (cnt / 32) : 3) + 1));
       if (newsiz > sz)
         {

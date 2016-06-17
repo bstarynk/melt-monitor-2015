@@ -77,7 +77,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
 {
   if (!hset || hset == MOM_EMPTY_SLOT || hset->va_itype != MOMITY_HASHSET)
     {
-      unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
+      unsigned newsiz = mom_prime_above ((6 * gap) / 5 + 3);
       hset = mom_gc_alloc (sizeof (*hset) + (newsiz - 1) * sizeof (void *));
       hset->va_itype = MOMITY_HASHSET;
       mom_put_size (hset, newsiz);
@@ -91,7 +91,7 @@ mom_hashset_reserve (struct mom_hashset_st *hset, unsigned gap)
     {
       // reorganize
       unsigned newsiz =
-        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
+        mom_prime_above ((5 * cnt) / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
       unsigned oldsiz = siz;
       unsigned oldcnt = cnt;
       struct mom_hashset_st *oldhset = hset;
@@ -316,7 +316,7 @@ mom_hashmap_reserve (struct mom_hashmap_st *hmap, unsigned gap)
 {
   if (!hmap || hmap == MOM_EMPTY_SLOT || hmap->va_itype != MOMITY_HASHMAP)
     {
-      unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
+      unsigned newsiz = mom_prime_above ((6 * gap) / 5 + 3);
       hmap =
         mom_gc_alloc (sizeof (*hmap) +
                       (newsiz - 1) * sizeof (struct mom_itementry_tu));
@@ -585,7 +585,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
 {
   if (!hass || hass == MOM_EMPTY_SLOT || hass->va_itype != MOMITY_HASHASSOC)
     {
-      unsigned newsiz = mom_prime_above (6 * gap / 5 + 3);
+      unsigned newsiz = mom_prime_above ((6 * gap) / 5 + 3);
       hass =
         mom_gc_alloc (sizeof (*hass) +
                       (newsiz - 1) * sizeof (struct mom_itementry_tu));
@@ -601,7 +601,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
     {
       // reorganize
       unsigned newsiz =
-        mom_prime_above (5 * cnt / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
+        mom_prime_above ((5 * cnt) / 4 + ((cnt > 100) ? (cnt / 32) : 1) + 3);
       unsigned oldsiz = siz;
       unsigned oldcnt = cnt;
       struct mom_hashassoc_st *oldhass = hass;
@@ -629,7 +629,7 @@ mom_hashassoc_reserve (struct mom_hashassoc_st *hass, unsigned gap)
   else if (6 * (gap + cnt) >= 5 * siz)
     {
       unsigned newsiz =
-        mom_prime_above (5 * (gap + cnt) / 4 +
+        mom_prime_above ((5 * (gap + cnt)) / 4 +
                          (((gap + cnt) > 100) ? ((gap + cnt) / 32) : 1) + 3);
       unsigned oldsiz = siz;
       unsigned oldcnt = cnt;

@@ -99,7 +99,7 @@ mom_loader_push_at (struct mom_loader_st *ld, const struct mom_statelem_st el,
   assert (siz == 0 || ld->ld_stackarr != NULL);
   if (top + 1 >= siz)
     {
-      unsigned newsiz = mom_prime_above (5 * siz / 4 + 10);
+      unsigned newsiz = mom_prime_above ((5 * siz) / 4 + 10);
       if (newsiz >= MOM_SIZE_MAX)
 #ifdef NDEBUG
         MOM_FATAPRINTF ("too big new size %u for loader @%p", newsiz, ld);
@@ -186,7 +186,7 @@ mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb, const char *fil,
 #endif
   if (siz > 20 && newtop < siz / 3)
     {
-      unsigned newsiz = mom_prime_above (4 * newtop / 3 + 9);
+      unsigned newsiz = mom_prime_above ((4 * newtop) / 3 + 9);
       if (newsiz < siz)
         {
           struct mom_statelem_st *newarr =

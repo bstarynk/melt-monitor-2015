@@ -132,7 +132,7 @@ mom_boxstring_make_len (const char *s, int len)
         break;
       };
   struct mom_boxstring_st *bs =
-    mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + (len));
+    mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + (len) + 1);
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_hsiz = len >> 16;
   bs->va_lsiz = len & 0xffff;

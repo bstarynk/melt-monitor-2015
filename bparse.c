@@ -949,7 +949,7 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           const void *sonval = momtok_parse (tovec, topos, &topos);
           if (nbsons >= (int) siz)
             {
-              unsigned newsiz = mom_prime_above (4 * siz / 3 + 4);
+              unsigned newsiz = mom_prime_above ((4 * nbsons) / 3 + 4);
               const void **newarr = mom_gc_alloc (newsiz * sizeof (void *));
               memcpy (newarr, arr, nbsons * sizeof (void *));
               if (arr != smallarr)
