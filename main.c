@@ -148,7 +148,7 @@ mom_gc_printf (const char *fmt, ...)
 {
   char *buf = NULL;
   const char *res = NULL;
-  char smallbuf[80];
+  char smallbuf[96];
   memset (smallbuf, 0, sizeof (smallbuf));
   va_list args;
   va_start (args, fmt);

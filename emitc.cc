@@ -475,7 +475,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     {
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
                         "mom_emit_c_code %s failed with MOM runtime exception %s in %s",
-                        mom_item_cstring(itm), e.what(), mom_item_cstring(cemit.current_function()));
+                        mom_item_cstring(itm), mom_gc_strdup(e.what()), mom_item_cstring(cemit.current_function()));
       return false;
     }
   catch (const std::exception& e)
@@ -768,12 +768,20 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   {
     auto sigr=scan_signature(sigitm,fuitm);
     auto formaltup = sigr.sig_formals;
+    MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s formaltup=%s",
+                    mom_item_cstring(fuitm), mom_value_cstring(formaltup));
     if (mom_boxtuple_length(formaltup)==0
         || mom_boxtuple_nth(formaltup, 0) != MOM_PREDEFITM(this_closure))
-      throw MOM_RUNTIME_PRINTF("func %s with signature %s of formals %s not starting with `this_closure`",
-                               mom_item_cstring(fuitm),
-                               mom_item_cstring(sigitm),
-                               mom_value_cstring(formaltup));
+      {
+        MOM_DEBUGPRINTF(gencod, "scan_func_element: bad func %s with signature %s of formals %s not starting with `this_closure`",
+                        mom_item_cstring(fuitm),
+                        mom_item_cstring(sigitm),
+                        mom_value_cstring(formaltup));
+        throw MOM_RUNTIME_PRINTF("func %s with signature %s of formals %s not starting with `this_closure`",
+                                 mom_item_cstring(fuitm),
+                                 mom_item_cstring(sigitm),
+                                 mom_value_cstring(formaltup));
+      }
     if (sigr.sig_result != MOM_PREDEFITM(value))
       throw  MOM_RUNTIME_PRINTF("func %s with signature %s of non-value result type %s",
                                 mom_item_cstring(fuitm),

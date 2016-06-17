@@ -37,7 +37,74 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <string.h>
 #include <gc/gc.h>
+
+// mark unlikely conditions to help optimization
+#ifdef __GNUC__
+#define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)
+#define MOM_LIKELY(P) !__builtin_expect(!(P),0)
+#define MOM_UNUSED __attribute__((unused))
+#else
+#define MOM_UNLIKELY(P) (P)
+#define MOM_LIKELY(P) (P)
+#define MOM_UNUSED
+#endif
+
+extern
+#ifdef __cplusplus
+"C"
+#endif
+void
+mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
+__attribute__ ((format (printf, 3, 4)));
+
+
+#if defined(NDEBUG) || !defined(MOM_GCDEBUG)
+static inline void *mom_gc_alloc (size_t sz)
+{
+  void *p = GC_MALLOC (sz);
+  if (MOM_LIKELY (p != NULL))
+    memset (p, 0, sz);
+  return p;
+}
+
+static inline void *mom_gc_alloc_scalar (size_t sz)
+{
+  void *p = GC_MALLOC_ATOMIC (sz);
+  if (MOM_LIKELY (p != NULL))
+    memset (p, 0, sz);
+  return p;
+}
+
+
+void *mom_gc_calloc (size_t nmemb, size_t size);
+
+static inline void *mom_gc_alloc_uncollectable (size_t sz)
+{
+  void *p = GC_MALLOC_UNCOLLECTABLE (sz);
+  if (MOM_LIKELY (p != NULL))
+    memset (p, 0, sz);
+  return p;
+}
+
+static inline char *mom_gc_strdup (const char *s)
+{
+  return GC_STRDUP (s);
+}
+#else // !NDEBUG or MOM_GCDEBUG
+#warning garbcoll debugging enabled
+extern void *mom_gc_alloc_at (size_t sz, const char*fil, int lin);
+#define mom_gc_alloc(Sz) mom_gc_alloc_at((Sz),__FILE__,__LINE__)
+extern void *mom_gc_alloc_scalar_at (size_t sz, const char*fil, int lin);
+#define mom_gc_alloc_scalar(Sz) mom_gc_alloc_scalar_at((Sz),__FILE__,__LINE__)
+extern void *mom_gc_calloc_at (size_t nmemb, size_t size, const char*fil, int lin);
+#define mom_gc_calloc(Nb,Siz) mom_gc_calloc_at((Nb),(Siz),__FILE__,__LINE__)
+extern void *mom_gc_alloc_uncollectable_at(size_t sz, const char*fil, int lin);
+#define mom_gc_alloc_uncollectable(Sz) mom_gc_alloc_uncollectable_at((Sz),__FILE__,__LINE__)
+extern char* mom_gc_strdup_at(const char*str, const char*fil, int lin);
+#define mom_gc_strdup(Str) mom_gc_strdup_at((Str),__FILE__,__LINE__)
+#endif // NDEBBUG or MOM_GCDEBUG
 
 #ifdef __cplusplus
 #include <atomic>
@@ -50,6 +117,7 @@ typedef std::atomic_bool mom_atomic_bool_t;
 typedef std::atomic_int mom_atomic_int_t;
 typedef std::atomic_int_least16_t mom_atomic_int16_t;
 typedef std::atomic<FILE*> mom_atomic_fileptr_t;
+
 class MomRuntimeErrorAt : public std::runtime_error
 {
   const char*_mre_file;
@@ -64,11 +132,20 @@ public:
     return _mre_line;
   };
   MomRuntimeErrorAt(const char*fil, int lin, const char*msg)
-    : std::runtime_error(msg), _mre_file(fil), _mre_line(lin) {};
+    : std::runtime_error(std::string(msg)), _mre_file(fil), _mre_line(lin)
+  {
+    mom_warnprintf_at(fil,lin,"runtime error: %s", msg);
+  };
   MomRuntimeErrorAt(const char*fil, int lin, const std::string&msg)
-    : std::runtime_error(msg), _mre_file(fil), _mre_line(lin) {};
+    : std::runtime_error(std::string(msg)), _mre_file(fil), _mre_line(lin)
+  {
+    mom_warnprintf_at(fil,lin,"runtime error: %s", msg.c_str());
+  };
   MomRuntimeErrorAt(const char*fil, int lin, std::ostringstream&out)
-    : std::runtime_error((out.flush(), out.str())), _mre_file(fil), _mre_line(lin) {};
+    : std::runtime_error((out.flush(), std::string(out.str()))), _mre_file(fil), _mre_line(lin)
+  {
+    mom_warnprintf_at(fil,lin,"runtime error: %s", out.str().c_str());
+  };
   ~MomRuntimeErrorAt()
   {
     _mre_file=nullptr;
@@ -176,16 +253,6 @@ static_assert (sizeof (intptr_t) == sizeof (double)
 
 const char *mom_hostname (void);
 
-// mark unlikely conditions to help optimization
-#ifdef __GNUC__
-#define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)
-#define MOM_LIKELY(P) !__builtin_expect(!(P),0)
-#define MOM_UNUSED __attribute__((unused))
-#else
-#define MOM_UNLIKELY(P) (P)
-#define MOM_LIKELY(P) (P)
-#define MOM_UNUSED
-#endif
 
 #ifdef NDEBUG
 #define MOM_PRIVATE static
@@ -210,52 +277,6 @@ static inline pid_t mom_gettid (void)
 /// generate a GPLv3 notice
 void mom_output_gplv3_notice (FILE *out, const char *prefix,
                               const char *suffix, const char *filename);
-
-#if defined(NDEBUG) || !defined(MOM_GCDEBUG)
-static inline void *mom_gc_alloc (size_t sz)
-{
-  void *p = GC_MALLOC (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-static inline void *mom_gc_alloc_scalar (size_t sz)
-{
-  void *p = GC_MALLOC_ATOMIC (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-
-void *mom_gc_calloc (size_t nmemb, size_t size);
-
-static inline void *mom_gc_alloc_uncollectable (size_t sz)
-{
-  void *p = GC_MALLOC_UNCOLLECTABLE (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-static inline char *mom_gc_strdup (const char *s)
-{
-  return GC_STRDUP (s);
-}
-#else // !NDEBUG or MOM_GCDEBUG
-#warning garbcoll debugging enabled
-extern void *mom_gc_alloc_at (size_t sz, const char*fil, int lin);
-#define mom_gc_alloc(Sz) mom_gc_alloc_at((Sz),__FILE__,__LINE__)
-extern void *mom_gc_alloc_scalar_at (size_t sz, const char*fil, int lin);
-#define mom_gc_alloc_scalar(Sz) mom_gc_alloc_scalar_at((Sz),__FILE__,__LINE__)
-extern void *mom_gc_calloc_at (size_t nmemb, size_t size, const char*fil, int lin);
-#define mom_gc_calloc(Nb,Siz) mom_gc_calloc_at((Nb),(Siz),__FILE__,__LINE__)
-extern void *mom_gc_alloc_uncollectable_at(size_t sz, const char*fil, int lin);
-#define mom_gc_alloc_uncollectable(Sz) mom_gc_alloc_uncollectable_at((Sz),__FILE__,__LINE__)
-extern char* mom_gc_strdup_at(const char*str, const char*fil, int lin);
-#define mom_gc_strdup(Str) mom_gc_strdup_at((Str),__FILE__,__LINE__)
-#endif // NDEBBUG or MOM_GCDEBUG
 
 void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
@@ -343,10 +364,6 @@ __attribute__ ((format (printf, 3, 4)));
   MOM_INFORMPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
 			  ##__VA_ARGS__)
 
-
-void
-mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
-__attribute__ ((format (printf, 3, 4)));
 
 #define MOM_WARNPRINTF_AT(Fil,Lin,Fmt,...) do {	\
     mom_warnprintf_at (Fil,Lin,Fmt,		\
