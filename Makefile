@@ -21,6 +21,7 @@
 ## Boehm GC is from http://www.hboehm.info/gc/
 CC=gcc
 CXX=g++
+DISABLE_ASLR= setarch $(shell uname -m) -R
 WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
 CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
@@ -112,5 +113,5 @@ modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
 
 tests: monimelt global.mom $(wildcard tests/*.mb)
-	+ ./monimelt -Dboot,gencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
+	+ $(DISABLE_ASLR) ./monimelt -Dboot,gencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
 
