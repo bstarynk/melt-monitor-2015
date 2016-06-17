@@ -71,8 +71,20 @@ struct momtokvect_st
   struct momtoken_st mtv_arr[];
 };
 
+const struct momtoken_st*
+momtok_nth_token(struct momtokvect_st*tvec, int pos)
+{
+  if (!tvec)
+    return NULL;
+  unsigned ln = tvec->mtv_len;
+  assert (ln < tvec->mtv_size && ln <= MOM_SIZE_MAX);
+  if (pos < 0) pos += ln;
+  if (pos >= 0 && pos<(int)ln) return tvec->mtv_arr+pos;
+  return NULL;
+} /* end momtok_nth_token */
+
 const char *
-momtok_gcstr (struct momtoken_st *ptok)
+momtok_gcstr (const struct momtoken_st *ptok)
 {
   if (!ptok)
     return "~";
@@ -800,34 +812,35 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       int ln = 0;
       topos++;
       MOM_DEBUGPRINTF (boot, "momtok_parse start set topos#%d", topos);
-      for (int ix = topos;
-           ix < tolen && tovec->mtv_arr[ix].mtok_kind == MOLEX_ITEM; ix++)
-        ln++;
-      MOM_DEBUGPRINTF (boot, "momtok_parse set ln=%d", ln);
-      if (topos + ln + 1 >= tolen
-          || tovec->mtv_arr[topos + ln].mtok_kind != MOLEX_DELIM
-          || tovec->mtv_arr[topos + ln].mtok_delim != MODLM_RBRACE)
-        MOM_FATAPRINTF ("invalid set starting line %d of file %s",
-                        curtok->mtok_lin, tovec->mtv_filename);
       const struct mom_item_st *smallitemarr[8] = { };
-      const struct mom_item_st **itemarr = NULL;
-      if (ln + 1 >= (int) (sizeof (smallitemarr) / sizeof (smallitemarr[0])))
-        itemarr = mom_gc_alloc ((ln + 1) * sizeof (struct mom_item_st *));
-      else
-        {
-          memset (smallitemarr, 0, sizeof (smallitemarr));
-          itemarr = smallitemarr;
-        };
-      for (int ix = 0; ix < ln; ix++)
-        {
-          assert (tovec->mtv_arr[topos + ix].mtok_kind == MOLEX_ITEM);
-          itemarr[ix] = tovec->mtv_arr[topos + ix].mtok_itm;
-        }
+      const struct mom_item_st **itemarr = smallitemarr;
+      unsigned itemsiz = sizeof(smallitemarr)/sizeof(smallitemarr[0]);
+      while (topos<tolen
+	     && ((curtok=tovec->mtv_arr+topos)->mtok_kind != MOLEX_DELIM
+		 || curtok->mtok_delim != MODLM_RBRACE)) {
+	MOM_DEBUGPRINTF (boot, "momtok_parse set ln=%d topos#%d curtok %s",
+			 ln, topos,  momtok_gcstr(curtok));
+	if (ln + 1 >= (int)itemsiz) {
+	  unsigned newsiz = mom_prime_above(5*ln/4+3);
+	  const struct mom_item_st**newitemarr =
+	    mom_gc_alloc(newsiz*sizeof(struct mom_item_st*));
+	  memcpy(newitemarr, itemarr, ln*sizeof(struct mom_item_st*));
+	  if (itemarr != smallitemarr) GC_FREE(itemarr);
+	  itemarr = newitemarr;
+	  itemsiz = newsiz;
+	};
+	const void*itv = momtok_parse(tovec, topos, &topos);
+	if (mom_itype (itv) != MOMITY_ITEM)
+	  MOM_FATAPRINTF("parsing set, expecting item after %s in file %s but got %s",
+			 momtok_gcstr(curtok), tovec->mtv_filename, mom_value_cstring(itv));
+	itemarr[ln] = (const struct mom_item_st*)itv;
+	ln++;
+      };
       res = mom_boxset_make_arr (ln, itemarr);
       if (itemarr != smallitemarr)
         GC_FREE (itemarr);
-      *endposptr = topos + ln + 1;
-      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d set %s endpos%d", topos,
+      *endposptr = topos + 1;
+      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d set %s endpos#%d", topos,
                        mom_value_cstring (res), *endposptr);
       return res;
     }
@@ -836,43 +849,38 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
     {
       int ln = 0;
       topos++;
-      MOM_DEBUGPRINTF (boot, "momtok_parse start tuple topos#%d", topos);
-      for (int ix = topos;
-           ix < tolen
-           && (tovec->mtv_arr[ix].mtok_kind == MOLEX_ITEM
-               || (tovec->mtv_arr[ix].mtok_kind == MOLEX_DELIM
-                   && tovec->mtv_arr[ix].mtok_delim == MODLM_TILDE)); ix++)
-        ln++;
-      MOM_DEBUGPRINTF (boot, "momtok_parse tuple ln=%d", ln);
-      if (topos + ln + 1 >= tolen
-          || tovec->mtv_arr[topos + ln].mtok_kind != MOLEX_DELIM
-          || tovec->mtv_arr[topos + ln].mtok_delim != MODLM_RBRACKET)
-        MOM_FATAPRINTF ("invalid tuple starting line %d of file %s",
-                        curtok->mtok_lin, tovec->mtv_filename);
+      MOM_DEBUGPRINTF (boot, "momtok_parse start tuple topos#%d tok:%s",
+		       topos, momtok_gcstr(momtok_nth_token(tovec,topos)));
       const struct mom_item_st *smallitemarr[8] = { };
-      const struct mom_item_st **itemarr = NULL;
-      if (ln + 1 >= (int) (sizeof (smallitemarr) / sizeof (smallitemarr[0])))
-        itemarr = mom_gc_alloc ((ln + 1) * sizeof (struct mom_item_st *));
-      else
-        {
-          memset (smallitemarr, 0, sizeof (smallitemarr));
-          itemarr = smallitemarr;
-        };
-      for (int ix = 0; ix < ln; ix++)
-        if (tovec->mtv_arr[topos + ix].mtok_kind == MOLEX_ITEM)
-          itemarr[ix] = tovec->mtv_arr[topos + ix].mtok_itm;
-        else
-          {
-            assert (tovec->mtv_arr[ix].mtok_kind == MOLEX_DELIM
-                    && tovec->mtv_arr[ix].mtok_delim == MODLM_TILDE);
-            itemarr[ix] = NULL;
-          }
+      const struct mom_item_st **itemarr = smallitemarr;
+      unsigned itemsiz = sizeof(smallitemarr)/sizeof(smallitemarr[0]);
+      while (topos<tolen
+	     && ((curtok=tovec->mtv_arr+topos)->mtok_kind != MOLEX_DELIM
+		 || curtok->mtok_delim != MODLM_RBRACKET)) {
+	MOM_DEBUGPRINTF (boot, "momtok_parse tuple ln=%d topos#%d curtok %s",
+			 ln, topos,  momtok_gcstr(curtok));
+	if (ln + 1 >= (int)itemsiz) {
+	  unsigned newsiz = mom_prime_above(5*ln/4+3);
+	  const struct mom_item_st**newitemarr =
+	    mom_gc_alloc(newsiz*sizeof(struct mom_item_st*));
+	  memcpy(newitemarr, itemarr, ln*sizeof(struct mom_item_st*));
+	  if (itemarr != smallitemarr) GC_FREE(itemarr);
+	  itemarr = newitemarr;
+	  itemsiz = newsiz;
+	};
+	const void*itv = momtok_parse(tovec, topos, &topos);
+	if (itv && mom_itype (itv) != MOMITY_ITEM)
+	  MOM_FATAPRINTF("parsing tuple, expecting item or nil after %s in file %s but got %s",
+			 momtok_gcstr(curtok), tovec->mtv_filename, mom_value_cstring(itv));
+	itemarr[ln] = (const struct mom_item_st*)itv;
+	ln++;
+      };
       res = mom_boxtuple_make_arr (ln, itemarr);
-      *endposptr = topos + ln + 1;
+      *endposptr = topos + 1;
       if (itemarr != smallitemarr)
         GC_FREE (itemarr);
-      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d tuple %s endpos %d",
-                       topos, mom_value_cstring (res), *endposptr);
+      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d  tok:%s tuple %s endpos %d",
+                       topos, momtok_gcstr(momtok_nth_token(tovec,topos)), mom_value_cstring (res), *endposptr);
       return res;
     }
   if (curtok->mtok_kind == MOLEX_DELIM && curtok->mtok_delim == MODLM_PERCENT)
@@ -886,9 +894,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       struct mom_item_st *metaitm = NULL;
       long metarank = 0;
       topos += 2;
-      topos++;
-      MOM_DEBUGPRINTF (boot, "momtok_parse node connitm=%s topos#%d",
-                       mom_item_cstring (connitm), topos);
+      MOM_DEBUGPRINTF (boot, "momtok_parse node connitm=%s topos#%d tok:%s",
+                       mom_item_cstring (connitm), topos,
+		       momtok_gcstr(momtok_nth_token(tovec,topos)));
       if (tovec->mtv_arr[topos].mtok_kind == MOLEX_DELIM
           && tovec->mtv_arr[topos].mtok_delim == MODLM_SLASH)
         {
