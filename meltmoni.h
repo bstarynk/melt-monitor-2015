@@ -369,23 +369,23 @@ extern void mom_random_init_genrand (void);
 static inline uint32_t mom_random_uint32 (void)
 {
 #ifdef __cplusplus
-  static thread_local int count;
+    static thread_local int count;
 #else
-  static _Thread_local int count;
+    static _Thread_local int count;
 #endif
-  if (MOM_UNLIKELY (count % 4096 == 0))
-    mom_random_init_genrand ();
-  count++;
-  return (uint32_t) momrand_genrand_int32 ();
-}
+    if (MOM_UNLIKELY (count % 4096 == 0))
+      mom_random_init_genrand ();
+    count++;
+    return (uint32_t) momrand_genrand_int32 ();
+  }
 
 // the program handle from GC_dlopen with NULL
-extern void *mom_prog_dlhandle;
+  extern void *mom_prog_dlhandle;
 
 // time measurement, in seconds
 // query a clock
-static inline double mom_clock_time (clockid_t cid)
-{
+  static inline double mom_clock_time (clockid_t cid)
+  {
   struct timespec ts = { 0, 0 };
   if (clock_gettime (cid, &ts))
     return NAN;
@@ -526,38 +526,38 @@ bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
 static inline momhash_t mom_hash (const void *p);
 
 #ifdef __cplusplus
-struct MomItemLess
-{
-  bool operator () (const struct mom_item_st* itm1, const struct mom_item_st* itm2) const
+  struct MomItemLess
   {
-    return ::mom_item_cmp(itm1, itm2)<0;
-  }
-};
+    bool operator () (const struct mom_item_st* itm1, const struct mom_item_st* itm2) const
+    {
+      return ::mom_item_cmp(itm1, itm2)<0;
+    }
+  };
 
-struct MomValueLess
-{
-  bool operator () (const void*v1, const void*v2) const
+  struct MomValueLess
   {
-    return ::mom_hashedvalue_cmp((const struct mom_hashedvalue_st *)v1,
-                                 (const struct mom_hashedvalue_st *)v2)
-           <0;
-  }
-};
-struct MomValueEqual
-{
-  bool operator () (const void*v1, const void*v2) const
+    bool operator () (const void*v1, const void*v2) const
+    {
+      return ::mom_hashedvalue_cmp((const struct mom_hashedvalue_st *)v1,
+                                   (const struct mom_hashedvalue_st *)v2)
+             <0;
+    }
+  };
+  struct MomValueEqual
   {
-    return ::mom_hashedvalue_equal((const struct mom_hashedvalue_st *)v1,
-                                   (const struct mom_hashedvalue_st *)v2);
-  }
-};
-struct MomValueHash
-{
-  bool operator () (const void*v) const
+    bool operator () (const void*v1, const void*v2) const
+    {
+      return ::mom_hashedvalue_equal((const struct mom_hashedvalue_st *)v1,
+                                     (const struct mom_hashedvalue_st *)v2);
+    }
+  };
+  struct MomValueHash
   {
-    return ::mom_hash(v);
-  }
-};
+    bool operator () (const void*v) const
+    {
+      return ::mom_hash(v);
+    }
+  };
 #endif /*__cplusplus*/
 
 // the common prefix of all values
@@ -568,441 +568,441 @@ struct MomValueHash
     uint16_t va_lsiz;				\
     mom_atomic_int16_t va_ixv;			\
   }
-struct mom_anyvalue_st
-{
-  /// field prefix: va_;
-  MOM_ANYVALUE_FIELDS;
-};
+  struct mom_anyvalue_st
+  {
+    /// field prefix: va_;
+    MOM_ANYVALUE_FIELDS;
+  };
 
-static inline unsigned mom_itype (const void *p)
-{
-  if (p && p != MOM_EMPTY_SLOT)
-    {
-      if ((intptr_t)p % 2 == 0)
-        return ((const struct mom_anyvalue_st *) p)->va_itype;
-      else return MOMITY_INT;
-    }
-  return 0;
-}
+  static inline unsigned mom_itype (const void *p)
+  {
+    if (p && p != MOM_EMPTY_SLOT)
+      {
+        if ((intptr_t)p % 2 == 0)
+          return ((const struct mom_anyvalue_st *) p)->va_itype;
+        else return MOMITY_INT;
+      }
+    return 0;
+  }
 
-const char *mom_itype_str (const void *p);
+  const char *mom_itype_str (const void *p);
 
-static inline unsigned mom_raw_size (const void *p)
-{
-  assert (p != NULL && p != MOM_EMPTY_SLOT && (intptr_t)p % 2 == 0);
-  return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
-         (((const struct mom_anyvalue_st *) p)->va_lsiz);
-}
+  static inline unsigned mom_raw_size (const void *p)
+  {
+    assert (p != NULL && p != MOM_EMPTY_SLOT && (intptr_t)p % 2 == 0);
+    return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
+           (((const struct mom_anyvalue_st *) p)->va_lsiz);
+  }
 
-static inline unsigned mom_size (const void *p)
-{
-  if (mom_itype(p) > MOMITY_INT)
-    return mom_raw_size (p);
-  return 0;
-}
+  static inline unsigned mom_size (const void *p)
+  {
+    if (mom_itype(p) > MOMITY_INT)
+      return mom_raw_size (p);
+    return 0;
+  }
 
-static inline void mom_put_size (void *p, unsigned sz)
-{
-  if (mom_itype(p) <= MOMITY_INT)
-    return;
-  if (sz >= MOM_SIZE_MAX)
-    MOM_FATAPRINTF ("too big size %u", sz);
-  ((struct mom_anyvalue_st *) p)->va_hsiz = sz >> 16;
-  ((struct mom_anyvalue_st *) p)->va_lsiz = sz & 0xffff;
-}
+  static inline void mom_put_size (void *p, unsigned sz)
+  {
+    if (mom_itype(p) <= MOMITY_INT)
+      return;
+    if (sz >= MOM_SIZE_MAX)
+      MOM_FATAPRINTF ("too big size %u", sz);
+    ((struct mom_anyvalue_st *) p)->va_hsiz = sz >> 16;
+    ((struct mom_anyvalue_st *) p)->va_lsiz = sz & 0xffff;
+  }
 
 
 #define MOM_HASHEDVALUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   momhash_t hva_hash
-struct mom_hashedvalue_st
-{
-  MOM_HASHEDVALUE_FIELDS;
-};
+  struct mom_hashedvalue_st
+  {
+    MOM_HASHEDVALUE_FIELDS;
+  };
 
 
-static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
-static inline momhash_t mom_hash (const void *p)
-{
-  unsigned t = mom_itype(p);
-  if (t > MOMITY_INT
-      && t <  MOMITY__LASTHASHED)
-    return ((const struct mom_hashedvalue_st *) p)->hva_hash;
-  else if (t==MOMITY_INT)
-    {
-      intptr_t i= mom_int_val_def(p,0);
-      return i % 1000001137 + 1;
-    }
-  return 0;
-}
+  static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
+  static inline momhash_t mom_hash (const void *p)
+  {
+    unsigned t = mom_itype(p);
+    if (t > MOMITY_INT
+        && t <  MOMITY__LASTHASHED)
+      return ((const struct mom_hashedvalue_st *) p)->hva_hash;
+    else if (t==MOMITY_INT)
+      {
+        intptr_t i= mom_int_val_def(p,0);
+        return i % 1000001137 + 1;
+      }
+    return 0;
+  }
 
-static inline void mom_put_hash (void *p, momhash_t h)
-{
-  unsigned t = mom_itype(p);
-  if (t > MOMITY_INT
-      && t <  MOMITY__LASTHASHED)
-    {
-      if (((struct mom_hashedvalue_st *) p)->hva_hash == 0)
-        ((struct mom_hashedvalue_st *) p)->hva_hash = h;
-      else if (((const struct mom_hashedvalue_st *) p)->hva_hash != h)
-        MOM_FATAPRINTF ("cannot change hash @%p from %u to %u",
-                        p,
-                        ((const struct mom_hashedvalue_st *) p)->hva_hash,
-                        h);
-    }
-}
-
-
-struct mom_boxint_st
-{
-  MOM_HASHEDVALUE_FIELDS;
-  // here field
-  intptr_t boxi_int;
-};
-static inline intptr_t mom_int_val_def (const void *p, intptr_t def)
-{
-  if (mom_itype(p) == MOMITY_INT)
-    {
-      if ((intptr_t)p % 2 == 0)
-        return ((const struct mom_boxint_st*)p)->boxi_int;
-      else return ((intptr_t)p >> 1);
-    }
-  return def;
-}
+  static inline void mom_put_hash (void *p, momhash_t h)
+  {
+    unsigned t = mom_itype(p);
+    if (t > MOMITY_INT
+        && t <  MOMITY__LASTHASHED)
+      {
+        if (((struct mom_hashedvalue_st *) p)->hva_hash == 0)
+          ((struct mom_hashedvalue_st *) p)->hva_hash = h;
+        else if (((const struct mom_hashedvalue_st *) p)->hva_hash != h)
+          MOM_FATAPRINTF ("cannot change hash @%p from %u to %u",
+                          p,
+                          ((const struct mom_hashedvalue_st *) p)->hva_hash,
+                          h);
+      }
+  }
 
 
-
-static inline momhash_t mom_int_hash (intptr_t i)
-{
-  momhash_t h = (i * 509) ^ (i % 76519);
-  if (!h)
-    h = (i & 0xffffff) + ((i >> 25) & 0xffffff) + 11;
-  assert (h != 0);
-  return h;
-}
-
-
-const void *mom_int_make (intptr_t i);
-static inline const void*mom_dyncast_int (const void*p)
-{
-  if (mom_itype(p) == MOMITY_INT) return p;
-  return NULL;
-};
-
-struct mom_boxdouble_st
-{
-  MOM_HASHEDVALUE_FIELDS;
-  // here field
-  double boxd_dbl;
-};
-
-static inline const struct mom_boxdouble_st *mom_dyncast_boxdouble (const
-    void *p)
-{
-  if (mom_itype(p) == MOMITY_BOXDOUBLE)
-    return (const struct mom_boxdouble_st *) p;
-  return NULL;
-}
-
-momhash_t mom_double_hash (double x);
-const struct mom_boxdouble_st *mom_boxdouble_make (double x);
-
-
-static inline double mom_boxdouble_val_def (const void *p, double def)
-{
-  const struct mom_boxdouble_st *bd = mom_dyncast_boxdouble (p);
-  if (bd)
-    return bd->boxd_dbl;
-  return def;
-}
+  struct mom_boxint_st
+  {
+    MOM_HASHEDVALUE_FIELDS;
+    // here field
+    intptr_t boxi_int;
+  };
+  static inline intptr_t mom_int_val_def (const void *p, intptr_t def)
+  {
+    if (mom_itype(p) == MOMITY_INT)
+      {
+        if ((intptr_t)p % 2 == 0)
+          return ((const struct mom_boxint_st*)p)->boxi_int;
+        else return ((intptr_t)p >> 1);
+      }
+    return def;
+  }
 
 
 
-struct mom_boxstring_st
-{
-  MOM_HASHEDVALUE_FIELDS;
-  // here
-  char cstr[MOM_FLEXIBLE_DIM];        /* actual size mom_raw_size+1 */
-};
+  static inline momhash_t mom_int_hash (intptr_t i)
+  {
+    momhash_t h = (i * 509) ^ (i % 76519);
+    if (!h)
+      h = (i & 0xffffff) + ((i >> 25) & 0xffffff) + 11;
+    assert (h != 0);
+    return h;
+  }
 
-static inline const struct mom_boxstring_st *mom_dyncast_boxstring (const
-    void *p)
-{
-  if (mom_itype(p) == MOMITY_BOXSTRING)
-    return (const struct mom_boxstring_st *) p;
-  return NULL;
-}
 
-static inline const char *mom_boxstring_cstr (const void *p)
-{
-  const struct mom_boxstring_st *str = mom_dyncast_boxstring (p);
-  if (str)
-    return str->cstr;
-  return NULL;
-}
+  const void *mom_int_make (intptr_t i);
+  static inline const void*mom_dyncast_int (const void*p)
+  {
+    if (mom_itype(p) == MOMITY_INT) return p;
+    return NULL;
+  };
 
-const struct mom_boxstring_st *mom_boxstring_make (const char *s);
+  struct mom_boxdouble_st
+  {
+    MOM_HASHEDVALUE_FIELDS;
+    // here field
+    double boxd_dbl;
+  };
+
+  static inline const struct mom_boxdouble_st *mom_dyncast_boxdouble (const
+      void *p)
+  {
+    if (mom_itype(p) == MOMITY_BOXDOUBLE)
+      return (const struct mom_boxdouble_st *) p;
+    return NULL;
+  }
+
+  momhash_t mom_double_hash (double x);
+  const struct mom_boxdouble_st *mom_boxdouble_make (double x);
+
+
+  static inline double mom_boxdouble_val_def (const void *p, double def)
+  {
+    const struct mom_boxdouble_st *bd = mom_dyncast_boxdouble (p);
+    if (bd)
+      return bd->boxd_dbl;
+    return def;
+  }
+
+
+
+  struct mom_boxstring_st
+  {
+    MOM_HASHEDVALUE_FIELDS;
+    // here
+    char cstr[MOM_FLEXIBLE_DIM];        /* actual size mom_raw_size+1 */
+  };
+
+  static inline const struct mom_boxstring_st *mom_dyncast_boxstring (const
+      void *p)
+  {
+    if (mom_itype(p) == MOMITY_BOXSTRING)
+      return (const struct mom_boxstring_st *) p;
+    return NULL;
+  }
+
+  static inline const char *mom_boxstring_cstr (const void *p)
+  {
+    const struct mom_boxstring_st *str = mom_dyncast_boxstring (p);
+    if (str)
+      return str->cstr;
+    return NULL;
+  }
+
+  const struct mom_boxstring_st *mom_boxstring_make (const char *s);
 
 // make a string of given length or the strlen(s) if len<0 or len bigger
-const struct mom_boxstring_st *mom_boxstring_make_len (const char *s,
-    int len);
+  const struct mom_boxstring_st *mom_boxstring_make_len (const char *s,
+      int len);
 
-const struct mom_boxstring_st *mom_boxstring_printf (const char *fmt, ...)
-__attribute__ ((format (printf, 1, 2)));
+  const struct mom_boxstring_st *mom_boxstring_printf (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
 
-const char* mom_gc_printf(const char *fmt, ...)
-__attribute__ ((format (printf, 1, 2)));
+  const char* mom_gc_printf(const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
 #define MOM_SEQITEMS_FIELDS						\
   MOM_HASHEDVALUE_FIELDS;						\
   struct mom_item_st* seqitem[MOM_FLEXIBLE_DIM] /* actual size mom_raw_size */
-struct mom_seqitems_st
-{
-  MOM_SEQITEMS_FIELDS;
-};
+  struct mom_seqitems_st
+  {
+    MOM_SEQITEMS_FIELDS;
+  };
 
 // a tuple can contain NULL items
-struct mom_boxtuple_st
-{
-  MOM_SEQITEMS_FIELDS;
-};
+  struct mom_boxtuple_st
+  {
+    MOM_SEQITEMS_FIELDS;
+  };
 // a set does not contain NULL items and they are sorted in ascending order
-struct mom_boxset_st
-{
-  MOM_SEQITEMS_FIELDS;
-};
+  struct mom_boxset_st
+  {
+    MOM_SEQITEMS_FIELDS;
+  };
 
-static inline const struct mom_seqitems_st *mom_dyncast_seqitems (const void
-    *p)
-{
-  uint8_t ityp = mom_itype(p);
-  if (ityp == MOMITY_TUPLE || ityp == MOMITY_SET)
-    return (const struct mom_seqitems_st *) p;
-  return NULL;
-}
-
-static inline struct mom_item_st *const *mom_seqitems_arr (const void *p)
-{
-  const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
-  if (si)
-    return (struct mom_item_st * const *) si->seqitem;
-  return NULL;
-}
-
-
-static inline unsigned mom_seqitems_length (const void *p)
-{
-  const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
-  if (si)
-    return mom_raw_size (si);
-  return 0;
-}
-
-static inline struct mom_item_st *mom_seqitems_nth (const void *p,
-    int rk)
-{
-  const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
-  if (!si)
+  static inline const struct mom_seqitems_st *mom_dyncast_seqitems (const void
+      *p)
+  {
+    uint8_t ityp = mom_itype(p);
+    if (ityp == MOMITY_TUPLE || ityp == MOMITY_SET)
+      return (const struct mom_seqitems_st *) p;
     return NULL;
-  unsigned sz = mom_raw_size (si);
-  if (rk < 0)
-    rk += sz;
-  if (rk >= 0 && rk < (int) sz)
-    return si->seqitem[rk];
-  return NULL;
-}
+  }
 
-static inline const struct mom_boxtuple_st *mom_dyncast_tuple (const void
-    *p)
-{
-  if (mom_itype(p) == MOMITY_TUPLE)
-    return (const struct mom_boxtuple_st *) p;
-  return NULL;
-}
-
-static inline const struct mom_boxset_st *mom_dyncast_set (const void *p)
-{
-  if (mom_itype(p) == MOMITY_SET)
-    return (const struct mom_boxset_st *) p;
-  return NULL;
-}
+  static inline struct mom_item_st *const *mom_seqitems_arr (const void *p)
+  {
+    const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
+    if (si)
+      return (struct mom_item_st * const *) si->seqitem;
+    return NULL;
+  }
 
 
-static inline unsigned
-mom_boxtuple_length (const struct mom_boxtuple_st *btup)
-{
-  if (mom_itype(btup) != MOMITY_TUPLE)
+  static inline unsigned mom_seqitems_length (const void *p)
+  {
+    const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
+    if (si)
+      return mom_raw_size (si);
     return 0;
-  return mom_raw_size (btup);
-}                             /* end of mom_boxtuple_length */
+  }
 
-static inline struct mom_item_st *
-mom_boxtuple_nth (const struct mom_boxtuple_st *btup,
-                  int rk)
-{
-  if (mom_itype(btup) != MOMITY_TUPLE)
+  static inline struct mom_item_st *mom_seqitems_nth (const void *p,
+      int rk)
+  {
+    const struct mom_seqitems_st *si = mom_dyncast_seqitems (p);
+    if (!si)
+      return NULL;
+    unsigned sz = mom_raw_size (si);
+    if (rk < 0)
+      rk += sz;
+    if (rk >= 0 && rk < (int) sz)
+      return si->seqitem[rk];
     return NULL;
-  unsigned sz = mom_raw_size (btup);
-  if (rk < 0)
-    rk += sz;
-  if (rk >= 0 && rk < (int) sz)
-    return (struct mom_item_st *) (btup->seqitem[rk]);
-  return NULL;
-}                             /* end of mom_boxtuple_nth */
+  }
+
+  static inline const struct mom_boxtuple_st *mom_dyncast_tuple (const void
+      *p)
+  {
+    if (mom_itype(p) == MOMITY_TUPLE)
+      return (const struct mom_boxtuple_st *) p;
+    return NULL;
+  }
+
+  static inline const struct mom_boxset_st *mom_dyncast_set (const void *p)
+  {
+    if (mom_itype(p) == MOMITY_SET)
+      return (const struct mom_boxset_st *) p;
+    return NULL;
+  }
 
 
-const struct mom_boxtuple_st *mom_boxtuple_make_arr2 (unsigned siz1,
-    const struct
-    mom_item_st *const
-    *arr1, unsigned siz2,
-    const struct
-    mom_item_st *const
-    *arr2);
+  static inline unsigned
+  mom_boxtuple_length (const struct mom_boxtuple_st *btup)
+  {
+    if (mom_itype(btup) != MOMITY_TUPLE)
+      return 0;
+    return mom_raw_size (btup);
+  }                             /* end of mom_boxtuple_length */
 
-const struct mom_boxtuple_st *mom_boxtuple_make_arr (unsigned siz,
-    const struct
-    mom_item_st *const
-    *arr);
+  static inline struct mom_item_st *
+mom_boxtuple_nth (const struct mom_boxtuple_st *btup,
+                    int rk)
+  {
+    if (mom_itype(btup) != MOMITY_TUPLE)
+      return NULL;
+    unsigned sz = mom_raw_size (btup);
+    if (rk < 0)
+      rk += sz;
+    if (rk >= 0 && rk < (int) sz)
+      return (struct mom_item_st *) (btup->seqitem[rk]);
+    return NULL;
+  }                             /* end of mom_boxtuple_nth */
 
-const struct mom_boxtuple_st *mom_boxtuple_make_va (unsigned siz, ...);
 
-const struct mom_boxtuple_st *mom_boxtuple_make_sentinel_va (struct
-    mom_item_st *,
-    ...)
-__attribute__ ((sentinel));
+  const struct mom_boxtuple_st *mom_boxtuple_make_arr2 (unsigned siz1,
+      const struct
+      mom_item_st *const
+      *arr1, unsigned siz2,
+      const struct
+      mom_item_st *const
+      *arr2);
+
+  const struct mom_boxtuple_st *mom_boxtuple_make_arr (unsigned siz,
+      const struct
+      mom_item_st *const
+      *arr);
+
+  const struct mom_boxtuple_st *mom_boxtuple_make_va (unsigned siz, ...);
+
+  const struct mom_boxtuple_st *mom_boxtuple_make_sentinel_va (struct
+      mom_item_st *,
+      ...)
+  __attribute__ ((sentinel));
 #define mom_boxtuple_make_sentinel(...) mom_boxtuple_make_sentinel_va(##__VA_ARGS__, NULL)
 
-static inline unsigned mom_boxset_length (const struct mom_boxset_st *bset)
-{
-  if (mom_itype(bset) != MOMITY_SET)
-    return 0;
-  return mom_raw_size (bset);
-}                             /* end of mom_boxset_length */
+  static inline unsigned mom_boxset_length (const struct mom_boxset_st *bset)
+  {
+    if (mom_itype(bset) != MOMITY_SET)
+      return 0;
+    return mom_raw_size (bset);
+  }                             /* end of mom_boxset_length */
 
-static inline const struct mom_item_st *
+  static inline const struct mom_item_st *
 mom_boxset_nth (const struct    mom_boxset_st *bset,
-                int rk)
-{
-  if (mom_itype(bset) != MOMITY_SET)
+                  int rk)
+  {
+    if (mom_itype(bset) != MOMITY_SET)
+      return NULL;
+    unsigned sz = mom_raw_size (bset);
+    if (rk < 0)
+      rk += sz;
+    if (rk >= 0 && rk < (int) sz)
+      return bset->seqitem[rk];
     return NULL;
-  unsigned sz = mom_raw_size (bset);
-  if (rk < 0)
-    rk += sz;
-  if (rk >= 0 && rk < (int) sz)
-    return bset->seqitem[rk];
-  return NULL;
-}                             /* end of mom_boxset_nth */
+  }                             /* end of mom_boxset_nth */
 
 
-const struct mom_boxset_st *mom_boxset_make_arr2 (unsigned siz1,
-    const struct mom_item_st
-    **arr1, unsigned siz2,
-    const struct mom_item_st
-    **arr2);
+  const struct mom_boxset_st *mom_boxset_make_arr2 (unsigned siz1,
+      const struct mom_item_st
+      **arr1, unsigned siz2,
+      const struct mom_item_st
+      **arr2);
 
-static inline const struct mom_boxset_st *mom_boxset_make_arr (unsigned siz,
-    const struct
-    mom_item_st
-    **arr)
-{
-  return mom_boxset_make_arr2 (siz, arr, 0, NULL);
-}
+  static inline const struct mom_boxset_st *mom_boxset_make_arr (unsigned siz,
+      const struct
+      mom_item_st
+      **arr)
+  {
+    return mom_boxset_make_arr2 (siz, arr, 0, NULL);
+  }
 
-const struct mom_boxset_st *mom_boxset_make_va (unsigned siz, ...);
+  const struct mom_boxset_st *mom_boxset_make_va (unsigned siz, ...);
 
-const struct mom_boxset_st *mom_boxset_make_sentinel_va (struct mom_item_st
-    *, ...)
-__attribute__ ((sentinel));
+  const struct mom_boxset_st *mom_boxset_make_sentinel_va (struct mom_item_st
+      *, ...)
+  __attribute__ ((sentinel));
 #define mom_boxset_make_sentinel(...) mom_boxset_make_sentinel_va(##__VA_ARGS__, NULL)
 
 
-const struct mom_boxset_st *mom_boxset_union (const struct mom_boxset_st
-    *set1,
-    const struct mom_boxset_st
-    *set2);
-const struct mom_boxset_st *mom_boxset_intersection (const struct
-    mom_boxset_st *set1,
-    const struct
-    mom_boxset_st *set2);
-const struct mom_boxset_st *mom_boxset_difference (const struct
-    mom_boxset_st *set1,
-    const struct
-    mom_boxset_st *set2);
+  const struct mom_boxset_st *mom_boxset_union (const struct mom_boxset_st
+      *set1,
+      const struct mom_boxset_st
+      *set2);
+  const struct mom_boxset_st *mom_boxset_intersection (const struct
+      mom_boxset_st *set1,
+      const struct
+      mom_boxset_st *set2);
+  const struct mom_boxset_st *mom_boxset_difference (const struct
+      mom_boxset_st *set1,
+      const struct
+      mom_boxset_st *set2);
 
 ////////////////
 
-struct mom_boxnode_st
-{
-  MOM_HASHEDVALUE_FIELDS;
-  // here prefix nod_
-  intptr_t nod_metarank;
-  struct mom_item_st *nod_metaitem;
-  struct mom_item_st *nod_connitm;
-  struct mom_hashedvalue_st *nod_sons[MOM_FLEXIBLE_DIM];      /* actual size is the mom_raw_size */
-};
-static inline const struct mom_boxnode_st *mom_dyncast_node (const void *p)
-{
-  if (mom_itype(p) == MOMITY_NODE)
-    return (const struct mom_boxnode_st *) p;
-  return NULL;
-}
+  struct mom_boxnode_st
+  {
+    MOM_HASHEDVALUE_FIELDS;
+    // here prefix nod_
+    intptr_t nod_metarank;
+    struct mom_item_st *nod_metaitem;
+    struct mom_item_st *nod_connitm;
+    struct mom_hashedvalue_st *nod_sons[MOM_FLEXIBLE_DIM];      /* actual size is the mom_raw_size */
+  };
+  static inline const struct mom_boxnode_st *mom_dyncast_node (const void *p)
+  {
+    if (mom_itype(p) == MOMITY_NODE)
+      return (const struct mom_boxnode_st *) p;
+    return NULL;
+  }
 
-static inline struct mom_item_st *mom_boxnode_conn (const void *p)
-{
-  if (mom_itype(p) == MOMITY_NODE)
-    return ((const struct mom_boxnode_st *) p)->nod_connitm;
-  return NULL;
-}
+  static inline struct mom_item_st *mom_boxnode_conn (const void *p)
+  {
+    if (mom_itype(p) == MOMITY_NODE)
+      return ((const struct mom_boxnode_st *) p)->nod_connitm;
+    return NULL;
+  }
 
-static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
-    int rk)
-{
-  if (mom_itype(p) == MOMITY_NODE)
-    {
-      unsigned sz = mom_raw_size (p);
-      if (rk < 0)
-        rk += sz;
-      if (rk >= 0 && rk < (int) sz)
-        return ((const struct mom_boxnode_st *) p)->nod_sons[rk];
-    }
-  return NULL;
-}
+  static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
+      int rk)
+  {
+    if (mom_itype(p) == MOMITY_NODE)
+      {
+        unsigned sz = mom_raw_size (p);
+        if (rk < 0)
+          rk += sz;
+        if (rk >= 0 && rk < (int) sz)
+          return ((const struct mom_boxnode_st *) p)->nod_sons[rk];
+      }
+    return NULL;
+  }
 
-const struct mom_boxnode_st *mom_boxnode_make_meta
+  const struct mom_boxnode_st *mom_boxnode_make_meta
 (const struct mom_item_st *conn, int size,
- const struct mom_hashedvalue_st **sons,
- const struct mom_item_st *meta, intptr_t metarank);
+   const struct mom_hashedvalue_st **sons,
+   const struct mom_item_st *meta, intptr_t metarank);
 
-static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
-    mom_item_st
-    *conn,
-    int size,
-    const struct  mom_hashedvalue_st
-    **sons)
-{
-  return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
-}
+  static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
+      mom_item_st
+      *conn,
+      int size,
+      const struct  mom_hashedvalue_st
+      **sons)
+  {
+    return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
+  }
 
-const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
-    mom_item_st *meta,
-    intptr_t metarank,
-    const struct
-    mom_item_st *conn,
-    unsigned size, ...);
+  const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
+      mom_item_st *meta,
+      intptr_t metarank,
+      const struct
+      mom_item_st *conn,
+      unsigned size, ...);
 
 #define mom_boxnode_make_va(Conn,Siz,...) mom_boxnode_meta_make_va(NULL,0,Conn,Siz,__VA_ARGS__)
 
 
-const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
-    mom_item_st
-    *meta,
-    intptr_t
-    metarank,
-    const struct
-    mom_item_st
-    *conn, ...)
-__attribute__ ((sentinel));
+  const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
+      mom_item_st
+      *meta,
+      intptr_t
+      metarank,
+      const struct
+      mom_item_st
+      *conn, ...)
+  __attribute__ ((sentinel));
 
 #define mom_boxnode_meta_make_sentinel(MetaItm,MetaRank,Conn,...)	\
   mom_boxnode_meta_make_sentinel_va((MetaItm),(MetaRank),(Conn),	\
@@ -1019,11 +1019,11 @@ __attribute__ ((sentinel));
   uint32_t cda_count
 
 
-struct mom_itementry_tu
-{
-  struct mom_item_st *ient_itm;
-  struct mom_hashedvalue_st *ient_val;
-};
+  struct mom_itementry_tu
+  {
+    struct mom_item_st *ient_itm;
+    struct mom_hashedvalue_st *ient_val;
+  };
 
 
 ////////////////
@@ -1032,54 +1032,54 @@ struct mom_itementry_tu
   MOM_COUNTEDATA_FIELDS;						\
   struct mom_itementry_tu ada_ents[MOM_FLEXIBLE_DIM]    /* sorted array of entries */
 // allocated size of ada_ents is size; used count is cda_count.
-struct mom_assovaldata_st
-{
-  MOM_ASSOVALDATA_FIELDS;
-};
+  struct mom_assovaldata_st
+  {
+    MOM_ASSOVALDATA_FIELDS;
+  };
 
-static inline const struct mom_assovaldata_st
+  static inline const struct mom_assovaldata_st
 *mom_assovaldata_dyncast (const void *p)
-{
-  if (mom_itype(p) == MOMITY_ASSOVALDATA)
-    {
-      const struct mom_assovaldata_st *ass = (const struct mom_assovaldata_st *)p;
-      return ass;
-    }
-  return NULL;
-}                             /* end mom_assovaldata_dyncast */
+  {
+    if (mom_itype(p) == MOMITY_ASSOVALDATA)
+      {
+        const struct mom_assovaldata_st *ass = (const struct mom_assovaldata_st *)p;
+        return ass;
+      }
+    return NULL;
+  }                             /* end mom_assovaldata_dyncast */
 
-static inline unsigned
-mom_assovaldata_count (const struct mom_assovaldata_st *ass)
-{
-  if (mom_itype(ass) != MOMITY_ASSOVALDATA)
-    return 0;
-  unsigned cnt = ass->cda_count;
-  assert (cnt <= mom_raw_size (ass));
-  return cnt;
-}                             /* end of mom_assovaldata_count */
+  static inline unsigned
+  mom_assovaldata_count (const struct mom_assovaldata_st *ass)
+  {
+    if (mom_itype(ass) != MOMITY_ASSOVALDATA)
+      return 0;
+    unsigned cnt = ass->cda_count;
+    assert (cnt <= mom_raw_size (ass));
+    return cnt;
+  }                             /* end of mom_assovaldata_count */
 
-const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
-    mom_assovaldata_st
-    *ass);
+  const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
+      mom_assovaldata_st
+      *ass);
 
-struct mom_hashedvalue_st *mom_assovaldata_get (const struct
-    mom_assovaldata_st *asso,
-    const struct mom_item_st
-    *itmat);
+  struct mom_hashedvalue_st *mom_assovaldata_get (const struct
+      mom_assovaldata_st *asso,
+      const struct mom_item_st
+      *itmat);
 
-struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
-    *asso,
-    const struct mom_item_st
-    *itmat);
+  struct mom_assovaldata_st *mom_assovaldata_remove (struct mom_assovaldata_st
+      *asso,
+      const struct mom_item_st
+      *itmat);
 
-struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
-    *asso,
-    const struct mom_item_st
-    *itmat, const void *data);
+  struct mom_assovaldata_st *mom_assovaldata_put (struct mom_assovaldata_st
+      *asso,
+      const struct mom_item_st
+      *itmat, const void *data);
 
-struct mom_assovaldata_st *mom_assovaldata_reserve (struct
-    mom_assovaldata_st
-    *asso, unsigned gap);
+  struct mom_assovaldata_st *mom_assovaldata_reserve (struct
+      mom_assovaldata_st
+      *asso, unsigned gap);
 
 ////////////////
 
@@ -1087,80 +1087,80 @@ struct mom_assovaldata_st *mom_assovaldata_reserve (struct
   MOM_COUNTEDATA_FIELDS;					\
   struct mom_hashedvalue_st*vecd_valarr[MOM_FLEXIBLE_DIM];
 //// mutable vector
-struct mom_vectvaldata_st
-{
-  MOM_VECTVALDATA_FIELDS;
-};
+  struct mom_vectvaldata_st
+  {
+    MOM_VECTVALDATA_FIELDS;
+  };
 
 
-static inline struct mom_vectvaldata_st *mom_vectvaldata_dyncast (void *p)
-{
-  if (mom_itype(p) == MOMITY_VECTVALDATA)
-    return (struct mom_vectvaldata_st*)p;
-  return NULL;
-}
+  static inline struct mom_vectvaldata_st *mom_vectvaldata_dyncast (void *p)
+  {
+    if (mom_itype(p) == MOMITY_VECTVALDATA)
+      return (struct mom_vectvaldata_st*)p;
+    return NULL;
+  }
 
-struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct
-    mom_vectvaldata_st *vec,
-    unsigned gap);
+  struct mom_vectvaldata_st *mom_vectvaldata_reserve (struct
+      mom_vectvaldata_st *vec,
+      unsigned gap);
 
-static inline const struct mom_hashedvalue_st *
+  static inline const struct mom_hashedvalue_st *
 mom_vectvaldata_nth (const struct mom_vectvaldata_st*vec,
-                     int rk)
-{
-  if (mom_itype(vec) != MOMITY_VECTVALDATA)
+                       int rk)
+  {
+    if (mom_itype(vec) != MOMITY_VECTVALDATA)
+      return NULL;
+    unsigned cnt = vec->cda_count;
+    assert (cnt <= mom_raw_size (vec));
+    if (rk < 0)
+      rk += cnt;
+    if (rk >= 0 && rk < (int) cnt)
+      return vec->vecd_valarr[rk];
     return NULL;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  if (rk < 0)
-    rk += cnt;
-  if (rk >= 0 && rk < (int) cnt)
-    return vec->vecd_valarr[rk];
-  return NULL;
-}
+  }
 
-static inline void
-mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
-                         const void *data)
-{
-  if (mom_itype(vec) != MOMITY_VECTVALDATA)
-    return;
-  if (data == MOM_EMPTY_SLOT)
-    data = NULL;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  if (rk < 0)
-    rk += cnt;
-  if (rk >= 0 && rk < (int) cnt)
-    vec->vecd_valarr[rk] = (struct mom_hashedvalue_st *) data;
-}
+  static inline void
+  mom_vectvaldata_put_nth (struct mom_vectvaldata_st *vec, int rk,
+                           const void *data)
+  {
+    if (mom_itype(vec) != MOMITY_VECTVALDATA)
+      return;
+    if (data == MOM_EMPTY_SLOT)
+      data = NULL;
+    unsigned cnt = vec->cda_count;
+    assert (cnt <= mom_raw_size (vec));
+    if (rk < 0)
+      rk += cnt;
+    if (rk >= 0 && rk < (int) cnt)
+      vec->vecd_valarr[rk] = (struct mom_hashedvalue_st *) data;
+  }
 
-static inline unsigned
-mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
-{
-  if (mom_itype(vec) != MOMITY_VECTVALDATA)
-    return 0;
-  unsigned cnt = vec->cda_count;
-  assert (cnt <= mom_raw_size (vec));
-  return cnt;
-}
+  static inline unsigned
+  mom_vectvaldata_count (const struct mom_vectvaldata_st *vec)
+  {
+    if (mom_itype(vec) != MOMITY_VECTVALDATA)
+      return 0;
+    unsigned cnt = vec->cda_count;
+    assert (cnt <= mom_raw_size (vec));
+    return cnt;
+  }
 
-static inline struct mom_anyvalue_st **mom_vectvaldata_valvect (const struct
-    mom_vectvaldata_st
-    *vec)
-{
-  if (mom_itype(vec) != MOMITY_VECTVALDATA)
-    return NULL;
-  assert (vec->cda_count <= mom_raw_size (vec));
-  return (struct mom_anyvalue_st **) vec->vecd_valarr;
-}
+  static inline struct mom_anyvalue_st **mom_vectvaldata_valvect (const struct
+      mom_vectvaldata_st
+      *vec)
+  {
+    if (mom_itype(vec) != MOMITY_VECTVALDATA)
+      return NULL;
+    assert (vec->cda_count <= mom_raw_size (vec));
+    return (struct mom_anyvalue_st **) vec->vecd_valarr;
+  }
 
-struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
-    *vec, unsigned count);
+  struct mom_vectvaldata_st *mom_vectvaldata_resize (struct mom_vectvaldata_st
+      *vec, unsigned count);
 
 
-struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
-    *vec, const void *data);
+  struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
+      *vec, const void *data);
 
 ////////////////
 /// for MOMITY_HASHSET
@@ -1169,46 +1169,46 @@ struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
   MOM_COUNTEDATA_FIELDS;				\
   struct mom_item_st*hset_items[MOM_FLEXIBLE_DIM];
 //// mutable hashed set
-struct mom_hashset_st
-{
-  MOM_HASHSET_FIELDS;
-};
+  struct mom_hashset_st
+  {
+    MOM_HASHSET_FIELDS;
+  };
 
-static inline struct mom_hashset_st *mom_hashset_dyncast (void *p)
-{
-  if (mom_itype(p)== MOMITY_HASHSET)
-    {
-      struct mom_hashset_st *hset = (struct mom_hashset_st *)p;
-      return hset;
-    }
-  return NULL;
-}                             /* end mom_hashset_dyncast */
+  static inline struct mom_hashset_st *mom_hashset_dyncast (void *p)
+  {
+    if (mom_itype(p)== MOMITY_HASHSET)
+      {
+        struct mom_hashset_st *hset = (struct mom_hashset_st *)p;
+        return hset;
+      }
+    return NULL;
+  }                             /* end mom_hashset_dyncast */
 
 
 /// with a 0 gap, will reorganize
-struct mom_hashset_st *mom_hashset_reserve (struct mom_hashset_st *hset,
-    unsigned gap);
+  struct mom_hashset_st *mom_hashset_reserve (struct mom_hashset_st *hset,
+      unsigned gap);
 
 
-struct mom_hashset_st *mom_hashset_insert (struct mom_hashset_st *hset,
-    struct mom_item_st *itm);
+  struct mom_hashset_st *mom_hashset_insert (struct mom_hashset_st *hset,
+      struct mom_item_st *itm);
 
-struct mom_hashset_st *mom_hashset_remove (struct mom_hashset_st *hset,
-    struct mom_item_st *itm);
+  struct mom_hashset_st *mom_hashset_remove (struct mom_hashset_st *hset,
+      struct mom_item_st *itm);
 
-bool
-mom_hashset_contains (const struct mom_hashset_st *hset,
-                      const struct mom_item_st *itm);
+  bool
+  mom_hashset_contains (const struct mom_hashset_st *hset,
+                        const struct mom_item_st *itm);
 
-const struct mom_boxset_st *mom_hashset_to_boxset (const struct
-    mom_hashset_st *hset);
+  const struct mom_boxset_st *mom_hashset_to_boxset (const struct
+      mom_hashset_st *hset);
 
-static inline unsigned mom_hashset_count (const struct mom_hashset_st *hset)
-{
-  if (mom_itype(hset) != MOMITY_HASHSET)
-    return 0;
-  return hset->cda_count;
-}
+  static inline unsigned mom_hashset_count (const struct mom_hashset_st *hset)
+  {
+    if (mom_itype(hset) != MOMITY_HASHSET)
+      return 0;
+    return hset->cda_count;
+  }
 
 /// for MOMITY_HASHMAP payload
 
@@ -1216,131 +1216,131 @@ static inline unsigned mom_hashset_count (const struct mom_hashset_st *hset)
   MOM_COUNTEDATA_FIELDS;				\
   struct mom_itementry_tu hmap_ents[MOM_FLEXIBLE_DIM]
 //// mutable hashed map
-struct mom_hashmap_st
-{
-  MOM_HASHMAP_FIELDS;
-};
+  struct mom_hashmap_st
+  {
+    MOM_HASHMAP_FIELDS;
+  };
 
 
-static inline struct mom_hashmap_st *mom_hashmap_dyncast (void *p)
-{
-  if (mom_itype(p) ==  MOMITY_HASHMAP)
-    return (struct mom_hashmap_st *)p;
-  return NULL;
-}                             /* end mom_hashmap_dyncast */
+  static inline struct mom_hashmap_st *mom_hashmap_dyncast (void *p)
+  {
+    if (mom_itype(p) ==  MOMITY_HASHMAP)
+      return (struct mom_hashmap_st *)p;
+    return NULL;
+  }                             /* end mom_hashmap_dyncast */
 
 
 
 /// with a 0 gap, will reorganize
-struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hmap,
-    unsigned gap);
+  struct mom_hashmap_st *mom_hashmap_reserve (struct mom_hashmap_st *hmap,
+      unsigned gap);
 
-const struct mom_hashedvalue_st *mom_hashmap_get (const struct
-    mom_hashmap_st *hmap,
-    const struct mom_item_st
-    *itm);
+  const struct mom_hashedvalue_st *mom_hashmap_get (const struct
+      mom_hashmap_st *hmap,
+      const struct mom_item_st
+      *itm);
 
-struct mom_hashmap_st *mom_hashmap_put (struct mom_hashmap_st *hmap,
-                                        const struct mom_item_st *itm,
-                                        const struct mom_hashedvalue_st
-                                        *val);
+  struct mom_hashmap_st *mom_hashmap_put (struct mom_hashmap_st *hmap,
+                                          const struct mom_item_st *itm,
+                                          const struct mom_hashedvalue_st
+                                          *val);
 
-struct mom_hashmap_st *mom_hashmap_remove (struct mom_hashmap_st *hmap,
-    const struct mom_item_st *itm);
+  struct mom_hashmap_st *mom_hashmap_remove (struct mom_hashmap_st *hmap,
+      const struct mom_item_st *itm);
 
-const struct mom_boxset_st *mom_hashmap_keyset (const struct mom_hashmap_st
-    *hmap);
+  const struct mom_boxset_st *mom_hashmap_keyset (const struct mom_hashmap_st
+      *hmap);
 
 
-static inline unsigned mom_hashmap_count (const struct mom_hashmap_st *hmap)
-{
-  if (mom_itype(hmap) != MOMITY_HASHMAP)
-    return 0;
-  return hmap->cda_count;
-}
+  static inline unsigned mom_hashmap_count (const struct mom_hashmap_st *hmap)
+  {
+    if (mom_itype(hmap) != MOMITY_HASHMAP)
+      return 0;
+    return hmap->cda_count;
+  }
 
 /// for MOMITY_HASHASSOC payload
-struct mom_hassocentry_tu
-{
-  const struct mom_hashedvalue_st *hass_key;
-  const struct mom_hashedvalue_st *hass_val;
-};
+  struct mom_hassocentry_tu
+  {
+    const struct mom_hashedvalue_st *hass_key;
+    const struct mom_hashedvalue_st *hass_val;
+  };
 
 #define MOM_HASHASSOC_FIELDS				\
   MOM_COUNTEDATA_FIELDS;				\
   struct mom_hassocentry_tu hass_ents[MOM_FLEXIBLE_DIM]
 //// mutable hashed association
-struct mom_hashassoc_st
-{
-  MOM_HASHASSOC_FIELDS;
-};
-static inline struct mom_hashassoc_st *mom_hashassoc_dyncast (void *p)
-{
-  if (mom_itype(p) == MOMITY_HASHASSOC)
-    return (struct mom_hashassoc_st *)p;
-  return NULL;
-}                             /* end mom_hashassoc_dyncast */
+  struct mom_hashassoc_st
+  {
+    MOM_HASHASSOC_FIELDS;
+  };
+  static inline struct mom_hashassoc_st *mom_hashassoc_dyncast (void *p)
+  {
+    if (mom_itype(p) == MOMITY_HASHASSOC)
+      return (struct mom_hashassoc_st *)p;
+    return NULL;
+  }                             /* end mom_hashassoc_dyncast */
 
 
 
 // with a 0 gap will reorganize
-struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st
-    *hass, unsigned gap);
+  struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st
+      *hass, unsigned gap);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get (const struct mom_hashassoc_st *hass,      //
-    const struct
-    mom_hashedvalue_st
-    *key);
+  const struct mom_hashedvalue_st *mom_hashassoc_get (const struct mom_hashassoc_st *hass,      //
+      const struct
+      mom_hashedvalue_st
+      *key);
 
 // specialized gets are faster, because they compare specifically the key
-const struct mom_hashedvalue_st *mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass,      //
-    const char
-    *cstr);
+  const struct mom_hashedvalue_st *mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass,      //
+      const char
+      *cstr);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashassoc_st *hass, //
-    const struct
-    mom_item_st *itm);
+  const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashassoc_st *hass, //
+      const struct
+      mom_item_st *itm);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,  //
-    intptr_t num);
+  const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,  //
+      intptr_t num);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass,       //
-    double d);
+  const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass,       //
+      double d);
 
-struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,    //
-    const struct mom_hashedvalue_st *key,     //
-    const struct mom_hashedvalue_st
-    *val);
+  struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,    //
+      const struct mom_hashedvalue_st *key,     //
+      const struct mom_hashedvalue_st
+      *val);
 
-struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st *hass, //
-    const struct
-    mom_hashedvalue_st *key);
-const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,      //
-    const struct
-    mom_item_st
-    *connitm);
+  struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st *hass, //
+      const struct
+      mom_hashedvalue_st *key);
+  const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,      //
+      const struct
+      mom_item_st
+      *connitm);
 
-static inline unsigned
-mom_hashassoc_count (const struct mom_hashassoc_st *ha)
-{
-  if (mom_itype(ha) != MOMITY_HASHASSOC)
-    return 0;
-  return ha->cda_count;
-}
+  static inline unsigned
+  mom_hashassoc_count (const struct mom_hashassoc_st *ha)
+  {
+    if (mom_itype(ha) != MOMITY_HASHASSOC)
+      return 0;
+    return ha->cda_count;
+  }
 
 ////////////////
-struct mom_itemname_tu
-{
-  uint32_t itname_rank;
-  struct mom_boxstring_st itname_string;
-};
+  struct mom_itemname_tu
+  {
+    uint32_t itname_rank;
+    struct mom_boxstring_st itname_string;
+  };
 
-enum mom_space_en
-{
-  MOMSPA_NONE,
-  MOMSPA_PREDEF,
-  MOMSPA_GLOBAL,
-};
+  enum mom_space_en
+  {
+    MOMSPA_NONE,
+    MOMSPA_PREDEF,
+    MOMSPA_GLOBAL,
+  };
 
 #define MOM_FUNC_PREFIX "momf_"
 #define MOM_SIGNATURE_PREFIX "momsig_"
@@ -1348,7 +1348,7 @@ enum mom_space_en
 #define MOM_DATA_PREFIX "momd_"
 #define MOM_DATAKIND_PREFIX "momkind_"
 
-/* inside an item, va_ixv is the space index */
+  /* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS							\
   MOM_HASHEDVALUE_FIELDS;						\
   struct mom_itemname_tu* itm_radix;					\
@@ -1363,189 +1363,189 @@ enum mom_space_en
 
 
 
-struct mom_item_st
-{
-  MOM_ITEM_FIELDS;
-};
+  struct mom_item_st
+  {
+    MOM_ITEM_FIELDS;
+  };
 
 
-const struct mom_boxset_st *mom_predefined_items_boxset (void);
-void mom_item_put_space (struct mom_item_st *itm, enum mom_space_en spix);
-static inline unsigned mom_item_space(struct mom_item_st*itm)
-{
-  if (mom_itype(itm) != MOMITY_ITEM)
-    return MOMSPA_NONE;
-  return atomic_load (&itm->va_ixv);
-} /* end of mom_item_space */
+  const struct mom_boxset_st *mom_predefined_items_boxset (void);
+  void mom_item_put_space (struct mom_item_st *itm, enum mom_space_en spix);
+  static inline unsigned mom_item_space(struct mom_item_st*itm)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      return MOMSPA_NONE;
+    return atomic_load (&itm->va_ixv);
+  } /* end of mom_item_space */
 
-static inline struct mom_item_st *mom_dyncast_item (const void *p)
-{
-  if (mom_itype(p) == MOMITY_ITEM)
-    return (struct mom_item_st *) p;
-  return NULL;
-}
-
-void mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
-                                  momhash_t hash);
-
-void mom_initialize_predefined_items(void);
-
-momhash_t mom_cstring_hash_len (const char *str, int len);
-
-
-bool mom_valid_name_radix_len (const char *str, int len);
-
-static inline bool mom_valid_name_radix (const char *str)
-{
-  return str && str != MOM_EMPTY_SLOT
-         && mom_valid_name_radix_len (str, strlen (str));
-}
-
-
-const struct mom_itemname_tu *mom_find_name_radix (const char *str);
-static inline const struct mom_itemname_tu *mom_find_name_radix_len (const
-    char
-    *str,
-    int
-    len)
-{
-  if (!str || str == MOM_EMPTY_SLOT || len == 0)
+  static inline struct mom_item_st *mom_dyncast_item (const void *p)
+  {
+    if (mom_itype(p) == MOMITY_ITEM)
+      return (struct mom_item_st *) p;
     return NULL;
-  if (len < 0)
-    return mom_find_name_radix (str);
-  if (str[len] == (char) 0 && (int) strlen (str) == len)
-    return mom_find_name_radix (str);
-  char copybuf[64];
-  memset (copybuf, 0, sizeof (copybuf));
-  if (len < (int) sizeof (copybuf) - 1)
-    {
-      strncpy (copybuf, str, len);
-      return mom_find_name_radix (copybuf);
-    }
-  else
-    {
-      char *cbuf = (char*)mom_gc_alloc_scalar (len + 1);
-      strncpy (cbuf, str, len);
-      return mom_find_name_radix (cbuf);
-    }
-}                             /* end of mom_find_name_radix_len */
+  }
+
+  void mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
+                                    momhash_t hash);
+
+  void mom_initialize_predefined_items(void);
+
+  momhash_t mom_cstring_hash_len (const char *str, int len);
 
 
-const struct mom_itemname_tu *mom_make_name_radix (const char *str);
-static inline const struct mom_itemname_tu *mom_make_name_radix_len (const
-    char
-    *str,
-    int
-    len)
-{
-  if (!str || str == MOM_EMPTY_SLOT || len == 0)
+  bool mom_valid_name_radix_len (const char *str, int len);
+
+  static inline bool mom_valid_name_radix (const char *str)
+  {
+    return str && str != MOM_EMPTY_SLOT
+           && mom_valid_name_radix_len (str, strlen (str));
+  }
+
+
+  const struct mom_itemname_tu *mom_find_name_radix (const char *str);
+  static inline const struct mom_itemname_tu *mom_find_name_radix_len (const
+      char
+      *str,
+      int
+      len)
+  {
+    if (!str || str == MOM_EMPTY_SLOT || len == 0)
+      return NULL;
+    if (len < 0)
+      return mom_find_name_radix (str);
+    if (str[len] == (char) 0 && (int) strlen (str) == len)
+      return mom_find_name_radix (str);
+    char copybuf[64];
+    memset (copybuf, 0, sizeof (copybuf));
+    if (len < (int) sizeof (copybuf) - 1)
+      {
+        strncpy (copybuf, str, len);
+        return mom_find_name_radix (copybuf);
+      }
+    else
+      {
+        char *cbuf = (char*)mom_gc_alloc_scalar (len + 1);
+        strncpy (cbuf, str, len);
+        return mom_find_name_radix (cbuf);
+      }
+  }                             /* end of mom_find_name_radix_len */
+
+
+  const struct mom_itemname_tu *mom_make_name_radix (const char *str);
+  static inline const struct mom_itemname_tu *mom_make_name_radix_len (const
+      char
+      *str,
+      int
+      len)
+  {
+    if (!str || str == MOM_EMPTY_SLOT || len == 0)
+      return NULL;
+    if (len < 0)
+      return mom_make_name_radix (str);
+    if (str[len] == (char) 0 && (int) strlen (str) == len)
+      return mom_make_name_radix (str);
+    char copybuf[64];
+    memset (copybuf, 0, sizeof (copybuf));
+    if (len < (int) sizeof (copybuf) - 1)
+      {
+        strncpy (copybuf, str, len);
+        return mom_make_name_radix (copybuf);
+      }
+    else
+      {
+        char *cbuf = (char*)mom_gc_alloc_scalar (len + 1);
+        strncpy (cbuf, str, len);
+        return mom_make_name_radix (cbuf);
+      }
+  }                             /* end of mom_make_name_radix_len */
+
+  struct mom_item_st *mom_find_item_from_radix_id (const struct
+      mom_itemname_tu *radix,
+      uint16_t hid,
+      uint64_t loid);
+
+  static inline struct mom_item_st *mom_find_item_from_str_id (const char
+      *str, int len,
+      uint16_t hid,
+      uint64_t loid)
+  {
+    const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
+    if (tu)
+      return mom_find_item_from_radix_id (tu, hid, loid);
     return NULL;
-  if (len < 0)
-    return mom_make_name_radix (str);
-  if (str[len] == (char) 0 && (int) strlen (str) == len)
-    return mom_make_name_radix (str);
-  char copybuf[64];
-  memset (copybuf, 0, sizeof (copybuf));
-  if (len < (int) sizeof (copybuf) - 1)
-    {
-      strncpy (copybuf, str, len);
-      return mom_make_name_radix (copybuf);
-    }
-  else
-    {
-      char *cbuf = (char*)mom_gc_alloc_scalar (len + 1);
-      strncpy (cbuf, str, len);
-      return mom_make_name_radix (cbuf);
-    }
-}                             /* end of mom_make_name_radix_len */
-
-struct mom_item_st *mom_find_item_from_radix_id (const struct
-    mom_itemname_tu *radix,
-    uint16_t hid,
-    uint64_t loid);
-
-static inline struct mom_item_st *mom_find_item_from_str_id (const char
-    *str, int len,
-    uint16_t hid,
-    uint64_t loid)
-{
-  const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
-  if (tu)
-    return mom_find_item_from_radix_id (tu, hid, loid);
-  return NULL;
-}
+  }
 
 
-static inline const struct mom_hashedvalue_st
+  static inline const struct mom_hashedvalue_st
 *mom_unsync_item_get_phys_attr (const struct mom_item_st *itm,
-                                const struct mom_item_st *itmat)
-{
-  if (mom_itype(itm) != MOMITY_ITEM)
-    return NULL;
-  if (mom_itype(itmat) != MOMITY_ITEM)
-    return NULL;
-  const struct mom_assovaldata_st *attrs =
-  mom_assovaldata_dyncast (itm->itm_pattr);
-  if (!attrs)
-    return NULL;
-  return mom_assovaldata_get (attrs, itmat);
-}                             /* end of mom_unsync_item_get_phys_attr */
+                                  const struct mom_item_st *itmat)
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      return NULL;
+    if (mom_itype(itmat) != MOMITY_ITEM)
+      return NULL;
+    const struct mom_assovaldata_st *attrs =
+    mom_assovaldata_dyncast (itm->itm_pattr);
+    if (!attrs)
+      return NULL;
+    return mom_assovaldata_get (attrs, itmat);
+  }                             /* end of mom_unsync_item_get_phys_attr */
 
-static inline struct mom_item_st*
+  static inline struct mom_item_st*
 mom_unsync_item_descr(const struct mom_item_st *itm)
-{
-  return mom_dyncast_item(mom_unsync_item_get_phys_attr(itm, MOM_PREDEFITM(descr)));
-}
+  {
+    return mom_dyncast_item(mom_unsync_item_get_phys_attr(itm, MOM_PREDEFITM(descr)));
+  }
 
-void
-mom_unsync_item_output_payload (FILE *fout,
-                                const struct mom_item_st *itm);
+  void
+  mom_unsync_item_output_payload (FILE *fout,
+                                  const struct mom_item_st *itm);
 
-static inline const struct mom_boxset_st
+  static inline const struct mom_boxset_st
 *mom_unsync_item_phys_set_attrs (const struct mom_item_st *itm)
-{
-  if (mom_itype(itm) != MOMITY_ITEM)
-    return NULL;
-  const struct mom_assovaldata_st *attrs =
-  mom_assovaldata_dyncast (itm->itm_pattr);
-  if (!attrs)
-    return NULL;
-  return mom_assovaldata_set_attrs (attrs);
-}                             /* end of mom_unsync_item_phys_set_attrs */
+  {
+    if (mom_itype(itm) != MOMITY_ITEM)
+      return NULL;
+    const struct mom_assovaldata_st *attrs =
+    mom_assovaldata_dyncast (itm->itm_pattr);
+    if (!attrs)
+      return NULL;
+    return mom_assovaldata_set_attrs (attrs);
+  }                             /* end of mom_unsync_item_phys_set_attrs */
 
 
 // put a physical attribute inside an item
-void mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
-                                    const struct mom_item_st *itmat,
-                                    const void *data);
+  void mom_unsync_item_put_phys_attr (struct mom_item_st *itm,
+                                      const struct mom_item_st *itmat,
+                                      const void *data);
 
 // remove a physical attribute from an item
-void mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
-                                       const struct mom_item_st *itmat);
+  void mom_unsync_item_remove_phys_attr (struct mom_item_st *itm,
+                                         const struct mom_item_st *itmat);
 
 // clear the payload in an item, return true iff cleared
-bool mom_unsync_item_clear_payload (struct mom_item_st *itm);
+  bool mom_unsync_item_clear_payload (struct mom_item_st *itm);
 
 ///
-void mom_initialize_items (void);
+  void mom_initialize_items (void);
 
-static inline void
-mom_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
-{
-  extern void mom_debug_item_lock_at (struct mom_item_st *itm,
-                                      const char *fil, int lin);
-  if (MOM_UNLIKELY (mom_itype(itm) != MOMITY_ITEM))
-    MOM_FATAPRINTF_AT (fil, lin, "bad itm@%p to lock", itm);
-  if (MOM_UNLIKELY (MOM_IS_DEBUGGING (mutex)))
-    mom_debug_item_lock_at (itm, fil, lin);
-  pthread_mutex_lock (&itm->itm_mtx);
-}
+  static inline void
+  mom_item_lock_at (struct mom_item_st *itm, const char *fil, int lin)
+  {
+    extern void mom_debug_item_lock_at (struct mom_item_st *itm,
+                                        const char *fil, int lin);
+    if (MOM_UNLIKELY (mom_itype(itm) != MOMITY_ITEM))
+      MOM_FATAPRINTF_AT (fil, lin, "bad itm@%p to lock", itm);
+    if (MOM_UNLIKELY (MOM_IS_DEBUGGING (mutex)))
+      mom_debug_item_lock_at (itm, fil, lin);
+    pthread_mutex_lock (&itm->itm_mtx);
+  }
 
 #define mom_item_lock(Itm) mom_item_lock_at((Itm),__FILE__,__LINE__)
 
-static inline void
-mom_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
-{
+  static inline void
+  mom_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
+  {
   extern void mom_debug_item_unlock_at (struct mom_item_st *itm,
                                         const char *fil, int lin);
   if (MOM_UNLIKELY
@@ -1600,306 +1600,306 @@ static inline struct mom_item_st *mom_clone_item (const struct mom_item_st
 #define MOM_HI_LO_SUFFIX_STATIC_DIM static MOM_HI_LO_SUFFIX_LEN
 #endif
 // convert a hi+lo pair to a suffix and return it
-const char *mom_hi_lo_suffix (char buf[MOM_HI_LO_SUFFIX_STATIC_DIM],
-                              uint16_t hi, uint64_t lo);
+  const char *mom_hi_lo_suffix (char buf[MOM_HI_LO_SUFFIX_STATIC_DIM],
+                                uint16_t hi, uint64_t lo);
 
 // convert a suffix to a hi & lo pair, or return false
-bool mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo);
+  bool mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo);
 
-static inline const char *mom_item_hi_lo_suffix (char buf[MOM_HI_LO_SUFFIX_STATIC_DIM],
-    const struct mom_item_st
-    *itm)
-{
-  memset (buf, 0, MOM_HI_LO_SUFFIX_LEN);
-  if (itm && (itm->itm_hid || itm->itm_lid))
-    mom_hi_lo_suffix (buf, itm->itm_hid, itm->itm_lid);
-  return buf;
-}
+  static inline const char *mom_item_hi_lo_suffix (char buf[MOM_HI_LO_SUFFIX_STATIC_DIM],
+      const struct mom_item_st
+      *itm)
+  {
+    memset (buf, 0, MOM_HI_LO_SUFFIX_LEN);
+    if (itm && (itm->itm_hid || itm->itm_lid))
+      mom_hi_lo_suffix (buf, itm->itm_hid, itm->itm_lid);
+    return buf;
+  }
 
-static inline const char *mom_item_radix_str (const struct mom_item_st *itm)
-{
-  if (itm)
-    return itm->itm_radix->itname_string.cstr;
-  else
-    return NULL;
-}
+  static inline const char *mom_item_radix_str (const struct mom_item_st *itm)
+  {
+    if (itm)
+      return itm->itm_radix->itname_string.cstr;
+    else
+      return NULL;
+  }
 
-struct mom_item_st *mom_find_item_from_string (const char *str,
-    const char **pend);
+  struct mom_item_st *mom_find_item_from_string (const char *str,
+      const char **pend);
 
-static inline struct mom_item_st *mom_find_item_by_string (const char *str)
-{
-  return mom_find_item_from_string (str, NULL);
-}
+  static inline struct mom_item_st *mom_find_item_by_string (const char *str)
+  {
+    return mom_find_item_from_string (str, NULL);
+  }
 
 /// Return the set of items of some given prefix str.
 // if the prefix is invalid, return NULL.
 // if the prefix has no __, we give a set of non-suffixed items
 // otherwise a set of suffixed items
-const struct mom_boxset_st *mom_set_items_prefixed (const char *str,
-    int slen);
+  const struct mom_boxset_st *mom_set_items_prefixed (const char *str,
+      int slen);
 
 
-struct mom_item_st *mom_make_item_from_string (const char *str,
-    const char **pend);
+  struct mom_item_st *mom_make_item_from_string (const char *str,
+      const char **pend);
 
-static inline struct mom_item_st *mom_make_item_by_string (const char *str)
-{
-  return mom_make_item_from_string (str, NULL);
-}
-
-static inline bool
-mom_set_contains (const struct mom_boxset_st *bs,
-                  const struct mom_item_st *const itm)
-{
-  if (mom_itype(bs) != MOMITY_SET)
-    return false;
-  if (mom_itype(itm) != MOMITY_ITEM)
-    return false;
-  unsigned siz = mom_raw_size (bs);
-  int lo = 0, hi = (int) siz - 1, md = 0;
-  while (lo + 5 < hi)
-    {
-      md = (lo + hi) / 2;
-      struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
-      assert (curitm);
-      if ((struct mom_item_st *) itm == curitm)
-        return true;
-      int c = mom_item_cmp (itm, curitm);
-      if (c < 0)
-        hi = md;
-      else
-        lo = md;
-    }
-  for (md = lo; md < hi; md++)
-    {
-      md = (lo + hi) / 2;
-      struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
-      assert (curitm);
-      if ((struct mom_item_st *) itm == curitm)
-        return true;
-    }
-  return false;
-}
-
-
-enum mom_statetype_en
-{
-  MOMSTA_EMPTY, MOMSTA_MARK, MOMSTA_INT, MOMSTA_DBL, MOMSTA_STRING,
-  MOMSTA_VAL
-};
-
-struct mom_statelem_st
-{
-  enum mom_statetype_en st_type;
-  union
+  static inline struct mom_item_st *mom_make_item_by_string (const char *str)
   {
-    void *st_nptr;            /* NULL for MOMSTA_EMPTY */
-    int st_mark;              /* when MOMSTA_MARK */
-    intptr_t st_int;          /* when MOMSTA_INT */
-    double st_dbl;            /* when MOMSTA_DBL */
-    const char *st_str;       /* GC-strduped string for when MOMSTA_STRING */
-    struct mom_hashedvalue_st *st_val;        /* when MOMSTA_VAL */
+    return mom_make_item_from_string (str, NULL);
+  }
+
+  static inline bool
+  mom_set_contains (const struct mom_boxset_st *bs,
+                    const struct mom_item_st *const itm)
+  {
+    if (mom_itype(bs) != MOMITY_SET)
+      return false;
+    if (mom_itype(itm) != MOMITY_ITEM)
+      return false;
+    unsigned siz = mom_raw_size (bs);
+    int lo = 0, hi = (int) siz - 1, md = 0;
+    while (lo + 5 < hi)
+      {
+        md = (lo + hi) / 2;
+        struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
+        assert (curitm);
+        if ((struct mom_item_st *) itm == curitm)
+          return true;
+        int c = mom_item_cmp (itm, curitm);
+        if (c < 0)
+          hi = md;
+        else
+          lo = md;
+      }
+    for (md = lo; md < hi; md++)
+      {
+        md = (lo + hi) / 2;
+        struct mom_item_st *curitm = (struct mom_item_st *) bs->seqitem[md];
+        assert (curitm);
+        if ((struct mom_item_st *) itm == curitm)
+          return true;
+      }
+    return false;
+  }
+
+
+  enum mom_statetype_en
+  {
+    MOMSTA_EMPTY, MOMSTA_MARK, MOMSTA_INT, MOMSTA_DBL, MOMSTA_STRING,
+    MOMSTA_VAL
   };
-};
 
-void mom_fprint_ldstate (FILE *f, const struct mom_statelem_st se);
-const char *mom_ldstate_cstring (const struct mom_statelem_st se);
+  struct mom_statelem_st
+  {
+    enum mom_statetype_en st_type;
+    union
+    {
+      void *st_nptr;            /* NULL for MOMSTA_EMPTY */
+      int st_mark;              /* when MOMSTA_MARK */
+      intptr_t st_int;          /* when MOMSTA_INT */
+      double st_dbl;            /* when MOMSTA_DBL */
+      const char *st_str;       /* GC-strduped string for when MOMSTA_STRING */
+      struct mom_hashedvalue_st *st_val;        /* when MOMSTA_VAL */
+    };
+  };
 
-static inline enum mom_statetype_en
-mom_ldstate_type (const struct mom_statelem_st se)
-{
-  return se.st_type;
-};
+  void mom_fprint_ldstate (FILE *f, const struct mom_statelem_st se);
+  const char *mom_ldstate_cstring (const struct mom_statelem_st se);
 
-static inline struct mom_statelem_st mom_ldstate_empty ()
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_EMPTY;
-  el.st_nptr = NULL;
-  return el;
-}
+  static inline enum mom_statetype_en
+  mom_ldstate_type (const struct mom_statelem_st se)
+  {
+    return se.st_type;
+  };
 
-static inline int mom_ldstate_mark (const struct mom_statelem_st se)
-{
+  static inline struct mom_statelem_st mom_ldstate_empty ()
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_EMPTY;
+    el.st_nptr = NULL;
+    return el;
+  }
 
-  return (se.st_type == MOMSTA_MARK) ? se.st_mark : (-1);
-};
+  static inline int mom_ldstate_mark (const struct mom_statelem_st se)
+  {
 
-static inline struct mom_statelem_st mom_ldstate_make_mark (int m)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_MARK;
-  el.st_mark = m;
-  return el;
-}
+    return (se.st_type == MOMSTA_MARK) ? se.st_mark : (-1);
+  };
 
-
-static inline intptr_t
-mom_ldstate_int_def (const struct mom_statelem_st se, intptr_t def)
-{
-  return (se.st_type == MOMSTA_INT) ? se.st_int : def;
-};
-
-static inline struct mom_statelem_st mom_ldstate_make_int (intptr_t i)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_INT;
-  el.st_int = i;
-  return el;
-}
+  static inline struct mom_statelem_st mom_ldstate_make_mark (int m)
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_MARK;
+    el.st_mark = m;
+    return el;
+  }
 
 
+  static inline intptr_t
+  mom_ldstate_int_def (const struct mom_statelem_st se, intptr_t def)
+  {
+    return (se.st_type == MOMSTA_INT) ? se.st_int : def;
+  };
 
-static inline double mom_ldstate_dbl (const struct mom_statelem_st se)
-{
-  return (se.st_type == MOMSTA_DBL) ? se.st_int : NAN;
-};
-
-static inline struct mom_statelem_st mom_ldstate_make_dbl (double x)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_DBL;
-  el.st_dbl = x;
-  return el;
-}
-
-
-static inline const char *mom_ldstate_str (const struct mom_statelem_st se)
-{
-  return (se.st_type == MOMSTA_STRING) ? se.st_str : NULL;
-};
-
-static inline struct mom_statelem_st mom_ldstate_make_str (const char *s)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_STRING;
-  el.st_str = s;
-  return el;
-}
+  static inline struct mom_statelem_st mom_ldstate_make_int (intptr_t i)
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_INT;
+    el.st_int = i;
+    return el;
+  }
 
 
-static inline const struct mom_hashedvalue_st *mom_ldstate_val (const struct
-    mom_statelem_st
-    se)
-{
-  return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
-};
 
-static inline struct mom_statelem_st
+  static inline double mom_ldstate_dbl (const struct mom_statelem_st se)
+  {
+    return (se.st_type == MOMSTA_DBL) ? se.st_int : NAN;
+  };
+
+  static inline struct mom_statelem_st mom_ldstate_make_dbl (double x)
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_DBL;
+    el.st_dbl = x;
+    return el;
+  }
+
+
+  static inline const char *mom_ldstate_str (const struct mom_statelem_st se)
+  {
+    return (se.st_type == MOMSTA_STRING) ? se.st_str : NULL;
+  };
+
+  static inline struct mom_statelem_st mom_ldstate_make_str (const char *s)
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_STRING;
+    el.st_str = s;
+    return el;
+  }
+
+
+  static inline const struct mom_hashedvalue_st *mom_ldstate_val (const struct
+      mom_statelem_st
+      se)
+  {
+    return (se.st_type == MOMSTA_VAL) ? se.st_val : NULL;
+  };
+
+  static inline struct mom_statelem_st
 mom_ldstate_make_val (const struct mom_hashedvalue_st *v)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)v;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)v;
+    return el;
+  }
 
 
-static inline struct mom_item_st *mom_ldstate_dynitem (const struct
-    mom_statelem_st se)
-{
-  return (struct mom_item_st *) mom_dyncast_item (mom_ldstate_val (se));
-};
+  static inline struct mom_item_st *mom_ldstate_dynitem (const struct
+      mom_statelem_st se)
+  {
+    return (struct mom_item_st *) mom_dyncast_item (mom_ldstate_val (se));
+  };
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_item (const struct mom_item_st *itm)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)itm;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)itm;
+    return el;
+  }
 
 
-static inline const void *mom_ldstate_dynboxint (const
-    struct
-    mom_statelem_st
-    se)
-{
-  return mom_dyncast_int (mom_ldstate_val (se));
-};
+  static inline const void *mom_ldstate_dynboxint (const
+      struct
+      mom_statelem_st
+      se)
+  {
+    return mom_dyncast_int (mom_ldstate_val (se));
+  };
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_boxint (const struct mom_boxint_st *bi)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)bi;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)bi;
+    return el;
+  }
 
-static inline const struct mom_boxstring_st *mom_ldstate_dynboxstring (const
-    struct
-    mom_statelem_st
-    se)
-{
-  return mom_dyncast_boxstring (mom_ldstate_val (se));
-};
+  static inline const struct mom_boxstring_st *mom_ldstate_dynboxstring (const
+      struct
+      mom_statelem_st
+      se)
+  {
+    return mom_dyncast_boxstring (mom_ldstate_val (se));
+  };
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_boxstring (const struct mom_boxstring_st *bs)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)bs;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)bs;
+    return el;
+  }
 
 
-static inline const struct mom_tuple_st *mom_ldstate_dyntuple (const struct
-    mom_statelem_st
-    se)
-{
-  return (const struct mom_tuple_st *)
-         mom_dyncast_tuple (mom_ldstate_val (se));
-};
+  static inline const struct mom_tuple_st *mom_ldstate_dyntuple (const struct
+      mom_statelem_st
+      se)
+  {
+    return (const struct mom_tuple_st *)
+           mom_dyncast_tuple (mom_ldstate_val (se));
+  };
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_tuple (const struct mom_boxtuple_st *tu)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)tu;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)tu;
+    return el;
+  }
 
 
-static inline const struct mom_set_st *mom_ldstate_dynset (const struct
-    mom_statelem_st
-    se)
-{
-  return (const struct mom_set_st *) mom_dyncast_set (mom_ldstate_val (se));
-};
+  static inline const struct mom_set_st *mom_ldstate_dynset (const struct
+      mom_statelem_st
+      se)
+  {
+    return (const struct mom_set_st *) mom_dyncast_set (mom_ldstate_val (se));
+  };
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_set (const struct mom_boxset_st *se)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)se;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)se;
+    return el;
+  }
 
 
 
-static inline const struct mom_boxnode_st *mom_ldstate_dynnode (const struct
-    mom_statelem_st
-    se)
-{
-  return (const struct mom_boxnode_st *)
-         mom_dyncast_node (mom_ldstate_val (se));
-};
+  static inline const struct mom_boxnode_st *mom_ldstate_dynnode (const struct
+      mom_statelem_st
+      se)
+  {
+    return (const struct mom_boxnode_st *)
+           mom_dyncast_node (mom_ldstate_val (se));
+  };
 
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_ldstate_make_node (const struct mom_boxnode_st *nd)
-{
-  struct mom_statelem_st el;
-  el.st_type = MOMSTA_VAL;
-  el.st_val = (struct mom_hashedvalue_st *)nd;
-  return el;
-}
+  {
+    struct mom_statelem_st el;
+    el.st_type = MOMSTA_VAL;
+    el.st_val = (struct mom_hashedvalue_st *)nd;
+    return el;
+  }
 
 
 #define MOM_LOADER_MAGIC 0x1f3fd30f     /*524276495 */
@@ -1919,160 +1919,160 @@ mom_ldstate_make_node (const struct mom_boxnode_st *nd)
   const char *ld_path;				\
   long ld_kindcount[MOMITY__LAST]
 
-struct mom_loader_st
-{
-  MOM_LOADER_FIELDS;
-};
+  struct mom_loader_st
+  {
+    MOM_LOADER_FIELDS;
+  };
 
-typedef void mom_loader_caret_sig_t (struct mom_item_st *itm,
-                                     struct mom_loader_st *ld);
+  typedef void mom_loader_caret_sig_t (struct mom_item_st *itm,
+                                       struct mom_loader_st *ld);
 #define MOM_LOADER_CARET_PREFIX MOM_FUNC_PREFIX "ldc_"
 
-typedef void mom_loader_paren_sig_t (struct mom_item_st *itm,
-                                     struct mom_loader_st *ld,
-                                     struct mom_statelem_st *elemarr,
-                                     unsigned elemsize);
+  typedef void mom_loader_paren_sig_t (struct mom_item_st *itm,
+                                       struct mom_loader_st *ld,
+                                       struct mom_statelem_st *elemarr,
+                                       unsigned elemsize);
 #define MOM_LOADER_PAREN_PREFIX MOM_FUNC_PREFIX "ldp_"
 
-static inline struct mom_statelem_st
+  static inline struct mom_statelem_st
 mom_loader_top (struct mom_loader_st *ld, unsigned topoff)
-{
-  if (mom_itype(ld) != MOMITY_LOADER)
-    return mom_ldstate_empty ();
-  assert (ld->ld_magic == MOM_LOADER_MAGIC);
-  assert (ld->ld_stacktop <= mom_raw_size (ld));
-  if (topoff >= ld->ld_stacktop)
-    return mom_ldstate_empty ();
-  return ld->ld_stackarr[ld->ld_stacktop - topoff - 1];
-}
+  {
+    if (mom_itype(ld) != MOMITY_LOADER)
+      return mom_ldstate_empty ();
+    assert (ld->ld_magic == MOM_LOADER_MAGIC);
+    assert (ld->ld_stacktop <= mom_raw_size (ld));
+    if (topoff >= ld->ld_stacktop)
+      return mom_ldstate_empty ();
+    return ld->ld_stackarr[ld->ld_stacktop - topoff - 1];
+  }
 
 #ifdef NDEBUG
-void mom_loader_push (struct mom_loader_st *ld,
-                      const struct mom_statelem_st el);
+  void mom_loader_push (struct mom_loader_st *ld,
+                        const struct mom_statelem_st el);
 
 // return index of previous mark
-int mom_loader_push_mark (struct mom_loader_st *ld);
+  int mom_loader_push_mark (struct mom_loader_st *ld);
 
-void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
+  void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
 #else // no NDEBUG
-void mom_loader_push_at (struct mom_loader_st *ld,
-                         const struct mom_statelem_st el,
-                         const char *fil, int lineno);
+  void mom_loader_push_at (struct mom_loader_st *ld,
+                           const struct mom_statelem_st el,
+                           const char *fil, int lineno);
 #define mom_loader_push(Ld,El)				\
   mom_loader_push_at((Ld),(El),__FILE__,__LINE__)
 
 // return index of previous mark
-int mom_loader_push_mark_at (struct mom_loader_st *ld, const char *fil,
-                             int lineno);
+  int mom_loader_push_mark_at (struct mom_loader_st *ld, const char *fil,
+                               int lineno);
 #define mom_loader_push_mark(Ld) mom_loader_push_mark_at((Ld),__FILE__,__LINE__)
 
-void mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb,
-                        const char *fil, int lineno);
+  void mom_loader_pop_at (struct mom_loader_st *ld, unsigned nb,
+                          const char *fil, int lineno);
 #define mom_loader_pop(Ld,Nb) mom_loader_pop_at((Ld),(Nb),__FILE__,__LINE__)
 #endif
 
 ////////////////
 #define MOM_NB_QUELEM 7
-struct mom_quelem_st
-{
-  struct mom_quelem_st *qu_next;
-  struct mom_hashedvalue_st *qu_elems[MOM_NB_QUELEM];
-};
+  struct mom_quelem_st
+  {
+    struct mom_quelem_st *qu_next;
+    struct mom_hashedvalue_st *qu_elems[MOM_NB_QUELEM];
+  };
 
 #define MOM_QUEUE_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
   struct mom_quelem_st* qu_first;		\
   struct mom_quelem_st* qu_last
 
-struct mom_queue_st
-{
-  MOM_QUEUE_FIELDS;
-};
+  struct mom_queue_st
+  {
+    MOM_QUEUE_FIELDS;
+  };
 
-void mom_queue_prepend (struct mom_queue_st *qu, const void *data);
-void mom_queue_append (struct mom_queue_st *qu, const void *data);
-void mom_queue_pop_front (struct mom_queue_st *qu);
+  void mom_queue_prepend (struct mom_queue_st *qu, const void *data);
+  void mom_queue_append (struct mom_queue_st *qu, const void *data);
+  void mom_queue_pop_front (struct mom_queue_st *qu);
 
-static inline struct mom_queue_st *mom_dyncast_queue (const void *p)
-{
-  if (mom_itype(p) == MOMITY_QUEUE)
-    return (struct mom_queue_st *) p;
-  return NULL;
-}
-
-static inline bool mom_queue_nonempty (const struct mom_queue_st *qu)
-{
-  if (mom_itype(qu) != MOMITY_QUEUE)
-    return FALSE;
-  return qu->qu_first != NULL;
-}
-
-static inline const void *mom_queue_front (const struct mom_queue_st *qu)
-{
-  if (mom_itype(qu) != MOMITY_QUEUE)
+  static inline struct mom_queue_st *mom_dyncast_queue (const void *p)
+  {
+    if (mom_itype(p) == MOMITY_QUEUE)
+      return (struct mom_queue_st *) p;
     return NULL;
-  struct mom_quelem_st *qfirst = qu->qu_first;
-  if (!qfirst)
-    return NULL;
-  for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
-    if (qfirst->qu_elems[ix])
-      return qfirst->qu_elems[ix];
-  MOM_FATAPRINTF ("corrupted queue @%p", qu);
-}
+  }
 
-static inline const void *mom_queue_back (const struct mom_queue_st *qu)
-{
-  if (mom_itype(qu) != MOMITY_QUEUE)
-    return NULL;
-  struct mom_quelem_st *qlast = qu->qu_last;
-  if (!qlast)
-    return NULL;
-  for (int ix = MOM_NB_QUELEM - 1; ix >= 0; ix--)
-    if (qlast->qu_elems[ix])
-      return qlast->qu_elems[ix];
-  MOM_FATAPRINTF ("corrupted queue @%p", qu);
-}
+  static inline bool mom_queue_nonempty (const struct mom_queue_st *qu)
+  {
+    if (mom_itype(qu) != MOMITY_QUEUE)
+      return FALSE;
+    return qu->qu_first != NULL;
+  }
 
-const struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
-    const struct mom_item_st
-    *connitm);
+  static inline const void *mom_queue_front (const struct mom_queue_st *qu)
+  {
+    if (mom_itype(qu) != MOMITY_QUEUE)
+      return NULL;
+    struct mom_quelem_st *qfirst = qu->qu_first;
+    if (!qfirst)
+      return NULL;
+    for (unsigned ix = 0; ix < MOM_NB_QUELEM; ix++)
+      if (qfirst->qu_elems[ix])
+        return qfirst->qu_elems[ix];
+    MOM_FATAPRINTF ("corrupted queue @%p", qu);
+  }
 
-static inline struct mom_queue_st *mom_queue_make (void)
-{
+  static inline const void *mom_queue_back (const struct mom_queue_st *qu)
+  {
+    if (mom_itype(qu) != MOMITY_QUEUE)
+      return NULL;
+    struct mom_quelem_st *qlast = qu->qu_last;
+    if (!qlast)
+      return NULL;
+    for (int ix = MOM_NB_QUELEM - 1; ix >= 0; ix--)
+      if (qlast->qu_elems[ix])
+        return qlast->qu_elems[ix];
+    MOM_FATAPRINTF ("corrupted queue @%p", qu);
+  }
 
-  struct mom_queue_st *qu =
-  (struct mom_queue_st *) mom_gc_alloc (sizeof (struct mom_queue_st));
-  qu->va_itype = MOMITY_QUEUE;
-  return qu;
-}                             /* end mom_queue_make */
+  const struct mom_boxnode_st *mom_queue_node (const struct mom_queue_st *qu,
+      const struct mom_item_st
+      *connitm);
+
+  static inline struct mom_queue_st *mom_queue_make (void)
+  {
+
+    struct mom_queue_st *qu =
+    (struct mom_queue_st *) mom_gc_alloc (sizeof (struct mom_queue_st));
+    qu->va_itype = MOMITY_QUEUE;
+    return qu;
+  }                             /* end mom_queue_make */
 
 /// initialize a local queue on the call stack
-static inline void mom_queue_init (struct mom_queue_st *qu)
-{
-  memset (qu, 0, sizeof (struct mom_queue_st));
-  qu->va_itype = MOMITY_QUEUE;
-}
+  static inline void mom_queue_init (struct mom_queue_st *qu)
+  {
+    memset (qu, 0, sizeof (struct mom_queue_st));
+    qu->va_itype = MOMITY_QUEUE;
+  }
 
 /// for MOMITY_JSON payload
 #define MOM_JSON_FIELDS				\
   MOM_ANYVALUE_FIELDS;				\
   json_t *json
 
-struct mom_json_st
-{
-  MOM_JSON_FIELDS;
-};
+  struct mom_json_st
+  {
+    MOM_JSON_FIELDS;
+  };
 
 /// for MOMITY_WEBEXCH payload
 
-enum mom_webmethod_en
-{
-  MOMWEBM_NONE,
-  MOMWEBM_HEAD,
-  MOMWEBM_GET,
-  MOMWEBM_POST
-};
-char *mom_webmethod_name (unsigned);
+  enum mom_webmethod_en
+  {
+    MOMWEBM_NONE,
+    MOMWEBM_HEAD,
+    MOMWEBM_GET,
+    MOMWEBM_POST
+  };
+  char *mom_webmethod_name (unsigned);
 
 #define MOM_WEBEXCH_FIELDS			\
   MOM_ANYVALUE_FIELDS;				\
@@ -2093,22 +2093,22 @@ char *mom_webmethod_name (unsigned);
   pthread_cond_t webx_donecond;			\
   long webx__spare
 
-struct mom_webexch_st
-{
-  MOM_WEBEXCH_FIELDS;
-};
+  struct mom_webexch_st
+  {
+    MOM_WEBEXCH_FIELDS;
+  };
 
-static inline
-struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st *itm)
-{
-  struct mom_webexch_st *wex = NULL;
-  if (mom_itype(itm) == MOMITY_ITEM
-      && itm->itm_paylkind == MOM_PREDEFITM (web_exchange)
-      && (wex = (struct mom_webexch_st *) itm->itm_payldata)
-      && mom_itype(wex) == MOMITY_WEBEXCH)
-    return wex;
-  return NULL;
-}
+  static inline
+  struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st *itm)
+  {
+    struct mom_webexch_st *wex = NULL;
+    if (mom_itype(itm) == MOMITY_ITEM
+        && itm->itm_paylkind == MOM_PREDEFITM (web_exchange)
+        && (wex = (struct mom_webexch_st *) itm->itm_payldata)
+        && mom_itype(wex) == MOMITY_WEBEXCH)
+      return wex;
+    return NULL;
+  }
 
 
 #define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {		\
@@ -2121,46 +2121,46 @@ struct mom_webexch_st *mom_item_unsync_webexch (struct mom_item_st *itm)
 #define MOM_WEXCH_PRINTF(Wex,...) MOM_WEXCH_PRINTF_AT(__LINE__,(Wex),__VA_ARGS__)
 
 // mom_wexch_write should be used with the owning webexchange item locked
-static inline void
-mom_wexch_write (struct mom_webexch_st *wex, const char *buf, size_t size)
-{
-  if (mom_itype(wex) == MOMITY_WEBEXCH
-      && wex->webx_outfil)
-    fwrite (buf, size, 1, wex->webx_outfil);
-}
+  static inline void
+  mom_wexch_write (struct mom_webexch_st *wex, const char *buf, size_t size)
+  {
+    if (mom_itype(wex) == MOMITY_WEBEXCH
+        && wex->webx_outfil)
+      fwrite (buf, size, 1, wex->webx_outfil);
+  }
 
-static inline void
-mom_wexch_puts (struct mom_webexch_st *wex, const char *buf)
-{
-  if (mom_itype(wex) == MOMITY_WEBEXCH
-      && wex->webx_outfil)
-    fputs (buf, wex->webx_outfil);
-}
+  static inline void
+  mom_wexch_puts (struct mom_webexch_st *wex, const char *buf)
+  {
+    if (mom_itype(wex) == MOMITY_WEBEXCH
+        && wex->webx_outfil)
+      fputs (buf, wex->webx_outfil);
+  }
 
-static inline void mom_wexch_flush (struct mom_webexch_st *wex)
-{
-  if (mom_itype(wex) == MOMITY_WEBEXCH
-      && wex->webx_outfil)
-    fflush (wex->webx_outfil);
-}
+  static inline void mom_wexch_flush (struct mom_webexch_st *wex)
+  {
+    if (mom_itype(wex) == MOMITY_WEBEXCH
+        && wex->webx_outfil)
+      fflush (wex->webx_outfil);
+  }
 
 
 // mom_wexch_reply should be used with the owning wexitm locked
-void
-mom_unsync_wexch_reply (struct mom_item_st *wexitm,
-                        struct mom_webexch_st *wex, int httpcode,
-                        const char *mimetype);
+  void
+  mom_unsync_wexch_reply (struct mom_item_st *wexitm,
+                          struct mom_webexch_st *wex, int httpcode,
+                          const char *mimetype);
 
 #define MOM_HTTPCODE_WEBSOCKET 999
 
-void mom_webexch_payload_cleanup (struct mom_item_st *itm,
-                                  struct mom_webexch_st *payl);
+  void mom_webexch_payload_cleanup (struct mom_item_st *itm,
+                                    struct mom_webexch_st *payl);
 
 
 /// for signature_webhandler
-typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
-                                   struct mom_webexch_st *wexch,
-                                   const struct mom_boxnode_st *wexclos);
+  typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
+                                     struct mom_webexch_st *wexch,
+                                     const struct mom_boxnode_st *wexclos);
 
 
 
@@ -2176,29 +2176,29 @@ typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
   unsigned wbss_inoff;				\
   long wbss__spare
 
-struct mom_websession_st
-{
-  MOM_WEBSESSION_FIELDS;
-};
+  struct mom_websession_st
+  {
+    MOM_WEBSESSION_FIELDS;
+  };
 
 
-void mom_unsync_websocket_printf (struct mom_item_st *itm,
-                                  const char *fmt,
-                                  ...)
-__attribute__ ((format (printf, 2, 3)));
+  void mom_unsync_websocket_printf (struct mom_item_st *itm,
+                                    const char *fmt,
+                                    ...)
+  __attribute__ ((format (printf, 2, 3)));
 
 
-void mom_unsync_websocket_puts (struct mom_item_st *itm, const char *str);
+  void mom_unsync_websocket_puts (struct mom_item_st *itm, const char *str);
 
-void mom_unsync_websocket_send_json (struct mom_item_st *itm,
-                                     const json_t *js);
+  void mom_unsync_websocket_send_json (struct mom_item_st *itm,
+                                       const json_t *js);
 
-void mom_websession_payload_cleanup (struct mom_item_st *itm,
-                                     struct mom_websession_st *payl);
+  void mom_websession_payload_cleanup (struct mom_item_st *itm,
+                                       struct mom_websession_st *payl);
 
 ////////////////
-enum mom_dumpstate_en
-{ MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
+  enum mom_dumpstate_en
+  { MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 
 #define MOM_DUMPER_FIELDS				\
   MOM_ANYVALUE_FIELDS;					\
@@ -2210,11 +2210,11 @@ enum mom_dumpstate_en
   struct mom_queue_st*du_itemque;			\
   FILE*du_emitfile
 
-extern bool mom_skip_dump_hooks;
-extern bool mom_dont_make_after_dump;
+  extern bool mom_skip_dump_hooks;
+  extern bool mom_dont_make_after_dump;
 
-struct mom_dumper_st
-{
+  struct mom_dumper_st
+  {
   MOM_DUMPER_FIELDS;
 };
 
