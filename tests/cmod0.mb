@@ -46,7 +46,11 @@
    ^at comment "our tiny_func from cmod0.mb"
    ^at descr func
    ^at signature signature_func_value_to_void
-   ^at body [
+   ^at body ^item ?body (
+       ^at comment "body of tiny_func"
+       ^at descr sequence
+       ^at body
+       [
     ^item ?run (
       ^at descr run
       ^at comment "show the val0 using show_msg_value_prim"
@@ -56,7 +60,8 @@
 	val0
       )
     )
-   ]
+    ]
+   )
 )
 
 ^item !tiny_module (

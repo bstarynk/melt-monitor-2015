@@ -782,14 +782,10 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
                                  mom_item_cstring(sigitm),
                                  mom_value_cstring(formaltup));
       }
-    if (sigr.sig_result != MOM_PREDEFITM(value))
-      throw  MOM_RUNTIME_PRINTF("func %s with signature %s of non-value result type %s",
-                                mom_item_cstring(fuitm),
-                                mom_item_cstring(sigitm),
-                                mom_value_cstring(sigr.sig_result));
   }
   if (bdyitm == nullptr)
-    throw MOM_RUNTIME_PRINTF("missing body in func %s", mom_item_cstring(fuitm));
+    throw MOM_RUNTIME_PRINTF("missing or bad body in func %s", mom_item_cstring(fuitm));
+  lock_item(bdyitm);
   scan_block(bdyitm,fuitm);
   _ce_curfunctionitm = nullptr;
 } // end  MomEmitter::scan_func_element
