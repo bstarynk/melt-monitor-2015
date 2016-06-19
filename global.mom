@@ -2103,11 +2103,13 @@ comment
 
 
 *string
-1456146211
+1466338903
 ^mtime
 (
 comment
 "for strings and boxed strings"_
+descr
+type
 notice
 (
 is_atom

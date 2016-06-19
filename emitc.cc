@@ -834,9 +834,13 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
         throw MOM_RUNTIME_PRINTF("missing formal#%d in signature %s",
                                  ix, mom_item_cstring(sigitm));
       lock_item(curformitm);
-      if (is_bound(curformitm))
-        throw MOM_RUNTIME_PRINTF("already bound formal#%d %s in signature %s",
-                                 ix, mom_item_cstring(curformitm), mom_item_cstring(sigitm));
+      {
+        auto curformbind = get_binding(curformitm);
+        if (curformbind)
+          throw MOM_RUNTIME_PRINTF("already bound formal#%d %s to role %s in signature %s",
+                                   ix, mom_item_cstring(curformitm),
+                                   mom_item_cstring(curformbind->vd_rolitm), mom_item_cstring(sigitm));
+      }
       MOM_DEBUGPRINTF(gencod, "formal#%d in signature %s is %s",
                       ix, mom_item_cstring(sigitm),
                       mom_item_cstring(curformitm));
