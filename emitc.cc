@@ -755,7 +755,6 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
   assert (is_locked_item(fuitm));
-  _ce_curfunctionitm = fuitm;
   bind_global(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
   bind_global(fuitm,MOM_PREDEFITM(func),fuitm);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
@@ -2165,10 +2164,15 @@ MomCEmitter::transform_data_element(struct mom_item_st*itm)
 
 
 const struct mom_boxnode_st*
-MomCEmitter::transform_func_element(struct mom_item_st*itm)
+MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
 {
+  assert (is_locked_item(fuitm));
+  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
+  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s", mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+
 #warning unimplemented MomCEmitter::transform_func_element
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomCEmitter::transform_func_element
 
 
