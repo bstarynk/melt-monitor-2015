@@ -153,23 +153,23 @@ mom_gc_printf (const char *fmt, ...)
   memset (smallbuf, 0, sizeof (smallbuf));
   va_list args;
   va_start (args, fmt);
-  if ((ln = vsnprintf (smallbuf, sizeof (smallbuf), fmt, args))
-      < (int) sizeof (smallbuf) - 1)
+  ln = vsnprintf (smallbuf, sizeof (smallbuf), fmt, args);
+  va_end (args);
+  if (ln >= 0 && ln < (int) sizeof (smallbuf) - 1)
     res = mom_gc_strdup (smallbuf);
   else
     {
-      ln = vasprintf (&buf, fmt, args);
-      if (ln < 0)
+      res = mom_gc_alloc_scalar (ln + 1);
+      va_start (args, fmt);
+      if (vsnprintf ((char *) res, ln, fmt, args) != ln)
         MOM_FATAPRINTF ("vasprintf failure with fmt=%s (%m)", fmt);
+      va_end (args);
     }
-  va_end (args);
-  if (!res && buf)
-    {
-      res = mom_gc_strdup (buf);
-      free (buf);
-    }
+  if (buf)
+    free (buf);
   return res;
 }                               /* end of mom_gc_printf */
+
 
 void
 mom_output_utf8_escaped (FILE *f, const char *str, int len,
