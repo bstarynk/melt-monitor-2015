@@ -229,29 +229,34 @@ mom_boxstring_make_len (const char *s, int len)
 const struct mom_boxstring_st *
 mom_boxstring_printf (const char *fmt, ...)
 {
-  char *s = NULL;
-  const struct mom_boxstring_st *bsv = NULL;
-  char buf[200];
+  struct mom_boxstring_st *bsv = NULL;
+  char buf[96];
   memset (buf, 0, sizeof (buf));
   va_list args;
   va_start (args, fmt);
   int ln = vsnprintf (buf, sizeof (buf), fmt, args);
   va_end (args);
-  if (ln >= (int) sizeof (buf) - 1)
+  if (MOM_UNLIKELY (ln < 0))
+    MOM_FATAPRINTF ("mom_boxstring_printf fmt=%s failure", fmt);
+  if (ln < (int) sizeof (buf) - 1)
     {
-      unsigned sz = ((ln + 2) | 3) + 1;
-      s = malloc (sz);
-      if (MOM_UNLIKELY (!s))
-        MOM_FATAPRINTF ("failed malloc for boxstring_printf %s", fmt);
-      va_start (args, fmt);
-      vsnprintf (s, sz, fmt, args);
-      va_end (args);
+      bsv = (struct mom_boxstring_st *) mom_boxstring_make (buf);
     }
+  else if (MOM_UNLIKELY (ln >= MOM_SIZE_MAX))
+    MOM_FATAPRINTF ("too long %d boxstring_printf for fmt %s", ln, fmt);
   else
-    s = buf;
-  bsv = mom_boxstring_make (s);
-  if (s != buf)
-    free (s);
+    {
+      bsv = mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + ln + 1);
+      bsv->va_itype = MOMITY_BOXSTRING;
+      bsv->va_hsiz = ln >> 16;
+      bsv->va_lsiz = ln & 0xffff;
+      va_start (args, fmt);
+      if (MOM_UNLIKELY (ln != vsnprintf (bsv->cstr, ln + 1, fmt, args)))
+        MOM_FATAPRINTF ("mom_boxstring_printf big ln=%d fmt=%s failure",
+                        ln, fmt);
+      va_end (args);
+      bsv->hva_hash = mom_cstring_hash_len (bsv->cstr, ln);
+    }
   return bsv;
 }                               /* end of mom_boxstring_printf */
 
