@@ -834,13 +834,14 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
         throw MOM_RUNTIME_PRINTF("missing formal#%d in signature %s",
                                  ix, mom_item_cstring(sigitm));
       lock_item(curformitm);
-      {
-        auto curformbind = get_binding(curformitm);
-        if (curformbind)
-          throw MOM_RUNTIME_PRINTF("already bound formal#%d %s to role %s in signature %s",
-                                   ix, mom_item_cstring(curformitm),
-                                   mom_item_cstring(curformbind->vd_rolitm), mom_item_cstring(sigitm));
-      }
+      if (!nobind)
+        {
+          auto curformbind = get_binding(curformitm);
+          if (curformbind)
+            throw MOM_RUNTIME_PRINTF("already bound formal#%d %s to role %s in signature %s",
+                                     ix, mom_item_cstring(curformitm),
+                                     mom_item_cstring(curformbind->vd_rolitm), mom_item_cstring(sigitm));
+        }
       MOM_DEBUGPRINTF(gencod, "formal#%d in signature %s is %s",
                       ix, mom_item_cstring(sigitm),
                       mom_item_cstring(curformitm));
@@ -1351,10 +1352,17 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
       auto comps = insitm->itm_pcomp;
       unsigned nbcomp = mom_vectvaldata_count(comps);
       if (nbcomp != sigarity)
-        throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s with wrong arity,"
-                                 " got %d expecting %d for signature %s",
-                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                                 nbcomp, sigarity, mom_item_cstring(primsigitm));
+        {
+          MOM_DEBUGPRINTF(gencod, "badarity runinstr %s rk#%d",
+                          mom_item_cstring(insitm), rk);
+          MOM_DEBUGPRINTF(gencod, "badarity blkitm %s nbcomp %d sigarity %d",
+                          mom_item_cstring(blkitm), nbcomp, sigarity);
+          MOM_DEBUGPRINTF(gencod, "badarity primsigitm %s", mom_item_cstring(primsigitm));
+          throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s with wrong arity,"
+                                   " got %d expecting %d for signature %s",
+                                   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                   nbcomp, sigarity, mom_item_cstring(primsigitm));
+        }
       for (unsigned ix=0; ix<nbcomp; ix++)
         {
           auto curformitm = mom_boxtuple_nth(sformaltup, ix);

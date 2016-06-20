@@ -149,14 +149,19 @@ mom_gc_printf (const char *fmt, ...)
   char *buf = NULL;
   const char *res = NULL;
   char smallbuf[96];
+  int ln = 0;
   memset (smallbuf, 0, sizeof (smallbuf));
   va_list args;
   va_start (args, fmt);
-  if (vsnprintf (smallbuf, sizeof (smallbuf), fmt, args)
-      < (int) sizeof (smallbuf))
+  if ((ln = vsnprintf (smallbuf, sizeof (smallbuf), fmt, args))
+      < (int) sizeof (smallbuf) - 1)
     res = mom_gc_strdup (smallbuf);
   else
-    vasprintf (&buf, fmt, args);
+    {
+      ln = vasprintf (&buf, fmt, args);
+      if (ln < 0)
+        MOM_FATAPRINTF ("vasprintf failure with fmt=%s (%m)", fmt);
+    }
   va_end (args);
   if (!res && buf)
     {
