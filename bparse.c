@@ -691,6 +691,9 @@ momtok_inside_item (struct mom_item_st *itm,
             {
               int oldtopos = topos;
               const void *newval = momtok_parse (tovec, topos, &topos);
+              MOM_DEBUGPRINTF (boot, "sequence in itm=%s nbval=%d newval=%s",
+                               mom_item_cstring (itm), nbval,
+                               mom_value_cstring (newval));
               if (!newval && topos == oldtopos)
                 MOM_FATAPRINTF
                   ("value expected  after ^sequence for ^item %s at line %d of file %s",
@@ -707,6 +710,7 @@ momtok_inside_item (struct mom_item_st *itm,
                   arr = newarr;
                   siz = newsiz;
                 }
+              arr[nbval++] = newval;
             };
           if (topos < tolen
               && tovec->mtv_arr[topos].mtok_kind == MOLEX_DELIM
