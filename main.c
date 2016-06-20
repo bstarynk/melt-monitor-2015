@@ -162,7 +162,7 @@ mom_gc_printf (const char *fmt, ...)
       res = mom_gc_alloc_scalar (ln + 1);
       va_start (args, fmt);
       if (vsnprintf ((char *) res, ln, fmt, args) != ln)
-        MOM_FATAPRINTF ("vasprintf failure with fmt=%s (%m)", fmt);
+        MOM_FATAPRINTF ("vsnprintf failure with fmt=%s (%m)", fmt);
       va_end (args);
     }
   if (buf)
