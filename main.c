@@ -159,9 +159,9 @@ mom_gc_printf (const char *fmt, ...)
     res = mom_gc_strdup (smallbuf);
   else
     {
-      res = mom_gc_alloc_scalar (ln + 1);
+      res = mom_gc_alloc_scalar (1 + ((ln + 2) | 3));
       va_start (args, fmt);
-      if (vsnprintf ((char *) res, ln, fmt, args) != ln)
+      if (MOM_UNLIKELY (vsnprintf ((char *) res, ln + 1, fmt, args) != ln))
         MOM_FATAPRINTF ("vsnprintf failure with fmt=%s (%m)", fmt);
       va_end (args);
     }
