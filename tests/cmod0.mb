@@ -42,6 +42,18 @@
   )
 )
 
+^name $runinstr ^item ?run (
+  ^at descr run
+  ^at comment "show the val0 using show_msg_value_prim"
+  ^at run show_msg_value_prim
+  ^sequence (
+    "tiny-showing: "
+    val0
+  )
+)
+	 
+^display "runinstr:" $runinstr
+
 ^item !tiny_func (
    ^at comment "our tiny_func from cmod0.mb"
    ^at descr func
@@ -50,19 +62,10 @@
        ^at comment "body of tiny_func"
        ^at descr sequence
        ^at body
-       [
-    ^item ?run (
-      ^at descr run
-      ^at comment "show the val0 using show_msg_value_prim"
-      ^at run show_msg_value_prim
-      ^sequence (
-        "tiny-showing: "
-	val0
-      )
-    )
-    ]
+       [ $runinstr ]
    )
 )
+
 
 ^item !tiny_module (
    ^at comment "our tiny_module from cmod0.mb"

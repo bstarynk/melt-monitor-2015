@@ -372,19 +372,17 @@ momtok_tokenize (const char *filnam)
           const char *endnam = ptok + 1;
           while (isalnum (*endnam))
             endnam++;
-          MOM_DEBUGPRINTF (boot, "lineno#%d col#%d name '%*s'",
+          const struct mom_boxstring_st *bs =
+            mom_boxstring_make_len (ptok + 1, (int) (endnam - (ptok + 1)));
+          MOM_DEBUGPRINTF (boot, "lineno#%d col#%d name %s",
                            lineno, (int) (ptok - linbuf),
-                           (int) (endnam - (ptok + 1)), ptok);
+                           mom_value_cstring (bs));
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
                                  .mtok_kind = MOLEX_NAMESTR,    //
                                  .mtok_lin = lineno,    //
-                                 .mtok_str = mom_boxstring_make_len (ptok + 1,
-                                                                     (int)
-                                                                     (endnam -
-                                                                      (ptok +
-                                                                       1)))});
+                                 .mtok_str = bs});
           continue;
         }
       if (*ptok == '?' && isalpha (ptok[1]))    //// '?abc1' is a cloned item
