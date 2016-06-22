@@ -396,12 +396,24 @@ public:
   void write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv=nullptr);
   void write_node(FILE*out, unsigned depth, long &lastnl, const struct mom_boxnode_st*nod,
                   const void*forv=nullptr);
+  static const unsigned constexpr MAXLINEWIDTH=64;
+  static const unsigned constexpr MAXLINEINDENT=12;
+  void write_indented_newline(FILE*out, unsigned depth, long &lastnl);
+  void write_nl_or_space(FILE*out, unsigned depth, long &lastnl);
   unsigned magic() const
   {
     return _ce_magic;
   };
 };				// end of MomEmitter
 
+/***** acceptable nodes for write_node
+   ^string(<string>) -> the doublequoted utf8cencoded <string>
+   ^verbatim(<string>) -> the utf8cencoded <string>
+   ^comma(...) -> comma separated arguments  
+   ^semicolon(...) -> semicolon separated arguments  
+   ^parenthesis(...) -> contents in parenthesis
+
+ *****/
 
 ////////////////
 class MomCEmitter final :public MomEmitter
@@ -2198,6 +2210,11 @@ MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, c
       fputs(mom_double_to_cstr (x,buf,sizeof(buf)), out);
     }
     break;
+    case MOMITY_BOXSTRING:
+    {
+      fputs(((const struct mom_boxstring_st*)val)->cstr, out);
+    }
+    break;
     case MOMITY_NODE:
     {
       write_node(out,depth,lastnl,(const struct mom_boxnode_st*)val, forv);
@@ -2209,17 +2226,82 @@ MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, c
     }
 } // end of MomEmitter::write_tree
 
+
+void
+MomEmitter::write_indented_newline(FILE*out, unsigned depth, long &lastnl)
+{
+  fputc('\n', out);
+  lastnl = ftell(out);
+  if (MOM_UNLIKELY(lastnl <= 0))
+    MOM_FATAPRINTF("failed to ftell (out@%p, fileno#%d)", out, fileno(out));
+  for (int ix=(int)depth % MAXLINEINDENT; ix>=0; ix--)
+    fputc(' ', out);
+} // end of MomEmitter::write_indented_newline
+
+
+void
+MomEmitter::write_nl_or_space(FILE*out, unsigned depth, long &lastnl)
+{
+  assert (out != nullptr);
+  long curoff = ftell(out);
+  if (MOM_UNLIKELY(curoff < 0))
+    MOM_FATAPRINTF("failed to ftell (out@%p, fileno#%d)", out, fileno(out));
+  if (curoff >= lastnl + MAXLINEWIDTH) 
+    write_indented_newline(out,depth,lastnl);
+  else fputc(' ', out);
+} // end of MomEmitter::write_nl_or_space
+
 void
 MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom_boxnode_st*nod,
                        const void*forv)
 {
   assert (out != nullptr);
+  assert (mom_itype(nod) == MOMITY_NODE);
   MOM_DEBUGPRINTF(gencod, "write_node start depth=%d lastnl=%ld nod=%s forv=%s",
                   depth, lastnl, mom_value_cstring(nod), mom_value_cstring(forv));
-#warning MomEmitter::write_node unimplemented
-  MOM_FATAPRINTF("unimplemented write_node depth=%d lastnl=%ld nod=%s forv=%s",
-                 depth, lastnl, mom_value_cstring(nod), mom_value_cstring(forv));
-}
+  unsigned arity = mom_raw_size(nod);
+  const struct mom_item_st*connitm = nod->nod_connitm;
+  assert (mom_itype(connitm) == MOMITY_ITEM);
+#define NBNODECONN_MOM 97
+#define CASE_NODECONN_MOM(Nam) momhashpredef_##Nam % NBNODECONN_MOM:	\
+	  if (connitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcaseconn; foundcase_##Nam
+  switch (connitm->hva_hash % NBNODECONN_MOM)
+    {
+    case CASE_NODECONN_MOM(string):
+    case CASE_NODECONN_MOM(verbatim):
+    {
+      bool verb = (connitm == MOM_PREDEFITM(verbatim));
+      if (arity != 1) goto badarity;
+      auto sonv = nod->nod_sons[0];
+      if (mom_itype(sonv) != MOMITY_BOXSTRING)
+        throw  MOM_RUNTIME_PRINTF("expecting string son write_node %s depth=%d forv=%s",
+                                  mom_value_cstring(nod), depth, mom_value_cstring(forv));
+      auto str = ((const struct mom_boxstring_st*)sonv)->cstr;
+      auto ln = mom_raw_size(sonv);
+      if (!verb) fputs(" \"", out);
+      mom_output_utf8_encoded (out, str, ln);
+      if (verb) fputs("\"", out);
+    }
+    break;
+    case CASE_NODECONN_MOM(comma):
+    case CASE_NODECONN_MOM(semicolon):
+      {
+	bool semic = (connitm == MOM_PREDEFITM(semicolon));
+      }
+    break;
+    default:
+defaultcaseconn:
+      throw  MOM_RUNTIME_PRINTF("unexpected write_node nod:%s depth=%d forv=%s",
+                                mom_value_cstring(nod), depth, mom_value_cstring(forv));
+badarity:
+      throw  MOM_RUNTIME_PRINTF("bad arity  write_node nod:%s depth=%d forv=%s",
+                                mom_value_cstring(nod), depth, mom_value_cstring(forv));
+
+    }
+#undef CASE_NODECONN_MOM
+#undef NBNODECONN_MOM
+} // end MomEmitter::write_node
 ////////////////////////////////////////////////////////////////
 MomCEmitter::~MomCEmitter()
 {
