@@ -214,6 +214,16 @@ comment
 
 
 
+*comma
+1466585720
+^mtime
+(
+comment
+"for comma separated output"_
+)attrs
+
+
+
 *comment
 1445968873
 ^mtime
@@ -344,6 +354,7 @@ comment
 
 
 
+
 *displayer
 1452104741
 ^mtime
@@ -351,7 +362,6 @@ comment
 comment
 "attribute giving the displayer closure"_
 )attrs
-
 
 
 
@@ -512,6 +522,7 @@ comment
 
 
 
+
 *from
 1465302282
 ^mtime
@@ -519,7 +530,6 @@ comment
 comment
 "for source, e.g. in assignments"_
 )attrs
-
 
 
 
@@ -684,6 +694,7 @@ comment
 
 
 
+
 *is_closure
 1457598341
 ^mtime
@@ -691,7 +702,6 @@ comment
 comment
 "test if argument is a closure"_
 )attrs
-
 
 
 
@@ -864,6 +874,7 @@ comment
 
 
 
+
 *left_assoc
 1455871773
 ^mtime
@@ -871,7 +882,6 @@ comment
 comment
 "for left associative delimiters"_
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ node_nth
 
 
 
+
 *node_arity
 1457430266
 ^mtime
@@ -1040,7 +1051,6 @@ node_nth
 comment
 "get the arity of a node, or else nil"_
 )attrs
-
 
 
 
@@ -1192,6 +1202,7 @@ comment
 
 
 
+
 *out_hexa
 1456812179
 ^mtime
@@ -1199,7 +1210,6 @@ comment
 comment
 "output hexa"_
 )attrs
-
 
 
 
@@ -1373,6 +1383,7 @@ comment
 
 
 
+
 *payl_assovaldata_remove
 1456833278
 ^mtime
@@ -1380,7 +1391,6 @@ comment
 comment
 "remove attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1550,6 +1560,7 @@ comment
 
 
 
+
 *payl_hashmap_get
 1456897878
 ^mtime
@@ -1557,7 +1568,6 @@ comment
 comment
 "operation to get a key in an hashmap"_
 )attrs
-
 
 
 
@@ -1719,6 +1729,7 @@ comment
 
 
 
+
 *payl_vectval_node
 1456840222
 ^mtime
@@ -1726,7 +1737,6 @@ comment
 comment
 "make node from vector of values payload"_
 )attrs
-
 
 
 
@@ -1919,6 +1929,7 @@ comment
 
 
 
+
 *range
 1465978097
 ^mtime
@@ -1926,7 +1937,6 @@ comment
 comment
 "for ranges in cases"_
 )attrs
-
 
 
 
@@ -2010,6 +2020,16 @@ comment
 
 
 
+*semicolon
+1466585720
+^mtime
+(
+comment
+"for semicolon separated output"_
+)attrs
+
+
+
 *sequence
 1452422570
 ^mtime
@@ -2071,6 +2091,7 @@ comment
 
 
 
+
 *signature_tasklet
 1446190348
 ^mtime
@@ -2088,7 +2109,6 @@ comment
 comment
 "for size information"_
 )attrs
-
 
 
 
@@ -2350,6 +2370,7 @@ comment
 
 
 
+
 *truth
 1455463429
 ^mtime
@@ -2372,7 +2393,6 @@ is_sequence
 is_tuple
 )set
 )attrs
-
 
 
 
@@ -2529,6 +2549,7 @@ comment
 
 
 
+
 *when
 1455462590
 ^mtime
@@ -2546,7 +2567,6 @@ comment
 comment
 "for while"_
 )attrs
-
 
 
 
