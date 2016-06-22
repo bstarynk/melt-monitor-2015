@@ -396,6 +396,10 @@ public:
   void write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv=nullptr);
   void write_node(FILE*out, unsigned depth, long &lastnl, const struct mom_boxnode_st*nod,
                   const void*forv=nullptr);
+  void write_balanced_node(FILE*out, unsigned depth,
+			   const char*prefix, const char*suffix,
+			   long &lastnl, const struct mom_boxnode_st*nod,
+			   const void*forv=nullptr);
   static const unsigned constexpr MAXLINEWIDTH=64;
   static const unsigned constexpr MAXLINEINDENT=12;
   void write_indented_newline(FILE*out, unsigned depth, long &lastnl);
@@ -2252,6 +2256,24 @@ MomEmitter::write_nl_or_space(FILE*out, unsigned depth, long &lastnl)
 } // end of MomEmitter::write_nl_or_space
 
 void
+MomEmitter::write_balanced_node(FILE*out, unsigned depth, 
+			   const char*prefix, const char*suffix,
+				long &lastnl, const  struct mom_boxnode_st*nod,
+				const void*forv)
+{
+  assert (mom_itype(nod) == MOMITY_NODE);
+  fputs(prefix, out);
+  write_nl_or_space(out, depth, lastnl);
+  unsigned arity = mom_raw_size(nod);
+  for (int ix=0; ix<arity; ix++) {
+    write_tree(out,depth+1,lastnl,nod->nod_sons[ix],forv);
+  }
+  fputc(' ', out);
+  fputs(suffix, out);
+} // end of MomEmitter::write_balanced_node
+
+
+void
 MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom_boxnode_st*nod,
                        const void*forv)
 {
@@ -2288,8 +2310,33 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     case CASE_NODECONN_MOM(semicolon):
       {
 	bool semic = (connitm == MOM_PREDEFITM(semicolon));
+	for (int ix=0; ix<(int)arity; ix++)
+	  {
+	    if (ix>0) {
+	      fputc(semic?';':',', out);
+	      write_nl_or_space(out,depth,lastnl);
+	    }
+	    write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+	  }
       }
     break;
+    case CASE_NODECONN_MOM(sequence):
+      {
+	for (int ix=0; ix<(int)arity; ix++)
+	  {
+	    write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+	  }
+      }
+      break;
+    case CASE_NODECONN_MOM(parenthesis):
+      write_balanced_node(out,depth,"(",")",lastnl,nod,forv);
+      break;
+    case CASE_NODECONN_MOM(brace):
+      write_balanced_node(out,depth,"{","}",lastnl,nod,forv);
+      break;
+    case CASE_NODECONN_MOM(bracket):
+      write_balanced_node(out,depth,"[","]",lastnl,nod,forv);
+      break;
     default:
 defaultcaseconn:
       throw  MOM_RUNTIME_PRINTF("unexpected write_node nod:%s depth=%d forv=%s",
