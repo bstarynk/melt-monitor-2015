@@ -95,7 +95,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -393,6 +393,9 @@ public:
       MOM_DEBUGPRINTF(gencod,"flush_todo_list %s done %ld todos",
                       kindname(), count);
   };
+  void write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv=nullptr);
+  void write_node(FILE*out, unsigned depth, long &lastnl, const struct mom_boxnode_st*nod,
+                  const void*forv=nullptr);
   unsigned magic() const
   {
     return _ce_magic;
@@ -409,6 +412,7 @@ public:
   MomCEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
+  const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
@@ -887,6 +891,7 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
   else if (restyp != MOMITY_NONE)
     throw  MOM_RUNTIME_PRINTF("invalid result %s for signature %s",
                               mom_value_cstring(resv), mom_item_cstring(sigitm));
+  _ce_sigitems.insert(sigitm);
   MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s done formals=%s result=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(resv));
   return {formtup,resv};
@@ -1773,7 +1778,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-    // failthru
+      // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2148,7 +2153,73 @@ MomEmitter::~MomEmitter()
   _ce_setlockeditems.clear();
 } // end MomEmitter::~MomEmitter
 
+void
+MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv)
+{
+  assert (out != nullptr);
+  MOM_DEBUGPRINTF(gencod, "write_tree start depth=%d lastnl=%ld val=%s forv=%s",
+                  depth, lastnl, mom_value_cstring(val), mom_value_cstring(forv));
+  unsigned ty = mom_itype(val);
+  switch (ty)
+    {
+    case MOMITY_NONE:
+      throw MOM_RUNTIME_PRINTF("cannot write_tree nil depth=%d forv=%s",
+                               depth, mom_value_cstring(forv));
+    case MOMITY_ITEM:
+      fputs(mom_item_cstring((const mom_item_st*)val), out);
+      break;
+    case MOMITY_SET:
+      throw MOM_RUNTIME_PRINTF("cannot write_tree set:%s depth=%d forv=%s",
+                               mom_value_cstring(val), depth, mom_value_cstring(forv));
+    case MOMITY_TUPLE:
+    {
+      auto tup = (const mom_boxtuple_st*)val;
+      unsigned siz = mom_raw_size(tup);
+      for (unsigned ix=0; ix<siz; ix++)
+        {
+          auto compitm=tup->seqitem[ix];
+          if (compitm==nullptr) continue;
+          assert (mom_itype(compitm)==MOMITY_ITEM);
+          fputs(mom_item_cstring(compitm), out);
+        }
+    }
+    break;
+    case MOMITY_INT:
+    {
+      long long l = mom_int_val_def (val, 0);
+      fprintf(out, "%lld", l);
+    }
+    break;
+    case MOMITY_BOXDOUBLE:
+    {
+      char buf[48];
+      double x= ((const struct mom_boxdouble_st *)val)->boxd_dbl;
+      memset(buf, 0, sizeof(buf));
+      fputs(mom_double_to_cstr (x,buf,sizeof(buf)), out);
+    }
+    break;
+    case MOMITY_NODE:
+    {
+      write_node(out,depth,lastnl,(const struct mom_boxnode_st*)val, forv);
+    }
+    break;
+    default:
+      throw MOM_RUNTIME_PRINTF("unexpected write_tree val:%s depth=%d forv=%s",
+                               mom_value_cstring(val), depth, mom_value_cstring(forv));
+    }
+} // end of MomEmitter::write_tree
 
+void
+MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom_boxnode_st*nod,
+                       const void*forv)
+{
+  assert (out != nullptr);
+  MOM_DEBUGPRINTF(gencod, "write_node start depth=%d lastnl=%ld nod=%s forv=%s",
+                  depth, lastnl, mom_value_cstring(nod), mom_value_cstring(forv));
+#warning MomEmitter::write_node unimplemented
+  MOM_FATAPRINTF("unimplemented write_node depth=%d lastnl=%ld nod=%s forv=%s",
+                 depth, lastnl, mom_value_cstring(nod), mom_value_cstring(forv));
+}
 ////////////////////////////////////////////////////////////////
 MomCEmitter::~MomCEmitter()
 {
@@ -2162,6 +2233,22 @@ MomCEmitter::transform_data_element(struct mom_item_st*itm)
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
 } // end MomCEmitter::transform_data_element
 
+const struct mom_boxnode_st*
+MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
+{
+  assert (is_locked_item(sigitm));
+  assert (is_locked_item(fitm));
+  MOM_DEBUGPRINTF(gencod, "c-emitter declare_signature_for start sigitm=%s fitm=%s",
+                  mom_item_cstring(sigitm), mom_item_cstring(fitm));
+  auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+  assert (formtup != nullptr);
+  auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtup=%s restyv=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
+#warning MomCEmitter::declare_signature_for unimplemented
+  MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
+                  mom_item_cstring(sigitm), mom_item_cstring(fitm));
+} // end MomCEmitter::declare_signature_for
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
@@ -2170,7 +2257,7 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s", mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-
+  auto declsigv = declare_signature_for(sigitm,fuitm);
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomCEmitter::transform_func_element
@@ -2285,7 +2372,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2339,7 +2426,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
