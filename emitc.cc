@@ -427,16 +427,17 @@ class MomCEmitter final :public MomEmitter
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
 public:
-  static unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
+  static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
+  static   constexpr const char* CPREFIX_TYPE = "momty_";
   MomCEmitter(struct mom_item_st*itm)
     : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()  {};
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
-  void add_glocal_decl(const struct mom_boxnode_st*nod)
+  void add_global_decl(const struct mom_boxnode_st*nod)
   {
     if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
     else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
-  }
+  };
   const struct mom_boxnode_st* declare_type (struct mom_item_st*typitm);
   const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
@@ -672,7 +673,7 @@ MomEmitter::transform_top_module(void)
       _ce_curfunctionitm = nullptr;
     }
   auto modnod = mom_boxnode_make(MOM_PREDEFITM(module),vecval.size(),
-                                 (const struct mom_hashedvalue_st**)vecval.data());
+                                 vecval.data());
   vecval.clear();
   MOM_DEBUGPRINTF(gencod, "transform_top_module from top module %s gives modnod\n.. %s",
                   mom_item_cstring(_ce_topitm), mom_value_cstring(modnod));
@@ -2276,7 +2277,7 @@ MomEmitter::write_balanced_node(FILE*out, unsigned depth,
   fputs(prefix, out);
   write_nl_or_space(out, depth, lastnl);
   unsigned arity = mom_raw_size(nod);
-  for (int ix=0; ix<arity; ix++)
+  for (int ix=0; ix<(int)arity; ix++)
     {
       write_tree(out,depth+1,lastnl,nod->nod_sons[ix],forv);
     }
@@ -2388,8 +2389,14 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtup=%s restyv=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
   int nbform = mom_raw_size(formtup);
+  momvalue_t smallformdeclarr[8] = {nullptr};
+  momvalue_t *formdeclarr =
+    (nbform<(int)(sizeof(smallformdeclarr)/sizeof(smallformdeclarr[0])))
+    ? smallformdeclarr
+    : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
   for (int ix=0; ix<nbform; ix++)
     {
+      momvalue_t curformdeclv = nullptr;
       struct mom_item_st*curformitm = formtup->seqitem[ix];
       MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s  ix#%d curformitm=%s",
                       mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
@@ -2399,6 +2406,29 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
       MOM_DEBUGPRINTF(gencod, "c-declare_signature_for curformitm=%s formtypitm=%s",
                       mom_item_cstring(curformitm),
                       mom_item_cstring(formtypitm));
+      assert (is_locked_item(formtypitm));
+      auto cextypv = mom_unsync_item_get_phys_attr (formtypitm, MOM_PREDEFITM(c_code));
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s cextypv=%s",
+                      mom_item_cstring(formtypitm), mom_value_cstring(cextypv));
+      if (!cextypv)
+        {
+          auto dectypnod = declare_type(formtypitm);
+          MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s dectypnod=%s",
+                          mom_item_cstring(formtypitm), mom_value_cstring(dectypnod));
+          add_global_decl(dectypnod);
+          curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                             mom_boxstring_make(CPREFIX_TYPE),
+                                             formtypitm, mom_boxstring_make(" "), curformitm);
+        }
+      else
+        {
+          curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                             cextypv, mom_boxstring_make(" "), curformitm);
+        }
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for ix#%d curformitm=%s curformdeclv=%s",
+                      ix,
+                      mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
+      formdeclarr[ix] = curformdeclv;
     }
 #warning MomCEmitter::declare_signature_for unimplemented
   MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
@@ -2444,7 +2474,7 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
     {
       _cec_declareditems.insert(sigitm);
       auto sigtypnod = declare_signature_type(sigitm);
-      add_glocal_decl(declsignod);
+      add_global_decl(declsignod);
     }
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));

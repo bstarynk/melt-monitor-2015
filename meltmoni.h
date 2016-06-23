@@ -973,7 +973,7 @@ mom_boxset_nth (const struct    mom_boxset_st *bset,
     momint_t nod_metarank;
     struct mom_item_st *nod_metaitem;
     struct mom_item_st *nod_connitm;
-    struct mom_hashedvalue_st *nod_sons[MOM_FLEXIBLE_DIM];      /* actual size is the mom_raw_size */
+    momvalue_t nod_sons[MOM_FLEXIBLE_DIM];      /* actual size is the mom_raw_size */
   };
   static inline const struct mom_boxnode_st *mom_dyncast_node (const void *p)
   {
@@ -989,7 +989,7 @@ mom_boxset_nth (const struct    mom_boxset_st *bset,
     return NULL;
   }
 
-  static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
+  static inline momvalue_t mom_boxnode_nth (const void *p,
       int rk)
   {
     if (mom_itype(p) == MOMITY_NODE)
@@ -1005,15 +1005,13 @@ mom_boxset_nth (const struct    mom_boxset_st *bset,
 
   const struct mom_boxnode_st *mom_boxnode_make_meta
 (const struct mom_item_st *conn, int size,
-   const struct mom_hashedvalue_st **sons,
+   const momvalue_t*sons,
    const struct mom_item_st *meta, momint_t metarank);
 
-  static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
-      mom_item_st
-      *conn,
-      int size,
-      const struct  mom_hashedvalue_st
-      **sons)
+  static inline const struct mom_boxnode_st *
+mom_boxnode_make (const struct  mom_item_st *conn,
+                    int size,
+                    momvalue_t*sons)
   {
     return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
   }
@@ -1021,21 +1019,16 @@ mom_boxset_nth (const struct    mom_boxset_st *bset,
   const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
       mom_item_st *meta,
       momint_t metarank,
-      const struct
-      mom_item_st *conn,
+      const struct mom_item_st *conn,
       unsigned size, ...);
 
 #define mom_boxnode_make_va(Conn,Siz,...) mom_boxnode_meta_make_va(NULL,0,Conn,Siz,__VA_ARGS__)
 
 
-  const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
-      mom_item_st
-      *meta,
-      momint_t
-      metarank,
-      const struct
-      mom_item_st
-      *conn, ...)
+  const struct mom_boxnode_st *
+mom_boxnode_meta_make_sentinel_va (const struct  mom_item_st  *meta,
+                                     momint_t  metarank,
+                                     const struct  mom_item_st*conn, ...)
   __attribute__ ((sentinel));
 
 #define mom_boxnode_meta_make_sentinel(MetaItm,MetaRank,Conn,...)	\

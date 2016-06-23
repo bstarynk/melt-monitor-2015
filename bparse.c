@@ -965,14 +965,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           && tovec->mtv_arr[topos].mtok_delim == MODLM_RPAR)
         topos++;
       if (withmeta)
-        res =
-          mom_boxnode_make_meta (connitm, nbsons,
-                                 (const struct mom_hashedvalue_st **) arr,
-                                 metaitm, metarank);
+        res = mom_boxnode_make_meta (connitm, nbsons, arr, metaitm, metarank);
       else
-        res =
-          mom_boxnode_make (connitm, nbsons,
-                            (const struct mom_hashedvalue_st **) arr);
+        res = mom_boxnode_make (connitm, nbsons, arr);
       MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d node %s", topos,
                        mom_value_cstring (res));
       if (arr != smallarr)

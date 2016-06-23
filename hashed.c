@@ -1099,8 +1099,8 @@ mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,
     return NULL;
   unsigned cnt = hass->cda_count;
   unsigned siz = mom_raw_size (hass);
-  const struct mom_hashedvalue_st *smallarr[16] = { NULL };
-  const struct mom_hashedvalue_st **arr =
+  momvalue_t smallarr[12] = { NULL };
+  momvalue_t *arr =
     (cnt < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
     : mom_gc_alloc ((cnt + 1) * sizeof (void *));
   unsigned icnt = 0;
