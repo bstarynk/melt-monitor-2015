@@ -95,7 +95,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -397,9 +397,9 @@ public:
   void write_node(FILE*out, unsigned depth, long &lastnl, const struct mom_boxnode_st*nod,
                   const void*forv=nullptr);
   void write_balanced_node(FILE*out, unsigned depth,
-			   const char*prefix, const char*suffix,
-			   long &lastnl, const struct mom_boxnode_st*nod,
-			   const void*forv=nullptr);
+                           const char*prefix, const char*suffix,
+                           long &lastnl, const struct mom_boxnode_st*nod,
+                           const void*forv=nullptr);
   static const unsigned constexpr MAXLINEWIDTH=64;
   static const unsigned constexpr MAXLINEINDENT=12;
   void write_indented_newline(FILE*out, unsigned depth, long &lastnl);
@@ -413,8 +413,8 @@ public:
 /***** acceptable nodes for write_node
    ^string(<string>) -> the doublequoted utf8cencoded <string>
    ^verbatim(<string>) -> the utf8cencoded <string>
-   ^comma(...) -> comma separated arguments  
-   ^semicolon(...) -> semicolon separated arguments  
+   ^comma(...) -> comma separated arguments
+   ^semicolon(...) -> semicolon separated arguments
    ^parenthesis(...) -> contents in parenthesis
 
  *****/
@@ -422,13 +422,23 @@ public:
 ////////////////
 class MomCEmitter final :public MomEmitter
 {
+  traced_vector_values_t _cec_globdecltree;
+  traced_set_items_t _cec_declareditems;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
+
 public:
   static unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
-  MomCEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
+  MomCEmitter(struct mom_item_st*itm)
+    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()  {};
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
+  void add_glocal_decl(const struct mom_boxnode_st*nod)
+  {
+    if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
+    else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
+  }
   const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
+  const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
@@ -1794,7 +1804,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      // failthru
+    // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2250,24 +2260,25 @@ MomEmitter::write_nl_or_space(FILE*out, unsigned depth, long &lastnl)
   long curoff = ftell(out);
   if (MOM_UNLIKELY(curoff < 0))
     MOM_FATAPRINTF("failed to ftell (out@%p, fileno#%d)", out, fileno(out));
-  if (curoff >= lastnl + MAXLINEWIDTH) 
+  if (curoff >= lastnl + MAXLINEWIDTH)
     write_indented_newline(out,depth,lastnl);
   else fputc(' ', out);
 } // end of MomEmitter::write_nl_or_space
 
 void
-MomEmitter::write_balanced_node(FILE*out, unsigned depth, 
-			   const char*prefix, const char*suffix,
-				long &lastnl, const  struct mom_boxnode_st*nod,
-				const void*forv)
+MomEmitter::write_balanced_node(FILE*out, unsigned depth,
+                                const char*prefix, const char*suffix,
+                                long &lastnl, const  struct mom_boxnode_st*nod,
+                                const void*forv)
 {
   assert (mom_itype(nod) == MOMITY_NODE);
   fputs(prefix, out);
   write_nl_or_space(out, depth, lastnl);
   unsigned arity = mom_raw_size(nod);
-  for (int ix=0; ix<arity; ix++) {
-    write_tree(out,depth+1,lastnl,nod->nod_sons[ix],forv);
-  }
+  for (int ix=0; ix<arity; ix++)
+    {
+      write_tree(out,depth+1,lastnl,nod->nod_sons[ix],forv);
+    }
   fputc(' ', out);
   fputs(suffix, out);
 } // end of MomEmitter::write_balanced_node
@@ -2308,26 +2319,27 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     break;
     case CASE_NODECONN_MOM(comma):
     case CASE_NODECONN_MOM(semicolon):
-      {
-	bool semic = (connitm == MOM_PREDEFITM(semicolon));
-	for (int ix=0; ix<(int)arity; ix++)
-	  {
-	    if (ix>0) {
-	      fputc(semic?';':',', out);
-	      write_nl_or_space(out,depth,lastnl);
-	    }
-	    write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
-	  }
-      }
+    {
+      bool semic = (connitm == MOM_PREDEFITM(semicolon));
+      for (int ix=0; ix<(int)arity; ix++)
+        {
+          if (ix>0)
+            {
+              fputc(semic?';':',', out);
+              write_nl_or_space(out,depth,lastnl);
+            }
+          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+        }
+    }
     break;
     case CASE_NODECONN_MOM(sequence):
-      {
-	for (int ix=0; ix<(int)arity; ix++)
-	  {
-	    write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
-	  }
-      }
-      break;
+    {
+      for (int ix=0; ix<(int)arity; ix++)
+        {
+          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+        }
+    }
+    break;
     case CASE_NODECONN_MOM(parenthesis):
       write_balanced_node(out,depth,"(",")",lastnl,nod,forv);
       break;
@@ -2380,13 +2392,32 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
 } // end MomCEmitter::declare_signature_for
 
 const struct mom_boxnode_st*
+MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
+{
+  assert (is_locked_item(sigitm));
+  MOM_DEBUGPRINTF(gencod, "declare_signature_type start sigitm=%s", mom_item_cstring(sigitm));
+#warning MomCEmitter::declare_signature_type unimplemented
+  MOM_FATAPRINTF( "c-emitter declare_signature_type unimplemented sigitm=%s",
+                  mom_item_cstring(sigitm));
+}
+
+const struct mom_boxnode_st*
 MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
 {
   assert (is_locked_item(fuitm));
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
-  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s", mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-  auto declsigv = declare_signature_for(sigitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  auto declsignod = declare_signature_for(sigitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s declsigfunv %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(declsignod));
+  if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+    {
+      _cec_declareditems.insert(sigitm);
+      auto sigtypnod = declare_signature_type(sigitm);
+      add_glocal_decl(declsignod);
+    }
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomCEmitter::transform_func_element
@@ -2501,7 +2532,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2555,7 +2586,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
