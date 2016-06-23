@@ -95,7 +95,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -437,6 +437,7 @@ public:
     if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
     else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
   }
+  const struct mom_boxnode_st* declare_type (struct mom_item_st*typitm);
   const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -1804,7 +1805,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-    // failthru
+      // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2386,10 +2387,24 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
   auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtup=%s restyv=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
+  int nbform = mom_raw_size(formtup);
+  for (int ix=0; ix<nbform; ix++)
+    {
+      struct mom_item_st*curformitm = formtup->seqitem[ix];
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s  ix#%d curformitm=%s",
+                      mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
+      assert (is_locked_item(curformitm));
+      struct mom_item_st*formtypitm =
+      mom_dyncast_item(mom_unsync_item_get_phys_attr (curformitm, MOM_PREDEFITM(type)));
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for curformitm=%s formtypitm=%s",
+                      mom_item_cstring(curformitm),
+                      mom_item_cstring(formtypitm));
+    }
 #warning MomCEmitter::declare_signature_for unimplemented
   MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
                   mom_item_cstring(sigitm), mom_item_cstring(fitm));
 } // end MomCEmitter::declare_signature_for
+
 
 const struct mom_boxnode_st*
 MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
@@ -2399,7 +2414,20 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 #warning MomCEmitter::declare_signature_type unimplemented
   MOM_FATAPRINTF( "c-emitter declare_signature_type unimplemented sigitm=%s",
                   mom_item_cstring(sigitm));
-}
+} // end of MomCEmitter::declare_signature_type
+
+
+const struct mom_boxnode_st*
+MomCEmitter::declare_type (struct mom_item_st*typitm)
+{
+  MOM_DEBUGPRINTF(gencod, "declare_type start typitm=%s",
+                  mom_item_cstring(typitm));
+  assert (is_locked_item(typitm));
+#warning MomCEmitter::declare_type unimplemented
+  MOM_FATAPRINTF( "c-emitter declare_type unimplemented typitm=%s",
+                  mom_item_cstring(typitm));
+} // end of MomCEmitter::declare_type
+
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
@@ -2532,7 +2560,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2586,7 +2614,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
