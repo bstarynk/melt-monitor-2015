@@ -406,9 +406,11 @@ comment
 
 
 *double
-1456146211
+1466672331
 ^mtime
 (
+c_code
+"double"_
 comment
 "for double & boxed doubles"_
 notice
@@ -689,9 +691,11 @@ comment
 
 
 *int
-1456146211
+1466672314
 ^mtime
 (
+c_code
+"momint_t"_
 comment
 "for int and boxed integers"_
 notice
@@ -2478,9 +2482,11 @@ type
 
 
 *value
-1465197965
+1466672017
 ^mtime
 (
+c_code
+"momvalue_t"_
 comment
 "for value, e.g. edition"_
 descr
