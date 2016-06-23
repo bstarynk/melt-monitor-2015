@@ -253,7 +253,9 @@ static_assert (sizeof (intptr_t) == sizeof (double)
 
 const char *mom_hostname (void);
 
-
+  typedef const void*momvalue_t;
+  typedef intptr_t momint_t;
+  
 #ifdef NDEBUG
 #define MOM_PRIVATE static
 #else
@@ -653,7 +655,7 @@ struct mom_hashedvalue_st
 };
 
 
-static inline intptr_t mom_int_val_def (const void *p, intptr_t def);
+static inline momint_t mom_int_val_def (const void *p, momint_t def);
 static inline momhash_t mom_hash (const void *p)
 {
   unsigned t = mom_itype(p);
@@ -662,7 +664,7 @@ static inline momhash_t mom_hash (const void *p)
     return ((const struct mom_hashedvalue_st *) p)->hva_hash;
   else if (t==MOMITY_INT)
     {
-      intptr_t i= mom_int_val_def(p,0);
+      momint_t i= mom_int_val_def(p,0);
       return i % 1000001137 + 1;
     }
   return 0;
@@ -689,22 +691,22 @@ struct mom_boxint_st
 {
   MOM_HASHEDVALUE_FIELDS;
   // here field
-  intptr_t boxi_int;
+  momint_t boxi_int;
 };
-static inline intptr_t mom_int_val_def (const void *p, intptr_t def)
+static inline momint_t mom_int_val_def (const void *p, momint_t def)
 {
   if (mom_itype(p) == MOMITY_INT)
     {
-      if ((intptr_t)p % 2 == 0)
+      if ((momint_t)p % 2 == 0)
         return ((const struct mom_boxint_st*)p)->boxi_int;
-      else return ((intptr_t)p >> 1);
+      else return ((momint_t)p >> 1);
     }
   return def;
 }
 
 
 
-static inline momhash_t mom_int_hash (intptr_t i)
+static inline momhash_t mom_int_hash (momint_t i)
 {
   momhash_t h = (i * 509) ^ (i % 76519);
   if (!h)
@@ -714,7 +716,7 @@ static inline momhash_t mom_int_hash (intptr_t i)
 }
 
 
-const void *mom_int_make (intptr_t i);
+const void *mom_int_make (momint_t i);
 static inline const void*mom_dyncast_int (const void*p)
 {
   if (mom_itype(p) == MOMITY_INT) return p;
@@ -968,7 +970,7 @@ struct mom_boxnode_st
 {
   MOM_HASHEDVALUE_FIELDS;
   // here prefix nod_
-  intptr_t nod_metarank;
+  momint_t nod_metarank;
   struct mom_item_st *nod_metaitem;
   struct mom_item_st *nod_connitm;
   struct mom_hashedvalue_st *nod_sons[MOM_FLEXIBLE_DIM];      /* actual size is the mom_raw_size */
@@ -1004,7 +1006,7 @@ static inline struct mom_hashedvalue_st *mom_boxnode_nth (const void *p,
 const struct mom_boxnode_st *mom_boxnode_make_meta
 (const struct mom_item_st *conn, int size,
  const struct mom_hashedvalue_st **sons,
- const struct mom_item_st *meta, intptr_t metarank);
+ const struct mom_item_st *meta, momint_t metarank);
 
 static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
     mom_item_st
@@ -1018,7 +1020,7 @@ static inline const struct mom_boxnode_st *mom_boxnode_make (const struct
 
 const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
     mom_item_st *meta,
-    intptr_t metarank,
+    momint_t metarank,
     const struct
     mom_item_st *conn,
     unsigned size, ...);
@@ -1029,7 +1031,7 @@ const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
 const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
     mom_item_st
     *meta,
-    intptr_t
+    momint_t
     metarank,
     const struct
     mom_item_st
@@ -1334,7 +1336,7 @@ const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashas
     mom_item_st *itm);
 
 const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,  //
-    intptr_t num);
+    momint_t num);
 
 const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass,       //
     double d);
@@ -1728,7 +1730,7 @@ struct mom_statelem_st
   {
     void *st_nptr;            /* NULL for MOMSTA_EMPTY */
     int st_mark;              /* when MOMSTA_MARK */
-    intptr_t st_int;          /* when MOMSTA_INT */
+    momint_t st_int;          /* when MOMSTA_INT */
     double st_dbl;            /* when MOMSTA_DBL */
     const char *st_str;       /* GC-strduped string for when MOMSTA_STRING */
     struct mom_hashedvalue_st *st_val;        /* when MOMSTA_VAL */
@@ -1767,13 +1769,13 @@ static inline struct mom_statelem_st mom_ldstate_make_mark (int m)
 }
 
 
-static inline intptr_t
-mom_ldstate_int_def (const struct mom_statelem_st se, intptr_t def)
+static inline momint_t
+mom_ldstate_int_def (const struct mom_statelem_st se, momint_t def)
 {
   return (se.st_type == MOMSTA_INT) ? se.st_int : def;
 };
 
-static inline struct mom_statelem_st mom_ldstate_make_int (intptr_t i)
+static inline struct mom_statelem_st mom_ldstate_make_int (momint_t i)
 {
   struct mom_statelem_st el;
   el.st_type = MOMSTA_INT;
@@ -2620,8 +2622,8 @@ struct mom_tasklet_st
 
 struct mom_framescalar_st
 {
-  intptr_t tfs_state;
-  intptr_t tfs_scalars[];
+  momint_t tfs_state;
+  momint_t tfs_scalars[];
 };
 
 struct mom_framepointer_st
@@ -2738,7 +2740,7 @@ typedef void mom_tasklet_sig_t (struct mom_item_st *tkitm);
 
 //// for signature_closure_1int_to_void
 typedef void mom_closure_1int_to_void_sig_t (const struct mom_boxnode_st
-    *clonod, intptr_t num);
+    *clonod, momint_t num);
 //// for signature_closure_void_to_void
 typedef void mom_closure_void_to_void_sig_t (const struct mom_boxnode_st
     *clonod);
@@ -2784,7 +2786,7 @@ struct mom_nanotaskstep_st
   double nats_startim;
   struct mom_tasklet_st *nats_tasklet;
   void *nats_ptrs[MOM_TASKSTEP_MAX_DATA];
-  intptr_t nats_nums[MOM_TASKSTEP_MAX_DATA];
+  momint_t nats_nums[MOM_TASKSTEP_MAX_DATA];
   double nats_dbls[MOM_TASKSTEP_MAX_DATA];
 };
 
