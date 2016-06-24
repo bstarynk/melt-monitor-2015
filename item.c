@@ -1195,6 +1195,29 @@ mom_item_cstring (const struct mom_item_st *itm)
 }                               /* end mom_item_cstring */
 
 
+const char*
+mom_item_content_cstring(struct mom_item_st *itm)
+{
+  if (!itm || itm == MOM_EMPTY_SLOT)
+    return "~";
+  assert (mom_itype (itm) == MOMITY_ITEM);
+  char* buf = NULL;
+  size_t sz = 0;
+  FILE *f = open_memstream(&buf, &sz);
+  if (MOM_UNLIKELY(!f))
+    MOM_FATAPRINTF("failed to open_memstring for item content %s", mom_item_cstring(itm));
+  {
+    long nl = 0;
+    mom_item_lock(itm);
+    mom_output_item_content(f,&nl,itm);
+    mom_item_unlock(itm);
+    fputc('\n', f);
+  }
+  fflush(f);
+  const char*res = mom_gc_strdup(buf);
+  free (buf), buf = NULL;
+  return res;
+} /* end of mom_item_content_cstring */
 
 int
 mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)

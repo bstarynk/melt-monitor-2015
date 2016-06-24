@@ -2359,6 +2359,8 @@ mom_output_value (FILE *f, long *plastnl, int depth,
 void
 mom_output_item_content (FILE *f, long *plastnl, struct mom_item_st *itm);
 
+const char *mom_item_content_cstring(struct mom_item_st *itm);
+
 #define MOM_LOAD_WEBDIR "webroot"
 #define MOM_MAX_WEBDIR 8
 extern const char *mom_webdir[MOM_MAX_WEBDIR];
