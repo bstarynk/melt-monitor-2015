@@ -435,6 +435,7 @@ class MomCEmitter final :public MomEmitter
 {
   traced_vector_values_t _cec_globdecltree;
   traced_set_items_t _cec_declareditems;
+  traced_set_values_t _cec_declaredtupletypes;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
 public:
@@ -449,7 +450,8 @@ public:
     if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
     else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
   };
-  const struct mom_boxnode_st* declare_type (struct mom_item_st*typitm);
+  momvalue_t declare_type (struct mom_item_st*typitm);
+  momvalue_t declare_tuple_type (const struct mom_boxtuple_st* typtup);
   const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -2435,24 +2437,11 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
                       mom_item_cstring(curformitm),
                       mom_item_cstring(formtypitm));
       assert (is_locked_item(formtypitm));
-      auto cextypv = mom_unsync_item_get_phys_attr (formtypitm, MOM_PREDEFITM(c_code));
-      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s cextypv=%s",
-                      mom_item_cstring(formtypitm), mom_value_cstring(cextypv));
-      if (!cextypv)
-        {
-          auto dectypnod = declare_type(formtypitm);
-          MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s dectypnod=%s",
-                          mom_item_cstring(formtypitm), mom_value_cstring(dectypnod));
-          add_global_decl(dectypnod);
-          curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                             literal_string(CPREFIX_TYPE),
-                                             formtypitm, literal_string(" "), curformitm);
-        }
-      else
-        {
-          curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                             cextypv, literal_string(" "), curformitm);
-        }
+      auto formtypnod = declare_type(formtypitm);
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s formtypnod=%s",
+                      mom_item_cstring(formtypitm), mom_value_cstring(formtypnod));
+      curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                         formtypnod, literal_string(" "), curformitm);
       MOM_DEBUGPRINTF(gencod, "c-declare_signature_for ix#%d curformitm=%s curformdeclv=%s",
                       ix,
                       mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
@@ -2460,11 +2449,29 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
     }
   for (int j=0; j<nbform; j++)
     MOM_DEBUGPRINTF(gencod, "formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
-  auto formtreev =  mom_boxnode_make(MOM_PREDEFITM(parenthesis),nbform,formdeclarr);
+  auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
+                                        mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
   if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
   formdeclarr = nullptr;
-  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtreev=%s",
-                  mom_item_cstring(sigitm), mom_value_cstring(formtreev));
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtreev=%s restyv=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtreev), mom_value_cstring(restyv));
+  momvalue_t restytree = nullptr;
+  switch(mom_itype(restyv))
+    {
+    case MOMITY_ITEM:
+      restytree = declare_type((struct mom_item_st*)restyv);
+      break;
+    case MOMITY_TUPLE:
+      restytree = declare_tuple_type((const struct mom_boxtuple_st*)restyv);
+      break;
+    default:
+      throw MOM_RUNTIME_PRINTF("bad result type %s for signature %s function %s",
+                               mom_value_cstring(restyv),
+                               mom_item_cstring(sigitm),
+                               mom_item_cstring(fitm));
+    }
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s restyv=%s restytree=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(restyv), mom_value_cstring(restytree));
 #warning MomCEmitter::declare_signature_for unimplemented
   MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
                   mom_item_cstring(sigitm), mom_item_cstring(fitm));
@@ -2482,16 +2489,34 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 } // end of MomCEmitter::declare_signature_type
 
 
-const struct mom_boxnode_st*
+momvalue_t
 MomCEmitter::declare_type (struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "declare_type start typitm=%s",
                   mom_item_cstring(typitm));
   assert (is_locked_item(typitm));
-#warning MomCEmitter::declare_type unimplemented
-  MOM_FATAPRINTF( "c-emitter declare_type unimplemented typitm=%s",
+  auto cextypv = mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(c_code));
+  MOM_DEBUGPRINTF(gencod, "declare_type typitm=%s cextypv=%s",
+                  mom_item_cstring(typitm), mom_value_cstring(cextypv));
+  if (cextypv != nullptr)
+    return cextypv;
+#warning MomCEmitter::declare_type partially unimplemented
+  // should handle records, structs, unions, ...
+  MOM_FATAPRINTF( "c-emitter declare_type partially unimplemented typitm=%s",
                   mom_item_cstring(typitm));
 } // end of MomCEmitter::declare_type
+
+
+momvalue_t
+MomCEmitter::declare_tuple_type (const struct mom_boxtuple_st*tuptyp)
+{
+  assert (mom_itype(tuptyp) == MOMITY_TUPLE);
+  MOM_DEBUGPRINTF(gencod, "declare_tuple_type start tuptyp=%s",
+                  mom_value_cstring(tuptyp));
+#warning MomCEmitter::declare_tuple_type unimplemented
+  MOM_FATAPRINTF( "c-emitter declare_tuple_type unimplemented tuptyp=%s",
+                  mom_value_cstring(tuptyp));
+} // end of MomCEmitter::declare_tuple_type
 
 
 const struct mom_boxnode_st*

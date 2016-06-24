@@ -994,11 +994,11 @@ mom_queue_node (const struct mom_queue_st *qu,
   if (nblink >= MOM_SIZE_MAX / MOM_NB_QUELEM - 1)
     MOM_FATAPRINTF ("too many links %d in queue", nblink);
   unsigned siz = nblink * MOM_NB_QUELEM;
-  struct mom_hashedvalue_st *smallarr[3 * MOM_NB_QUELEM];
+  momvalue_t smallarr[3 * MOM_NB_QUELEM];
   memset (smallarr, 0, sizeof (smallarr));
-  const struct mom_hashedvalue_st **arr =
+  momvalue_t *arr =
     (siz < (sizeof (smallarr) / sizeof (smallarr[0]))) ? smallarr
-    : mom_gc_alloc (siz * sizeof (void *));
+    : mom_gc_alloc (siz * sizeof (momvalue_t));
   unsigned cnt = 0;
   for (struct mom_quelem_st * ql = qu->qu_first; ql != NULL; ql = ql->qu_next)
     {
@@ -1721,8 +1721,8 @@ momf_ldp_node (struct mom_item_st *itm,
                     mom_item_cstring (itm));
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
-  struct mom_hashedvalue_st *smallarr[16] = { };
-  const struct mom_hashedvalue_st **arr =
+  momvalue_t smallarr[16] = { };
+  momvalue_t *arr =
     (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
   for (unsigned ix = 0; ix < elemsize - 1; ix++)
@@ -1759,14 +1759,13 @@ momf_ldp_nodemeta (struct mom_item_st *itm,
                     mom_item_cstring (itm), elemsize);
   assert (itm && itm->va_itype == MOMITY_ITEM);
   assert (ld && ld->va_itype == MOMITY_LOADER);
-  struct mom_hashedvalue_st *smallarr[16] = { };
-  const struct mom_hashedvalue_st **arr =
+  momvalue_t smallarr[16] = { };
+  momvalue_t *arr =
     (elemsize < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr :
     mom_gc_alloc ((elemsize + 1) * sizeof (struct mom_hashedvalue_st *));
   for (unsigned ix = 0; ix < elemsize - 3; ix++)
     {
-      arr[ix] =
-        (const struct mom_hashedvalue_st *) mom_ldstate_val (elemarr[ix]);
+      arr[ix] = mom_ldstate_val (elemarr[ix]);
       MOM_DEBUGPRINTF (load, "momf_ldp_nodemeta arr[%d] = %s", ix,
                        mom_value_cstring (arr[ix]));
     }
