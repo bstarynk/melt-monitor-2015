@@ -213,6 +213,7 @@ public:
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
+  virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
   virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -459,6 +460,7 @@ public:
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -484,6 +486,7 @@ public:
   };
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
+  virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
   virtual MomEmitter::CaseScannerData*
   make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2591,6 +2594,8 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s",
                   mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  assert (is_locked_item(sigitm));
+  assert (is_locked_item(bdyitm));
   auto funhnod = declare_funheader_for(sigitm,fuitm);
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s funhnod %s",
                   mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(funhnod));
@@ -2621,12 +2626,24 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
                               literal_string("[]= \""),
                               sigitm,
                               literal_string("\";"));
-  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigdef %s", mom_item_cstring(fuitm),
-                  mom_value_cstring(sigdef));
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigdef %s bdyitm %s", mom_item_cstring(fuitm),
+                  mom_value_cstring(sigdef), mom_item_cstring(bdyitm));
+  auto bdynod = transform_body_element(bdyitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s bdyitm %s bdynod %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(bdyitm), mom_value_cstring(bdynod));
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomCEmitter::transform_func_element
 
+const struct mom_boxnode_st*
+MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm=%s routitm=%s",
+                  mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+#warning unimplemented MomCEmitter::transform_body_element
+  MOM_FATAPRINTF("unimplemented  MomCEmitter::transform_body_element bdyitm=%s routitm=%s",
+                 mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+} // end of MomCEmitter::transform_body_element
 
 
 const struct mom_boxnode_st*
@@ -3097,6 +3114,16 @@ MomJavascriptEmitter::transform_func_element(struct mom_item_st*itm)
   MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
 } // end MomJavascriptEmitter::transform_func_element
 
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s routitm=%s",
+                  mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+#warning unimplemented MomCEmitter::transform_body_element
+  MOM_FATAPRINTF("unimplemented  MomJavascriptEmitter::transform_body_element bdyitm=%s routitm=%s",
+                 mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+} // end of MomJavascriptEmitter::transform_body_element
 
 MomEmitter::CaseScannerData*
 MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
