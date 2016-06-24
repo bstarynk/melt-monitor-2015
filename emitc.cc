@@ -2640,6 +2640,7 @@ MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_s
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm=%s routitm=%s",
                   mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm:=\n %s", mom_item_content_cstring(bdyitm));
 #warning unimplemented MomCEmitter::transform_body_element
   MOM_FATAPRINTF("unimplemented  MomCEmitter::transform_body_element bdyitm=%s routitm=%s",
                  mom_item_cstring(bdyitm), mom_item_cstring(routitm));
