@@ -86,6 +86,9 @@ private:
   traced_set_items_t _ce_typitems;
   traced_set_items_t _ce_blockitems;
   traced_set_items_t _ce_instritems;
+  std::map<std::string,momvalue_t,
+      std::less<std::string>,
+      traceable_allocator<std::pair<std::string,momvalue_t>>> _ce_literalstringmap;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
   traced_varmap_t _ce_globalvarmap;
   traced_varmap_t _ce_localvarmap;
@@ -198,6 +201,14 @@ protected:
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
 public:
+  momvalue_t literal_string(const std::string&s)
+  {
+    auto it = _ce_literalstringmap.find(s);
+    if (it != _ce_literalstringmap.end()) return it->second;
+    auto strv = mom_boxstring_make(s.c_str());
+    _ce_literalstringmap[s] = strv;
+    return strv;
+  }
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
   virtual void scan_routine_element(struct mom_item_st*itm);
@@ -1033,7 +1044,8 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
       scan_instr(insitm, (int)ix, blkitm);
     }
   flush_todo_list(__LINE__);
-  unbind(blkitm);
+  MOM_DEBUGPRINTF(gencod, "scan_block end blkitm=%s initm=%s\n",
+                  mom_item_cstring(blkitm), mom_item_cstring(initm));
 } // end MomEmitter::scan_block
 
 
@@ -1548,6 +1560,8 @@ defaultcasedesc:
 #undef CASE_OPER_MOM
 #undef NBMODOPER_MOM
     }
+  MOM_DEBUGPRINTF(gencod, "scan_instr end insitm=%s rk#%d blkitm=%s\n",
+                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
 } // end of MomEmitter::scan_instr
 
 
@@ -2179,7 +2193,21 @@ MomEmitter::~MomEmitter()
     mom_item_unlock(_ce_veclockeditems[ix]);
   _ce_veclockeditems.clear();
   _ce_setlockeditems.clear();
+  _ce_topitm = nullptr;
+  _ce_sigitems.clear();
+  _ce_typitems.clear();
+  _ce_blockitems.clear();
+  _ce_literalstringmap.clear();
+  _ce_todoque.clear();
+  _ce_globalvarmap.clear();
+  _ce_localvarmap.clear();
+  _ce_localvalueset.clear();
+  _ce_localcloseditems.clear();
+  _ce_localnodetypecache.clear();
+  _ce_curfunctionitm = nullptr;
 } // end MomEmitter::~MomEmitter
+
+
 
 void
 MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv)
@@ -2417,19 +2445,26 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
                           mom_item_cstring(formtypitm), mom_value_cstring(dectypnod));
           add_global_decl(dectypnod);
           curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                             mom_boxstring_make(CPREFIX_TYPE),
-                                             formtypitm, mom_boxstring_make(" "), curformitm);
+                                             literal_string(CPREFIX_TYPE),
+                                             formtypitm, literal_string(" "), curformitm);
         }
       else
         {
           curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                             cextypv, mom_boxstring_make(" "), curformitm);
+                                             cextypv, literal_string(" "), curformitm);
         }
       MOM_DEBUGPRINTF(gencod, "c-declare_signature_for ix#%d curformitm=%s curformdeclv=%s",
                       ix,
                       mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
       formdeclarr[ix] = curformdeclv;
     }
+  for (int j=0; j<nbform; j++)
+    MOM_DEBUGPRINTF(gencod, "formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
+  auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),nbform,formdeclarr);
+  if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
+  formdeclarr = nullptr;
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtreev=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtreev));
 #warning MomCEmitter::declare_signature_for unimplemented
   MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
                   mom_item_cstring(sigitm), mom_item_cstring(fitm));

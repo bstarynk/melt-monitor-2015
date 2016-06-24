@@ -1176,6 +1176,7 @@ mom_item_cstring (const struct mom_item_st *itm)
 {
   if (!itm || itm == MOM_EMPTY_SLOT)
     return "~";
+  assert (mom_itype (itm) == MOMITY_ITEM);
   if (itm->itm_hid == 0 && itm->itm_lid == 0)
     return mom_item_radix_str (itm);
   else
