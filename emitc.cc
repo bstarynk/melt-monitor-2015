@@ -435,12 +435,11 @@ class MomCEmitter final :public MomEmitter
 {
   traced_vector_values_t _cec_globdecltree;
   traced_set_items_t _cec_declareditems;
-  traced_set_values_t _cec_declaredtupletypes;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
-  static   constexpr const char* CPREFIX_TYPE = "momty_";
+  static   constexpr const char* CTYPE_PREFIX = "momty_";
   static   constexpr const char* CINT_TYPE = "momint_t";
   static   constexpr const char* CVALUE_TYPE = "momvalue_t";
   static   constexpr const char* CDOUBLE_TYPE = "double";
@@ -455,8 +454,7 @@ public:
     else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
   };
   momvalue_t declare_type (struct mom_item_st*typitm);
-  momvalue_t declare_tuple_type (const struct mom_boxtuple_st* typtup);
-  const struct mom_boxnode_st* declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
+  const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
@@ -2411,16 +2409,16 @@ MomCEmitter::transform_data_element(struct mom_item_st*itm)
 } // end MomCEmitter::transform_data_element
 
 const struct mom_boxnode_st*
-MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
+MomCEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
 {
   assert (is_locked_item(sigitm));
   assert (is_locked_item(fitm));
-  MOM_DEBUGPRINTF(gencod, "c-emitter declare_signature_for start sigitm=%s fitm=%s",
+  MOM_DEBUGPRINTF(gencod, "c-emitter declare_funheader_for start sigitm=%s fitm=%s",
                   mom_item_cstring(sigitm), mom_item_cstring(fitm));
   auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
   assert (formtup != nullptr);
   auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
-  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtup=%s restyv=%s",
+  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s formtup=%s restyv=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
   int nbform = mom_raw_size(formtup);
   momvalue_t smallformdeclarr[8] = {nullptr};
@@ -2432,21 +2430,21 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
     {
       momvalue_t curformdeclv = nullptr;
       struct mom_item_st*curformitm = formtup->seqitem[ix];
-      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s  ix#%d curformitm=%s",
+      MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s  ix#%d curformitm=%s",
                       mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
       assert (is_locked_item(curformitm));
       struct mom_item_st*formtypitm =
       mom_dyncast_item(mom_unsync_item_get_phys_attr (curformitm, MOM_PREDEFITM(type)));
-      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for curformitm=%s formtypitm=%s",
+      MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for curformitm=%s formtypitm=%s",
                       mom_item_cstring(curformitm),
                       mom_item_cstring(formtypitm));
       assert (is_locked_item(formtypitm));
       auto formtypnod = declare_type(formtypitm);
-      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for formtypitm=%s formtypnod=%s",
+      MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for formtypitm=%s formtypnod=%s",
                       mom_item_cstring(formtypitm), mom_value_cstring(formtypnod));
       curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
                                          formtypnod, literal_string(" "), curformitm);
-      MOM_DEBUGPRINTF(gencod, "c-declare_signature_for ix#%d curformitm=%s curformdeclv=%s",
+      MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for ix#%d curformitm=%s curformdeclv=%s",
                       ix,
                       mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
       formdeclarr[ix] = curformdeclv;
@@ -2457,7 +2455,7 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
                                         mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
   if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
   formdeclarr = nullptr;
-  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtreev=%s restyv=%s",
+  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s formtreev=%s restyv=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtreev), mom_value_cstring(restyv));
   momvalue_t restytree = nullptr;
   switch(mom_itype(restyv))
@@ -2465,21 +2463,27 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
     case MOMITY_ITEM:
       restytree = declare_type((struct mom_item_st*)restyv);
       break;
-    case MOMITY_TUPLE:
-      restytree = declare_tuple_type((const struct mom_boxtuple_st*)restyv);
-      break;
     default:
       throw MOM_RUNTIME_PRINTF("bad result type %s for signature %s function %s",
                                mom_value_cstring(restyv),
                                mom_item_cstring(sigitm),
                                mom_item_cstring(fitm));
     }
-  MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s restyv=%s restytree=%s",
+  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s restyv=%s restytree=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(restyv), mom_value_cstring(restytree));
-#warning MomCEmitter::declare_signature_for unimplemented
-  MOM_FATAPRINTF( "c-emitter declare_signature_for unimplemented sigitm=%s fitm=%s",
-                  mom_item_cstring(sigitm), mom_item_cstring(fitm));
-} // end MomCEmitter::declare_signature_for
+  auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                   restytree,
+                   literal_string(" "),
+                   literal_string(MOM_FUNC_PREFIX),
+                   fitm,
+                   formtreev
+                                            );
+  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s fitm=%s result funheadv=%s",
+                  mom_item_cstring(sigitm),
+                  mom_item_cstring(fitm),
+                  mom_value_cstring(funheadv));
+  return funheadv;
+} // end MomCEmitter::declare_funheader_for
 
 
 const struct mom_boxnode_st*
@@ -2518,29 +2522,17 @@ MomCEmitter::declare_type (struct mom_item_st*typitm)
       return literal_string(CVALUE_TYPE);
     case CASE_KNOWNTYPE_MOM (double):
       return literal_string(CDOUBLE_TYPE);
-    defaultcasetype:
+defaultcasetype:
     default:
       break;
     }
-  #undef NBKNOWNTYPE_MOM
-  #undef CASE_KNOWNTYPE_MOM
+#undef NBKNOWNTYPE_MOM
+#undef CASE_KNOWNTYPE_MOM
 #warning MomCEmitter::declare_type partially unimplemented
   // should handle records, structs, unions, ...
   MOM_FATAPRINTF( "c-emitter declare_type partially unimplemented typitm=%s",
                   mom_item_cstring(typitm));
 } // end of MomCEmitter::declare_type
-
-
-momvalue_t
-MomCEmitter::declare_tuple_type (const struct mom_boxtuple_st*tuptyp)
-{
-  assert (mom_itype(tuptyp) == MOMITY_TUPLE);
-  MOM_DEBUGPRINTF(gencod, "declare_tuple_type start tuptyp=%s",
-                  mom_value_cstring(tuptyp));
-#warning MomCEmitter::declare_tuple_type unimplemented
-  MOM_FATAPRINTF( "c-emitter declare_tuple_type unimplemented tuptyp=%s",
-                  mom_value_cstring(tuptyp));
-} // end of MomCEmitter::declare_tuple_type
 
 
 const struct mom_boxnode_st*
@@ -2551,14 +2543,16 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s",
                   mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-  auto declsignod = declare_signature_for(sigitm,fuitm);
-  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s declsigfunv %s",
-                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(declsignod));
+  auto funhnod = declare_funheader_for(sigitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s funhnod %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(funhnod));
   if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
     {
       _cec_declareditems.insert(sigitm);
       auto sigtypnod = declare_signature_type(sigitm);
-      add_global_decl(declsignod);
+      MOM_DEBUGPRINTF(gencod, "c-emitter transform func sigitm %s sigtypnod %s",
+                      mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
+      add_global_decl(sigtypnod);
     }
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));

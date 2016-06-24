@@ -23,7 +23,7 @@ A *func-item* has some `signature` : *signature-item* and some `body` : *block-i
 
 A *signature-item* has `descr` : `signature` and some `formals` :
 *formals-tuple* (with *formal-item*s inside), with an optional
-`result` : *type-item* or *result-type-tuple* made of *type-item*s.
+`result` : *type-item*.
 
 A *formal-item* has `descr` : `formal` and `type` : *type-item*. The *type-item* cannot be `unit`.
 
