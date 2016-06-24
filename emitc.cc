@@ -2460,7 +2460,7 @@ MomCEmitter::declare_signature_for (struct mom_item_st*sigitm, struct mom_item_s
     }
   for (int j=0; j<nbform; j++)
     MOM_DEBUGPRINTF(gencod, "formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
-  auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),nbform,formdeclarr);
+  auto formtreev =  mom_boxnode_make(MOM_PREDEFITM(parenthesis),nbform,formdeclarr);
   if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
   formdeclarr = nullptr;
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_for sigitm=%s formtreev=%s",
