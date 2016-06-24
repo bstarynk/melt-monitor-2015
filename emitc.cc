@@ -441,6 +441,10 @@ class MomCEmitter final :public MomEmitter
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static   constexpr const char* CPREFIX_TYPE = "momty_";
+  static   constexpr const char* CINT_TYPE = "momint_t";
+  static   constexpr const char* CVALUE_TYPE = "momvalue_t";
+  static   constexpr const char* CDOUBLE_TYPE = "double";
+  static   constexpr const char* CVOID_TYPE = "void";
   MomCEmitter(struct mom_item_st*itm)
     : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()  {};
   MomCEmitter(const MomCEmitter&) = delete;
@@ -2500,6 +2504,26 @@ MomCEmitter::declare_type (struct mom_item_st*typitm)
                   mom_item_cstring(typitm), mom_value_cstring(cextypv));
   if (cextypv != nullptr)
     return cextypv;
+#define NBKNOWNTYPE_MOM 31
+#define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:	\
+	  if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasetype; foundcase_##Nam
+  switch (typitm->hva_hash % NBKNOWNTYPE_MOM)
+    {
+    case CASE_KNOWNTYPE_MOM (int):
+      return literal_string(CINT_TYPE);
+    case CASE_KNOWNTYPE_MOM (unit):
+      return literal_string(CVOID_TYPE);
+    case CASE_KNOWNTYPE_MOM (value):
+      return literal_string(CVALUE_TYPE);
+    case CASE_KNOWNTYPE_MOM (double):
+      return literal_string(CDOUBLE_TYPE);
+    defaultcasetype:
+    default:
+      break;
+    }
+  #undef NBKNOWNTYPE_MOM
+  #undef CASE_KNOWNTYPE_MOM
 #warning MomCEmitter::declare_type partially unimplemented
   // should handle records, structs, unions, ...
   MOM_FATAPRINTF( "c-emitter declare_type partially unimplemented typitm=%s",
