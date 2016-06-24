@@ -440,6 +440,7 @@ class MomCEmitter final :public MomEmitter
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static   constexpr const char* CTYPE_PREFIX = "momty_";
+  static   constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static   constexpr const char* CINT_TYPE = "momint_t";
   static   constexpr const char* CVALUE_TYPE = "momvalue_t";
   static   constexpr const char* CDOUBLE_TYPE = "double";
@@ -2476,8 +2477,7 @@ MomCEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_s
                    literal_string(" "),
                    literal_string(MOM_FUNC_PREFIX),
                    fitm,
-                   formtreev
-                                            );
+                   formtreev );
   MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s fitm=%s result funheadv=%s",
                   mom_item_cstring(sigitm),
                   mom_item_cstring(fitm),
@@ -2490,10 +2490,58 @@ const struct mom_boxnode_st*
 MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 {
   assert (is_locked_item(sigitm));
-  MOM_DEBUGPRINTF(gencod, "declare_signature_type start sigitm=%s", mom_item_cstring(sigitm));
-#warning MomCEmitter::declare_signature_type unimplemented
-  MOM_FATAPRINTF( "c-emitter declare_signature_type unimplemented sigitm=%s",
-                  mom_item_cstring(sigitm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type start sigitm=%s", mom_item_cstring(sigitm));
+  auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+  assert (formtup != nullptr);
+  auto restyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result)));
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s formtup=%s restyitm=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_item_cstring(restyitm));
+  int nbform = mom_raw_size(formtup);
+  momvalue_t smallformtyparr[8] = {nullptr};
+  momvalue_t *formtyparr =
+    (nbform<(int)(sizeof(smallformtyparr)/sizeof(smallformtyparr[0])))
+    ? smallformtyparr
+    : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
+  for (int ix=0; ix<nbform; ix++)
+    {
+      struct mom_item_st*curformitm = formtup->seqitem[ix];
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s  ix#%d curformitm=%s",
+                      mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
+      assert (is_locked_item(curformitm));
+      struct mom_item_st*formtypitm =
+      mom_dyncast_item(mom_unsync_item_get_phys_attr (curformitm, MOM_PREDEFITM(type)));
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_type curformitm=%s formtypitm=%s",
+                      mom_item_cstring(curformitm),
+                      mom_item_cstring(formtypitm));
+      assert (is_locked_item(formtypitm));
+      auto formtypnod = declare_type(formtypitm);
+      MOM_DEBUGPRINTF(gencod, "c-declare_signature_type ix#%d formtypnod=%s", ix, mom_value_cstring(formtypnod));
+      formtyparr[ix] = formtypnod;
+    }
+  auto formtytree =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
+                                         mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formtyparr));
+  if (formtyparr != smallformtyparr) GC_FREE(formtyparr);
+  formtyparr = nullptr;
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s formtytree=%s restyitm=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtytree), mom_item_cstring(restyitm));
+  assert (is_locked_item(restyitm));
+  auto restytree = declare_type(restyitm);
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s restytree=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(restytree));
+  auto sigdeclv = //
+    mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                              literal_string("typedef "),
+                              restytree,
+                              literal_string(" "),
+                              formtytree,
+                              literal_string(CSIGNTYPE_PREFIX),
+                              sigitm,
+                              literal_string(";")
+                             );
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s result sigheadv=%s",
+                  mom_item_cstring(sigitm),
+                  mom_value_cstring(sigdeclv));
+  return sigdeclv;
 } // end of MomCEmitter::declare_signature_type
 
 
@@ -2554,6 +2602,27 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
                       mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
       add_global_decl(sigtypnod);
     }
+  auto fundecl =
+    mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                              literal_string(CSIGNTYPE_PREFIX),
+                              sigitm,
+                              literal_string(" "),
+                              literal_string(MOM_FUNC_PREFIX),
+                              fuitm,
+                              literal_string(";"));
+  add_global_decl(fundecl);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s fundecl %s", mom_item_cstring(fuitm),
+                  mom_value_cstring(fundecl));
+  auto sigdef =
+    mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                              literal_string("const char "),
+                              literal_string(MOM_SIGNATURE_PREFIX),
+                              fuitm,
+                              literal_string("[]= \""),
+                              sigitm,
+                              literal_string("\";"));
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigdef %s", mom_item_cstring(fuitm),
+                  mom_value_cstring(sigdef));
 #warning unimplemented MomCEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomCEmitter::transform_func_element
