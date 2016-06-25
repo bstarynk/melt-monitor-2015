@@ -464,6 +464,7 @@ public:
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
+  momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*insideitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2717,6 +2718,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
                       mom_value_cstring(localtree));
       int bodylen = mom_raw_size(bodytup);
+      momvalue_t smalbodyarr[8]= {};
+      momvalue_t* bodyarr = (bodylen<sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
           struct mom_item_st*insitm = bodytup->seqitem[bix];
@@ -2724,6 +2728,11 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                           "c-transform_block blkitm=%s bix#%d insitm:=\n%s",
                           mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
           assert (is_locked_item(insitm));
+          auto instree = transform_instruction(insitm, blkitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_block insitm=%s instree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(instree));
+
         }
     }
     break;
@@ -2740,6 +2749,24 @@ defaultcasebrole: // should never happen
                  mom_item_cstring(blkitm), mom_item_cstring(initm));
 } // end of MomCEmitter::transform_block
 
+
+momvalue_t
+MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_instruction fromitm=%s insitm:=\n%s",
+                  mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
+  assert (is_locked_item(insitm));
+  auto insbind = get_local_binding(insitm);
+  assert (insbind != nullptr);
+  MOM_DEBUGPRINTF(gencod,
+                  "c-transform_block insitm=%s insbind rol %s what %s detail %s rank %ld",
+                  mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
+                  mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
+  struct mom_item_st*rolitm = insbind->vd_rolitm;
+  assert (mom_itype(rolitm) == MOMITY_ITEM);
+#warning unimplemented MomCEmitter::transform_instruction
+  MOM_FATAPRINTF("unimplemented c-transform_instruction insitm=%s", mom_item_cstring(insitm));
+} // end of MomCEmitter::transform_instruction
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_routine_element(struct mom_item_st*itm)
