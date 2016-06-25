@@ -47,6 +47,10 @@ public:
     MomItemLess,
     traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
     traced_map_item2item_t;
+  typedef std::map<const struct mom_item_st*,momvalue_t,
+    MomItemLess,
+    traceable_allocator<std::pair<struct mom_item_st*,momvalue_t>>>
+    traced_map_item2value_t;
   typedef std::set<const void*,
           MomValueLess,
           traceable_allocator<void*>>
@@ -465,6 +469,7 @@ public:
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*insideitm);
+  momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2719,7 +2724,7 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_value_cstring(localtree));
       int bodylen = mom_raw_size(bodytup);
       momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
                             : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
@@ -2732,7 +2737,8 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
           MOM_DEBUGPRINTF(gencod,
                           "c-transform_block insitm=%s instree=%s",
                           mom_item_cstring(insitm), mom_value_cstring(instree));
-
+          assert (instree != nullptr);
+          bodyarr[bix] = instree;
         }
     }
     break;
@@ -2759,14 +2765,76 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
   auto insbind = get_local_binding(insitm);
   assert (insbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
-                  "c-transform_block insitm=%s insbind rol %s what %s detail %s rank %ld",
+                  "c-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
                   mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
                   mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
   struct mom_item_st*rolitm = insbind->vd_rolitm;
   assert (mom_itype(rolitm) == MOMITY_ITEM);
+#define NBINSTROLE_MOM 73
+#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
+	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcaseirole; foundcase_##Nam
+  switch (rolitm->hva_hash % NBINSTROLE_MOM)
+    {
+    case CASE_INSTROLE_MOM(run):
+    {
+      auto runitm = mom_dyncast_item(insbind->vd_what);
+      assert (insbind != nullptr);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction insitm=%s runitm:=\n%s",
+                      mom_item_cstring(insitm), mom_item_content_cstring(runitm));
+      assert (is_locked_item(runitm));
+      return transform_runinstr(insitm, runitm, fromitm);
+    }
+    break;
+    default:
+defaultcaseirole:
+      MOM_FATAPRINTF("unexpected role %s in insitm %s",
+                     mom_item_cstring(rolitm), mom_item_cstring(insitm));
+      break;
+    }
+#undef NBINSTROLE_MOM
+#undef CASE_INSTROLE_MOM
 #warning unimplemented MomCEmitter::transform_instruction
   MOM_FATAPRINTF("unimplemented c-transform_instruction insitm=%s", mom_item_cstring(insitm));
 } // end of MomCEmitter::transform_instruction
+
+momvalue_t
+MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*fromitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_runinstr fromitm=%s runitm:=\n%s insitm:=\n%s",
+                  mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
+  assert (is_locked_item(insitm));
+  assert (is_locked_item(runitm));
+  auto desrunitm = mom_unsync_item_descr(runitm);
+  if (desrunitm == MOM_PREDEFITM(primitive))
+    {
+      auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr runitm=%s sigitm:=\n%s",
+                      mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
+      assert (is_locked_item(sigitm));
+      auto formaltup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+      assert (formaltup != nullptr);
+      unsigned nbformals = mom_size(formaltup);
+      traced_map_item2value_t argmap;
+      auto inscomp = insitm->itm_pcomp;
+      auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
+                      mom_value_cstring(expnod));
+#warning we should transform_expr every component of the insitm
+      for (int aix=0; aix<(int)nbformals; aix++)
+        {
+          auto curfitm = formaltup->seqitem[aix];
+          auto curarg = mom_vectvaldata_nth(inscomp, aix);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
+                          mom_item_cstring(curfitm), mom_value_cstring(curarg));
+          assert (mom_itype(curfitm)==MOMITY_ITEM);
+          argmap[curfitm] = curarg; // wrong, should be the transformed expression
+        }
+    }
+#warning unimplemented MomCEmitter::transform_runinstr
+  MOM_FATAPRINTF("unimplemented c-transform_runinstr insitm=%s", mom_item_cstring(insitm));
+} // end of MomCEmitter::transform_runinstr
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_routine_element(struct mom_item_st*itm)
