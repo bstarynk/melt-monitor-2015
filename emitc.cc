@@ -441,6 +441,8 @@ class MomCEmitter final :public MomEmitter
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static   constexpr const char* CTYPE_PREFIX = "momty_";
+  static   constexpr const char* CLOCAL_PREFIX = "momloc_";
+  static   constexpr const char* CFORMAL_PREFIX = "momarg_";
   static   constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static   constexpr const char* CINT_TYPE = "momint_t";
   static   constexpr const char* CVALUE_TYPE = "momvalue_t";
@@ -2228,8 +2230,7 @@ MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, c
   switch (ty)
     {
     case MOMITY_NONE:
-      throw MOM_RUNTIME_PRINTF("cannot write_tree nil depth=%d forv=%s",
-                               depth, mom_value_cstring(forv));
+      break;
     case MOMITY_ITEM:
       fputs(mom_item_cstring((const mom_item_st*)val), out);
       break;
@@ -2360,14 +2361,18 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     case CASE_NODECONN_MOM(semicolon):
     {
       bool semic = (connitm == MOM_PREDEFITM(semicolon));
+      int cnt=0;
       for (int ix=0; ix<(int)arity; ix++)
         {
-          if (ix>0)
+          if (nod->nod_sons[ix] == nullptr)
+            continue;
+          if (cnt>0)
             {
               fputc(semic?';':',', out);
               write_nl_or_space(out,depth,lastnl);
             }
           write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+          cnt++;
         }
     }
     break;
@@ -2447,8 +2452,10 @@ MomCEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_s
       auto formtypnod = declare_type(formtypitm);
       MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for formtypitm=%s formtypnod=%s",
                       mom_item_cstring(formtypitm), mom_value_cstring(formtypnod));
-      curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                         formtypnod, literal_string(" "), curformitm);
+      curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                         formtypnod, literal_string(" "),
+                                         literal_string(CFORMAL_PREFIX),
+                                         curformitm);
       MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for ix#%d curformitm=%s curformdeclv=%s",
                       ix,
                       mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
@@ -2668,11 +2675,11 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                   mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
   struct mom_item_st*rolitm = blkbind->vd_rolitm;
   assert (mom_itype(rolitm) == MOMITY_ITEM);
-  auto blkbody =
+  auto bodytup =
     mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod,
-                  "c-transform_block blkitm=%s blkbody=%s",
-                  mom_item_cstring(blkitm), mom_value_cstring(blkbody));
+                  "c-transform_block blkitm=%s bodytup=%s",
+                  mom_item_cstring(blkitm), mom_value_cstring(bodytup));
 #define NBBLOCKROLE_MOM 19
 #define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
 	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
@@ -2686,6 +2693,38 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s nblocals#%d localseq:%s",
                       mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
+      momvalue_t localtree= nullptr;
+      if (nblocals>0)
+        {
+          momvalue_t smallocarr[8]= {};
+          momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
+                               : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
+          for (int lix=0; lix<(int)nblocals; lix++)
+            {
+              momvalue_t curloctree = nullptr;
+              struct mom_item_st*locitm = localseq->seqitem[lix];
+              assert (is_locked_item(locitm));
+              MOM_DEBUGPRINTF(gencod,
+                              "c-transform_block blkitm=%s lix#%d locitm:=\n%s",
+                              mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+              MOM_FATAPRINTF("c-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
+                             mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+#warning MomCEmitter::transform_block unhandled local
+            }
+        }
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s sequence of body %s localtree=%s",
+                      mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
+                      mom_value_cstring(localtree));
+      int bodylen = mom_raw_size(bodytup);
+      for (int bix=0; bix<bodylen; bix++)
+        {
+          struct mom_item_st*insitm = bodytup->seqitem[bix];
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_block blkitm=%s bix#%d insitm:=\n%s",
+                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+          assert (is_locked_item(insitm));
+        }
     }
     break;
     default:
