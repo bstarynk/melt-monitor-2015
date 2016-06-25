@@ -98,7 +98,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -461,6 +461,7 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
+  momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -1828,7 +1829,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      // failthru
+    // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2590,6 +2591,8 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
 {
   assert (is_locked_item(fuitm));
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func start fuitm:=\n%s",
+                  mom_item_content_cstring(fuitm));
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigitm %s bdyitm %s",
@@ -2640,11 +2643,63 @@ MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_s
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm=%s routitm=%s",
                   mom_item_cstring(bdyitm), mom_item_cstring(routitm));
-  MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm:=\n %s", mom_item_content_cstring(bdyitm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm:=\n %s",
+                  mom_item_content_cstring(bdyitm));
+  auto bdytree = transform_block(bdyitm, routitm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm=%s bdytree=%s",
+                  mom_item_cstring(bdyitm), mom_value_cstring(bdytree));
 #warning unimplemented MomCEmitter::transform_body_element
   MOM_FATAPRINTF("unimplemented  MomCEmitter::transform_body_element bdyitm=%s routitm=%s",
                  mom_item_cstring(bdyitm), mom_item_cstring(routitm));
 } // end of MomCEmitter::transform_body_element
+
+
+momvalue_t
+MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_block initm=%s blkitm:=\n%s",
+                  mom_item_cstring(initm), mom_item_content_cstring(blkitm));
+  assert (is_locked_item(blkitm));
+  auto blkbind = get_local_binding(blkitm);
+  assert (blkbind != nullptr);
+  MOM_DEBUGPRINTF(gencod,
+                  "c-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
+                  mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
+                  mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
+  struct mom_item_st*rolitm = blkbind->vd_rolitm;
+  assert (mom_itype(rolitm) == MOMITY_ITEM);
+  auto blkbody =
+    mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod,
+                  "c-transform_block blkitm=%s blkbody=%s",
+                  mom_item_cstring(blkitm), mom_value_cstring(blkbody));
+#define NBBLOCKROLE_MOM 19
+#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
+	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasebrole; foundcase_##Nam
+  switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
+    {
+    case CASE_BLOCKROLE_MOM (sequence):
+    {
+      auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
+      unsigned nblocals = mom_seqitems_length(localseq);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s nblocals#%d localseq:%s",
+                      mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
+    }
+    break;
+    default:
+defaultcasebrole: // should never happen
+      MOM_FATAPRINTF("unexpected role %s in blkitm %s",
+                     mom_item_cstring(rolitm), mom_item_cstring(blkitm));
+      break;
+    }
+#undef NBBLOCKROLE_MOM
+#undef CASE_BLOCKROLE_MOM
+#warning unimplemented MomCEmitter::transform_body_element
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_block blkitm=%s initm=%s",
+                 mom_item_cstring(blkitm), mom_item_cstring(initm));
+} // end of MomCEmitter::transform_block
 
 
 const struct mom_boxnode_st*
@@ -2755,7 +2810,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -2809,7 +2864,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
