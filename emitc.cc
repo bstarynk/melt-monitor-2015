@@ -472,7 +472,7 @@ public:
   momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
   momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
-  momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm);
+  momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2791,21 +2791,22 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
       auto rolitm = expbind?expbind->vd_rolitm:nullptr;
       MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s bind rol %s what %s",
                       mom_item_content_cstring(expitm), mom_item_cstring(rolitm),
-		      expbind?mom_value_cstring(expbind->vd_what):"°");
+                      expbind?mom_value_cstring(expbind->vd_what):"°");
 #define NBROLE_MOM 31
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
-	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
-	  goto defaultrole; foundrolcase_##Nam
-      switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0) {
-      case CASE_ROLE_MOM(formal):
-	  return transform_var(expitm,initm);
-      case CASE_ROLE_MOM(locals):
-	  return transform_var(expitm,initm);
-      defaultrole:
-      default:
-      MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
-                     mom_item_cstring(expitm), mom_item_cstring(rolitm), mom_item_cstring(initm));
-      }
+ if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+ goto defaultrole; foundrolcase_##Nam
+      switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
+        {
+        case CASE_ROLE_MOM(formal):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(locals):
+          return transform_var(expitm,initm,expbind);
+defaultrole:
+        default:
+          MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
+                         mom_item_cstring(expitm), mom_item_cstring(rolitm), mom_item_cstring(initm));
+        }
 #undef NBROLE_MOM
 #undef CASE_ROLE_MOM
     }
@@ -2824,13 +2825,41 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
 
 
 momvalue_t
-MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm)
+MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
 {
-  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm:=\n%s ... insitm=%s",
-                  mom_item_content_cstring(varitm), mom_item_cstring(insitm));
+  if (!varbind)
+    varbind = get_binding(varitm);
+  if (MOM_UNLIKELY(!varbind)) // should never happen
+    MOM_FATAPRINTF("c-transform_var varitm=%s in insitm %s lacking binding",
+                   mom_item_cstring(varitm), mom_item_cstring(insitm));
+  auto rolitm = varbind->vd_rolitm;
+  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
+  momvalue_t vartree = nullptr;
+#define NBROLE_MOM 31
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
+ if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+ goto defaultrole; foundrolcase_##Nam
+  switch (rolitm->hva_hash)
+    {
+    case CASE_ROLE_MOM(formal):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(CFORMAL_PREFIX),
+                            varitm);
+      break;
+defaultrole:
+    default:
+      break;
+    }
+  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(vartree));
+  if (vartree) return vartree;
 #warning unimplemented MomCEmitter::transform_var
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s",
-                 mom_item_cstring(varitm), mom_item_cstring(insitm));
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
 } // end of MomCEmitter::transform_var
 
 momvalue_t
