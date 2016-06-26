@@ -2664,9 +2664,7 @@ MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_s
   auto bdytree = transform_block(bdyitm, routitm);
   MOM_DEBUGPRINTF(gencod, "c-transform_body_element bdyitm=%s bdytree=%s",
                   mom_item_cstring(bdyitm), mom_value_cstring(bdytree));
-#warning unimplemented MomCEmitter::transform_body_element
-  MOM_FATAPRINTF("unimplemented  MomCEmitter::transform_body_element bdyitm=%s routitm=%s",
-                 mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+  return mom_dyncast_node(bdytree);
 } // end of MomCEmitter::transform_body_element
 
 
@@ -2743,6 +2741,13 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
           assert (instree != nullptr);
           bodyarr[bix] = instree;
         }
+      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+      auto bracetree = mom_boxnode_make_va(MOM_PREDEFITM(brace),1,bodytree);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s gives bracetree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(bracetree));
+      return bracetree;
+
     }
     break;
     default:
