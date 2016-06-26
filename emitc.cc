@@ -2841,7 +2841,7 @@ MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm,
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
  goto defaultrole; foundrolcase_##Nam
-  switch (rolitm->hva_hash)
+  switch (rolitm->hva_hash % NBROLE_MOM)
     {
     case CASE_ROLE_MOM(formal):
       vartree =
@@ -2853,6 +2853,8 @@ defaultrole:
     default:
       break;
     }
+#undef NBROLE_MOM
+#undef CASE_ROLE_MOM
   MOM_DEBUGPRINTF(gencod, "c-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
                   mom_item_content_cstring(varitm), mom_item_cstring(insitm),
                   mom_item_cstring(rolitm), mom_value_cstring(vartree));
@@ -2924,10 +2926,14 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       unsigned nbformals = mom_size(formaltup);
       traced_map_item2value_t argmap;
       auto inscomp = insitm->itm_pcomp;
+      momvalue_t treev = nullptr;
       auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
                       mom_value_cstring(expnod));
-#warning we should transform_expr every component of the insitm
+      if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
+        MOM_FATAPRINTF("c-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
+                       mom_item_cstring(insitm), mom_item_cstring(runitm),
+                       mom_value_cstring(expnod));
       for (int aix=0; aix<(int)nbformals; aix++)
         {
           auto curfitm = formaltup->seqitem[aix];
@@ -2940,6 +2946,31 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
                           mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
           argmap[curfitm] = argtree;
         }
+      int exparity = mom_raw_size(expnod);
+      momvalue_t smalltreearr[8]= {};
+      momvalue_t* treearr = (exparity<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
+                            : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+      for (int ix=0; ix<exparity; ix++)
+        {
+          momvalue_t curtreev = nullptr;
+          momvalue_t curson = expnod->nod_sons[ix];
+          auto cursonitm = mom_dyncast_item(curson);
+          if (cursonitm != nullptr)
+            {
+              auto it = argmap.find(cursonitm);
+              if (it != argmap.end())
+                curtreev = it->second;
+              else
+                curtreev = curson;
+            }
+          else
+            curtreev = curson;
+          treearr[ix] = curtreev;
+        }
+      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(treev));
+      return treev;
     }
 #warning unimplemented MomCEmitter::transform_runinstr
   MOM_FATAPRINTF("unimplemented c-transform_runinstr insitm=%s", mom_item_cstring(insitm));
