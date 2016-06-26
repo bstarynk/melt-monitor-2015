@@ -470,6 +470,9 @@ public:
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*insideitm);
   momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
+  momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
+  momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
+  momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2756,6 +2759,62 @@ defaultcasebrole: // should never happen
 } // end of MomCEmitter::transform_block
 
 
+
+momvalue_t
+MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s initm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(initm));
+#warning unimplemented MomCEmitter::transform_node_expr
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_node_expr expnod=%s initm=%s",
+                 mom_value_cstring(expnod), mom_item_cstring(initm));
+} // end MomCEmitter::transform_node_expr
+
+
+momvalue_t
+MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_expr expv=%s initm=%s",
+                  mom_value_cstring(expv), mom_item_cstring(initm));
+  unsigned expty = mom_itype(expv);
+  switch (expty)
+    {
+    case MOMITY_INT:
+    case MOMITY_BOXDOUBLE:
+      return expv;
+    case MOMITY_BOXSTRING:
+      return mom_boxnode_make_va(MOM_PREDEFITM(string),1,expv);
+    case MOMITY_ITEM:
+    {
+      auto expitm = (struct mom_item_st*)expv;
+      MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s",
+                      mom_item_content_cstring(expitm));
+
+    }
+    break;
+    case MOMITY_NODE:
+      return transform_node_expr((struct mom_boxnode_st*)expv, initm);
+    default:
+      MOM_FATAPRINTF("transform_expr bad expv=%s initm=%s",
+                     mom_value_cstring(expv), mom_item_cstring(initm));
+
+    }
+#warning unimplemented MomCEmitter::transform_expr
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_expr expv=%s initm=%s",
+                 mom_value_cstring(expv), mom_item_cstring(initm));
+} // end of MomCEmitter::transform_expr
+
+
+momvalue_t
+MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm:=\n%s ... insitm=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm));
+#warning unimplemented MomCEmitter::transform_var
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm));
+} // end of MomCEmitter::transform_var
+
 momvalue_t
 MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
 {
@@ -2829,7 +2888,10 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
           MOM_DEBUGPRINTF(gencod, "c-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
                           mom_item_cstring(curfitm), mom_value_cstring(curarg));
           assert (mom_itype(curfitm)==MOMITY_ITEM);
-          argmap[curfitm] = curarg; // wrong, should be the transformed expression
+          auto argtree =  transform_expr(curarg, insitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
+                          mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
+          argmap[curfitm] = argtree;
         }
     }
 #warning unimplemented MomCEmitter::transform_runinstr
