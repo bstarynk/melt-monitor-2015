@@ -829,8 +829,11 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
   switch (descitm->hva_hash % NBMODELEMDESC_MOM)
     {
     case CASE_DESCR_MOM (global):
+      goto datacase;
     case CASE_DESCR_MOM (thread_local):
+      goto datacase;
     case CASE_DESCR_MOM (data):
+    datacase:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_data_element(elitm);
@@ -876,8 +879,11 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
   switch (descitm->hva_hash % NBMODELEMDESC_MOM)
     {
     case CASE_DESCR_MOM (global):
+      goto datacase;
     case CASE_DESCR_MOM (thread_local):
+      goto datacase;
     case CASE_DESCR_MOM (data):
+    datacase:
       resnod = transform_data_element(elitm);
       MOM_DEBUGPRINTF(gencod, "transform_module_element data elitm=%s resnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
@@ -1299,7 +1305,9 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     }
     break;
     case CASE_OPER_MOM(loop):
+      goto sequencecase;
     case CASE_OPER_MOM(sequence):
+    sequencecase:
     {
       MOM_DEBUGPRINTF(gencod, "scan_instr nested block insitm=%s rk#%d blkitm=%s",
                       mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
@@ -1811,7 +1819,9 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     }
     break;
     case CASE_EXPCONN_MOM(and):
+      goto orcase;
     case CASE_EXPCONN_MOM(or):
+    orcase:
     {
       if (nodarity == 0)
         {
@@ -1874,7 +1884,9 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     }
     break;
     case CASE_EXPCONN_MOM(plus):
+      goto multcase;
     case CASE_EXPCONN_MOM(mult):
+    multcase:
     {
       if (nodarity == 0)
         throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
@@ -1899,7 +1911,9 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     }
     break;
     case CASE_EXPCONN_MOM(sub):
+      goto divcase;
     case CASE_EXPCONN_MOM(div):
+    divcase:
     {
       if (nodarity != 2)
         throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
@@ -1946,9 +1960,11 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-      // failthru
+      goto tuplecase;
     case CASE_EXPCONN_MOM(set):
+      goto tuplecase;
     case CASE_EXPCONN_MOM(tuple):
+    tuplecase:
     {
       for (unsigned ix=0; ix<nodarity; ix++)
         {
@@ -2067,7 +2083,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     }
     break;
     case CASE_DESCONN_MOM(routine):
+      goto primitivecase;
     case CASE_DESCONN_MOM(primitive):
+    primitivecase:
     {
       // a known routine application
       auto routsigitm =
@@ -2457,7 +2475,9 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
   switch (connitm->hva_hash % NBNODECONN_MOM)
     {
     case CASE_NODECONN_MOM(string):
+      goto verbatimcase;
     case CASE_NODECONN_MOM(verbatim):
+    verbatimcase:
     {
       bool verb = (connitm == MOM_PREDEFITM(verbatim));
       if (arity != 1) goto badarity;
@@ -2473,7 +2493,9 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     }
     break;
     case CASE_NODECONN_MOM(comma):
+      goto semicoloncase;
     case CASE_NODECONN_MOM(semicolon):
+    semicoloncase:
     {
       bool semic = (connitm == MOM_PREDEFITM(semicolon));
       int cnt=0;
