@@ -449,6 +449,7 @@ public:
   static   constexpr const char* CLOCAL_PREFIX = "momloc_";
   static   constexpr const char* CFORMAL_PREFIX = "momarg_";
   static   constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
+  static   constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static   constexpr const char* CINT_TYPE = "momint_t";
   static   constexpr const char* CVALUE_TYPE = "momvalue_t";
   static   constexpr const char* CDOUBLE_TYPE = "double";
@@ -2202,7 +2203,11 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                                   mom_item_cstring(typitm));
       return typexpitm;
     }
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typitm=%s typexpitm=%s",
+                  mom_item_cstring(expitm), mom_item_cstring(typitm),
+                  mom_item_cstring(typexpitm));
   _ce_localvalueset.insert(expitm);
+  bind_local(expitm, MOM_PREDEFITM(item), expitm);
   if (typitm == MOM_PREDEFITM(item))
     return typitm;
   else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
@@ -2944,7 +2949,7 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
       auto expbind = get_binding(expitm);
       auto rolitm = expbind?expbind->vd_rolitm:nullptr;
       MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s bind rol %s what %s",
-                      mom_item_content_cstring(expitm), mom_item_cstring(rolitm),
+                      mom_item_cstring(expitm), mom_item_cstring(rolitm),
                       expbind?mom_value_cstring(expbind->vd_what):"°");
 #define NBROLE_MOM 31
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
@@ -2956,6 +2961,32 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
           return transform_var(expitm,initm,expbind);
         case CASE_ROLE_MOM(locals):
           return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(item):
+        {
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_expr expitm=%s constant",
+                          mom_item_cstring(expitm));
+          if (mom_item_space(expitm) == MOMSPA_PREDEF)
+            {
+              auto prnod =
+                mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                    literal_string(CPREDEFITEM_MACRO),
+                                    literal_string("("),
+                                    expitm,
+                                    literal_string(")"));
+              MOM_DEBUGPRINTF(gencod,
+                              "c-transform_expr expitm=%s gives prnod=%s",
+                              mom_item_cstring(expitm), mom_value_cstring(prnod));
+              return prnod;
+            }
+          else
+            {
+#warning transform_expr does not handle yet non-predefined items
+              MOM_FATAPRINTF("transform_expr non-predefined expitm=%s initm=%s",
+                             mom_item_cstring(expitm), mom_item_cstring(initm));
+            }
+        }
+        break;
 defaultrole:
         default:
           MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
