@@ -42,13 +42,23 @@
   )
 )
 
-^name $runinstr ^item ?run (
+^name $runinstrshowval0 ^item ?run (
   ^at descr run
   ^at comment "show the val0 using show_msg_value_prim"
   ^at run show_msg_value_prim
   ^sequence (
     "tiny-showing: "
     val0
+  )
+)
+
+^name $runinstrshowthesys ^item ?run (
+  ^at descr run
+  ^at comment "show the_system using show_msg_value_prim"
+  ^at run show_msg_value_prim
+  ^sequence (
+    "showing the_system: "
+    the_system
   )
 )
 	 
@@ -62,7 +72,7 @@
        ^at comment "body of tiny_func"
        ^at descr sequence
        ^at body
-       [ $runinstr ]
+       [ $runinstrshowval0  $runinstrshowthesys ]
    )
 )
 
