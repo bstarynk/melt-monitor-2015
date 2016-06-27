@@ -2922,12 +2922,17 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
       auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
       auto bracetree =
         mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                            3,
+                            4,
                             mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
                                 literal_string("block"),
                                 literal_string(" "),
                                 blkitm),
-                            bodytree, literal_string(";"));
+                            bodytree, literal_string(";"),
+			    mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                literal_string("endblock"),
+                                literal_string(" "),
+                                blkitm)
+			    );
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s gives bracetree=%s",
                       mom_item_cstring(blkitm), mom_value_cstring(bracetree));
