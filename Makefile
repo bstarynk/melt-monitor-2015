@@ -115,4 +115,5 @@ modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 
 tests: monimelt global.mom $(wildcard tests/*.mb)
 	+ $(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
+	+ $(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitjs
 

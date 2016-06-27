@@ -497,6 +497,7 @@ class MomJavascriptEmitter final : public MomEmitter
   friend bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*out);
 public:
   static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
+  static   constexpr const char* JSFUNC_PREFIX = "momjs_";
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
@@ -507,6 +508,7 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
+  const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   virtual MomEmitter::CaseScannerData*
   make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -2928,11 +2930,11 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                                 literal_string(" "),
                                 blkitm),
                             bodytree, literal_string(";"),
-			    mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
                                 literal_string("endblock"),
                                 literal_string(" "),
                                 blkitm)
-			    );
+                           );
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s gives bracetree=%s",
                       mom_item_cstring(blkitm), mom_value_cstring(bracetree));
@@ -3658,11 +3660,67 @@ MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
 } // end MomJavascriptEmitter::transform_data_element
 
 
+
 const struct mom_boxnode_st*
-MomJavascriptEmitter::transform_func_element(struct mom_item_st*itm)
+MomJavascriptEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
 {
+  assert (is_locked_item(sigitm));
+  assert (is_locked_item(fitm));
+  MOM_DEBUGPRINTF(gencod, "JS-emitter declare_funheader_for start sigitm=%s fitm=%s",
+                  mom_item_cstring(sigitm), mom_item_cstring(fitm));
+  auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+  assert (formtup != nullptr);
+  auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
+  MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtup=%s restyv=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
+  int nbform = mom_raw_size(formtup);
+  momvalue_t smallformdeclarr[8] = {nullptr};
+  momvalue_t *formdeclarr =
+    (nbform<(int)(sizeof(smallformdeclarr)/sizeof(smallformdeclarr[0])))
+    ? smallformdeclarr
+    : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
+  for (int ix=0; ix<nbform; ix++)
+    {
+      momvalue_t curformdeclv = nullptr;
+      struct mom_item_st*curformitm = formtup->seqitem[ix];
+      MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s  ix#%d curformitm=%s",
+                      mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
+      assert (is_locked_item(curformitm));
+      formdeclarr[ix] = curformitm;
+    }
+  auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
+                                        mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
+  if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
+  formdeclarr = nullptr;
+  MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtreev=%s",
+                  mom_item_cstring(sigitm), mom_value_cstring(formtreev));
+  auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                   literal_string("function"),
+                   literal_string(" "),
+                   literal_string(JSFUNC_PREFIX),
+                   fitm,
+                   formtreev);
+  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s fitm=%s result funheadv=%s",
+                  mom_item_cstring(sigitm),
+                  mom_item_cstring(fitm),
+                  mom_value_cstring(funheadv));
+  return funheadv;
+} // end of MomJavaScriptEmitter::declare_funheader_for
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
+{
+  assert (is_locked_item(fuitm));
+  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func start fuitm:=\n%s",
+                  mom_item_content_cstring(fuitm));
+  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
+  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s bdyitm %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  assert (is_locked_item(sigitm));
+  assert (is_locked_item(bdyitm));
 #warning unimplemented MomJavascriptEmitter::transform_func_element
-  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element itm=%s", mom_item_cstring(itm));
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomJavascriptEmitter::transform_func_element
 
 
