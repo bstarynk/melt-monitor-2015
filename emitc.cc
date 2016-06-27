@@ -432,6 +432,7 @@ public:
    ^comma(...) -> comma separated arguments
    ^semicolon(...) -> semicolon separated arguments
    ^parenthesis(...) -> contents in parenthesis
+   ^comment(...) -> the scalar elements as comment
 
  *****/
 
@@ -553,7 +554,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
         MOM_FATAPRINTF("failed to fopen %s", tmpath);
       MOM_DEBUGPRINTF(gencod, "mom_emit_c_code tmpath=%s gpath=%s", tmpath, gpath);
       errno = 0;
-      fprintf(fout, "// generated file " MOM_CPREFIX_PATH "%s.c ** DO NOT EDIT\n\n",
+      fprintf(fout, "// EmitC-generated file %s.c ** DO NOT EDIT\n\n",
               basename(gpath));
       mom_output_gplv3_notice (fout, "//", "",  basename(gpath));
       fprintf(fout, "\n\n#include \"meltmoni.h\"\n\n");
@@ -2498,6 +2499,29 @@ verbatimcase:
         if (!verb) fputs("\"", out);
       }
       break;
+    case CASE_NODECONN_MOM(comment):
+    {
+      fputs("/**", out);
+      for (int i=0; i<arity; i++)
+        {
+          auto sonv = nod->nod_sons[i];
+          if (mom_itype(sonv) == MOMITY_BOXSTRING)
+            {
+              auto strson = (const mom_boxstring_st*)sonv;
+              if (strstr(strson->cstr, "*/") || strchr(strson->cstr, '\n'))
+                throw MOM_RUNTIME_PRINTF("bad string son in comment: %s",
+                                         mom_value_cstring(nod));
+              else
+                fputs(strson->cstr, out);
+            }
+          else
+            write_tree(out, depth+1, lastnl, sonv, forv);
+          write_nl_or_space(out,depth,lastnl);
+        }
+      fputs("**/", out);
+      write_nl_or_space(out,depth,lastnl);
+    }
+    break;
     case CASE_NODECONN_MOM(comma):
       goto semicoloncase;
     case CASE_NODECONN_MOM(semicolon):
@@ -2896,7 +2920,14 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
           bodyarr[bix] = instree;
         }
       auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
-      auto bracetree = mom_boxnode_make_va(MOM_PREDEFITM(brace),1,bodytree);
+      auto bracetree =
+        mom_boxnode_make_va(MOM_PREDEFITM(brace),
+                            3,
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                literal_string("block"),
+                                literal_string(" "),
+                                blkitm),
+                            bodytree, literal_string(";"));
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s gives bracetree=%s",
                       mom_item_cstring(blkitm), mom_value_cstring(bracetree));
