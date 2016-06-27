@@ -508,7 +508,9 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
+  momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
+  momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   virtual MomEmitter::CaseScannerData*
   make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -3719,6 +3721,13 @@ MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
                   mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
   assert (is_locked_item(sigitm));
   assert (is_locked_item(bdyitm));
+  auto funhnod = declare_funheader_for(sigitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s funhnod %s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(funhnod));
+  auto bdynod = transform_body_element(bdyitm,fuitm);
+  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
+                  mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
+                  mom_value_cstring(bdynod), mom_value_cstring(funhnod));
 #warning unimplemented MomJavascriptEmitter::transform_func_element
   MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
 } // end MomJavascriptEmitter::transform_func_element
@@ -3729,10 +3738,162 @@ MomJavascriptEmitter::transform_body_element(struct mom_item_st*bdyitm, struct m
 {
   MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s routitm=%s",
                   mom_item_cstring(bdyitm), mom_item_cstring(routitm));
-#warning unimplemented MomCEmitter::transform_body_element
-  MOM_FATAPRINTF("unimplemented  MomJavascriptEmitter::transform_body_element bdyitm=%s routitm=%s",
-                 mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm:=\n %s",
+                  mom_item_content_cstring(bdyitm));
+  auto bdytree = transform_block(bdyitm, routitm);
+  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s bdytree=%s",
+                  mom_item_cstring(bdyitm), mom_value_cstring(bdytree));
+  return mom_dyncast_node(bdytree);
 } // end of MomJavascriptEmitter::transform_body_element
+
+momvalue_t
+MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_block initm=%s blkitm:=\n%s",
+                  mom_item_cstring(initm), mom_item_content_cstring(blkitm));
+  assert (is_locked_item(blkitm));
+  auto blkbind = get_local_binding(blkitm);
+  assert (blkbind != nullptr);
+  MOM_DEBUGPRINTF(gencod,
+                  "js-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
+                  mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
+                  mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
+  struct mom_item_st*rolitm = blkbind->vd_rolitm;
+  assert (mom_itype(rolitm) == MOMITY_ITEM);
+  auto bodytup =
+    mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod,
+                  "c-transform_block blkitm=%s bodytup=%s",
+                  mom_item_cstring(blkitm), mom_value_cstring(bodytup));
+#define NBBLOCKROLE_MOM 19
+#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
+	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcasebrole; foundcase_##Nam
+  switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
+    {
+    case CASE_BLOCKROLE_MOM (sequence):
+    {
+      auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
+      unsigned nblocals = mom_seqitems_length(localseq);
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block blkitm=%s nblocals#%d localseq:%s",
+                      mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
+      momvalue_t localtree= nullptr;
+      if (nblocals>0)
+        {
+          momvalue_t smallocarr[8]= {};
+          momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
+                               : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
+          for (int lix=0; lix<(int)nblocals; lix++)
+            {
+              momvalue_t curloctree = nullptr;
+              struct mom_item_st*locitm = localseq->seqitem[lix];
+              assert (is_locked_item(locitm));
+              MOM_DEBUGPRINTF(gencod,
+                              "js-transform_block blkitm=%s lix#%d locitm:=\n%s",
+                              mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+              MOM_FATAPRINTF("js-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
+                             mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+#warning MomCEmitter::transform_block unhandled local
+            }
+        }
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block blkitm=%s sequence of body %s localtree=%s",
+                      mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
+                      mom_value_cstring(localtree));
+      int bodylen = mom_raw_size(bodytup);
+      momvalue_t smalbodyarr[8]= {};
+      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      for (int bix=0; bix<bodylen; bix++)
+        {
+          struct mom_item_st*insitm = bodytup->seqitem[bix];
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_block blkitm=%s bix#%d insitm:=\n%s",
+                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+          assert (is_locked_item(insitm));
+          auto instree = transform_instruction(insitm, blkitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_block insitm=%s instree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(instree));
+          assert (instree != nullptr);
+          bodyarr[bix] = instree;
+        }
+      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+      auto bracetree =
+        mom_boxnode_make_va(MOM_PREDEFITM(brace),
+                            4,
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                literal_string("block"),
+                                literal_string(" "),
+                                blkitm),
+                            bodytree, literal_string(";"),
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                literal_string("endblock"),
+                                literal_string(" "),
+                                blkitm)
+                           );
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block blkitm=%s gives bracetree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(bracetree));
+      return bracetree;
+
+    }
+    break;
+    default:
+defaultcasebrole: // should never happen
+      MOM_FATAPRINTF("unexpected role %s in blkitm %s",
+                     mom_item_cstring(rolitm), mom_item_cstring(blkitm));
+      break;
+    }
+#undef NBBLOCKROLE_MOM
+#undef CASE_BLOCKROLE_MOM
+#warning unimplemented MomJavascriptEmitter::transform_block
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_block blkitm=%s initm=%s",
+                 mom_item_cstring(blkitm), mom_item_cstring(initm));
+} // end of MomJavascriptEmitter::transform_block
+
+momvalue_t
+MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_instruction fromitm=%s insitm:=\n%s",
+                  mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
+  assert (is_locked_item(insitm));
+  auto insbind = get_local_binding(insitm);
+  assert (insbind != nullptr);
+  MOM_DEBUGPRINTF(gencod,
+                  "js-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
+                  mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
+                  mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
+  struct mom_item_st*rolitm = insbind->vd_rolitm;
+  assert (mom_itype(rolitm) == MOMITY_ITEM);
+#define NBINSTROLE_MOM 73
+#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
+	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcaseirole; foundcase_##Nam
+  switch (rolitm->hva_hash % NBINSTROLE_MOM)
+    {
+    case CASE_INSTROLE_MOM(run):
+    {
+      auto runitm = mom_dyncast_item(insbind->vd_what);
+      assert (is_locked_item(runitm));
+      MOM_FATAPRINTF("js-transform_instruction insitm=%s runitm=%s unimplemented",
+                     mom_item_cstring(insitm), mom_item_cstring(runitm));
+    }
+
+    break;
+    default:
+defaultcaseirole:
+      MOM_FATAPRINTF("unexpected role %s in insitm %s",
+                     mom_item_cstring(rolitm), mom_item_cstring(insitm));
+      break;
+    }
+#undef NBINSTROLE_MOM
+#undef CASE_INSTROLE_MOM
+#warning unimplemented MomJavascriptEmitter::transform_instruction
+  MOM_FATAPRINTF("unimplemented js-transform_instruction insitm=%s", mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_instruction
+
 
 MomEmitter::CaseScannerData*
 MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
