@@ -102,7 +102,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -439,6 +439,7 @@ public:
 class MomCEmitter final :public MomEmitter
 {
   traced_vector_values_t _cec_globdecltree;
+  traced_vector_values_t _cec_globdefintree;
   traced_set_items_t _cec_declareditems;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
@@ -460,6 +461,11 @@ public:
   {
     if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
     else throw MOM_RUNTIME_PRINTF("bad global declaration %s", mom_value_cstring(nod));
+  };
+  void add_definition(const struct mom_boxnode_st*nod)
+  {
+    if (mom_itype(nod) == MOMITY_NODE) _cec_globdefintree.push_back(nod);
+    else throw MOM_RUNTIME_PRINTF("bad definition %s", mom_value_cstring(nod));
   };
   momvalue_t declare_type (struct mom_item_st*typitm);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
@@ -529,9 +535,103 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     {
       auto nod = cemit.transform_top_module();
       cemit.flush_todo_list(__LINE__);
-#warning mom_emit_c_code incomplete
-      MOM_FATAPRINTF("unimplemented mom_emit_c_code %s",
-                     mom_item_cstring(itm));
+      cemit.add_definition(nod);
+      long r = 0;
+      do
+        {
+          r= ((momrand_genrand_int32 () % 65536) << 32) |  momrand_genrand_int32();
+        }
+      while (MOM_UNLIKELY(r<100));
+      cemit.flush_todo_list(__LINE__);
+      MOM_DEBUGPRINTF(gencod, "mom_emit_c_code itm=%s nod=%s\n", mom_item_cstring(itm), mom_value_cstring(nod));
+      const char*tmpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c+%lxp%d.tmp",
+                                        mom_item_cstring(itm), r, (int)getpid());
+      const char*gpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c", mom_item_cstring(itm));
+      FILE* fout = fopen(tmpath, "w");
+      if (!fout)
+        MOM_FATAPRINTF("failed to fopen %s", tmpath);
+      MOM_DEBUGPRINTF(gencod, "mom_emit_c_code tmpath=%s gpath=%s", tmpath, gpath);
+      errno = 0;
+      fprintf(fout, "// generated file " MOM_CPREFIX_PATH "%s.c ** DO NOT EDIT\n\n",
+              basename(gpath));
+      mom_output_gplv3_notice (fout, "//", "",  basename(gpath));
+      fprintf(fout, "\n\n#include \"meltmoni.h\"\n\n");
+      int nbdecl = (int)cemit._cec_globdecltree.size();
+      if (nbdecl>0)
+        {
+          fprintf(fout, "\n/// %d declarations:\n", nbdecl);
+          for (int i=0; i<nbdecl; i++)
+            {
+              fputc('\n', fout);
+              long nl = ftell(fout);
+              cemit.write_tree(fout,0, nl, cemit._cec_globdecltree[i], itm);
+              fputs("\n\n", fout);
+            }
+        }
+      else fputs("// no declarations\n\n", fout);
+      fflush(fout);
+      int nbdef = (int)cemit._cec_globdefintree.size();
+      if (nbdef>0)
+        {
+          fprintf(fout, "\n/// %d definitions:\n", nbdef);
+          for (int i=0; i<nbdef; i++)
+            {
+              fputc('\n', fout);
+              long nl = ftell(fout);
+              cemit.write_tree(fout,0, nl, cemit._cec_globdefintree[i], itm);
+              fputs("\n\n", fout);
+            }
+        }
+      else fputs("// no definitions\n\n", fout);
+      fprintf(fout,"/// end of generated file %s\n", basename(gpath));
+      if (fclose(fout))
+        MOM_FATAPRINTF("failed to fclose %s", tmpath);
+      FILE*fold = fopen(gpath, "r");
+      fout = fopen(tmpath, "r");
+      if (!fout)
+        MOM_FATAPRINTF("failed to re-fopen %s", tmpath);
+      if (fold == nullptr)
+        {
+          fclose(fout);
+          if (rename (tmpath, gpath))
+            MOM_FATAPRINTF("failed to rename %s to %s", tmpath, gpath);
+        }
+      else
+        {
+          struct ::stat stold = {};
+          struct ::stat stnew = {};
+          if (fstat(fileno(fold),&stold))
+            MOM_FATAPRINTF("failed to fstat#%d for %s", fileno(fold), gpath);
+          if (fstat(fileno(fout), &stnew))
+            MOM_FATAPRINTF("failed to fstat#%d for %s", fileno(fout), tmpath);
+          bool same = stold.st_size == stnew.st_size;
+          while (same)
+            {
+              int ob = fgetc(fold);
+              int nb = fgetc(fout);
+              if (ob != nb) same=false;
+              if (ob == EOF) break;
+            };
+          fclose(fout);
+          fclose(fold);
+          if (same)
+            {
+              MOM_INFORMPRINTF("C code unchanged for module %s in %s", mom_item_cstring(itm), gpath);
+              remove (tmpath);
+            }
+          else
+            {
+              const char*bakpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c~", mom_item_cstring(itm));
+              if (rename(gpath, bakpath))
+                MOM_WARNPRINTF("failed to rename for backup %s -> %s (%m)", gpath, bakpath);
+              else
+                MOM_INFORMPRINTF("backed up %s -> %s", gpath, bakpath);
+              if (rename(tmpath, gpath))
+                MOM_FATAPRINTF("failed to rename %s to %s", tmpath, gpath);
+              MOM_INFORMPRINTF("C code generated for module %s in %s of %ld bytes",
+                               mom_item_cstring(itm), gpath, (long)stnew.st_size);
+            }
+        }
       return true;
     }
   catch (const MomRuntimeErrorAt& e)
@@ -706,8 +806,8 @@ MomEmitter::transform_top_module(void)
   auto modnod = mom_boxnode_make(MOM_PREDEFITM(module),vecval.size(),
                                  vecval.data());
   vecval.clear();
-  MOM_DEBUGPRINTF(gencod, "transform_top_module from top module %s gives modnod\n.. %s",
-                  mom_item_cstring(_ce_topitm), mom_value_cstring(modnod));
+  MOM_DEBUGPRINTF(gencod, "transform_top_module from top module :=\n %s\n... gives modnod\n.. %s",
+                  mom_item_content_cstring(_ce_topitm), mom_value_cstring(modnod));
   return modnod;
 } // end of MomEmitter::transform_top_module
 
@@ -763,10 +863,10 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
 {
   const struct mom_boxnode_st*resnod = nullptr;
   struct mom_item_st*descitm = mom_unsync_item_descr(elitm);
-  MOM_DEBUGPRINTF(gencod, "transform_module_element %s topitm=%s elitm=%s descitm=%s",
+  MOM_DEBUGPRINTF(gencod, "transform_module_element %s topitm=%s\nelitm:=%s\n descitm=%s",
                   kindname(),
                   mom_item_cstring(_ce_topitm),
-                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+                  mom_item_content_cstring(elitm), mom_item_cstring(descitm));
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
 #define NBMODELEMDESC_MOM 31
@@ -779,12 +879,18 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (thread_local):
     case CASE_DESCR_MOM (data):
       resnod = transform_data_element(elitm);
+      MOM_DEBUGPRINTF(gencod, "transform_module_element data elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
       break;
     case CASE_DESCR_MOM (func):
       resnod = transform_func_element(elitm);
+      MOM_DEBUGPRINTF(gencod, "transform_module_element func elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
       break;
     case CASE_DESCR_MOM (routine):
       resnod = transform_routine_element(elitm);
+      MOM_DEBUGPRINTF(gencod, "transform_module_element routine elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
       break;
 defaultcasedesc:
     default:
@@ -793,9 +899,9 @@ defaultcasedesc:
     };
 #undef NBMODELEMDESC_MOM
 #undef CASE_DESCR_MOM
-  MOM_DEBUGPRINTF(gencod, "transform_module_element topitm=%s elitm=%s\n.. resnod=%s",
+  MOM_DEBUGPRINTF(gencod, "transform_module_element topitm=%s\nelitm:=%s\n.. resnod=%s",
                   mom_item_cstring(_ce_topitm),
-                  mom_item_cstring(elitm),
+                  mom_item_content_cstring(elitm),
                   mom_value_cstring(resnod));
   return resnod;
 } // end of MomEmitter::transform_module_element
@@ -1840,7 +1946,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("`node` expr %s in %s should have at least one argument",
                                  mom_value_cstring(expnod),
                                  mom_item_cstring(insitm));
-    // failthru
+      // failthru
     case CASE_EXPCONN_MOM(set):
     case CASE_EXPCONN_MOM(tuple):
     {
@@ -2402,6 +2508,17 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     case CASE_NODECONN_MOM(bracket):
       write_balanced_node(out,depth,"[","]",lastnl,nod,forv);
       break;
+    case CASE_NODECONN_MOM(module):
+    {
+      for (int ix=0; ix<(int)arity; ix++)
+        {
+          fputc('\n', out);
+          lastnl = ftell(out);
+          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+          fputc('\n', out);
+        }
+    }
+    break;
     default:
 defaultcaseconn:
       throw  MOM_RUNTIME_PRINTF("unexpected write_node nod:%s depth=%d forv=%s",
@@ -2645,14 +2762,22 @@ MomCEmitter::transform_func_element(struct mom_item_st*fuitm)
                               literal_string("[]= \""),
                               sigitm,
                               literal_string("\";"));
+  add_global_decl(sigdef);
   MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s sigdef %s bdyitm %s", mom_item_cstring(fuitm),
                   mom_value_cstring(sigdef), mom_item_cstring(bdyitm));
   auto bdynod = transform_body_element(bdyitm,fuitm);
-  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s bdyitm %s bdynod %s",
-                  mom_item_cstring(fuitm), mom_item_cstring(bdyitm), mom_value_cstring(bdynod));
-#warning unimplemented MomCEmitter::transform_func_element
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
+                  mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
+                  mom_value_cstring(bdynod), mom_value_cstring(funhnod));
+  auto fundef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                    funhnod,
+                                    literal_string("\n"),
+                                    bdynod);
+  MOM_DEBUGPRINTF(gencod, "c-emitter transform func fuitm %s result fundef=%s",  mom_item_cstring(fuitm),
+                  mom_value_cstring(fundef));
+  return fundef;
 } // end MomCEmitter::transform_func_element
+
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm)
@@ -3089,7 +3214,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3143,7 +3268,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
