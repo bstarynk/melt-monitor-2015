@@ -621,7 +621,8 @@ bool mom_emit_c_code(struct mom_item_st*itm)
             }
           else
             {
-              const char*bakpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c~", mom_item_cstring(itm));
+              const char*bakpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c~",
+                                                 mom_item_cstring(itm));
               if (rename(gpath, bakpath))
                 MOM_WARNPRINTF("failed to rename for backup %s -> %s (%m)", gpath, bakpath);
               else
@@ -833,7 +834,7 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (thread_local):
       goto datacase;
     case CASE_DESCR_MOM (data):
-    datacase:
+datacase:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_data_element(elitm);
@@ -883,7 +884,7 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (thread_local):
       goto datacase;
     case CASE_DESCR_MOM (data):
-    datacase:
+datacase:
       resnod = transform_data_element(elitm);
       MOM_DEBUGPRINTF(gencod, "transform_module_element data elitm=%s resnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
@@ -1307,22 +1308,22 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
     case CASE_OPER_MOM(loop):
       goto sequencecase;
     case CASE_OPER_MOM(sequence):
-    sequencecase:
-    {
-      MOM_DEBUGPRINTF(gencod, "scan_instr nested block insitm=%s rk#%d blkitm=%s",
-                      mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-      todo([=](MomEmitter*em)
+sequencecase:
       {
-        MOM_DEBUGPRINTF(gencod, "before scanning nested block insitm=%s rk#%d blkitm=%s",
+        MOM_DEBUGPRINTF(gencod, "scan_instr nested block insitm=%s rk#%d blkitm=%s",
                         mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-        em->scan_block(insitm, blkitm);
-        MOM_DEBUGPRINTF(gencod, "after scanning nested block insitm=%s rk#%d blkitm=%s",
-                        mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-      });
-      bind_local(insitm,desitm,
-                 insitm, blkitm, rk);
-    }
-    break;
+        todo([=](MomEmitter*em)
+        {
+          MOM_DEBUGPRINTF(gencod, "before scanning nested block insitm=%s rk#%d blkitm=%s",
+                          mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+          em->scan_block(insitm, blkitm);
+          MOM_DEBUGPRINTF(gencod, "after scanning nested block insitm=%s rk#%d blkitm=%s",
+                          mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+        });
+        bind_local(insitm,desitm,
+                   insitm, blkitm, rk);
+      }
+      break;
     case CASE_OPER_MOM(cond):
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
@@ -1821,35 +1822,35 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(and):
       goto orcase;
     case CASE_EXPCONN_MOM(or):
-    orcase:
-    {
-      if (nodarity == 0)
-        {
-          if (!typitm)
-            throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
-                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
-          return typitm;
-        }
-      for (unsigned ix=0; ix<nodarity; ix++)
-        {
-          auto subexpv = expnod->nod_sons[ix];
-          auto newtypitm = scan_expr(subexpv, insitm, depth+1, typitm);
-          if (!newtypitm)
-            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is typeless in instr %s",
-                                     ix, mom_value_cstring(subexpv),
-                                     mom_value_cstring(expnod), mom_item_cstring(insitm));
-          else if (typitm==nullptr)
-            typitm = newtypitm;
-          else if (newtypitm != typitm)
-            throw MOM_RUNTIME_PRINTF("son#%d %s of %s is badly typed %s expecting %s in instr %s",
-                                     ix, mom_value_cstring(subexpv),
-                                     mom_value_cstring(expnod),
-                                     mom_item_cstring(newtypitm), mom_item_cstring(typitm),
-                                     mom_item_cstring(insitm));
-        }
-      return typitm;
-    }
-    break;
+orcase:
+      {
+        if (nodarity == 0)
+          {
+            if (!typitm)
+              throw MOM_RUNTIME_PRINTF("typeless empty %s expr in instr %s",
+                                       mom_value_cstring(expnod), mom_item_cstring(insitm));
+            return typitm;
+          }
+        for (unsigned ix=0; ix<nodarity; ix++)
+          {
+            auto subexpv = expnod->nod_sons[ix];
+            auto newtypitm = scan_expr(subexpv, insitm, depth+1, typitm);
+            if (!newtypitm)
+              throw MOM_RUNTIME_PRINTF("son#%d %s of %s is typeless in instr %s",
+                                       ix, mom_value_cstring(subexpv),
+                                       mom_value_cstring(expnod), mom_item_cstring(insitm));
+            else if (typitm==nullptr)
+              typitm = newtypitm;
+            else if (newtypitm != typitm)
+              throw MOM_RUNTIME_PRINTF("son#%d %s of %s is badly typed %s expecting %s in instr %s",
+                                       ix, mom_value_cstring(subexpv),
+                                       mom_value_cstring(expnod),
+                                       mom_item_cstring(newtypitm), mom_item_cstring(typitm),
+                                       mom_item_cstring(insitm));
+          }
+        return typitm;
+      }
+      break;
     case CASE_EXPCONN_MOM(sequence):
     {
       if (nodarity == 0)
@@ -1886,54 +1887,54 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(plus):
       goto multcase;
     case CASE_EXPCONN_MOM(mult):
-    multcase:
-    {
-      if (nodarity == 0)
-        throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
-                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
-      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
-      if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
-        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
-                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
-                                  mom_item_cstring(insitm));
-      for (unsigned ix=1; ix<nodarity; ix++)
-        {
-          auto curson = expnod->nod_sons[ix];
-          auto curtypitm = scan_expr(curson, insitm, depth+1, firstypitm);
-          if (curtypitm != firstypitm)
-            throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for son#%d %s of expr %s in instr %s",
-                                     mom_item_cstring(firstypitm),
-                                     ix, mom_value_cstring(curson),
-                                     mom_value_cstring(expnod),
-                                     mom_item_cstring(insitm));
-        }
-      return firstypitm;
-    }
-    break;
+multcase:
+      {
+        if (nodarity == 0)
+          throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
+                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
+        auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+        if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
+          throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                    mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                    mom_item_cstring(insitm));
+        for (unsigned ix=1; ix<nodarity; ix++)
+          {
+            auto curson = expnod->nod_sons[ix];
+            auto curtypitm = scan_expr(curson, insitm, depth+1, firstypitm);
+            if (curtypitm != firstypitm)
+              throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for son#%d %s of expr %s in instr %s",
+                                       mom_item_cstring(firstypitm),
+                                       ix, mom_value_cstring(curson),
+                                       mom_value_cstring(expnod),
+                                       mom_item_cstring(insitm));
+          }
+        return firstypitm;
+      }
+      break;
     case CASE_EXPCONN_MOM(sub):
       goto divcase;
     case CASE_EXPCONN_MOM(div):
-    divcase:
-    {
-      if (nodarity != 2)
-        throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
-                                 mom_value_cstring(expnod), mom_item_cstring(insitm));
-      auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
-      if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
-        throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
-                                  mom_item_cstring(firstypitm), mom_value_cstring(expnod),
-                                  mom_item_cstring(insitm));
-      auto rightexp = expnod->nod_sons[1];
-      auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
-      if (rightypitm != firstypitm)
-        throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
-                                 mom_item_cstring(firstypitm),
-                                 mom_value_cstring(rightexp),
-                                 mom_value_cstring(expnod),
-                                 mom_item_cstring(insitm));
-      return firstypitm;
-    }
-    break;
+divcase:
+      {
+        if (nodarity != 2)
+          throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
+                                   mom_value_cstring(expnod), mom_item_cstring(insitm));
+        auto firstypitm = scan_expr(expnod->nod_sons[0], insitm, depth+1, typitm);
+        if (firstypitm != MOM_PREDEFITM(int) && firstypitm != MOM_PREDEFITM(double))
+          throw  MOM_RUNTIME_PRINTF("non-numerical type %s of expr %s in instr %s",
+                                    mom_item_cstring(firstypitm), mom_value_cstring(expnod),
+                                    mom_item_cstring(insitm));
+        auto rightexp = expnod->nod_sons[1];
+        auto rightypitm =  scan_expr(rightexp, insitm, depth+1, firstypitm);
+        if (rightypitm != firstypitm)
+          throw MOM_RUNTIME_PRINTF("numerical type mismatch (want %s) for right son %s of expr %s in instr %s",
+                                   mom_item_cstring(firstypitm),
+                                   mom_value_cstring(rightexp),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm));
+        return firstypitm;
+      }
+      break;
     case CASE_EXPCONN_MOM(mod):
     {
       if (nodarity != 2)
@@ -1964,21 +1965,21 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(set):
       goto tuplecase;
     case CASE_EXPCONN_MOM(tuple):
-    tuplecase:
-    {
-      for (unsigned ix=0; ix<nodarity; ix++)
-        {
-          auto subexpv = expnod->nod_sons[ix];
-          auto subtypitm = scan_expr(subexpv, insitm, depth+1);
-          if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
-            throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
-                                     ix, mom_item_cstring(connitm),
-                                     mom_value_cstring(expnod),
-                                     mom_item_cstring(insitm));
-        }
-      return MOM_PREDEFITM(value);
-    }
-    break;
+tuplecase:
+      {
+        for (unsigned ix=0; ix<nodarity; ix++)
+          {
+            auto subexpv = expnod->nod_sons[ix];
+            auto subtypitm = scan_expr(subexpv, insitm, depth+1);
+            if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
+              throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
+                                       ix, mom_item_cstring(connitm),
+                                       mom_value_cstring(expnod),
+                                       mom_item_cstring(insitm));
+          }
+        return MOM_PREDEFITM(value);
+      }
+      break;
     default:
 defaultcaseconn:
       {
@@ -2085,85 +2086,85 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     case CASE_DESCONN_MOM(routine):
       goto primitivecase;
     case CASE_DESCONN_MOM(primitive):
-    primitivecase:
-    {
-      // a known routine application
-      auto routsigitm =
-        mom_dyncast_item(mom_unsync_item_get_phys_attr
-                         (connitm,
-                          MOM_PREDEFITM(signature)));
-      if (routsigitm==nullptr)
-        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
-                                 mom_item_cstring(desconnitm),
-                                 mom_item_cstring(connitm),
-                                 mom_value_cstring(expnod),
-                                 mom_item_cstring(insitm));
-      lock_item(routsigitm);
-      const struct mom_boxtuple_st* formaltup=nullptr;
-      struct mom_item_st*restypitm=nullptr;
+primitivecase:
       {
-        auto sigr=scan_nonbinding_signature(routsigitm,insitm);
-        formaltup=sigr.sig_formals;
-        restypitm=mom_dyncast_item(sigr.sig_result);
-      }
-      if (formaltup==nullptr || restypitm==nullptr)
-        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s with bad signature %s",
-                                 mom_item_cstring(desconnitm),
-                                 mom_item_cstring(connitm),
-                                 mom_value_cstring(expnod),
-                                 mom_item_cstring(insitm),
-                                 mom_item_cstring(routsigitm));
-      unsigned nbformals = mom_boxtuple_length(formaltup);
-      if (nbformals != nodarity)
-        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                 " with wrong %d number of arguments (%d expected from signature %s)",
-                                 mom_item_cstring(desconnitm),
-                                 mom_item_cstring(connitm),
-                                 mom_value_cstring(expnod),
-                                 mom_item_cstring(insitm),
-                                 nodarity, nbformals,
-                                 mom_item_cstring(routsigitm));
-      for (unsigned ix=0; ix<nbformals; ix++)
+        // a known routine application
+        auto routsigitm =
+          mom_dyncast_item(mom_unsync_item_get_phys_attr
+                           (connitm,
+                            MOM_PREDEFITM(signature)));
+        if (routsigitm==nullptr)
+          throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
+                                   mom_item_cstring(desconnitm),
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm));
+        lock_item(routsigitm);
+        const struct mom_boxtuple_st* formaltup=nullptr;
+        struct mom_item_st*restypitm=nullptr;
         {
-          auto sonexpv = expnod->nod_sons[ix];
-          auto curformalitm = mom_boxtuple_nth(formaltup, ix);
-          assert (is_locked_item(curformalitm));
-          auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
-          if (curtypitm == nullptr)
-            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                      " with signature %s of untyped formal#%d %s",
-                                      mom_item_cstring(desconnitm),
-                                      mom_item_cstring(connitm),
-                                      mom_value_cstring(expnod),
-                                      mom_item_cstring(insitm),
-                                      mom_item_cstring(routsigitm),
-                                      ix, mom_item_cstring(curformalitm));
-          lock_item(curtypitm);
-          auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
-          if (exptypitm != curtypitm)
-            throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                      " with signature %s type mismatch for #%d (formal %s)",
-                                      mom_item_cstring(desconnitm),
-                                      mom_item_cstring(connitm),
-                                      mom_value_cstring(expnod),
-                                      mom_item_cstring(insitm),
-                                      mom_item_cstring(routsigitm),
-                                      ix,  mom_item_cstring(curformalitm));
-        };
-      if (typitm != nullptr && typitm != restypitm)
-        throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
-                                 " with signature %s result type mismatch (expecting %s got %s)",
-                                 mom_item_cstring(desconnitm),
-                                 mom_item_cstring(connitm),
-                                 mom_value_cstring(expnod),
-                                 mom_item_cstring(insitm),
-                                 mom_item_cstring(routsigitm),
-                                 mom_item_cstring(typitm), mom_item_cstring(restypitm));
-      return restypitm;
-    }
-    break;
+          auto sigr=scan_nonbinding_signature(routsigitm,insitm);
+          formaltup=sigr.sig_formals;
+          restypitm=mom_dyncast_item(sigr.sig_result);
+        }
+        if (formaltup==nullptr || restypitm==nullptr)
+          throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s with bad signature %s",
+                                   mom_item_cstring(desconnitm),
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm),
+                                   mom_item_cstring(routsigitm));
+        unsigned nbformals = mom_boxtuple_length(formaltup);
+        if (nbformals != nodarity)
+          throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                   " with wrong %d number of arguments (%d expected from signature %s)",
+                                   mom_item_cstring(desconnitm),
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm),
+                                   nodarity, nbformals,
+                                   mom_item_cstring(routsigitm));
+        for (unsigned ix=0; ix<nbformals; ix++)
+          {
+            auto sonexpv = expnod->nod_sons[ix];
+            auto curformalitm = mom_boxtuple_nth(formaltup, ix);
+            assert (is_locked_item(curformalitm));
+            auto curtypitm = mom_dyncast_item( mom_unsync_item_get_phys_attr (curformalitm, MOM_PREDEFITM(type)));
+            if (curtypitm == nullptr)
+              throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                        " with signature %s of untyped formal#%d %s",
+                                        mom_item_cstring(desconnitm),
+                                        mom_item_cstring(connitm),
+                                        mom_value_cstring(expnod),
+                                        mom_item_cstring(insitm),
+                                        mom_item_cstring(routsigitm),
+                                        ix, mom_item_cstring(curformalitm));
+            lock_item(curtypitm);
+            auto exptypitm = scan_expr(sonexpv,insitm,depth+1,curtypitm);
+            if (exptypitm != curtypitm)
+              throw  MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                        " with signature %s type mismatch for #%d (formal %s)",
+                                        mom_item_cstring(desconnitm),
+                                        mom_item_cstring(connitm),
+                                        mom_value_cstring(expnod),
+                                        mom_item_cstring(insitm),
+                                        mom_item_cstring(routsigitm),
+                                        ix,  mom_item_cstring(curformalitm));
+          };
+        if (typitm != nullptr && typitm != restypitm)
+          throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s"
+                                   " with signature %s result type mismatch (expecting %s got %s)",
+                                   mom_item_cstring(desconnitm),
+                                   mom_item_cstring(connitm),
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm),
+                                   mom_item_cstring(routsigitm),
+                                   mom_item_cstring(typitm), mom_item_cstring(restypitm));
+        return restypitm;
+      }
+      break;
 defaultdesconn:
-    break;
+      break;
     }
 #undef CASE_DESCONN_MOM
 #undef NBDESCONN_MOM
@@ -2477,42 +2478,42 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
     case CASE_NODECONN_MOM(string):
       goto verbatimcase;
     case CASE_NODECONN_MOM(verbatim):
-    verbatimcase:
-    {
-      bool verb = (connitm == MOM_PREDEFITM(verbatim));
-      if (arity != 1) goto badarity;
-      auto sonv = nod->nod_sons[0];
-      if (mom_itype(sonv) != MOMITY_BOXSTRING)
-        throw  MOM_RUNTIME_PRINTF("expecting string son write_node %s depth=%d forv=%s",
-                                  mom_value_cstring(nod), depth, mom_value_cstring(forv));
-      auto str = ((const struct mom_boxstring_st*)sonv)->cstr;
-      auto ln = mom_raw_size(sonv);
-      if (!verb) fputs(" \"", out);
-      mom_output_utf8_encoded (out, str, ln);
-      if (verb) fputs("\"", out);
-    }
-    break;
+verbatimcase:
+      {
+        bool verb = (connitm == MOM_PREDEFITM(verbatim));
+        if (arity != 1) goto badarity;
+        auto sonv = nod->nod_sons[0];
+        if (mom_itype(sonv) != MOMITY_BOXSTRING)
+          throw  MOM_RUNTIME_PRINTF("expecting string son write_node %s depth=%d forv=%s",
+                                    mom_value_cstring(nod), depth, mom_value_cstring(forv));
+        auto str = ((const struct mom_boxstring_st*)sonv)->cstr;
+        auto ln = mom_raw_size(sonv);
+        if (!verb) fputs(" \"", out);
+        mom_output_utf8_encoded (out, str, ln);
+        if (!verb) fputs("\"", out);
+      }
+      break;
     case CASE_NODECONN_MOM(comma):
       goto semicoloncase;
     case CASE_NODECONN_MOM(semicolon):
-    semicoloncase:
-    {
-      bool semic = (connitm == MOM_PREDEFITM(semicolon));
-      int cnt=0;
-      for (int ix=0; ix<(int)arity; ix++)
-        {
-          if (nod->nod_sons[ix] == nullptr)
-            continue;
-          if (cnt>0)
-            {
-              fputc(semic?';':',', out);
-              write_nl_or_space(out,depth,lastnl);
-            }
-          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
-          cnt++;
-        }
-    }
-    break;
+semicoloncase:
+      {
+        bool semic = (connitm == MOM_PREDEFITM(semicolon));
+        int cnt=0;
+        for (int ix=0; ix<(int)arity; ix++)
+          {
+            if (nod->nod_sons[ix] == nullptr)
+              continue;
+            if (cnt>0)
+              {
+                fputc(semic?';':',', out);
+                write_nl_or_space(out,depth,lastnl);
+              }
+            write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+            cnt++;
+          }
+      }
+      break;
     case CASE_NODECONN_MOM(sequence):
     {
       for (int ix=0; ix<(int)arity; ix++)
@@ -2692,9 +2693,10 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
                               literal_string("typedef "),
                               restytree,
                               literal_string(" "),
-                              formtytree,
                               literal_string(CSIGNTYPE_PREFIX),
                               sigitm,
+                              literal_string(" "),
+                              formtytree,
                               literal_string(";")
                              );
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s result sigheadv=%s",
