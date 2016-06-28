@@ -102,7 +102,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -511,6 +511,7 @@ public:
   momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
+  momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
   virtual MomEmitter::CaseScannerData*
   make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -3309,7 +3310,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3363,7 +3364,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3853,6 +3854,8 @@ defaultcasebrole: // should never happen
                  mom_item_cstring(blkitm), mom_item_cstring(initm));
 } // end of MomJavascriptEmitter::transform_block
 
+
+
 momvalue_t
 MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
 {
@@ -3877,8 +3880,7 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
     {
       auto runitm = mom_dyncast_item(insbind->vd_what);
       assert (is_locked_item(runitm));
-      MOM_FATAPRINTF("js-transform_instruction insitm=%s runitm=%s unimplemented",
-                     mom_item_cstring(insitm), mom_item_cstring(runitm));
+      return transform_runinstr(insitm, runitm, fromitm);
     }
 
     break;
@@ -3893,6 +3895,20 @@ defaultcaseirole:
 #warning unimplemented MomJavascriptEmitter::transform_instruction
   MOM_FATAPRINTF("unimplemented js-transform_instruction insitm=%s", mom_item_cstring(insitm));
 } // end of MomJavascriptEmitter::transform_instruction
+
+momvalue_t
+MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*fromitm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_runinstr fromitm=%s runitm:=\n%s\n ..insitm:=\n%s",
+                  mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
+#warning unimplemented MomJavascriptEmitter::transform_runinstr
+  MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s",
+                 mom_item_cstring(insitm));
+}
+
+
+
+
 
 
 MomEmitter::CaseScannerData*
