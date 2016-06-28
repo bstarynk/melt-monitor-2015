@@ -899,6 +899,16 @@ comment
 
 
 
+*js_expansion
+1467113815
+^mtime
+(
+comment
+"for JavaScript expansion"_
+)attrs
+
+
+
 *left_assoc
 1455871773
 ^mtime
@@ -1029,6 +1039,7 @@ comment
 
 
 
+
 *name
 1452697324
 ^mtime
@@ -1036,7 +1047,6 @@ comment
 comment
 "for unknown names"_
 )attrs
-
 
 
 
@@ -1196,6 +1206,7 @@ comment
 
 
 
+
 *out_filebuffer
 1456930526
 ^mtime
@@ -1203,7 +1214,6 @@ comment
 comment
 "output a filebuffer"_
 )attrs
-
 
 
 
@@ -1370,6 +1380,7 @@ identity
 
 
 
+
 *payl_assovaldata
 1456825884
 ^mtime
@@ -1384,7 +1395,6 @@ payl_assovaldata_remove
 payl_assovaldata_set_attrs
 )set
 )attrs
-
 
 
 
@@ -1546,6 +1556,7 @@ comment
 
 
 
+
 *payl_hashassoc_sorted_key_node
 1456921741
 ^mtime
@@ -1553,7 +1564,6 @@ comment
 comment
 "get a node with sorted keys"_
 )attrs
-
 
 
 
@@ -1723,6 +1733,7 @@ comment
 
 
 
+
 *payl_tasklet
 1457031395
 ^mtime
@@ -1730,7 +1741,6 @@ comment
 comment
 "tasklet payload"_
 )attrs
-
 
 
 
@@ -1923,6 +1933,7 @@ comment
 
 
 
+
 *primitive
 1465807699
 ^mtime
@@ -1930,7 +1941,6 @@ comment
 comment
 "for primitives (operations)"_
 )attrs
-
 
 
 
@@ -2089,6 +2099,7 @@ comment
 
 
 
+
 *signature_displayer
 1452104741
 ^mtime
@@ -2096,7 +2107,6 @@ comment
 comment
 "signature of displayer functions"_
 )attrs
-
 
 
 
@@ -2364,6 +2374,7 @@ value
 
 
 
+
 *thread_local
 1465299099
 ^mtime
@@ -2371,7 +2382,6 @@ value
 comment
 "for thread-local variables"_
 )attrs
-
 
 
 
@@ -2545,6 +2555,7 @@ comment
 
 
 
+
 *web_exchange
 1456934574
 ^mtime
@@ -2552,7 +2563,6 @@ comment
 comment
 "current web exchange"_
 )attrs
-
 
 
 
