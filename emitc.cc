@@ -3107,6 +3107,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                   mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
                   mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
   struct mom_item_st*rolitm = insbind->vd_rolitm;
+  auto whatv = insbind->vd_what;
   assert (mom_itype(rolitm) == MOMITY_ITEM);
 #define NBINSTROLE_MOM 73
 #define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
@@ -3125,9 +3126,32 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return transform_runinstr(insitm, runitm, fromitm);
     }
     break;
+    case CASE_INSTROLE_MOM(assign):
+    {
+      auto whatnod = mom_dyncast_node(whatv);
+      assert (whatnod != nullptr && whatnod->nod_connitm == MOM_PREDEFITM(assign) && mom_raw_size(whatnod) == 3);
+      auto tovaritm = mom_dyncast_item(whatnod->nod_sons[0]);
+      auto fromexp = whatnod->nod_sons[1];
+      auto totypitm = mom_dyncast_item(whatnod->nod_sons[2]);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction assign insitm=%s tovaritm=%s fromexp=%s totypitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(tovaritm),
+                      mom_value_cstring(fromexp), mom_item_cstring(totypitm));
+      assert (tovaritm != nullptr);
+      assert (totypitm != nullptr);
+      auto fromtree =  transform_expr(fromexp, insitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction assign insitm=%s fromtree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(fromtree));
+#warning unimplemented MomCEmitter::transform_instruction assign
+      MOM_FATAPRINTF("unimplemented c-transform_instruction assign insitm=%s fromtree=%s",
+                     mom_item_cstring(insitm), mom_value_cstring(fromtree));
+
+    }
+    break;
     default:
 defaultcaseirole:
-      MOM_FATAPRINTF("unexpected role %s in insitm %s",
+      MOM_FATAPRINTF("c-transform_instruction unexpected role %s in insitm %s",
                      mom_item_cstring(rolitm), mom_item_cstring(insitm));
       break;
     }
@@ -3886,7 +3910,6 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
       assert (is_locked_item(runitm));
       return transform_runinstr(insitm, runitm, fromitm);
     }
-
     break;
     default:
 defaultcaseirole:
