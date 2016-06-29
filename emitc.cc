@@ -94,6 +94,7 @@ private:
   traced_set_items_t _ce_typitems;
   traced_set_items_t _ce_blockitems;
   traced_set_items_t _ce_instritems;
+protected:
   traced_map_item2long_t _ce_breakcountmap;
   traced_map_item2long_t _ce_continuecountmap;
   std::map<std::string,momvalue_t,
