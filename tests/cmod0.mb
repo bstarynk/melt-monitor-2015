@@ -37,8 +37,11 @@
   ^at descr primitive
   ^at signature signature_string_value_to_void
   ^at c_expansion %code_chunk(
-  "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
-  "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)\n"
+    "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
+    "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)"
+  )
+  ^at js_expansion %code_chunk(
+    "console.log((" str0 "), (" val0 "))"
   )
 )
 
