@@ -102,7 +102,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -512,6 +512,9 @@ public:
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
+  momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
+  momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
+  momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual MomEmitter::CaseScannerData*
   make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -3157,9 +3160,9 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
                       mom_value_cstring(expnod));
       if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
-        MOM_FATAPRINTF("c-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
-                       mom_item_cstring(insitm), mom_item_cstring(runitm),
-                       mom_value_cstring(expnod));
+        throw MOM_RUNTIME_PRINTF("c-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
+                                 mom_item_cstring(insitm), mom_item_cstring(runitm),
+                                 mom_value_cstring(expnod));
       for (int aix=0; aix<(int)nbformals; aix++)
         {
           auto curfitm = formaltup->seqitem[aix];
@@ -3310,7 +3313,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3364,7 +3367,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3904,11 +3907,178 @@ MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_i
 #warning unimplemented MomJavascriptEmitter::transform_runinstr
   MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s",
                  mom_item_cstring(insitm));
-}
+  assert (is_locked_item(insitm));
+  assert (is_locked_item(runitm));
+  auto desrunitm = mom_unsync_item_descr(runitm);
+  if (desrunitm == MOM_PREDEFITM(primitive))
+    {
+      auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr runitm=%s sigitm:=\n%s",
+                      mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
+      assert (is_locked_item(sigitm));
+      auto formaltup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+      assert (formaltup != nullptr);
+      unsigned nbformals = mom_size(formaltup);
+      traced_map_item2value_t argmap;
+      auto inscomp = insitm->itm_pcomp;
+      momvalue_t treev = nullptr;
+      auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(js_expansion)));
+      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
+                      mom_value_cstring(expnod));
+      if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
+        throw MOM_RUNTIME_PRINTF("js-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
+                                 mom_item_cstring(insitm), mom_item_cstring(runitm),
+                                 mom_value_cstring(expnod));
+      for (int aix=0; aix<(int)nbformals; aix++)
+        {
+          auto curfitm = formaltup->seqitem[aix];
+          auto curarg = mom_vectvaldata_nth(inscomp, aix);
+          MOM_DEBUGPRINTF(gencod, "js-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
+                          mom_item_cstring(curfitm), mom_value_cstring(curarg));
+          assert (mom_itype(curfitm)==MOMITY_ITEM);
+          auto argtree =  transform_expr(curarg, insitm);
+          MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
+                          mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
+          argmap[curfitm] = argtree;
+        }
+      int exparity = mom_raw_size(expnod);
+      momvalue_t smalltreearr[8]= {};
+      momvalue_t* treearr = (exparity<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
+                            : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+      for (int ix=0; ix<exparity; ix++)
+        {
+          momvalue_t curtreev = nullptr;
+          momvalue_t curson = expnod->nod_sons[ix];
+          auto cursonitm = mom_dyncast_item(curson);
+          if (cursonitm != nullptr)
+            {
+              auto it = argmap.find(cursonitm);
+              if (it != argmap.end())
+                curtreev = it->second;
+              else
+                curtreev = curson;
+            }
+          else
+            curtreev = curson;
+          treearr[ix] = curtreev;
+        }
+      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
+      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s treev=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(treev));
+      return treev;
+    }
+#warning unimplemented MomJavascriptEmitter::transform_runinstr
+  MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s", mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_runinstr
 
 
+momvalue_t
+MomJavascriptEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_expr expv=%s initm=%s",
+                  mom_value_cstring(expv), mom_item_cstring(initm));
+  unsigned expty = mom_itype(expv);
+  switch (expty)
+    {
+    case MOMITY_INT:
+    case MOMITY_BOXDOUBLE:
+      return expv;
+    case MOMITY_BOXSTRING:
+      return mom_boxnode_make_va(MOM_PREDEFITM(string),1,expv);
+    case MOMITY_ITEM:
+    {
+      auto expitm = (struct mom_item_st*)expv;
+      auto expbind = get_binding(expitm);
+      auto rolitm = expbind?expbind->vd_rolitm:nullptr;
+      MOM_DEBUGPRINTF(gencod, "js-transform_expr expitm=%s bind rol %s what %s",
+                      mom_item_cstring(expitm), mom_item_cstring(rolitm),
+                      expbind?mom_value_cstring(expbind->vd_what):"°");
+#define NBROLE_MOM 31
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
+ if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+ goto defaultrole; foundrolcase_##Nam
+      switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
+        {
+        case CASE_ROLE_MOM(formal):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(locals):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(item):
+        {
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_expr expitm=%s constant",
+                          mom_item_cstring(expitm));
+#warning transform_expr does not handle yet non-predefined items
+          MOM_FATAPRINTF("js-transform_expr non-predefined expitm=%s initm=%s",
+                         mom_item_cstring(expitm), mom_item_cstring(initm));
+        }
+        break;
+defaultrole:
+        default:
+          MOM_FATAPRINTF("js-transform_expr bad expitm=%s rolitm=%s initm=%s",
+                         mom_item_cstring(expitm), mom_item_cstring(rolitm), mom_item_cstring(initm));
+        }
+#undef NBROLE_MOM
+#undef CASE_ROLE_MOM
+    }
+    break;
+    case MOMITY_NODE:
+      return transform_node_expr((struct mom_boxnode_st*)expv, initm);
+    default:
+      MOM_FATAPRINTF("js-transform_expr bad expv=%s initm=%s",
+                     mom_value_cstring(expv), mom_item_cstring(initm));
+
+    }
+#warning unimplemented MomJavascriptEmitter::transform_expr
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_expr expv=%s initm=%s",
+                 mom_value_cstring(expv), mom_item_cstring(initm));
+} // end of MomJavascriptEmitter::transform_expr
 
 
+momvalue_t
+MomJavascriptEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
+{
+  if (!varbind)
+    varbind = get_binding(varitm);
+  if (MOM_UNLIKELY(!varbind)) // should never happen
+    MOM_FATAPRINTF("js-transform_var varitm=%s in insitm %s lacking binding",
+                   mom_item_cstring(varitm), mom_item_cstring(insitm));
+  auto rolitm = varbind->vd_rolitm;
+  MOM_DEBUGPRINTF(gencod, "js-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
+  momvalue_t vartree = nullptr;
+#define NBROLE_MOM 31
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+  goto defaultrole; foundrolcase_##Nam
+  switch (rolitm->hva_hash % NBROLE_MOM)
+    {
+    case CASE_ROLE_MOM(formal):
+defaultrole:
+    default:
+      break;
+    }
+#undef NBROLE_MOM
+#undef CASE_ROLE_MOM
+  MOM_DEBUGPRINTF(gencod, "js-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(vartree));
+  if (vartree) return vartree;
+#warning unimplemented MomJavascriptEmitter::transform_var
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
+} // end of MomJavascriptEmitter::transform_var
+
+momvalue_t
+MomJavascriptEmitter:: transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_node_expr expnod=%s insitm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm));
+#warning unimplemented MomJavascriptEmitter::transform_node_expr
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_node_expr expnod=%s insitm=%s",
+                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_node_expr
 
 
 MomEmitter::CaseScannerData*
