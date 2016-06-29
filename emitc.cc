@@ -47,6 +47,10 @@ public:
     MomItemLess,
     traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
     traced_map_item2item_t;
+  typedef std::map<const struct mom_item_st*,long,
+    MomItemLess,
+    traceable_allocator<std::pair<struct mom_item_st*,long>>>
+    traced_map_item2long_t;
   typedef std::map<const struct mom_item_st*,momvalue_t,
     MomItemLess,
     traceable_allocator<std::pair<struct mom_item_st*,momvalue_t>>>
@@ -90,6 +94,8 @@ private:
   traced_set_items_t _ce_typitems;
   traced_set_items_t _ce_blockitems;
   traced_set_items_t _ce_instritems;
+  traced_map_item2long_t _ce_breakcountmap;
+  traced_map_item2long_t _ce_continuecountmap;
   std::map<std::string,momvalue_t,
       std::less<std::string>,
       traceable_allocator<std::pair<std::string,momvalue_t>>> _ce_literalstringmap;
@@ -1286,6 +1292,13 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
                                  mom_item_cstring(blkbind->vd_rolitm));
       bind_local(insitm,MOM_PREDEFITM(break),
                  outblkitm, blkitm, rk);
+      {
+        auto it = _ce_breakcountmap.find(outblkitm);
+        if (it != _ce_breakcountmap.end())
+          it->second++;
+        else
+          _ce_breakcountmap[outblkitm] = 1;
+      }
     }
     break;
     case CASE_OPER_MOM(continue):
@@ -1314,6 +1327,13 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
                                  mom_item_cstring(loopbind->vd_rolitm));
       bind_local(insitm,MOM_PREDEFITM(continue),
                  loopitm, blkitm, rk);
+      {
+        auto it = _ce_continuecountmap.find(loopitm);
+        if (it != _ce_continuecountmap.end())
+          it->second++;
+        else
+          _ce_continuecountmap[loopitm] = 1;
+      }
     }
     break;
     case CASE_OPER_MOM(loop):
@@ -2882,6 +2902,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
     {
     case CASE_BLOCKROLE_MOM (sequence):
     {
+      if (_ce_continuecountmap[blkitm]>0)
+        throw MOM_RUNTIME_PRINTF("sequence block %s is continue-d %ld times",
+                                 mom_item_cstring(blkitm), (_ce_continuecountmap[blkitm]));
       auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
       unsigned nblocals = mom_seqitems_length(localseq);
       MOM_DEBUGPRINTF(gencod,
@@ -3143,10 +3166,16 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_instruction assign insitm=%s fromtree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(fromtree));
-#warning unimplemented MomCEmitter::transform_instruction assign
-      MOM_FATAPRINTF("unimplemented c-transform_instruction assign insitm=%s fromtree=%s",
-                     mom_item_cstring(insitm), mom_value_cstring(fromtree));
-
+      auto totree = transform_var(tovaritm, insitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction assign insitm=%s totree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(totree));
+      auto assitree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                          totree, literal_string (" = "), fromtree);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction assign insitm=%s assitree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(assitree));
+      return assitree;
     }
     break;
     default:
