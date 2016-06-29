@@ -102,7 +102,7 @@ private:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -498,6 +498,7 @@ class MomJavascriptEmitter final : public MomEmitter
 public:
   static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
   static   constexpr const char* JSFUNC_PREFIX = "momjs_";
+  static   constexpr const char* JSFORMAL_PREFIX = "momjarg_";
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
@@ -3313,7 +3314,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3367,7 +3368,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3899,14 +3900,13 @@ defaultcaseirole:
   MOM_FATAPRINTF("unimplemented js-transform_instruction insitm=%s", mom_item_cstring(insitm));
 } // end of MomJavascriptEmitter::transform_instruction
 
+
+
 momvalue_t
 MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*fromitm)
 {
   MOM_DEBUGPRINTF(gencod, "js-transform_runinstr fromitm=%s runitm:=\n%s\n ..insitm:=\n%s",
                   mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
-#warning unimplemented MomJavascriptEmitter::transform_runinstr
-  MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s",
-                 mom_item_cstring(insitm));
   assert (is_locked_item(insitm));
   assert (is_locked_item(runitm));
   auto desrunitm = mom_unsync_item_descr(runitm);
@@ -4008,8 +4008,8 @@ MomJavascriptEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
           MOM_DEBUGPRINTF(gencod,
                           "js-transform_expr expitm=%s constant",
                           mom_item_cstring(expitm));
-#warning transform_expr does not handle yet non-predefined items
-          MOM_FATAPRINTF("js-transform_expr non-predefined expitm=%s initm=%s",
+#warning js-transform_expr does not handle yet items
+          MOM_FATAPRINTF("js-transform_expr constant expitm=%s initm=%s unhandled",
                          mom_item_cstring(expitm), mom_item_cstring(initm));
         }
         break;
@@ -4055,6 +4055,11 @@ MomJavascriptEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_s
   switch (rolitm->hva_hash % NBROLE_MOM)
     {
     case CASE_ROLE_MOM(formal):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(JSFORMAL_PREFIX),
+                            varitm);
+      break;
 defaultrole:
     default:
       break;
