@@ -55,7 +55,7 @@ all: monimelt
 
 
 clean:
-	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.orig README.html
+	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.ii *.orig README.html
 	$(RM) modules/*.so modules/*~ modules/*%
 	$(RM) _listpredef*
 	$(RM) *.bin
@@ -88,6 +88,10 @@ monimelt: $(OBJECTS) global.mom
 	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
 	rm _timestamp.*
 
+%.i: %.c meltmoni.h $(GENERATED_HEADERS)
+	$(COMPILE.c) -C -E $< -o $@
+%.ii: %.cc meltmoni.h $(GENERATED_HEADERS)
+	$(COMPILE.cc) -C -E $< -o $@
 indent: .indent.pro
 	cp -v meltmoni.h meltmoni.h%
 	$(ASTYLE) $(ASTYLEFLAGS) meltmoni.h

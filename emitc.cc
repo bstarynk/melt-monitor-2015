@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -453,15 +453,17 @@ class MomCEmitter final :public MomEmitter
 
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
-  static   constexpr const char* CTYPE_PREFIX = "momty_";
-  static   constexpr const char* CLOCAL_PREFIX = "momloc_";
-  static   constexpr const char* CFORMAL_PREFIX = "momarg_";
-  static   constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
-  static   constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
-  static   constexpr const char* CINT_TYPE = "momint_t";
-  static   constexpr const char* CVALUE_TYPE = "momvalue_t";
-  static   constexpr const char* CDOUBLE_TYPE = "double";
-  static   constexpr const char* CVOID_TYPE = "void";
+  static constexpr const char* CTYPE_PREFIX = "momty_";
+  static constexpr const char* CLOCAL_PREFIX = "momloc_";
+  static constexpr const char* CFORMAL_PREFIX = "momarg_";
+  static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
+  static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
+  static constexpr const char* CBREAKLAB_PREFIX = "mombreaklab_";
+  static constexpr const char* CCONTINUELAB_PREFIX = "momcontlab_";
+  static constexpr const char* CINT_TYPE = "momint_t";
+  static constexpr const char* CVALUE_TYPE = "momvalue_t";
+  static constexpr const char* CDOUBLE_TYPE = "double";
+  static constexpr const char* CVOID_TYPE = "void";
   MomCEmitter(struct mom_item_st*itm)
     : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()  {};
   MomCEmitter(const MomCEmitter&) = delete;
@@ -3179,6 +3181,62 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return assitree;
     }
     break;
+    case CASE_INSTROLE_MOM(break):
+    {
+      auto outblkitm = mom_dyncast_item(whatv);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction break insitm=%s outblkitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+      assert (outblkitm != nullptr && is_locked_item(outblkitm));
+      assert (_ce_breakcountmap[outblkitm] > 0);
+      auto breaktree = MOM_IS_DEBUGGING(gencod)
+                       ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                             mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
+                                                 literal_string("break insitm="),
+                                                 insitm,
+                                                 literal_string(" outblkitm="),
+                                                 outblkitm),
+                                             literal_string("goto "),
+                                             literal_string(CBREAKLAB_PREFIX),
+                                             outblkitm)
+                       : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                             literal_string("goto "),
+                                             literal_string(CBREAKLAB_PREFIX),
+                                             outblkitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction break insitm=%s breaktree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(breaktree));
+      return breaktree;
+    }
+    break;
+    case CASE_INSTROLE_MOM(continue):
+    {
+      auto outblkitm = mom_dyncast_item(whatv);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction continue insitm=%s outblkitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+      assert (outblkitm != nullptr && is_locked_item(outblkitm));
+      assert (_ce_continuecountmap[outblkitm] > 0);
+      auto continuetree = MOM_IS_DEBUGGING(gencod)
+                          ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                              mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
+                                  literal_string("continue insitm="),
+                                  insitm,
+                                  literal_string(" outblkitm="),
+                                  outblkitm),
+                              literal_string("goto "),
+                              literal_string(CCONTINUELAB_PREFIX),
+                              outblkitm)
+                          : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                              literal_string("goto "),
+                              literal_string(CCONTINUELAB_PREFIX),
+                              outblkitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction continue insitm=%s continuetree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(continuetree));
+      return continuetree;
+    }
+    break;
     default:
 defaultcaseirole:
       MOM_FATAPRINTF("c-transform_instruction unexpected role %s in insitm %s",
@@ -3232,8 +3290,16 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
         }
       int exparity = mom_raw_size(expnod);
       momvalue_t smalltreearr[8]= {};
-      momvalue_t* treearr = (exparity<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
-                            : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+      momvalue_t* treearr = (exparity+1<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
+                            : (momvalue_t*) mom_gc_alloc((exparity+2)*sizeof(momvalue_t));
+      int treecnt = 0;
+      if (MOM_IS_DEBUGGING(gencod))
+        treearr[treecnt++] = //
+          mom_boxnode_make_sentinel(MOM_PREDEFITM(comment),
+                                    literal_string("run insitm="),
+                                    insitm,
+                                    literal_string(" runitm="),
+                                    runitm);
       for (int ix=0; ix<exparity; ix++)
         {
           momvalue_t curtreev = nullptr;
@@ -3249,7 +3315,7 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
             }
           else
             curtreev = curson;
-          treearr[ix] = curtreev;
+          treearr[treecnt++] = curtreev;
         }
       treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
@@ -3368,7 +3434,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3422,7 +3488,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-    /////
+      /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
