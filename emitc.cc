@@ -508,6 +508,7 @@ public:
   static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
   static   constexpr const char* JSFUNC_PREFIX = "momjs_";
   static   constexpr const char* JSFORMAL_PREFIX = "momjarg_";
+  static   constexpr const char* JSLABEL_PREFIX = "momjlab_";
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
@@ -3250,6 +3251,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       assert (tovaritm != nullptr);
       assert (totypitm != nullptr);
       auto fromtree =  transform_expr(fromexp, insitm);
+      // perhaps should handle the lack of fromtree when non-scalar totypitm
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_instruction assign insitm=%s fromtree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(fromtree));
@@ -3974,10 +3976,10 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
   MOM_DEBUGPRINTF(gencod,
                   "c-transform_block blkitm=%s bodytup=%s",
                   mom_item_cstring(blkitm), mom_value_cstring(bodytup));
-#define NBBLOCKROLE_MOM 19
+#define NBBLOCKROLE_MOM 31
 #define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
-	  goto defaultcasebrole; foundcase_##Nam
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+  goto defaultcasebrole; foundcase_##Nam
   switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
     {
     case CASE_BLOCKROLE_MOM (sequence):
@@ -4003,7 +4005,7 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
                               mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
               MOM_FATAPRINTF("js-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
                              mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
-#warning MomCEmitter::transform_block unhandled local
+#warning MomJavascriptEmitter::transform_block unhandled local
             }
         }
       MOM_DEBUGPRINTF(gencod,
@@ -4049,6 +4051,81 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
 
     }
     break;
+    case CASE_BLOCKROLE_MOM (loop):
+    {
+      auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
+      auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+      long nbcont = _ce_continuecountmap[blkitm];
+      long nbbreak = _ce_breakcountmap[blkitm];
+      momvalue_t prologtree = nullptr;
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%d, nbbreak=%d",
+                      mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
+                      nbcont, nbbreak);
+      if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
+        {
+          prologtree = literal_string("for(;;)");
+        }
+      else
+        {
+          prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                           literal_string("while ("),
+                                           transform_expr(whilexpv,blkitm),
+                                           literal_string(")"));
+        };
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block blkitm=%s loop prologtree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(prologtree));
+      int bodylen = mom_raw_size(bodytup);
+      momvalue_t smalbodyarr[8]= {};
+      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      for (int bix=0; bix<bodylen; bix++)
+        {
+          struct mom_item_st*insitm = bodytup->seqitem[bix];
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
+                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+          assert (is_locked_item(insitm));
+          auto instree = transform_instruction(insitm, blkitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_block loop insitm=%s instree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(instree));
+          assert (instree != nullptr);
+          bodyarr[bix] = instree;
+        }
+      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+      auto labtree = (nbcont>0 || nbbreak>0)
+                     ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                           literal_string(" "),
+                                           literal_string(JSLABEL_PREFIX),
+                                           blkitm,
+                                           literal_string(":"))
+                     : nullptr;
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block loop blkitm=%s prologtree=%s bodytree=%s labtree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(prologtree),
+                      mom_value_cstring(bodytree), mom_value_cstring(labtree));
+      auto looptree = //
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                                literal_string("loop "),
+                                blkitm),
+                            labtree,
+                            prologtree,
+                            mom_boxnode_make_va(MOM_PREDEFITM(brace),3,
+                                bodytree,
+                                literal_string(";")),
+                            mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                                literal_string("endloop "),
+                                blkitm)
+                           );
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_block loop blkitm=%s result looptree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(looptree));
+      return looptree;
+    }
+    break;
     default:
 defaultcasebrole: // should never happen
       MOM_FATAPRINTF("unexpected role %s in blkitm %s",
@@ -4078,6 +4155,7 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
                   mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
   struct mom_item_st*rolitm = insbind->vd_rolitm;
   assert (mom_itype(rolitm) == MOMITY_ITEM);
+  auto whatv = insbind->vd_what;
 #define NBINSTROLE_MOM 73
 #define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
 	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
@@ -4091,6 +4169,78 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
       return transform_runinstr(insitm, runitm, fromitm);
     }
     break;
+    case CASE_INSTROLE_MOM(assign):
+    {
+      auto whatnod = mom_dyncast_node(whatv);
+      assert (whatnod != nullptr && whatnod->nod_connitm == MOM_PREDEFITM(assign) && mom_raw_size(whatnod) == 3);
+      auto tovaritm = mom_dyncast_item(whatnod->nod_sons[0]);
+      auto fromexp = whatnod->nod_sons[1];
+      auto totypitm = mom_dyncast_item(whatnod->nod_sons[2]);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction assign insitm=%s tovaritm=%s fromexp=%s totypitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(tovaritm),
+                      mom_value_cstring(fromexp), mom_item_cstring(totypitm));
+      assert (tovaritm != nullptr);
+      assert (totypitm != nullptr);
+      auto fromtree =  transform_expr(fromexp, insitm);
+      if (fromtree == nullptr)
+        fromtree = literal_string("null");
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction assign insitm=%s fromtree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(fromtree));
+      auto totree = transform_var(tovaritm, insitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction assign insitm=%s totree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(totree));
+      auto assitree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                          totree, literal_string (" = "), fromtree);
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction assign insitm=%s assitree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(assitree));
+      return assitree;
+    }
+    break;
+    case CASE_INSTROLE_MOM(break):
+    {
+      auto outblkitm = mom_dyncast_item(whatv);
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction break insitm=%s outblkitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+      assert (outblkitm != nullptr && is_locked_item(outblkitm));
+      assert (_ce_breakcountmap[outblkitm] > 0);
+      auto breaktree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                            literal_string("break "),
+                            literal_string(JSLABEL_PREFIX),
+                            outblkitm,
+                            literal_string(";"));
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction break insitm=%s result breaktree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(breaktree));
+      return breaktree;
+    }
+    break;
+    case CASE_INSTROLE_MOM(continue):
+    {
+      auto outblkitm = mom_dyncast_item(whatv);
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction continue insitm=%s outblkitm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+      assert (outblkitm != nullptr && is_locked_item(outblkitm));
+      assert (_ce_continuecountmap[outblkitm] > 0);
+      auto contree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                            literal_string("continue "),
+                            literal_string(JSLABEL_PREFIX),
+                            outblkitm,
+                            literal_string(";"));
+      MOM_DEBUGPRINTF(gencod,
+                      "js-transform_instruction continue insitm=%s result contree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(contree));
+      return contree;
+    }
+    break;
+
     default:
 defaultcaseirole:
       MOM_FATAPRINTF("unexpected role %s in insitm %s",
