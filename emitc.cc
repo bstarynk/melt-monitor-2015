@@ -2878,6 +2878,8 @@ MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_s
 } // end of MomCEmitter::transform_body_element
 
 
+
+
 momvalue_t
 MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 {
@@ -2897,10 +2899,10 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
   MOM_DEBUGPRINTF(gencod,
                   "c-transform_block blkitm=%s bodytup=%s",
                   mom_item_cstring(blkitm), mom_value_cstring(bodytup));
-#define NBBLOCKROLE_MOM 19
+#define NBBLOCKROLE_MOM 31
 #define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
-	  goto defaultcasebrole; foundcase_##Nam
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+  goto defaultcasebrole; foundcase_##Nam
   switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
     {
     case CASE_BLOCKROLE_MOM (sequence):
@@ -2908,6 +2910,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
       if (_ce_continuecountmap[blkitm]>0)
         throw MOM_RUNTIME_PRINTF("sequence block %s is continue-d %ld times",
                                  mom_item_cstring(blkitm), (_ce_continuecountmap[blkitm]));
+      if (_ce_breakcountmap[blkitm]>0)
+        throw MOM_RUNTIME_PRINTF("sequence block %s is break-d %ld times",
+                                 mom_item_cstring(blkitm), (_ce_breakcountmap[blkitm]));
       auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
       unsigned nblocals = mom_seqitems_length(localseq);
       MOM_DEBUGPRINTF(gencod,
@@ -2973,6 +2978,85 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_item_cstring(blkitm), mom_value_cstring(bracetree));
       return bracetree;
 
+    }
+    break;
+    case CASE_BLOCKROLE_MOM (loop):
+    {
+      auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
+      auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+      long nbcont = _ce_continuecountmap[blkitm];
+      long nbbreak = _ce_breakcountmap[blkitm];
+      momvalue_t prologtree = nullptr;
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s loop of while %s, body %s, nbcont=%d, nbbreak=%d",
+                      mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
+                      nbcont, nbbreak);
+      if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
+        {
+          prologtree = literal_string("for(;;)");
+        }
+      else
+        {
+          prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                           literal_string("while ("),
+                                           transform_expr(whilexpv,blkitm),
+                                           literal_string(")"));
+        };
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s loop prologtree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(prologtree));
+      int bodylen = mom_raw_size(bodytup);
+      momvalue_t smalbodyarr[8]= {};
+      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      for (int bix=0; bix<bodylen; bix++)
+        {
+          struct mom_item_st*insitm = bodytup->seqitem[bix];
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
+                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+          assert (is_locked_item(insitm));
+          auto instree = transform_instruction(insitm, blkitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_block loop insitm=%s instree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(instree));
+          assert (instree != nullptr);
+          bodyarr[bix] = instree;
+        }
+      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+      auto labcontree = (nbcont>0)
+                        ?mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                             literal_string(" "),
+                                             literal_string(CCONTINUELAB_PREFIX),
+                                             blkitm,
+                                             literal_string(":;"))
+                        :nullptr;
+      auto labreaktree = (nbbreak>0)
+                         ?mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                              literal_string(" "),
+                                              literal_string(CBREAKLAB_PREFIX),
+                                              blkitm,
+                                              literal_string(":;"))
+                         :nullptr;
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s loop prologtree=%s bodytree=%s labcontree=%s labreaktree=%s",
+                      mom_item_cstring(blkitm),
+                      mom_value_cstring(prologtree),
+                      mom_value_cstring(bodytree),
+                      mom_value_cstring(labcontree),
+                      mom_value_cstring(labreaktree));
+      auto looptree =
+        mom_boxnode_make_va(MOM_PREDEFITM(semicolon),
+                            4,
+                            labcontree,
+                            prologtree,
+                            mom_boxnode_make_va(MOM_PREDEFITM(brace),1,bodytree),
+                            labreaktree);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_block blkitm=%s loop result looptree=%s",
+                      mom_item_cstring(blkitm),
+                      mom_value_cstring(looptree));
+      return looptree;
     }
     break;
     default:
