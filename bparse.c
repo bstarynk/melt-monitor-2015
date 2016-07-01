@@ -426,27 +426,26 @@ momtok_tokenize (const char *filnam)
           continue;
         }
       // ^* is a shorthand for ^at
-      else if (ptok[0] == '^' && ptok[1] == '*') {
+      else if (ptok[0] == '^' && ptok[1] == '*')
+        {
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_OPERITEM,
-				     .mtok_lin = lineno,
-				     .mtok_itm = MOM_PREDEFITM(at)
-				     });
-	ptok += 2;
-	continue;
-      }
+                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
+                                 lineno,.mtok_itm = MOM_PREDEFITM (at)});
+          ptok += 2;
+          continue;
+        }
       // ^: is a shorthand for ^sequence
-      else if (ptok[0] == '^' && ptok[1] == ':') {
+      else if (ptok[0] == '^' && ptok[1] == ':')
+        {
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_OPERITEM,
-				     .mtok_lin = lineno,
-				     .mtok_itm = MOM_PREDEFITM(sequence)
-				     });
-	ptok += 2;
-	continue;
-      }
+                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
+                                 lineno,.mtok_itm =
+                                 MOM_PREDEFITM (sequence)});
+          ptok += 2;
+          continue;
+        }
       if (*ptok == '"')
         {
           ptok++;
