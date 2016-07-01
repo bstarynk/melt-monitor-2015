@@ -2049,9 +2049,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
   MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s desconnitm=%s nodarity=%d",
 		  mom_value_cstring(expnod),
 		  mom_item_cstring(desconnitm), nodarity);
-#define NBDESCONN_MOM 79
+#define NBDESCONN_MOM 101
 #define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
- if (connitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
+ if (desconnitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
  goto defaultdesconn; foundesconn_##Nam
   switch (desconnitm->hva_hash % NBDESCONN_MOM)
     {
@@ -2061,6 +2061,11 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
       auto sigr=scan_nonbinding_signature(connitm,insitm);
       auto sformaltup = sigr.sig_formals;
       auto sresultv = sigr.sig_result;
+      MOM_DEBUGPRINTF(gencod,
+		      "scan_node_descr_conn_expr expnod=%s signature formtup=%s resultv=%s",
+		      mom_value_cstring(expnod),
+		      mom_value_cstring(sformaltup),
+		      mom_value_cstring(sresultv));
       unsigned lnformals = mom_boxtuple_length(sformaltup);
       if (lnformals<1 || mom_boxtuple_nth(sformaltup, 0) != MOM_PREDEFITM(this_closure))
         throw MOM_RUNTIME_PRINTF("bad formals %s of applied signature %s expnod %s instr %s",
@@ -2117,8 +2122,14 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     }
     break;
     case CASE_DESCONN_MOM(routine):
+      MOM_DEBUGPRINTF(gencod,
+		      "scan_node_descr_conn_expr expnod=%s routine",
+		      mom_value_cstring(expnod));
       goto primitivecase;
     case CASE_DESCONN_MOM(primitive):
+      MOM_DEBUGPRINTF(gencod,
+		      "scan_node_descr_conn_expr expnod=%s primitive",
+		      mom_value_cstring(expnod));
 primitivecase:
       {
         // a known routine or primitive application
@@ -2126,8 +2137,8 @@ primitivecase:
           mom_dyncast_item(mom_unsync_item_get_phys_attr
                            (connitm,
                             MOM_PREDEFITM(signature)));
-  MOM_DEBUGPRINTF(gencod,
-		  "scan_node_descr_conn_expr expnod=%s desconnitm=%s routsigitm=%s",
+	MOM_DEBUGPRINTF(gencod,
+			"scan_node_descr_conn_expr expnod=%s desconnitm=%s routsigitm=%s",
 		  mom_value_cstring(expnod),
 		  mom_item_cstring(desconnitm),
 		  mom_item_cstring(routsigitm));
@@ -2205,6 +2216,8 @@ primitivecase:
       }
       break;
 defaultdesconn:
+      MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s default desconnitm=%s",
+		      mom_value_cstring(expnod), mom_item_cstring(desconnitm));
       break;
     }
 #undef CASE_DESCONN_MOM
