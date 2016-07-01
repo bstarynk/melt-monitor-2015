@@ -700,9 +700,16 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
     {
       auto nod = jsemit.transform_top_module();
       jsemit.flush_todo_list(__LINE__);
-#warning mom_emit_javascript_code incomplete
-      MOM_FATAPRINTF("unimplemented mom_emit_javascript_code %s",
-                     mom_item_cstring(itm));
+      MOM_DEBUGPRINTF(gencod, "mom_emit_javascript_code itm=%s nod=%s",
+                      mom_item_cstring(itm), mom_value_cstring(nod));
+      fprintf(fil, "/// EmitC Javascript %s *** DO NOT EDIT ***\n", mom_item_cstring(itm));
+      mom_output_gplv3_notice (fil, "///", "", mom_item_cstring(itm));
+      fputs("\n\n", fil);
+      long nl = ftell(fil);
+      jsemit.write_tree(fil, 0, nl, nod, itm);
+      fprintf(fil, "\n\n" "//// end generated Javascript %s\n", mom_item_cstring(itm));
+      fflush(fil);
+      return true;
     }
   catch (const MomRuntimeErrorAt& e)
     {
@@ -3941,11 +3948,11 @@ MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
                   mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
                   mom_value_cstring(bdynod), mom_value_cstring(funhnod));
   auto funtree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-					   funhnod,
-					   bdynod,
-					   literal_string("\n"));
+                 funhnod,
+                 bdynod,
+                 literal_string("\n"));
   MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s gives funtree %s",
-		  mom_item_cstring(fuitm), mom_value_cstring(funtree));
+                  mom_item_cstring(fuitm), mom_value_cstring(funtree));
   return funtree;
 } // end MomJavascriptEmitter::transform_func_element
 

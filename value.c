@@ -745,7 +745,7 @@ update_node_hash_mom (struct mom_boxnode_st *nod)
       const struct mom_hashedvalue_st *curson = nod->nod_sons[ix];
       if (!curson)
         continue;
-      momhash_t hson = mom_hash(curson);
+      momhash_t hson = mom_hash (curson);
       if (ix % 2)
         h = (307 * h + 7 * ix) ^ (419 * hson);
       else
