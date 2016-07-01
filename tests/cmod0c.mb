@@ -93,7 +93,14 @@
       ^* descr case
       ^* case { be cooked }
       ^* run ^item ?cooked (
-      ^* comment "runcaseinstr for be&cooked"
+        ^* comment "runcaseinstr for be&cooked"
+        ^* descr run
+        ^* comment "show be using show_msg_value_prim"
+  	^* run show_msg_value_prim
+  	^: (
+    	  "showing be: "
+    	  be
+  	)
       )
     )
     ^item ?case (
@@ -101,7 +108,14 @@
       ^* descr case
       ^* case comma
       ^* run ^item ?comma (
-      ^* comment "runcaseinstr for comma"
+        ^* comment "runcaseinstr for comma"
+        ^* descr run
+        ^* comment "show be using show_msg_value_prim"
+  	^* run show_msg_value_prim
+  	^: (
+    	  "showing comma: "
+    	  comma
+	)
       )
     )
   }
