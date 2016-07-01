@@ -3465,13 +3465,37 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
   assert (whatnod != nullptr);
   assert (whatnod->nod_connitm == MOM_PREDEFITM(switch));
   assert (mom_raw_size(whatnod) == 4);
-  auto typitm = mom_dyncast_item(whatnod->nod_sons[0]);
+  auto swtypitm = mom_dyncast_item(whatnod->nod_sons[0]);
   auto argexp = whatnod->nod_sons[1];
   auto caseset = mom_dyncast_set(whatnod->nod_sons[2]);
   auto otherwitm = mom_dyncast_item(whatnod->nod_sons[3]);
-  assert (typitm && typitm->va_itype == MOMITY_ITEM);
+  assert (swtypitm && swtypitm->va_itype == MOMITY_ITEM);
   assert (caseset && caseset->va_itype == MOMITY_SET);
   assert (otherwitm == nullptr || otherwitm->va_itype == MOMITY_ITEM);
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+#warning should fill cases in MomCEmitter::transform_switchinstr
+    case CASE_SWTYPE_MOM(int):
+      {
+      }
+      break;
+    case CASE_SWTYPE_MOM(string):
+      {
+      }
+      break;
+    case CASE_SWTYPE_MOM(item):
+      {
+      }
+      break;
+    default:
+      MOM_FATAPRINTF("c-transform_switchinstr impossible swtypitm %s in insitm %s",
+		     mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+    }
+  
 #warning unimplemented MomCEmitter::transform_switchinstr
   MOM_FATAPRINTF("unimplemented c-transform_switchinstr insitm=%s whatv=%s",
 		 mom_item_cstring(insitm), mom_value_cstring(whatv));
