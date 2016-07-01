@@ -2047,8 +2047,8 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
   assert (is_locked_item(connitm));
   assert (is_locked_item(desconnitm));
   MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s desconnitm=%s nodarity=%d",
-		  mom_value_cstring(expnod),
-		  mom_item_cstring(desconnitm), nodarity);
+                  mom_value_cstring(expnod),
+                  mom_item_cstring(desconnitm), nodarity);
 #define NBDESCONN_MOM 101
 #define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
  if (desconnitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
@@ -2062,10 +2062,10 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
       auto sformaltup = sigr.sig_formals;
       auto sresultv = sigr.sig_result;
       MOM_DEBUGPRINTF(gencod,
-		      "scan_node_descr_conn_expr expnod=%s signature formtup=%s resultv=%s",
-		      mom_value_cstring(expnod),
-		      mom_value_cstring(sformaltup),
-		      mom_value_cstring(sresultv));
+                      "scan_node_descr_conn_expr expnod=%s signature formtup=%s resultv=%s",
+                      mom_value_cstring(expnod),
+                      mom_value_cstring(sformaltup),
+                      mom_value_cstring(sresultv));
       unsigned lnformals = mom_boxtuple_length(sformaltup);
       if (lnformals<1 || mom_boxtuple_nth(sformaltup, 0) != MOM_PREDEFITM(this_closure))
         throw MOM_RUNTIME_PRINTF("bad formals %s of applied signature %s expnod %s instr %s",
@@ -2123,13 +2123,13 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     break;
     case CASE_DESCONN_MOM(routine):
       MOM_DEBUGPRINTF(gencod,
-		      "scan_node_descr_conn_expr expnod=%s routine",
-		      mom_value_cstring(expnod));
+                      "scan_node_descr_conn_expr expnod=%s routine",
+                      mom_value_cstring(expnod));
       goto primitivecase;
     case CASE_DESCONN_MOM(primitive):
       MOM_DEBUGPRINTF(gencod,
-		      "scan_node_descr_conn_expr expnod=%s primitive",
-		      mom_value_cstring(expnod));
+                      "scan_node_descr_conn_expr expnod=%s primitive",
+                      mom_value_cstring(expnod));
 primitivecase:
       {
         // a known routine or primitive application
@@ -2137,11 +2137,11 @@ primitivecase:
           mom_dyncast_item(mom_unsync_item_get_phys_attr
                            (connitm,
                             MOM_PREDEFITM(signature)));
-	MOM_DEBUGPRINTF(gencod,
-			"scan_node_descr_conn_expr expnod=%s desconnitm=%s routsigitm=%s",
-		  mom_value_cstring(expnod),
-		  mom_item_cstring(desconnitm),
-		  mom_item_cstring(routsigitm));
+        MOM_DEBUGPRINTF(gencod,
+                        "scan_node_descr_conn_expr expnod=%s desconnitm=%s routsigitm=%s",
+                        mom_value_cstring(expnod),
+                        mom_item_cstring(desconnitm),
+                        mom_item_cstring(routsigitm));
         if (routsigitm==nullptr)
           throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
                                    mom_item_cstring(desconnitm),
@@ -2209,15 +2209,15 @@ primitivecase:
                                    mom_item_cstring(insitm),
                                    mom_item_cstring(routsigitm),
                                    mom_item_cstring(typitm), mom_item_cstring(restypitm));
-	MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s gives restypitm=%s",
-			mom_value_cstring(expnod),
-			mom_item_cstring(restypitm));
+        MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s gives restypitm=%s",
+                        mom_value_cstring(expnod),
+                        mom_item_cstring(restypitm));
         return restypitm;
       }
       break;
 defaultdesconn:
       MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s default desconnitm=%s",
-		      mom_value_cstring(expnod), mom_item_cstring(desconnitm));
+                      mom_value_cstring(expnod), mom_item_cstring(desconnitm));
       break;
     }
 #undef CASE_DESCONN_MOM
@@ -3631,6 +3631,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
                                     casix, mom_item_cstring(casitm),
                                     mom_item_cstring(insitm),
                                     rk, mom_item_cstring(blkitm));
+        lock_item(runitm);
         if (casev==nullptr)
           throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
                                     "in switch instr %s #%d in block %s",
@@ -3838,6 +3839,10 @@ MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
 {
   const long constexpr maxsize = 65536;
   unsigned expty = mom_itype(expv);
+  MOM_DEBUGPRINTF(gencod, "itemcase start expv=%s casitm:=%s\n.. runitm=%s",
+                  mom_value_cstring(expv),
+                  mom_item_content_cstring(casitm),
+                  mom_item_content_cstring(runitm));
   assert (cas_emitter->is_locked_item(casitm));
   assert (cas_emitter->is_locked_item(runitm));
   if (cas_item2casemap.size() > maxsize)
@@ -3851,6 +3856,8 @@ MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
   if (expty == MOMITY_ITEM)
     {
       auto itm = (struct mom_item_st*)expv;
+      MOM_DEBUGPRINTF(gencod, "itemcase casitm %s item %s",
+                      mom_item_cstring(casitm), mom_item_cstring(itm));
       if (cas_item2casemap.find(itm) != cas_item2casemap.end())
         throw  MOM_RUNTIME_PRINTF("duplicate item %s case in case item %s"
                                   " run item %s insitm %s #%d blkitm %s",
@@ -3865,6 +3872,8 @@ MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
     {
       unsigned card = mom_size(expv);
       auto set = (const struct mom_boxset_st*)expv;
+      MOM_DEBUGPRINTF(gencod, "itemcase casitm %s set %s",
+                      mom_item_cstring(casitm), mom_value_cstring(set));
       for (unsigned ix=0; ix<card; ix++)
         {
           auto itm = set->seqitem[ix];
@@ -3876,17 +3885,23 @@ MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
                                       mom_item_cstring(runitm),
                                       mom_item_cstring(cas_insitm),
                                       cas_rank, mom_item_cstring(cas_blkitm));
+          MOM_DEBUGPRINTF(gencod, "itemcase ix#%d itm=%s casitm=%s", ix, mom_item_cstring(itm),
+                          mom_item_cstring(casitm));
           cas_item2casemap[itm] = casitm;
         }
+      return;
     }
   else if (expty != MOMITY_NODE)
-    throw  MOM_RUNTIME_PRINTF("non-node item case %s in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              mom_value_cstring(expv), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
+    throw MOM_RUNTIME_PRINTF("non-node item case %s in case item %s"
+                             " run item %s insitm %s #%d blkitm %s",
+                             mom_value_cstring(expv), mom_item_cstring(casitm),
+                             mom_item_cstring(runitm),
+                             mom_item_cstring(cas_insitm),
+                             cas_rank, mom_item_cstring(cas_blkitm));
   auto nodexp = (const struct mom_boxnode_st*)expv;
+  MOM_DEBUGPRINTF(gencod, "itemcase casitm %s nodexp %s",
+                  mom_item_cstring(casitm), mom_value_cstring(nodexp));
+  assert (mom_itype(nodexp) == MOMITY_NODE);
   auto connitm = nodexp->nod_connitm;
   unsigned arity = mom_raw_size(nodexp);
   assert (mom_itype(connitm) == MOMITY_ITEM);
@@ -4128,7 +4143,8 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
                       mom_item_cstring(blkitm), mom_value_cstring(prologtree));
       int bodylen = mom_raw_size(bodytup);
       momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
+      momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+                            ? smalbodyarr
                             : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
