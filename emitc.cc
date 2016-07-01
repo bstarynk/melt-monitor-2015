@@ -2046,6 +2046,9 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
   unsigned nodarity = mom_size(expnod);
   assert (is_locked_item(connitm));
   assert (is_locked_item(desconnitm));
+  MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s desconnitm=%s nodarity=%d",
+		  mom_value_cstring(expnod),
+		  mom_item_cstring(desconnitm), nodarity);
 #define NBDESCONN_MOM 79
 #define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
  if (connitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;	\
@@ -2118,11 +2121,16 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     case CASE_DESCONN_MOM(primitive):
 primitivecase:
       {
-        // a known routine application
+        // a known routine or primitive application
         auto routsigitm =
           mom_dyncast_item(mom_unsync_item_get_phys_attr
                            (connitm,
                             MOM_PREDEFITM(signature)));
+  MOM_DEBUGPRINTF(gencod,
+		  "scan_node_descr_conn_expr expnod=%s desconnitm=%s routsigitm=%s",
+		  mom_value_cstring(expnod),
+		  mom_item_cstring(desconnitm),
+		  mom_item_cstring(routsigitm));
         if (routsigitm==nullptr)
           throw MOM_RUNTIME_PRINTF("applied %s %s in expnod %s instr %s without signature",
                                    mom_item_cstring(desconnitm),
@@ -2190,6 +2198,9 @@ primitivecase:
                                    mom_item_cstring(insitm),
                                    mom_item_cstring(routsigitm),
                                    mom_item_cstring(typitm), mom_item_cstring(restypitm));
+	MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s gives restypitm=%s",
+			mom_value_cstring(expnod),
+			mom_item_cstring(restypitm));
         return restypitm;
       }
       break;
@@ -3472,10 +3483,10 @@ std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
 MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
   MOM_DEBUGPRINTF(gencod, "c-case_scanner start swtypitm=%s insitm=%s rk=%d blkitm=%s",
-		  mom_item_cstring(swtypitm),
-		  mom_item_cstring(insitm),
-		  rk,
-		  mom_item_cstring(blkitm));
+                  mom_item_cstring(swtypitm),
+                  mom_item_cstring(insitm),
+                  rk,
+                  mom_item_cstring(blkitm));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
