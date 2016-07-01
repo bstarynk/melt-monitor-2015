@@ -3540,6 +3540,13 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
       "fill casemultimap", __LINE__);
       unsigned nbemitcases = casemultimap.size();
       MOM_DEBUGPRINTF(gencod, "nbemitcases=%u", nbemitcases);
+      for (auto p : casemultimap)
+        {
+          momhash_t kh = p.first;
+          struct mom_item_st* kitm=p.second;
+          MOM_DEBUGPRINTF(gencod,
+                          "kh=%u kitm=%s", kh, mom_item_cstring(kitm));
+        }
     }
     break;
     case CASE_SWTYPE_MOM(int):

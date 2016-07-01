@@ -91,7 +91,7 @@
     ^item ?case (
       ^* comment "case for be&cooked"
       ^* descr case
-      ^* case { be cooked }
+      ^* case { be cooked truth }
       ^* run ^item ?cooked (
         ^* comment "runcaseinstr for be&cooked"
         ^* descr run
