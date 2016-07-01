@@ -201,6 +201,25 @@ protected:
       return "ItemCaseScannerData";
     };
     void process_itemcase(const void*expv, struct mom_item_st*casitm, struct mom_item_st*runitm);
+    void each_item_case(std::function<void(struct mom_item_st*, struct mom_item_st*)> fun,
+                        const char*nam="?", int lineno=0)
+    {
+      for (auto it : cas_item2casemap)
+        {
+          struct mom_item_st*keyitm = const_cast<struct mom_item_st*>(it.first);
+          struct mom_item_st*casitm = it.second;
+          MOM_DEBUGPRINTF(gencod, "each_item_case keyitm=%s casitm=%s nam=%s lin#%d",
+                          mom_item_cstring(keyitm),
+                          mom_item_cstring(casitm),
+                          nam,
+                          lineno);
+          fun(keyitm,casitm);
+        }
+    }
+    size_t nb_item_cases (void) const
+    {
+      return cas_item2casemap.size();
+    };
     ItemCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
       : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_item2casemap() {};
     virtual ~ItemCaseScannerData()
@@ -3471,34 +3490,72 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
   auto otherwitm = mom_dyncast_item(whatnod->nod_sons[3]);
   assert (swtypitm && swtypitm->va_itype == MOMITY_ITEM);
   assert (caseset && caseset->va_itype == MOMITY_SET);
+  unsigned nbcases = mom_size(caseset);
   assert (otherwitm == nullptr || otherwitm->va_itype == MOMITY_ITEM);
+  std::unique_ptr<CaseScannerData> casdata {make_case_scanner_data(swtypitm,insitm,-1,fromitm)};
+  assert (casdata != nullptr);
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
- if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
- goto defaultcaseswtyp; foundcaseswtyp_##Nam
+  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+  goto defaultcaseswtyp; foundcaseswtyp_##Nam
   switch (swtypitm->hva_hash % NBSWTYPE_MOM)
     {
 #warning should fill cases in MomCEmitter::transform_switchinstr
-    case CASE_SWTYPE_MOM(int):
-      {
-      }
-      break;
-    case CASE_SWTYPE_MOM(string):
-      {
-      }
-      break;
     case CASE_SWTYPE_MOM(item):
-      {
-      }
-      break;
-    default:
-      MOM_FATAPRINTF("c-transform_switchinstr impossible swtypitm %s in insitm %s",
-		     mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+    {
+      auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata.get());
+      assert (itemcasdata != nullptr);
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          auto casev =
+            mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+          MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
+                          cix, mom_item_content_cstring(casitm),
+                          mom_item_cstring(runitm), mom_value_cstring(casev));
+          itemcasdata->process_itemcase(casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
+                          cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
+                          mom_value_cstring(casev));
+        };
+      unsigned nbdiscases = itemcasdata->nb_item_cases ();
+      unsigned primsiz = mom_prime_above(4*nbdiscases/3+3);
+      MOM_DEBUGPRINTF(gencod, "nbdiscases=%d primsiz=%d", nbdiscases, primsiz);
+      std::multimap<long,struct mom_item_st*,std::less<long>,
+        traceable_allocator<std::pair<long,struct mom_item_st*>>>
+        casemultimap;
+      /*** dont compile!
+      itemcasdata->each_item_case([=](struct mom_item_st*discritm,struct mom_item_st*casitm){
+          casemultimap.emplace(mom_hash(discritm),casitm);
+        },
+        "fill casemultimap", __LINE__);
+      ****/
     }
-  
+    break;
+    case CASE_SWTYPE_MOM(int):
+  {
+      auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
+      assert (intcasdata != nullptr);
+    }
+    break;
+    case CASE_SWTYPE_MOM(string):
+    {
+      auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata.get());
+      assert (strcasdata != nullptr);
+    }
+    break;
+    default:
+defaultcaseswtyp:
+      MOM_FATAPRINTF("c-transform_switchinstr impossible swtypitm %s in insitm %s",
+                     mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+    }
+
 #warning unimplemented MomCEmitter::transform_switchinstr
   MOM_FATAPRINTF("unimplemented c-transform_switchinstr insitm=%s whatv=%s",
-		 mom_item_cstring(insitm), mom_value_cstring(whatv));
+                 mom_item_cstring(insitm), mom_value_cstring(whatv));
 } // end of MomCEmitter::transform_switchinstr
 
 const struct mom_boxnode_st*
