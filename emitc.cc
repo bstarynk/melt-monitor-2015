@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -3522,21 +3522,28 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                           mom_value_cstring(casev));
         };
       unsigned nbdiscases = itemcasdata->nb_item_cases ();
-      unsigned primsiz = mom_prime_above(4*nbdiscases/3+3);
+      unsigned primsiz = mom_prime_above(3*nbdiscases/2+nbcases/2+15);
       MOM_DEBUGPRINTF(gencod, "nbdiscases=%d primsiz=%d", nbdiscases, primsiz);
-      std::multimap<long,struct mom_item_st*,std::less<long>,
-        traceable_allocator<std::pair<long,struct mom_item_st*>>>
+      std::multimap<momhash_t,struct mom_item_st*,std::less<long>,
+        traceable_allocator<std::pair<momhash_t,struct mom_item_st*>>>
         casemultimap;
-      /*** dont compile!
-      itemcasdata->each_item_case([=](struct mom_item_st*discritm,struct mom_item_st*casitm){
-          casemultimap.emplace(mom_hash(discritm),casitm);
-        },
-        "fill casemultimap", __LINE__);
-      ****/
+      itemcasdata->each_item_case([=,&casemultimap](struct mom_item_st*discritm,struct mom_item_st*casitm)
+    {
+        assert (mom_itype(discritm) == MOMITY_ITEM);
+        auto h = mom_hash(discritm);
+        MOM_DEBUGPRINTF(gencod, "discritm=%s casitm=%s h=%u=%#x h%%prim=%d",
+                        mom_item_cstring(discritm),
+                        mom_item_cstring(casitm),
+                        h,h, h%primsiz);
+        casemultimap.insert({h%primsiz,casitm});
+      },
+      "fill casemultimap", __LINE__);
+      unsigned nbemitcases = casemultimap.size();
+      MOM_DEBUGPRINTF(gencod, "nbemitcases=%u", nbemitcases);
     }
     break;
     case CASE_SWTYPE_MOM(int):
-  {
+    {
       auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
       assert (intcasdata != nullptr);
     }
@@ -3670,7 +3677,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         intcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
@@ -3724,7 +3731,7 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
         });
         strcasdata->add_runitm(runitm);
       };
-      /////
+    /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
       {
