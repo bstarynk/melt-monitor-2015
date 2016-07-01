@@ -745,13 +745,14 @@ update_node_hash_mom (struct mom_boxnode_st *nod)
       const struct mom_hashedvalue_st *curson = nod->nod_sons[ix];
       if (!curson)
         continue;
+      momhash_t hson = mom_hash(curson);
       if (ix % 2)
-        h = (307 * h + 7 * ix) ^ (419 * curson->hva_hash);
+        h = (307 * h + 7 * ix) ^ (419 * hson);
       else
-        h = (509 * h - 31 * ix) ^ (607 * curson->hva_hash);
+        h = (509 * h - 31 * ix) ^ (607 * hson);
     }
   if (!h)
-    h = ((nod->nod_connitm->hva_hash + 3 * siz) & 0xffff) + 20;
+    h = ((17 * nod->nod_connitm->hva_hash + 3 * siz) & 0xfffff) + 20;
   nod->hva_hash = h;
 }
 
