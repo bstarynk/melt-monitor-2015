@@ -3920,6 +3920,7 @@ MomJavascriptEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct m
   return funheadv;
 } // end of MomJavaScriptEmitter::declare_funheader_for
 
+
 const struct mom_boxnode_st*
 MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
 {
@@ -3939,9 +3940,15 @@ MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
   MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
                   mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
                   mom_value_cstring(bdynod), mom_value_cstring(funhnod));
-#warning unimplemented MomJavascriptEmitter::transform_func_element
-  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_func_element fuitm=%s", mom_item_cstring(fuitm));
+  auto funtree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+					   funhnod,
+					   bdynod,
+					   literal_string("\n"));
+  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s gives funtree %s",
+		  mom_item_cstring(fuitm), mom_value_cstring(funtree));
+  return funtree;
 } // end MomJavascriptEmitter::transform_func_element
+
 
 
 const struct mom_boxnode_st*
