@@ -2,69 +2,69 @@
 
 
 ^item !val0 (
-   ^at comment "val0 in cmod0.mb"
-   ^at descr formal
-   ^at type value
+   ^* comment "val0 in cmod0.mb"
+   ^* descr formal
+   ^* type value
 )
 
 
 ^item !str0 (
-   ^at comment "str0 in cmod0.mb"
-   ^at descr formal
-   ^at type string
+   ^* comment "str0 in cmod0.mb"
+   ^* descr formal
+   ^* type string
 )
 
 ^item !signature_func_value_to_void (
-   ^at comment "func signature: value -> void, in cmod0c.mb"
-   ^at descr signature
-   ^at formals [ this_closure val0 ]
-   ^at result unit
+   ^* comment "func signature: value -> void, in cmod0c.mb"
+   ^* descr signature
+   ^* formals [ this_closure val0 ]
+   ^* result unit
 )
 ^display "funcsig value->void:" signature_func_value_to_void
 
 
 ^item !signature_rout_value_to_item (
-   ^at comment "func signature: value -> item, in cmod0c.mb"
-   ^at descr signature
-   ^at formals [ val0 ]
-   ^at result item
+   ^* comment "func signature: value -> item, in cmod0c.mb"
+   ^* descr signature
+   ^* formals [ val0 ]
+   ^* result item
 )
 ^display "routsig value->item:" signature_rout_value_to_item
 
 
 ^item !signature_string_value_to_void (
-   ^at comment "signature: string, value -> void, in cmod0.mb"
-   ^at descr signature
-   ^at formals [ str0 val0 ]
-   ^at result unit
+   ^* comment "signature: string, value -> void, in cmod0.mb"
+   ^* descr signature
+   ^* formals [ str0 val0 ]
+   ^* result unit
 )
 
 ^display "sig str,value->void:" signature_string_value_to_void
 
 ^item !show_msg_value_prim (
-  ^at comment "primitive to show a value with a message"
-  ^at descr primitive
-  ^at signature signature_string_value_to_void
-  ^at c_expansion %code_chunk(
+  ^* comment "primitive to show a value with a message"
+  ^* descr primitive
+  ^* signature signature_string_value_to_void
+  ^* c_expansion %code_chunk(
     "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
     "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)"
   )
 )
 
 ^item !dyncast_item_prim (
-  ^at comment "primitive to cast a value to an item"
-  ^at descr primitive
-  ^at signature signature_rout_value_to_item
-  ^at c_expansion %code_chunk(
+  ^* comment "primitive to cast a value to an item"
+  ^* descr primitive
+  ^* signature signature_rout_value_to_item
+  ^* c_expansion %code_chunk(
     "mom_dyncast_item("  val0  ")"
   )
 )
 
 ^name $runinstrshowval0 ^item ?run (
-  ^at descr run
-  ^at comment "show the val0 using show_msg_value_prim"
-  ^at run show_msg_value_prim
-  ^sequence (
+  ^* descr run
+  ^* comment "show the val0 using show_msg_value_prim"
+  ^* run show_msg_value_prim
+  ^: (
     "tiny-showing: "
     val0
   )
@@ -73,10 +73,10 @@
 ^display "runinstrshowval0:" $runinstrshowval0
 
 ^name $runinstrshowthesys ^item ?run (
-  ^at descr run
-  ^at comment "show the_system using show_msg_value_prim"
-  ^at run show_msg_value_prim
-  ^sequence (
+  ^* descr run
+  ^* comment "show the_system using show_msg_value_prim"
+  ^* run show_msg_value_prim
+  ^: (
     "showing the_system: "
     the_system
   )
@@ -84,46 +84,46 @@
 	 
 
 ^name $switchinstrval0item  ^item ?switch (
-  ^at descr switch
-  ^at switch item
-  ^at arg %dyncast_item_prim(val0)
-  ^at case {
+  ^* descr switch
+  ^* switch item
+  ^* arg %dyncast_item_prim(val0)
+  ^* case {
     ^item ?case (
-      ^at comment "case for be&cooked"
-      ^at descr case
-      ^at case { be cooked }
-      ^at run ^item ?cooked (
-      ^at comment "runcaseinstr for be&cooked"
+      ^* comment "case for be&cooked"
+      ^* descr case
+      ^* case { be cooked }
+      ^* run ^item ?cooked (
+      ^* comment "runcaseinstr for be&cooked"
       )
     )
     ^item ?case (
-      ^at comment "case for comma"
-      ^at descr case
-      ^at case comma
-      ^at run ^item ?comma (
-      ^at comment "runcaseinstr for comma"
+      ^* comment "case for comma"
+      ^* descr case
+      ^* case comma
+      ^* run ^item ?comma (
+      ^* comment "runcaseinstr for comma"
       )
     )
   }
 )
   
 ^item !tiny_func (
-   ^at comment "our tiny_func from cmod0c.mb"
-   ^at descr func
-   ^at signature signature_func_value_to_void
-   ^at body ^item ?body (
-       ^at comment "body of tiny_func"
-       ^at descr sequence
-       ^at body
+   ^* comment "our tiny_func from cmod0c.mb"
+   ^* descr func
+   ^* signature signature_func_value_to_void
+   ^* body ^item ?body (
+       ^* comment "body of tiny_func"
+       ^* descr sequence
+       ^* body
        [ $runinstrshowval0  $runinstrshowthesys $switchinstrval0item ]
    )
 )
 
 
 ^item !tiny_module (
-   ^at comment "our tiny_module from cmod0.mb"
-   ^at descr module
-   ^at module [
+   ^* comment "our tiny_module from cmod0.mb"
+   ^* descr module
+   ^* module [
      tiny_func
    ]
 )

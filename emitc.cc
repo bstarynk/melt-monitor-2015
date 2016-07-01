@@ -1200,8 +1200,8 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 
 void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_instr start insitm=%s rk#%d blkitm=%s",
-                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+  MOM_DEBUGPRINTF(gencod, "scan_instr start insitm:=\n%s\n.. rk#%d blkitm=%s",
+                  mom_item_content_cstring(insitm), rk, mom_item_cstring(blkitm));
   assert (is_locked_item(insitm));
   {
     auto insbind = get_local_binding(insitm);
