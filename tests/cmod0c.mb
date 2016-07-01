@@ -1,0 +1,92 @@
+# file cmod0c.mb -*- indented-text -*-
+
+
+^item !val0 (
+   ^at comment "val0 in cmod0.mb"
+   ^at descr formal
+   ^at type value
+)
+
+
+^item !str0 (
+   ^at comment "str0 in cmod0.mb"
+   ^at descr formal
+   ^at type string
+)
+
+^item !signature_func_value_to_void (
+   ^at comment "func signature: value -> void, in cmod0.mb"
+   ^at descr signature
+   ^at formals [ this_closure val0 ]
+   ^at result unit
+)
+
+^display "funcsig value->void:" signature_func_value_to_void
+
+^item !signature_string_value_to_void (
+   ^at comment "signature: string, value -> void, in cmod0.mb"
+   ^at descr signature
+   ^at formals [ str0 val0 ]
+   ^at result unit
+)
+
+^display "sig str,value->void:" signature_string_value_to_void
+
+^item !show_msg_value_prim (
+  ^at comment "primitive to show a value with a message"
+  ^at descr primitive
+  ^at signature signature_string_value_to_void
+  ^at c_expansion %code_chunk(
+    "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
+    "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)"
+  )
+)
+
+^name $runinstrshowval0 ^item ?run (
+  ^at descr run
+  ^at comment "show the val0 using show_msg_value_prim"
+  ^at run show_msg_value_prim
+  ^sequence (
+    "tiny-showing: "
+    val0
+  )
+)
+
+^display "runinstrshowval0:" $runinstrshowval0
+
+^name $runinstrshowthesys ^item ?run (
+  ^at descr run
+  ^at comment "show the_system using show_msg_value_prim"
+  ^at run show_msg_value_prim
+  ^sequence (
+    "showing the_system: "
+    the_system
+  )
+)
+	 
+
+^item !tiny_func (
+   ^at comment "our tiny_func from cmod0c.mb"
+   ^at descr func
+   ^at signature signature_func_value_to_void
+   ^at body ^item ?body (
+       ^at comment "body of tiny_func"
+       ^at descr sequence
+       ^at body
+       [ $runinstrshowval0  $runinstrshowthesys ]
+   )
+)
+
+
+^item !tiny_module (
+   ^at comment "our tiny_module from cmod0.mb"
+   ^at descr module
+   ^at module [
+     tiny_func
+   ]
+)
+
+
+^display "final tiny_module:" tiny_module
+
+#eof cmod0c.mb

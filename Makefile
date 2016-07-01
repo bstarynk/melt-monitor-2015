@@ -50,7 +50,7 @@ CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
 CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*.cc)))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
-.PHONY: all tags modules plugins clean tests predefgc
+.PHONY: all tags modules plugins clean  predefgc tests test0 test1
 all: monimelt
 
 
@@ -117,7 +117,11 @@ predefgc: $(OBJECTS)  predefgc.cc
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
 
-tests: monimelt global.mom $(wildcard tests/*.mb)
-	+ $(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitc
-	+ $(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0.mb --test-arg tiny_module --test-run emitjs
+tests: monimelt global.mom test0 test1
+
+test0: monimelt global.mom 
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0c.mb --test-arg tiny_module --test-run emitc
+
+test1: monimelt global.mom 
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod1j.mb --test-arg tiny_jmodule --test-run emitjs
 

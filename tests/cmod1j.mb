@@ -1,5 +1,4 @@
-# file cmod0.mb -*- indented-text -*-
-
+# file cmod1j.mb -*- indented-text -*-
 
 ^item !val0 (
    ^at comment "val0 in cmod0.mb"
@@ -36,10 +35,6 @@
   ^at comment "primitive to show a value with a message"
   ^at descr primitive
   ^at signature signature_string_value_to_void
-  ^at c_expansion %code_chunk(
-    "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
-    "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)"
-  )
   ^at js_expansion %code_chunk(
     "console.log((" str0 "), (" val0 "))"
   )
@@ -55,40 +50,37 @@
   )
 )
 
-^name $runinstrshowthesys ^item ?run (
+^name $runinstrshow1 ^item ?run (
   ^at descr run
-  ^at comment "show the_system using show_msg_value_prim"
+  ^at comment "show 1 using show_msg_value_prim"
   ^at run show_msg_value_prim
   ^sequence (
-    "showing the_system: "
-    the_system
+    "one-showing: "
+    1
   )
 )
-	 
-^display "runinstr:" $runinstr
 
-^item !tiny_func (
-   ^at comment "our tiny_func from cmod0.mb"
+^item !tiny_js_func (
+   ^at comment "our tiny_js_func from cmod1j.mb"
    ^at descr func
    ^at signature signature_func_value_to_void
    ^at body ^item ?body (
        ^at comment "body of tiny_func"
        ^at descr sequence
        ^at body
-       [ $runinstrshowval0  $runinstrshowthesys ]
+       [ $runinstrshowval0  $runinstrshow1 ]
    )
 )
 
-
-^item !tiny_module (
-   ^at comment "our tiny_module from cmod0.mb"
+^item !tiny_jmodule (
+   ^at comment "our tiny_jmodule from cmod1j.mb"
    ^at descr module
    ^at module [
-     tiny_func
+     tiny_js_func
    ]
 )
 
 
-^display "final tiny_module:" tiny_module
+^display "final tiny_jmodule:" tiny_jmodule
 
-#eof cmod0.mb
+#eof cmod0c.mb
