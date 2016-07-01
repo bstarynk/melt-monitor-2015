@@ -3471,7 +3471,11 @@ MomCEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item
 std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
 MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
-  assert (is_locked_item(swtypitm));
+  MOM_DEBUGPRINTF(gencod, "c-case_scanner start swtypitm=%s insitm=%s rk=%d blkitm=%s",
+		  mom_item_cstring(swtypitm),
+		  mom_item_cstring(insitm),
+		  rk,
+		  mom_item_cstring(blkitm));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\

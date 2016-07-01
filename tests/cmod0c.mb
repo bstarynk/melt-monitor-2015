@@ -86,8 +86,8 @@
 ^name $switchinstrval0item  ^item ?switch (
   ^at descr switch
   ^at switch item
-  ^arg %dyncast_item_prim(val0)
-  ^case {
+  ^at arg %dyncast_item_prim(val0)
+  ^at case {
     ^item ?case (
       ^at comment "case for be&cooked"
       ^at descr case
