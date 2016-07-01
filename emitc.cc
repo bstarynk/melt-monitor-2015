@@ -2542,7 +2542,7 @@ verbatimcase:
     case CASE_NODECONN_MOM(comment):
     {
       fputs("/**", out);
-      for (int i=0; i<arity; i++)
+      for (int i=0; i<(int)arity; i++)
         {
           auto sonv = nod->nod_sons[i];
           if (mom_itype(sonv) == MOMITY_BOXSTRING)
@@ -2951,8 +2951,10 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_value_cstring(localtree));
       int bodylen = mom_raw_size(bodytup);
       momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
-                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      momvalue_t* bodyarr =
+	(bodylen<((int)(sizeof(smalbodyarr)/sizeof(momvalue_t))))
+	? smalbodyarr
+	: (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
           struct mom_item_st*insitm = bodytup->seqitem[bix];
@@ -2996,7 +2998,7 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
       long nbbreak = _ce_breakcountmap[blkitm];
       momvalue_t prologtree = nullptr;
       MOM_DEBUGPRINTF(gencod,
-                      "c-transform_block blkitm=%s loop of while %s, body %s, nbcont=%d, nbbreak=%d",
+                      "c-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
                       mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
                       nbcont, nbbreak);
       if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
@@ -3015,8 +3017,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_item_cstring(blkitm), mom_value_cstring(prologtree));
       int bodylen = mom_raw_size(bodytup);
       momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
-                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+	? smalbodyarr
+	: (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
           struct mom_item_st*insitm = bodytup->seqitem[bix];
@@ -3383,8 +3386,9 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
         }
       int exparity = mom_raw_size(expnod);
       momvalue_t smalltreearr[8]= {};
-      momvalue_t* treearr = (exparity+1<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
-                            : (momvalue_t*) mom_gc_alloc((exparity+2)*sizeof(momvalue_t));
+      momvalue_t* treearr = (exparity+1<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
+	? smalltreearr
+	: (momvalue_t*) mom_gc_alloc((exparity+2)*sizeof(momvalue_t));
       int treecnt = 0;
       if (MOM_IS_DEBUGGING(gencod))
         treearr[treecnt++] = //
@@ -4028,8 +4032,9 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
                       mom_value_cstring(localtree));
       int bodylen = mom_raw_size(bodytup);
       momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<(int)sizeof(smalbodyarr)/sizeof(momvalue_t)) ? smalbodyarr
-                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+	? smalbodyarr
+	: (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
       for (int bix=0; bix<bodylen; bix++)
         {
           struct mom_item_st*insitm = bodytup->seqitem[bix];
@@ -4073,7 +4078,7 @@ MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item
       long nbbreak = _ce_breakcountmap[blkitm];
       momvalue_t prologtree = nullptr;
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%d, nbbreak=%d",
+                      "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
                       mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
                       nbcont, nbbreak);
       if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
@@ -4310,8 +4315,9 @@ MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_i
         }
       int exparity = mom_raw_size(expnod);
       momvalue_t smalltreearr[8]= {};
-      momvalue_t* treearr = (exparity<sizeof(smalltreearr)/sizeof(momvalue_t)) ? smalltreearr
-                            : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+      momvalue_t* treearr = (exparity<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
+	? smalltreearr
+	: (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
       for (int ix=0; ix<exparity; ix++)
         {
           momvalue_t curtreev = nullptr;

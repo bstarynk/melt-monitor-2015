@@ -1473,14 +1473,6 @@ do_bootfile_mom (void)
     }
 }                               /* end do_bootfile_mom */
 
-void
-momtest_comparesig (const char *arg)
-{
-  MOM_INFORMPRINTF ("start momtest_comparesig arg=%s", arg);
-  MOM_FATAPRINTF ("missing momtest_comparesig arg=%s", arg);
-#warning momtest_comparesig missing
-}                               /* end of momtest_comparesig */
-
 
 void
 momtest_emitc (const char *arg)
