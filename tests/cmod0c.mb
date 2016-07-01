@@ -15,13 +15,22 @@
 )
 
 ^item !signature_func_value_to_void (
-   ^at comment "func signature: value -> void, in cmod0.mb"
+   ^at comment "func signature: value -> void, in cmod0c.mb"
    ^at descr signature
    ^at formals [ this_closure val0 ]
    ^at result unit
 )
-
 ^display "funcsig value->void:" signature_func_value_to_void
+
+
+^item !signature_rout_value_to_item (
+   ^at comment "func signature: value -> item, in cmod0c.mb"
+   ^at descr signature
+   ^at formals [ val0 ]
+   ^at result item
+)
+^display "routsig value->item:" signature_rout_value_to_item
+
 
 ^item !signature_string_value_to_void (
    ^at comment "signature: string, value -> void, in cmod0.mb"
@@ -39,6 +48,15 @@
   ^at c_expansion %code_chunk(
     "do {long _nl=ftell(stdout); fputs(("  str0  "), stdout);\n"
     "mom_output_value(stdout,&_nl,0, ("  val0  "));putchar(\'\\n\');}while(0)"
+  )
+)
+
+^item !dyncast_item_prim (
+  ^at comment "primitive to cast a value to an item"
+  ^at descr primitive
+  ^at signature signature_rout_value_to_item
+  ^at c_expansion %code_chunk(
+    "mom_dyncast_item("  val0  ")"
   )
 )
 
@@ -65,6 +83,30 @@
 )
 	 
 
+^name $switchinstrval0item  ^item ?switch (
+  ^at descr switch
+  ^at switch item
+  ^arg %dyncast_item_prim(val0)
+  ^case {
+    ^item ?case (
+      ^at comment "case for be&cooked"
+      ^at descr case
+      ^at case { be cooked }
+      ^at run ^item ?cooked (
+      ^at comment "runcaseinstr for be&cooked"
+      )
+    )
+    ^item ?case (
+      ^at comment "case for comma"
+      ^at descr case
+      ^at case comma
+      ^at run ^item ?comma (
+      ^at comment "runcaseinstr for comma"
+      )
+    )
+  }
+)
+  
 ^item !tiny_func (
    ^at comment "our tiny_func from cmod0c.mb"
    ^at descr func
@@ -73,7 +115,7 @@
        ^at comment "body of tiny_func"
        ^at descr sequence
        ^at body
-       [ $runinstrshowval0  $runinstrshowthesys ]
+       [ $runinstrshowval0  $runinstrshowthesys $switchinstrval0item ]
    )
 )
 

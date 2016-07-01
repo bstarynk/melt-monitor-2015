@@ -1520,8 +1520,8 @@ momtest_emitjs (const char *arg)
       bool ok = mom_emit_javascript_code (itm, fil);
       if (ok)
         MOM_INFORMPRINTF
-          ("momtest_emitjs succeeded emitting JavaScript code for %s",
-           mom_item_cstring (itm));
+          ("momtest_emitjs succeeded emitting JavaScript code for %s (%ld bytes)",
+           mom_item_cstring (itm), ftell (fil));
       else
         MOM_FATAPRINTF
           ("momtest_emitjs failed emitting JavaScript code for %s",

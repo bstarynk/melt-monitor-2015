@@ -14,9 +14,9 @@
 )
 
 ^item !signature_func_value_to_void (
-   ^at comment "func signature: value -> void, in cmod0.mb"
+   ^at comment "func signature: value -> void, in cmod1j.mb"
    ^at descr signature
-   ^at formals [ this_closure val0 ]
+   ^at formals [ val0 ]
    ^at result unit
 )
 
