@@ -36,8 +36,8 @@ class MomEmitter
 {
 public:
   typedef std::function<void(MomEmitter*)> todofun_t;
-  typedef std::vector<const void*,
-          traceable_allocator<const void*> >
+  typedef std::vector<momvalue_t,
+          traceable_allocator<momvalue_t> >
           traced_vector_values_t;
   typedef std::set<const struct mom_item_st*,
     MomItemLess,
@@ -219,6 +219,15 @@ protected:
     size_t nb_item_cases (void) const
     {
       return cas_item2casemap.size();
+    };
+    struct mom_item_st*case_for_item(struct mom_item_st*ditm) const {
+      struct mom_item_st*casitm = nullptr;
+      if (mom_itype(ditm)==MOMITY_ITEM) {
+	auto it = cas_item2casemap.find(ditm);
+	if (it != cas_item2casemap.end())
+	  casitm = it->second;
+      };
+      return casitm;
     };
     ItemCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
       : CaseScannerData(em,swtypitm,insitm,blkitm,rank), cas_item2casemap() {};
@@ -478,7 +487,8 @@ public:
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static constexpr const char* CBREAKLAB_PREFIX = "mombreaklab_";
-  static constexpr const char* CCONTINUELAB_PREFIX = "momcontlab_";
+  static constexpr const char* CCONTINUELAB_PREFIX = "momcontilab_";
+  static constexpr const char* OTHERWISELAB_PREFIX = "momotherwiselab_";
   static constexpr const char* CINT_TYPE = "momint_t";
   static constexpr const char* CVALUE_TYPE = "momvalue_t";
   static constexpr const char* CDOUBLE_TYPE = "double";
@@ -3535,17 +3545,44 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                         mom_item_cstring(discritm),
                         mom_item_cstring(casitm),
                         h,h, h%primsiz);
-        casemultimap.insert({h%primsiz,casitm});
+        casemultimap.insert({h%primsiz,discritm});
       },
       "fill casemultimap", __LINE__);
       unsigned nbemitcases = casemultimap.size();
       MOM_DEBUGPRINTF(gencod, "nbemitcases=%u", nbemitcases);
+      traced_vector_values_t vectree;
+      int nboutcases = 0;
+      momhash_t prevk = 0;
       for (auto p : casemultimap)
         {
           momhash_t kh = p.first;
           struct mom_item_st* kitm=p.second;
           MOM_DEBUGPRINTF(gencod,
-                          "kh=%u kitm=%s", kh, mom_item_cstring(kitm));
+                          "kh=%u kitm=%s",
+			  kh, mom_item_cstring(kitm));
+	  if (nboutcases==0 || prevk != kh) {
+	    if (nboutcases > 0) {
+	      auto gotothertree = 
+	       mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+				   literal_string("goto "),
+				   literal_string(OTHERWISELAB_PREFIX),
+				   insitm
+				   );
+	      MOM_DEBUGPRINTF(gencod, "gotothertree=%s",
+			      mom_value_cstring(gotothertree));
+	      vectree.push_back(gotothertree);
+	    };
+	    auto ccastree =
+	       mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+				   literal_string("case "),
+				   mom_int_make(kh),
+				   literal_string(":")
+				   );
+	      MOM_DEBUGPRINTF(gencod, "ccastree=",
+			      mom_value_cstring(ccastree));
+	      vectree.push_back(ccastree);
+	      nboutcases++;
+	  }
         }
     }
     break;
