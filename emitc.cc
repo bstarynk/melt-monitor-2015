@@ -220,13 +220,15 @@ protected:
     {
       return cas_item2casemap.size();
     };
-    struct mom_item_st*case_for_item(struct mom_item_st*ditm) const {
+    struct mom_item_st*case_for_item(struct mom_item_st*ditm) const
+    {
       struct mom_item_st*casitm = nullptr;
-      if (mom_itype(ditm)==MOMITY_ITEM) {
-	auto it = cas_item2casemap.find(ditm);
-	if (it != cas_item2casemap.end())
-	  casitm = it->second;
-      };
+      if (mom_itype(ditm)==MOMITY_ITEM)
+        {
+          auto it = cas_item2casemap.find(ditm);
+          if (it != cas_item2casemap.end())
+            casitm = it->second;
+        };
       return casitm;
     };
     ItemCaseScannerData(MomEmitter*em, struct mom_item_st*swtypitm, struct mom_item_st*insitm, struct mom_item_st*blkitm, unsigned rank)
@@ -488,7 +490,9 @@ public:
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static constexpr const char* CBREAKLAB_PREFIX = "mombreaklab_";
   static constexpr const char* CCONTINUELAB_PREFIX = "momcontilab_";
-  static constexpr const char* OTHERWISELAB_PREFIX = "momotherwiselab_";
+  static constexpr const char* COTHERWISELAB_PREFIX = "momotherwiselab_";
+  static constexpr const char* CCASELAB_PREFIX = "momcaselab_";
+  static constexpr const char* CITEMSW_PREFIX = "momitemsw_";
   static constexpr const char* CINT_TYPE = "momint_t";
   static constexpr const char* CVALUE_TYPE = "momvalue_t";
   static constexpr const char* CDOUBLE_TYPE = "double";
@@ -3515,6 +3519,11 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
     {
       auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata.get());
       assert (itemcasdata != nullptr);
+      auto switemtree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                            literal_string(CITEMSW_PREFIX),
+                            insitm);
+      MOM_DEBUGPRINTF(gencod, "switemtree=%s", mom_value_cstring(switemtree));
       for (unsigned cix=0; cix<nbcases; cix++)
         {
           auto casitm = caseset->seqitem[cix];
@@ -3559,30 +3568,58 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
           struct mom_item_st* kitm=p.second;
           MOM_DEBUGPRINTF(gencod,
                           "kh=%u kitm=%s",
-			  kh, mom_item_cstring(kitm));
-	  if (nboutcases==0 || prevk != kh) {
-	    if (nboutcases > 0) {
-	      auto gotothertree = 
-	       mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-				   literal_string("goto "),
-				   literal_string(OTHERWISELAB_PREFIX),
-				   insitm
-				   );
-	      MOM_DEBUGPRINTF(gencod, "gotothertree=%s",
-			      mom_value_cstring(gotothertree));
-	      vectree.push_back(gotothertree);
-	    };
-	    auto ccastree =
-	       mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-				   literal_string("case "),
-				   mom_int_make(kh),
-				   literal_string(":")
-				   );
-	      MOM_DEBUGPRINTF(gencod, "ccastree=",
-			      mom_value_cstring(ccastree));
-	      vectree.push_back(ccastree);
-	      nboutcases++;
-	  }
+                          kh, mom_item_cstring(kitm));
+          if (nboutcases==0 || prevk != kh)
+            {
+              if (nboutcases > 0)
+                {
+                  auto gotothertree =
+                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                        literal_string("goto "),
+                                        literal_string(COTHERWISELAB_PREFIX),
+                                        insitm
+                                       );
+                  MOM_DEBUGPRINTF(gencod, "gotothertree=%s",
+                                  mom_value_cstring(gotothertree));
+                  vectree.push_back(gotothertree);
+                }
+              else
+                {
+                  auto defgotothtree =
+                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                        literal_string("default:"),
+                                        literal_string("goto "),
+                                        literal_string(COTHERWISELAB_PREFIX),
+                                        insitm
+                                       );
+                  MOM_DEBUGPRINTF(gencod, "defgotothtree=%s",
+                                  mom_value_cstring(defgotothtree));
+                  vectree.push_back(defgotothtree);
+                }
+              auto ccastree =
+                mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                    literal_string("case "),
+                                    mom_int_make(kh),
+                                    literal_string(":")
+                                   );
+              MOM_DEBUGPRINTF(gencod, "ccastree=%s",
+                              mom_value_cstring(ccastree));
+              vectree.push_back(ccastree);
+              nboutcases++;
+            };
+          auto curitmtree = transform_expr(kitm,insitm);
+          MOM_DEBUGPRINTF(gencod, "curitmtree=%s", mom_value_cstring(curitmtree));
+          auto curcasitm = itemcasdata->case_for_item(kitm);
+          auto testitmtree =
+            mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                      literal_string("if ("),
+                                      switemtree,
+                                      literal_string(" == "),
+                                      curitmtree,
+                                      literal_string(") goto "),
+                                      literal_string(CCASELAB_PREFIX),
+                                      curcasitm);
+          MOM_DEBUGPRINTF(gencod, "testitmtree=%s", mom_value_cstring(testitmtree));
         }
     }
     break;

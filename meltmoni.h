@@ -558,6 +558,7 @@ int mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
 bool mom_hashedvalue_equal (const struct mom_hashedvalue_st *val1,
                             const struct mom_hashedvalue_st *val2);
 static inline momhash_t mom_hash (const void *p);
+static inline momhash_t mom_item_hash (const struct mom_item_st*itm);
 
 #ifdef __cplusplus
 struct MomItemLess
@@ -1396,6 +1397,14 @@ struct mom_item_st
 {
   MOM_ITEM_FIELDS;
 };
+
+static inline momhash_t mom_item_hash (const struct mom_item_st*itm)
+{
+  if (itm == NULL || itm == MOM_EMPTY_SLOT || (intptr_t)itm % 4 != 0)
+    return 0;
+  if (itm->va_itype != MOMITY_ITEM) return 0;
+  return itm->hva_hash;
+}
 
 
 const struct mom_boxset_st *mom_predefined_items_boxset (void);
