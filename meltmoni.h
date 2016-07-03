@@ -1023,7 +1023,7 @@ const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
     const struct mom_item_st *conn,
     unsigned size, ...);
 
-#define mom_boxnode_make_va(Conn,Siz,...) mom_boxnode_meta_make_va(NULL,0,Conn,Siz,__VA_ARGS__)
+#define mom_boxnode_make_va(Conn,Siz,...) mom_boxnode_meta_make_va(NULL,0,(Conn), (Siz), __VA_ARGS__)
 
 
 const struct mom_boxnode_st *

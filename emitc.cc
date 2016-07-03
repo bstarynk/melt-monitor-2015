@@ -3546,7 +3546,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
       auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata.get());
       assert (itemcasdata != nullptr);
       auto switemtree =
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
                             literal_string(CITEMSW_PREFIX),
                             insitm);
       MOM_DEBUGPRINTF(gencod, "switemtree=%s", mom_value_cstring(switemtree));
@@ -3648,9 +3648,10 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
           MOM_DEBUGPRINTF(gencod, "testitmtree=%s", mom_value_cstring(testitmtree));
           vectree.push_back(testitmtree);
         }
-      auto swbodytree = mom_boxnode_make_va(MOM_PREDEFITM(semicolon),
-                                            vectree.size(),
-                                            vectree.data());
+      MOM_DEBUGPRINTF(gencod, "vectreesize %d", (int) vectree.size());
+      auto swbodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),
+                                         vectree.size(),
+                                         vectree.data());
       vectree.clear();
       MOM_DEBUGPRINTF(gencod, "swbodytree=%s", mom_value_cstring(swbodytree));
 #warning switch item incomplete MomCEmitter::transform_switchinstr
