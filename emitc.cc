@@ -3140,6 +3140,49 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 #warning unimplemented MomCEmitter::transform_node_expr
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_node_expr expnod=%s initm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(initm));
+  assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
+  auto connitm = expnod->nod_connitm;
+  assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
+  unsigned nodarity = mom_size(expnod);
+  lock_item(connitm);
+#define NBEXPCONN_MOM 131
+#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
+ if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;	\
+ goto defaultcaseconn; foundcaseconn_##Nam
+  switch (connitm->hva_hash % NBEXPCONN_MOM)
+    {
+    case CASE_EXPCONN_MOM(verbatim):
+    {
+      assert (nodarity == 1);
+#warning MomCEmitter::transform_node_expr verbatim unimplemented
+      MOM_FATAPRINTF("unimplemented c-transform_node_expr of verbatim-expr %s in %s",
+                     mom_value_cstring(expnod), mom_item_cstring(initm));
+    }
+    break;
+    case CASE_EXPCONN_MOM(and):
+      goto orandcase;
+    case CASE_EXPCONN_MOM(or):
+orandcase:
+      {
+#warning MomCEmitter::transform_node_expr and/or unimplemented
+        MOM_FATAPRINTF("unimplemented c-transform_node_expr of and/or-expr %s in %s",
+                       mom_value_cstring(expnod), mom_item_cstring(initm));
+      }
+      break;
+    default:
+defaultcaseconn:
+      {
+#warning MomCEmitter::transform_node_expr and/or unimplemented
+        MOM_FATAPRINTF("unimplemented c-transform_node_expr of default expr %s in %s",
+                       mom_value_cstring(expnod), mom_item_cstring(initm));
+      }
+      break;
+    }
+#undef NBEXPCONN_MOM
+#undef CASE_EXPCONN_MOM
+#warning  MomCEmitter::transform_node_expr unimplemented
+  MOM_FATAPRINTF("unimplemented c-transform_node_expr of %s in %s",
+                 mom_value_cstring(expnod), mom_item_cstring(initm));
 } // end MomCEmitter::transform_node_expr
 
 
@@ -3534,6 +3577,9 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
   assert (otherwitm == nullptr || otherwitm->va_itype == MOMITY_ITEM);
   std::unique_ptr<CaseScannerData> casdata {make_case_scanner_data(swtypitm,insitm,-1,fromitm)};
   assert (casdata != nullptr);
+  auto argtree = transform_expr(argexp, insitm);
+  MOM_DEBUGPRINTF(gencod, "argexp=%s argtree=%s",
+                  mom_value_cstring(argexp), mom_value_cstring(argtree));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
   if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
@@ -3654,6 +3700,16 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                                          vectree.data());
       vectree.clear();
       MOM_DEBUGPRINTF(gencod, "swbodytree=%s", mom_value_cstring(swbodytree));
+      auto defswitemtree =
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("struct mom_item_st* "),
+                                  switemtree,
+                                  literal_string(" = "),
+                                  argtree
+                                 );
+      MOM_DEBUGPRINTF(gencod, "defswitemtree=%s", mom_value_cstring(defswitemtree));
+
+
 #warning switch item incomplete MomCEmitter::transform_switchinstr
       MOM_FATAPRINTF("switch item incomplete insitm=%s", mom_value_cstring(insitm));
     }
