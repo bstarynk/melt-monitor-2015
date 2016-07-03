@@ -3195,8 +3195,39 @@ defaultcaseconn:
                                        mom_value_cstring(expnod), nodarity, nbformals);
 
             traced_map_item2value_t argmap;
+            for (unsigned ix = 0; ix < nbformals; ix++)
+              {
+                auto curformitm = formaltup->seqitem[ix];
+                assert (mom_itype(curformitm) == MOMITY_ITEM);
+                auto curson = expnod->nod_sons[ix];
+                MOM_DEBUGPRINTF(gencod, "expnod=%s ix#%d curson=%s", mom_value_cstring(expnod),
+                                ix, mom_value_cstring(curson));
+                auto curstree = transform_expr(expnod->nod_sons[ix], initm);
+                MOM_DEBUGPRINTF(gencod, "expnod=%s ix#%d curstree=%s", mom_value_cstring(expnod),
+                                ix, mom_value_cstring(curstree));
+                argmap[curformitm] = curstree;
+              }
+            traced_vector_values_t treevec;
+            unsigned sizcxexp = mom_raw_size(cxexpnod);
+            treevec.reserve(sizcxexp+1);
+            for (unsigned cix=0; cix<sizcxexp; cix++)
+              {
+                auto curxson = cxexpnod->nod_sons[cix];
+                auto curxitm = mom_dyncast_item(curxson);
+                auto it = argmap.end();
+                if (curxitm != nullptr && (it = argmap.find(curxitm)) != argmap.end())
+                  treevec.push_back(it->second);
+                else
+                  treevec.push_back(curxson);
+              }
+            auto nodtree = mom_boxnode_make(MOM_PREDEFITM(sequence),
+                                            treevec.size(),
+                                            treevec.data());
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr primitive expnod=%s gives nodtree=%s",
+                            mom_value_cstring(expnod), mom_value_cstring(nodtree));
+            return nodtree;
           }
-#warning MomCEmitter::transform_node_expr and/or unimplemented
+#warning MomCEmitter::transform_node_expr unimplemented
         MOM_FATAPRINTF("unimplemented c-transform_node_expr of default expr %s in %s with conndescitm=%s",
                        mom_value_cstring(expnod), mom_item_cstring(initm), mom_item_cstring(conndescitm));
       }
