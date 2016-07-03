@@ -3137,14 +3137,12 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s initm=%s",
                   mom_value_cstring(expnod), mom_item_cstring(initm));
-#warning unimplemented MomCEmitter::transform_node_expr
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_node_expr expnod=%s initm=%s",
-                 mom_value_cstring(expnod), mom_item_cstring(initm));
   assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
   auto connitm = expnod->nod_connitm;
   assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
   unsigned nodarity = mom_size(expnod);
   lock_item(connitm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr connitm=%s", mom_item_cstring(connitm));
 #define NBEXPCONN_MOM 131
 #define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;	\
@@ -3172,9 +3170,35 @@ orandcase:
     default:
 defaultcaseconn:
       {
+        MOM_DEBUGPRINTF(gencod, "connitm=%s", mom_item_cstring(connitm));
+        auto conndescitm = mom_unsync_item_descr(connitm);
+        MOM_DEBUGPRINTF(gencod, "conndescitm=%s", mom_item_cstring(conndescitm));
+        if (conndescitm == MOM_PREDEFITM(primitive))
+          {
+            auto sigitm = //
+              mom_dyncast_item(mom_unsync_item_get_phys_attr (connitm, MOM_PREDEFITM(signature)));
+            assert (is_locked_item(sigitm));
+            auto formaltup = //
+              mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+            assert (formaltup != nullptr);
+            unsigned nbformals = mom_size(formaltup);
+            auto cxexpnod = //
+              mom_dyncast_node(mom_unsync_item_get_phys_attr (connitm, MOM_PREDEFITM(c_expansion)));
+            MOM_DEBUGPRINTF(gencod, "cxexpnod=%s formaltup=%s",
+                            mom_value_cstring(cxexpnod), mom_value_cstring(formaltup));
+            if (!cxexpnod || cxexpnod->nod_connitm != MOM_PREDEFITM(code_chunk))
+              throw MOM_RUNTIME_PRINTF("c-transform_node_expr primitive node %s bad cxexpnod=%s",
+                                       mom_value_cstring(expnod),
+                                       mom_value_cstring(cxexpnod));
+            if (nbformals != nodarity)
+              throw MOM_RUNTIME_PRINTF("c-transform_node_expr primitive node %s arity %d != nbformals %d",
+                                       mom_value_cstring(expnod), nodarity, nbformals);
+
+            traced_map_item2value_t argmap;
+          }
 #warning MomCEmitter::transform_node_expr and/or unimplemented
-        MOM_FATAPRINTF("unimplemented c-transform_node_expr of default expr %s in %s",
-                       mom_value_cstring(expnod), mom_item_cstring(initm));
+        MOM_FATAPRINTF("unimplemented c-transform_node_expr of default expr %s in %s with conndescitm=%s",
+                       mom_value_cstring(expnod), mom_item_cstring(initm), mom_item_cstring(conndescitm));
       }
       break;
     }
@@ -3485,17 +3509,20 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
   auto desrunitm = mom_unsync_item_descr(runitm);
   if (desrunitm == MOM_PREDEFITM(primitive))
     {
-      auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+      auto sigitm = //
+        mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr runitm=%s sigitm:=\n%s",
                       mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
       assert (is_locked_item(sigitm));
-      auto formaltup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+      auto formaltup = //
+        mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
       assert (formaltup != nullptr);
       unsigned nbformals = mom_size(formaltup);
       traced_map_item2value_t argmap;
       auto inscomp = insitm->itm_pcomp;
       momvalue_t treev = nullptr;
-      auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
+      auto expnod = //
+        mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
                       mom_value_cstring(expnod));
       if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
