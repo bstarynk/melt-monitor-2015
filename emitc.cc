@@ -3843,7 +3843,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
           mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
                                      literal_string(CENDCASELAB_PREFIX),
                                      insitm,
-                                     literal_string(":"));
+                                     literal_string(":;"));
         MOM_DEBUGPRINTF(gencod, "endlabtree=%s",
                         mom_value_cstring(endlabtree));
         vectree.push_back(endlabtree);
