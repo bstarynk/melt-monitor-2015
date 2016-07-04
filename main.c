@@ -1492,21 +1492,22 @@ momtest_emitc (const char *arg)
       else
         MOM_FATAPRINTF ("momtest_emitc failed emitting C code for %s",
                         mom_item_cstring (itm));
-      if (ok) {
-	char cmdbuf[128];
-	memset(cmdbuf, 0, sizeof(cmdbuf));
-	fflush(NULL);
-	int cst = -1;
-	if (snprintf(cmdbuf, sizeof(cmdbuf),
-		     "make modules/momg_%s.so", mom_item_cstring(itm))
-	    < (int)sizeof(cmdbuf)-1)
-	  cst = system(cmdbuf);
-	if (cst==0)
-	  MOM_INFORMPRINTF ("momtest_emitc succeeded: %s", cmdbuf);
-	else
-	  MOM_FATAPRINTF ("momtest_emitc failed compiling C code for %s",
-			  mom_item_cstring (itm));	  
-      }
+      if (ok)
+        {
+          char cmdbuf[128];
+          memset (cmdbuf, 0, sizeof (cmdbuf));
+          fflush (NULL);
+          int cst = -1;
+          if (snprintf (cmdbuf, sizeof (cmdbuf),
+                        "make modules/momg_%s.so", mom_item_cstring (itm))
+              < (int) sizeof (cmdbuf) - 1)
+            cst = system (cmdbuf);
+          if (cst == 0)
+            MOM_INFORMPRINTF ("momtest_emitc succeeded: %s", cmdbuf);
+          else
+            MOM_FATAPRINTF ("momtest_emitc failed compiling C code for %s",
+                            mom_item_cstring (itm));
+        }
     }
 }                               /* end momtest_emitc */
 

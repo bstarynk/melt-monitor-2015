@@ -2659,6 +2659,15 @@ semicoloncase:
         }
     }
     break;
+    case CASE_NODECONN_MOM(out_newline):
+    {
+      write_indented_newline(out,depth,lastnl);
+      for (int ix=0; ix<(int)arity; ix++)
+        {
+          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+        }
+    }
+    break;
     default:
 defaultcaseconn:
       throw  MOM_RUNTIME_PRINTF("unexpected write_node nod:%s depth=%d forv=%s",
@@ -3729,7 +3738,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                   vectree.push_back(defgotothtree);
                 }
               auto ccastree =
-                mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                mom_boxnode_make_va(MOM_PREDEFITM(out_newline),3,
                                     literal_string("case "),
                                     mom_int_make(kh),
                                     literal_string(":")
@@ -3802,7 +3811,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
             mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
           assert (is_locked_item(runitm));
           auto caselabtree =
-            mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
+            mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
                                        literal_string(CCASELAB_PREFIX),
                                        casitm,
                                        literal_string(":")
@@ -3820,7 +3829,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
         }
       {
         auto otherwlabtree =
-          mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
+          mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
                                      literal_string(COTHERWISELAB_PREFIX),
                                      insitm,
                                      literal_string(":"));
@@ -3840,7 +3849,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
       vectree.push_back(gotoendtree);
       {
         auto endlabtree =
-          mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
+          mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
                                      literal_string(CENDCASELAB_PREFIX),
                                      insitm,
                                      literal_string(":;"));
