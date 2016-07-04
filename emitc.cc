@@ -3612,7 +3612,7 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
             curtreev = curson;
           treearr[treecnt++] = curtreev;
         }
-      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
+      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),treecnt,treearr);
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
                       mom_item_cstring(insitm), mom_value_cstring(treev));
       return treev;
@@ -3759,7 +3759,8 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                                       curitmtree,
                                       literal_string(") goto "),
                                       literal_string(CCASELAB_PREFIX),
-                                      curcasitm);
+                                      curcasitm,
+                                      literal_string(";"));
           MOM_DEBUGPRINTF(gencod, "testitmtree=%s", mom_value_cstring(testitmtree));
           vectree.push_back(testitmtree);
         }
