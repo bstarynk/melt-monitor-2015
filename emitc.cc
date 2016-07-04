@@ -2997,9 +2997,31 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
               MOM_DEBUGPRINTF(gencod,
                               "c-transform_block blkitm=%s lix#%d locitm:=\n%s",
                               mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
-              MOM_FATAPRINTF("c-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
-                             mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+              momvalue_t typeval = mom_unsync_item_get_phys_attr (locitm, MOM_PREDEFITM(type));
+              auto typeitm = mom_dyncast_item(typeval);
+              if (typeitm != nullptr)
+                {
+                  assert (is_locked_item(typeitm));
+                  momvalue_t typecexp = nullptr;
+                  if (mom_unsync_item_descr(typeitm) == MOM_PREDEFITM(type)
+                      && (typecexp = mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(c_code))) != nullptr)
+                    {
+                      curloctree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                                       literal_string(CLOCAL_PREFIX),
+                                                       locitm,
+                                                       literal_string(" = "),
+                                                       literal_string("/*nothing*/0"));
+                    }
+                }
+              MOM_DEBUGPRINTF(gencod,
+                              "c-transform_block lix#%d locitm=%s curloctree=%s",
+                              lix, mom_item_cstring(locitm), mom_value_cstring(curloctree));
+              if (curloctree == nullptr)
+                MOM_FATAPRINTF("c-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
+                               mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
 #warning MomCEmitter::transform_block unhandled local
+              else
+                locarr[lix] = curloctree;
             }
         }
       MOM_DEBUGPRINTF(gencod,
