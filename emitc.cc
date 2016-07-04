@@ -3006,11 +3006,13 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                   if (mom_unsync_item_descr(typeitm) == MOM_PREDEFITM(type)
                       && (typecexp = mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(c_code))) != nullptr)
                     {
-                      curloctree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
-                                                       literal_string(CLOCAL_PREFIX),
-                                                       locitm,
-                                                       literal_string(" = "),
-                                                       literal_string("/*nothing*/0"));
+                      curloctree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+							     typecexp,
+							     literal_string(" "),
+							     literal_string(CLOCAL_PREFIX),
+							     locitm,
+							     literal_string(" = "),
+							     literal_string("/*nothing*/0"));
                     }
                 }
               MOM_DEBUGPRINTF(gencod,
@@ -3895,6 +3897,22 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
     {
       auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
       assert (intcasdata != nullptr);
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          auto casev =
+            mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+          MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
+                          cix, mom_item_content_cstring(casitm),
+                          mom_item_cstring(runitm), mom_value_cstring(casev));
+          intcasdata->process_intcase(casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
+                          cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
+                          mom_value_cstring(casev));
+        };
     }
     break;
     case CASE_SWTYPE_MOM(string):

@@ -691,13 +691,15 @@ comment
 
 
 *int
-1466672314
+1467641450
 ^mtime
 (
 c_code
-"momint_t"_
+"long"_
 comment
 "for int and boxed integers"_
+descr
+type
 notice
 (
 is_atom
