@@ -55,7 +55,7 @@ all: monimelt
 
 
 clean:
-	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.ii *.orig README.html
+	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.ii *.orig README.html *#
 	$(RM) modules/*.so modules/*~ modules/*%
 	$(RM) _listpredef*
 	$(RM) *.bin

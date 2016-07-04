@@ -1221,8 +1221,7 @@ mom_dumpemit_value (struct mom_dumper_st *du,
 
 #define MOM_MAXDEPTH_OUT 9
 void
-mom_output_value (FILE *fout, long *plastnl,
-                  int depth, const struct mom_hashedvalue_st *val)
+mom_output_value (FILE *fout, long *plastnl, int depth, const momvalue_t val)
 {
   if (!fout || fout == MOM_EMPTY_SLOT)
     return;
@@ -1233,7 +1232,8 @@ mom_output_value (FILE *fout, long *plastnl,
       return;
     }
 #define INDENTED_NEWLINE_MOM() do { fputc('\n', fout); lastnl = ftell(fout); for (int ix=depth % 16; ix>0; ix--) fputc(' ', fout); } while(0);
-  switch (mom_itype (val))
+  unsigned valtype = mom_itype (val);
+  switch (valtype)
     {
     case MOMITY_INT:
       fprintf (fout, "%lld", (long long) mom_int_val_def (val, 0));
@@ -1261,7 +1261,7 @@ mom_output_value (FILE *fout, long *plastnl,
       break;
     case MOMITY_SET:
     case MOMITY_TUPLE:
-      if (val->va_itype == MOMITY_SET)
+      if (valtype == MOMITY_SET)
         fputc ('{', fout);
       else
         fputc ('[', fout);
@@ -1280,7 +1280,7 @@ mom_output_value (FILE *fout, long *plastnl,
               fputc (' ', fout);
             fputs (mom_item_cstring (seq->seqitem[ix]), fout);
           }
-        if (val->va_itype == MOMITY_SET)
+        if (valtype == MOMITY_SET)
           fputc ('}', fout);
         else
           fputc (']', fout);
@@ -1320,7 +1320,7 @@ mom_output_value (FILE *fout, long *plastnl,
         }
         break;
     default:
-        fprintf (fout, "<strange value@%p of type %d>", val, val->va_itype);
+        fprintf (fout, "<strange value@%p of type %d>", val, valtype);
       }
       fflush (fout);
     }

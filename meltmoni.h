@@ -2365,7 +2365,7 @@ const char *mom_value_cstring (const void *val);
 
 void
 mom_output_value (FILE *f, long *plastnl, int depth,
-                  const struct mom_hashedvalue_st *val);
+                  const momvalue_t val);
 
 void
 mom_output_item_content (FILE *f, long *plastnl, struct mom_item_st *itm);
