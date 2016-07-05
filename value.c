@@ -1090,8 +1090,7 @@ mom_double_to_cstr (double x, char *buf, size_t buflen)
       strncpy (buf, "+NAN", buflen);
       return buf;
     }
-  else if isinf
-    (x)
+  else if (isinf (x))
     {
       if (x > 0.0)
         strncpy (buf, "+INF", buflen);

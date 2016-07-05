@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -165,6 +165,7 @@ protected:
     std::map<long,struct mom_item_st*,std::less<long>,traceable_allocator<long>> cas_num2casemap;
   public:
     void process_intcase(const void*expv, struct mom_item_st*casitm, struct mom_item_st*runitm);
+    momvalue_t c_transform_intcase(class MomCEmitter*cem, const void*expv, struct mom_item_st*casitm, struct mom_item_st*runitm);
     const char*name() const
     {
       return "IntCaseScannerData";
@@ -3719,7 +3720,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                         mom_item_cstring(discritm),
                         mom_item_cstring(casitm),
                         h,h, h%primsiz);
-        casemultimap.insert({h%primsiz,discritm});
+        casemultimap.insert( {h%primsiz,discritm});
       },
       "fill casemultimap", __LINE__);
       unsigned nbemitcases = casemultimap.size();
@@ -3826,7 +3827,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                                    literal_string("goto "),
                                    literal_string(CENDCASELAB_PREFIX),
                                    insitm);
-      MOM_DEBUGPRINTF(gencod, "gotoendtree=%s", gotoendtree);
+      MOM_DEBUGPRINTF(gencod, "gotoendtree=%s", mom_value_cstring(gotoendtree));
       /* output each case of caseset and the otherwitm */
       for (unsigned cix=0; cix<nbcases; cix++)
         {
@@ -3897,6 +3898,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
     {
       auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
       assert (intcasdata != nullptr);
+      traced_vector_values_t vectree;
       for (unsigned cix=0; cix<nbcases; cix++)
         {
           auto casitm = caseset->seqitem[cix];
@@ -3912,6 +3914,9 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
           MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
                           cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
                           mom_value_cstring(casev));
+          auto castree = intcasdata->c_transform_intcase(this,casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d castree=%s", cix, mom_value_cstring(castree));
+
         };
       MOM_FATAPRINTF("c-transform_switchinstr int insitm=%s unimplemented",
                      mom_item_cstring(insitm));
@@ -4266,6 +4271,86 @@ throw MOM_RUNTIME_PRINTF("bad node int case %s in case item %s"
                          cas_rank, mom_item_cstring(cas_blkitm));
 } // end MomEmitter::IntCaseScannerData::process_intcase
 
+momvalue_t
+MomEmitter::IntCaseScannerData::c_transform_intcase(MomCEmitter*cem, const void*expv,
+struct mom_item_st*casitm,
+struct mom_item_st*runitm)
+{
+  assert (cem != nullptr);
+  momvalue_t restree = nullptr;
+  MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s casitm:=%s\n.. runtim=%s",
+              mom_value_cstring(expv),
+              mom_item_content_cstring(casitm),
+              mom_item_cstring(runitm));
+  auto exptyp = mom_itype(expv);
+  switch (exptyp)
+{
+case MOMITY_INT:
+{
+  restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                cem->literal_string("case "),
+                                expv,
+                                cem->literal_string(":"));
+  MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s gives %s",
+                  mom_value_cstring(expv),
+                  mom_value_cstring(restree));
+  return restree;
+}
+break;
+case MOMITY_NODE:
+{
+  auto expnod = (const struct mom_boxnode_st*)expv;
+  auto connitm = expnod->nod_connitm;
+  auto expsiz = mom_raw_size(expv);
+  if (connitm == MOM_PREDEFITM(or))
+    {
+      traced_vector_values_t vectree;
+      for (unsigned ix=0; ix<expsiz; ix++)
+        {
+          if (ix>0)
+            vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline), 0));
+          auto curson = expnod->nod_sons[ix];
+          MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d curson=%s", ix,
+                          mom_value_cstring(curson));
+          auto cursubtree = c_transform_intcase(cem,curson,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d cursubtree=%s", ix,
+                          mom_value_cstring(cursubtree));
+          vectree.push_back(cursubtree);
+        }
+    }
+  else if (connitm == MOM_PREDEFITM(range))
+    {
+      assert (expsiz==2);
+      auto left = expnod->nod_sons[0];
+      auto right = expnod->nod_sons[0];
+      assert (mom_itype(left)==MOMITY_INT);
+      assert (mom_itype(right)==MOMITY_INT);
+      assert (mom_int_val_def (left, -2) <= mom_int_val_def (right, -1));
+      restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+                                    cem->literal_string("case "),
+                                    left,
+                                    cem->literal_string(" .. "),
+                                    right,
+                                    cem->literal_string(":"));
+      MOM_DEBUGPRINTF(gencod, "c_transform_intcase range gives %s",
+                      mom_value_cstring(restree));
+      return restree;
+    }
+  else
+    MOM_FATAPRINTF("c_transform_intcase bad node expv=%s casitm=%s runtim=%s",
+                   mom_value_cstring(expv),
+                   mom_item_cstring(casitm),
+                   mom_item_cstring(runitm));
+
+}
+break;
+default: /// should never happen
+  MOM_FATAPRINTF("c_transform_intcase bad expv=%s casitm=%s runtim=%s",
+                 mom_value_cstring(expv),
+                 mom_item_cstring(casitm),
+                 mom_item_cstring(runitm));
+}
+} // end MomEmitter::IntCaseScannerData::c_transform_intcase
 
 
 void
