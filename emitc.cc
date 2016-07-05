@@ -1692,6 +1692,8 @@ sequencecase:
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(switch)));
       auto casehdr = case_scanner(swtypitm,insitm,rk,blkitm);
       auto argv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(arg));
+      MOM_DEBUGPRINTF(gencod, "switch instr insitm=%s swtypitm=%s argv=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(swtypitm), mom_value_cstring(argv));
       if (argv==nullptr)
         throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
                                   "with missing arg",
@@ -1743,9 +1745,12 @@ sequencecase:
           lock_item(otherwitm);
           scan_instr(otherwitm,-1,insitm);
         }
-      bind_local(insitm,MOM_PREDEFITM(switch),
-                 mom_boxnode_make_va(MOM_PREDEFITM(switch),4,
-                                     swtypitm, argv, caseseq, otherwv),
+      auto bindsw =
+        mom_boxnode_make_va(MOM_PREDEFITM(switch),4,
+                            swtypitm, argv, caseseq, otherwv);
+      MOM_DEBUGPRINTF(gencod, "scaninstr switch insitm=%s bindsw=%s", mom_item_cstring(insitm),
+                      mom_value_cstring(bindsw));
+      bind_local(insitm,MOM_PREDEFITM(switch),bindsw,
                  blkitm, rk);
     }
     break;
