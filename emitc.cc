@@ -3763,11 +3763,12 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
               else
                 {
                   auto defgotothtree =
-                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
                                         literal_string("default:"),
                                         literal_string("goto "),
                                         literal_string(COTHERWISELAB_PREFIX),
-                                        insitm
+                                        insitm,
+                                        literal_string(";")
                                        );
                   MOM_DEBUGPRINTF(gencod, "defgotothtree=%s",
                                   mom_value_cstring(defgotothtree));
@@ -3937,16 +3938,17 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
           MOM_DEBUGPRINTF(gencod, "cix#%d gotocastree=%s", cix, mom_value_cstring(gotocastree));
         };
       auto defgototree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                             4,
+                                             5,
                                              literal_string("default:"),
                                              literal_string("goto "),
                                              literal_string(COTHERWISELAB_PREFIX),
-                                             insitm);
+                                             insitm,
+                                             literal_string(";"));
       casvectree.push_back(defgototree);
       MOM_DEBUGPRINTF(gencod, "insitm %s defgototree %s",
                       mom_item_cstring(insitm), mom_value_cstring(defgototree));
       auto swbratree =mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
-                                          mom_boxnode_make_va(MOM_PREDEFITM(semicolon),
+                                          mom_boxnode_make(MOM_PREDEFITM(semicolon),
                                               casvectree.size(),
                                               casvectree.data()));
       MOM_DEBUGPRINTF(gencod, "insitm %s swbratree %s", mom_item_cstring(insitm),
