@@ -3945,15 +3945,18 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
       casvectree.push_back(defgototree);
       MOM_DEBUGPRINTF(gencod, "insitm %s defgototree %s",
                       mom_item_cstring(insitm), mom_value_cstring(defgototree));
+      auto swbratree =mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
+                                          mom_boxnode_make_va(MOM_PREDEFITM(semicolon),
+                                              casvectree.size(),
+                                              casvectree.data()));
+      MOM_DEBUGPRINTF(gencod, "insitm %s swbratree %s", mom_item_cstring(insitm),
+                      mom_value_cstring(swbratree));
       auto swintree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                   literal_string("switch ("),
                                   argtree,
                                   literal_string(")"),
-                                  mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
-						      mom_boxnode_make_va(MOM_PREDEFITM(semicolon),
-									  casvectree.size(),
-									  casvectree.data())));
+                                  swbratree);
       MOM_DEBUGPRINTF(gencod, "insitm %s swintree %s",
                       mom_item_cstring(insitm), mom_value_cstring(swintree));
       casvectree.clear();
