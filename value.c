@@ -757,12 +757,12 @@ update_node_hash_mom (struct mom_boxnode_st *nod)
 }
 
 const struct mom_boxnode_st *
-mom_boxnode_make_meta (const struct mom_item_st *conn,
+mom_boxnode_make_meta (const struct mom_item_st *connitm,
                        int size,
                        const momvalue_t *sons,
                        const struct mom_item_st *metaitm, intptr_t metarank)
 {
-  if (!conn || conn == MOM_EMPTY_SLOT)
+  if (mom_itype (connitm) != MOMITY_ITEM)
     return NULL;
   if (!sons || sons == MOM_EMPTY_SLOT)
     size = 0;
@@ -770,14 +770,14 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
     size = 0;
   if (size >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big %d node of connective %s",
-                    size, mom_item_cstring (conn));
+                    size, mom_item_cstring (connitm));
   struct mom_boxnode_st *nod =
     mom_gc_alloc (sizeof (*nod) +
                   ((size > 0) ? ((size - 1) * sizeof (void *)) : 0));
   nod->va_itype = MOMITY_NODE;
   nod->va_hsiz = size >> 16;
   nod->va_lsiz = size & 0xffff;
-  nod->nod_connitm = (struct mom_item_st *) conn;
+  nod->nod_connitm = (struct mom_item_st *) connitm;
   nod->nod_metaitem = (struct mom_item_st *) metaitm;
   nod->nod_metarank = metarank;
   for (unsigned ix = 0; ix < (unsigned) size; ix++)
@@ -794,18 +794,19 @@ mom_boxnode_make_meta (const struct mom_item_st *conn,
 const struct mom_boxnode_st *
 mom_boxnode_meta_make_va (const struct mom_item_st *metaitm,
                           intptr_t metarank,
-                          const struct mom_item_st *conn, unsigned size, ...)
+                          const struct mom_item_st *connitm, unsigned size,
+                          ...)
 {
   va_list args;
-  if (!conn || conn == MOM_EMPTY_SLOT)
+  if (mom_itype (connitm) != MOMITY_ITEM)
     return NULL;
-  momvalue_t smallarr[12] = { NULL };
+  momvalue_t smallarr[8] = { NULL };
   if (size >= MOM_SIZE_MAX)
     MOM_FATAPRINTF ("too big %d node of connective %s",
-                    size, mom_item_cstring (conn));
+                    size, mom_item_cstring (connitm));
   momvalue_t *arr
-    = (size < sizeof (smallarr) / sizeof (smallarr[0])) ? smallarr
-    : mom_gc_alloc (size * sizeof (void *));
+    = (size < (unsigned) (sizeof (smallarr) / sizeof (smallarr[0])))
+    ? smallarr : mom_gc_alloc (size * sizeof (void *));
   va_start (args, size);
   for (unsigned ix = 0; ix < size; ix++)
     {
@@ -813,11 +814,39 @@ mom_boxnode_meta_make_va (const struct mom_item_st *metaitm,
       if (curval == MOM_EMPTY_SLOT)
         curval = NULL;
       arr[ix] = curval;
+      MOM_DEBUGPRINTF (gencod, "arr[%d]: %s", ix, mom_value_cstring (curval));
     }
   va_end (args);
-  return mom_boxnode_make_meta (conn, size, arr, metaitm, metarank);
+  return mom_boxnode_make_meta (connitm, size, arr, metaitm, metarank);
 }                               /* end mom_boxnode_meta_make_va */
 
+
+const struct mom_boxnode_st *
+mom_boxnode_make_va (const struct mom_item_st *connitm,
+                     unsigned size, /*momvalue_t-s */ ...)
+{
+  va_list args;
+  if (mom_itype (connitm) != MOMITY_ITEM)
+    return NULL;
+  momvalue_t smallarr[8] = { NULL };
+  if (size >= MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big %d node of connective %s",
+                    size, mom_item_cstring (connitm));
+  momvalue_t *arr
+    = (size < (unsigned) (sizeof (smallarr) / sizeof (smallarr[0])))
+    ? smallarr : mom_gc_alloc (size * sizeof (void *));
+  va_start (args, size);
+  for (unsigned ix = 0; ix < size; ix++)
+    {
+      momvalue_t curval = va_arg (args, momvalue_t);
+      if (curval == MOM_EMPTY_SLOT)
+        curval = NULL;
+      arr[ix] = curval;
+      assert (curval == NULL || mom_itype (curval) > 0);
+    }
+  va_end (args);
+  return mom_boxnode_make (connitm, size, arr);
+}                               /* end mom_boxnode_make_va */
 
 const struct mom_boxnode_st *
 mom_boxnode_meta_make_sentinel_va (const struct mom_item_st *metaitm,
