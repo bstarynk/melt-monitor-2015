@@ -3909,7 +3909,7 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
     {
       auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
       assert (intcasdata != nullptr);
-      traced_vector_values_t vectree;
+      traced_vector_values_t casvectree;
       for (unsigned cix=0; cix<nbcases; cix++)
         {
           auto casitm = caseset->seqitem[cix];
@@ -3927,8 +3927,34 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
                           mom_value_cstring(casev));
           auto castree = intcasdata->c_transform_intcase(this,casev,casitm,runitm);
           MOM_DEBUGPRINTF(gencod, "cix#%d castree=%s", cix, mom_value_cstring(castree));
-
+          casvectree.push_back(castree);
+          auto gotocastree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                                 3,
+                                                 literal_string("goto "),
+                                                 literal_string(CCASELAB_PREFIX),
+                                                 casitm);
+          casvectree.push_back(gotocastree);
+          MOM_DEBUGPRINTF(gencod, "cix#%d gotocastree=%s", cix, mom_value_cstring(gotocastree));
         };
+      auto defgototree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                             4,
+                                             literal_string("default:"),
+                                             literal_string("goto "),
+                                             literal_string(COTHERWISELAB_PREFIX),
+                                             insitm);
+      casvectree.push_back(defgototree);
+      MOM_DEBUGPRINTF(gencod, "insitm %s defgototree %s",
+                      mom_item_cstring(insitm), mom_value_cstring(defgototree));
+      auto swintree = //
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("switch ("),
+                                  argtree,
+                                  literal_string(")"),
+                                  mom_boxnode_make(MOM_PREDEFITM(brace),
+                                      casvectree.size(),
+                                      casvectree.data()));
+      MOM_DEBUGPRINTF(gencod, "insitm %s swintree %s",
+                      mom_item_cstring(insitm), mom_value_cstring(swintree));
       MOM_FATAPRINTF("c-transform_switchinstr int insitm=%s unimplemented",
                      mom_item_cstring(insitm));
 #warning c-transform_switchinstr int switch unimplemented
@@ -4328,6 +4354,13 @@ case MOMITY_NODE:
                           mom_value_cstring(cursubtree));
           vectree.push_back(cursubtree);
         }
+      restree = mom_boxnode_make(MOM_PREDEFITM(sequence),
+                                 vectree.size(),
+                                 vectree.data());
+      MOM_DEBUGPRINTF(gencod,
+                      "c_transform_intcase disjonction gives %s",
+                      mom_value_cstring(restree));
+      return restree;
     }
   else if (connitm == MOM_PREDEFITM(range))
     {
@@ -4340,7 +4373,7 @@ case MOMITY_NODE:
       restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
                                     cem->literal_string("case "),
                                     left,
-                                    cem->literal_string(" .. "),
+                                    cem->literal_string(" ... "),
                                     right,
                                     cem->literal_string(":"));
       MOM_DEBUGPRINTF(gencod, "c_transform_intcase range gives %s",
