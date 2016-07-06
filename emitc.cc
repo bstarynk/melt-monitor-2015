@@ -485,6 +485,10 @@ class MomCEmitter final :public MomEmitter
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static constexpr const char* CTYPE_PREFIX = "momty_";
+  static constexpr const char* CSTRUCT_PREFIX = "momstruct_";
+  static constexpr const char* CUNION_PREFIX = "momunion_";
+  static constexpr const char* CENUM_PREFIX = "momenum_";
+  static constexpr const char* CENUVAL_PREFIX = "momenuva_";
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
@@ -2863,8 +2867,8 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
     }
 #define NBKNOWNTYPE_MOM 31
 #define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:	\
-	  if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
-	  goto defaultcasetype; foundcase_##Nam
+  if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+  goto defaultcasetype; foundcase_##Nam
   switch (typitm->hva_hash % NBKNOWNTYPE_MOM)
     {
     case CASE_KNOWNTYPE_MOM (int):
@@ -2883,12 +2887,52 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if (scalarp)
         *scalarp = true;
       return literal_string(CDOUBLE_TYPE);
-defaultcasetype:
+    defaultcasetype:
     default:
       break;
     }
 #undef NBKNOWNTYPE_MOM
 #undef CASE_KNOWNTYPE_MOM
+  auto tytree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+				    literal_string(CTYPE_PREFIX),
+				    typitm);
+  MOM_DEBUGPRINTF(gencod, "typitm=%s has tytree %s",
+		  mom_item_cstring(typitm), mom_value_cstring(tytree));
+  if (_cec_declareditems.find(typitm) != _cec_declareditems.end()) {
+    MOM_DEBUGPRINTF(gencod, "typitm=%s known so  gives tytree %s",
+		    mom_item_cstring(typitm), mom_value_cstring(tytree));
+    return tytree;
+  }
+  auto tytypitm =  mom_dyncast_item(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(type)));
+  MOM_DEBUGPRINTF(gencod, "typitm=%s has tytypitm=%s",
+		  mom_item_cstring(typitm), mom_item_cstring(tytypitm));
+  if (tytypitm == MOM_PREDEFITM(struct)) {
+    auto fieldseq =
+      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
+    if (fieldseq==nullptr)
+      throw MOM_RUNTIME_PRINTF("struct type item %s missing `struct` : fieldseq",
+			       mom_item_cstring(typitm));   
+    MOM_DEBUGPRINTF(gencod, "typitm=%s struct of fields %s",
+		    mom_item_cstring(typitm), mom_value_cstring(fieldseq));
+  }
+  else if  (tytypitm == MOM_PREDEFITM(union)) {
+    auto fieldseq =
+      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(union)));
+    if (fieldseq==nullptr)
+      throw MOM_RUNTIME_PRINTF("union type item %s missing `union` : fieldseq",
+			       mom_item_cstring(typitm)); 
+    MOM_DEBUGPRINTF(gencod, "typitm=%s union of fields %s",
+		    mom_item_cstring(typitm), mom_value_cstring(fieldseq));
+  }
+  else if  (tytypitm == MOM_PREDEFITM(enum)) {
+    auto enuseq =
+      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
+    if (enuseq==nullptr)
+      throw MOM_RUNTIME_PRINTF("enum type item %s missing `enum` : enuvalseq",
+			       mom_item_cstring(typitm));
+  }
+  else
+    throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
 #warning MomCEmitter::declare_type partially unimplemented
   // should handle records, structs, unions, ...
   MOM_FATAPRINTF( "c-emitter declare_type partially unimplemented typitm=%s",

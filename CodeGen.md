@@ -40,6 +40,13 @@ A *loop-item* has `descr` : `loop` (and of course some `body`, but no
 `locals`) and may have a `while` : *expr* (whose computed type cannot
 be `unit` or nil).
 
+A *type-item* has `descr` : `type`. It either has a `c_code` :
+*string* if it is a primitive type, or a `type` : `union` or `type` :
+`struct` if it is an aggregate type, or a `type` : `enum` if it is an
+enumeration type. A union type should has `union` : *fields-seq* and a
+struct type should has `struct` : *fields-seq*
+
+
 An *instruction-item* is one of:
 
 * an *assignment-item* with `descr`: `assign`, `to`: some

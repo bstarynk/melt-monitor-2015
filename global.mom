@@ -454,6 +454,16 @@ comment
 
 
 
+*enum
+1467813329
+^mtime
+(
+comment
+"for enums"_
+)attrs
+
+
+
 *equal
 1457364041
 ^mtime
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *flexible_array
 1467790128
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "for flexible arrays"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *hashset
 1446576569
 ^mtime
@@ -682,7 +693,6 @@ comment
 comment
 "hashed set"_
 )attrs
-
 
 
 
@@ -860,6 +870,7 @@ tuple
 
 
 
+
 *is_set
 1457361412
 ^mtime
@@ -869,7 +880,6 @@ comment
 notice
 set
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ comment
 
 
 
+
 *map
 1457082461
 ^mtime
@@ -1040,7 +1051,6 @@ comment
 comment
 "primitive to map a function to a value with a connective"_
 )attrs
-
 
 
 
@@ -1200,6 +1210,7 @@ comment
 
 
 
+
 *other_modules
 1457431680
 ^mtime
@@ -1207,7 +1218,6 @@ comment
 comment
 "list some other modules"_
 )attrs
-
 
 
 
@@ -1361,6 +1371,7 @@ comment
 
 
 
+
 *out_raw
 1457501635
 ^mtime
@@ -1368,7 +1379,6 @@ comment
 comment
 "output a raw string or number"_
 )attrs
-
 
 
 
@@ -1542,6 +1552,7 @@ comment
 
 
 
+
 *payl_hashassoc
 1456904803
 ^mtime
@@ -1557,7 +1568,6 @@ payl_hashassoc_remove
 payl_hashassoc_sorted_key_node
 )set
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ comment
 
 
 
+
 *payl_hashset_remove_content
 1456855856
 ^mtime
@@ -1734,7 +1745,6 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1898,6 +1908,7 @@ comment
 
 
 
+
 *payload
 1456825494
 ^mtime
@@ -1934,7 +1945,6 @@ payl_file
 payl_filebuffer
 )tuple
 )attrs
-
 
 
 
@@ -2088,6 +2098,7 @@ comment
 
 
 
+
 *run
 1465882737
 ^mtime
@@ -2095,7 +2106,6 @@ comment
 comment
 "for run instructions"_
 )attrs
-
 
 
 
@@ -2258,6 +2268,7 @@ comment
 
 
 
+
 *switch_item
 1457337792
 ^mtime
@@ -2265,7 +2276,6 @@ comment
 comment
 "to switch on items"_
 )attrs
-
 
 
 
@@ -2545,6 +2555,7 @@ comment
 
 
 
+
 *union
 1467813167
 ^mtime
@@ -2552,7 +2563,6 @@ comment
 comment
 "for unions"_
 )attrs
-
 
 
 
