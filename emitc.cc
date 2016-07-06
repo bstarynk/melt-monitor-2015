@@ -525,6 +525,7 @@ public:
   momvalue_t transform_switchinstr(struct mom_item_st*insitm, momvalue_t whatv, struct mom_item_st*fromitm);
   momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
+  momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree);
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
@@ -3018,13 +3019,14 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                   if (mom_unsync_item_descr(typeitm) == MOM_PREDEFITM(type)
                       && (typecexp = mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(c_code))) != nullptr)
                     {
-                      curloctree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                                             typecexp,
-                                                             literal_string(" "),
-                                                             literal_string(CLOCAL_PREFIX),
-                                                             locitm,
-                                                             literal_string(" = "),
-                                                             literal_string("/*nothing*/0"));
+                      curloctree = //
+                        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                                  typecexp,
+                                                  literal_string(" "),
+                                                  literal_string(CLOCAL_PREFIX),
+                                                  locitm,
+                                                  literal_string(" = "),
+                                                  literal_string("/*nothing*/0"));
                     }
                 }
               MOM_DEBUGPRINTF(gencod,
@@ -3364,6 +3366,47 @@ defaultrole:
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_expr expv=%s initm=%s",
                  mom_value_cstring(expv), mom_item_cstring(initm));
 } // end of MomCEmitter::transform_expr
+
+momvalue_t
+MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_type_for start typexpv=%s vartree=%s",
+                  mom_value_cstring(typexpv),
+                  mom_value_cstring(vartree));
+  unsigned tytyp = mom_itype(typexpv);
+  if (tytyp == MOMITY_ITEM)
+    {
+      auto typitm = (struct mom_item_st*)typexpv;
+      lock_item(typitm);
+      auto desctitm = mom_unsync_item_descr(typitm);
+      if (desctitm == MOM_PREDEFITM(type))
+        {
+          auto ccodexp = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(c_code));
+          if (ccodexp)
+            {
+              auto tree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                              ccodexp,
+                                              literal_string(" "),
+                                              vartree);
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for gives %s for primitive c-type", mom_value_cstring(tree));
+              return tree;
+            }
+        }
+    }
+  else if (tytyp == MOMITY_NODE)
+    {
+      auto typnod = (const struct mom_boxnode_st*)typexpv;
+      unsigned sz = mom_raw_size(typexpv);
+    }
+  else
+    throw MOM_RUNTIME_PRINTF("invalid typexpv %s to c-transform",
+                             mom_value_cstring(typexpv));
+#warning MomCEmitter::transform_type_for unimplemented
+  MOM_FATAPRINTF("c-transform_type unimplemented typexpv=%s vartree=%s",
+                 mom_value_cstring(typexpv),
+                 mom_value_cstring(vartree));
+} // end of MomCEmitter::transform_type_for
+
 
 
 momvalue_t
