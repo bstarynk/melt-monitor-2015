@@ -525,7 +525,7 @@ public:
   momvalue_t transform_switchinstr(struct mom_item_st*insitm, momvalue_t whatv, struct mom_item_st*fromitm);
   momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
-  momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree);
+  momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool*scalarp= nullptr);
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
@@ -3030,13 +3030,44 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                                                   literal_string("/*nothing*/0"));
                     }
                 }
+              else
+                {
+                  bool scalar = true;
+                  auto vartree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                                                     literal_string(CLOCAL_PREFIX),
+                                                     locitm);
+                  MOM_DEBUGPRINTF(gencod,
+                                  "c-transform_block blkitm=%s lix#%d vartree=%s",
+                                  mom_item_cstring(blkitm), lix, mom_value_cstring(vartree));
+                  auto declvtree = transform_type_for(typeval, vartree, &scalar);
+                  MOM_DEBUGPRINTF(gencod,
+                                  "c-transform_block blkitm=%s lix#%d declvtree=%s scalar %s",
+                                  mom_item_cstring(blkitm), lix,
+                                  mom_value_cstring(declvtree),
+                                  scalar?"true":"false");
+                  if (scalar)
+                    curloctree = //
+                      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                                declvtree,
+                                                literal_string(" = "),
+                                                literal_string("/*nothing*/0"));
+                  else
+                    curloctree = //
+                      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                                declvtree,
+                                                literal_string(" = "),
+                                                literal_string("/*empty*/{}"));
+                  MOM_DEBUGPRINTF(gencod,
+                                  "c-transform_block blkitm=%s lix#%d locitm=%s curloctree=%s",
+                                  mom_item_cstring(blkitm), lix, mom_item_cstring(locitm),
+                                  mom_value_cstring(curloctree));
+                }
               MOM_DEBUGPRINTF(gencod,
                               "c-transform_block lix#%d locitm=%s curloctree=%s",
                               lix, mom_item_cstring(locitm), mom_value_cstring(curloctree));
               if (curloctree == nullptr)
                 MOM_FATAPRINTF("c-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
                                mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
-#warning MomCEmitter::transform_block unhandled local
               else
                 locarr[lix] = curloctree;
             }
@@ -3369,7 +3400,7 @@ defaultrole:
 } // end of MomCEmitter::transform_expr
 
 momvalue_t
-MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
+MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* scalarp)
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_type_for start typexpv=%s vartree=%s",
                   mom_value_cstring(typexpv),
@@ -3385,6 +3416,8 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
           auto ccodexp = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(c_code));
           if (ccodexp)
             {
+              if (scalarp)
+                *scalarp = true;
               auto tree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
                                               ccodexp,
                                               literal_string(" "),
@@ -3410,6 +3443,7 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
           MOM_DEBUGPRINTF(gencod, "c-transform_type_for starvartree=%s dereftypv=%s",
                           mom_value_cstring(starvartree), mom_value_cstring(dereftypv));
           restree = transform_type_for(dereftypv, starvartree);
+          if (scalarp) *scalarp = true;
         }
       else if (connitm == MOM_PREDEFITM(array) && sz == 2)
         {
@@ -3420,9 +3454,10 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
                                                  literal_string("["),
                                                  dimv,
                                                  literal_string("]"));
-	  MOM_DEBUGPRINTF(gencod, "c-transform_type_for arrvartree=%s comptypv=%s",
-			  mom_value_cstring(arrvartree), mom_value_cstring(comptypv));
-	  restree = transform_type_for(comptypv, arrvartree);
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for arrvartree=%s comptypv=%s",
+                          mom_value_cstring(arrvartree), mom_value_cstring(comptypv));
+          restree = transform_type_for(comptypv, arrvartree);
+          if (scalarp) *scalarp = false;
         }
       else if (connitm == MOM_PREDEFITM(flexible_array) && sz == 1)
         {
@@ -3433,6 +3468,7 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
           MOM_DEBUGPRINTF(gencod, "c-transform_type_for flexvartree=%s comptypv=%s",
                           mom_value_cstring(flexvartree), mom_value_cstring(comptypv));
           restree = transform_type_for(comptypv, flexvartree);
+          if (scalarp) *scalarp = false;
         }
       else goto invalidtype;
       MOM_DEBUGPRINTF(gencod, "c-transform_type_for typexpv=%s gives restree=%s",
@@ -4801,192 +4837,192 @@ return mom_dyncast_node(bdytree);
 momvalue_t
 MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 {
-  MOM_DEBUGPRINTF(gencod, "js-transform_block initm=%s blkitm:=\n%s",
-		  mom_item_cstring(initm), mom_item_content_cstring(blkitm));
-  assert (is_locked_item(blkitm));
-  auto blkbind = get_local_binding(blkitm);
-  assert (blkbind != nullptr);
-  MOM_DEBUGPRINTF(gencod,
-		  "js-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
-		  mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
-		  mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
-  struct mom_item_st*rolitm = blkbind->vd_rolitm;
-  assert (mom_itype(rolitm) == MOMITY_ITEM);
-  auto bodytup =
-    mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
-  MOM_DEBUGPRINTF(gencod,
-		  "js-transform_block blkitm=%s bodytup=%s",
-		  mom_item_cstring(blkitm), mom_value_cstring(bodytup));
+MOM_DEBUGPRINTF(gencod, "js-transform_block initm=%s blkitm:=\n%s",
+                mom_item_cstring(initm), mom_item_content_cstring(blkitm));
+assert (is_locked_item(blkitm));
+auto blkbind = get_local_binding(blkitm);
+assert (blkbind != nullptr);
+MOM_DEBUGPRINTF(gencod,
+                "js-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
+                mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
+                mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
+struct mom_item_st*rolitm = blkbind->vd_rolitm;
+assert (mom_itype(rolitm) == MOMITY_ITEM);
+auto bodytup =
+  mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+MOM_DEBUGPRINTF(gencod,
+                "js-transform_block blkitm=%s bodytup=%s",
+                mom_item_cstring(blkitm), mom_value_cstring(bodytup));
 #define NBBLOCKROLE_MOM 31
 #define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
-  goto defaultcasebrole; foundcase_##Nam
-  switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
-    {
-    case CASE_BLOCKROLE_MOM (sequence):
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+goto defaultcasebrole; foundcase_##Nam
+switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
+  {
+  case CASE_BLOCKROLE_MOM (sequence):
+  {
+    auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
+    unsigned nblocals = mom_seqitems_length(localseq);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s nblocals#%d localseq:%s",
+                    mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
+    momvalue_t localtree= nullptr;
+    if (nblocals>0)
       {
-	auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
-	unsigned nblocals = mom_seqitems_length(localseq);
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block blkitm=%s nblocals#%d localseq:%s",
-			mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
-	momvalue_t localtree= nullptr;
-	if (nblocals>0)
-	  {
-	    momvalue_t smallocarr[8]= {};
-	    momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
-	      : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
-	    for (int lix=0; lix<(int)nblocals; lix++)
-	      {
-		momvalue_t curloctree = nullptr;
-		struct mom_item_st*locitm = localseq->seqitem[lix];
-		assert (is_locked_item(locitm));
-		MOM_DEBUGPRINTF(gencod,
-				"js-transform_block blkitm=%s lix#%d locitm:=\n%s",
-				mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
-		locarr[lix] = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-						  literal_string(JSLOCAL_PREFIX),
-						  locitm);
-	      }
-	    auto commatree =  mom_boxnode_make(MOM_PREDEFITM(comma), nblocals, locarr);
-	    localtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-					    literal_string("let "),
-					    commatree);
-	  }
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block blkitm=%s sequence of body %s localtree=%s",
-			mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
-			mom_value_cstring(localtree));
-	int bodylen = mom_raw_size(bodytup);
-	int bodycnt = 0;
-	momvalue_t smalbodyarr[8]= {};
-	momvalue_t* bodyarr = ((bodylen+1)<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
-	  ? smalbodyarr
-	  : (momvalue_t*) mom_gc_alloc((bodylen+1)*sizeof(momvalue_t));
-	if (localtree != nullptr)
-	  bodyarr[bodycnt++] = localtree;
-	for (int bix=0; bix<bodylen; bix++)
-	  {
-	    struct mom_item_st*insitm = bodytup->seqitem[bix];
-	    MOM_DEBUGPRINTF(gencod,
-			    "js-transform_block blkitm=%s bix#%d insitm:=\n%s",
-			    mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
-	    assert (is_locked_item(insitm));
-	    auto instree = transform_instruction(insitm, blkitm);
-	    MOM_DEBUGPRINTF(gencod,
-			    "js-transform_block insitm=%s instree=%s",
-			    mom_item_cstring(insitm), mom_value_cstring(instree));
-	    assert (instree != nullptr);
-	    bodyarr[bodycnt++] = instree;
-	  }
-	auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodycnt,bodyarr);
-	auto bracetree =
-	  mom_boxnode_make_va(MOM_PREDEFITM(brace),
-			      4,
-			      mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-						  literal_string("block"),
-						  literal_string(" "),
-						  blkitm),
-			      bodytree, literal_string(";"),
-			      mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-						  literal_string("endblock"),
-						  literal_string(" "),
-						  blkitm)
-			      );
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block blkitm=%s gives bracetree=%s",
-			mom_item_cstring(blkitm), mom_value_cstring(bracetree));
-	return bracetree;
+        momvalue_t smallocarr[8]= {};
+        momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
+                             : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
+        for (int lix=0; lix<(int)nblocals; lix++)
+          {
+            momvalue_t curloctree = nullptr;
+            struct mom_item_st*locitm = localseq->seqitem[lix];
+            assert (is_locked_item(locitm));
+            MOM_DEBUGPRINTF(gencod,
+                            "js-transform_block blkitm=%s lix#%d locitm:=\n%s",
+                            mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+            locarr[lix] = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                              literal_string(JSLOCAL_PREFIX),
+                                              locitm);
+          }
+        auto commatree =  mom_boxnode_make(MOM_PREDEFITM(comma), nblocals, locarr);
+        localtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                        literal_string("let "),
+                                        commatree);
+      }
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s sequence of body %s localtree=%s",
+                    mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
+                    mom_value_cstring(localtree));
+    int bodylen = mom_raw_size(bodytup);
+    int bodycnt = 0;
+    momvalue_t smalbodyarr[8]= {};
+    momvalue_t* bodyarr = ((bodylen+1)<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+                          ? smalbodyarr
+                          : (momvalue_t*) mom_gc_alloc((bodylen+1)*sizeof(momvalue_t));
+    if (localtree != nullptr)
+      bodyarr[bodycnt++] = localtree;
+    for (int bix=0; bix<bodylen; bix++)
+      {
+        struct mom_item_st*insitm = bodytup->seqitem[bix];
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block blkitm=%s bix#%d insitm:=\n%s",
+                        mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+        assert (is_locked_item(insitm));
+        auto instree = transform_instruction(insitm, blkitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block insitm=%s instree=%s",
+                        mom_item_cstring(insitm), mom_value_cstring(instree));
+        assert (instree != nullptr);
+        bodyarr[bodycnt++] = instree;
+      }
+    auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodycnt,bodyarr);
+    auto bracetree =
+      mom_boxnode_make_va(MOM_PREDEFITM(brace),
+                          4,
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                              literal_string("block"),
+                              literal_string(" "),
+                              blkitm),
+                          bodytree, literal_string(";"),
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                              literal_string("endblock"),
+                              literal_string(" "),
+                              blkitm)
+                         );
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s gives bracetree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(bracetree));
+    return bracetree;
 
-      }
-      break;
-    case CASE_BLOCKROLE_MOM (loop):
+  }
+  break;
+  case CASE_BLOCKROLE_MOM (loop):
+  {
+    auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
+    auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+    long nbcont = _ce_continuecountmap[blkitm];
+    long nbbreak = _ce_breakcountmap[blkitm];
+    momvalue_t prologtree = nullptr;
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
+                    mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
+                    nbcont, nbbreak);
+    if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
       {
-	auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
-	auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
-	long nbcont = _ce_continuecountmap[blkitm];
-	long nbbreak = _ce_breakcountmap[blkitm];
-	momvalue_t prologtree = nullptr;
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
-			mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
-			nbcont, nbbreak);
-	if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
-	  {
-	    prologtree = literal_string("for(;;)");
-	  }
-	else
-	  {
-	    prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-					     literal_string("while ("),
-					     transform_expr(whilexpv,blkitm),
-					     literal_string(")"));
-	  };
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block blkitm=%s loop prologtree=%s",
-			mom_item_cstring(blkitm), mom_value_cstring(prologtree));
-	int bodylen = mom_raw_size(bodytup);
-	momvalue_t smalbodyarr[8]= {};
-	momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
-	  ? smalbodyarr
-	  : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
-	for (int bix=0; bix<bodylen; bix++)
-	  {
-	    struct mom_item_st*insitm = bodytup->seqitem[bix];
-	    MOM_DEBUGPRINTF(gencod,
-			    "js-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
-			    mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
-	    assert (is_locked_item(insitm));
-	    auto instree = transform_instruction(insitm, blkitm);
-	    MOM_DEBUGPRINTF(gencod,
-			    "js-transform_block loop insitm=%s instree=%s",
-			    mom_item_cstring(insitm), mom_value_cstring(instree));
-	    assert (instree != nullptr);
-	    bodyarr[bix] = instree;
-	  }
-	auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
-	auto labtree = (nbcont>0 || nbbreak>0)
-	  ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-				literal_string(" "),
-				literal_string(JSLABEL_PREFIX),
-				blkitm,
-				literal_string(":"))
-	  : nullptr;
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block loop blkitm=%s prologtree=%s bodytree=%s labtree=%s",
-			mom_item_cstring(blkitm), mom_value_cstring(prologtree),
-			mom_value_cstring(bodytree), mom_value_cstring(labtree));
-	auto looptree = //
-	  mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
-			      mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
-						  literal_string("loop "),
-						  blkitm),
-			      labtree,
-			      prologtree,
-			      mom_boxnode_make_va(MOM_PREDEFITM(brace),3,
-						  bodytree,
-						  literal_string(";")),
-			      mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
-						  literal_string("endloop "),
-						  blkitm)
-			      );
-	MOM_DEBUGPRINTF(gencod,
-			"js-transform_block loop blkitm=%s result looptree=%s",
-			mom_item_cstring(blkitm), mom_value_cstring(looptree));
-	return looptree;
+        prologtree = literal_string("for(;;)");
       }
-      break;
-    default:
-    defaultcasebrole: // should never happen
-      MOM_FATAPRINTF("unexpected role %s in blkitm %s",
-		     mom_item_cstring(rolitm), mom_item_cstring(blkitm));
-      break;
-    }
+    else
+      {
+        prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                         literal_string("while ("),
+                                         transform_expr(whilexpv,blkitm),
+                                         literal_string(")"));
+      };
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s loop prologtree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(prologtree));
+    int bodylen = mom_raw_size(bodytup);
+    momvalue_t smalbodyarr[8]= {};
+    momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+                          ? smalbodyarr
+                          : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+    for (int bix=0; bix<bodylen; bix++)
+      {
+        struct mom_item_st*insitm = bodytup->seqitem[bix];
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
+                        mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+        assert (is_locked_item(insitm));
+        auto instree = transform_instruction(insitm, blkitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block loop insitm=%s instree=%s",
+                        mom_item_cstring(insitm), mom_value_cstring(instree));
+        assert (instree != nullptr);
+        bodyarr[bix] = instree;
+      }
+    auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+    auto labtree = (nbcont>0 || nbbreak>0)
+                   ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                         literal_string(" "),
+                                         literal_string(JSLABEL_PREFIX),
+                                         blkitm,
+                                         literal_string(":"))
+                   : nullptr;
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block loop blkitm=%s prologtree=%s bodytree=%s labtree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(prologtree),
+                    mom_value_cstring(bodytree), mom_value_cstring(labtree));
+    auto looptree = //
+      mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                              literal_string("loop "),
+                              blkitm),
+                          labtree,
+                          prologtree,
+                          mom_boxnode_make_va(MOM_PREDEFITM(brace),3,
+                              bodytree,
+                              literal_string(";")),
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                              literal_string("endloop "),
+                              blkitm)
+                         );
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block loop blkitm=%s result looptree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(looptree));
+    return looptree;
+  }
+  break;
+  default:
+defaultcasebrole: // should never happen
+    MOM_FATAPRINTF("unexpected role %s in blkitm %s",
+                   mom_item_cstring(rolitm), mom_item_cstring(blkitm));
+    break;
+  }
 #undef NBBLOCKROLE_MOM
 #undef CASE_BLOCKROLE_MOM
 #warning unimplemented MomJavascriptEmitter::transform_block
-  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_block blkitm=%s initm=%s",
-		 mom_item_cstring(blkitm), mom_item_cstring(initm));
+MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_block blkitm=%s initm=%s",
+               mom_item_cstring(blkitm), mom_item_cstring(initm));
 } // end of MomJavascriptEmitter::transform_block
 
 
