@@ -264,6 +264,16 @@ comment
 
 
 
+*components
+1467813167
+^mtime
+(
+comment
+"for components"_
+)attrs
+
+
+
 *cond
 1455462590
 ^mtime
@@ -344,6 +354,7 @@ comment
 
 
 
+
 *delimiter
 1452808377
 ^mtime
@@ -351,7 +362,6 @@ comment
 comment
 "for delimiter"_
 )attrs
-
 
 
 
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *fold_left
 1457090580
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "primitive for fold left (nodefun,inival,compval)"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *identity
 1456312882
 ^mtime
@@ -686,7 +697,6 @@ notice
 parenthesis
 )tuple
 )attrs
-
 
 
 
@@ -862,6 +872,7 @@ set
 
 
 
+
 *is_string
 1457360097
 ^mtime
@@ -869,7 +880,6 @@ set
 comment
 "to test if argument is string"_
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ comment
 
 
 
+
 *mapix
 1457082461
 ^mtime
@@ -1040,7 +1051,6 @@ comment
 comment
 "primitive to map a function to a value and index with a connective"_
 )attrs
-
 
 
 
@@ -1200,6 +1210,7 @@ comment
 
 
 
+
 *otherwise
 1465882737
 ^mtime
@@ -1207,7 +1218,6 @@ comment
 comment
 "otherwise case in switches"_
 )attrs
-
 
 
 
@@ -1361,6 +1371,7 @@ comment
 
 
 
+
 *out_utf8enc
 1456812179
 ^mtime
@@ -1368,7 +1379,6 @@ comment
 comment
 "output UTF8 C/JSON encoding"_
 )attrs
-
 
 
 
@@ -1550,6 +1560,7 @@ payl_hashassoc_sorted_key_node
 
 
 
+
 *payl_hashassoc_count
 1456921741
 ^mtime
@@ -1557,7 +1568,6 @@ payl_hashassoc_sorted_key_node
 comment
 "get a node with sorted keys"_
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ comment
 
 
 
+
 *payl_hashset_reserve
 1456841817
 ^mtime
@@ -1734,7 +1745,6 @@ comment
 comment
 "reserve in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1927,6 +1937,7 @@ payl_filebuffer
 
 
 
+
 *payload_module
 1457332521
 ^mtime
@@ -1934,7 +1945,6 @@ payl_filebuffer
 comment
 "the payload module"_
 )attrs
-
 
 
 
@@ -2088,6 +2098,7 @@ comment
 
 
 
+
 *same
 1457364041
 ^mtime
@@ -2095,7 +2106,6 @@ comment
 comment
 "test for identity of two values"_
 )attrs
-
 
 
 
@@ -2218,6 +2228,16 @@ is_string
 
 
 
+*struct
+1467813167
+^mtime
+(
+comment
+"for structures"_
+)attrs
+
+
+
 *sub
 1465727643
 ^mtime
@@ -2248,6 +2268,7 @@ comment
 
 
 
+
 *tasklet
 1464078294
 ^mtime
@@ -2265,7 +2286,6 @@ comment
 comment
 "for tests"_
 )attrs
-
 
 
 
@@ -2525,6 +2545,17 @@ comment
 
 
 
+*union
+1467813167
+^mtime
+(
+comment
+"for unions"_
+)attrs
+
+
+
+
 *unit
 1466182001
 ^mtime
@@ -2556,7 +2587,6 @@ type
 comment
 "the value module"_
 )attrs
-
 
 
 
