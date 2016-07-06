@@ -1108,7 +1108,6 @@ enum extraopt_en
   xtraopt_info,
   xtraopt_testarg,
   xtraopt_testrun,
-  xtraopt_outputcontent,
 };
 
 static const struct option mom_long_options[] = {
@@ -1129,7 +1128,7 @@ static const struct option mom_long_options[] = {
   {"add-predefined", required_argument, NULL, xtraopt_addpredef},
   {"unpredef", required_argument, NULL, xtraopt_unpredef},
   {"comment-predefined", required_argument, NULL, xtraopt_commentpredef},
-  {"output-content", required_argument, NULL, xtraopt_outputcontent},
+  {"output-content", required_argument, NULL, 'O'},
   {"test-arg", required_argument, NULL, xtraopt_testarg},
   {"test-run", required_argument, NULL, xtraopt_testrun},
   {"webdir", required_argument, NULL, xtraopt_webdir},
@@ -1159,6 +1158,8 @@ usage_mom (const char *argv0)
     printf (" %s", mom_debug_names[ix]);
   putchar ('\n');
   printf ("\t -L | --load statefile" " \t#Load a state \n");
+  printf ("\t -O | --output-content <item>"
+          " \t#output the content of given <item>\n");
   printf ("\t -R | --run" " \t#forcibly run\n");
   printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
   printf ("\t --chdir-after-load dirpath"
@@ -1166,8 +1167,6 @@ usage_mom (const char *argv0)
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
-  printf ("\t --output-content <item>"
-          " \t#output the content of given <item>\n");
   printf ("\t --skip-made-check"
           " \t#Skip the check that the binary is made up to date\n");
   printf ("\t --skip-dump-hooks"
@@ -1199,7 +1198,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char *commentstr = NULL;
   char *testargstr = NULL;
   char *suffix = NULL;
-  while ((opt = getopt_long (argc, argv, "hVdsRD:L:W:J:B:",
+  while ((opt = getopt_long (argc, argv, "hVdsRD:L:W:J:B:O:",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -1259,6 +1258,21 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
               MOM_FATAPRINTF ("too many %d bootfiles", count_bootf_mom);
             bootf_mom[count_bootf_mom++] = optarg;
           }
+          break;
+        case 'O':		/* --output-content item */
+          if (optarg)
+            suffix = strstr (optarg, "__");
+          if (!suffix && optarg)
+            suffix = optarg + strlen (optarg);
+          if (!optarg || !isalpha (optarg[0])
+              || !mom_valid_name_radix_len (optarg, suffix - optarg))
+            MOM_FATAPRINTF ("missing or invalid name %s for --output-content",
+                            optarg ? optarg : "??");
+          if (outcont_count_mom >= MAX_OUTPUTCONTENT_MOM)
+            MOM_FATAPRINTF
+              ("too many %d items for --output-content (last is %s)",
+               outcont_count_mom, optarg);
+          outcont_name_mom[outcont_count_mom++] = optarg;
           break;
         case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
           {
@@ -1332,21 +1346,6 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           unpredefined_mom[count_unpredef_mom] = optarg;
           count_unpredef_mom++;
           should_dump_mom = true;
-          break;
-        case xtraopt_outputcontent:
-          if (optarg)
-            suffix = strstr (optarg, "__");
-          if (!suffix && optarg)
-            suffix = optarg + strlen (optarg);
-          if (!optarg || !isalpha (optarg[0])
-              || !mom_valid_name_radix_len (optarg, suffix - optarg))
-            MOM_FATAPRINTF ("missing or invalid name %s for --output-content",
-                            optarg ? optarg : "??");
-          if (outcont_count_mom >= MAX_OUTPUTCONTENT_MOM)
-            MOM_FATAPRINTF
-              ("too many %d items for --output-content (last is %s)",
-               outcont_count_mom, optarg);
-          outcont_name_mom[outcont_count_mom++] = optarg;
           break;
         case xtraopt_testarg:
           testargstr = optarg;
