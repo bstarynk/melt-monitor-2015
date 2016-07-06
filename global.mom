@@ -474,6 +474,16 @@ comment
 
 
 
+*field
+1467811996
+^mtime
+(
+comment
+"for field items"_
+)attrs
+
+
+
 *first
 1456995334
 ^mtime
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *fold_right
 1457090580
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "primitive for fold right (nodefun,compval,inival)"_
 )attrs
-
 
 
 
@@ -679,6 +689,7 @@ parenthesis
 
 
 
+
 *included_files
 1457031973
 ^mtime
@@ -686,7 +697,6 @@ parenthesis
 comment
 "for included header files"_
 )attrs
-
 
 
 
@@ -862,6 +872,7 @@ comment
 
 
 
+
 *is_tuple
 1457361164
 ^mtime
@@ -871,7 +882,6 @@ comment
 notice
 tuple
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ comment
 
 
 
+
 *mod
 1465738210
 ^mtime
@@ -1040,7 +1051,6 @@ comment
 comment
 "for modulus of two numbers"_
 )attrs
-
 
 
 
@@ -1200,6 +1210,7 @@ comment
 
 
 
+
 *out_apply
 1456930526
 ^mtime
@@ -1207,7 +1218,6 @@ comment
 comment
 "apply a function to the output"_
 )attrs
-
 
 
 
@@ -1361,6 +1371,7 @@ comment
 
 
 
+
 *output
 1456812179
 ^mtime
@@ -1377,7 +1388,6 @@ out_outdent
 out_puts
 )set
 )attrs
-
 
 
 
@@ -1550,6 +1560,7 @@ comment
 
 
 
+
 *payl_hashassoc_get
 1456910539
 ^mtime
@@ -1557,7 +1568,6 @@ comment
 comment
 "get in an hashassoc item"_
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ comment
 
 
 
+
 *payl_json
 1457031335
 ^mtime
@@ -1734,7 +1745,6 @@ comment
 comment
 "JSON payload"_
 )attrs
-
 
 
 
@@ -1927,6 +1937,7 @@ comment
 
 
 
+
 *persistent
 1456994815
 ^mtime
@@ -1934,7 +1945,6 @@ comment
 comment
 "for persistent item-making expressions"_
 )attrs
-
 
 
 
@@ -2088,6 +2098,7 @@ comment
 
 
 
+
 *semicolon
 1466585720
 ^mtime
@@ -2095,7 +2106,6 @@ comment
 comment
 "for semicolon separated output"_
 )attrs
-
 
 
 
@@ -2258,6 +2268,7 @@ comment
 
 
 
+
 *the_agenda
 1458227320
 ^mtime
@@ -2267,7 +2278,6 @@ comment
 )attrs
 (
 )payload_queue
-
 
 
 
@@ -2549,6 +2559,7 @@ comment
 
 
 
+
 *value_types
 1457963722
 ^mtime
@@ -2556,7 +2567,6 @@ comment
 comment
 "hold the types of values"_
 )attrs
-
 
 
 
