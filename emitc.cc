@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -2887,50 +2887,85 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if (scalarp)
         *scalarp = true;
       return literal_string(CDOUBLE_TYPE);
-    defaultcasetype:
+defaultcasetype:
     default:
       break;
     }
 #undef NBKNOWNTYPE_MOM
 #undef CASE_KNOWNTYPE_MOM
   auto tytree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-				    literal_string(CTYPE_PREFIX),
-				    typitm);
+                                    literal_string(CTYPE_PREFIX),
+                                    typitm);
   MOM_DEBUGPRINTF(gencod, "typitm=%s has tytree %s",
-		  mom_item_cstring(typitm), mom_value_cstring(tytree));
-  if (_cec_declareditems.find(typitm) != _cec_declareditems.end()) {
-    MOM_DEBUGPRINTF(gencod, "typitm=%s known so  gives tytree %s",
-		    mom_item_cstring(typitm), mom_value_cstring(tytree));
-    return tytree;
-  }
+                  mom_item_cstring(typitm), mom_value_cstring(tytree));
+  if (_cec_declareditems.find(typitm) != _cec_declareditems.end())
+    {
+      MOM_DEBUGPRINTF(gencod, "typitm=%s known so gives tytree %s",
+                      mom_item_cstring(typitm), mom_value_cstring(tytree));
+      return tytree;
+    }
   auto tytypitm =  mom_dyncast_item(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "typitm=%s has tytypitm=%s",
-		  mom_item_cstring(typitm), mom_item_cstring(tytypitm));
-  if (tytypitm == MOM_PREDEFITM(struct)) {
-    auto fieldseq =
-      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
-    if (fieldseq==nullptr)
-      throw MOM_RUNTIME_PRINTF("struct type item %s missing `struct` : fieldseq",
-			       mom_item_cstring(typitm));   
-    MOM_DEBUGPRINTF(gencod, "typitm=%s struct of fields %s",
-		    mom_item_cstring(typitm), mom_value_cstring(fieldseq));
-  }
-  else if  (tytypitm == MOM_PREDEFITM(union)) {
-    auto fieldseq =
-      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(union)));
-    if (fieldseq==nullptr)
-      throw MOM_RUNTIME_PRINTF("union type item %s missing `union` : fieldseq",
-			       mom_item_cstring(typitm)); 
-    MOM_DEBUGPRINTF(gencod, "typitm=%s union of fields %s",
-		    mom_item_cstring(typitm), mom_value_cstring(fieldseq));
-  }
-  else if  (tytypitm == MOM_PREDEFITM(enum)) {
-    auto enuseq =
-      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
-    if (enuseq==nullptr)
-      throw MOM_RUNTIME_PRINTF("enum type item %s missing `enum` : enuvalseq",
-			       mom_item_cstring(typitm));
-  }
+                  mom_item_cstring(typitm), mom_item_cstring(tytypitm));
+  if (tytypitm == MOM_PREDEFITM(struct))
+    {
+      auto fieldseq =
+        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
+      auto nbfields = mom_size(fieldseq);
+      if (fieldseq==nullptr || nbfields == 0)
+        throw MOM_RUNTIME_PRINTF("struct type item %s missing or empty `struct` : fieldseq",
+                                 mom_item_cstring(typitm));
+      MOM_DEBUGPRINTF(gencod, "typitm=%s struct of fields %s",
+                      mom_item_cstring(typitm), mom_value_cstring(fieldseq));
+      auto strudecltree = //
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("typedef "),
+                                  literal_string("struct "),
+                                  literal_string(CSTRUCT_PREFIX),
+                                  typitm,
+                                  literal_string(" "),
+                                  literal_string(CTYPE_PREFIX),
+                                  typitm,
+                                  literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "typitm=%s strudecltree=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(strudecltree));
+      add_global_decl(strudecltree);
+      _cec_declareditems.insert(typitm);
+      bind_global(typitm, MOM_PREDEFITM(struct), nullptr);
+      for (int fix=0; fix<(int)nbfields; fix++)
+        {
+          auto curflditm = fieldseq->seqitem[fix];
+          MOM_DEBUGPRINTF(gencod, "typitm=%s fix#%d curflditm:=%s",
+                          mom_item_cstring(typitm), fix,
+                          mom_item_content_cstring(curflditm));
+          if (!curflditm)
+            throw MOM_RUNTIME_PRINTF("in field type %s #%d missing field", mom_item_cstring(typitm), fix);
+          lock_item(curflditm);
+          auto descurflditm = mom_unsync_item_descr(curflditm);
+#warning c-declare_type should handle field item in struct
+          MOM_FATAPRINTF("c-declare_type unimplemented typitm=%s fix#%d curflditm=%s descurflditm=%s",
+                         mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_item_cstring(descurflditm));
+        }
+    }
+  else if  (tytypitm == MOM_PREDEFITM(union))
+    {
+      auto fieldseq =
+        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(union)));
+      if (fieldseq==nullptr)
+        throw MOM_RUNTIME_PRINTF("union type item %s missing `union` : fieldseq",
+                                 mom_item_cstring(typitm));
+      MOM_DEBUGPRINTF(gencod, "typitm=%s union of fields %s",
+                      mom_item_cstring(typitm), mom_value_cstring(fieldseq));
+    }
+  else if  (tytypitm == MOM_PREDEFITM(enum))
+    {
+      auto enuseq =
+        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
+      if (enuseq==nullptr)
+        throw MOM_RUNTIME_PRINTF("enum type item %s missing `enum` : enuvalseq",
+                                 mom_item_cstring(typitm));
+    }
   else
     throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
 #warning MomCEmitter::declare_type partially unimplemented
@@ -3491,7 +3526,7 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
                               scalarp?((*scalarp)?"scalar":"aggregate"):"dontcare");
               return dtree;
             }
-	}
+        }
     }
   else if (tytyp == MOMITY_NODE)
     {
@@ -3500,1628 +3535,160 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
       auto connitm = typnod->nod_connitm;
       momvalue_t restree = nullptr;
       if (connitm == MOM_PREDEFITM(pointer) && sz == 1)
-	{
-	  auto starvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-						  literal_string(" *"),
-						  vartree);
-	  auto dereftypv = typnod->nod_sons[0];
-	  MOM_DEBUGPRINTF(gencod, "c-transform_type_for starvartree=%s dereftypv=%s",
-			  mom_value_cstring(starvartree), mom_value_cstring(dereftypv));
-	  if (dereftypv != nullptr && dereftypv != MOM_PREDEFITM(unit))
-	    restree = transform_type_for(dereftypv, starvartree);
-	  else
-	    restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-					  literal_string("void* "),
-					  vartree);
-	  if (scalarp)
-	    *scalarp = true;
-	}
+        {
+          auto starvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                                  literal_string(" *"),
+                                                  vartree);
+          auto dereftypv = typnod->nod_sons[0];
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for starvartree=%s dereftypv=%s",
+                          mom_value_cstring(starvartree), mom_value_cstring(dereftypv));
+          if (dereftypv != nullptr && dereftypv != MOM_PREDEFITM(unit))
+            restree = transform_type_for(dereftypv, starvartree);
+          else
+            restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                          literal_string("void* "),
+                                          vartree);
+          if (scalarp)
+            *scalarp = true;
+        }
       else if (connitm == MOM_PREDEFITM(array) && sz == 2)
-	{
-	  auto comptypv = typnod->nod_sons[0];
-	  auto dimv = typnod->nod_sons[1];
-	  auto arrvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
-						 vartree,
-						 literal_string("["),
-						 dimv,
-						 literal_string("]"));
-	  MOM_DEBUGPRINTF(gencod, "c-transform_type_for arrvartree=%s comptypv=%s",
-			  mom_value_cstring(arrvartree), mom_value_cstring(comptypv));
-	  restree = transform_type_for(comptypv, arrvartree);
-	  if (scalarp) *scalarp = false;
-	}
+        {
+          auto comptypv = typnod->nod_sons[0];
+          auto dimv = typnod->nod_sons[1];
+          auto arrvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                                 vartree,
+                                                 literal_string("["),
+                                                 dimv,
+                                                 literal_string("]"));
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for arrvartree=%s comptypv=%s",
+                          mom_value_cstring(arrvartree), mom_value_cstring(comptypv));
+          restree = transform_type_for(comptypv, arrvartree);
+          if (scalarp) *scalarp = false;
+        }
       else if (connitm == MOM_PREDEFITM(flexible_array) && sz == 1)
-	{
-	  auto comptypv = typnod->nod_sons[0];
-	  auto flexvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-						  vartree,
-						  literal_string("[]"));
-	  MOM_DEBUGPRINTF(gencod, "c-transform_type_for flexvartree=%s comptypv=%s",
-			  mom_value_cstring(flexvartree), mom_value_cstring(comptypv));
-	  restree = transform_type_for(comptypv, flexvartree);
-	  if (scalarp) *scalarp = false;
-	}
+        {
+          auto comptypv = typnod->nod_sons[0];
+          auto flexvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                                  vartree,
+                                                  literal_string("[]"));
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for flexvartree=%s comptypv=%s",
+                          mom_value_cstring(flexvartree), mom_value_cstring(comptypv));
+          restree = transform_type_for(comptypv, flexvartree);
+          if (scalarp) *scalarp = false;
+        }
       else goto invalidtype;
       MOM_DEBUGPRINTF(gencod, "c-transform_type_for typexpv=%s gives restree=%s",
-		      mom_value_cstring(typexpv), mom_value_cstring(restree));
+                      mom_value_cstring(typexpv), mom_value_cstring(restree));
       if (restree) return restree;
       else goto invalidtype;
     }
   else
-  invalidtype:
+invalidtype:
     throw MOM_RUNTIME_PRINTF("invalid typexpv %s to c-transform",
-			     mom_value_cstring(typexpv));
+                             mom_value_cstring(typexpv));
 #warning MomCEmitter::transform_type_for unimplemented
   MOM_FATAPRINTF("c-transform_type_for unimplemented typexpv=%s vartree=%s",
-		 mom_value_cstring(typexpv),
-		 mom_value_cstring(vartree));
+                 mom_value_cstring(typexpv),
+                 mom_value_cstring(vartree));
 } // end of MomCEmitter::transform_type_for
 
 
 
-  momvalue_t
-  MomCEmitter::transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm)
-  {
-    MOM_DEBUGPRINTF(gencod, "c-transform_constant_item start cstitm=%s insitm=%s",
-                    mom_item_cstring(cstitm), mom_item_cstring(insitm));
-    if (mom_item_space(cstitm) == MOMSPA_PREDEF)
-      {
-        auto prnod =
-          mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                              literal_string(CPREDEFITEM_MACRO),
-                              literal_string("("),
-                              cstitm,
-                              literal_string(")"));
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_constant_item cstitm=%s gives prnod=%s",
-                        mom_item_cstring(cstitm), mom_value_cstring(prnod));
-        return prnod;
-      }
+momvalue_t
+MomCEmitter::transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_constant_item start cstitm=%s insitm=%s",
+                  mom_item_cstring(cstitm), mom_item_cstring(insitm));
+  if (mom_item_space(cstitm) == MOMSPA_PREDEF)
+    {
+      auto prnod =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                            literal_string(CPREDEFITEM_MACRO),
+                            literal_string("("),
+                            cstitm,
+                            literal_string(")"));
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_constant_item cstitm=%s gives prnod=%s",
+                      mom_item_cstring(cstitm), mom_value_cstring(prnod));
+      return prnod;
+    }
 #warning  MomCEmitter::transform_constant_item not fully implemented
-    MOM_FATAPRINTF("c-transform_constant_item non-predefined cstitm=%s initm=%s",
-                   mom_item_cstring(cstitm), mom_item_cstring(insitm));
-  } // end MomCEmitter::transform_constant_item
+  MOM_FATAPRINTF("c-transform_constant_item non-predefined cstitm=%s initm=%s",
+                 mom_item_cstring(cstitm), mom_item_cstring(insitm));
+} // end MomCEmitter::transform_constant_item
 
 
 
-  momvalue_t
-  MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
-  {
-    if (!varbind)
-      varbind = get_binding(varitm);
-    if (MOM_UNLIKELY(!varbind)) // should never happen
-      MOM_FATAPRINTF("c-transform_var varitm=%s in insitm %s lacking binding",
-                     mom_item_cstring(varitm), mom_item_cstring(insitm));
-    auto rolitm = varbind->vd_rolitm;
-    MOM_DEBUGPRINTF(gencod, "c-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
-                    mom_item_content_cstring(varitm), mom_item_cstring(insitm),
-                    mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
-    momvalue_t vartree = nullptr;
+momvalue_t
+MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
+{
+  if (!varbind)
+    varbind = get_binding(varitm);
+  if (MOM_UNLIKELY(!varbind)) // should never happen
+    MOM_FATAPRINTF("c-transform_var varitm=%s in insitm %s lacking binding",
+                   mom_item_cstring(varitm), mom_item_cstring(insitm));
+  auto rolitm = varbind->vd_rolitm;
+  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
+  momvalue_t vartree = nullptr;
 #define NBROLE_MOM 31
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
  goto defaultrole; foundrolcase_##Nam
-    switch (rolitm->hva_hash % NBROLE_MOM)
-      {
-      case CASE_ROLE_MOM(formal):
-        vartree =
-          mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                              literal_string(CFORMAL_PREFIX),
-                              varitm);
-        break;
+  switch (rolitm->hva_hash % NBROLE_MOM)
+    {
+    case CASE_ROLE_MOM(formal):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(CFORMAL_PREFIX),
+                            varitm);
+      break;
 defaultrole:
-      default:
-        break;
-      }
+    default:
+      break;
+    }
 #undef NBROLE_MOM
 #undef CASE_ROLE_MOM
-    MOM_DEBUGPRINTF(gencod, "c-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
-                    mom_item_content_cstring(varitm), mom_item_cstring(insitm),
-                    mom_item_cstring(rolitm), mom_value_cstring(vartree));
-    if (vartree) return vartree;
+  MOM_DEBUGPRINTF(gencod, "c-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(vartree));
+  if (vartree) return vartree;
 #warning unimplemented MomCEmitter::transform_var
-    MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
-                   mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
-  } // end of MomCEmitter::transform_var
-
-
-
-  momvalue_t
-  MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
-  {
-    MOM_DEBUGPRINTF(gencod, "c-transform_instruction fromitm=%s insitm:=\n%s",
-                    mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
-    assert (is_locked_item(insitm));
-    auto insbind = get_local_binding(insitm);
-    assert (insbind != nullptr);
-    MOM_DEBUGPRINTF(gencod,
-                    "c-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
-                    mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
-                    mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
-    struct mom_item_st*rolitm = insbind->vd_rolitm;
-    auto whatv = insbind->vd_what;
-    assert (mom_itype(rolitm) == MOMITY_ITEM);
-#define NBINSTROLE_MOM 73
-#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
-	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
-	  goto defaultcaseirole; foundcase_##Nam
-    switch (rolitm->hva_hash % NBINSTROLE_MOM)
-      {
-      case CASE_INSTROLE_MOM(run):
-      {
-        auto runitm = mom_dyncast_item(insbind->vd_what);
-        assert (insbind != nullptr);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction insitm=%s runitm:=\n%s",
-                        mom_item_cstring(insitm), mom_item_content_cstring(runitm));
-        assert (is_locked_item(runitm));
-        return transform_runinstr(insitm, runitm, fromitm);
-      }
-      break;
-      case CASE_INSTROLE_MOM(assign):
-      {
-        auto whatnod = mom_dyncast_node(whatv);
-        assert (whatnod != nullptr && whatnod->nod_connitm == MOM_PREDEFITM(assign) && mom_raw_size(whatnod) == 3);
-        auto tovaritm = mom_dyncast_item(whatnod->nod_sons[0]);
-        auto fromexp = whatnod->nod_sons[1];
-        auto totypitm = mom_dyncast_item(whatnod->nod_sons[2]);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction assign insitm=%s tovaritm=%s fromexp=%s totypitm=%s",
-                        mom_item_cstring(insitm), mom_item_cstring(tovaritm),
-                        mom_value_cstring(fromexp), mom_item_cstring(totypitm));
-        assert (tovaritm != nullptr);
-        assert (totypitm != nullptr);
-        auto fromtree =  transform_expr(fromexp, insitm);
-        // perhaps should handle the lack of fromtree when non-scalar totypitm
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction assign insitm=%s fromtree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(fromtree));
-        auto totree = transform_var(tovaritm, insitm);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction assign insitm=%s totree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(totree));
-        auto assitree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                            totree, literal_string (" = "), fromtree);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction assign insitm=%s assitree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(assitree));
-        return assitree;
-      }
-      break;
-      case CASE_INSTROLE_MOM(break):
-      {
-        auto outblkitm = mom_dyncast_item(whatv);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction break insitm=%s outblkitm=%s",
-                        mom_item_cstring(insitm), mom_item_cstring(outblkitm));
-        assert (outblkitm != nullptr && is_locked_item(outblkitm));
-        assert (_ce_breakcountmap[outblkitm] > 0);
-        auto breaktree = MOM_IS_DEBUGGING(gencod)
-                         ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                               mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
-                                                   literal_string("break insitm="),
-                                                   insitm,
-                                                   literal_string(" outblkitm="),
-                                                   outblkitm),
-                                               literal_string("goto "),
-                                               literal_string(CBREAKLAB_PREFIX),
-                                               outblkitm)
-                         : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                               literal_string("goto "),
-                                               literal_string(CBREAKLAB_PREFIX),
-                                               outblkitm);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction break insitm=%s breaktree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(breaktree));
-        return breaktree;
-      }
-      break;
-      case CASE_INSTROLE_MOM(continue):
-      {
-        auto outblkitm = mom_dyncast_item(whatv);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction continue insitm=%s outblkitm=%s",
-                        mom_item_cstring(insitm), mom_item_cstring(outblkitm));
-        assert (outblkitm != nullptr && is_locked_item(outblkitm));
-        assert (_ce_continuecountmap[outblkitm] > 0);
-        auto continuetree = MOM_IS_DEBUGGING(gencod)
-                            ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
-                                    literal_string("continue insitm="),
-                                    insitm,
-                                    literal_string(" outblkitm="),
-                                    outblkitm),
-                                literal_string("goto "),
-                                literal_string(CCONTINUELAB_PREFIX),
-                                outblkitm)
-                            : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                literal_string("goto "),
-                                literal_string(CCONTINUELAB_PREFIX),
-                                outblkitm);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction continue insitm=%s continuetree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(continuetree));
-        return continuetree;
-      }
-      break;
-      case CASE_INSTROLE_MOM(switch):
-      {
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction switch insitm=%s whatv=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(whatv));
-        auto switchtree = transform_switchinstr(insitm, whatv, fromitm);
-        MOM_DEBUGPRINTF(gencod,
-                        "c-transform_instruction switch insitm=%s gives switchtree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(switchtree));
-        return switchtree;
-      }
-      break;
-      default:
-defaultcaseirole:
-        MOM_FATAPRINTF("c-transform_instruction unexpected role %s in insitm %s",
-                       mom_item_cstring(rolitm), mom_item_cstring(insitm));
-        break;
-      }
-#undef NBINSTROLE_MOM
-#undef CASE_INSTROLE_MOM
-#warning unimplemented MomCEmitter::transform_instruction
-    MOM_FATAPRINTF("unimplemented c-transform_instruction insitm=%s", mom_item_cstring(insitm));
-  } // end of MomCEmitter::transform_instruction
-
-  momvalue_t
-  MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm,
-                                  struct mom_item_st*fromitm)
-  {
-    MOM_DEBUGPRINTF(gencod, "c-transform_runinstr fromitm=%s runitm:=\n%s insitm:=\n%s",
-                    mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
-    assert (is_locked_item(insitm));
-    assert (is_locked_item(runitm));
-    auto desrunitm = mom_unsync_item_descr(runitm);
-    if (desrunitm == MOM_PREDEFITM(primitive))
-      {
-        auto sigitm = //
-          mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
-        MOM_DEBUGPRINTF(gencod, "c-transform_runinstr runitm=%s sigitm:=\n%s",
-                        mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
-        assert (is_locked_item(sigitm));
-        auto formaltup = //
-          mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
-        assert (formaltup != nullptr);
-        unsigned nbformals = mom_size(formaltup);
-        traced_map_item2value_t argmap;
-        auto inscomp = insitm->itm_pcomp;
-        momvalue_t treev = nullptr;
-        auto expnod = //
-          mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
-        MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
-                        mom_value_cstring(expnod));
-        if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
-          throw MOM_RUNTIME_PRINTF("c-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
-                                   mom_item_cstring(insitm), mom_item_cstring(runitm),
-                                   mom_value_cstring(expnod));
-        for (int aix=0; aix<(int)nbformals; aix++)
-          {
-            auto curfitm = formaltup->seqitem[aix];
-            auto curarg = mom_vectvaldata_nth(inscomp, aix);
-            MOM_DEBUGPRINTF(gencod, "c-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
-                            mom_item_cstring(curfitm), mom_value_cstring(curarg));
-            assert (mom_itype(curfitm)==MOMITY_ITEM);
-            auto argtree =  transform_expr(curarg, insitm);
-            MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
-                            mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
-            argmap[curfitm] = argtree;
-          }
-        int exparity = mom_raw_size(expnod);
-        momvalue_t smalltreearr[8]= {};
-        momvalue_t* treearr = (exparity+1<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
-                              ? smalltreearr
-                              : (momvalue_t*) mom_gc_alloc((exparity+2)*sizeof(momvalue_t));
-        int treecnt = 0;
-        if (MOM_IS_DEBUGGING(gencod))
-          treearr[treecnt++] = //
-            mom_boxnode_make_sentinel(MOM_PREDEFITM(comment),
-                                      literal_string("run insitm="),
-                                      insitm,
-                                      literal_string(" runitm="),
-                                      runitm);
-        for (int ix=0; ix<exparity; ix++)
-          {
-            momvalue_t curtreev = nullptr;
-            momvalue_t curson = expnod->nod_sons[ix];
-            auto cursonitm = mom_dyncast_item(curson);
-            if (cursonitm != nullptr)
-              {
-                auto it = argmap.find(cursonitm);
-                if (it != argmap.end())
-                  curtreev = it->second;
-                else
-                  curtreev = curson;
-              }
-            else
-              curtreev = curson;
-            treearr[treecnt++] = curtreev;
-          }
-        treev = mom_boxnode_make(MOM_PREDEFITM(sequence),treecnt,treearr);
-        MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(treev));
-        return treev;
-      }
-#warning unimplemented MomCEmitter::transform_runinstr
-    MOM_FATAPRINTF("unimplemented c-transform_runinstr insitm=%s", mom_item_cstring(insitm));
-  } // end of MomCEmitter::transform_runinstr
-
-
-
-  momvalue_t
-  MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
-                                     struct mom_item_st*fromitm)
-  {
-    MOM_DEBUGPRINTF(gencod, "c-transform_switchinstr insitm:=\n%s\n.. whatv=%s\n.. fromitm=%s",
-                    mom_item_content_cstring(insitm),
-                    mom_value_cstring(whatv),
-                    mom_item_cstring(fromitm));
-    auto whatnod = mom_dyncast_node(whatv);
-    assert (whatnod != nullptr);
-    assert (whatnod->nod_connitm == MOM_PREDEFITM(switch));
-    assert (mom_raw_size(whatnod) == 4);
-    auto swtypitm = mom_dyncast_item(whatnod->nod_sons[0]);
-    auto argexp = whatnod->nod_sons[1];
-    auto caseset = mom_dyncast_set(whatnod->nod_sons[2]);
-    auto otherwitm = mom_dyncast_item(whatnod->nod_sons[3]);
-    assert (swtypitm && swtypitm->va_itype == MOMITY_ITEM);
-    assert (caseset && caseset->va_itype == MOMITY_SET);
-    unsigned nbcases = mom_size(caseset);
-    assert (otherwitm == nullptr || otherwitm->va_itype == MOMITY_ITEM);
-    std::unique_ptr<CaseScannerData> casdata {make_case_scanner_data(swtypitm,insitm,-1,fromitm)};
-    assert (casdata != nullptr);
-    auto argtree = transform_expr(argexp, insitm);
-    MOM_DEBUGPRINTF(gencod, "argexp=%s argtree=%s",
-                    mom_value_cstring(argexp), mom_value_cstring(argtree));
-#define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
-  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
-  goto defaultcaseswtyp; foundcaseswtyp_##Nam
-    switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-      {
-#warning should fill cases in MomCEmitter::transform_switchinstr
-      case CASE_SWTYPE_MOM(item):
-      {
-        auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata.get());
-        assert (itemcasdata != nullptr);
-        auto switemtree =
-          mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                              literal_string(CITEMSW_PREFIX),
-                              insitm);
-        MOM_DEBUGPRINTF(gencod, "switemtree=%s", mom_value_cstring(switemtree));
-        for (unsigned cix=0; cix<nbcases; cix++)
-          {
-            auto casitm = caseset->seqitem[cix];
-            assert (is_locked_item(casitm));
-            auto runitm =
-              mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-            auto casev =
-              mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-            MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
-                            cix, mom_item_content_cstring(casitm),
-                            mom_item_cstring(runitm), mom_value_cstring(casev));
-            itemcasdata->process_itemcase(casev,casitm,runitm);
-            MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
-                            cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
-                            mom_value_cstring(casev));
-          };
-        unsigned nbdiscases = itemcasdata->nb_item_cases ();
-        unsigned primsiz = //
-          mom_prime_above(3*nbdiscases/2+nbdiscases/4+nbcases/2+15);
-        MOM_DEBUGPRINTF(gencod, "nbdiscases=%d primsiz=%d", nbdiscases, primsiz);
-        std::multimap<momhash_t,struct mom_item_st*,std::less<long>,
-          traceable_allocator<std::pair<momhash_t,struct mom_item_st*>>>
-          casemultimap;
-        itemcasdata->each_item_case([=,&casemultimap](struct mom_item_st*discritm,struct mom_item_st*casitm)
-      {
-          assert (mom_itype(discritm) == MOMITY_ITEM);
-          auto h = mom_hash(discritm);
-          MOM_DEBUGPRINTF(gencod, "discritm=%s casitm=%s h=%u=%#x h%%prim=%d",
-                          mom_item_cstring(discritm),
-                          mom_item_cstring(casitm),
-                          h,h, h%primsiz);
-          casemultimap.insert( {h%primsiz,discritm});
-        },
-        "fill casemultimap", __LINE__);
-        unsigned nbemitcases = casemultimap.size();
-        MOM_DEBUGPRINTF(gencod, "nbemitcases=%u", nbemitcases);
-        traced_vector_values_t vectree;
-        int nboutcases = 0;
-        momhash_t prevk = 0;
-        for (auto p : casemultimap)
-          {
-            momhash_t kh = p.first;
-            struct mom_item_st* kitm=p.second;
-            MOM_DEBUGPRINTF(gencod,
-                            "kh=%u kitm=%s",
-                            kh, mom_item_cstring(kitm));
-            if (nboutcases==0 || prevk != kh)
-              {
-                if (nboutcases > 0)
-                  {
-                    auto gotothertree =
-                      mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                          literal_string("goto "),
-                                          literal_string(COTHERWISELAB_PREFIX),
-                                          insitm
-                                         );
-                    MOM_DEBUGPRINTF(gencod, "gotothertree=%s",
-                                    mom_value_cstring(gotothertree));
-                    vectree.push_back(gotothertree);
-                  }
-                else
-                  {
-                    auto defgotothtree =
-                      mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
-                                          literal_string("default:"),
-                                          literal_string("goto "),
-                                          literal_string(COTHERWISELAB_PREFIX),
-                                          insitm,
-                                          literal_string(";")
-                                         );
-                    MOM_DEBUGPRINTF(gencod, "defgotothtree=%s",
-                                    mom_value_cstring(defgotothtree));
-                    vectree.push_back(defgotothtree);
-                  }
-                auto ccastree =
-                  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),3,
-                                      literal_string("case "),
-                                      mom_int_make(kh),
-                                      literal_string(":")
-                                     );
-                MOM_DEBUGPRINTF(gencod, "ccastree=%s",
-                                mom_value_cstring(ccastree));
-                vectree.push_back(ccastree);
-                nboutcases++;
-              };
-            auto curitmtree = transform_constant_item(kitm,insitm);
-            MOM_DEBUGPRINTF(gencod, "curitmtree=%s", mom_value_cstring(curitmtree));
-            auto curcasitm = itemcasdata->case_for_item(kitm);
-            auto testitmtree =
-              mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                        literal_string("if ("),
-                                        switemtree,
-                                        literal_string(" == "),
-                                        curitmtree,
-                                        literal_string(") goto "),
-                                        literal_string(CCASELAB_PREFIX),
-                                        curcasitm,
-                                        literal_string(";"));
-            MOM_DEBUGPRINTF(gencod, "testitmtree=%s", mom_value_cstring(testitmtree));
-            vectree.push_back(testitmtree);
-          }
-        MOM_DEBUGPRINTF(gencod, "vectreesize %d", (int) vectree.size());
-        auto swbodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),
-                                           vectree.size(),
-                                           vectree.data());
-        vectree.clear();
-        MOM_DEBUGPRINTF(gencod, "swbodytree=%s", mom_value_cstring(swbodytree));
-        auto defswitemtree =
-          mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                    literal_string("struct mom_item_st* "),
-                                    switemtree,
-                                    literal_string(" = "),
-                                    argtree
-                                   );
-        MOM_DEBUGPRINTF(gencod, "defswitemtree=%s", mom_value_cstring(defswitemtree));
-        auto swheadtree=
-          mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                    literal_string("switch(mom_item_hash("),
-                                    switemtree,
-                                    literal_string(") % "),
-                                    mom_int_make(primsiz),
-                                    literal_string(")"));
-        MOM_DEBUGPRINTF(gencod, "swheadtree=%s",
-                        mom_value_cstring(swheadtree));
-        vectree.push_back(defswitemtree);
-        auto swblocktree = mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                                               1,
-                                               swbodytree);
-        auto switchtree =
-          mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
-                                     swheadtree,
-                                     swblocktree);
-        MOM_DEBUGPRINTF(gencod, "switchtree=%s", mom_value_cstring(switchtree));
-        vectree.push_back(switchtree);
-        auto gotoendtree =
-          mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
-                                     literal_string("goto "),
-                                     literal_string(CENDCASELAB_PREFIX),
-                                     insitm);
-        MOM_DEBUGPRINTF(gencod, "gotoendtree=%s", mom_value_cstring(gotoendtree));
-        /* output each case of caseset and the otherwitm */
-        for (unsigned cix=0; cix<nbcases; cix++)
-          {
-            auto casitm = caseset->seqitem[cix];
-            assert (is_locked_item(casitm));
-            auto runitm =
-              mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-            assert (is_locked_item(runitm));
-            auto caselabtree =
-              mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
-                                         literal_string(CCASELAB_PREFIX),
-                                         casitm,
-                                         literal_string(":")
-                                        );
-            MOM_DEBUGPRINTF(gencod, "cix#%d caselabtree=%s runitm=%s",
-                            cix, mom_value_cstring(caselabtree),
-                            mom_item_cstring(runitm));
-            vectree.push_back(caselabtree);
-            auto curuntree = transform_instruction(runitm, insitm);
-            MOM_DEBUGPRINTF(gencod, "cix#%d runitm=%s curuntree=%s",
-                            cix, mom_item_cstring(runitm),
-                            mom_value_cstring(curuntree));
-            vectree.push_back(curuntree);
-            vectree.push_back(gotoendtree);
-          }
-        {
-          auto otherwlabtree =
-            mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
-                                       literal_string(COTHERWISELAB_PREFIX),
-                                       insitm,
-                                       literal_string(":"));
-          MOM_DEBUGPRINTF(gencod, "otherwlabtree=%s",
-                          mom_value_cstring(otherwlabtree));
-          vectree.push_back(otherwlabtree);
-        }
-        if (otherwitm)
-          {
-            MOM_DEBUGPRINTF(gencod, "otherwitm=%s",
-                            mom_item_cstring(otherwitm));
-            auto otherwtree = transform_instruction(otherwitm, insitm);
-            MOM_DEBUGPRINTF(gencod, "otherwtree=%s",
-                            mom_value_cstring(otherwtree));
-            vectree.push_back(otherwtree);
-          }
-        vectree.push_back(gotoendtree);
-        {
-          auto endlabtree =
-            mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
-                                       literal_string(CENDCASELAB_PREFIX),
-                                       insitm,
-                                       literal_string(":;"));
-          MOM_DEBUGPRINTF(gencod, "endlabtree=%s",
-                          mom_value_cstring(endlabtree));
-          vectree.push_back(endlabtree);
-        }
-        auto fullswitchtree =
-          mom_boxnode_make_sentinel (MOM_PREDEFITM(brace),
-                                     mom_boxnode_make (MOM_PREDEFITM(semicolon),
-                                         vectree.size(),
-                                         vectree.data()));
-        MOM_DEBUGPRINTF(gencod, "insitm=%s gives fullswitchtree=%s",
-                        mom_item_cstring(insitm),
-                        mom_value_cstring(fullswitchtree));
-        return fullswitchtree;
-      }
-      break;
-      case CASE_SWTYPE_MOM(int):
-      {
-        auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
-        assert (intcasdata != nullptr);
-        traced_vector_values_t casvectree;
-        for (unsigned cix=0; cix<nbcases; cix++)
-          {
-            auto casitm = caseset->seqitem[cix];
-            assert (is_locked_item(casitm));
-            auto runitm =
-              mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-            auto casev =
-              mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-            MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
-                            cix, mom_item_content_cstring(casitm),
-                            mom_item_cstring(runitm), mom_value_cstring(casev));
-            intcasdata->process_intcase(casev,casitm,runitm);
-            MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
-                            cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
-                            mom_value_cstring(casev));
-            auto castree = intcasdata->c_transform_intcase(this,casev,casitm,runitm);
-            MOM_DEBUGPRINTF(gencod, "cix#%d castree=%s", cix, mom_value_cstring(castree));
-            casvectree.push_back(castree);
-            auto gotocastree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                                   3,
-                                                   literal_string("goto "),
-                                                   literal_string(CCASELAB_PREFIX),
-                                                   casitm);
-            casvectree.push_back(gotocastree);
-            MOM_DEBUGPRINTF(gencod, "cix#%d gotocastree=%s", cix, mom_value_cstring(gotocastree));
-          };
-        auto defgototree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                               5,
-                                               literal_string("default:"),
-                                               literal_string("goto "),
-                                               literal_string(COTHERWISELAB_PREFIX),
-                                               insitm,
-                                               literal_string(";"));
-        casvectree.push_back(defgototree);
-        MOM_DEBUGPRINTF(gencod, "insitm %s defgototree %s",
-                        mom_item_cstring(insitm), mom_value_cstring(defgototree));
-        auto swbratree =mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
-                                            mom_boxnode_make(MOM_PREDEFITM(semicolon),
-                                                casvectree.size(),
-                                                casvectree.data()));
-        MOM_DEBUGPRINTF(gencod, "insitm %s swbratree %s", mom_item_cstring(insitm),
-                        mom_value_cstring(swbratree));
-        auto swintree = //
-          mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                    literal_string("switch ("),
-                                    argtree,
-                                    literal_string(")"),
-                                    swbratree);
-        MOM_DEBUGPRINTF(gencod, "insitm %s swintree %s",
-                        mom_item_cstring(insitm), mom_value_cstring(swintree));
-        casvectree.clear();
-        traced_vector_values_t swinvectree;
-        swinvectree.push_back(swintree);
-        auto gotoendtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                               3,
-                                               literal_string("goto "),
-                                               literal_string(CENDCASELAB_PREFIX),
-                                               insitm);
-        MOM_DEBUGPRINTF(gencod, "insitm %s gotoendtree %s",
-                        mom_item_cstring(insitm), mom_value_cstring(gotoendtree));
-        auto newlinetree = mom_boxnode_make(MOM_PREDEFITM(out_newline),
-                                            0, NULL);
-        for (unsigned cix=0; cix<nbcases; cix++)
-          {
-            auto casitm = caseset->seqitem[cix];
-            if (cix>0)
-              swinvectree.push_back(newlinetree);
-            assert (is_locked_item(casitm));
-            auto runitm =
-              mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-            auto labcastree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                                  3,
-                                                  literal_string(CCASELAB_PREFIX),
-                                                  casitm,
-                                                  literal_string(":"));
-            MOM_DEBUGPRINTF(gencod, "insitm %s cix#%d labcastree=%s runitm=%s",
-                            mom_item_cstring(insitm), cix, mom_value_cstring(labcastree),
-                            mom_item_cstring(runitm));
-            swinvectree.push_back(labcastree);
-            auto runtree = transform_instruction(runitm, insitm);
-            MOM_DEBUGPRINTF(gencod, "cix#%d runitm=%s runtree=%s",
-                            cix, mom_item_cstring(runitm), mom_value_cstring(runtree));
-            swinvectree.push_back(runtree);
-            swinvectree.push_back(gotoendtree);
-          };
-        auto labotherwisetree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                3,
-                                literal_string(COTHERWISELAB_PREFIX),
-                                insitm,
-                                literal_string(":"));
-        swinvectree.push_back(labotherwisetree);
-        if (otherwitm)
-          {
-            MOM_DEBUGPRINTF(gencod, "otherwitm=%s",
-                            mom_item_cstring(otherwitm));
-            auto otherwtree = transform_instruction(otherwitm, insitm);
-            MOM_DEBUGPRINTF(gencod, "otherwtree=%s",
-                            mom_value_cstring(otherwtree));
-            swinvectree.push_back(otherwtree);
-          }
-        swinvectree.push_back(gotoendtree);
-        auto labendtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-                                              3,
-                                              literal_string(CENDCASELAB_PREFIX),
-                                              insitm,
-                                              literal_string(":;"));
-        swinvectree.push_back(labendtree);
-        auto fullswintree = mom_boxnode_make_va(MOM_PREDEFITM(brace),1,
-                                                mom_boxnode_make(MOM_PREDEFITM(semicolon),
-                                                    swinvectree.size(),
-                                                    swinvectree.data()));
-        MOM_DEBUGPRINTF(gencod, "insitm=%s gives fullswintree=%s",
-                        mom_item_cstring(insitm), mom_value_cstring(fullswintree));
-        return fullswintree;
-      }
-      break;
-      case CASE_SWTYPE_MOM(string):
-      {
-        auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata.get());
-        assert (strcasdata != nullptr);
-        MOM_FATAPRINTF("c-transform_switchinstr string insitm=%s unimplemented",
-                       mom_item_cstring(insitm));
-#warning c-transform_switchinstr string switch unimplemented
-      }
-      break;
-    default:
-defaultcaseswtyp:
-      MOM_FATAPRINTF("c-transform_switchinstr impossible swtypitm %s in insitm %s",
-                     mom_item_cstring(swtypitm), mom_item_cstring(insitm));
-    }
-#warning unimplemented MomCEmitter::transform_switchinstr
-  MOM_FATAPRINTF("unimplemented c-transform_switchinstr insitm=%s whatv=%s",
-                 mom_item_cstring(insitm), mom_value_cstring(whatv));
-} // end of MomCEmitter::transform_switchinstr
-
-
-const struct mom_boxnode_st*
-MomCEmitter::transform_routine_element(struct mom_item_st*itm)
-{
-#warning unimplemented MomCEmitter::transform_routine_element
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
-} // end MomCEmitter::transform_routine_element
-
-
-MomEmitter::CaseScannerData*
-MomEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
-{
-  assert (is_locked_item(swtypitm));
-#define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
- if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
- goto defaultcaseswtyp; foundcaseswtyp_##Nam
-  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-    {
-    case CASE_SWTYPE_MOM(int):
-      return new IntCaseScannerData(this,swtypitm,insitm,blkitm,rk);
-    case CASE_SWTYPE_MOM(string):
-      return new StringCaseScannerData(this,swtypitm,insitm,blkitm,rk);
-defaultcaseswtyp:
-    default:
-      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                                "with bad switch type %s",
-                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                                mom_item_cstring(swtypitm));
-    }
-#undef NBSWTYPE_MOM
-#undef CASE_SWTYPE_MOM
-} // end MomEmitter::make_case_scanner_data
-
-
-MomEmitter::CaseScannerData*
-MomCEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
-{
-  assert (is_locked_item(swtypitm));
-  if (swtypitm == MOM_PREDEFITM(item))
-    return new ItemCaseScannerData(this,swtypitm,insitm,blkitm,rk);
-  else
-    return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
-} // end MomEmitter::make_case_scanner_data
-
-
-std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
-MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
-{
-  MOM_DEBUGPRINTF(gencod, "c-case_scanner start swtypitm=%s insitm=%s rk=%d blkitm=%s",
-                  mom_item_cstring(swtypitm),
-                  mom_item_cstring(insitm),
-                  rk,
-                  mom_item_cstring(blkitm));
-#define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
- if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
- goto defaultcaseswtyp; foundcaseswtyp_##Nam
-  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-    {
-    case CASE_SWTYPE_MOM(int):
-      return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-      {
-        assert (is_locked_item(casitm));
-        auto runitm =
-          mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-        auto casev =
-          mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-        MOM_DEBUGPRINTF(gencod, "C-case_scanner intcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-                        mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-        if (runitm==nullptr)
-          throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `run` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        lock_item(runitm);
-        if (casev==nullptr)
-          throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `case` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
-        assert (intcasdata != nullptr);
-        if (intcasdata->has_runitm(runitm))
-          throw  MOM_RUNTIME_PRINTF("intcase#%d %s with reused run %s "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(runitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        intcasdata->process_intcase(casev,casitm,runitm);
-        todo([=](MomEmitter*em)
-        {
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner before intcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-          em->scan_instr(runitm,casix,insitm);
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner after intcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-        });
-        intcasdata->add_runitm(runitm);
-      };
-/////
-    case CASE_SWTYPE_MOM(string):
-      return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-      {
-        assert (is_locked_item(casitm));
-        auto runitm =
-          mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-        auto casev =
-          mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-        MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-                        mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-        if (runitm==nullptr)
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        if (casev==nullptr)
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata);
-        assert (strcasdata != nullptr);
-        if (strcasdata->has_runitm(runitm))
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(runitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        strcasdata->process_stringcase(casev,casitm,runitm);
-        todo([=](MomEmitter*em)
-        {
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner before stringcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-          em->scan_instr(runitm,casix,insitm);
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner after stringcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-        });
-        strcasdata->add_runitm(runitm);
-      };
-/////
-    case CASE_SWTYPE_MOM(item):
-      return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-      {
-        assert (is_locked_item(casitm));
-        auto runitm =
-          mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-        auto casev =
-          mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-        MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-                        mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-                        mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-        if (runitm==nullptr)
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        lock_item(runitm);
-        if (casev==nullptr)
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata);
-        assert (itemcasdata != nullptr);
-        if (itemcasdata->has_runitm(runitm))
-          throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
-                                    "in switch instr %s #%d in block %s",
-                                    casix, mom_item_cstring(casitm),
-                                    mom_item_cstring(runitm),
-                                    mom_item_cstring(insitm),
-                                    rk, mom_item_cstring(blkitm));
-        itemcasdata->process_itemcase(casev,casitm,runitm);
-        todo([=](MomEmitter*em)
-        {
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner before stringcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-          em->scan_instr(runitm,casix,insitm);
-          MOM_DEBUGPRINTF(gencod,
-                          "C-case_scanner after stringcase#%d %s run %s "
-                          "in switch instr %s #%d in block %s",
-                          casix, mom_item_cstring(casitm),
-                          mom_item_cstring(runitm),
-                          mom_item_cstring(insitm),
-                          rk, mom_item_cstring(blkitm));
-        });
-        itemcasdata->add_runitm(runitm);
-      };
-defaultcaseswtyp:
-    default:
-      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                                "with bad switch type %s",
-                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                                mom_item_cstring(swtypitm));
-    }
-#undef NBSWTYPE_MOM
-#undef CASE_SWTYPE_MOM
-} // end of MomCEmitter::case_scanner
-
-
-void
-MomEmitter::IntCaseScannerData::process_intcase(const void*expv,
-    struct mom_item_st*casitm,
-    struct mom_item_st*runitm)
-{
-  const long constexpr maxrangewidth = 65536;
-  const long constexpr maxsize = 16*maxrangewidth;
-  unsigned expty = mom_itype(expv);
-  assert (cas_emitter->is_locked_item(casitm));
-  assert (cas_emitter->is_locked_item(runitm));
-  if (cas_num2casemap.size() > maxsize)
-    throw  MOM_RUNTIME_PRINTF("too many %ld int cases in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              (long)cas_num2casemap.size(), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
-
-  if (expty == MOMITY_INT)
-    {
-      auto iv = mom_int_val_def(expv,0);
-      if (cas_num2casemap.find(iv) != cas_num2casemap.end())
-        throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
-                                  " run item %s insitm %s #%d blkitm %s",
-                                  (long)iv, mom_item_cstring(casitm),
-                                  mom_item_cstring(runitm),
-                                  mom_item_cstring(cas_insitm),
-                                  cas_rank, mom_item_cstring(cas_blkitm));
-      cas_num2casemap[iv] = casitm;
-      return;
-    }
-  else if (expty != MOMITY_NODE)
-    throw  MOM_RUNTIME_PRINTF("non-node int case %s in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              mom_value_cstring(expv), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
-  auto nodexp = (const struct mom_boxnode_st*)expv;
-  auto connitm = nodexp->nod_connitm;
-  unsigned arity = mom_raw_size(nodexp);
-  assert (mom_itype(connitm) == MOMITY_ITEM);
-  if (connitm==MOM_PREDEFITM(or))
-    {
-      for (unsigned ix=0; ix<arity; ix++)
-        process_intcase(nodexp->nod_sons[ix],casitm,runitm);
-    }
-  else if (connitm==MOM_PREDEFITM(range))
-    {
-      const void*leftv=nullptr;
-      const void* rightv=nullptr;
-      long leftnum=0, rightnum=0;
-      if (arity != 2
-          || (leftv = nodexp->nod_sons[0]) == nullptr
-          || mom_itype(leftv) != MOMITY_INT
-          || (rightv = nodexp->nod_sons[1]) == nullptr
-          || mom_itype(rightv) != MOMITY_INT
-          || ((leftnum = mom_int_val_def(leftv,0))
-              > (rightnum = mom_int_val_def(rightv,0))))
-        throw  MOM_RUNTIME_PRINTF("bad range int case %s in case item %s"
-                                  " run item %s insitm %s #%d blkitm %s",
-                                  mom_value_cstring(expv), mom_item_cstring(casitm),
-                                  mom_item_cstring(runitm),
-                                  mom_item_cstring(cas_insitm),
-                                  cas_rank, mom_item_cstring(cas_blkitm));
-      if (leftnum + maxrangewidth < rightnum)
-        throw  MOM_RUNTIME_PRINTF("too wide range int case %s in case item %s"
-                                  " run item %s insitm %s #%d blkitm %s",
-                                  mom_value_cstring(expv), mom_item_cstring(casitm),
-                                  mom_item_cstring(runitm),
-                                  mom_item_cstring(cas_insitm),
-                                  cas_rank, mom_item_cstring(cas_blkitm));
-      for (long ix=leftnum; ix<=rightnum; ix++)
-        {
-          if (cas_num2casemap.find(ix) != cas_num2casemap.end())
-            throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
-                                      " run item %s insitm %s #%d blkitm %s",
-                                      (long)ix, mom_item_cstring(casitm),
-                                      mom_item_cstring(runitm),
-                                      mom_item_cstring(cas_insitm),
-                                      cas_rank, mom_item_cstring(cas_blkitm));
-          cas_num2casemap[ix] = casitm;
-        }
-    }
-  else
-    throw MOM_RUNTIME_PRINTF("bad node int case %s in case item %s"
-                             " run item %s insitm %s #%d blkitm %s",
-                             mom_value_cstring(expv), mom_item_cstring(casitm),
-                             mom_item_cstring(runitm),
-                             mom_item_cstring(cas_insitm),
-                             cas_rank, mom_item_cstring(cas_blkitm));
-} // end MomEmitter::IntCaseScannerData::process_intcase
-
-
-momvalue_t
-MomEmitter::IntCaseScannerData::c_transform_intcase(MomCEmitter*cem, const void*expv,
-    struct mom_item_st*casitm,
-    struct mom_item_st*runitm)
-{
-  assert (cem != nullptr);
-  momvalue_t restree = nullptr;
-  MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s casitm:=%s\n.. runtim=%s",
-                  mom_value_cstring(expv),
-                  mom_item_content_cstring(casitm),
-                  mom_item_cstring(runitm));
-  auto exptyp = mom_itype(expv);
-  switch (exptyp)
-    {
-    case MOMITY_INT:
-    {
-      restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-                                    cem->literal_string("case "),
-                                    expv,
-                                    cem->literal_string(":"));
-      MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s gives %s",
-                      mom_value_cstring(expv),
-                      mom_value_cstring(restree));
-      return restree;
-    }
-    break;
-    case MOMITY_NODE:
-    {
-      auto expnod = (const struct mom_boxnode_st*)expv;
-      auto connitm = expnod->nod_connitm;
-      auto expsiz = mom_raw_size(expv);
-      if (connitm == MOM_PREDEFITM(or))
-        {
-          traced_vector_values_t vectree;
-          for (unsigned ix=0; ix<expsiz; ix++)
-            {
-              if (ix>0)
-                vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline), 0));
-              auto curson = expnod->nod_sons[ix];
-              MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d curson=%s", ix,
-                              mom_value_cstring(curson));
-              auto cursubtree = c_transform_intcase(cem,curson,casitm,runitm);
-              MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d cursubtree=%s", ix,
-                              mom_value_cstring(cursubtree));
-              vectree.push_back(cursubtree);
-            }
-          restree = mom_boxnode_make(MOM_PREDEFITM(sequence),
-                                     vectree.size(),
-                                     vectree.data());
-          MOM_DEBUGPRINTF(gencod,
-                          "c_transform_intcase disjonction gives %s",
-                          mom_value_cstring(restree));
-          return restree;
-        }
-      else if (connitm == MOM_PREDEFITM(range))
-        {
-          assert (expsiz==2);
-          auto left = expnod->nod_sons[0];
-          auto right = expnod->nod_sons[1];
-          assert (mom_itype(left)==MOMITY_INT);
-          assert (mom_itype(right)==MOMITY_INT);
-          assert (mom_int_val_def (left, -2) <= mom_int_val_def (right, -1));
-          restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
-                                        cem->literal_string("case "),
-                                        left,
-                                        cem->literal_string(" ... "),
-                                        right,
-                                        cem->literal_string(":"));
-          MOM_DEBUGPRINTF(gencod, "c_transform_intcase range gives %s",
-                          mom_value_cstring(restree));
-          return restree;
-        }
-      else
-        MOM_FATAPRINTF("c_transform_intcase bad node expv=%s casitm=%s runtim=%s",
-                       mom_value_cstring(expv),
-                       mom_item_cstring(casitm),
-                       mom_item_cstring(runitm));
-
-    }
-    break;
-    default: /// should never happen
-      break;
-    }
-  MOM_FATAPRINTF("c_transform_intcase bad expv=%s casitm=%s runtim=%s",
-                 mom_value_cstring(expv),
-                 mom_item_cstring(casitm),
-                 mom_item_cstring(runitm));
-} // end MomEmitter::IntCaseScannerData::c_transform_intcase
-
-
-
-void
-MomEmitter::StringCaseScannerData::process_stringcase(const void*expv,
-    struct mom_item_st*casitm,
-    struct mom_item_st*runitm)
-{
-  const long constexpr maxsize = 65536;
-  unsigned expty = mom_itype(expv);
-  assert (cas_emitter->is_locked_item(casitm));
-  assert (cas_emitter->is_locked_item(runitm));
-  if (cas_string2casemap.size() > maxsize)
-    throw  MOM_RUNTIME_PRINTF("too many %ld string cases in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              (long)cas_string2casemap.size(), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
-
-  if (expty == MOMITY_BOXSTRING)
-    {
-      std::string sv {mom_boxstring_cstr(expv)};
-      if (cas_string2casemap.find(sv) != cas_string2casemap.end())
-        throw  MOM_RUNTIME_PRINTF("duplicate string '%s' case in case item %s"
-                                  " run item %s insitm %s #%d blkitm %s",
-                                  sv.c_str(), mom_item_cstring(casitm),
-                                  mom_item_cstring(runitm),
-                                  mom_item_cstring(cas_insitm),
-                                  cas_rank, mom_item_cstring(cas_blkitm));
-      cas_string2casemap[sv] = casitm;
-      return;
-    }
-  else if (expty != MOMITY_NODE)
-    throw  MOM_RUNTIME_PRINTF("non-node string case %s in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              mom_value_cstring(expv), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
-  auto nodexp = (const struct mom_boxnode_st*)expv;
-  auto connitm = nodexp->nod_connitm;
-  unsigned arity = mom_raw_size(nodexp);
-  assert (mom_itype(connitm) == MOMITY_ITEM);
-  if (connitm==MOM_PREDEFITM(or))
-    {
-      for (unsigned ix=0; ix<arity; ix++)
-        process_stringcase(nodexp->nod_sons[ix],casitm,runitm);
-    }
-  else
-    throw MOM_RUNTIME_PRINTF("bad node string case %s in case item %s"
-                             " run item %s insitm %s #%d blkitm %s",
-                             mom_value_cstring(expv), mom_item_cstring(casitm),
-                             mom_item_cstring(runitm),
-                             mom_item_cstring(cas_insitm),
-                             cas_rank, mom_item_cstring(cas_blkitm));
-} // end MomEmitter::StringCaseScannerData::process_stringcase
-
-
-
-void
-MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
-    struct mom_item_st*casitm,
-    struct mom_item_st*runitm)
-{
-  const long constexpr maxsize = 65536;
-  unsigned expty = mom_itype(expv);
-  MOM_DEBUGPRINTF(gencod, "itemcase start expv=%s casitm:=%s\n.. runitm=%s",
-                  mom_value_cstring(expv),
-                  mom_item_content_cstring(casitm),
-                  mom_item_content_cstring(runitm));
-  assert (cas_emitter->is_locked_item(casitm));
-  assert (cas_emitter->is_locked_item(runitm));
-  if (cas_item2casemap.size() > maxsize)
-    throw  MOM_RUNTIME_PRINTF("too many %ld item cases in case item %s"
-                              " run item %s insitm %s #%d blkitm %s",
-                              (long)cas_item2casemap.size(), mom_item_cstring(casitm),
-                              mom_item_cstring(runitm),
-                              mom_item_cstring(cas_insitm),
-                              cas_rank, mom_item_cstring(cas_blkitm));
-
-  if (expty == MOMITY_ITEM)
-    {
-      auto itm = (struct mom_item_st*)expv;
-      MOM_DEBUGPRINTF(gencod, "itemcase casitm %s item %s",
-                      mom_item_cstring(casitm), mom_item_cstring(itm));
-      if (cas_item2casemap.find(itm) != cas_item2casemap.end())
-        throw  MOM_RUNTIME_PRINTF("duplicate item %s case in case item %s"
-                                  " run item %s insitm %s #%d blkitm %s",
-                                  mom_item_cstring(itm), mom_item_cstring(casitm),
-                                  mom_item_cstring(runitm),
-                                  mom_item_cstring(cas_insitm),
-                                  cas_rank, mom_item_cstring(cas_blkitm));
-      cas_item2casemap[itm] = casitm;
-      return;
-    }
-  else if (expty == MOMITY_SET)
-    {
-      unsigned card = mom_size(expv);
-      auto set = (const struct mom_boxset_st*)expv;
-      MOM_DEBUGPRINTF(gencod, "itemcase casitm %s set %s",
-                      mom_item_cstring(casitm), mom_value_cstring(set));
-      for (unsigned ix=0; ix<card; ix++)
-        {
-          auto itm = set->seqitem[ix];
-          assert (mom_itype(itm) == MOMITY_ITEM);
-          if (cas_item2casemap.find(itm) != cas_item2casemap.end())
-            throw  MOM_RUNTIME_PRINTF("duplicate item %s case in case item %s"
-                                      " run item %s insitm %s #%d blkitm %s",
-                                      mom_item_cstring(itm), mom_item_cstring(casitm),
-                                      mom_item_cstring(runitm),
-                                      mom_item_cstring(cas_insitm),
-                                      cas_rank, mom_item_cstring(cas_blkitm));
-          MOM_DEBUGPRINTF(gencod, "itemcase ix#%d itm=%s casitm=%s", ix, mom_item_cstring(itm),
-                          mom_item_cstring(casitm));
-          cas_item2casemap[itm] = casitm;
-        }
-      return;
-    }
-  else if (expty != MOMITY_NODE)
-    throw MOM_RUNTIME_PRINTF("non-node item case %s in case item %s"
-                             " run item %s insitm %s #%d blkitm %s",
-                             mom_value_cstring(expv), mom_item_cstring(casitm),
-                             mom_item_cstring(runitm),
-                             mom_item_cstring(cas_insitm),
-                             cas_rank, mom_item_cstring(cas_blkitm));
-  auto nodexp = (const struct mom_boxnode_st*)expv;
-  MOM_DEBUGPRINTF(gencod, "itemcase casitm %s nodexp %s",
-                  mom_item_cstring(casitm), mom_value_cstring(nodexp));
-  assert (mom_itype(nodexp) == MOMITY_NODE);
-  auto connitm = nodexp->nod_connitm;
-  unsigned arity = mom_raw_size(nodexp);
-  assert (mom_itype(connitm) == MOMITY_ITEM);
-  if (connitm==MOM_PREDEFITM(or))
-    {
-      for (unsigned ix=0; ix<arity; ix++)
-        process_itemcase(nodexp->nod_sons[ix],casitm,runitm);
-    }
-  else
-    throw MOM_RUNTIME_PRINTF("bad node item case %s in case item %s"
-                             " run item %s insitm %s #%d blkitm %s",
-                             mom_value_cstring(expv), mom_item_cstring(casitm),
-                             mom_item_cstring(runitm),
-                             mom_item_cstring(cas_insitm),
-                             cas_rank, mom_item_cstring(cas_blkitm));
-} // end MomEmitter::ItemCaseScannerData::process_itemcase
-
-const struct mom_boxnode_st*
-MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
-{
-#warning unimplemented MomJavascriptEmitter::transform_data_element
-  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
-} // end MomJavascriptEmitter::transform_data_element
-
-
-
-const struct mom_boxnode_st*
-MomJavascriptEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
-{
-  assert (is_locked_item(sigitm));
-  assert (is_locked_item(fitm));
-  MOM_DEBUGPRINTF(gencod, "JS-emitter declare_funheader_for start sigitm=%s fitm=%s",
-                  mom_item_cstring(sigitm), mom_item_cstring(fitm));
-  auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
-  assert (formtup != nullptr);
-  auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
-  MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtup=%s restyv=%s",
-                  mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
-  int nbform = mom_raw_size(formtup);
-  momvalue_t smallformdeclarr[8] = {nullptr};
-  momvalue_t *formdeclarr =
-    (nbform<(int)(sizeof(smallformdeclarr)/sizeof(smallformdeclarr[0])))
-    ? smallformdeclarr
-    : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
-  for (int ix=0; ix<nbform; ix++)
-    {
-      momvalue_t curformdeclv = nullptr;
-      struct mom_item_st*curformitm = formtup->seqitem[ix];
-      MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s  ix#%d curformitm=%s",
-                      mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
-      assert (is_locked_item(curformitm));
-      formdeclarr[ix] =
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                            literal_string(JSFORMAL_PREFIX),
-                            curformitm);
-    }
-  auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
-                                        mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
-  if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
-  formdeclarr = nullptr;
-  MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtreev=%s",
-                  mom_item_cstring(sigitm), mom_value_cstring(formtreev));
-  auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                   literal_string("function"),
-                   literal_string(" "),
-                   literal_string(JSFUNC_PREFIX),
-                   fitm,
-                   formtreev);
-  MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s fitm=%s result funheadv=%s",
-                  mom_item_cstring(sigitm),
-                  mom_item_cstring(fitm),
-                  mom_value_cstring(funheadv));
-  return funheadv;
-} // end of MomJavaScriptEmitter::declare_funheader_for
-
-
-const struct mom_boxnode_st*
-MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
-{
-  assert (is_locked_item(fuitm));
-  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func start fuitm:=\n%s",
-                  mom_item_content_cstring(fuitm));
-  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
-  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
-  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s bdyitm %s",
-                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-  assert (is_locked_item(sigitm));
-  assert (is_locked_item(bdyitm));
-  auto funhnod = declare_funheader_for(sigitm,fuitm);
-  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s funhnod %s",
-                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(funhnod));
-  auto bdynod = transform_body_element(bdyitm,fuitm);
-  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
-                  mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
-                  mom_value_cstring(bdynod), mom_value_cstring(funhnod));
-  auto funtree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                 funhnod,
-                 bdynod,
-                 literal_string("\n"));
-  MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s gives funtree %s",
-                  mom_item_cstring(fuitm), mom_value_cstring(funtree));
-  return funtree;
-} // end MomJavascriptEmitter::transform_func_element
-
-
-
-const struct mom_boxnode_st*
-MomJavascriptEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm)
-{
-  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s routitm=%s",
-                  mom_item_cstring(bdyitm), mom_item_cstring(routitm));
-  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm:=\n %s",
-                  mom_item_content_cstring(bdyitm));
-  auto bdytree = transform_block(bdyitm, routitm);
-  MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s bdytree=%s",
-                  mom_item_cstring(bdyitm), mom_value_cstring(bdytree));
-  return mom_dyncast_node(bdytree);
-} // end of MomJavascriptEmitter::transform_body_element
-
-momvalue_t
-MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
-{
-  MOM_DEBUGPRINTF(gencod, "js-transform_block initm=%s blkitm:=\n%s",
-                  mom_item_cstring(initm), mom_item_content_cstring(blkitm));
-  assert (is_locked_item(blkitm));
-  auto blkbind = get_local_binding(blkitm);
-  assert (blkbind != nullptr);
-  MOM_DEBUGPRINTF(gencod,
-                  "js-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
-                  mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
-                  mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
-  struct mom_item_st*rolitm = blkbind->vd_rolitm;
-  assert (mom_itype(rolitm) == MOMITY_ITEM);
-  auto bodytup =
-    mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
-  MOM_DEBUGPRINTF(gencod,
-                  "js-transform_block blkitm=%s bodytup=%s",
-                  mom_item_cstring(blkitm), mom_value_cstring(bodytup));
-#define NBBLOCKROLE_MOM 31
-#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
-goto defaultcasebrole; foundcase_##Nam
-  switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
-    {
-    case CASE_BLOCKROLE_MOM (sequence):
-    {
-      auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
-      unsigned nblocals = mom_seqitems_length(localseq);
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s nblocals#%d localseq:%s",
-                      mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
-      momvalue_t localtree= nullptr;
-      if (nblocals>0)
-        {
-          momvalue_t smallocarr[8]= {};
-          momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
-                               : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
-          for (int lix=0; lix<(int)nblocals; lix++)
-            {
-              momvalue_t curloctree = nullptr;
-              struct mom_item_st*locitm = localseq->seqitem[lix];
-              assert (is_locked_item(locitm));
-              MOM_DEBUGPRINTF(gencod,
-                              "js-transform_block blkitm=%s lix#%d locitm:=\n%s",
-                              mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
-              locarr[lix] = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-                                                literal_string(JSLOCAL_PREFIX),
-                                                locitm);
-            }
-          auto commatree =  mom_boxnode_make(MOM_PREDEFITM(comma), nblocals, locarr);
-          localtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-                                          literal_string("let "),
-                                          commatree);
-        }
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s sequence of body %s localtree=%s",
-                      mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
-                      mom_value_cstring(localtree));
-      int bodylen = mom_raw_size(bodytup);
-      int bodycnt = 0;
-      momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = ((bodylen+1)<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
-                            ? smalbodyarr
-                            : (momvalue_t*) mom_gc_alloc((bodylen+1)*sizeof(momvalue_t));
-      if (localtree != nullptr)
-        bodyarr[bodycnt++] = localtree;
-      for (int bix=0; bix<bodylen; bix++)
-        {
-          struct mom_item_st*insitm = bodytup->seqitem[bix];
-          MOM_DEBUGPRINTF(gencod,
-                          "js-transform_block blkitm=%s bix#%d insitm:=\n%s",
-                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
-          assert (is_locked_item(insitm));
-          auto instree = transform_instruction(insitm, blkitm);
-          MOM_DEBUGPRINTF(gencod,
-                          "js-transform_block insitm=%s instree=%s",
-                          mom_item_cstring(insitm), mom_value_cstring(instree));
-          assert (instree != nullptr);
-          bodyarr[bodycnt++] = instree;
-        }
-      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodycnt,bodyarr);
-      auto bracetree =
-        mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                            4,
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-                                literal_string("block"),
-                                literal_string(" "),
-                                blkitm),
-                            bodytree, literal_string(";"),
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-                                literal_string("endblock"),
-                                literal_string(" "),
-                                blkitm)
-                           );
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s gives bracetree=%s",
-                      mom_item_cstring(blkitm), mom_value_cstring(bracetree));
-      return bracetree;
-
-    }
-    break;
-    case CASE_BLOCKROLE_MOM (loop):
-    {
-      auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
-      auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
-      long nbcont = _ce_continuecountmap[blkitm];
-      long nbbreak = _ce_breakcountmap[blkitm];
-      momvalue_t prologtree = nullptr;
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
-                      mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
-                      nbcont, nbbreak);
-      if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
-        {
-          prologtree = literal_string("for(;;)");
-        }
-      else
-        {
-          prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-                                           literal_string("while ("),
-                                           transform_expr(whilexpv,blkitm),
-                                           literal_string(")"));
-        };
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block blkitm=%s loop prologtree=%s",
-                      mom_item_cstring(blkitm), mom_value_cstring(prologtree));
-      int bodylen = mom_raw_size(bodytup);
-      momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
-                            ? smalbodyarr
-                            : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
-      for (int bix=0; bix<bodylen; bix++)
-        {
-          struct mom_item_st*insitm = bodytup->seqitem[bix];
-          MOM_DEBUGPRINTF(gencod,
-                          "js-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
-                          mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
-          assert (is_locked_item(insitm));
-          auto instree = transform_instruction(insitm, blkitm);
-          MOM_DEBUGPRINTF(gencod,
-                          "js-transform_block loop insitm=%s instree=%s",
-                          mom_item_cstring(insitm), mom_value_cstring(instree));
-          assert (instree != nullptr);
-          bodyarr[bix] = instree;
-        }
-      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
-      auto labtree = (nbcont>0 || nbbreak>0)
-                     ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                           literal_string(" "),
-                                           literal_string(JSLABEL_PREFIX),
-                                           blkitm,
-                                           literal_string(":"))
-                     : nullptr;
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block loop blkitm=%s prologtree=%s bodytree=%s labtree=%s",
-                      mom_item_cstring(blkitm), mom_value_cstring(prologtree),
-                      mom_value_cstring(bodytree), mom_value_cstring(labtree));
-      auto looptree = //
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
-                                literal_string("loop "),
-                                blkitm),
-                            labtree,
-                            prologtree,
-                            mom_boxnode_make_va(MOM_PREDEFITM(brace),3,
-                                bodytree,
-                                literal_string(";")),
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
-                                literal_string("endloop "),
-                                blkitm)
-                           );
-      MOM_DEBUGPRINTF(gencod,
-                      "js-transform_block loop blkitm=%s result looptree=%s",
-                      mom_item_cstring(blkitm), mom_value_cstring(looptree));
-      return looptree;
-    }
-    break;
-    default:
-defaultcasebrole: // should never happen
-      MOM_FATAPRINTF("unexpected role %s in blkitm %s",
-                     mom_item_cstring(rolitm), mom_item_cstring(blkitm));
-      break;
-    }
-#undef NBBLOCKROLE_MOM
-#undef CASE_BLOCKROLE_MOM
-#warning unimplemented MomJavascriptEmitter::transform_block
-  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_block blkitm=%s initm=%s",
-                 mom_item_cstring(blkitm), mom_item_cstring(initm));
-} // end of MomJavascriptEmitter::transform_block
+  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
+} // end of MomCEmitter::transform_var
 
 
 
 momvalue_t
-MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
+MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
 {
-  MOM_DEBUGPRINTF(gencod, "js-transform_instruction fromitm=%s insitm:=\n%s",
+  MOM_DEBUGPRINTF(gencod, "c-transform_instruction fromitm=%s insitm:=\n%s",
                   mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
   assert (is_locked_item(insitm));
   auto insbind = get_local_binding(insitm);
   assert (insbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
-                  "js-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
+                  "c-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
                   mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
                   mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
   struct mom_item_st*rolitm = insbind->vd_rolitm;
-  assert (mom_itype(rolitm) == MOMITY_ITEM);
   auto whatv = insbind->vd_what;
+  assert (mom_itype(rolitm) == MOMITY_ITEM);
 #define NBINSTROLE_MOM 73
 #define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
- if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
- goto defaultcaseirole; foundcase_##Nam
+	  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+	  goto defaultcaseirole; foundcase_##Nam
   switch (rolitm->hva_hash % NBINSTROLE_MOM)
     {
     case CASE_INSTROLE_MOM(run):
     {
       auto runitm = mom_dyncast_item(insbind->vd_what);
+      assert (insbind != nullptr);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction insitm=%s runitm:=\n%s",
+                      mom_item_cstring(insitm), mom_item_content_cstring(runitm));
       assert (is_locked_item(runitm));
       return transform_runinstr(insitm, runitm, fromitm);
     }
@@ -5140,19 +3707,18 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
       assert (tovaritm != nullptr);
       assert (totypitm != nullptr);
       auto fromtree =  transform_expr(fromexp, insitm);
-      if (fromtree == nullptr)
-        fromtree = literal_string("null");
+      // perhaps should handle the lack of fromtree when non-scalar totypitm
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction assign insitm=%s fromtree=%s",
+                      "c-transform_instruction assign insitm=%s fromtree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(fromtree));
       auto totree = transform_var(tovaritm, insitm);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction assign insitm=%s totree=%s",
+                      "c-transform_instruction assign insitm=%s totree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(totree));
       auto assitree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
                                           totree, literal_string (" = "), fromtree);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction assign insitm=%s assitree=%s",
+                      "c-transform_instruction assign insitm=%s assitree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(assitree));
       return assitree;
     }
@@ -5161,18 +3727,26 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
     {
       auto outblkitm = mom_dyncast_item(whatv);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction break insitm=%s outblkitm=%s",
+                      "c-transform_instruction break insitm=%s outblkitm=%s",
                       mom_item_cstring(insitm), mom_item_cstring(outblkitm));
       assert (outblkitm != nullptr && is_locked_item(outblkitm));
       assert (_ce_breakcountmap[outblkitm] > 0);
-      auto breaktree =
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                            literal_string("break "),
-                            literal_string(JSLABEL_PREFIX),
-                            outblkitm,
-                            literal_string(";"));
+      auto breaktree = MOM_IS_DEBUGGING(gencod)
+                       ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                             mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
+                                                 literal_string("break insitm="),
+                                                 insitm,
+                                                 literal_string(" outblkitm="),
+                                                 outblkitm),
+                                             literal_string("goto "),
+                                             literal_string(CBREAKLAB_PREFIX),
+                                             outblkitm)
+                       : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                             literal_string("goto "),
+                                             literal_string(CBREAKLAB_PREFIX),
+                                             outblkitm);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction break insitm=%s result breaktree=%s",
+                      "c-transform_instruction break insitm=%s breaktree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(breaktree));
       return breaktree;
     }
@@ -5181,81 +3755,110 @@ MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mo
     {
       auto outblkitm = mom_dyncast_item(whatv);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction continue insitm=%s outblkitm=%s",
+                      "c-transform_instruction continue insitm=%s outblkitm=%s",
                       mom_item_cstring(insitm), mom_item_cstring(outblkitm));
       assert (outblkitm != nullptr && is_locked_item(outblkitm));
       assert (_ce_continuecountmap[outblkitm] > 0);
-      auto contree =
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                            literal_string("continue "),
-                            literal_string(JSLABEL_PREFIX),
-                            outblkitm,
-                            literal_string(";"));
+      auto continuetree = MOM_IS_DEBUGGING(gencod)
+                          ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                              mom_boxnode_make_va(MOM_PREDEFITM(comment),4,
+                                  literal_string("continue insitm="),
+                                  insitm,
+                                  literal_string(" outblkitm="),
+                                  outblkitm),
+                              literal_string("goto "),
+                              literal_string(CCONTINUELAB_PREFIX),
+                              outblkitm)
+                          : mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                              literal_string("goto "),
+                              literal_string(CCONTINUELAB_PREFIX),
+                              outblkitm);
       MOM_DEBUGPRINTF(gencod,
-                      "js-transform_instruction continue insitm=%s result contree=%s",
-                      mom_item_cstring(insitm), mom_value_cstring(contree));
-      return contree;
+                      "c-transform_instruction continue insitm=%s continuetree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(continuetree));
+      return continuetree;
     }
     break;
-
+    case CASE_INSTROLE_MOM(switch):
+    {
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction switch insitm=%s whatv=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(whatv));
+      auto switchtree = transform_switchinstr(insitm, whatv, fromitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction switch insitm=%s gives switchtree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(switchtree));
+      return switchtree;
+    }
+    break;
     default:
 defaultcaseirole:
-      MOM_FATAPRINTF("unexpected role %s in insitm %s",
+      MOM_FATAPRINTF("c-transform_instruction unexpected role %s in insitm %s",
                      mom_item_cstring(rolitm), mom_item_cstring(insitm));
       break;
     }
 #undef NBINSTROLE_MOM
 #undef CASE_INSTROLE_MOM
-#warning unimplemented MomJavascriptEmitter::transform_instruction
-  MOM_FATAPRINTF("unimplemented js-transform_instruction insitm=%s", mom_item_cstring(insitm));
-} // end of MomJavascriptEmitter::transform_instruction
-
-
+#warning unimplemented MomCEmitter::transform_instruction
+  MOM_FATAPRINTF("unimplemented c-transform_instruction insitm=%s", mom_item_cstring(insitm));
+} // end of MomCEmitter::transform_instruction
 
 momvalue_t
-MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*fromitm)
+MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm,
+                                struct mom_item_st*fromitm)
 {
-  MOM_DEBUGPRINTF(gencod, "js-transform_runinstr fromitm=%s runitm:=\n%s\n ..insitm:=\n%s",
+  MOM_DEBUGPRINTF(gencod, "c-transform_runinstr fromitm=%s runitm:=\n%s insitm:=\n%s",
                   mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
   assert (is_locked_item(insitm));
   assert (is_locked_item(runitm));
   auto desrunitm = mom_unsync_item_descr(runitm);
   if (desrunitm == MOM_PREDEFITM(primitive))
     {
-      auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
-      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr runitm=%s sigitm:=\n%s",
+      auto sigitm = //
+        mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr runitm=%s sigitm:=\n%s",
                       mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
       assert (is_locked_item(sigitm));
-      auto formaltup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+      auto formaltup = //
+        mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
       assert (formaltup != nullptr);
       unsigned nbformals = mom_size(formaltup);
       traced_map_item2value_t argmap;
       auto inscomp = insitm->itm_pcomp;
       momvalue_t treev = nullptr;
-      auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(js_expansion)));
-      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
+      auto expnod = //
+        mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(c_expansion)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
                       mom_value_cstring(expnod));
       if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
-        throw MOM_RUNTIME_PRINTF("js-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
+        throw MOM_RUNTIME_PRINTF("c-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
                                  mom_item_cstring(insitm), mom_item_cstring(runitm),
                                  mom_value_cstring(expnod));
       for (int aix=0; aix<(int)nbformals; aix++)
         {
           auto curfitm = formaltup->seqitem[aix];
           auto curarg = mom_vectvaldata_nth(inscomp, aix);
-          MOM_DEBUGPRINTF(gencod, "js-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
                           mom_item_cstring(curfitm), mom_value_cstring(curarg));
           assert (mom_itype(curfitm)==MOMITY_ITEM);
           auto argtree =  transform_expr(curarg, insitm);
-          MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
                           mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
           argmap[curfitm] = argtree;
         }
       int exparity = mom_raw_size(expnod);
       momvalue_t smalltreearr[8]= {};
-      momvalue_t* treearr = (exparity<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
+      momvalue_t* treearr = (exparity+1<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
                             ? smalltreearr
-                            : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+                            : (momvalue_t*) mom_gc_alloc((exparity+2)*sizeof(momvalue_t));
+      int treecnt = 0;
+      if (MOM_IS_DEBUGGING(gencod))
+        treearr[treecnt++] = //
+          mom_boxnode_make_sentinel(MOM_PREDEFITM(comment),
+                                    literal_string("run insitm="),
+                                    insitm,
+                                    literal_string(" runitm="),
+                                    runitm);
       for (int ix=0; ix<exparity; ix++)
         {
           momvalue_t curtreev = nullptr;
@@ -5271,173 +3874,1605 @@ MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_i
             }
           else
             curtreev = curson;
-          treearr[ix] = curtreev;
+          treearr[treecnt++] = curtreev;
         }
-      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
-      MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s treev=%s",
+      treev = mom_boxnode_make(MOM_PREDEFITM(sequence),treecnt,treearr);
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
                       mom_item_cstring(insitm), mom_value_cstring(treev));
       return treev;
-      }
-#warning unimplemented MomJavascriptEmitter::transform_runinstr
-    MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s", mom_item_cstring(insitm));
-  } // end of MomJavascriptEmitter::transform_runinstr
+    }
+#warning unimplemented MomCEmitter::transform_runinstr
+  MOM_FATAPRINTF("unimplemented c-transform_runinstr insitm=%s", mom_item_cstring(insitm));
+} // end of MomCEmitter::transform_runinstr
 
 
-  momvalue_t
-  MomJavascriptEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
-  {
-    MOM_DEBUGPRINTF(gencod, "js-transform_expr expv=%s initm=%s",
-                    mom_value_cstring(expv), mom_item_cstring(initm));
-    unsigned expty = mom_itype(expv);
-    switch (expty)
+
+momvalue_t
+MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
+                                   struct mom_item_st*fromitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-transform_switchinstr insitm:=\n%s\n.. whatv=%s\n.. fromitm=%s",
+                  mom_item_content_cstring(insitm),
+                  mom_value_cstring(whatv),
+                  mom_item_cstring(fromitm));
+  auto whatnod = mom_dyncast_node(whatv);
+  assert (whatnod != nullptr);
+  assert (whatnod->nod_connitm == MOM_PREDEFITM(switch));
+  assert (mom_raw_size(whatnod) == 4);
+  auto swtypitm = mom_dyncast_item(whatnod->nod_sons[0]);
+  auto argexp = whatnod->nod_sons[1];
+  auto caseset = mom_dyncast_set(whatnod->nod_sons[2]);
+  auto otherwitm = mom_dyncast_item(whatnod->nod_sons[3]);
+  assert (swtypitm && swtypitm->va_itype == MOMITY_ITEM);
+  assert (caseset && caseset->va_itype == MOMITY_SET);
+  unsigned nbcases = mom_size(caseset);
+  assert (otherwitm == nullptr || otherwitm->va_itype == MOMITY_ITEM);
+  std::unique_ptr<CaseScannerData> casdata {make_case_scanner_data(swtypitm,insitm,-1,fromitm)};
+  assert (casdata != nullptr);
+  auto argtree = transform_expr(argexp, insitm);
+  MOM_DEBUGPRINTF(gencod, "argexp=%s argtree=%s",
+                  mom_value_cstring(argexp), mom_value_cstring(argtree));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+  goto defaultcaseswtyp; foundcaseswtyp_##Nam
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+#warning should fill cases in MomCEmitter::transform_switchinstr
+    case CASE_SWTYPE_MOM(item):
+    {
+      auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata.get());
+      assert (itemcasdata != nullptr);
+      auto switemtree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(CITEMSW_PREFIX),
+                            insitm);
+      MOM_DEBUGPRINTF(gencod, "switemtree=%s", mom_value_cstring(switemtree));
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          auto casev =
+            mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+          MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
+                          cix, mom_item_content_cstring(casitm),
+                          mom_item_cstring(runitm), mom_value_cstring(casev));
+          itemcasdata->process_itemcase(casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
+                          cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
+                          mom_value_cstring(casev));
+        };
+      unsigned nbdiscases = itemcasdata->nb_item_cases ();
+      unsigned primsiz = //
+        mom_prime_above(3*nbdiscases/2+nbdiscases/4+nbcases/2+15);
+      MOM_DEBUGPRINTF(gencod, "nbdiscases=%d primsiz=%d", nbdiscases, primsiz);
+      std::multimap<momhash_t,struct mom_item_st*,std::less<long>,
+        traceable_allocator<std::pair<momhash_t,struct mom_item_st*>>>
+        casemultimap;
+      itemcasdata->each_item_case([=,&casemultimap](struct mom_item_st*discritm,struct mom_item_st*casitm)
+    {
+        assert (mom_itype(discritm) == MOMITY_ITEM);
+        auto h = mom_hash(discritm);
+        MOM_DEBUGPRINTF(gencod, "discritm=%s casitm=%s h=%u=%#x h%%prim=%d",
+                        mom_item_cstring(discritm),
+                        mom_item_cstring(casitm),
+                        h,h, h%primsiz);
+        casemultimap.insert( {h%primsiz,discritm});
+      },
+      "fill casemultimap", __LINE__);
+      unsigned nbemitcases = casemultimap.size();
+      MOM_DEBUGPRINTF(gencod, "nbemitcases=%u", nbemitcases);
+      traced_vector_values_t vectree;
+      int nboutcases = 0;
+      momhash_t prevk = 0;
+      for (auto p : casemultimap)
+        {
+          momhash_t kh = p.first;
+          struct mom_item_st* kitm=p.second;
+          MOM_DEBUGPRINTF(gencod,
+                          "kh=%u kitm=%s",
+                          kh, mom_item_cstring(kitm));
+          if (nboutcases==0 || prevk != kh)
+            {
+              if (nboutcases > 0)
+                {
+                  auto gotothertree =
+                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                        literal_string("goto "),
+                                        literal_string(COTHERWISELAB_PREFIX),
+                                        insitm
+                                       );
+                  MOM_DEBUGPRINTF(gencod, "gotothertree=%s",
+                                  mom_value_cstring(gotothertree));
+                  vectree.push_back(gotothertree);
+                }
+              else
+                {
+                  auto defgotothtree =
+                    mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+                                        literal_string("default:"),
+                                        literal_string("goto "),
+                                        literal_string(COTHERWISELAB_PREFIX),
+                                        insitm,
+                                        literal_string(";")
+                                       );
+                  MOM_DEBUGPRINTF(gencod, "defgotothtree=%s",
+                                  mom_value_cstring(defgotothtree));
+                  vectree.push_back(defgotothtree);
+                }
+              auto ccastree =
+                mom_boxnode_make_va(MOM_PREDEFITM(out_newline),3,
+                                    literal_string("case "),
+                                    mom_int_make(kh),
+                                    literal_string(":")
+                                   );
+              MOM_DEBUGPRINTF(gencod, "ccastree=%s",
+                              mom_value_cstring(ccastree));
+              vectree.push_back(ccastree);
+              nboutcases++;
+            };
+          auto curitmtree = transform_constant_item(kitm,insitm);
+          MOM_DEBUGPRINTF(gencod, "curitmtree=%s", mom_value_cstring(curitmtree));
+          auto curcasitm = itemcasdata->case_for_item(kitm);
+          auto testitmtree =
+            mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                      literal_string("if ("),
+                                      switemtree,
+                                      literal_string(" == "),
+                                      curitmtree,
+                                      literal_string(") goto "),
+                                      literal_string(CCASELAB_PREFIX),
+                                      curcasitm,
+                                      literal_string(";"));
+          MOM_DEBUGPRINTF(gencod, "testitmtree=%s", mom_value_cstring(testitmtree));
+          vectree.push_back(testitmtree);
+        }
+      MOM_DEBUGPRINTF(gencod, "vectreesize %d", (int) vectree.size());
+      auto swbodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),
+                                         vectree.size(),
+                                         vectree.data());
+      vectree.clear();
+      MOM_DEBUGPRINTF(gencod, "swbodytree=%s", mom_value_cstring(swbodytree));
+      auto defswitemtree =
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("struct mom_item_st* "),
+                                  switemtree,
+                                  literal_string(" = "),
+                                  argtree
+                                 );
+      MOM_DEBUGPRINTF(gencod, "defswitemtree=%s", mom_value_cstring(defswitemtree));
+      auto swheadtree=
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("switch(mom_item_hash("),
+                                  switemtree,
+                                  literal_string(") % "),
+                                  mom_int_make(primsiz),
+                                  literal_string(")"));
+      MOM_DEBUGPRINTF(gencod, "swheadtree=%s",
+                      mom_value_cstring(swheadtree));
+      vectree.push_back(defswitemtree);
+      auto swblocktree = mom_boxnode_make_va(MOM_PREDEFITM(brace),
+                                             1,
+                                             swbodytree);
+      auto switchtree =
+        mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
+                                   swheadtree,
+                                   swblocktree);
+      MOM_DEBUGPRINTF(gencod, "switchtree=%s", mom_value_cstring(switchtree));
+      vectree.push_back(switchtree);
+      auto gotoendtree =
+        mom_boxnode_make_sentinel (MOM_PREDEFITM(sequence),
+                                   literal_string("goto "),
+                                   literal_string(CENDCASELAB_PREFIX),
+                                   insitm);
+      MOM_DEBUGPRINTF(gencod, "gotoendtree=%s", mom_value_cstring(gotoendtree));
+      /* output each case of caseset and the otherwitm */
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          assert (is_locked_item(runitm));
+          auto caselabtree =
+            mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
+                                       literal_string(CCASELAB_PREFIX),
+                                       casitm,
+                                       literal_string(":")
+                                      );
+          MOM_DEBUGPRINTF(gencod, "cix#%d caselabtree=%s runitm=%s",
+                          cix, mom_value_cstring(caselabtree),
+                          mom_item_cstring(runitm));
+          vectree.push_back(caselabtree);
+          auto curuntree = transform_instruction(runitm, insitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d runitm=%s curuntree=%s",
+                          cix, mom_item_cstring(runitm),
+                          mom_value_cstring(curuntree));
+          vectree.push_back(curuntree);
+          vectree.push_back(gotoendtree);
+        }
       {
-      case MOMITY_INT:
-      case MOMITY_BOXDOUBLE:
-        return expv;
-      case MOMITY_BOXSTRING:
-        return mom_boxnode_make_va(MOM_PREDEFITM(string),1,expv);
-      case MOMITY_ITEM:
+        auto otherwlabtree =
+          mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
+                                     literal_string(COTHERWISELAB_PREFIX),
+                                     insitm,
+                                     literal_string(":"));
+        MOM_DEBUGPRINTF(gencod, "otherwlabtree=%s",
+                        mom_value_cstring(otherwlabtree));
+        vectree.push_back(otherwlabtree);
+      }
+      if (otherwitm)
+        {
+          MOM_DEBUGPRINTF(gencod, "otherwitm=%s",
+                          mom_item_cstring(otherwitm));
+          auto otherwtree = transform_instruction(otherwitm, insitm);
+          MOM_DEBUGPRINTF(gencod, "otherwtree=%s",
+                          mom_value_cstring(otherwtree));
+          vectree.push_back(otherwtree);
+        }
+      vectree.push_back(gotoendtree);
       {
-        auto expitm = (struct mom_item_st*)expv;
-        auto expbind = get_binding(expitm);
-        auto rolitm = expbind?expbind->vd_rolitm:nullptr;
-        MOM_DEBUGPRINTF(gencod, "js-transform_expr expitm=%s bind rol %s what %s",
-                        mom_item_cstring(expitm), mom_item_cstring(rolitm),
-                        expbind?mom_value_cstring(expbind->vd_what):"°");
-#define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
- if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
- goto defaultrole; foundrolcase_##Nam
-        switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
-          {
-          case CASE_ROLE_MOM(formal):
-            return transform_var(expitm,initm,expbind);
-          case CASE_ROLE_MOM(locals):
-            return transform_var(expitm,initm,expbind);
-          case CASE_ROLE_MOM(item):
-          {
-            MOM_DEBUGPRINTF(gencod,
-                            "js-transform_expr expitm=%s constant",
-                            mom_item_cstring(expitm));
-#warning js-transform_expr does not handle yet items
-            MOM_FATAPRINTF("js-transform_expr constant expitm=%s initm=%s unhandled",
-                           mom_item_cstring(expitm), mom_item_cstring(initm));
-          }
-          break;
-defaultrole:
-          default:
-            MOM_FATAPRINTF("js-transform_expr bad expitm=%s rolitm=%s initm=%s",
-                           mom_item_cstring(expitm), mom_item_cstring(rolitm), mom_item_cstring(initm));
-          }
-#undef NBROLE_MOM
-#undef CASE_ROLE_MOM
+        auto endlabtree =
+          mom_boxnode_make_sentinel (MOM_PREDEFITM(out_newline),
+                                     literal_string(CENDCASELAB_PREFIX),
+                                     insitm,
+                                     literal_string(":;"));
+        MOM_DEBUGPRINTF(gencod, "endlabtree=%s",
+                        mom_value_cstring(endlabtree));
+        vectree.push_back(endlabtree);
       }
-      break;
-      case MOMITY_NODE:
-        return transform_node_expr((struct mom_boxnode_st*)expv, initm);
-      default:
-        MOM_FATAPRINTF("js-transform_expr bad expv=%s initm=%s",
-                       mom_value_cstring(expv), mom_item_cstring(initm));
+      auto fullswitchtree =
+        mom_boxnode_make_sentinel (MOM_PREDEFITM(brace),
+                                   mom_boxnode_make (MOM_PREDEFITM(semicolon),
+                                       vectree.size(),
+                                       vectree.data()));
+      MOM_DEBUGPRINTF(gencod, "insitm=%s gives fullswitchtree=%s",
+                      mom_item_cstring(insitm),
+                      mom_value_cstring(fullswitchtree));
+      return fullswitchtree;
+    }
+    break;
+    case CASE_SWTYPE_MOM(int):
+    {
+      auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata.get());
+      assert (intcasdata != nullptr);
+      traced_vector_values_t casvectree;
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          auto casev =
+            mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+          MOM_DEBUGPRINTF(gencod, "cix#%d casitm:=%s\n .. runitm=%s casev=%s",
+                          cix, mom_item_content_cstring(casitm),
+                          mom_item_cstring(runitm), mom_value_cstring(casev));
+          intcasdata->process_intcase(casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d processed casitm=%s runitm=%s casev=%s",
+                          cix, mom_item_cstring(casitm), mom_item_cstring(runitm),
+                          mom_value_cstring(casev));
+          auto castree = intcasdata->c_transform_intcase(this,casev,casitm,runitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d castree=%s", cix, mom_value_cstring(castree));
+          casvectree.push_back(castree);
+          auto gotocastree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                                 3,
+                                                 literal_string("goto "),
+                                                 literal_string(CCASELAB_PREFIX),
+                                                 casitm);
+          casvectree.push_back(gotocastree);
+          MOM_DEBUGPRINTF(gencod, "cix#%d gotocastree=%s", cix, mom_value_cstring(gotocastree));
+        };
+      auto defgototree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                             5,
+                                             literal_string("default:"),
+                                             literal_string("goto "),
+                                             literal_string(COTHERWISELAB_PREFIX),
+                                             insitm,
+                                             literal_string(";"));
+      casvectree.push_back(defgototree);
+      MOM_DEBUGPRINTF(gencod, "insitm %s defgototree %s",
+                      mom_item_cstring(insitm), mom_value_cstring(defgototree));
+      auto swbratree =mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
+                                          mom_boxnode_make(MOM_PREDEFITM(semicolon),
+                                              casvectree.size(),
+                                              casvectree.data()));
+      MOM_DEBUGPRINTF(gencod, "insitm %s swbratree %s", mom_item_cstring(insitm),
+                      mom_value_cstring(swbratree));
+      auto swintree = //
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("switch ("),
+                                  argtree,
+                                  literal_string(")"),
+                                  swbratree);
+      MOM_DEBUGPRINTF(gencod, "insitm %s swintree %s",
+                      mom_item_cstring(insitm), mom_value_cstring(swintree));
+      casvectree.clear();
+      traced_vector_values_t swinvectree;
+      swinvectree.push_back(swintree);
+      auto gotoendtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                             3,
+                                             literal_string("goto "),
+                                             literal_string(CENDCASELAB_PREFIX),
+                                             insitm);
+      MOM_DEBUGPRINTF(gencod, "insitm %s gotoendtree %s",
+                      mom_item_cstring(insitm), mom_value_cstring(gotoendtree));
+      auto newlinetree = mom_boxnode_make(MOM_PREDEFITM(out_newline),
+                                          0, NULL);
+      for (unsigned cix=0; cix<nbcases; cix++)
+        {
+          auto casitm = caseset->seqitem[cix];
+          if (cix>0)
+            swinvectree.push_back(newlinetree);
+          assert (is_locked_item(casitm));
+          auto runitm =
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+          auto labcastree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                                3,
+                                                literal_string(CCASELAB_PREFIX),
+                                                casitm,
+                                                literal_string(":"));
+          MOM_DEBUGPRINTF(gencod, "insitm %s cix#%d labcastree=%s runitm=%s",
+                          mom_item_cstring(insitm), cix, mom_value_cstring(labcastree),
+                          mom_item_cstring(runitm));
+          swinvectree.push_back(labcastree);
+          auto runtree = transform_instruction(runitm, insitm);
+          MOM_DEBUGPRINTF(gencod, "cix#%d runitm=%s runtree=%s",
+                          cix, mom_item_cstring(runitm), mom_value_cstring(runtree));
+          swinvectree.push_back(runtree);
+          swinvectree.push_back(gotoendtree);
+        };
+      auto labotherwisetree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                              3,
+                              literal_string(COTHERWISELAB_PREFIX),
+                              insitm,
+                              literal_string(":"));
+      swinvectree.push_back(labotherwisetree);
+      if (otherwitm)
+        {
+          MOM_DEBUGPRINTF(gencod, "otherwitm=%s",
+                          mom_item_cstring(otherwitm));
+          auto otherwtree = transform_instruction(otherwitm, insitm);
+          MOM_DEBUGPRINTF(gencod, "otherwtree=%s",
+                          mom_value_cstring(otherwtree));
+          swinvectree.push_back(otherwtree);
+        }
+      swinvectree.push_back(gotoendtree);
+      auto labendtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                            3,
+                                            literal_string(CENDCASELAB_PREFIX),
+                                            insitm,
+                                            literal_string(":;"));
+      swinvectree.push_back(labendtree);
+      auto fullswintree = mom_boxnode_make_va(MOM_PREDEFITM(brace),1,
+                                              mom_boxnode_make(MOM_PREDEFITM(semicolon),
+                                                  swinvectree.size(),
+                                                  swinvectree.data()));
+      MOM_DEBUGPRINTF(gencod, "insitm=%s gives fullswintree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(fullswintree));
+      return fullswintree;
+    }
+    break;
+    case CASE_SWTYPE_MOM(string):
+    {
+      auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata.get());
+      assert (strcasdata != nullptr);
+      MOM_FATAPRINTF("c-transform_switchinstr string insitm=%s unimplemented",
+                     mom_item_cstring(insitm));
+#warning c-transform_switchinstr string switch unimplemented
+    }
+    break;
+  default:
+defaultcaseswtyp:
+    MOM_FATAPRINTF("c-transform_switchinstr impossible swtypitm %s in insitm %s",
+                   mom_item_cstring(swtypitm), mom_item_cstring(insitm));
+  }
+#warning unimplemented MomCEmitter::transform_switchinstr
+MOM_FATAPRINTF("unimplemented c-transform_switchinstr insitm=%s whatv=%s",
+               mom_item_cstring(insitm), mom_value_cstring(whatv));
+} // end of MomCEmitter::transform_switchinstr
 
-      }
-#warning unimplemented MomJavascriptEmitter::transform_expr
-    MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_expr expv=%s initm=%s",
-                   mom_value_cstring(expv), mom_item_cstring(initm));
-  } // end of MomJavascriptEmitter::transform_expr
+
+const struct mom_boxnode_st*
+MomCEmitter::transform_routine_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomCEmitter::transform_routine_element
+MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
+} // end MomCEmitter::transform_routine_element
 
 
-  momvalue_t
-  MomJavascriptEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
-  {
-    if (!varbind)
-      varbind = get_binding(varitm);
-    if (MOM_UNLIKELY(!varbind)) // should never happen
-      MOM_FATAPRINTF("js-transform_var varitm=%s in insitm %s lacking binding",
-                     mom_item_cstring(varitm), mom_item_cstring(insitm));
-    auto rolitm = varbind->vd_rolitm;
-    MOM_DEBUGPRINTF(gencod, "js-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
-                    mom_item_content_cstring(varitm), mom_item_cstring(insitm),
-                    mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
-    momvalue_t vartree = nullptr;
-#define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
-  goto defaultrole; foundrolcase_##Nam
-    switch (rolitm->hva_hash % NBROLE_MOM)
-      {
-      case CASE_ROLE_MOM(formal):
-        vartree =
-          mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                              literal_string(JSFORMAL_PREFIX),
-                              varitm);
-        break;
-defaultrole:
-      default:
-        break;
-      }
-#undef NBROLE_MOM
-#undef CASE_ROLE_MOM
-    MOM_DEBUGPRINTF(gencod, "js-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
-                    mom_item_content_cstring(varitm), mom_item_cstring(insitm),
-                    mom_item_cstring(rolitm), mom_value_cstring(vartree));
-    if (vartree) return vartree;
-#warning unimplemented MomJavascriptEmitter::transform_var
-    MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
-                   mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
-  } // end of MomJavascriptEmitter::transform_var
-
-  momvalue_t
-  MomJavascriptEmitter:: transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm)
-  {
-    MOM_DEBUGPRINTF(gencod, "js-transform_node_expr expnod=%s insitm=%s",
-                    mom_value_cstring(expnod), mom_item_cstring(insitm));
-#warning unimplemented MomJavascriptEmitter::transform_node_expr
-    MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_node_expr expnod=%s insitm=%s",
-                   mom_value_cstring(expnod), mom_item_cstring(insitm));
-  } // end of MomJavascriptEmitter::transform_node_expr
-
-
-  MomEmitter::CaseScannerData*
-  MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
-  {
-    if (swtypitm == MOM_PREDEFITM(item))
-      throw   MOM_RUNTIME_PRINTF("JavaScript switch instr %s rk#%d in block %s "
-                                 "with bad switch type item",
-                                 mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-    return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
-  } // end MomJavascriptEmitter::make_case_scanner_data
-
-
-
-  std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
-  MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
-  {
-    assert (is_locked_item(swtypitm));
+MomEmitter::CaseScannerData*
+MomEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+assert (is_locked_item(swtypitm));
 #define NBSWTYPE_MOM 43
 #define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
  goto defaultcaseswtyp; foundcaseswtyp_##Nam
-    switch (swtypitm->hva_hash % NBSWTYPE_MOM)
-      {
-      case CASE_SWTYPE_MOM(int):
-      case CASE_SWTYPE_MOM(string):
-      case CASE_SWTYPE_MOM(item):
+switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+  {
+  case CASE_SWTYPE_MOM(int):
+    return new IntCaseScannerData(this,swtypitm,insitm,blkitm,rk);
+  case CASE_SWTYPE_MOM(string):
+    return new StringCaseScannerData(this,swtypitm,insitm,blkitm,rk);
 defaultcaseswtyp:
-#warning incomplete MomJavascriptEmitter::case_scanner
-      default:
-        throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
-                                  "with bad switch type %s",
-                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-                                  mom_item_cstring(swtypitm));
-      }
+  default:
+    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                              "with bad switch type %s",
+                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                              mom_item_cstring(swtypitm));
+  }
 #undef NBSWTYPE_MOM
 #undef CASE_SWTYPE_MOM
-  } // end of MomJavascriptEmitter::case_scanner
+} // end MomEmitter::make_case_scanner_data
 
-  MomJavascriptEmitter::~MomJavascriptEmitter()
+
+MomEmitter::CaseScannerData*
+MomCEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+assert (is_locked_item(swtypitm));
+if (swtypitm == MOM_PREDEFITM(item))
+  return new ItemCaseScannerData(this,swtypitm,insitm,blkitm,rk);
+else
+  return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
+} // end MomEmitter::make_case_scanner_data
+
+
+std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
+MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+MOM_DEBUGPRINTF(gencod, "c-case_scanner start swtypitm=%s insitm=%s rk=%d blkitm=%s",
+                mom_item_cstring(swtypitm),
+                mom_item_cstring(insitm),
+                rk,
+                mom_item_cstring(blkitm));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+switch (swtypitm->hva_hash % NBSWTYPE_MOM)
   {
-    MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
-  } // end MomJavascriptEmitter::~MomJavascriptEmitter
+  case CASE_SWTYPE_MOM(int):
+    return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
+    {
+      assert (is_locked_item(casitm));
+      auto runitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+      auto casev =
+        mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+      MOM_DEBUGPRINTF(gencod, "C-case_scanner intcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+                      mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+                      mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+      if (runitm==nullptr)
+        throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `run` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      lock_item(runitm);
+      if (casev==nullptr)
+        throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `case` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
+      assert (intcasdata != nullptr);
+      if (intcasdata->has_runitm(runitm))
+        throw  MOM_RUNTIME_PRINTF("intcase#%d %s with reused run %s "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      intcasdata->process_intcase(casev,casitm,runitm);
+      todo([=](MomEmitter*em)
+      {
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner before intcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+        em->scan_instr(runitm,casix,insitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner after intcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+      });
+      intcasdata->add_runitm(runitm);
+    };
+/////
+  case CASE_SWTYPE_MOM(string):
+    return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
+    {
+      assert (is_locked_item(casitm));
+      auto runitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+      auto casev =
+        mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+      MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+                      mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+                      mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+      if (runitm==nullptr)
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      if (casev==nullptr)
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata);
+      assert (strcasdata != nullptr);
+      if (strcasdata->has_runitm(runitm))
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      strcasdata->process_stringcase(casev,casitm,runitm);
+      todo([=](MomEmitter*em)
+      {
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner before stringcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+        em->scan_instr(runitm,casix,insitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner after stringcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+      });
+      strcasdata->add_runitm(runitm);
+    };
+/////
+  case CASE_SWTYPE_MOM(item):
+    return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
+    {
+      assert (is_locked_item(casitm));
+      auto runitm =
+        mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+      auto casev =
+        mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+      MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+                      mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+                      mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+      if (runitm==nullptr)
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      lock_item(runitm);
+      if (casev==nullptr)
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata);
+      assert (itemcasdata != nullptr);
+      if (itemcasdata->has_runitm(runitm))
+        throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+                                  "in switch instr %s #%d in block %s",
+                                  casix, mom_item_cstring(casitm),
+                                  mom_item_cstring(runitm),
+                                  mom_item_cstring(insitm),
+                                  rk, mom_item_cstring(blkitm));
+      itemcasdata->process_itemcase(casev,casitm,runitm);
+      todo([=](MomEmitter*em)
+      {
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner before stringcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+        em->scan_instr(runitm,casix,insitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "C-case_scanner after stringcase#%d %s run %s "
+                        "in switch instr %s #%d in block %s",
+                        casix, mom_item_cstring(casitm),
+                        mom_item_cstring(runitm),
+                        mom_item_cstring(insitm),
+                        rk, mom_item_cstring(blkitm));
+      });
+      itemcasdata->add_runitm(runitm);
+    };
+defaultcaseswtyp:
+  default:
+    throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                              "with bad switch type %s",
+                              mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                              mom_item_cstring(swtypitm));
+  }
+#undef NBSWTYPE_MOM
+#undef CASE_SWTYPE_MOM
+} // end of MomCEmitter::case_scanner
+
+
+void
+MomEmitter::IntCaseScannerData::process_intcase(const void*expv,
+  struct mom_item_st*casitm,
+  struct mom_item_st*runitm)
+{
+const long constexpr maxrangewidth = 65536;
+const long constexpr maxsize = 16*maxrangewidth;
+unsigned expty = mom_itype(expv);
+assert (cas_emitter->is_locked_item(casitm));
+assert (cas_emitter->is_locked_item(runitm));
+if (cas_num2casemap.size() > maxsize)
+  throw  MOM_RUNTIME_PRINTF("too many %ld int cases in case item %s"
+                            " run item %s insitm %s #%d blkitm %s",
+                            (long)cas_num2casemap.size(), mom_item_cstring(casitm),
+                            mom_item_cstring(runitm),
+                            mom_item_cstring(cas_insitm),
+                            cas_rank, mom_item_cstring(cas_blkitm));
+
+if (expty == MOMITY_INT)
+  {
+    auto iv = mom_int_val_def(expv,0);
+    if (cas_num2casemap.find(iv) != cas_num2casemap.end())
+      throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
+                                " run item %s insitm %s #%d blkitm %s",
+                                (long)iv, mom_item_cstring(casitm),
+                                mom_item_cstring(runitm),
+                                mom_item_cstring(cas_insitm),
+                                cas_rank, mom_item_cstring(cas_blkitm));
+    cas_num2casemap[iv] = casitm;
+    return;
+  }
+else if (expty != MOMITY_NODE)
+  throw  MOM_RUNTIME_PRINTF("non-node int case %s in case item %s"
+                            " run item %s insitm %s #%d blkitm %s",
+                            mom_value_cstring(expv), mom_item_cstring(casitm),
+                            mom_item_cstring(runitm),
+                            mom_item_cstring(cas_insitm),
+                            cas_rank, mom_item_cstring(cas_blkitm));
+auto nodexp = (const struct mom_boxnode_st*)expv;
+auto connitm = nodexp->nod_connitm;
+unsigned arity = mom_raw_size(nodexp);
+assert (mom_itype(connitm) == MOMITY_ITEM);
+if (connitm==MOM_PREDEFITM(or))
+  {
+    for (unsigned ix=0; ix<arity; ix++)
+      process_intcase(nodexp->nod_sons[ix],casitm,runitm);
+  }
+else if (connitm==MOM_PREDEFITM(range))
+  {
+    const void*leftv=nullptr;
+    const void* rightv=nullptr;
+    long leftnum=0, rightnum=0;
+    if (arity != 2
+        || (leftv = nodexp->nod_sons[0]) == nullptr
+        || mom_itype(leftv) != MOMITY_INT
+        || (rightv = nodexp->nod_sons[1]) == nullptr
+        || mom_itype(rightv) != MOMITY_INT
+        || ((leftnum = mom_int_val_def(leftv,0))
+            > (rightnum = mom_int_val_def(rightv,0))))
+      throw  MOM_RUNTIME_PRINTF("bad range int case %s in case item %s"
+                                " run item %s insitm %s #%d blkitm %s",
+                                mom_value_cstring(expv), mom_item_cstring(casitm),
+                                mom_item_cstring(runitm),
+                                mom_item_cstring(cas_insitm),
+                                cas_rank, mom_item_cstring(cas_blkitm));
+    if (leftnum + maxrangewidth < rightnum)
+      throw  MOM_RUNTIME_PRINTF("too wide range int case %s in case item %s"
+                                " run item %s insitm %s #%d blkitm %s",
+                                mom_value_cstring(expv), mom_item_cstring(casitm),
+                                mom_item_cstring(runitm),
+                                mom_item_cstring(cas_insitm),
+                                cas_rank, mom_item_cstring(cas_blkitm));
+    for (long ix=leftnum; ix<=rightnum; ix++)
+      {
+        if (cas_num2casemap.find(ix) != cas_num2casemap.end())
+          throw  MOM_RUNTIME_PRINTF("duplicate int %ld case in case item %s"
+                                    " run item %s insitm %s #%d blkitm %s",
+                                    (long)ix, mom_item_cstring(casitm),
+                                    mom_item_cstring(runitm),
+                                    mom_item_cstring(cas_insitm),
+                                    cas_rank, mom_item_cstring(cas_blkitm));
+        cas_num2casemap[ix] = casitm;
+      }
+  }
+else
+  throw MOM_RUNTIME_PRINTF("bad node int case %s in case item %s"
+                           " run item %s insitm %s #%d blkitm %s",
+                           mom_value_cstring(expv), mom_item_cstring(casitm),
+                           mom_item_cstring(runitm),
+                           mom_item_cstring(cas_insitm),
+                           cas_rank, mom_item_cstring(cas_blkitm));
+} // end MomEmitter::IntCaseScannerData::process_intcase
+
+
+momvalue_t
+MomEmitter::IntCaseScannerData::c_transform_intcase(MomCEmitter*cem, const void*expv,
+  struct mom_item_st*casitm,
+  struct mom_item_st*runitm)
+{
+assert (cem != nullptr);
+momvalue_t restree = nullptr;
+MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s casitm:=%s\n.. runtim=%s",
+                mom_value_cstring(expv),
+                mom_item_content_cstring(casitm),
+                mom_item_cstring(runitm));
+auto exptyp = mom_itype(expv);
+switch (exptyp)
+  {
+  case MOMITY_INT:
+  {
+    restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                  cem->literal_string("case "),
+                                  expv,
+                                  cem->literal_string(":"));
+    MOM_DEBUGPRINTF(gencod, "c_transform_intcase expv=%s gives %s",
+                    mom_value_cstring(expv),
+                    mom_value_cstring(restree));
+    return restree;
+  }
+  break;
+  case MOMITY_NODE:
+  {
+    auto expnod = (const struct mom_boxnode_st*)expv;
+    auto connitm = expnod->nod_connitm;
+    auto expsiz = mom_raw_size(expv);
+    if (connitm == MOM_PREDEFITM(or))
+      {
+        traced_vector_values_t vectree;
+        for (unsigned ix=0; ix<expsiz; ix++)
+          {
+            if (ix>0)
+              vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline), 0));
+            auto curson = expnod->nod_sons[ix];
+            MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d curson=%s", ix,
+                            mom_value_cstring(curson));
+            auto cursubtree = c_transform_intcase(cem,curson,casitm,runitm);
+            MOM_DEBUGPRINTF(gencod, "c_transform_intcase disjonction ix#%d cursubtree=%s", ix,
+                            mom_value_cstring(cursubtree));
+            vectree.push_back(cursubtree);
+          }
+        restree = mom_boxnode_make(MOM_PREDEFITM(sequence),
+                                   vectree.size(),
+                                   vectree.data());
+        MOM_DEBUGPRINTF(gencod,
+                        "c_transform_intcase disjonction gives %s",
+                        mom_value_cstring(restree));
+        return restree;
+      }
+    else if (connitm == MOM_PREDEFITM(range))
+      {
+        assert (expsiz==2);
+        auto left = expnod->nod_sons[0];
+        auto right = expnod->nod_sons[1];
+        assert (mom_itype(left)==MOMITY_INT);
+        assert (mom_itype(right)==MOMITY_INT);
+        assert (mom_int_val_def (left, -2) <= mom_int_val_def (right, -1));
+        restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+                                      cem->literal_string("case "),
+                                      left,
+                                      cem->literal_string(" ... "),
+                                      right,
+                                      cem->literal_string(":"));
+        MOM_DEBUGPRINTF(gencod, "c_transform_intcase range gives %s",
+                        mom_value_cstring(restree));
+        return restree;
+      }
+    else
+      MOM_FATAPRINTF("c_transform_intcase bad node expv=%s casitm=%s runtim=%s",
+                     mom_value_cstring(expv),
+                     mom_item_cstring(casitm),
+                     mom_item_cstring(runitm));
+
+  }
+  break;
+  default: /// should never happen
+    break;
+  }
+MOM_FATAPRINTF("c_transform_intcase bad expv=%s casitm=%s runtim=%s",
+               mom_value_cstring(expv),
+               mom_item_cstring(casitm),
+               mom_item_cstring(runitm));
+} // end MomEmitter::IntCaseScannerData::c_transform_intcase
+
+
+
+void
+MomEmitter::StringCaseScannerData::process_stringcase(const void*expv,
+  struct mom_item_st*casitm,
+  struct mom_item_st*runitm)
+{
+const long constexpr maxsize = 65536;
+unsigned expty = mom_itype(expv);
+assert (cas_emitter->is_locked_item(casitm));
+assert (cas_emitter->is_locked_item(runitm));
+if (cas_string2casemap.size() > maxsize)
+  throw  MOM_RUNTIME_PRINTF("too many %ld string cases in case item %s"
+                            " run item %s insitm %s #%d blkitm %s",
+                            (long)cas_string2casemap.size(), mom_item_cstring(casitm),
+                            mom_item_cstring(runitm),
+                            mom_item_cstring(cas_insitm),
+                            cas_rank, mom_item_cstring(cas_blkitm));
+
+if (expty == MOMITY_BOXSTRING)
+  {
+    std::string sv {mom_boxstring_cstr(expv)};
+    if (cas_string2casemap.find(sv) != cas_string2casemap.end())
+      throw  MOM_RUNTIME_PRINTF("duplicate string '%s' case in case item %s"
+                                " run item %s insitm %s #%d blkitm %s",
+                                sv.c_str(), mom_item_cstring(casitm),
+                                mom_item_cstring(runitm),
+                                mom_item_cstring(cas_insitm),
+                                cas_rank, mom_item_cstring(cas_blkitm));
+    cas_string2casemap[sv] = casitm;
+    return;
+  }
+else if (expty != MOMITY_NODE)
+  throw  MOM_RUNTIME_PRINTF("non-node string case %s in case item %s"
+                            " run item %s insitm %s #%d blkitm %s",
+                            mom_value_cstring(expv), mom_item_cstring(casitm),
+                            mom_item_cstring(runitm),
+                            mom_item_cstring(cas_insitm),
+                            cas_rank, mom_item_cstring(cas_blkitm));
+auto nodexp = (const struct mom_boxnode_st*)expv;
+auto connitm = nodexp->nod_connitm;
+unsigned arity = mom_raw_size(nodexp);
+assert (mom_itype(connitm) == MOMITY_ITEM);
+if (connitm==MOM_PREDEFITM(or))
+  {
+    for (unsigned ix=0; ix<arity; ix++)
+      process_stringcase(nodexp->nod_sons[ix],casitm,runitm);
+  }
+else
+  throw MOM_RUNTIME_PRINTF("bad node string case %s in case item %s"
+                           " run item %s insitm %s #%d blkitm %s",
+                           mom_value_cstring(expv), mom_item_cstring(casitm),
+                           mom_item_cstring(runitm),
+                           mom_item_cstring(cas_insitm),
+                           cas_rank, mom_item_cstring(cas_blkitm));
+} // end MomEmitter::StringCaseScannerData::process_stringcase
+
+
+
+void
+MomEmitter::ItemCaseScannerData::process_itemcase(const void*expv,
+  struct mom_item_st*casitm,
+  struct mom_item_st*runitm)
+{
+const long constexpr maxsize = 65536;
+unsigned expty = mom_itype(expv);
+MOM_DEBUGPRINTF(gencod, "itemcase start expv=%s casitm:=%s\n.. runitm=%s",
+                mom_value_cstring(expv),
+                mom_item_content_cstring(casitm),
+                mom_item_content_cstring(runitm));
+assert (cas_emitter->is_locked_item(casitm));
+assert (cas_emitter->is_locked_item(runitm));
+if (cas_item2casemap.size() > maxsize)
+  throw  MOM_RUNTIME_PRINTF("too many %ld item cases in case item %s"
+                            " run item %s insitm %s #%d blkitm %s",
+                            (long)cas_item2casemap.size(), mom_item_cstring(casitm),
+                            mom_item_cstring(runitm),
+                            mom_item_cstring(cas_insitm),
+                            cas_rank, mom_item_cstring(cas_blkitm));
+
+if (expty == MOMITY_ITEM)
+  {
+    auto itm = (struct mom_item_st*)expv;
+    MOM_DEBUGPRINTF(gencod, "itemcase casitm %s item %s",
+                    mom_item_cstring(casitm), mom_item_cstring(itm));
+    if (cas_item2casemap.find(itm) != cas_item2casemap.end())
+      throw  MOM_RUNTIME_PRINTF("duplicate item %s case in case item %s"
+                                " run item %s insitm %s #%d blkitm %s",
+                                mom_item_cstring(itm), mom_item_cstring(casitm),
+                                mom_item_cstring(runitm),
+                                mom_item_cstring(cas_insitm),
+                                cas_rank, mom_item_cstring(cas_blkitm));
+    cas_item2casemap[itm] = casitm;
+    return;
+  }
+else if (expty == MOMITY_SET)
+  {
+    unsigned card = mom_size(expv);
+    auto set = (const struct mom_boxset_st*)expv;
+    MOM_DEBUGPRINTF(gencod, "itemcase casitm %s set %s",
+                    mom_item_cstring(casitm), mom_value_cstring(set));
+    for (unsigned ix=0; ix<card; ix++)
+      {
+        auto itm = set->seqitem[ix];
+        assert (mom_itype(itm) == MOMITY_ITEM);
+        if (cas_item2casemap.find(itm) != cas_item2casemap.end())
+          throw  MOM_RUNTIME_PRINTF("duplicate item %s case in case item %s"
+                                    " run item %s insitm %s #%d blkitm %s",
+                                    mom_item_cstring(itm), mom_item_cstring(casitm),
+                                    mom_item_cstring(runitm),
+                                    mom_item_cstring(cas_insitm),
+                                    cas_rank, mom_item_cstring(cas_blkitm));
+        MOM_DEBUGPRINTF(gencod, "itemcase ix#%d itm=%s casitm=%s", ix, mom_item_cstring(itm),
+                        mom_item_cstring(casitm));
+        cas_item2casemap[itm] = casitm;
+      }
+    return;
+  }
+else if (expty != MOMITY_NODE)
+  throw MOM_RUNTIME_PRINTF("non-node item case %s in case item %s"
+                           " run item %s insitm %s #%d blkitm %s",
+                           mom_value_cstring(expv), mom_item_cstring(casitm),
+                           mom_item_cstring(runitm),
+                           mom_item_cstring(cas_insitm),
+                           cas_rank, mom_item_cstring(cas_blkitm));
+auto nodexp = (const struct mom_boxnode_st*)expv;
+MOM_DEBUGPRINTF(gencod, "itemcase casitm %s nodexp %s",
+                mom_item_cstring(casitm), mom_value_cstring(nodexp));
+assert (mom_itype(nodexp) == MOMITY_NODE);
+auto connitm = nodexp->nod_connitm;
+unsigned arity = mom_raw_size(nodexp);
+assert (mom_itype(connitm) == MOMITY_ITEM);
+if (connitm==MOM_PREDEFITM(or))
+  {
+    for (unsigned ix=0; ix<arity; ix++)
+      process_itemcase(nodexp->nod_sons[ix],casitm,runitm);
+  }
+else
+  throw MOM_RUNTIME_PRINTF("bad node item case %s in case item %s"
+                           " run item %s insitm %s #%d blkitm %s",
+                           mom_value_cstring(expv), mom_item_cstring(casitm),
+                           mom_item_cstring(runitm),
+                           mom_item_cstring(cas_insitm),
+                           cas_rank, mom_item_cstring(cas_blkitm));
+} // end MomEmitter::ItemCaseScannerData::process_itemcase
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_data_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomJavascriptEmitter::transform_data_element
+MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+} // end MomJavascriptEmitter::transform_data_element
+
+
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm)
+{
+assert (is_locked_item(sigitm));
+assert (is_locked_item(fitm));
+MOM_DEBUGPRINTF(gencod, "JS-emitter declare_funheader_for start sigitm=%s fitm=%s",
+                mom_item_cstring(sigitm), mom_item_cstring(fitm));
+auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+assert (formtup != nullptr);
+auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
+MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtup=%s restyv=%s",
+                mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
+int nbform = mom_raw_size(formtup);
+momvalue_t smallformdeclarr[8] = {nullptr};
+momvalue_t *formdeclarr =
+  (nbform<(int)(sizeof(smallformdeclarr)/sizeof(smallformdeclarr[0])))
+  ? smallformdeclarr
+  : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
+for (int ix=0; ix<nbform; ix++)
+  {
+    momvalue_t curformdeclv = nullptr;
+    struct mom_item_st*curformitm = formtup->seqitem[ix];
+    MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s  ix#%d curformitm=%s",
+                    mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
+    assert (is_locked_item(curformitm));
+    formdeclarr[ix] =
+      mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                          literal_string(JSFORMAL_PREFIX),
+                          curformitm);
+  }
+auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
+                                      mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
+if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
+formdeclarr = nullptr;
+MOM_DEBUGPRINTF(gencod, "JS-declare_funheader_for sigitm=%s formtreev=%s",
+                mom_item_cstring(sigitm), mom_value_cstring(formtreev));
+auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                 literal_string("function"),
+                 literal_string(" "),
+                 literal_string(JSFUNC_PREFIX),
+                 fitm,
+                 formtreev);
+MOM_DEBUGPRINTF(gencod, "c-declare_funheader_for sigitm=%s fitm=%s result funheadv=%s",
+                mom_item_cstring(sigitm),
+                mom_item_cstring(fitm),
+                mom_value_cstring(funheadv));
+return funheadv;
+} // end of MomJavaScriptEmitter::declare_funheader_for
+
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_func_element(struct mom_item_st*fuitm)
+{
+assert (is_locked_item(fuitm));
+MOM_DEBUGPRINTF(gencod, "JS-emitter transform func start fuitm:=\n%s",
+                mom_item_content_cstring(fuitm));
+auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
+auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
+MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s bdyitm %s",
+                mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+assert (is_locked_item(sigitm));
+assert (is_locked_item(bdyitm));
+auto funhnod = declare_funheader_for(sigitm,fuitm);
+MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s sigitm %s funhnod %s",
+                mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_value_cstring(funhnod));
+auto bdynod = transform_body_element(bdyitm,fuitm);
+MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
+                mom_item_cstring(fuitm), mom_item_cstring(bdyitm),
+                mom_value_cstring(bdynod), mom_value_cstring(funhnod));
+auto funtree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+               funhnod,
+               bdynod,
+               literal_string("\n"));
+MOM_DEBUGPRINTF(gencod, "JS-emitter transform func fuitm %s gives funtree %s",
+                mom_item_cstring(fuitm), mom_value_cstring(funtree));
+return funtree;
+} // end MomJavascriptEmitter::transform_func_element
+
+
+
+const struct mom_boxnode_st*
+MomJavascriptEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm)
+{
+MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s routitm=%s",
+                mom_item_cstring(bdyitm), mom_item_cstring(routitm));
+MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm:=\n %s",
+                mom_item_content_cstring(bdyitm));
+auto bdytree = transform_block(bdyitm, routitm);
+MOM_DEBUGPRINTF(gencod, "js-transform_body_element bdyitm=%s bdytree=%s",
+                mom_item_cstring(bdyitm), mom_value_cstring(bdytree));
+return mom_dyncast_node(bdytree);
+} // end of MomJavascriptEmitter::transform_body_element
+
+momvalue_t
+MomJavascriptEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
+{
+MOM_DEBUGPRINTF(gencod, "js-transform_block initm=%s blkitm:=\n%s",
+                mom_item_cstring(initm), mom_item_content_cstring(blkitm));
+assert (is_locked_item(blkitm));
+auto blkbind = get_local_binding(blkitm);
+assert (blkbind != nullptr);
+MOM_DEBUGPRINTF(gencod,
+                "js-transform_block blkitm=%s blkbind rol %s what %s detail %s rank %ld",
+                mom_item_cstring(blkitm), mom_item_cstring(blkbind->vd_rolitm),
+                mom_value_cstring(blkbind->vd_what), mom_value_cstring(blkbind->vd_detail), blkbind->vd_rank);
+struct mom_item_st*rolitm = blkbind->vd_rolitm;
+assert (mom_itype(rolitm) == MOMITY_ITEM);
+auto bodytup =
+  mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+MOM_DEBUGPRINTF(gencod,
+                "js-transform_block blkitm=%s bodytup=%s",
+                mom_item_cstring(blkitm), mom_value_cstring(bodytup));
+#define NBBLOCKROLE_MOM 31
+#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+goto defaultcasebrole; foundcase_##Nam
+switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
+  {
+  case CASE_BLOCKROLE_MOM (sequence):
+  {
+    auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
+    unsigned nblocals = mom_seqitems_length(localseq);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s nblocals#%d localseq:%s",
+                    mom_item_cstring(blkitm), nblocals, mom_value_cstring(localseq));
+    momvalue_t localtree= nullptr;
+    if (nblocals>0)
+      {
+        momvalue_t smallocarr[8]= {};
+        momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
+                             : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
+        for (int lix=0; lix<(int)nblocals; lix++)
+          {
+            momvalue_t curloctree = nullptr;
+            struct mom_item_st*locitm = localseq->seqitem[lix];
+            assert (is_locked_item(locitm));
+            MOM_DEBUGPRINTF(gencod,
+                            "js-transform_block blkitm=%s lix#%d locitm:=\n%s",
+                            mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
+            locarr[lix] = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                              literal_string(JSLOCAL_PREFIX),
+                                              locitm);
+          }
+        auto commatree =  mom_boxnode_make(MOM_PREDEFITM(comma), nblocals, locarr);
+        localtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                        literal_string("let "),
+                                        commatree);
+      }
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s sequence of body %s localtree=%s",
+                    mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
+                    mom_value_cstring(localtree));
+    int bodylen = mom_raw_size(bodytup);
+    int bodycnt = 0;
+    momvalue_t smalbodyarr[8]= {};
+    momvalue_t* bodyarr = ((bodylen+1)<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+                          ? smalbodyarr
+                          : (momvalue_t*) mom_gc_alloc((bodylen+1)*sizeof(momvalue_t));
+    if (localtree != nullptr)
+      bodyarr[bodycnt++] = localtree;
+    for (int bix=0; bix<bodylen; bix++)
+      {
+        struct mom_item_st*insitm = bodytup->seqitem[bix];
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block blkitm=%s bix#%d insitm:=\n%s",
+                        mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+        assert (is_locked_item(insitm));
+        auto instree = transform_instruction(insitm, blkitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block insitm=%s instree=%s",
+                        mom_item_cstring(insitm), mom_value_cstring(instree));
+        assert (instree != nullptr);
+        bodyarr[bodycnt++] = instree;
+      }
+    auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodycnt,bodyarr);
+    auto bracetree =
+      mom_boxnode_make_va(MOM_PREDEFITM(brace),
+                          4,
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                              literal_string("block"),
+                              literal_string(" "),
+                              blkitm),
+                          bodytree, literal_string(";"),
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                              literal_string("endblock"),
+                              literal_string(" "),
+                              blkitm)
+                         );
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s gives bracetree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(bracetree));
+    return bracetree;
+
+  }
+  break;
+  case CASE_BLOCKROLE_MOM (loop):
+  {
+    auto whilexpv =  (momvalue_t)mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
+    auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
+    long nbcont = _ce_continuecountmap[blkitm];
+    long nbbreak = _ce_breakcountmap[blkitm];
+    momvalue_t prologtree = nullptr;
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s loop of while %s, body %s, nbcont=%ld, nbbreak=%ld",
+                    mom_item_cstring(blkitm), mom_value_cstring(whilexpv), mom_value_cstring(bodytup),
+                    nbcont, nbbreak);
+    if (whilexpv == nullptr || whilexpv == MOM_PREDEFITM(truth))
+      {
+        prologtree = literal_string("for(;;)");
+      }
+    else
+      {
+        prologtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                         literal_string("while ("),
+                                         transform_expr(whilexpv,blkitm),
+                                         literal_string(")"));
+      };
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block blkitm=%s loop prologtree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(prologtree));
+    int bodylen = mom_raw_size(bodytup);
+    momvalue_t smalbodyarr[8]= {};
+    momvalue_t* bodyarr = (bodylen<(int)(sizeof(smalbodyarr)/sizeof(momvalue_t)))
+                          ? smalbodyarr
+                          : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+    for (int bix=0; bix<bodylen; bix++)
+      {
+        struct mom_item_st*insitm = bodytup->seqitem[bix];
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block loop blkitm=%s bix#%d insitm:=\n%s",
+                        mom_item_cstring(blkitm), bix, mom_item_content_cstring(insitm));
+        assert (is_locked_item(insitm));
+        auto instree = transform_instruction(insitm, blkitm);
+        MOM_DEBUGPRINTF(gencod,
+                        "js-transform_block loop insitm=%s instree=%s",
+                        mom_item_cstring(insitm), mom_value_cstring(instree));
+        assert (instree != nullptr);
+        bodyarr[bix] = instree;
+      }
+    auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+    auto labtree = (nbcont>0 || nbbreak>0)
+                   ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                         literal_string(" "),
+                                         literal_string(JSLABEL_PREFIX),
+                                         blkitm,
+                                         literal_string(":"))
+                   : nullptr;
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block loop blkitm=%s prologtree=%s bodytree=%s labtree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(prologtree),
+                    mom_value_cstring(bodytree), mom_value_cstring(labtree));
+    auto looptree = //
+      mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                              literal_string("loop "),
+                              blkitm),
+                          labtree,
+                          prologtree,
+                          mom_boxnode_make_va(MOM_PREDEFITM(brace),3,
+                              bodytree,
+                              literal_string(";")),
+                          mom_boxnode_make_va(MOM_PREDEFITM(comment),2,
+                              literal_string("endloop "),
+                              blkitm)
+                         );
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_block loop blkitm=%s result looptree=%s",
+                    mom_item_cstring(blkitm), mom_value_cstring(looptree));
+    return looptree;
+  }
+  break;
+  default:
+defaultcasebrole: // should never happen
+    MOM_FATAPRINTF("unexpected role %s in blkitm %s",
+                   mom_item_cstring(rolitm), mom_item_cstring(blkitm));
+    break;
+  }
+#undef NBBLOCKROLE_MOM
+#undef CASE_BLOCKROLE_MOM
+#warning unimplemented MomJavascriptEmitter::transform_block
+MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_block blkitm=%s initm=%s",
+               mom_item_cstring(blkitm), mom_item_cstring(initm));
+} // end of MomJavascriptEmitter::transform_block
+
+
+
+momvalue_t
+MomJavascriptEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm)
+{
+MOM_DEBUGPRINTF(gencod, "js-transform_instruction fromitm=%s insitm:=\n%s",
+                mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
+assert (is_locked_item(insitm));
+auto insbind = get_local_binding(insitm);
+assert (insbind != nullptr);
+MOM_DEBUGPRINTF(gencod,
+                "js-transform_instruction insitm=%s insbind rol %s what %s detail %s rank %ld",
+                mom_item_cstring(insitm), mom_item_cstring(insbind->vd_rolitm),
+                mom_value_cstring(insbind->vd_what), mom_value_cstring(insbind->vd_detail), insbind->vd_rank);
+struct mom_item_st*rolitm = insbind->vd_rolitm;
+assert (mom_itype(rolitm) == MOMITY_ITEM);
+auto whatv = insbind->vd_what;
+#define NBINSTROLE_MOM 73
+#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
+ if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+ goto defaultcaseirole; foundcase_##Nam
+switch (rolitm->hva_hash % NBINSTROLE_MOM)
+  {
+  case CASE_INSTROLE_MOM(run):
+  {
+    auto runitm = mom_dyncast_item(insbind->vd_what);
+    assert (is_locked_item(runitm));
+    return transform_runinstr(insitm, runitm, fromitm);
+  }
+  break;
+  case CASE_INSTROLE_MOM(assign):
+  {
+    auto whatnod = mom_dyncast_node(whatv);
+    assert (whatnod != nullptr && whatnod->nod_connitm == MOM_PREDEFITM(assign) && mom_raw_size(whatnod) == 3);
+    auto tovaritm = mom_dyncast_item(whatnod->nod_sons[0]);
+    auto fromexp = whatnod->nod_sons[1];
+    auto totypitm = mom_dyncast_item(whatnod->nod_sons[2]);
+    MOM_DEBUGPRINTF(gencod,
+                    "c-transform_instruction assign insitm=%s tovaritm=%s fromexp=%s totypitm=%s",
+                    mom_item_cstring(insitm), mom_item_cstring(tovaritm),
+                    mom_value_cstring(fromexp), mom_item_cstring(totypitm));
+    assert (tovaritm != nullptr);
+    assert (totypitm != nullptr);
+    auto fromtree =  transform_expr(fromexp, insitm);
+    if (fromtree == nullptr)
+      fromtree = literal_string("null");
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction assign insitm=%s fromtree=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(fromtree));
+    auto totree = transform_var(tovaritm, insitm);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction assign insitm=%s totree=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(totree));
+    auto assitree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                        totree, literal_string (" = "), fromtree);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction assign insitm=%s assitree=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(assitree));
+    return assitree;
+  }
+  break;
+  case CASE_INSTROLE_MOM(break):
+  {
+    auto outblkitm = mom_dyncast_item(whatv);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction break insitm=%s outblkitm=%s",
+                    mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+    assert (outblkitm != nullptr && is_locked_item(outblkitm));
+    assert (_ce_breakcountmap[outblkitm] > 0);
+    auto breaktree =
+      mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                          literal_string("break "),
+                          literal_string(JSLABEL_PREFIX),
+                          outblkitm,
+                          literal_string(";"));
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction break insitm=%s result breaktree=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(breaktree));
+    return breaktree;
+  }
+  break;
+  case CASE_INSTROLE_MOM(continue):
+  {
+    auto outblkitm = mom_dyncast_item(whatv);
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction continue insitm=%s outblkitm=%s",
+                    mom_item_cstring(insitm), mom_item_cstring(outblkitm));
+    assert (outblkitm != nullptr && is_locked_item(outblkitm));
+    assert (_ce_continuecountmap[outblkitm] > 0);
+    auto contree =
+      mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                          literal_string("continue "),
+                          literal_string(JSLABEL_PREFIX),
+                          outblkitm,
+                          literal_string(";"));
+    MOM_DEBUGPRINTF(gencod,
+                    "js-transform_instruction continue insitm=%s result contree=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(contree));
+    return contree;
+  }
+  break;
+
+  default:
+defaultcaseirole:
+    MOM_FATAPRINTF("unexpected role %s in insitm %s",
+                   mom_item_cstring(rolitm), mom_item_cstring(insitm));
+    break;
+  }
+#undef NBINSTROLE_MOM
+#undef CASE_INSTROLE_MOM
+#warning unimplemented MomJavascriptEmitter::transform_instruction
+MOM_FATAPRINTF("unimplemented js-transform_instruction insitm=%s", mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_instruction
+
+
+
+momvalue_t
+MomJavascriptEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*fromitm)
+{
+MOM_DEBUGPRINTF(gencod, "js-transform_runinstr fromitm=%s runitm:=\n%s\n ..insitm:=\n%s",
+                mom_item_cstring(fromitm), mom_item_content_cstring(runitm), mom_item_content_cstring(insitm));
+assert (is_locked_item(insitm));
+assert (is_locked_item(runitm));
+auto desrunitm = mom_unsync_item_descr(runitm);
+if (desrunitm == MOM_PREDEFITM(primitive))
+  {
+    auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+    MOM_DEBUGPRINTF(gencod, "js-transform_runinstr runitm=%s sigitm:=\n%s",
+                    mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
+    assert (is_locked_item(sigitm));
+    auto formaltup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+    assert (formaltup != nullptr);
+    unsigned nbformals = mom_size(formaltup);
+    traced_map_item2value_t argmap;
+    auto inscomp = insitm->itm_pcomp;
+    momvalue_t treev = nullptr;
+    auto expnod = mom_dyncast_node(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(js_expansion)));
+    MOM_DEBUGPRINTF(gencod, "js-transform_runinstr formaltup=%s expnod=%s", mom_value_cstring(formaltup),
+                    mom_value_cstring(expnod));
+    if (!expnod || expnod->nod_connitm != MOM_PREDEFITM(code_chunk))
+      throw MOM_RUNTIME_PRINTF("js-transform_runinstr insitm=%s runitm=%s bad expnod=%s",
+                               mom_item_cstring(insitm), mom_item_cstring(runitm),
+                               mom_value_cstring(expnod));
+    for (int aix=0; aix<(int)nbformals; aix++)
+      {
+        auto curfitm = formaltup->seqitem[aix];
+        auto curarg = mom_vectvaldata_nth(inscomp, aix);
+        MOM_DEBUGPRINTF(gencod, "js-transform_runinstr aix#%d curfitm=%s curarg=%s", aix,
+                        mom_item_cstring(curfitm), mom_value_cstring(curarg));
+        assert (mom_itype(curfitm)==MOMITY_ITEM);
+        auto argtree =  transform_expr(curarg, insitm);
+        MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s aix#%d curarg=%s argtree=%s",
+                        mom_item_cstring(fromitm), aix, mom_value_cstring(curarg), mom_value_cstring(argtree));
+        argmap[curfitm] = argtree;
+      }
+    int exparity = mom_raw_size(expnod);
+    momvalue_t smalltreearr[8]= {};
+    momvalue_t* treearr = (exparity<(int)(sizeof(smalltreearr)/sizeof(momvalue_t)))
+                          ? smalltreearr
+                          : (momvalue_t*) mom_gc_alloc(exparity*sizeof(momvalue_t));
+    for (int ix=0; ix<exparity; ix++)
+      {
+        momvalue_t curtreev = nullptr;
+        momvalue_t curson = expnod->nod_sons[ix];
+        auto cursonitm = mom_dyncast_item(curson);
+        if (cursonitm != nullptr)
+          {
+            auto it = argmap.find(cursonitm);
+            if (it != argmap.end())
+              curtreev = it->second;
+            else
+              curtreev = curson;
+          }
+        else
+          curtreev = curson;
+        treearr[ix] = curtreev;
+      }
+    treev = mom_boxnode_make(MOM_PREDEFITM(sequence),exparity,treearr);
+    MOM_DEBUGPRINTF(gencod, "js-transform_runinstr insitm=%s treev=%s",
+                    mom_item_cstring(insitm), mom_value_cstring(treev));
+    return treev;
+    }
+#warning unimplemented MomJavascriptEmitter::transform_runinstr
+  MOM_FATAPRINTF("unimplemented js-transform_runinstr insitm=%s", mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_runinstr
+
+
+momvalue_t
+MomJavascriptEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_expr expv=%s initm=%s",
+                  mom_value_cstring(expv), mom_item_cstring(initm));
+  unsigned expty = mom_itype(expv);
+  switch (expty)
+    {
+    case MOMITY_INT:
+    case MOMITY_BOXDOUBLE:
+      return expv;
+    case MOMITY_BOXSTRING:
+      return mom_boxnode_make_va(MOM_PREDEFITM(string),1,expv);
+    case MOMITY_ITEM:
+    {
+      auto expitm = (struct mom_item_st*)expv;
+      auto expbind = get_binding(expitm);
+      auto rolitm = expbind?expbind->vd_rolitm:nullptr;
+      MOM_DEBUGPRINTF(gencod, "js-transform_expr expitm=%s bind rol %s what %s",
+                      mom_item_cstring(expitm), mom_item_cstring(rolitm),
+                      expbind?mom_value_cstring(expbind->vd_what):"°");
+#define NBROLE_MOM 31
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
+ if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+ goto defaultrole; foundrolcase_##Nam
+      switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
+        {
+        case CASE_ROLE_MOM(formal):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(locals):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(item):
+        {
+          MOM_DEBUGPRINTF(gencod,
+                          "js-transform_expr expitm=%s constant",
+                          mom_item_cstring(expitm));
+#warning js-transform_expr does not handle yet items
+          MOM_FATAPRINTF("js-transform_expr constant expitm=%s initm=%s unhandled",
+                         mom_item_cstring(expitm), mom_item_cstring(initm));
+        }
+        break;
+defaultrole:
+        default:
+          MOM_FATAPRINTF("js-transform_expr bad expitm=%s rolitm=%s initm=%s",
+                         mom_item_cstring(expitm), mom_item_cstring(rolitm), mom_item_cstring(initm));
+        }
+#undef NBROLE_MOM
+#undef CASE_ROLE_MOM
+    }
+    break;
+    case MOMITY_NODE:
+      return transform_node_expr((struct mom_boxnode_st*)expv, initm);
+    default:
+      MOM_FATAPRINTF("js-transform_expr bad expv=%s initm=%s",
+                     mom_value_cstring(expv), mom_item_cstring(initm));
+
+    }
+#warning unimplemented MomJavascriptEmitter::transform_expr
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_expr expv=%s initm=%s",
+                 mom_value_cstring(expv), mom_item_cstring(initm));
+} // end of MomJavascriptEmitter::transform_expr
+
+
+momvalue_t
+MomJavascriptEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind)
+{
+  if (!varbind)
+    varbind = get_binding(varitm);
+  if (MOM_UNLIKELY(!varbind)) // should never happen
+    MOM_FATAPRINTF("js-transform_var varitm=%s in insitm %s lacking binding",
+                   mom_item_cstring(varitm), mom_item_cstring(insitm));
+  auto rolitm = varbind->vd_rolitm;
+  MOM_DEBUGPRINTF(gencod, "js-transform_var varitm:=\n%s ... insitm=%s, rolitm=%s what=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
+  momvalue_t vartree = nullptr;
+#define NBROLE_MOM 31
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+  goto defaultrole; foundrolcase_##Nam
+  switch (rolitm->hva_hash % NBROLE_MOM)
+    {
+    case CASE_ROLE_MOM(formal):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(JSFORMAL_PREFIX),
+                            varitm);
+      break;
+defaultrole:
+    default:
+      break;
+    }
+#undef NBROLE_MOM
+#undef CASE_ROLE_MOM
+  MOM_DEBUGPRINTF(gencod, "js-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
+                  mom_item_content_cstring(varitm), mom_item_cstring(insitm),
+                  mom_item_cstring(rolitm), mom_value_cstring(vartree));
+  if (vartree) return vartree;
+#warning unimplemented MomJavascriptEmitter::transform_var
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
+                 mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
+} // end of MomJavascriptEmitter::transform_var
+
+momvalue_t
+MomJavascriptEmitter:: transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm)
+{
+  MOM_DEBUGPRINTF(gencod, "js-transform_node_expr expnod=%s insitm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm));
+#warning unimplemented MomJavascriptEmitter::transform_node_expr
+  MOM_FATAPRINTF("unimplemented MomJavascriptEmitter::transform_node_expr expnod=%s insitm=%s",
+                 mom_value_cstring(expnod), mom_item_cstring(insitm));
+} // end of MomJavascriptEmitter::transform_node_expr
+
+
+MomEmitter::CaseScannerData*
+MomJavascriptEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+  if (swtypitm == MOM_PREDEFITM(item))
+    throw   MOM_RUNTIME_PRINTF("JavaScript switch instr %s rk#%d in block %s "
+                               "with bad switch type item",
+                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+  return MomEmitter::make_case_scanner_data(swtypitm,insitm,rk,blkitm);
+} // end MomJavascriptEmitter::make_case_scanner_data
+
+
+
+std::function<void(struct mom_item_st*,unsigned,MomEmitter::CaseScannerData*)>
+MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
+{
+  assert (is_locked_item(swtypitm));
+#define NBSWTYPE_MOM 43
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
+ if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+ goto defaultcaseswtyp; foundcaseswtyp_##Nam
+  switch (swtypitm->hva_hash % NBSWTYPE_MOM)
+    {
+    case CASE_SWTYPE_MOM(int):
+    case CASE_SWTYPE_MOM(string):
+    case CASE_SWTYPE_MOM(item):
+defaultcaseswtyp:
+#warning incomplete MomJavascriptEmitter::case_scanner
+    default:
+      throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "
+                                "with bad switch type %s",
+                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+                                mom_item_cstring(swtypitm));
+    }
+#undef NBSWTYPE_MOM
+#undef CASE_SWTYPE_MOM
+} // end of MomJavascriptEmitter::case_scanner
+
+MomJavascriptEmitter::~MomJavascriptEmitter()
+{
+  MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
+} // end MomJavascriptEmitter::~MomJavascriptEmitter
 
 
 // end of file emitc.cc

@@ -1259,7 +1259,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
             bootf_mom[count_bootf_mom++] = optarg;
           }
           break;
-        case 'O':		/* --output-content item */
+        case 'O':              /* --output-content item */
           if (optarg)
             suffix = strstr (optarg, "__");
           if (!suffix && optarg)
