@@ -73,6 +73,16 @@ size
 
 
 
+*array
+1467790128
+^mtime
+(
+comment
+"for dimensioned arrays"_
+)attrs
+
+
+
 *assign
 1456753938
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *call
 1465882737
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "for function call instructions"_
 )attrs
-
 
 
 
@@ -344,6 +354,7 @@ comment
 
 
 
+
 *depth
 1454531567
 ^mtime
@@ -351,7 +362,6 @@ comment
 comment
 "for depth"_
 )attrs
-
 
 
 
@@ -484,6 +494,16 @@ comment
 
 
 
+*flexible_array
+1467790128
+^mtime
+(
+comment
+"for flexible arrays"_
+)attrs
+
+
+
 *fold_left
 1457090580
 ^mtime
@@ -504,6 +524,7 @@ comment
 
 
 
+
 *foldix_left
 1457090580
 ^mtime
@@ -521,7 +542,6 @@ comment
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 )attrs
-
 
 
 
@@ -669,6 +689,7 @@ comment
 
 
 
+
 *initial_modules
 1457332482
 ^mtime
@@ -686,7 +707,6 @@ comment
 comment
 "for instructions"_
 )attrs
-
 
 
 
@@ -854,6 +874,7 @@ tuple
 
 
 
+
 *item
 1467368821
 ^mtime
@@ -879,7 +900,6 @@ is_item
 comment
 "the item module"_
 )attrs
-
 
 
 
@@ -1023,6 +1043,7 @@ comment
 
 
 
+
 *module
 1464869956
 ^mtime
@@ -1040,7 +1061,6 @@ comment
 comment
 "for products of numbers"_
 )attrs
-
 
 
 
@@ -1190,6 +1210,7 @@ comment
 
 
 
+
 *out_content
 1458122116
 ^mtime
@@ -1207,7 +1228,6 @@ comment
 comment
 "output decimal"_
 )attrs
-
 
 
 
@@ -1360,6 +1380,7 @@ out_puts
 
 
 
+
 *parent
 1454575823
 ^mtime
@@ -1381,7 +1402,6 @@ notice
 identity
 )tuple
 )attrs
-
 
 
 
@@ -1540,6 +1560,7 @@ comment
 
 
 
+
 *payl_hashassoc_put
 1456910539
 ^mtime
@@ -1557,7 +1578,6 @@ comment
 comment
 "remove in an hashassoc item"_
 )attrs
-
 
 
 
@@ -1717,6 +1737,7 @@ comment
 
 
 
+
 *payl_loader
 1457031316
 ^mtime
@@ -1734,7 +1755,6 @@ comment
 comment
 "queue payload"_
 )attrs
-
 
 
 
@@ -1917,12 +1937,23 @@ comment
 
 
 
+
 *plus
 1465726736
 ^mtime
 (
 comment
 "for addition of numbers"_
+)attrs
+
+
+
+*pointer
+1467790128
+^mtime
+(
+comment
+"for pointer types"_
 )attrs
 
 
@@ -1934,7 +1965,6 @@ comment
 comment
 "for precedence"_
 )attrs
-
 
 
 
@@ -2068,6 +2098,7 @@ comment
 
 
 
+
 *sequence
 1452422570
 ^mtime
@@ -2100,7 +2131,6 @@ is_set
 comment
 "signature keyword"_
 )attrs
-
 
 
 
@@ -2240,6 +2270,7 @@ comment
 
 
 
+
 *the_system
 1458218226
 ^mtime
@@ -2375,7 +2406,6 @@ formal
 type
 value
 )attrs
-
 
 
 
@@ -2529,6 +2559,7 @@ comment
 
 
 
+
 *variable
 1464962851
 ^mtime
@@ -2556,7 +2587,6 @@ comment
 comment
 "for verbatim"_
 )attrs
-
 
 
 
