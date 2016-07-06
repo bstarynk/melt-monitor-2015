@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -3388,7 +3388,8 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
                                               ccodexp,
                                               literal_string(" "),
                                               vartree);
-              MOM_DEBUGPRINTF(gencod, "c-transform_type_for gives %s for primitive c-type", mom_value_cstring(tree));
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for %s gives %s for primitive c-type",
+                              mom_item_cstring(typitm), mom_value_cstring(tree));
               return tree;
             }
         }
@@ -3397,8 +3398,49 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree)
     {
       auto typnod = (const struct mom_boxnode_st*)typexpv;
       unsigned sz = mom_raw_size(typexpv);
+      auto connitm = typnod->nod_connitm;
+      momvalue_t restree = nullptr;
+      if (connitm == MOM_PREDEFITM(pointer) && sz == 1)
+        {
+          auto starvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                                  literal_string(" *"),
+                                                  vartree);
+          auto dereftypv = typnod->nod_sons[0];
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for starvartree=%s dereftypv=%s",
+                          mom_value_cstring(starvartree), mom_value_cstring(dereftypv));
+          restree = transform_type_for(dereftypv, starvartree);
+        }
+      else if (connitm == MOM_PREDEFITM(array) && sz == 2)
+        {
+          auto comptypv = typnod->nod_sons[0];
+          auto dimv = typnod->nod_sons[1];
+          auto arrvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                                 vartree,
+                                                 literal_string("["),
+                                                 dimv,
+                                                 literal_string("]"));
+	  MOM_DEBUGPRINTF(gencod, "c-transform_type_for arrvartree=%s comptypv=%s",
+			  mom_value_cstring(arrvartree), mom_value_cstring(comptypv));
+	  restree = transform_type_for(comptypv, arrvartree);
+        }
+      else if (connitm == MOM_PREDEFITM(flexible_array) && sz == 1)
+        {
+          auto comptypv = typnod->nod_sons[0];
+          auto flexvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                                  vartree,
+                                                  literal_string("[]"));
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for flexvartree=%s comptypv=%s",
+                          mom_value_cstring(flexvartree), mom_value_cstring(comptypv));
+          restree = transform_type_for(comptypv, flexvartree);
+        }
+      else goto invalidtype;
+      MOM_DEBUGPRINTF(gencod, "c-transform_type_for typexpv=%s gives restree=%s",
+                      mom_value_cstring(typexpv), mom_value_cstring(restree));
+      if (restree) return restree;
+      else goto invalidtype;
     }
   else
+invalidtype:
     throw MOM_RUNTIME_PRINTF("invalid typexpv %s to c-transform",
                              mom_value_cstring(typexpv));
 #warning MomCEmitter::transform_type_for unimplemented
