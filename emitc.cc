@@ -518,6 +518,7 @@ public:
     else throw MOM_RUNTIME_PRINTF("bad definition %s", mom_value_cstring(nod));
   };
   momvalue_t declare_type (struct mom_item_st*typitm, bool*scalarp=nullptr);
+  momvalue_t declare_field (struct mom_item_st*flditm);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -2851,6 +2852,16 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 
 
 momvalue_t
+MomCEmitter::declare_field (struct mom_item_st*flditm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-declare_field start flditm:=%s",
+                  mom_item_content_cstring(flditm));
+#warning unimplemented MomCEmitter::declare_field
+  MOM_FATAPRINTF("unimplemented MomCEmitter::declare_field flditm=%s",
+                 mom_item_cstring(flditm));
+} // end of MomCEmitter::declare_field
+
+momvalue_t
 MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
 {
   MOM_DEBUGPRINTF(gencod, "declare_type start typitm=%s",
@@ -2936,13 +2947,39 @@ defaultcasetype:
       for (int fix=0; fix<(int)nbfields; fix++)
         {
           auto curflditm = fieldseq->seqitem[fix];
-          MOM_DEBUGPRINTF(gencod, "typitm=%s fix#%d curflditm:=%s",
+          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s fix#%d curflditm:=%s",
                           mom_item_cstring(typitm), fix,
                           mom_item_content_cstring(curflditm));
           if (!curflditm)
-            throw MOM_RUNTIME_PRINTF("in field type %s #%d missing field", mom_item_cstring(typitm), fix);
+            throw MOM_RUNTIME_PRINTF("in type %s #%d missing field", mom_item_cstring(typitm), fix);
           lock_item(curflditm);
           auto descurflditm = mom_unsync_item_descr(curflditm);
+          if (descurflditm == MOM_PREDEFITM(field))
+            {
+              MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s fix#%d field curflditm=%s",
+                              mom_item_cstring(typitm), fix,
+                              mom_item_cstring(curflditm));
+              auto fldtree = declare_field(curflditm);
+              MOM_DEBUGPRINTF(gencod, "c-declare_field curflditm=%s got fldtree=%s",
+                              mom_item_cstring(curflditm), mom_value_cstring(fldtree));
+#warning should do something with fldtree
+            }
+          else if ((descurflditm == MOM_PREDEFITM(type)
+                    && (void*)mom_unsync_item_get_phys_attr(curflditm,
+                        MOM_PREDEFITM(type))
+                    == MOM_PREDEFITM(union))
+                   || descurflditm == MOM_PREDEFITM(union))
+            {
+              auto unionseq =
+                mom_dyncast_seqitems(mom_unsync_item_get_phys_attr(curflditm,
+                                     MOM_PREDEFITM(union)));
+              if (unionseq==nullptr)
+                throw MOM_RUNTIME_PRINTF("in struct type %s union field #%d %s with missing union",
+                                         mom_item_cstring(typitm),
+                                         fix, mom_item_cstring(curflditm));
+              MOM_DEBUGPRINTF(gencod, "struct typitm %s field #%d %s unionseq %s",
+                              mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_value_cstring(unionseq));
+            }
 #warning c-declare_type should handle field item in struct
           MOM_FATAPRINTF("c-declare_type unimplemented typitm=%s fix#%d curflditm=%s descurflditm=%s",
                          mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_item_cstring(descurflditm));
