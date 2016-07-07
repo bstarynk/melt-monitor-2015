@@ -2953,7 +2953,6 @@ defaultcasetype:
                   mom_item_cstring(typitm), mom_item_cstring(tytypitm));
   if (tytypitm == MOM_PREDEFITM(struct))
     {
-#warning should handle extend in struct
       auto fieldseq =
         mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
       auto nbfields = mom_size(fieldseq);
@@ -2977,6 +2976,34 @@ defaultcasetype:
                       mom_value_cstring(strudecltree));
       add_global_decl(strudecltree);
       _cec_declareditems.insert(typitm);
+      struct mom_item_st*extenditm = nullptr;
+      {
+        auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
+        if (extendv != nullptr)
+          {
+            extenditm = mom_dyncast_item(extendv);
+            if (extenditm == nullptr)
+              throw MOM_RUNTIME_PRINTF("invalid `extend` %s in struct type %s",
+                                       mom_value_cstring(extendv), mom_item_cstring(typitm));
+            auto extendbind = get_global_binding(extenditm);
+            if (extendbind == nullptr)
+              throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
+                                       mom_item_cstring(extenditm), mom_item_cstring(typitm));
+            MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
+                            mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                            mom_item_cstring(extendbind->vd_rolitm),
+                            mom_value_cstring(extendbind->vd_what));
+            if (extendbind->vd_rolitm != MOM_PREDEFITM(struct))
+              throw  MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is wrongly bound to role %s what %s",
+                                        mom_item_cstring(extenditm), mom_item_cstring(typitm),
+                                        mom_item_cstring(extendbind->vd_rolitm),
+                                        mom_value_cstring(extendbind->vd_what));
+            auto extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
+            assert (extfieldseq != nullptr);
+            auto myfieldseq = fieldseq;
+            // @@@ concatenate extfieldseq with myfieldseq into fieldseq
+          }
+      }
 #warning we should bind to the perhaps extended sequence of fields
       bind_global(typitm, MOM_PREDEFITM(struct), fieldseq);
       traced_vector_values_t vectree;
