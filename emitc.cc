@@ -518,7 +518,10 @@ public:
     else throw MOM_RUNTIME_PRINTF("bad definition %s", mom_value_cstring(nod));
   };
   momvalue_t declare_type (struct mom_item_st*typitm, bool*scalarp=nullptr);
-  momvalue_t declare_field (struct mom_item_st*flditm);
+  // declare a field, and bind it if fromitm is non-null
+  momvalue_t declare_field (struct mom_item_st*flditm, struct mom_item_st*fromitm, int rank);
+  momvalue_t declare_field_unbound(struct mom_item_st*flditm)
+  { return declare_field(flditm,nullptr,0); };
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -2852,10 +2855,11 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 
 
 momvalue_t
-MomCEmitter::declare_field (struct mom_item_st*flditm)
+MomCEmitter::declare_field (struct mom_item_st*flditm, struct mom_item_st*fromitm, int rank)
 {
-  MOM_DEBUGPRINTF(gencod, "c-declare_field start flditm:=%s",
-                  mom_item_content_cstring(flditm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_field start flditm:=%s\n.. fromitm=%s rank#%d",
+                  mom_item_content_cstring(flditm),
+		  mom_item_cstring(fromitm), rank);
 #warning unimplemented MomCEmitter::declare_field
   MOM_FATAPRINTF("unimplemented MomCEmitter::declare_field flditm=%s",
                  mom_item_cstring(flditm));
@@ -2959,7 +2963,7 @@ defaultcasetype:
               MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s fix#%d field curflditm=%s",
                               mom_item_cstring(typitm), fix,
                               mom_item_cstring(curflditm));
-              auto fldtree = declare_field(curflditm);
+              auto fldtree = declare_field(curflditm, typitm, fix);
               MOM_DEBUGPRINTF(gencod, "c-declare_field curflditm=%s got fldtree=%s",
                               mom_item_cstring(curflditm), mom_value_cstring(fldtree));
 #warning should do something with fldtree
