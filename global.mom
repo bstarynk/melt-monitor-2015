@@ -484,6 +484,16 @@ comment
 
 
 
+*extend
+1467896846
+^mtime
+(
+comment
+"for extension of struct-s, union-s, enum-s, etc.."_
+)attrs
+
+
+
 *fail
 1457596906
 ^mtime
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *flatten_node
 1456758793
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "to make a node, but flattening some arguments"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *hashmap
 1464719561
 ^mtime
@@ -682,7 +693,6 @@ comment
 comment
 "hashed maps"_
 )attrs
-
 
 
 
@@ -855,6 +865,7 @@ comment
 
 
 
+
 *is_sequence
 1457361164
 ^mtime
@@ -867,7 +878,6 @@ set
 tuple
 )set
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ comment
 
 
 
+
 *main_module
 1458208784
 ^mtime
@@ -1040,7 +1051,6 @@ comment
 comment
 "the main module"_
 )attrs
-
 
 
 
@@ -1200,6 +1210,7 @@ comment
 
 
 
+
 *or
 1455462876
 ^mtime
@@ -1207,7 +1218,6 @@ comment
 comment
 "for disjunctions"_
 )attrs
-
 
 
 
@@ -1361,6 +1371,7 @@ comment
 
 
 
+
 *out_puts
 1457095329
 ^mtime
@@ -1368,7 +1379,6 @@ comment
 comment
 "put to output arg0 the string arg1"_
 )attrs
-
 
 
 
@@ -1542,6 +1552,7 @@ comment
 
 
 
+
 *payl_filebuffer
 1456929384
 ^mtime
@@ -1549,7 +1560,6 @@ comment
 comment
 "for file buffer payload"_
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ comment
 
 
 
+
 *payl_hashset_remove
 1456855856
 ^mtime
@@ -1734,7 +1745,6 @@ comment
 comment
 "remove some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1898,6 +1908,7 @@ comment
 
 
 
+
 *payl_websession
 1457031373
 ^mtime
@@ -1905,7 +1916,6 @@ comment
 comment
 "web session payload"_
 )attrs
-
 
 
 
@@ -2088,6 +2098,7 @@ comment
 
 
 
+
 *routine
 1464941643
 ^mtime
@@ -2095,7 +2106,6 @@ comment
 comment
 "for raw routines"_
 )attrs
-
 
 
 
@@ -2258,6 +2268,7 @@ comment
 
 
 
+
 *switch
 1465882737
 ^mtime
@@ -2265,7 +2276,6 @@ comment
 comment
 "for switch instructions"_
 )attrs
-
 
 
 
@@ -2545,6 +2555,7 @@ comment
 
 
 
+
 *unequal
 1457365666
 ^mtime
@@ -2552,7 +2563,6 @@ comment
 comment
 "test for inequality of two values"_
 )attrs
-
 
 
 
