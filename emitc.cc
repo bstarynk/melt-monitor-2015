@@ -39,6 +39,9 @@ public:
   typedef std::vector<momvalue_t,
           traceable_allocator<momvalue_t> >
           traced_vector_values_t;
+  typedef std::vector<struct mom_item_st*,
+    traceable_allocator<struct mom_item_st*> >
+    traced_vector_items_t;
   typedef std::set<const struct mom_item_st*,
     MomItemLess,
     traceable_allocator<struct mom_item_st*>>
@@ -109,7 +112,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -2977,6 +2980,7 @@ defaultcasetype:
       add_global_decl(strudecltree);
       _cec_declareditems.insert(typitm);
       struct mom_item_st*extenditm = nullptr;
+      traced_vector_values_t vectree;
       {
         auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
         if (extendv != nullptr)
@@ -3001,13 +3005,29 @@ defaultcasetype:
             auto extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
             assert (extfieldseq != nullptr);
             auto myfieldseq = fieldseq;
+            traced_vector_items_t vecfields;
+            unsigned extfieldlen = mom_raw_size(extfieldseq);
+            unsigned myfieldlen = mom_raw_size(myfieldseq);
+            vecfields.reserve(extfieldlen+ myfieldlen+1);
             // @@@ concatenate extfieldseq with myfieldseq into fieldseq
+            for (int extix=0; extix<(int)extfieldlen; extix++)
+              vecfields.push_back(extfieldseq->seqitem[extix]);
+            for (int myfix=0; myfix<(int)myfieldlen; myfix++)
+              vecfields.push_back(myfieldseq->seqitem[myfix]);
+            fieldseq =
+              (mom_seqitems_st*)
+              (mom_boxtuple_make_arr (vecfields.size(),
+                                      vecfields.data()));
+            nbfields = extfieldlen + myfieldlen;
+            vectree.reserve(nbfields+2);
+            vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                                  literal_string("/*extending "),
+                                                  extenditm,
+                                                  literal_string("*/")));
           }
       }
-#warning we should bind to the perhaps extended sequence of fields
-      bind_global(typitm, MOM_PREDEFITM(struct), fieldseq);
-      traced_vector_values_t vectree;
       vectree.reserve(nbfields+1);
+      bind_global(typitm, MOM_PREDEFITM(struct), fieldseq);
       for (int fix=0; fix<(int)nbfields; fix++)
         {
           auto curflditm = fieldseq->seqitem[fix];
