@@ -109,7 +109,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -491,6 +491,7 @@ public:
   static constexpr const char* CENUVAL_PREFIX = "momenuva_";
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
+  static constexpr const char* CFIELD_PREFIX = "momfld_";
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static constexpr const char* CBREAKLAB_PREFIX = "mombreaklab_";
@@ -521,7 +522,9 @@ public:
   // declare a field, and bind it if fromitm is non-null
   momvalue_t declare_field (struct mom_item_st*flditm, struct mom_item_st*fromitm, int rank);
   momvalue_t declare_field_unbound(struct mom_item_st*flditm)
-  { return declare_field(flditm,nullptr,0); };
+  {
+    return declare_field(flditm,nullptr,0);
+  };
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -2859,10 +2862,36 @@ MomCEmitter::declare_field (struct mom_item_st*flditm, struct mom_item_st*fromit
 {
   MOM_DEBUGPRINTF(gencod, "c-declare_field start flditm:=%s\n.. fromitm=%s rank#%d",
                   mom_item_content_cstring(flditm),
-		  mom_item_cstring(fromitm), rank);
-#warning unimplemented MomCEmitter::declare_field
-  MOM_FATAPRINTF("unimplemented MomCEmitter::declare_field flditm=%s",
-                 mom_item_cstring(flditm));
+                  mom_item_cstring(fromitm), rank);
+  assert (is_locked_item(flditm));
+  if (mom_unsync_item_descr(flditm) != MOM_PREDEFITM(field))
+    throw MOM_RUNTIME_PRINTF("%s is not a field (from %s)",
+                             mom_item_cstring(flditm), mom_item_cstring(fromitm));
+  auto typval = mom_unsync_item_get_phys_attr(flditm, MOM_PREDEFITM(type));
+  MOM_DEBUGPRINTF(gencod, "c-declare_field flditm=%s has typval=%s",
+                  mom_item_cstring(flditm), mom_value_cstring(typval));
+  if (typval == nullptr)
+    throw  MOM_RUNTIME_PRINTF("field %s (from %s) without type",
+                              mom_item_cstring(flditm), mom_item_cstring(fromitm));
+  if (fromitm != nullptr)
+    {
+      auto fbnd = get_binding(flditm);
+      if (fbnd)
+        throw MOM_RUNTIME_PRINTF("field %s #%d from %s is already bound to role %s what %s",
+                                 mom_item_cstring(flditm),
+                                 rank, mom_item_cstring(fromitm),
+                                 mom_item_cstring(fbnd->vd_rolitm),
+                                 mom_value_cstring(fbnd->vd_what));
+      bind_global(flditm, MOM_PREDEFITM(field), fromitm, nullptr, rank);
+    }
+  auto fldtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                     literal_string (CFIELD_PREFIX), flditm);
+  MOM_DEBUGPRINTF(gencod, "c-declare_field flditm=%s fldtree=%s",
+                  mom_item_cstring(flditm), mom_value_cstring(fldtree));
+  auto dcltree = transform_type_for(typval,fldtree);
+  MOM_DEBUGPRINTF(gencod, "c-declare_field flditm=%s gives dcltree=%s",
+                  mom_item_cstring(flditm), mom_value_cstring(dcltree));
+  return dcltree;
 } // end of MomCEmitter::declare_field
 
 momvalue_t
@@ -2948,6 +2977,8 @@ defaultcasetype:
       add_global_decl(strudecltree);
       _cec_declareditems.insert(typitm);
       bind_global(typitm, MOM_PREDEFITM(struct), nullptr);
+      traced_vector_values_t vectree;
+      vectree.reserve(nbfields+1);
       for (int fix=0; fix<(int)nbfields; fix++)
         {
           auto curflditm = fieldseq->seqitem[fix];
@@ -2966,7 +2997,7 @@ defaultcasetype:
               auto fldtree = declare_field(curflditm, typitm, fix);
               MOM_DEBUGPRINTF(gencod, "c-declare_field curflditm=%s got fldtree=%s",
                               mom_item_cstring(curflditm), mom_value_cstring(fldtree));
-#warning should do something with fldtree
+              vectree.push_back(fldtree);
             }
           else if ((descurflditm == MOM_PREDEFITM(type)
                     && (void*)mom_unsync_item_get_phys_attr(curflditm,
@@ -2983,10 +3014,46 @@ defaultcasetype:
                                          fix, mom_item_cstring(curflditm));
               MOM_DEBUGPRINTF(gencod, "struct typitm %s field #%d %s unionseq %s",
                               mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_value_cstring(unionseq));
+              traced_vector_values_t univectree;
+              unsigned unionlen = mom_raw_size(unionseq);
+              for (int uix=0; uix<(int)unionlen; uix++)
+                {
+                  auto uniflditm = unionseq->seqitem[uix];
+                  MOM_DEBUGPRINTF(gencod, "struct typitm %s field fix#%d curflditm=%s uix#%d uniflditm=%s",
+                                  mom_item_cstring(typitm), fix,
+                                  mom_item_cstring(curflditm), uix,
+                                  mom_item_cstring(uniflditm));
+                  if (!uniflditm)
+                    throw MOM_RUNTIME_PRINTF("in struct type %s #%d union-field %s missing #%d",
+                                             mom_item_cstring(typitm), fix,
+                                             mom_item_cstring(curflditm),
+                                             uix);
+                  lock_item(uniflditm);
+                  if (mom_unsync_item_descr(uniflditm) != MOM_PREDEFITM(field))
+                    throw MOM_RUNTIME_PRINTF("in struct type %s #%d bad union-field %s #%d",
+                                             mom_item_cstring(typitm), fix,
+                                             mom_item_cstring(curflditm),
+                                             uix);
+                  auto unifldtree = declare_field(uniflditm, typitm, fix);
+                  MOM_DEBUGPRINTF(gencod, "c-declare_field uniflditm=%s got unifldtree=%s for uix#%d",
+                                  mom_item_cstring(uniflditm), mom_value_cstring(unifldtree), uix);
+                  univectree.push_back(unifldtree);
+                }
+              auto unifldtree =
+                mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                          literal_string("union /*unioncomp "),
+                                          curflditm,
+                                          literal_string("*/ "),
+#warning some brace node containing a semicolon
+                                          literal_string(" /*end-unioncomp "),
+                                          curflditm,
+                                          literal_string("*/"));
+              MOM_DEBUGPRINTF(gencod, "c-declare_field union curflditm=%s gives unifldtree=%s",
+                              mom_item_cstring(curflditm), mom_value_cstring(unifldtree));
             }
-#warning c-declare_type should handle field item in struct
-          MOM_FATAPRINTF("c-declare_type unimplemented typitm=%s fix#%d curflditm=%s descurflditm=%s",
-                         mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_item_cstring(descurflditm));
+          else
+            throw MOM_RUNTIME_PRINTF("in struct type %s bad field #%d %s",
+                                     mom_item_cstring(typitm), fix, mom_item_cstring(curflditm));
         }
     }
   else if  (tytypitm == MOM_PREDEFITM(union))
