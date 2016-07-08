@@ -528,6 +528,12 @@ public:
   {
     return declare_field(flditm,nullptr,0);
   };
+  // declare a struct member, either a field or a union of fields
+  momvalue_t declare_struct_member(struct mom_item_st*memitm, struct mom_item_st*fromitm, int rank);
+  momvalue_t declare_struct_member_unbound(struct mom_item_st*memitm)
+  {
+    return declare_struct_member(memitm,nullptr,0);
+  };
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -2898,6 +2904,78 @@ MomCEmitter::declare_field (struct mom_item_st*flditm, struct mom_item_st*fromit
 } // end of MomCEmitter::declare_field
 
 
+
+momvalue_t
+MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_st*fromitm, int rank)
+{
+  MOM_DEBUGPRINTF(gencod, "c-declare_struct_member start memitm:=%s\n.. fromitm=%s rank#%d",
+                  mom_item_content_cstring(memitm),
+                  mom_item_cstring(fromitm), rank);
+  assert (is_locked_item(memitm));
+  auto membind = get_binding(memitm);
+  if (membind != nullptr && fromitm != nullptr)
+    throw MOM_RUNTIME_PRINTF("struct member %s from %s rk#%d already bound to role %s what %s",
+                             mom_item_cstring(memitm), mom_item_cstring(fromitm), rank,
+                             mom_item_cstring(membind->vd_rolitm),
+                             mom_value_cstring(membind->vd_what));
+
+  auto descitm = mom_unsync_item_descr(memitm);
+  if (descitm == MOM_PREDEFITM(field))
+    {
+      auto fldtree = declare_field(memitm,fromitm,rank);
+      MOM_DEBUGPRINTF(gencod, "c-declare_struct_member field memitm=%s gives %s",
+                      mom_item_cstring(memitm), mom_value_cstring(fldtree));
+      return fldtree;
+    }
+  else if (descitm == MOM_PREDEFITM(union))
+    {
+      auto ufldseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr(memitm, MOM_PREDEFITM(union)));
+      auto ufldlen = mom_size(ufldseq);
+      if (ufldlen == 0)
+        throw MOM_RUNTIME_PRINTF("bad or empty union in struct member %s from %s rk#%d",
+                                 mom_item_cstring(memitm), mom_item_cstring(fromitm), rank);
+      if (fromitm != nullptr)
+        bind_global(memitm, MOM_PREDEFITM(type), mom_boxnode_make_va(MOM_PREDEFITM(union), 2,
+                    fromitm, mom_int_make(rank)));
+      traced_vector_values_t vecomptree;
+      vecomptree.reserve(ufldlen);
+      for (int uix=0; uix<(int)ufldlen; uix++)
+        {
+          auto curfitm = ufldseq->seqitem[uix];
+          if (curfitm == nullptr)
+            throw
+            MOM_RUNTIME_PRINTF("member %s from %s rk#%d is union with null #%d component",
+                               mom_item_cstring(memitm), mom_item_cstring(fromitm), rank, uix);
+          lock_item(curfitm);
+          MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d curfitm=%s",
+                          mom_item_cstring(memitm), uix, mom_item_cstring(curfitm));
+          auto curftree = declare_field(curfitm, fromitm, rank);
+          MOM_DEBUGPRINTF(gencod, "c-declare_struct_member curfitm=%s uix#%d curftree=%s",
+                          mom_item_cstring(curfitm), uix, mom_value_cstring(curftree));
+          vecomptree.push_back(curfitm);
+        }
+      vecomptree.push_back(literal_string(";"));
+      auto bractree = //
+        mom_boxnode_make_va (MOM_PREDEFITM(brace), 1,
+                             mom_boxnode_make(MOM_PREDEFITM(semicolon),vecomptree.size(),vecomptree.data()));
+      auto unitree =
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("union"),
+                                  literal_string(" /*"),
+                                  memitm,
+                                  literal_string("*/ "),
+                                  bractree);
+      MOM_DEBUGPRINTF(gencod, "c-declare_struct_member memitm=%s from %s rank %s gives unitree=%s",
+                      mom_item_cstring(memitm), mom_item_cstring(fromitm), rank,
+                      mom_value_cstring(unitree));
+      return unitree;
+    }
+  else
+    throw MOM_RUNTIME_PRINTF("member %s from %s rk#%d has bad descr %s",
+                             mom_item_cstring(memitm), mom_item_cstring(fromitm), rank,
+                             mom_item_cstring(descitm));
+} // end of MomCEmitter::declare_struct_member
+
 ////////////////
 momvalue_t
 MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
@@ -2914,6 +2992,14 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
         *scalarp = true;
       return cextypv;
     }
+  {
+    auto tybind = get_binding(typitm);
+    if (tybind != nullptr)
+      throw MOM_RUNTIME_PRINTF("declared type %s already bound to role %s what %s",
+                               mom_item_cstring(typitm),
+                               mom_item_cstring(tybind->vd_rolitm),
+                               mom_value_cstring(tybind->vd_rolitm));
+  }
 #define NBKNOWNTYPE_MOM 31
 #define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:	\
   if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
@@ -2936,12 +3022,14 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if (scalarp)
         *scalarp = true;
       return literal_string(CDOUBLE_TYPE);
-    defaultcasetype:
+defaultcasetype:
     default:
       break;
     }
 #undef NBKNOWNTYPE_MOM
 #undef CASE_KNOWNTYPE_MOM
+  /// temporary binding, will be rebound later
+  bind_global(typitm, MOM_PREDEFITM(type), nullptr);
   auto tytree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
                                     literal_string(CTYPE_PREFIX),
                                     typitm);
@@ -2958,14 +3046,15 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                   mom_item_cstring(typitm), mom_item_cstring(tytypitm));
   if (tytypitm == MOM_PREDEFITM(struct))
     {
-      auto fieldseq =
-        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
-      auto nbfields = mom_size(fieldseq);
-      if (fieldseq==nullptr || nbfields == 0)
-        throw MOM_RUNTIME_PRINTF("struct type item %s missing or empty `struct` : fieldseq",
+      const struct mom_boxtuple_st*fieldtup = nullptr;
+      auto myfieldtup =
+        mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
+      auto mynbfields = mom_size(myfieldtup);
+      if (myfieldtup==nullptr || mynbfields == 0)
+        throw MOM_RUNTIME_PRINTF("struct type item %s missing or empty `struct` : field-tuple",
                                  mom_item_cstring(typitm));
       MOM_DEBUGPRINTF(gencod, "typitm=%s struct of fields %s",
-                      mom_item_cstring(typitm), mom_value_cstring(fieldseq));
+                      mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
       auto strudecltree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                   literal_string("typedef "),
@@ -2982,179 +3071,134 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       add_global_decl(strudecltree);
       _cec_declareditems.insert(typitm);
       struct mom_item_st*extenditm = nullptr;
-      const struct mom_seqitems_st*extfieldseq = nullptr;
+      const struct mom_boxtuple_st*extfieldtup = nullptr;
       unsigned extfieldlen = 0;
       traced_vector_values_t vectree;
-      {
-        auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
-        if (extendv != nullptr)
-          {
-            extenditm = mom_dyncast_item(extendv);
-            if (extenditm == nullptr)
-              throw MOM_RUNTIME_PRINTF("invalid `extend` %s in struct type %s",
-                                       mom_value_cstring(extendv), mom_item_cstring(typitm));
-            auto extendbind = get_global_binding(extenditm);
-            if (extendbind == nullptr)
-              throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
-                                       mom_item_cstring(extenditm), mom_item_cstring(typitm));
-            MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
-                            mom_item_cstring(typitm), mom_item_cstring(extenditm),
-                            mom_item_cstring(extendbind->vd_rolitm),
-                            mom_value_cstring(extendbind->vd_what));
-            if (extendbind->vd_rolitm != MOM_PREDEFITM(struct))
-              throw  MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is wrongly bound to role %s what %s",
-                                        mom_item_cstring(extenditm), mom_item_cstring(typitm),
-                                        mom_item_cstring(extendbind->vd_rolitm),
-                                        mom_value_cstring(extendbind->vd_what));
-	    extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
-            assert (extfieldseq != nullptr);
-            auto myfieldseq = fieldseq;
-            traced_vector_items_t vecfields;
-	    extfieldlen = mom_raw_size(extfieldseq);
-            unsigned myfieldlen = mom_raw_size(myfieldseq);
-            vecfields.reserve(extfieldlen+ myfieldlen+1);
-            // concatenate extfieldseq with myfieldseq into fieldseq
-            for (int extix=0; extix<(int)extfieldlen; extix++)
-              vecfields.push_back(extfieldseq->seqitem[extix]);
-            for (int myfix=0; myfix<(int)myfieldlen; myfix++)
-              vecfields.push_back(myfieldseq->seqitem[myfix]);
-            fieldseq =
-              (mom_seqitems_st*)
-              (mom_boxtuple_make_arr (vecfields.size(),
-                                      vecfields.data()));
-            nbfields = extfieldlen + myfieldlen;
-            vectree.reserve(nbfields+2);
-            vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-                                                  literal_string("/*extending "),
-                                                  extenditm,
-                                                  literal_string("*/")));
-          }
-      }
-      vectree.reserve(nbfields+1);
-      bind_global(typitm, MOM_PREDEFITM(struct), fieldseq);
-      for (int fix=0; fix<(int)nbfields; fix++)
+      auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
+      if (extendv != nullptr)
         {
-	  if (extenditm != nullptr && fix == extfieldlen)
-            vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-                                                  literal_string("/*extended "),
-                                                  extenditm,
-                                                  literal_string("*/")));
-	    
-          auto curflditm = fieldseq->seqitem[fix];
-          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s fix#%d curflditm:=%s",
-                          mom_item_cstring(typitm), fix,
-                          mom_item_content_cstring(curflditm));
-          if (!curflditm)
-            throw MOM_RUNTIME_PRINTF("in type %s #%d missing field", mom_item_cstring(typitm), fix);
-          lock_item(curflditm);
-          auto descurflditm = mom_unsync_item_descr(curflditm);
-          if (descurflditm == MOM_PREDEFITM(field))
+          traced_vector_items_t vecfields;
+          extenditm = mom_dyncast_item(extendv);
+          if (extenditm == nullptr)
+            throw MOM_RUNTIME_PRINTF("invalid `extend` %s in struct type %s",
+                                     mom_value_cstring(extendv), mom_item_cstring(typitm));
+          auto extendbind = get_global_binding(extenditm);
+          if (extendbind == nullptr)
+            throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
+                                     mom_item_cstring(extenditm), mom_item_cstring(typitm));
+          MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
+                          mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                          mom_item_cstring(extendbind->vd_rolitm),
+                          mom_value_cstring(extendbind->vd_what));
+          if (extendbind->vd_rolitm != MOM_PREDEFITM(struct))
+            throw  MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is wrongly bound to role %s what %s",
+                                      mom_item_cstring(extenditm), mom_item_cstring(typitm),
+                                      mom_item_cstring(extendbind->vd_rolitm),
+                                      mom_value_cstring(extendbind->vd_what));
+          extfieldtup = mom_dyncast_tuple(extendbind->vd_what);
+          assert (extfieldtup != nullptr);
+          extfieldlen = mom_raw_size(extfieldtup);
+          vectree.reserve(extfieldlen+mynbfields+3);
+          vecfields.reserve(extfieldlen+mynbfields+1);
+          auto introtree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                literal_string("/*extending struct "),
+                                extenditm,
+                                literal_string("*/"));
+          MOM_DEBUGPRINTF(gencod, "typitm=%s introtree=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(introtree));
+          vectree.push_back(introtree);
+          for (int efix=0; efix<(int)extfieldlen; efix++)
             {
-              MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s fix#%d field curflditm=%s",
-                              mom_item_cstring(typitm), fix,
-                              mom_item_cstring(curflditm));
-              auto fldtree = declare_field(curflditm, typitm, fix);
-              MOM_DEBUGPRINTF(gencod, "c-declare_field curflditm=%s got fldtree=%s",
-                              mom_item_cstring(curflditm), mom_value_cstring(fldtree));
-              vectree.push_back(fldtree);
-            }
-          else if ((descurflditm == MOM_PREDEFITM(type)
-                    && (void*)mom_unsync_item_get_phys_attr(curflditm,
-							    MOM_PREDEFITM(type))
-                    == MOM_PREDEFITM(union))
-                   || descurflditm == MOM_PREDEFITM(union))
-            {
-              auto unionseq =
-                mom_dyncast_seqitems(mom_unsync_item_get_phys_attr(curflditm,
-								   MOM_PREDEFITM(union)));
-              if (unionseq==nullptr)
-                throw MOM_RUNTIME_PRINTF("in struct type %s union field #%d %s with missing union",
-                                         mom_item_cstring(typitm),
-                                         fix, mom_item_cstring(curflditm));
-              MOM_DEBUGPRINTF(gencod, "struct typitm %s field #%d %s unionseq %s",
-                              mom_item_cstring(typitm), fix, mom_item_cstring(curflditm), mom_value_cstring(unionseq));
-              traced_vector_values_t univectree;
-              unsigned unionlen = mom_raw_size(unionseq);
-              for (int uix=0; uix<(int)unionlen; uix++)
-                {
-                  auto uniflditm = unionseq->seqitem[uix];
-                  MOM_DEBUGPRINTF(gencod, "struct typitm %s field fix#%d curflditm=%s uix#%d uniflditm=%s",
-                                  mom_item_cstring(typitm), fix,
-                                  mom_item_cstring(curflditm), uix,
-                                  mom_item_cstring(uniflditm));
-                  if (!uniflditm)
-                    throw MOM_RUNTIME_PRINTF("in struct type %s #%d union-field %s missing #%d",
-                                             mom_item_cstring(typitm), fix,
-                                             mom_item_cstring(curflditm),
-                                             uix);
-                  lock_item(uniflditm);
-                  if (mom_unsync_item_descr(uniflditm) != MOM_PREDEFITM(field))
-                    throw MOM_RUNTIME_PRINTF("in struct type %s #%d bad union-field %s #%d",
-                                             mom_item_cstring(typitm), fix,
-                                             mom_item_cstring(curflditm),
-                                             uix);
-                  auto unifldtree = declare_field(uniflditm, typitm, fix);
-                  MOM_DEBUGPRINTF(gencod, "c-declare_field uniflditm=%s got unifldtree=%s for uix#%d",
-                                  mom_item_cstring(uniflditm), mom_value_cstring(unifldtree), uix);
-                  univectree.push_back(unifldtree);
-                }
-              auto unifldtree =
-                mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                          literal_string("union /*unioncomp "),
-                                          curflditm,
-                                          literal_string("*/ "),
-                                          mom_boxnode_make_va(MOM_PREDEFITM(brace),
-							      1,
-							      mom_boxnode_make(MOM_PREDEFITM(semicolon),
-									       univectree.size(),
-									       univectree.data())),
-                                          literal_string(" /*end-unioncomp "),
-                                          curflditm,
-                                          literal_string("*/"));
-              MOM_DEBUGPRINTF(gencod, "c-declare_field union curflditm=%s gives unifldtree=%s",
-                              mom_item_cstring(curflditm), mom_value_cstring(unifldtree));
-              vectree.push_back(unifldtree);
-            }
-          else
-            throw MOM_RUNTIME_PRINTF("in struct type %s bad field #%d %s",
-                                     mom_item_cstring(typitm), fix, mom_item_cstring(curflditm));
+              auto curextfitm = extfieldtup->seqitem[efix];
+              assert (is_locked_item(curextfitm));
+              vecfields.push_back(curextfitm);
+              MOM_DEBUGPRINTF(gencod, "typitm=%s efix#%d curextfitm=%s",
+                              mom_item_cstring(typitm), efix, mom_item_cstring(curextfitm));
+              auto curextftree = declare_struct_member_unbound (curextfitm);
+              MOM_DEBUGPRINTF(gencod, "typitm=%s efix#%d curextfitm=%s curextftree=%s",
+                              mom_item_cstring(typitm), efix,
+                              mom_item_cstring(curextfitm), mom_value_cstring(curextftree));
+              assert (curextftree != nullptr);
+              vectree.push_back(curextftree);
+            };
+          auto aftertree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+                                literal_string("/*extended struct "),
+                                extenditm,
+                                literal_string(" in "),
+                                typitm,
+                                literal_string("*/"));
+          MOM_DEBUGPRINTF(gencod, "typitm=%s aftertree=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(aftertree));
+          vectree.push_back(aftertree);
+          auto allfldtup = mom_boxtuple_make_arr(vecfields.size(), vecfields.data());
+          MOM_DEBUGPRINTF(gencod, "typitm=%s binding allfldtup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(allfldtup));
+          bind_global(typitm, MOM_PREDEFITM(struct), allfldtup);
         }
-      auto strubracetree= mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                                              1,
-                                              mom_boxnode_make(MOM_PREDEFITM(semicolon),
-							       vectree.size(),
-							       vectree.data()));
-      auto structree =
+      else   /* no extension in struct */
+        {
+          MOM_DEBUGPRINTF(gencod, "typitm=%s binding myfieldtup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
+          bind_global(typitm, MOM_PREDEFITM(struct), myfieldtup);
+        }
+      for (int fix=0; fix<(int)mynbfields; fix++)
+        {
+          auto curflditm = myfieldtup->seqitem[fix];
+          MOM_DEBUGPRINTF(gencod, "typitm=%s fix#%d curflditm=%s",
+                          mom_item_cstring(typitm), fix, mom_item_cstring(curflditm));
+          if (curflditm==nullptr)
+            throw MOM_RUNTIME_PRINTF("in struct type %s field #%d is null",
+                                     mom_item_cstring(typitm), fix);
+          lock_item(curflditm);
+          auto curftree = declare_struct_member(curflditm, typitm, fix+extfieldlen);
+          MOM_DEBUGPRINTF(gencod, "typitm=%s fix#%d curflditm=%s curftree=%s",
+                          mom_item_cstring(typitm), fix,
+                          mom_item_cstring(curflditm), mom_value_cstring(curftree));
+          vectree.push_back(curftree);
+        }
+      auto endtree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                            literal_string("/*ending struct "),
+                            typitm,
+                            literal_string("*/"));
+      MOM_DEBUGPRINTF(gencod, "typitm=%s endtree=%s", mom_item_cstring(typitm), mom_value_cstring(endtree));
+      vectree.push_back(endtree);
+      auto bractree =
+        mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
+                            mom_boxnode_make(MOM_PREDEFITM(semicolon), vectree.size(), vectree.data()));
+      vectree.clear();
+      auto strudeftree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                   literal_string("struct "),
                                   literal_string(CSTRUCT_PREFIX),
                                   typitm,
                                   literal_string(" "),
-                                  strubracetree,
+                                  bractree,
                                   literal_string(";"));
-      MOM_DEBUGPRINTF(gencod, "typitm=%s struct adding global decl structree=%s",
-                      mom_item_cstring(typitm), mom_value_cstring(structree));
-      add_global_decl(structree);
-      if (scalarp) *scalarp = false;
-      auto restree =
-        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                            literal_string(CTYPE_PREFIX),
-                            typitm);
-      MOM_DEBUGPRINTF(gencod, "typitm=%s struct gives restree=%s",
-                      mom_item_cstring(typitm),
-                      mom_value_cstring(restree));
-      return restree;
-    }
+      MOM_DEBUGPRINTF(gencod, "typitm=%s strudeftree=%s", mom_item_cstring(typitm), mom_value_cstring(strudeftree));
+      add_global_decl(strudeftree);
+    } // end handling struct
   else if  (tytypitm == MOM_PREDEFITM(union))
     {
       struct mom_item_st*extenditm = nullptr;
       const struct mom_seqitems_st*extfieldseq = nullptr;
       unsigned extfieldlen = 0;
       traced_vector_values_t vectree;
+      const struct mom_seqitems_st*myfieldseq =
+      mom_dyncast_seqitems(mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(union)));
+      unsigned mynbfields = mom_size(myfieldseq);
+      MOM_DEBUGPRINTF(gencod, "typitm=%s union of fields %s",
+                      mom_item_cstring(typitm), mom_value_cstring(myfieldseq));
+      if( mynbfields==0)
+        throw MOM_RUNTIME_PRINTF("union type %s with missing or empty `union` sequence",
+                                 mom_item_cstring(typitm));
       {
         auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
         if (extendv != nullptr)
           {
+            traced_vector_items_t vecfields;
             extenditm = mom_dyncast_item(extendv);
             if (extenditm == nullptr)
               throw MOM_RUNTIME_PRINTF("invalid `extend` %s in union type %s",
@@ -3172,26 +3216,44 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                                         mom_item_cstring(extenditm), mom_item_cstring(typitm),
                                         mom_item_cstring(extendbind->vd_rolitm),
                                         mom_value_cstring(extendbind->vd_what));
-	    extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
+            extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
             MOM_DEBUGPRINTF(gencod, "typitm=%s extended union extfieldseq=%s",
-			    mom_item_cstring(typitm), mom_value_cstring(extfieldseq));
+                            mom_item_cstring(typitm), mom_value_cstring(extfieldseq));
             assert (extfieldseq != nullptr);
-	  }
+            extfieldlen = mom_raw_size(extfieldseq);
+            vecfields.reserve(extfieldlen+mynbfields+1);
+            auto introtree =
+              mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                  literal_string("/*extending union "),
+                                  extenditm,
+                                  literal_string("*/"));
+            vectree.push_back(introtree);
+            for (int efix=0; efix<(int)extfieldlen; efix++)
+              {
+                auto xflditm = extfieldseq->seqitem[efix];
+                MOM_DEBUGPRINTF(gencod, "typitm=%s union xflditm=%s efix#%d",
+                                mom_item_cstring(typitm), mom_item_cstring(xflditm), efix);
+                assert (is_locked_item(xflditm));
+                vecfields.push_back(xflditm);
+                auto xfldtree = declare_field_unbound(xflditm);
+                MOM_DEBUGPRINTF(gencod, "typitm=%s union xflditm=%s efix#%d xfldtree=%s",
+                                mom_item_cstring(typitm), mom_item_cstring(xflditm),
+                                efix, mom_value_cstring(xfldtree));
+                assert (xfldtree != nullptr);
+                vectree.push_back(xfldtree);
+              }
+#warning @@@ c-declare_type for union is incomplete
+          }
+        else   // union without extension
+          {
+            bind_global(typitm, MOM_PREDEFITM(union), myfieldseq);
+          }
       }
-      auto ufieldseq =
-        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(union)));
-      if (ufieldseq==nullptr)
-        throw MOM_RUNTIME_PRINTF("union type item %s missing `union` : fieldseq",
-                                 mom_item_cstring(typitm));
-      MOM_DEBUGPRINTF(gencod, "typitm=%s union of fields %s",
-                      mom_item_cstring(typitm), mom_value_cstring(ufieldseq));
-#warning should bind union to extended & own field seq
-      unsigned unionlen = mom_raw_size(ufieldseq);
       traced_vector_values_t uncompvec;
-      uncompvec.reserve(unionlen+1);
-      for (int ufix=0; ufix<(int)unionlen; ufix++)
+      uncompvec.reserve(mynbfields+1);
+      for (int ufix=0; ufix<(int)mynbfields; ufix++)
         {
-          auto curuflditm =  ufieldseq->seqitem[ufix];
+          auto curuflditm =  myfieldseq->seqitem[ufix];
           MOM_DEBUGPRINTF(gencod, "union typitm %s field ufix#%d curuflditm=%s",
                           mom_item_cstring(typitm), ufix,
                           mom_item_cstring(curuflditm));
@@ -3213,18 +3275,20 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
     }
   else if  (tytypitm == MOM_PREDEFITM(enum))
     {
-      auto enuseq =
-        mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
-      if (enuseq==nullptr)
+      auto enutup =
+        mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
+      if (enutup==nullptr)
         throw MOM_RUNTIME_PRINTF("enum type item %s missing `enum` : enuvalseq",
                                  mom_item_cstring(typitm));
+      MOM_FATAPRINTF("c-declare type %s enum %s unimplemented",
+                     mom_item_cstring(typitm), mom_value_cstring(enutup));
+#warning c-declare_type enum unimplemented
     }
   else
     throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
-#warning MomCEmitter::declare_type partially unimplemented
-  // should handle records, structs, unions, ...
-  MOM_FATAPRINTF( "c-emitter declare_type partially unimplemented typitm=%s",
-                  mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s gives %s",
+                  mom_item_cstring(typitm), mom_value_cstring(tytree));
+  return tytree;
 } // end of MomCEmitter::declare_type
 
 

@@ -44,7 +44,12 @@ A *type-item* has `descr` : `type`. It either has a `c_code` :
 *string* if it is a primitive type, or a `type` : `union` or `type` :
 `struct` if it is an aggregate type, or a `type` : `enum` if it is an
 enumeration type. A union type should has `union` : *fields-seq* and a
-struct type should has `struct` : *fields-seq*
+struct type should has `struct` : *struct-fields-tuple*. The
+*fields-seq* inside a union have distinct items of `descr` : `field`
+with some `type` : *type-expr*. The *struct-fields-tuple* inside a
+struct have items of `descr` : `field` like in unions, or items of
+`descr` : `union` and `union` : *struct-fields-seq*, a sequence or
+tuple of distinct items of `descr` : `field` like previously.
 
 
 An *instruction-item* is one of:
