@@ -3180,6 +3180,7 @@ defaultcasetype:
       MOM_DEBUGPRINTF(gencod, "typitm=%s strudeftree=%s", mom_item_cstring(typitm), mom_value_cstring(strudeftree));
       add_global_decl(strudeftree);
     } // end handling struct
+  ////////////////
   else if  (tytypitm == MOM_PREDEFITM(union))
     {
       struct mom_item_st*extenditm = nullptr;
@@ -3228,6 +3229,9 @@ defaultcasetype:
                                   extenditm,
                                   literal_string("*/"));
             vectree.push_back(introtree);
+	    MOM_DEBUGPRINTF(gencod, "typitm=%s introtree=%s",
+			    mom_item_cstring(typitm),
+			    mom_value_cstring(introtree));
             for (int efix=0; efix<(int)extfieldlen; efix++)
               {
                 auto xflditm = extfieldseq->seqitem[efix];
@@ -3242,6 +3246,32 @@ defaultcasetype:
                 assert (xfldtree != nullptr);
                 vectree.push_back(xfldtree);
               }
+            auto aftertree =
+              mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                  literal_string("/*extended with union "),
+                                  extenditm,
+                                  literal_string("*/"));
+	    MOM_DEBUGPRINTF(gencod, "typitm=%s aftertree=%s",
+			    mom_item_cstring(typitm),
+			    mom_value_cstring(aftertree));
+            vectree.push_back(aftertree);
+	    for (int fix=0; fix<(int)mynbfields; fix++) {
+	      auto curflditm = myfieldseq->seqitem[fix];
+	      MOM_DEBUGPRINTF(gencod, "typitm=%s union fix#%d curflditm=%s",
+			      mom_item_cstring(typitm), fix,
+			      mom_item_cstring(curflditm));
+	      if (curflditm == nullptr)
+		throw MOM_RUNTIME_PRINTF("in union type %s field #%d is missing",
+					 mom_item_cstring(typitm), fix);
+	      lock_item(curflditm);
+	      vecfields.push_back(curflditm);
+	      auto curfldtree = declare_field(curflditm, typitm, fix+extfieldlen);
+	      MOM_DEBUGPRINTF(gencod, "typitm=%s union fix#%d curflditm=%s curfldtree=%s",
+			      mom_item_cstring(typitm), fix,
+			      mom_item_cstring(curflditm),
+			      mom_value_cstring(curfldtree));
+	      vectree.push_back(curfldtree);
+	    }
 #warning @@@ c-declare_type for union is incomplete
           }
         else   // union without extension
@@ -3272,7 +3302,8 @@ defaultcasetype:
                           mom_item_cstring(curuflditm),
                           mom_value_cstring(unifldtree));
         }
-    }
+    } /// end union
+  ////////////////
   else if  (tytypitm == MOM_PREDEFITM(enum))
     {
       auto enutup =
@@ -3283,7 +3314,8 @@ defaultcasetype:
       MOM_FATAPRINTF("c-declare type %s enum %s unimplemented",
                      mom_item_cstring(typitm), mom_value_cstring(enutup));
 #warning c-declare_type enum unimplemented
-    }
+    }/// end enum
+  ////////////////
   else
     throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
   MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s gives %s",
