@@ -89,6 +89,9 @@ public:
   static const unsigned constexpr NB_MAX_BLOCKS = 65536;
   static const unsigned constexpr NB_MAX_INSTRS = 1048576;
 private:
+  /* perhaps we want to modify some items after a successful
+     compilation, e.g. put ranks of fields inside them, etc.. */
+#warning we might have a todo list of functions to be run at end of compilation, to modify some items
   const unsigned _ce_magic;
   struct mom_item_st* _ce_topitm;
   std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_veclockeditems;
