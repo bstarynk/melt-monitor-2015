@@ -89,10 +89,8 @@ public:
   static const unsigned constexpr NB_MAX_BLOCKS = 65536;
   static const unsigned constexpr NB_MAX_INSTRS = 1048576;
 private:
-  /* perhaps we want to modify some items after a successful
-     compilation, e.g. put ranks of fields inside them, etc.. */
-#warning we might have a todo list of functions to be run at end of compilation, to modify some items
   const unsigned _ce_magic;
+  bool _ce_failing;
   struct mom_item_st* _ce_topitm;
   std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_veclockeditems;
   traced_set_items_t _ce_setlockeditems;
@@ -107,6 +105,9 @@ protected:
       std::less<std::string>,
       traceable_allocator<std::pair<std::string,momvalue_t>>> _ce_literalstringmap;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
+  /* perhaps we want to modify some items after a successful
+     compilation, e.g. put ranks of fields inside them, etc.. */
+  std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_doatendque;
   traced_varmap_t _ce_globalvarmap;
   traced_varmap_t _ce_localvarmap;
   traced_set_values_t _ce_localvalueset;
@@ -249,6 +250,10 @@ protected:
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
 public:
+  void failing(void)
+  {
+    _ce_failing = true;
+  };
   momvalue_t literal_string(const std::string&s)
   {
     auto it = _ce_literalstringmap.find(s);
@@ -425,6 +430,10 @@ public:
   {
     _ce_todoque.push_back(tf);
   };
+  void do_at_end(const todofun_t& tf)
+  {
+    _ce_doatendque.push_back(tf);
+  }
   unsigned long nb_todos() const
   {
     return _ce_todoque.size();
@@ -720,6 +729,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     }
   catch (const MomRuntimeErrorAt& e)
     {
+      cemit.failing();
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
                         "mom_emit_c_code %s failed with MOM runtime exception %s in %s",
                         mom_item_cstring(itm), mom_gc_strdup(e.what()), mom_item_cstring(cemit.current_function()));
@@ -727,12 +737,14 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     }
   catch (const std::exception& e)
     {
+      cemit.failing();
       MOM_WARNPRINTF("mom_emit_c_code %s failed with exception %s in %s",
                      mom_item_cstring(itm), e.what(), mom_item_cstring(cemit.current_function()));
       return false;
     }
   catch (...)
     {
+      cemit.failing();
       MOM_WARNPRINTF("mom_emit_c_code %s failed in %s",
                      mom_item_cstring(itm), mom_item_cstring(cemit.current_function()));
       return false;
@@ -775,6 +787,7 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
     }
   catch (const MomRuntimeErrorAt& e)
     {
+      jsemit.failing();
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
                         "mom_emit_javascript_code %s failed with MOM runtime exception %s in %s",
                         mom_item_cstring(itm), e.what(), mom_item_cstring(jsemit.current_function()));
@@ -782,12 +795,14 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
     }
   catch (const std::exception& e)
     {
+      jsemit.failing();
       MOM_WARNPRINTF("mom_emit_javascript_code %s failed with exception %s in %s",
                      mom_item_cstring(itm), e.what(), mom_item_cstring(jsemit.current_function()));
       return false;
     }
   catch (...)
     {
+      jsemit.failing();
       MOM_WARNPRINTF("mom_emit_javascript_code %s failed in %s",
                      mom_item_cstring(itm), mom_item_cstring(jsemit.current_function()));
       return false;
@@ -798,6 +813,7 @@ bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*fil)
 
 MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
   : _ce_magic(magic),
+    _ce_failing(false),
     _ce_topitm(itm),
     _ce_veclockeditems {},
                      _ce_setlockeditems {},
@@ -806,6 +822,7 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_blockitems {},
                      _ce_instritems {},
                      _ce_todoque {},
+                     _ce_doatendque {},
                      _ce_globalvarmap {},
                      _ce_localvarmap {},
                      _ce_localvalueset {},
@@ -2464,6 +2481,12 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
 
 MomEmitter::~MomEmitter()
 {
+  if (!_ce_failing)
+    for (auto ef : _ce_doatendque)
+      {
+        ef(this);
+      }
+  _ce_doatendque.clear();
   int nbit = _ce_veclockeditems.size();
   for (int ix=nbit-1; ix>=0; ix--)
     mom_item_unlock(_ce_veclockeditems[ix]);
@@ -2895,6 +2918,14 @@ MomCEmitter::declare_field (struct mom_item_st*flditm, struct mom_item_st*fromit
                                  mom_item_cstring(fbnd->vd_rolitm),
                                  mom_value_cstring(fbnd->vd_what));
       bind_global(flditm, MOM_PREDEFITM(field), fromitm, nullptr, rank);
+      do_at_end([=](MomEmitter*em)
+      {
+        assert (em != nullptr);
+        MOM_DEBUGPRINTF(gencod, "atend flditm=%s at #%d",
+                        mom_item_cstring(flditm), rank);
+        mom_unsync_item_put_phys_attr(flditm, MOM_PREDEFITM(at),
+                                      mom_int_make(rank));
+      });
     }
   auto fldtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
                                      literal_string (CFIELD_PREFIX), flditm);
@@ -2938,8 +2969,18 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
         throw MOM_RUNTIME_PRINTF("bad or empty union in struct member %s from %s rk#%d",
                                  mom_item_cstring(memitm), mom_item_cstring(fromitm), rank);
       if (fromitm != nullptr)
-        bind_global(memitm, MOM_PREDEFITM(type), mom_boxnode_make_va(MOM_PREDEFITM(union), 2,
-                    fromitm, mom_int_make(rank)));
+        {
+          bind_global(memitm, MOM_PREDEFITM(type), mom_boxnode_make_va(MOM_PREDEFITM(union), 2,
+                      fromitm, mom_int_make(rank)));
+          do_at_end([=](MomEmitter*em)
+          {
+            assert (em != nullptr);
+            MOM_DEBUGPRINTF(gencod, "atend union %s at rank %d",
+                            mom_item_cstring(memitm), rank);
+            mom_unsync_item_put_phys_attr(memitm, MOM_PREDEFITM(at),
+                                          mom_int_make(rank));
+          });
+        }
       traced_vector_values_t vecomptree;
       vecomptree.reserve(ufldlen);
       for (int uix=0; uix<(int)ufldlen; uix++)
