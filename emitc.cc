@@ -3318,7 +3318,9 @@ defaultcasetype:
                 vectree.push_back(curfldtree);
               }
             auto fullfieldtup = mom_boxtuple_make_arr (vecfields.size(), vecfields.data());
-            MOM_DEBUGPRINTF(gencod, "typitm=%s union fullfieldtup=%s", mom_value_cstring(fullfieldtup));
+            MOM_DEBUGPRINTF(gencod, "typitm=%s union fullfieldtup=%s",
+                            mom_item_cstring(typitm),
+                            mom_value_cstring(fullfieldtup));
             bind_global(typitm, MOM_PREDEFITM(union), fullfieldtup);
           }  // end union with extension
         else   // union without extension
@@ -3370,13 +3372,57 @@ defaultcasetype:
   ////////////////
   else if  (tytypitm == MOM_PREDEFITM(enum))
     {
-      auto enutup =
+      const struct mom_seqitems_st*extfieldseq = nullptr;
+      unsigned extfieldlen = 0;
+      struct mom_item_st*extenditm = nullptr;
+      traced_vector_values_t vectree;
+      auto myenutup =
         mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
-      if (enutup==nullptr)
+      if (myenutup==nullptr)
         throw MOM_RUNTIME_PRINTF("enum type item %s missing `enum` : enuvalseq",
                                  mom_item_cstring(typitm));
-      MOM_FATAPRINTF("c-declare type %s enum %s unimplemented",
-                     mom_item_cstring(typitm), mom_value_cstring(enutup));
+      unsigned mynbenur = mom_size(myenutup);
+      MOM_DEBUGPRINTF(gencod, "typitm=%s enum of enumerators %s",
+                      mom_item_cstring(typitm), mom_value_cstring(myenutup));
+      if( mynbenur==0)
+        throw MOM_RUNTIME_PRINTF("enum type %s with missing or empty `enum` sequence",
+                                 mom_item_cstring(typitm));
+      {
+        auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
+        if (extendv != nullptr)
+          {
+            traced_vector_items_t vecfields;
+            extenditm = mom_dyncast_item(extendv);
+            if (extenditm == nullptr)
+              throw MOM_RUNTIME_PRINTF("invalid `extend` %s in enum type %s",
+                                       mom_value_cstring(extendv), mom_item_cstring(typitm));
+            auto extendbind = get_global_binding(extenditm);
+            if (extendbind == nullptr)
+              throw MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is unbound",
+                                       mom_item_cstring(extenditm), mom_item_cstring(typitm));
+            MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
+                            mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                            mom_item_cstring(extendbind->vd_rolitm),
+                            mom_value_cstring(extendbind->vd_what));
+            if (extendbind->vd_rolitm != MOM_PREDEFITM(enum))
+              throw  MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is wrongly bound to role %s what %s",
+                                        mom_item_cstring(extenditm), mom_item_cstring(typitm),
+                                        mom_item_cstring(extendbind->vd_rolitm),
+                                        mom_value_cstring(extendbind->vd_what));
+            extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
+            MOM_DEBUGPRINTF(gencod, "typitm=%s extended enum extfieldseq=%s",
+                            mom_item_cstring(typitm), mom_value_cstring(extfieldseq));
+            assert (extfieldseq != nullptr);
+            extfieldlen = mom_raw_size(extfieldseq);
+            vecfields.reserve(extfieldlen+mynbenur+1);
+            auto introtree =
+              mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                  literal_string("/*extending enum "),
+                                  extenditm,
+                                  literal_string("*/"));
+            vectree.push_back(introtree);
+          }
+      }
 #warning c-declare_type enum unimplemented
     }/// end enum
   ////////////////
@@ -3386,6 +3432,9 @@ defaultcasetype:
                   mom_item_cstring(typitm), mom_value_cstring(tytree));
   return tytree;
 } // end of MomCEmitter::declare_type
+
+
+
 
 
 const struct mom_boxnode_st*
