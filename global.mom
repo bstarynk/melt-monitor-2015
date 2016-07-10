@@ -464,6 +464,16 @@ comment
 
 
 
+*enumerator
+1468139992
+^mtime
+(
+comment
+"for enumerators inside enums"_
+)attrs
+
+
+
 *equal
 1457364041
 ^mtime
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *first
 1456995334
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "for first of several expressions"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *hashassoc
 1464079301
 ^mtime
@@ -682,7 +693,6 @@ comment
 comment
 "payload signature of hashassocs"_
 )attrs
-
 
 
 
@@ -855,6 +865,7 @@ comment
 
 
 
+
 *is_scalar
 1457360097
 ^mtime
@@ -862,7 +873,6 @@ comment
 comment
 "to test if argument is scalar"_
 )attrs
-
 
 
 
@@ -1033,6 +1043,7 @@ comment
 
 
 
+
 *loop
 1465200679
 ^mtime
@@ -1040,7 +1051,6 @@ comment
 comment
 "for looping blocks or loops"_
 )attrs
-
 
 
 
@@ -1200,6 +1210,7 @@ is_null
 
 
 
+
 *operator
 1455881447
 ^mtime
@@ -1207,7 +1218,6 @@ is_null
 comment
 "for operator in delimiters, etc..."_
 )attrs
-
 
 
 
@@ -1361,6 +1371,7 @@ comment
 
 
 
+
 *out_outdent
 1457095329
 ^mtime
@@ -1368,7 +1379,6 @@ comment
 comment
 "output with less indentation"_
 )attrs
-
 
 
 
@@ -1542,6 +1552,7 @@ comment
 
 
 
+
 *payl_file_write
 1456929384
 ^mtime
@@ -1549,7 +1560,6 @@ comment
 comment
 "for written file payload"_
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ comment
 
 
 
+
 *payl_hashset_insert_content
 1456845046
 ^mtime
@@ -1734,7 +1745,6 @@ comment
 comment
 "insert some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1898,6 +1908,7 @@ payl_vectval_resize
 
 
 
+
 *payl_webexch
 1457031348
 ^mtime
@@ -1905,7 +1916,6 @@ payl_vectval_resize
 comment
 "Web exchange payload"_
 )attrs
-
 
 
 
@@ -2088,6 +2098,7 @@ comment
 
 
 
+
 *right_assoc
 1455871773
 ^mtime
@@ -2095,7 +2106,6 @@ comment
 comment
 "for right associative delimiters"_
 )attrs
-
 
 
 
@@ -2258,6 +2268,7 @@ comment
 
 
 
+
 *sub
 1465727643
 ^mtime
@@ -2265,7 +2276,6 @@ comment
 comment
 "for difference of two numbers"_
 )attrs
-
 
 
 
@@ -2545,6 +2555,7 @@ comment
 
 
 
+
 *undefined_result
 1456139800
 ^mtime
@@ -2552,7 +2563,6 @@ comment
 comment
 "for undefined result"_
 )attrs
-
 
 
 
@@ -2707,6 +2717,7 @@ comment
 comment
 "for unknown words"_
 )attrs
+
 
 
 ### eof global.mom
