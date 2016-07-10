@@ -546,6 +546,8 @@ public:
   {
     return declare_struct_member(memitm,nullptr,0);
   };
+  // declare an enumerator and bind it if fromitm is non-null
+  momvalue_t declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -3020,6 +3022,20 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
                              mom_item_cstring(descitm));
 } // end of MomCEmitter::declare_struct_member
 
+
+
+////////////////
+momvalue_t
+MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank)
+{
+  MOM_DEBUGPRINTF(gencod, "c-declare_enumerator start enuritm=%s fromitm=%s rank#%d",
+		  mom_item_cstring(enuritm), mom_item_cstring(fromitm), rank);
+  MOM_FATAPRINTF("c-declare_enumerator unimplemented enuritm=%s",
+		 mom_item_cstring(enuritm));
+#warning MomCEmitter::declare_enumerator unimplemented
+} // end of MomCEmitter::declare_enumerator
+
+
 ////////////////
 momvalue_t
 MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
@@ -3372,8 +3388,8 @@ defaultcasetype:
   ////////////////
   else if  (tytypitm == MOM_PREDEFITM(enum))
     {
-      const struct mom_seqitems_st*extfieldseq = nullptr;
-      unsigned extfieldlen = 0;
+      const struct mom_boxtuple_st*extenumtup = nullptr;
+      unsigned extenumlen = 0;
       struct mom_item_st*extenditm = nullptr;
       traced_vector_values_t vectree;
       auto myenutup =
@@ -3391,7 +3407,7 @@ defaultcasetype:
         auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
         if (extendv != nullptr)
           {
-            traced_vector_items_t vecfields;
+            traced_vector_items_t vecenurs;
             extenditm = mom_dyncast_item(extendv);
             if (extenditm == nullptr)
               throw MOM_RUNTIME_PRINTF("invalid `extend` %s in enum type %s",
@@ -3409,18 +3425,27 @@ defaultcasetype:
                                         mom_item_cstring(extenditm), mom_item_cstring(typitm),
                                         mom_item_cstring(extendbind->vd_rolitm),
                                         mom_value_cstring(extendbind->vd_what));
-            extfieldseq = mom_dyncast_seqitems(extendbind->vd_what);
-            MOM_DEBUGPRINTF(gencod, "typitm=%s extended enum extfieldseq=%s",
-                            mom_item_cstring(typitm), mom_value_cstring(extfieldseq));
-            assert (extfieldseq != nullptr);
-            extfieldlen = mom_raw_size(extfieldseq);
-            vecfields.reserve(extfieldlen+mynbenur+1);
+            extenumtup = mom_dyncast_tuple(extendbind->vd_what);
+            MOM_DEBUGPRINTF(gencod, "typitm=%s extended enum extenumtup=%s",
+                            mom_item_cstring(typitm), mom_value_cstring(extenumtup));
+            assert (extenumtup != nullptr);
+            extenumlen = mom_raw_size(extenumtup);
+            vecenurs.reserve(extenumlen+mynbenur+1);
             auto introtree =
               mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
                                   literal_string("/*extending enum "),
                                   extenditm,
                                   literal_string("*/"));
             vectree.push_back(introtree);
+	    for (int eix=0; eix<(int)extenumlen; eix++) {
+	      auto curxenuritm = extenumtup->seqitem[eix];
+	      MOM_DEBUGPRINTF(gencod, "typitim %s eix#%d curxenuritm=%s",
+			      mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm));
+	      assert (is_locked_item(curxenuritm));
+	      vecenurs.push_back(curxenuritm);
+	      auto curxenurbind = get_binding(curxenuritm);
+	      assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
+	    }
           }
       }
 #warning c-declare_type enum unimplemented
