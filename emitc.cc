@@ -116,7 +116,7 @@ protected:
   struct mom_item_st*_ce_curfunctionitm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -547,7 +547,8 @@ public:
     return declare_struct_member(memitm,nullptr,0);
   };
   // declare an enumerator and bind it if fromitm is non-null
-  momvalue_t declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank);
+  momvalue_t declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank, int&preval,
+                                struct mom_item_st* initm=nullptr);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
@@ -3026,12 +3027,59 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
 
 ////////////////
 momvalue_t
-MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank)
+MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm,
+                                int rank, int& preval, struct mom_item_st* initm)
 {
-  MOM_DEBUGPRINTF(gencod, "c-declare_enumerator start enuritm=%s fromitm=%s rank#%d",
-		  mom_item_cstring(enuritm), mom_item_cstring(fromitm), rank);
+  MOM_DEBUGPRINTF(gencod, "c-declare_enumerator start enuritm=%s fromitm=%s rank#%d old preval=%d initm=%s",
+                  mom_item_cstring(enuritm), mom_item_cstring(fromitm),
+                  rank, preval, mom_value_cstring(initm));
+  assert (is_locked_item(enuritm));
+  if (mom_unsync_item_descr(enuritm) != MOM_PREDEFITM(enumerator))
+    throw MOM_RUNTIME_PRINTF("in enum %s enumerator #%d %s has not `descr`: `enumerator`",
+                             mom_item_cstring(fromitm), rank, mom_item_cstring(enuritm));
+  if (fromitm != nullptr)
+    {
+      auto curenuroldbind = get_binding(enuritm);
+      if (curenuroldbind != nullptr)
+        throw MOM_RUNTIME_PRINTF("in enum %s enumerator #%d %s already bound to role %s what %s",
+                                 mom_item_cstring(initm), rank,
+                                 mom_item_cstring(enuritm),
+                                 mom_item_cstring(curenuroldbind->vd_rolitm),
+                                 mom_value_cstring(curenuroldbind->vd_what));
+    }
+  int curival = preval+1;
+  {
+    auto curenumeratorv = mom_unsync_item_get_phys_attr(enuritm, MOM_PREDEFITM(enumerator));
+    if (curenumeratorv != nullptr)
+      {
+        if (mom_itype(curenumeratorv) != MOMITY_INT)
+          throw  MOM_RUNTIME_PRINTF("in enum %s enumerator #%d %s has bad `enumerator` value %s - should be int",
+                                    mom_item_cstring(initm), rank,
+                                    mom_item_cstring(enuritm),
+                                    mom_value_cstring(curenumeratorv));
+        curival = mom_int_val_def (curenumeratorv,curival);
+      };
+  }
+  if (fromitm != nullptr)
+    {
+      bind_global(enuritm, MOM_PREDEFITM(enumerator),
+                  mom_boxnode_make_va(MOM_PREDEFITM(enumerator),3,
+                                      fromitm, mom_int_make(rank), mom_int_make(curival)));
+      do_at_end([=](MomEmitter*em)
+      {
+        assert (em != nullptr);
+        MOM_DEBUGPRINTF(gencod, "atend enumerator %s at rank %d",
+                        mom_item_cstring(enuritm), rank);
+        mom_unsync_item_put_phys_attr(enuritm, MOM_PREDEFITM(at),
+                                      mom_int_make(rank));
+        mom_unsync_item_put_phys_attr(enuritm, MOM_PREDEFITM(value),
+                                      mom_int_make(curival));
+      });
+    }
+  /// should return a tree
   MOM_FATAPRINTF("c-declare_enumerator unimplemented enuritm=%s",
-		 mom_item_cstring(enuritm));
+                 mom_item_cstring(enuritm));
+
 #warning MomCEmitter::declare_enumerator unimplemented
 } // end of MomCEmitter::declare_enumerator
 
@@ -3437,15 +3485,30 @@ defaultcasetype:
                                   extenditm,
                                   literal_string("*/"));
             vectree.push_back(introtree);
-	    for (int eix=0; eix<(int)extenumlen; eix++) {
-	      auto curxenuritm = extenumtup->seqitem[eix];
-	      MOM_DEBUGPRINTF(gencod, "typitim %s eix#%d curxenuritm=%s",
-			      mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm));
-	      assert (is_locked_item(curxenuritm));
-	      vecenurs.push_back(curxenuritm);
-	      auto curxenurbind = get_binding(curxenuritm);
-	      assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
-	    }
+            for (int eix=0; eix<(int)extenumlen; eix++)
+              {
+                auto curxenuritm = extenumtup->seqitem[eix];
+                MOM_DEBUGPRINTF(gencod, "typitm %s eix#%d curxenuritm=%s",
+                                mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm));
+                assert (is_locked_item(curxenuritm));
+                vecenurs.push_back(curxenuritm);
+                auto curxenurbind = get_binding(curxenuritm);
+                assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
+              }
+          }
+        else   // enum without extension
+          {
+            int preval = -1;
+            for (int nix=0; nix<(int)mynbenur; nix++)
+              {
+                auto curenuritm = myenutup->seqitem[nix];
+                MOM_DEBUGPRINTF(gencod, "enum typitm %s nix#%d curenuritm=%s",
+                                mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm));
+                if (curenuritm==nullptr)
+                  throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
+                lock_item(curenuritm);
+                auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
+              }
           }
       }
 #warning c-declare_type enum unimplemented
