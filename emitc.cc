@@ -3090,7 +3090,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
   momvalue_t enutree = nullptr;
   if (initm)
     enutree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
-                                  literal_string(CENUM_PREFIX),
+                                  literal_string(CENUVAL_PREFIX),
                                   enuritm,
                                   literal_string(CENUFROM_INFIX),
                                   initm,
@@ -3099,7 +3099,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
                                   literal_string(","));
   else
     enutree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
-                                  literal_string(CENUM_PREFIX),
+                                  literal_string(CENUVAL_PREFIX),
                                   enuritm,
                                   literal_string(" = "),
                                   mom_int_make(curival),
@@ -3555,7 +3555,25 @@ defaultcasetype:
               vectree.push_back(enurtree);
             }
         }
-#warning c-declare_type enum unimplemented
+      auto enumdecltree = //
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                  literal_string("typedef "),
+                                  literal_string("enum "),
+                                  literal_string(CENUM_PREFIX),
+                                  typitm,
+				  mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
+						      mom_boxnode_make(MOM_PREDEFITM(output),
+								       vectree.size(),
+								       vectree.data())),						   
+                                  literal_string(" "),
+                                  literal_string(CTYPE_PREFIX),
+                                  typitm,
+                                  literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "typitm=%s enumdecltree=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(enumdecltree));
+      add_global_decl(enumdecltree);
+      _cec_declareditems.insert(typitm);
     }/// end enum
   ////////////////
   else

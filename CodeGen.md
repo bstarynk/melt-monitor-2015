@@ -49,7 +49,10 @@ struct type should has `struct` : *struct-fields-tuple*. The
 with some `type` : *type-expr*. The *struct-fields-tuple* inside a
 struct have items of `descr` : `field` like in unions, or items of
 `descr` : `union` and `union` : *struct-fields-seq*, a sequence or
-tuple of distinct items of `descr` : `field` like previously.
+tuple of distinct items of `descr` : `field` like previously.  An
+enumeration type has `descr` : `enum` and `enum` : *enumerator-tuple*
+and my have `extend`: *enumeration-type*.  An enumerator has `descr` :
+`enumerator` and may have `enumerator` : *int-value*.
 
 
 An *instruction-item* is one of:
