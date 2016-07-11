@@ -504,6 +504,7 @@ public:
   static constexpr const char* CUNION_PREFIX = "momunion_";
   static constexpr const char* CENUM_PREFIX = "momenum_";
   static constexpr const char* CENUVAL_PREFIX = "momenuva_";
+  static constexpr const char* CENUFROM_INFIX = "_momenfr_";
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
   static constexpr const char* CFIELD_PREFIX = "momfld_";
@@ -546,7 +547,7 @@ public:
   {
     return declare_struct_member(memitm,nullptr,0);
   };
-  // declare an enumerator and bind it if fromitm is non-null
+  // declare an enumerator and bind it if fromitm is non-null; return a tree ending with a comma
   momvalue_t declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*fromitm, int rank, int&preval,
                                 struct mom_item_st* initm=nullptr);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
@@ -3042,7 +3043,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
       auto curenuroldbind = get_binding(enuritm);
       if (curenuroldbind != nullptr)
         throw MOM_RUNTIME_PRINTF("in enum %s enumerator #%d %s already bound to role %s what %s",
-                                 mom_item_cstring(initm), rank,
+                                 mom_item_cstring(fromitm), rank,
                                  mom_item_cstring(enuritm),
                                  mom_item_cstring(curenuroldbind->vd_rolitm),
                                  mom_value_cstring(curenuroldbind->vd_what));
@@ -3054,7 +3055,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
       {
         if (mom_itype(curenumeratorv) != MOMITY_INT)
           throw  MOM_RUNTIME_PRINTF("in enum %s enumerator #%d %s has bad `enumerator` value %s - should be int",
-                                    mom_item_cstring(initm), rank,
+                                    mom_item_cstring(fromitm), rank,
                                     mom_item_cstring(enuritm),
                                     mom_value_cstring(curenumeratorv));
         curival = mom_int_val_def (curenumeratorv,curival);
@@ -3076,11 +3077,27 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
                                       mom_int_make(curival));
       });
     }
-  /// should return a tree
-  MOM_FATAPRINTF("c-declare_enumerator unimplemented enuritm=%s",
-                 mom_item_cstring(enuritm));
-
-#warning MomCEmitter::declare_enumerator unimplemented
+  momvalue_t enutree = nullptr;
+  if (initm)
+    enutree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+                                  literal_string(CENUM_PREFIX),
+                                  enuritm,
+                                  literal_string(CENUFROM_INFIX),
+                                  initm,
+                                  literal_string(" = "),
+                                  mom_int_make(curival),
+                                  literal_string(","));
+  else
+    enutree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+                                  literal_string(CENUM_PREFIX),
+                                  enuritm,
+                                  literal_string(" = "),
+                                  mom_int_make(curival),
+                                  literal_string(","));
+  MOM_DEBUGPRINTF(gencod, "c-declare_enumerator enuritm=%s gives enutree=%s preval=%d",
+                  mom_item_cstring(enuritm), mom_value_cstring(enutree), preval);
+  preval = curival;
+  return enutree;
 } // end of MomCEmitter::declare_enumerator
 
 
@@ -3451,66 +3468,83 @@ defaultcasetype:
       if( mynbenur==0)
         throw MOM_RUNTIME_PRINTF("enum type %s with missing or empty `enum` sequence",
                                  mom_item_cstring(typitm));
-      {
-        auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
-        if (extendv != nullptr)
-          {
-            traced_vector_items_t vecenurs;
-            extenditm = mom_dyncast_item(extendv);
-            if (extenditm == nullptr)
-              throw MOM_RUNTIME_PRINTF("invalid `extend` %s in enum type %s",
-                                       mom_value_cstring(extendv), mom_item_cstring(typitm));
-            auto extendbind = get_global_binding(extenditm);
-            if (extendbind == nullptr)
-              throw MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is unbound",
-                                       mom_item_cstring(extenditm), mom_item_cstring(typitm));
-            MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
-                            mom_item_cstring(typitm), mom_item_cstring(extenditm),
-                            mom_item_cstring(extendbind->vd_rolitm),
-                            mom_value_cstring(extendbind->vd_what));
-            if (extendbind->vd_rolitm != MOM_PREDEFITM(enum))
-              throw  MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is wrongly bound to role %s what %s",
-                                        mom_item_cstring(extenditm), mom_item_cstring(typitm),
-                                        mom_item_cstring(extendbind->vd_rolitm),
-                                        mom_value_cstring(extendbind->vd_what));
-            extenumtup = mom_dyncast_tuple(extendbind->vd_what);
-            MOM_DEBUGPRINTF(gencod, "typitm=%s extended enum extenumtup=%s",
-                            mom_item_cstring(typitm), mom_value_cstring(extenumtup));
-            assert (extenumtup != nullptr);
-            extenumlen = mom_raw_size(extenumtup);
-            vecenurs.reserve(extenumlen+mynbenur+1);
-            auto introtree =
-              mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-                                  literal_string("/*extending enum "),
-                                  extenditm,
-                                  literal_string("*/"));
-            vectree.push_back(introtree);
-            for (int eix=0; eix<(int)extenumlen; eix++)
-              {
-                auto curxenuritm = extenumtup->seqitem[eix];
-                MOM_DEBUGPRINTF(gencod, "typitm %s eix#%d curxenuritm=%s",
-                                mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm));
-                assert (is_locked_item(curxenuritm));
-                vecenurs.push_back(curxenuritm);
-                auto curxenurbind = get_binding(curxenuritm);
-                assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
-              }
-          }
-        else   // enum without extension
-          {
-            int preval = -1;
-            for (int nix=0; nix<(int)mynbenur; nix++)
-              {
-                auto curenuritm = myenutup->seqitem[nix];
-                MOM_DEBUGPRINTF(gencod, "enum typitm %s nix#%d curenuritm=%s",
-                                mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm));
-                if (curenuritm==nullptr)
-                  throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
-                lock_item(curenuritm);
-                auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
-              }
-          }
-      }
+      int preval = -1;
+      auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
+      if (extendv != nullptr)
+        {
+          traced_vector_items_t vecenurs;
+          extenditm = mom_dyncast_item(extendv);
+          if (extenditm == nullptr)
+            throw MOM_RUNTIME_PRINTF("invalid `extend` %s in enum type %s",
+                                     mom_value_cstring(extendv), mom_item_cstring(typitm));
+          auto extendbind = get_global_binding(extenditm);
+          if (extendbind == nullptr)
+            throw MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is unbound",
+                                     mom_item_cstring(extenditm), mom_item_cstring(typitm));
+          MOM_DEBUGPRINTF(gencod, "typitm=%s extenditm=%s extendbind role %s what %s",
+                          mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                          mom_item_cstring(extendbind->vd_rolitm),
+                          mom_value_cstring(extendbind->vd_what));
+          if (extendbind->vd_rolitm != MOM_PREDEFITM(enum))
+            throw  MOM_RUNTIME_PRINTF(" `extend` %s in enum type %s is wrongly bound to role %s what %s",
+                                      mom_item_cstring(extenditm), mom_item_cstring(typitm),
+                                      mom_item_cstring(extendbind->vd_rolitm),
+                                      mom_value_cstring(extendbind->vd_what));
+          extenumtup = mom_dyncast_tuple(extendbind->vd_what);
+          MOM_DEBUGPRINTF(gencod, "typitm=%s extended enum extenumtup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(extenumtup));
+          assert (extenumtup != nullptr);
+          extenumlen = mom_raw_size(extenumtup);
+          vecenurs.reserve(extenumlen+mynbenur+1);
+          auto introtree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                literal_string("/*extending enum "),
+                                extenditm,
+                                literal_string("*/"));
+          vectree.push_back(introtree);
+          MOM_DEBUGPRINTF(gencod, "typitm %s introtree=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(introtree));
+          for (int eix=0; eix<(int)extenumlen; eix++)
+            {
+              auto curxenuritm = extenumtup->seqitem[eix];
+              MOM_DEBUGPRINTF(gencod, "typitm %s eix#%d curxenuritm=%s",
+                              mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm));
+              assert (is_locked_item(curxenuritm));
+              vecenurs.push_back(curxenuritm);
+              auto curxenurbind = get_binding(curxenuritm);
+              assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
+              auto curxenurtree = declare_enumerator(curxenuritm, typitm, eix, preval, extenditm);
+              MOM_DEBUGPRINTF(gencod, "typitm %s eix#%d curxenuritm=%s curxenurtree=%s",
+                              mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm),
+                              mom_value_cstring(curxenurtree));
+              vectree.push_back(curxenurtree);
+            }
+          auto aftertree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                literal_string("/*extended enum "),
+                                extenditm,
+                                literal_string("*/"));
+          vectree.push_back(aftertree);
+          MOM_DEBUGPRINTF(gencod, "typitm %s aftertree=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(aftertree));
+        }
+      else   // enum without extension
+        {
+          for (int nix=0; nix<(int)mynbenur; nix++)
+            {
+              auto curenuritm = myenutup->seqitem[nix];
+              MOM_DEBUGPRINTF(gencod, "enum typitm %s nix#%d curenuritm=%s",
+                              mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm));
+              if (curenuritm==nullptr)
+                throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
+              lock_item(curenuritm);
+              auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
+              MOM_DEBUGPRINTF(gencod, "enum typitm %s nix#%d curenuritm=%s enurtree=%s",
+                              mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
+                              mom_value_cstring(enurtree));
+              vectree.push_back(enurtree);
+            }
+        }
 #warning c-declare_type enum unimplemented
     }/// end enum
   ////////////////
