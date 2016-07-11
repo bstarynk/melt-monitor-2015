@@ -2732,6 +2732,16 @@ semicoloncase:
         }
     }
     break;
+    case CASE_NODECONN_MOM(output):
+    {
+      write_nl_or_space(out,depth,lastnl);
+      for (int ix=0; ix<(int)arity; ix++)
+        {
+          write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
+	  write_nl_or_space(out,depth,lastnl);
+        }
+    }
+    break;
     default:
 defaultcaseconn:
       throw  MOM_RUNTIME_PRINTF("unexpected write_node nod:%s depth=%d forv=%s",
