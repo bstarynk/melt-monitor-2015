@@ -1,0 +1,61 @@
+# file cmodbty.mb -*- indented-text -*-
+
+^global !uint8_t (
+  ^* comment "the uint8_t type of 8 bit unsigned"
+  ^* descr type
+  ^* c_code "uint8_t"
+  )
+
+^global !uint16_t (
+  ^* comment "the uint16_t type of 16 bit unsigned"
+  ^* descr type
+  ^* c_code "uint16_t"
+  )
+
+^global !hash_t (
+  ^* comment "the unsigned type of hash-code"
+  ^* descr type
+  ^* c_code "momhash_t"
+  )
+
+^global !atomic_int16_t (
+  ^* comment "the atomic_int16_t type of 16 bit signed and atomic"
+  ^* descr type
+  ^* c_code "mom_atomic_int16_t"
+  )
+  
+^global !anyvalue_ty (
+  ^global
+  ^* comment "the type of any value"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global va_itype (
+        ^* comment "the field giving the type"
+        ^* descr field
+        ^* type uint16_t
+      )
+      ^global va_ixv (
+        ^* comment "the field giving the index"
+        ^* descr field
+        ^* type atomic_int16_t
+      )
+  ]
+)
+  
+^global !hashedvalue_ty (
+  ^* comment "the type of hashed value"
+  ^* descr type
+  ^* type struct
+  ^* extend anyvalue_ty
+  ^* struct [
+      ^global hva_hash (
+        ^* comment "the field giving the hash"
+        ^* descr field
+        ^* type hash_t
+      )
+  ]
+)
+
+
+## eof cmodbty.mb
