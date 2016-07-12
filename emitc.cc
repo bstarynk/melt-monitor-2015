@@ -114,6 +114,7 @@ protected:
   traced_set_items_t _ce_localcloseditems;
   traced_node2itemhashmap_t _ce_localnodetypecache;
   struct mom_item_st*_ce_curfunctionitm;
+  struct mom_item_st* _ce_emitteritm;
 protected:
   class CaseScannerData
   {
@@ -249,6 +250,20 @@ protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
+  void set_emitter_item(struct mom_item_st*emititm)
+  {
+    if (!emititm || emititm==MOM_EMPTY_SLOT)
+      {
+        _ce_emitteritm = nullptr;
+        return;
+      }
+    assert (mom_itype(emititm)==MOMITY_ITEM);
+    _ce_emitteritm = emititm;
+  };
+  struct mom_item_st*emitter_item(void) const
+  {
+    return _ce_emitteritm;
+  };
 public:
   void failing(void)
   {
@@ -495,7 +510,6 @@ class MomCEmitter final :public MomEmitter
   traced_vector_values_t _cec_globdecltree;
   traced_vector_values_t _cec_globdefintree;
   traced_set_items_t _cec_declareditems;
-  struct mom_item_st* _cec_emitteritm;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
 public:
@@ -521,20 +535,16 @@ public:
   static constexpr const char* CVALUE_TYPE = "momvalue_t";
   static constexpr const char* CDOUBLE_TYPE = "double";
   static constexpr const char* CVOID_TYPE = "void";
-  struct mom_item_st* emitter_item(void) const
-  {
-    return _cec_emitteritm;
-  };
   MomCEmitter(struct mom_item_st*itm)
-    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems(),
-      _cec_emitteritm(nullptr)
+    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()
   {
-    _cec_emitteritm = mom_clone_item(itm);
-    lock_item(_cec_emitteritm);
-    mom_unsync_item_put_phys_attr(_cec_emitteritm, MOM_PREDEFITM(descr), MOM_PREDEFITM(c_expansion));
-    mom_unsync_item_put_phys_attr(_cec_emitteritm, MOM_PREDEFITM(from), itm);
+    auto emititm = mom_clone_item(itm);
+    lock_item(emititm);
+    mom_unsync_item_put_phys_attr(emititm, MOM_PREDEFITM(descr), MOM_PREDEFITM(c_expansion));
+    mom_unsync_item_put_phys_attr(emititm, MOM_PREDEFITM(from), itm);
+    set_emitter_item(emititm);
     MOM_DEBUGPRINTF(gencod, "start c-emitter itm=%s emitteritm:=%s",
-                    mom_item_cstring(itm), mom_item_content_cstring(_cec_emitteritm));
+                    mom_item_cstring(itm), mom_item_content_cstring(emititm));
   };
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
@@ -846,7 +856,8 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_localvalueset {},
                      _ce_localcloseditems {},
                      _ce_localnodetypecache {},
-_ce_curfunctionitm {nullptr}
+                     _ce_curfunctionitm {nullptr},
+_ce_emitteritm {nullptr}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
     throw MOM_RUNTIME_ERROR("non item");
@@ -858,6 +869,7 @@ _ce_curfunctionitm {nullptr}
 const struct mom_boxnode_st*
 MomEmitter::transform_top_module(void)
 {
+  assert (is_locked_item(_ce_topitm));
   auto descitm = mom_unsync_item_descr(_ce_topitm);
   traced_vector_values_t vecval;
   MOM_DEBUGPRINTF(gencod, "transform_top_module %s topitm=%s descitm=%s",
@@ -867,10 +879,41 @@ MomEmitter::transform_top_module(void)
   if (descitm != MOM_PREDEFITM(module))
     throw MOM_RUNTIME_PRINTF("item %s has non-module descr: %s",
                              mom_item_cstring(_ce_topitm), mom_item_cstring(descitm));
-  auto modulev = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(module));
-  MOM_DEBUGPRINTF(gencod, "transform_top_module %s modulev %s",
+  auto prepv = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(preparation));
+  MOM_DEBUGPRINTF(gencod, "transform_top_module %s prepv %s",
                   kindname(),
-                  mom_value_cstring(modulev));
+                  mom_value_cstring(prepv));
+  if (prepv != nullptr)
+    {
+      auto prepnod = mom_dyncast_node(prepv);
+      if (prepnod == nullptr)
+        throw MOM_RUNTIME_PRINTF("module item %s has non-node preparation %s",
+                                 mom_item_cstring(_ce_topitm), mom_value_cstring(prepv));
+      auto prepconnitm = prepnod->nod_connitm;
+      assert (mom_itype(prepconnitm) == MOMITY_ITEM);
+      lock_item(prepconnitm);
+      MOM_DEBUGPRINTF(gencod, "transform_top_module module %s prepconnitm=%s",
+                      mom_item_cstring(_ce_topitm), mom_item_cstring(prepconnitm));
+      if (prepconnitm->itm_paylkind != MOM_PREDEFITM(signature_func_item_to_void)
+          || !prepconnitm->itm_payldata)
+        throw MOM_RUNTIME_PRINTF("module item %s has preparation %s"
+                                 " with bad connective of kind %s, expecting signature_func_item_to_void",
+                                 mom_item_cstring(_ce_topitm), mom_value_cstring(prepv),
+                                 mom_item_cstring(prepconnitm->itm_paylkind));
+      auto funptr = (mom_func_item_to_void_sig_t *)prepconnitm->itm_payldata;
+      MOM_DEBUGPRINTF(gencod, "transform_top_module module %s before calling preparation %s on emitter %s",
+                      mom_item_cstring(_ce_topitm), mom_value_cstring(prepv),
+                      mom_item_cstring(emitter_item()));
+      (*funptr)(prepnod, emitter_item());
+      MOM_DEBUGPRINTF(gencod, "transform_top_module module %s did preparation %s on emitter %s",
+                      mom_item_cstring(_ce_topitm), mom_value_cstring(prepv),
+                      mom_item_cstring(emitter_item()));
+    }
+  auto modulev = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(module));
+  MOM_DEBUGPRINTF(gencod, "transform_top_module %s modulev %s prepv %s",
+                  kindname(),
+                  mom_value_cstring(modulev),
+                  mom_value_cstring(prepv));
   auto modulseq = mom_dyncast_seqitems (modulev);
   if (!modulseq)
     throw MOM_RUNTIME_PRINTF("item %s with bad module:%s",
@@ -2511,6 +2554,7 @@ MomEmitter::~MomEmitter()
   _ce_veclockeditems.clear();
   _ce_setlockeditems.clear();
   _ce_topitm = nullptr;
+  _ce_emitteritm = nullptr;
   _ce_sigitems.clear();
   _ce_typitems.clear();
   _ce_blockitems.clear();
@@ -2775,7 +2819,6 @@ MomCEmitter::~MomCEmitter()
   _cec_globdecltree.clear();
   _cec_globdefintree.clear();
   _cec_declareditems.clear();
-  _cec_emitteritm = nullptr;
 } // end MomCEmitter::~MomCEmitter
 
 const struct mom_boxnode_st*

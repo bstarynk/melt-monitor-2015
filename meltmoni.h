@@ -2464,6 +2464,9 @@ typedef void mom_displayer_sig_t (const struct mom_boxnode_st *closnod,
                                   const void *pval, int depth);
 
 
+// for signature_func_item_to_void
+typedef void mom_func_item_to_void_sig_t (const struct mom_boxnode_st *closnod,
+    struct mom_item_st*itm0);
 ////////////////
 /**** for MOMITY_FILE & MOMITY_FILEBUFFER *****/
 #define MOM_FILE_FIELDS				\

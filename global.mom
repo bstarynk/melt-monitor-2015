@@ -2032,6 +2032,16 @@ comment
 
 
 
+*preparation
+1468325324
+^mtime
+(
+comment
+"git a preparation node"_
+)attrs
+
+
+
 *primitive
 1465807699
 ^mtime
@@ -2092,6 +2102,7 @@ comment
 
 
 
+
 *result
 1464962940
 ^mtime
@@ -2099,7 +2110,6 @@ comment
 comment
 "for result"_
 )attrs
-
 
 
 
@@ -2263,6 +2273,7 @@ comment
 
 
 
+
 *step
 1454531512
 ^mtime
@@ -2270,7 +2281,6 @@ comment
 comment
 "for steps, e.g. limits"_
 )attrs
-
 
 
 
@@ -2542,6 +2552,7 @@ comment
 
 
 
+
 *tuple
 1456146211
 ^mtime
@@ -2554,7 +2565,6 @@ is_sequence
 is_tuple
 )set
 )attrs
-
 
 
 
@@ -2723,6 +2733,7 @@ comment
 
 
 
+
 *when
 1455462590
 ^mtime
@@ -2730,7 +2741,6 @@ comment
 comment
 "inside conditionals"_
 )attrs
-
 
 
 
