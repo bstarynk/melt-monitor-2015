@@ -765,6 +765,12 @@ momtok_inside_item (struct mom_item_st *itm,
               ("int expected after ^resize for ^item %s at line %d of file %s",
                mom_item_cstring (itm), curtok->mtok_lin, tovec->mtv_filename);
         }
+      else if (curtok->mtok_itm == MOM_PREDEFITM (global))
+        {
+          topos++;
+	  mom_item_put_space (itm, MOMSPA_GLOBAL);
+	  MOM_INFORMPRINTF("item %s is made global", mom_item_cstring(itm));
+	}
       else
         MOM_FATAPRINTF
           ("bad operator ^%s after ^item %s at line %d of file %s",
