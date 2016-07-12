@@ -973,6 +973,20 @@ comment
 
 
 
+*itm0
+1468324302
+^mtime
+(
+comment
+"itm0, formal "_
+descr
+formal
+type
+item
+)attrs
+
+
+
 *js_expansion
 1467113815
 ^mtime
@@ -1033,6 +1047,7 @@ comment
 
 
 
+
 *locals
 1465201575
 ^mtime
@@ -1040,7 +1055,6 @@ comment
 comment
 "for local variables inside blocks"_
 )attrs
-
 
 
 
@@ -1204,10 +1218,10 @@ is_null
 
 
 
+
 *notice
 1446546422
 ^mtime
-
 
 
 
@@ -1361,6 +1375,7 @@ comment
 
 
 
+
 *out_newline
 1457095329
 ^mtime
@@ -1368,7 +1383,6 @@ comment
 comment
 "output an indented newline"_
 )attrs
-
 
 
 
@@ -1542,6 +1556,7 @@ comment
 
 
 
+
 *payl_file_close
 1456929384
 ^mtime
@@ -1549,7 +1564,6 @@ comment
 comment
 "file close operation"_
 )attrs
-
 
 
 
@@ -1727,6 +1741,7 @@ payl_hashset_reserve
 
 
 
+
 *payl_hashset_insert
 1456855856
 ^mtime
@@ -1734,7 +1749,6 @@ payl_hashset_reserve
 comment
 "insert some content in an hashed set payload"_
 )attrs
-
 
 
 
@@ -1888,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectvaldata
 1456839406
 ^mtime
@@ -1905,7 +1920,6 @@ payl_vectval_reserve
 payl_vectval_resize
 )set
 )attrs
-
 
 
 
@@ -2088,6 +2102,7 @@ comment
 
 
 
+
 *reviter
 1457086941
 ^mtime
@@ -2095,7 +2110,6 @@ comment
 comment
 "to reverse iterate a function on a composite value"_
 )attrs
-
 
 
 
@@ -2194,6 +2208,25 @@ comment
 
 
 
+*signature_func_item_to_void
+1468324302
+^mtime
+(
+comment
+"func signature: item itm0 -> void"_
+descr
+signature
+formals
+(
+this_closure
+itm0
+)tuple
+result
+unit
+)attrs
+
+
+
 *signature_loader_caret
 1445950071
 ^mtime
@@ -2240,6 +2273,7 @@ comment
 
 
 
+
 *string
 1466338903
 ^mtime
@@ -2265,7 +2299,6 @@ is_string
 comment
 "for structures"_
 )attrs
-
 
 
 
@@ -2524,6 +2557,7 @@ is_tuple
 
 
 
+
 *type
 1456146499
 ^mtime
@@ -2552,7 +2586,6 @@ node
 comment
 "for type error"_
 )attrs
-
 
 
 
@@ -2700,6 +2733,7 @@ comment
 
 
 
+
 *while
 1455520074
 ^mtime
@@ -2717,7 +2751,6 @@ comment
 comment
 "for unknown words"_
 )attrs
-
 
 
 ### eof global.mom
