@@ -495,6 +495,7 @@ class MomCEmitter final :public MomEmitter
   traced_vector_values_t _cec_globdecltree;
   traced_vector_values_t _cec_globdefintree;
   traced_set_items_t _cec_declareditems;
+  struct mom_item_st* _cec_emitteritm;
   friend bool mom_emit_c_code(struct mom_item_st*itm);
 
 public:
@@ -520,8 +521,21 @@ public:
   static constexpr const char* CVALUE_TYPE = "momvalue_t";
   static constexpr const char* CDOUBLE_TYPE = "double";
   static constexpr const char* CVOID_TYPE = "void";
+  struct mom_item_st* emitter_item(void) const
+  {
+    return _cec_emitteritm;
+  };
   MomCEmitter(struct mom_item_st*itm)
-    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()  {};
+    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems(),
+      _cec_emitteritm(nullptr)
+  {
+    _cec_emitteritm = mom_clone_item(itm);
+    lock_item(_cec_emitteritm);
+    mom_unsync_item_put_phys_attr(_cec_emitteritm, MOM_PREDEFITM(descr), MOM_PREDEFITM(c_expansion));
+    mom_unsync_item_put_phys_attr(_cec_emitteritm, MOM_PREDEFITM(from), itm);
+    MOM_DEBUGPRINTF(gencod, "start c-emitter itm=%s emitteritm:=%s",
+                    mom_item_cstring(itm), mom_item_content_cstring(_cec_emitteritm));
+  };
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
   void add_global_decl(const struct mom_boxnode_st*nod)
@@ -2738,7 +2752,7 @@ semicoloncase:
       for (int ix=0; ix<(int)arity; ix++)
         {
           write_tree(out, depth+1, lastnl, nod->nod_sons[ix], forv);
-	  write_nl_or_space(out,depth,lastnl);
+          write_nl_or_space(out,depth,lastnl);
         }
     }
     break;
@@ -2758,6 +2772,10 @@ badarity:
 MomCEmitter::~MomCEmitter()
 {
   MOM_DEBUGPRINTF(gencod, "end %s for this@%p", kindname(), this);
+  _cec_globdecltree.clear();
+  _cec_globdefintree.clear();
+  _cec_declareditems.clear();
+  _cec_emitteritm = nullptr;
 } // end MomCEmitter::~MomCEmitter
 
 const struct mom_boxnode_st*
@@ -3561,10 +3579,10 @@ defaultcasetype:
                                   literal_string("enum "),
                                   literal_string(CENUM_PREFIX),
                                   typitm,
-				  mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
-						      mom_boxnode_make(MOM_PREDEFITM(output),
-								       vectree.size(),
-								       vectree.data())),						   
+                                  mom_boxnode_make_va(MOM_PREDEFITM(brace), 1,
+                                      mom_boxnode_make(MOM_PREDEFITM(output),
+                                          vectree.size(),
+                                          vectree.data())),
                                   literal_string(" "),
                                   literal_string(CTYPE_PREFIX),
                                   typitm,

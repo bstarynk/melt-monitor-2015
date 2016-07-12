@@ -61,41 +61,17 @@ __attribute__ ((format (printf, 3, 4)));
 
 
 #if defined(NDEBUG) || !defined(MOM_GCDEBUG)
-static inline void *
-mom_gc_alloc (size_t sz)
-{
-  void *p = GC_MALLOC (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-static inline void *
-mom_gc_alloc_scalar (size_t sz)
-{
-  void *p = GC_MALLOC_ATOMIC (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+static inline void *mom_gc_alloc (size_t sz);
+static inline void *mom_gc_alloc_scalar (size_t sz);
 void *mom_gc_calloc (size_t nmemb, size_t size);
-
-static inline void *
-mom_gc_alloc_uncollectable (size_t sz)
-{
-  void *p = GC_MALLOC_UNCOLLECTABLE (sz);
-  if (MOM_LIKELY (p != NULL))
-    memset (p, 0, sz);
-  return p;
-}
-
-static inline char *
-mom_gc_strdup (const char *s)
-{
-  return GC_STRDUP (s);
-}
+static inline void *mom_gc_alloc_uncollectable (size_t sz);
+static inline char *mom_gc_strdup (const char *s);
+#ifdef __cplusplus
+}; // end extern "C"
+#endif
 #else // !NDEBUG or MOM_GCDEBUG
 #warning garbcoll debugging enabled
 extern void *mom_gc_alloc_at (size_t sz, const char *fil, int lin);
@@ -328,6 +304,46 @@ __attribute__ ((format (printf, 3, 4), noreturn));
 #define MOM_FATAPRINTF(Fmt,...)			\
   MOM_FATAPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
 			##__VA_ARGS__)
+
+
+
+
+#if defined(NDEBUG) || !defined(MOM_GCDEBUG)
+static inline void *mom_gc_alloc (size_t sz)
+{
+  void *p = GC_MALLOC (sz);
+  if (MOM_UNLIKELY (p == NULL))
+    MOM_FATAPRINTF("failed to allocate %zd bytes", sz);
+  memset (p, 0, sz);
+  return p;
+}
+static inline void *mom_gc_alloc_scalar (size_t sz)
+{
+  void *p = GC_MALLOC_ATOMIC (sz);
+  if (MOM_UNLIKELY (p == NULL))
+    MOM_FATAPRINTF("failed to allocate %zd scalar bytes", sz);
+  memset (p, 0, sz);
+  return p;
+}
+
+static inline void *mom_gc_alloc_uncollectable (size_t sz)
+{
+  void *p = GC_MALLOC_UNCOLLECTABLE (sz);
+  if (MOM_UNLIKELY (p == NULL))
+    MOM_FATAPRINTF("failed to allocate %zd uncollectable bytes", sz);
+  memset (p, 0, sz);
+  return p;
+}
+
+static inline char *mom_gc_strdup (const char *s)
+{
+  if (!s || s == MOM_EMPTY_SLOT) return NULL;
+  char*p =  GC_STRDUP (s);
+  if (MOM_UNLIKELY (p == NULL))
+    MOM_FATAPRINTF("failed to gc strdup %s", s);
+  return p;
+}
+#endif // NDEBUG || !MOM_GCDEBUG
 
 // for debugging; the color level are user-definable:
 #define MOM_DEBUG_LIST_OPTIONS(Dbg)		\
