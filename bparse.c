@@ -1275,6 +1275,24 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       return itm;
     }
 
+  if (curtok->mtok_kind == MOLEX_OPERITEM
+      && curtok->mtok_itm == MOM_PREDEFITM (global))
+    {
+      topos++;
+      struct mom_item_st *itm =
+        mom_dyncast_item (momtok_parse (tovec, topos, &topos));
+      if (!itm)
+        MOM_FATAPRINTF ("bad item for ^global at line %d of file %s",
+                        curtok->mtok_lin, tovec->mtv_filename);
+      mom_item_put_space (itm, MOMSPA_GLOBAL);
+
+      momtok_inside_item (itm, tovec, topos, &topos);
+      *endposptr = topos;
+      MOM_DEBUGPRINTF (boot, "topos#%d done global %s", topos,
+                       mom_item_cstring (itm));
+      return itm;
+    }
+
   MOM_FATAPRINTF ("syntax error line %d file %s", curtok->mtok_lin,
                   tovec->mtv_filename);
 }                               // end momtok_parse
