@@ -602,9 +602,9 @@ second_pass_loader_mom (struct mom_loader_st *ld)
           if (!curitm)
             MOM_FATAPRINTF ("failed to find defined item for line#%d: '%s'",
                             linecount, linbuf);
-          else if (mom_raw_size (curitm) == 0)
+          else if (mom_item_space (curitm) == 0)
             {
-              mom_put_size (curitm, MOMSPA_GLOBAL);
+              mom_item_put_space (curitm, MOMSPA_GLOBAL);
               MOM_DEBUGPRINTF (load,
                                "second_pass global curitm %s linbuf '%s'",
                                mom_item_cstring (curitm), linbuf);

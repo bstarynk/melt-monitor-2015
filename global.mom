@@ -750,6 +750,16 @@ comment
 
 
 
+*inline
+1468411163
+^mtime
+(
+comment
+"for inlined routines"_
+)attrs
+
+
+
 *instruction
 1465307584
 ^mtime
@@ -855,6 +865,7 @@ not
 
 
 
+
 *is_number
 1457359776
 ^mtime
@@ -862,7 +873,6 @@ not
 comment
 "to test if argument is a number"_
 )attrs
-
 
 
 
@@ -1037,6 +1047,7 @@ comment
 
 
 
+
 *letrec
 1455623664
 ^mtime
@@ -1044,7 +1055,6 @@ comment
 comment
 "letrec keyword"_
 )attrs
-
 
 
 
@@ -1206,6 +1216,7 @@ comment
 
 
 
+
 *not
 1457428465
 ^mtime
@@ -1215,7 +1226,6 @@ comment
 notice
 is_null
 )attrs
-
 
 
 
@@ -1365,6 +1375,7 @@ comment
 
 
 
+
 *out_last_line_width
 1457095329
 ^mtime
@@ -1372,7 +1383,6 @@ comment
 comment
 "give the last line width of some output"_
 )attrs
-
 
 
 
@@ -1546,6 +1556,7 @@ comment
 
 
 
+
 *payl_file
 1457031403
 ^mtime
@@ -1553,7 +1564,6 @@ comment
 comment
 "file payload"_
 )attrs
-
 
 
 
@@ -1723,6 +1733,7 @@ comment
 
 
 
+
 *payl_hashset
 1456841456
 ^mtime
@@ -1738,7 +1749,6 @@ payl_hashset_remove_content
 payl_hashset_reserve
 )set
 )attrs
-
 
 
 
@@ -1892,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectval_resize
 1456840222
 ^mtime
@@ -1899,7 +1910,6 @@ comment
 comment
 "resize in a vector of values"_
 )attrs
-
 
 
 
@@ -2092,6 +2102,7 @@ comment
 
 
 
+
 *resize
 1464790967
 ^mtime
@@ -2099,7 +2110,6 @@ comment
 comment
 "for resizing"_
 )attrs
-
 
 
 
@@ -2263,6 +2273,7 @@ comment
 
 
 
+
 *size
 1456761997
 ^mtime
@@ -2270,7 +2281,6 @@ comment
 comment
 "for size information"_
 )attrs
-
 
 
 
@@ -2542,6 +2552,7 @@ comment
 
 
 
+
 *truth
 1455463429
 ^mtime
@@ -2549,7 +2560,6 @@ comment
 comment
 "for true value"_
 )attrs
-
 
 
 
@@ -2723,6 +2733,7 @@ comment
 
 
 
+
 *web_session
 1446110845
 ^mtime
@@ -2730,7 +2741,6 @@ comment
 comment
 "for web sessions"_
 )attrs
-
 
 
 
