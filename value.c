@@ -1418,6 +1418,34 @@ mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
 
 #undef INDENTED_NEWLINE_MOM
 
+void
+mom_print_value (const char *msg, const void *val)
+{
+  if (msg)
+    puts (msg);
+  long nl = ftell (stdout);
+  mom_output_value (stdout, &nl, 0, val);
+  putc ('\n', stdout);
+  fflush (NULL);
+}                               /* end mom_print_value */
+
+void
+mom_print_content (const char *msg, const void *v)
+{
+  if (msg)
+    puts (msg);
+  long nl = ftell (stdout);
+  if (mom_itype (v) == MOMITY_ITEM)
+    {
+      mom_output_item_content (stdout, &nl, (struct mom_item_st *) v);
+    }
+  else
+    {
+      mom_output_value (stdout, &nl, 0, v);
+    }
+  putc ('\n', stdout);
+  fflush (NULL);
+}                               /* end mom_print_content */
 
 const char *
 mom_value_cstring (const void *val)

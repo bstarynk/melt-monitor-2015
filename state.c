@@ -767,7 +767,12 @@ dump_scan_pass_mom (struct mom_dumper_st *du)
   unsigned nbpred = mom_size (predset);
   MOM_DEBUGPRINTF (dump, "should scan %d predefined", nbpred);
   for (int ix = 0; ix < (int) nbpred; ix++)
-    mom_dumpscan_item (du, mom_seqitems_nth (predset, ix));
+    {
+      struct mom_item_st *curitm = predset->seqitem[ix];
+      assert (curitm != NULL && curitm->va_itype == MOMITY_ITEM);
+      MOM_DEBUGPRINTF (dump, "predef curitm=%s", mom_item_cstring (curitm));
+      mom_dumpscan_item (du, curitm);
+    }
   long scancount = 0;
   while (mom_queue_nonempty (du->du_itemque))
     {

@@ -2423,6 +2423,11 @@ void mom_load_state (const char *statepath);
 void mom_dump_state (void);
 const char *mom_value_cstring (const void *val);
 
+// output on stdout, with a message
+void mom_print_value(const char*msg, const void*val);
+// if val is an item print its content, otherwise print the value
+void mom_print_content(const char*msg, const void*val);
+
 void
 mom_output_value (FILE *f, long *plastnl, int depth, const momvalue_t val);
 

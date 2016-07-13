@@ -591,7 +591,7 @@ public:
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
- const struct mom_boxnode_st* transform_inline_element(struct mom_item_st*elitm);
+  const struct mom_boxnode_st* transform_inline_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const char*kindname() const
@@ -1012,7 +1012,7 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (thread_local):
       goto datacase;
     case CASE_DESCR_MOM (data):
-    datacase:
+datacase:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_data_element(elitm);
@@ -1027,7 +1027,7 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (inline):
       goto scanroutine;
     case CASE_DESCR_MOM (routine):
-    scanroutine:
+scanroutine:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_routine_element(elitm);
