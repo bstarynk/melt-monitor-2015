@@ -591,6 +591,7 @@ public:
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
+ const struct mom_boxnode_st* transform_inline_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const char*kindname() const
@@ -1000,7 +1001,7 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
                   mom_item_cstring(elitm), mom_item_cstring(descitm));
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
-#define NBMODELEMDESC_MOM 31
+#define NBMODELEMDESC_MOM 61
 #define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
 	  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
 	  goto defaultcasedesc; foundcase_##Nam
@@ -1011,7 +1012,7 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
     case CASE_DESCR_MOM (thread_local):
       goto datacase;
     case CASE_DESCR_MOM (data):
-datacase:
+    datacase:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_data_element(elitm);
@@ -1023,7 +1024,10 @@ datacase:
         thisemit->scan_func_element(elitm);
       });
       break;
+    case CASE_DESCR_MOM (inline):
+      goto scanroutine;
     case CASE_DESCR_MOM (routine):
+    scanroutine:
       todo([=](MomEmitter*thisemit)
       {
         thisemit->scan_routine_element(elitm);
@@ -5006,6 +5010,13 @@ MomCEmitter::transform_routine_element(struct mom_item_st*itm)
 #warning unimplemented MomCEmitter::transform_routine_element
 MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
 } // end MomCEmitter::transform_routine_element
+
+const struct mom_boxnode_st*
+MomCEmitter::transform_inline_element(struct mom_item_st*itm)
+{
+#warning unimplemented MomCEmitter::transform_inline_element
+MOM_FATAPRINTF("unimplemented MomCEmitter::transform_inline_element itm=%s", mom_item_cstring(itm));
+} // end MomCEmitter::transform_inline_element
 
 
 MomEmitter::CaseScannerData*
