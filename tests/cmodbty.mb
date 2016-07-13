@@ -11,6 +11,11 @@
   ^* descr type
   ^* c_code "uint16_t"
   )
+^global !uint32_t (
+  ^* comment "the uint32_t type of 32 bit unsigned"
+  ^* descr type
+  ^* c_code "uint32_t"
+  )
 
 ^global !hash_t (
   ^* comment "the unsigned type of hash-code"
@@ -37,6 +42,11 @@
       )
       ^global va_ixv (
         ^* comment "the field giving the index"
+        ^* descr field
+        ^* type atomic_int16_t
+      )
+      ^global va_size (
+        ^* comment "the field giving the size"
         ^* descr field
         ^* type atomic_int16_t
       )

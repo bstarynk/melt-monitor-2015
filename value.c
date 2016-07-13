@@ -194,8 +194,7 @@ mom_boxstring_make (const char *s)
   struct mom_boxstring_st *bs =
     mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + ln + 1);
   bs->va_itype = MOMITY_BOXSTRING;
-  bs->va_hsiz = ln >> 16;
-  bs->va_lsiz = ln & 0xffff;
+  bs->va_size = ln;
   bs->hva_hash = mom_cstring_hash_len (s, ln);
   memcpy (bs->cstr, s, ln);
   return bs;
@@ -219,8 +218,7 @@ mom_boxstring_make_len (const char *s, int len)
   struct mom_boxstring_st *bs =
     mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + (len) + 1);
   bs->va_itype = MOMITY_BOXSTRING;
-  bs->va_hsiz = len >> 16;
-  bs->va_lsiz = len & 0xffff;
+  bs->va_size = len;
   bs->hva_hash = mom_cstring_hash_len (s, len);
   memcpy (bs->cstr, s, len);
   return bs;
@@ -248,8 +246,7 @@ mom_boxstring_printf (const char *fmt, ...)
     {
       bsv = mom_gc_alloc_scalar (sizeof (struct mom_boxstring_st) + ln + 1);
       bsv->va_itype = MOMITY_BOXSTRING;
-      bsv->va_hsiz = ln >> 16;
-      bsv->va_lsiz = ln & 0xffff;
+      bsv->va_size = ln;
       va_start (args, fmt);
       if (MOM_UNLIKELY (ln != vsnprintf (bsv->cstr, ln + 1, fmt, args)))
         MOM_FATAPRINTF ("mom_boxstring_printf big ln=%d fmt=%s failure",
@@ -296,15 +293,13 @@ mom_boxdouble_make (double x)
 #define SEQITEM_EMPTY_HASH_MOM(Ty) (127 * (Ty))
 static const struct mom_boxset_st empty_boxset_mom = {
   .va_itype = MOMITY_SET,
-  .va_hsiz = 0,
-  .va_lsiz = 0,
+  .va_size = 0,
   .hva_hash = SEQITEM_EMPTY_HASH_MOM (MOMITY_SET)
 };
 
 static const struct mom_boxtuple_st empty_boxtuple_mom = {
   .va_itype = MOMITY_TUPLE,
-  .va_hsiz = 0,
-  .va_lsiz = 0,
+  .va_size = 0,
   .hva_hash = SEQITEM_EMPTY_HASH_MOM (MOMITY_TUPLE)
 };
 
@@ -372,8 +367,7 @@ mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st *const *arr1,
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
                   (tsiz > 0) ? ((tsiz - 1) * sizeof (void *)) : 0);
   tup->va_itype = MOMITY_TUPLE;
-  tup->va_hsiz = tsiz >> 16;
-  tup->va_lsiz = tsiz & 0xffff;
+  tup->va_size = tsiz;
   for (unsigned ix = 0; ix < siz1; ix++)
     tup->seqitem[ix] = (struct mom_item_st *) (arr1[ix]);
   for (unsigned ix = 0; ix < siz2; ix++)
@@ -398,8 +392,7 @@ mom_boxtuple_make_arr (unsigned siz, const struct mom_item_st *const *arr)
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
                   ((siz > 0) ? ((siz - 1) * sizeof (void *)) : 0));
   tup->va_itype = MOMITY_TUPLE;
-  tup->va_hsiz = siz >> 16;
-  tup->va_lsiz = siz & 0xffff;
+  tup->va_size = siz;
   assert (mom_raw_size (tup) == siz);
   for (unsigned ix = 0; ix < siz; ix++)
     tup->seqitem[ix] = (struct mom_item_st *) (arr[ix]);
@@ -421,8 +414,7 @@ mom_boxtuple_make_va (unsigned siz, ...)
     mom_gc_alloc (sizeof (struct mom_boxtuple_st) +
                   ((siz > 0) ? ((siz - 1) * sizeof (void *)) : 0));
   tup->va_itype = MOMITY_TUPLE;
-  tup->va_hsiz = siz >> 16;
-  tup->va_lsiz = siz & 0xffff;
+  tup->va_size = siz;
   va_start (args, siz);
   for (unsigned ix = 0; ix < siz; ix++)
     tup->seqitem[ix] = mom_dyncast_item (va_arg (args, struct mom_item_st *));
@@ -524,8 +516,7 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
         GC_FREE (oldset);
       set = newset;
     };
-  set->va_hsiz = cnt >> 16;
-  set->va_lsiz = cnt & 0xffff;
+  set->va_size = cnt;
   seqitem_hash_compute_mom ((struct mom_seqitems_st *) set);
   return set;
 }                               /* end of mom_boxset_make_arr2 */
@@ -738,7 +729,7 @@ update_node_hash_mom (struct mom_boxnode_st *nod)
   assert (nod->va_itype == MOMITY_NODE);
   assert (nod->hva_hash == 0);
   assert (nod->nod_connitm != NULL);
-  unsigned siz = (nod->va_hsiz << 16) | nod->va_lsiz;
+  unsigned siz = nod->va_size;
   momhash_t h = (23 * nod->nod_connitm->hva_hash) ^ (149 * siz);
   for (unsigned ix = 0; ix < siz; ix++)
     {
@@ -775,8 +766,7 @@ mom_boxnode_make_meta (const struct mom_item_st *connitm,
     mom_gc_alloc (sizeof (*nod) +
                   ((size > 0) ? ((size - 1) * sizeof (void *)) : 0));
   nod->va_itype = MOMITY_NODE;
-  nod->va_hsiz = size >> 16;
-  nod->va_lsiz = size & 0xffff;
+  nod->va_size = size;
   nod->nod_connitm = (struct mom_item_st *) connitm;
   nod->nod_metaitem = (struct mom_item_st *) metaitm;
   nod->nod_metarank = metarank;

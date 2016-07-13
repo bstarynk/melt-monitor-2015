@@ -647,12 +647,9 @@ static inline momhash_t mom_item_hash (const struct mom_item_st *itm);
 
 // the common prefix of all values
 #define MOM_ANYVALUE_FIELDS			\
-  uint8_t va_itype;				\
-  uint8_t va_hsiz;				\
-  union {					\
-    uint16_t va_lsiz;				\
-    mom_atomic_int16_t va_ixv;			\
-  }
+  uint16_t va_itype;				\
+  mom_atomic_int16_t va_ixv;			\
+  uint32_t va_size
   struct mom_anyvalue_st
   {
     /// field prefix: va_;
@@ -678,8 +675,7 @@ static inline momhash_t mom_item_hash (const struct mom_item_st *itm);
   mom_raw_size (const void *p)
   {
     assert (p != NULL && p != MOM_EMPTY_SLOT && (intptr_t) p % 2 == 0);
-    return (((const struct mom_anyvalue_st *) p)->va_hsiz << 16) |
-           (((const struct mom_anyvalue_st *) p)->va_lsiz);
+    return (((const struct mom_anyvalue_st *) p)->va_size);
   }
 
   static inline unsigned
@@ -697,8 +693,7 @@ static inline momhash_t mom_item_hash (const struct mom_item_st *itm);
       return;
     if (sz >= MOM_SIZE_MAX)
       MOM_FATAPRINTF ("too big size %u", sz);
-    ((struct mom_anyvalue_st *) p)->va_hsiz = sz >> 16;
-    ((struct mom_anyvalue_st *) p)->va_lsiz = sz & 0xffff;
+    ((struct mom_anyvalue_st *) p)->va_size = sz;
   }
 
 

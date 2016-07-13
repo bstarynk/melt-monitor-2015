@@ -259,8 +259,7 @@ put_name_radix_mom (int ix, const char *str)
                            2) | 3) + 1);
   newnam->itname_rank = ix;
   newnam->itname_string.va_itype = MOMITY_BOXSTRING;
-  newnam->itname_string.va_hsiz = len >> 8;
-  newnam->itname_string.va_lsiz = len & 0xffff;
+  newnam->itname_string.va_size = len;
   newnam->itname_string.hva_hash = mom_cstring_hash_len (str, len);
   strncpy (newnam->itname_string.cstr, str, len);
   newnam->itname_string.cstr[len] = (char) 0;

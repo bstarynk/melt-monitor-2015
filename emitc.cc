@@ -284,6 +284,7 @@ public:
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*itm) =0;
+  virtual const struct mom_boxnode_st* transform_other_element(struct mom_item_st*itm, struct mom_item_st*descitm) =0;
   virtual CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*, unsigned, CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm) =0;
   struct sigdef_st scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, bool nobind=false);
@@ -579,6 +580,7 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
+  virtual const struct mom_boxnode_st* transform_other_element(struct mom_item_st*itm, struct mom_item_st*descitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
   momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*insideitm);
   momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
@@ -618,6 +620,13 @@ public:
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
+  virtual const struct mom_boxnode_st* transform_other_element(struct mom_item_st*itm, struct mom_item_st*descitm)
+  {
+    MOM_DEBUGPRINTF(gencod, "js-transform_other_element itm=%s descitm=%s",
+                    mom_item_cstring(itm),
+                    mom_item_cstring(descitm));
+    return nullptr;
+  }
   momvalue_t transform_instruction(struct mom_item_st*insitm, struct mom_item_st*fromitm);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   momvalue_t transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm);
@@ -1020,6 +1029,18 @@ datacase:
         thisemit->scan_routine_element(elitm);
       });
       break;
+    case CASE_DESCR_MOM (type):
+      todo([=](MomEmitter*thisemit)
+      {
+        thisemit->scan_type(elitm);
+      });
+      break;
+    case CASE_DESCR_MOM (signature):
+      todo([=](MomEmitter*thisemit)
+      {
+        thisemit->scan_signature(elitm,(_ce_topitm));
+      });
+      break;
 defaultcasedesc:
     default:
       throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
@@ -1069,8 +1090,15 @@ datacase:
       break;
 defaultcasedesc:
     default:
-      throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
-                               mom_item_cstring(elitm), mom_item_cstring(descitm));
+      MOM_DEBUGPRINTF(gencod, "transform_module_element other element elitm=%s descitm=%s",
+                      mom_item_cstring(elitm), mom_item_cstring(descitm));
+      resnod = transform_other_element(elitm, descitm);
+      MOM_DEBUGPRINTF(gencod, "transform_module_element other elitm=%s descitm=%s got resnod=%s",
+                      mom_item_cstring(elitm), mom_item_cstring(descitm), mom_value_cstring(resnod));
+      if (resnod == nullptr)
+        throw MOM_RUNTIME_PRINTF("module element %s strange desc %s",
+                                 mom_item_cstring(elitm), mom_item_cstring(descitm));
+      break;
     };
 #undef NBMODELEMDESC_MOM
 #undef CASE_DESCR_MOM
@@ -3722,6 +3750,30 @@ MomCEmitter::transform_body_element(struct mom_item_st*bdyitm, struct mom_item_s
 
 
 
+const struct mom_boxnode_st*
+MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_st*descitm)
+{
+  const struct mom_boxnode_st*resnod= nullptr;
+  MOM_DEBUGPRINTF(gencod, "c-transform_other_element elitm=%s descitm=%s",
+                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+  assert (is_locked_item(elitm));
+  assert (mom_unsync_item_descr(elitm)==descitm);
+  if (descitm == MOM_PREDEFITM(type))
+    {
+      resnod = mom_dyncast_node(declare_type(elitm));
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element type elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
+      return resnod;
+    }
+  else if  (descitm == MOM_PREDEFITM(signature))
+    {
+      resnod = mom_dyncast_node(declare_signature_type(elitm));
+      MOM_DEBUGPRINTF(gencod, "transform_module_element signature elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
+      return resnod;
+    }
+  return nullptr;
+}
 
 momvalue_t
 MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
