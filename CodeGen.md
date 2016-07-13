@@ -17,7 +17,7 @@ A *module-item* has `descr` : `module` and `module` :
 
 A *module-component* is an item. It can be a *data-item* (of `descr` :
 `data`), or a *func-item* (of `descr` : `func`), or a *routine-item*
-(of `descr` : `routine`).
+(of `descr` : `routine` or `inline`) or a *type-item* or a *signature-item*.
 
 A *func-item* has some `signature` : *signature-item* and some `body` : *block-item*; the first formal is required to be `the_closure`.
 

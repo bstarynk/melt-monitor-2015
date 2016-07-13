@@ -2324,8 +2324,8 @@ static inline bool
 mom_dumpable_item (const struct mom_item_st *itm)
 {
   return itm && itm != MOM_EMPTY_SLOT
-    && itm->va_itype == MOMITY_ITEM
-    && mom_item_space ((struct mom_item_st *)itm) > MOMSPA_NONE;
+         && itm->va_itype == MOMITY_ITEM
+         && mom_item_space ((struct mom_item_st *)itm) > MOMSPA_NONE;
 }
 
 static inline bool

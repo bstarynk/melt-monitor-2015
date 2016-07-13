@@ -1151,6 +1151,7 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   lock_item(bdyitm);
   scan_block(bdyitm,fuitm);
   _ce_curfunctionitm = nullptr;
+  MOM_DEBUGPRINTF(gencod, "scan_func_element done fuitm=%s\n", mom_item_cstring(fuitm));
 } // end  MomEmitter::scan_func_element
 
 
@@ -2565,11 +2566,32 @@ MomEmitter::scan_closed(struct mom_item_st*cloitm, struct mom_item_st*insitm)
 void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm=%s", mom_item_cstring(rtitm));
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm:=%s", mom_item_content_cstring(rtitm));
   _ce_curfunctionitm = rtitm;
-#warning unimplemented MomEmitter::scan_routine_element
-  MOM_FATAPRINTF("unimplemented scan_routine_element %s", mom_item_cstring(rtitm));
+  assert (is_locked_item(rtitm));
+  auto descitm = mom_unsync_item_descr(rtitm);
+  assert (descitm == MOM_PREDEFITM(routine) || descitm==MOM_PREDEFITM(inline));
+  bind_global(descitm,descitm,rtitm);
+  bind_global(rtitm,descitm,rtitm);
+  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(signature)));
+  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element fuitm=%s sigitm=%s bdyitm=%s",
+                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  if (sigitm == nullptr)
+    throw MOM_RUNTIME_PRINTF("missing signature in routine %s", mom_item_cstring(rtitm));
+  lock_item(sigitm);
+  {
+    auto sigr=scan_signature(sigitm,fuitm);
+    auto formaltup = sigr.sig_formals;
+    MOM_DEBUGPRINTF(gencod, "scan_routine_element fuitm=%s formaltup=%s",
+                    mom_item_cstring(rtitm), mom_value_cstring(formaltup));
+  }
+  if (bdyitm == nullptr)
+    throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
+  lock_item(bdyitm);
+  scan_block(bdyitm,fuitm);
   _ce_curfunctionitm = nullptr;
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element done rtitm=%s\n", mom_item_cstring(rtitm));
 } // end  MomEmitter::scan_routine_element
 
 MomEmitter::~MomEmitter()
