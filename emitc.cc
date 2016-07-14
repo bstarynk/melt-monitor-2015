@@ -2575,21 +2575,21 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
   bind_global(rtitm,descitm,rtitm);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(body)));
-  MOM_DEBUGPRINTF(gencod, "scan_routine_element fuitm=%s sigitm=%s bdyitm=%s",
-                  mom_item_cstring(fuitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s sigitm=%s bdyitm=%s",
+                  mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
   if (sigitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing signature in routine %s", mom_item_cstring(rtitm));
   lock_item(sigitm);
   {
-    auto sigr=scan_signature(sigitm,fuitm);
+    auto sigr=scan_signature(sigitm,rtitm);
     auto formaltup = sigr.sig_formals;
-    MOM_DEBUGPRINTF(gencod, "scan_routine_element fuitm=%s formaltup=%s",
+    MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s formaltup=%s",
                     mom_item_cstring(rtitm), mom_value_cstring(formaltup));
   }
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
   lock_item(bdyitm);
-  scan_block(bdyitm,fuitm);
+  scan_block(bdyitm,rtitm);
   _ce_curfunctionitm = nullptr;
   MOM_DEBUGPRINTF(gencod, "scan_routine_element done rtitm=%s\n", mom_item_cstring(rtitm));
 } // end  MomEmitter::scan_routine_element
