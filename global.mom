@@ -143,6 +143,16 @@ comment
 
 
 
+*bool
+1468828961
+^mtime
+(
+comment
+"the boolean type"_
+)attrs
+
+
+
 *brace
 1466600546
 ^mtime
@@ -183,6 +193,7 @@ comment
 
 
 
+
 *c_expansion
 1466095212
 ^mtime
@@ -190,7 +201,6 @@ comment
 comment
 "give the c expansion in a primitive"_
 )attrs
-
 
 
 
@@ -344,6 +354,7 @@ comment
 
 
 
+
 *dbg_yellow
 1457617248
 ^mtime
@@ -351,7 +362,6 @@ comment
 comment
 "for debug yellow"_
 )attrs
-
 
 
 
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *field
 1467811996
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "for field items"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *hackc
 1446033098
 ^mtime
@@ -682,7 +693,6 @@ comment
 comment
 "hackc root proto"_
 )attrs
-
 
 
 
@@ -853,6 +863,7 @@ comment
 
 
 
+
 *is_null
 1457414352
 ^mtime
@@ -862,7 +873,6 @@ comment
 notice
 not
 )attrs
-
 
 
 
@@ -1037,6 +1047,7 @@ comment
 
 
 
+
 *let
 1455623664
 ^mtime
@@ -1044,7 +1055,6 @@ comment
 comment
 "let keyword"_
 )attrs
-
 
 
 
@@ -1206,6 +1216,7 @@ comment
 
 
 
+
 *none
 1457014740
 ^mtime
@@ -1213,7 +1224,6 @@ comment
 comment
 "pseudo type for nil"_
 )attrs
-
 
 
 
@@ -1365,6 +1375,7 @@ comment
 
 
 
+
 *out_indentation
 1457095329
 ^mtime
@@ -1372,7 +1383,6 @@ comment
 comment
 "give the indentation of some output"_
 )attrs
-
 
 
 
@@ -1546,6 +1556,7 @@ comment
 
 
 
+
 *payl_dumper
 1457031326
 ^mtime
@@ -1553,7 +1564,6 @@ comment
 comment
 "dumper payload"_
 )attrs
-
 
 
 
@@ -1723,6 +1733,7 @@ comment
 
 
 
+
 *payl_hashmap_remove
 1456897878
 ^mtime
@@ -1730,7 +1741,6 @@ comment
 comment
 "operation to remove a key in an hashmap"_
 )attrs
-
 
 
 
@@ -1892,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectval_reserve
 1456840222
 ^mtime
@@ -1899,7 +1910,6 @@ comment
 comment
 "reserve in a vector of values"_
 )attrs
-
 
 
 
@@ -2092,6 +2102,7 @@ comment
 
 
 
+
 *raw
 1452095862
 ^mtime
@@ -2099,7 +2110,6 @@ comment
 comment
 "for raw display"_
 )attrs
-
 
 
 
@@ -2263,6 +2273,7 @@ comment
 
 
 
+
 *signature_tasklet
 1446190348
 ^mtime
@@ -2270,7 +2281,6 @@ comment
 comment
 "signature of tasklet functions"_
 )attrs
-
 
 
 
@@ -2542,6 +2552,7 @@ comment
 
 
 
+
 *transient
 1456994815
 ^mtime
@@ -2549,7 +2560,6 @@ comment
 comment
 "for transient item-making expressions"_
 )attrs
-
 
 
 
@@ -2723,6 +2733,7 @@ comment
 
 
 
+
 *web_handlers
 1446061228
 ^mtime
@@ -2730,7 +2741,6 @@ comment
 comment
 "hashassoc for web handlers"_
 )attrs
-
 
 
 
