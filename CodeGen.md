@@ -83,6 +83,9 @@ is a primitive, and optional `result` as before.
 `string`, `arg` : an expression, and `case` : a tuple or set of
 *case-item*s, optionally `otherwise` : a block or instruction
 
+* a *return-item* with `descr`: `return`, `return` : *expr* (could be
+  omitted to return the default, or for `unit` result type)
+
 A *case-item* has `descr` : `case`, `case` : *current-case*, `run` :
 *instruction-item* (often some block). Inside an `int` switch, the
 *current-case* can be an integer, or some %`range` node with two

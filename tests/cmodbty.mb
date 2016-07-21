@@ -28,7 +28,13 @@
   ^* descr type
   ^* c_code "mom_atomic_int16_t"
   )
-  
+
+^global !bool (
+  ^* comment "the type for booleans"
+  ^* descr type
+  ^* c_code "bool"
+)
+
 ^global !anyvalue_ty (
   ^global
   ^* comment "the type of any value"
@@ -67,5 +73,43 @@
   ]
 )
 
+^global val0 (
+   ^* comment "val0 in cmodbty.mb"
+   ^* descr formal
+   ^* type value
+)
+
+^global !signature_value_to_bool (
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result bool
+)
+
+^global !signature_value_to_int (
+  ^* comment "signature value -> int"
+  ^* formals [ val0 ]
+  ^* result int
+)
+
+^global !cast_pointer_to_int_prim (
+  ^* comment "primitive to cast a pointer to an int"
+  ^* descr primitive
+  ^* signature signature_value_to_int
+  ^* c_expansion %code_chunk(
+      "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
+)
+
+^global !valid_value_pointer (
+  ^* comment "inline function testing validity of value pointer"
+  ^* descr inline
+  ^* signature signature_value_to_bool
+  ^* body  ^global ?valid_value_pointer (
+       ^* comment "body of valid_value_pointer"
+       ^* descr sequence
+       ^* body
+       [
+       ]
+   )
+)
 
 ## eof cmodbty.mb

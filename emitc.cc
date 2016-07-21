@@ -1409,7 +1409,7 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
 	  goto defaultcasedesc; foundcase_##Nam
   switch (desitm->hva_hash % NBMODOPER_MOM)
     {
-    case CASE_OPER_MOM(assign):
+    case CASE_OPER_MOM(assign): //////////
     {
       auto tovaritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(to)));
       auto fromexp = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(from));
@@ -1436,9 +1436,10 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
                  mom_boxnode_make_va(MOM_PREDEFITM(assign),3,
                                      tovaritm, fromexp,  totypitm),
                  blkitm, rk);
-    }
+    } //// end assign
     break;
-    case CASE_OPER_MOM(break):
+    /////
+    case CASE_OPER_MOM(break): //////////
     {
       auto outblkitm= mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(block)));
       if (!outblkitm)
@@ -1471,9 +1472,10 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
         else
           _ce_breakcountmap[outblkitm] = 1;
       }
-    }
+    } //// end break
     break;
-    case CASE_OPER_MOM(continue):
+    ////
+    case CASE_OPER_MOM(continue): ///////////////
     {
       auto loopitm= mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(loop)));
       if (!loopitm)
@@ -1506,11 +1508,12 @@ void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_s
         else
           _ce_continuecountmap[loopitm] = 1;
       }
-    }
+    } /// end continue
     break;
-    case CASE_OPER_MOM(loop):
+    ////
+    case CASE_OPER_MOM(loop): /////////
       goto sequencecase;
-    case CASE_OPER_MOM(sequence):
+    case CASE_OPER_MOM(sequence): ////////
 sequencecase:
       {
         MOM_DEBUGPRINTF(gencod, "scan_instr nested block insitm=%s rk#%d blkitm=%s",
@@ -1525,9 +1528,10 @@ sequencecase:
         });
         bind_local(insitm,desitm,
                    insitm, blkitm, rk);
-      }
+      } /// end sequence (& loop)
       break;
-    case CASE_OPER_MOM(cond):
+      //////
+    case CASE_OPER_MOM(cond): ////////////////////
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
       if (!condtup)
@@ -1601,9 +1605,10 @@ sequencecase:
         }
       bind_local(insitm,MOM_PREDEFITM(cond),
                  condtup, blkitm, rk);
-    }
+    } // end cond
     break;
-    case CASE_OPER_MOM(call):
+    /////
+    case CASE_OPER_MOM(call):	/////////////
     {
       auto callsigitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(call)));
@@ -1706,9 +1711,10 @@ sequencecase:
                                   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                   mom_value_cstring(resultv));
       bind_local(insitm,MOM_PREDEFITM(call),callsigitm, blkitm, rk);
-    }
+    } // end call
     break;
-    case CASE_OPER_MOM(run):
+    /////
+    case CASE_OPER_MOM(run):	//////////////////
     {
       auto primitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(run)));
@@ -1820,9 +1826,10 @@ sequencecase:
                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                  mom_value_cstring(resultv));
       bind_local(insitm,MOM_PREDEFITM(run),primitm, blkitm, rk);
-    }
+    } // end run
     break;
-    case CASE_OPER_MOM(switch):
+    /////
+    case CASE_OPER_MOM(switch): ////////////////
     {
       auto swtypitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(switch)));
@@ -1894,10 +1901,21 @@ sequencecase:
                       mom_value_cstring(bindsw));
       bind_local(insitm,MOM_PREDEFITM(switch),bindsw,
                  blkitm, rk);
-    }
+    } //// end switch
     break;
+    /////
+    case CASE_OPER_MOM(return): ////////////////
+      {
+      auto retexpv =
+        mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(return));
+      MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s",
+		      mom_item_cstring(insitm), mom_value_cstring(retexpv));
+#warning scan_instr return incomplete
+      } //end return
+      break;
+      ////
     default:
-defaultcasedesc:
+    defaultcasedesc: ////
       {
         MOM_DEBUGPRINTF(gencod, "scan_instr special before insitm=%s desitm=%s rk#%d blkitm %s",
                         mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
