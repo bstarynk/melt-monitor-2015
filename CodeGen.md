@@ -102,7 +102,11 @@ An *expression* is one of:
 * a *variable-item*, if it has a `descr` : `variable`, `global`, `thread_local`, `formal`
 
 * a *closed-item* if it has a `descr` : `closed` (all closed items are
-  of type `value`).
+of type `value`).
+
+* a *constant-item* has `descr` : `constant`, `type` : *type-item*
+  (default is `value`), and either `value` : *value* or
+  `c_expansion` : *chunk-node*
 
 * any other item is considered literally (as a constant)
 

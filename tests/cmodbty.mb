@@ -99,6 +99,13 @@
       "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
 )
 
+^global !empty_slot (
+  ^* comment "constant for MOM_EMPTY_SLOT"
+  ^* descr constant
+  ^* c_expansion %code_chunk(
+       "/*empty_slot*/ MOM_EMPTY_SLOT" )
+)
+
 ^global !valid_value_pointer (
   ^* comment "inline function testing validity of value pointer"
   ^* descr inline

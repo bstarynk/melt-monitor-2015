@@ -317,6 +317,7 @@ public:
       int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_constant(struct mom_item_st*constitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_closed(struct mom_item_st*varitm, struct mom_item_st*insitm);
 public:
   static int constexpr MAX_DEPTH_EXPR=128;
@@ -2450,7 +2451,16 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
       || desitm == MOM_PREDEFITM(thread_local) || desitm == MOM_PREDEFITM(formal))
     return scan_var(expitm,insitm,typitm);
   else if (desitm == MOM_PREDEFITM(closed))
-    return scan_closed(expitm,insitm);
+    {
+      if (typitm && typitm != MOM_PREDEFITM(value))
+        throw MOM_RUNTIME_PRINTF("closed item %s in instr %s but expecting non-value type %s",
+                                 mom_item_cstring(expitm),
+                                 mom_item_cstring(insitm),
+                                 mom_item_cstring(typitm));
+      return scan_closed(expitm,insitm);
+    }
+  else if (desitm == MOM_PREDEFITM(constant))
+    return scan_constant(expitm,insitm,typitm);
   auto typexpitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
@@ -2574,6 +2584,30 @@ defaultvardesc:
 #undef CASE_VARDESCR_MOM
   return typitm;
 } // end of MomEmitter::scan_var
+
+
+
+
+
+struct mom_item_st*
+MomEmitter::scan_constant(struct mom_item_st*cstitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
+{
+  MOM_DEBUGPRINTF(gencod, "scan_constant start cstitm=%s insitm=%s typitm=%s",
+                  mom_item_cstring(cstitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
+  assert (is_locked_item(cstitm));
+  assert(mom_unsync_item_descr(cstitm)==MOM_PREDEFITM(constant));
+  auto cstypitm = //
+    mom_dyncast_item(mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(type)));
+  if (cstypitm == nullptr)
+    cstypitm = MOM_PREDEFITM(value);
+  if (typitm != nullptr && typitm != cstypitm)
+    throw MOM_RUNTIME_PRINTF("constant %s in instruction %s has type %s but expecting %s",
+                             mom_item_cstring(cstitm), mom_item_cstring(insitm),
+                             mom_item_cstring(cstypitm),
+                             mom_item_cstring(typitm));
+  bind_global(cstitm, MOM_PREDEFITM(constant), cstypitm);
+  return cstypitm;
+} // end MomEmitter::scan_constant
 
 
 struct mom_item_st*
@@ -4380,6 +4414,22 @@ MomCEmitter::transform_constant_item(struct mom_item_st*cstitm, struct mom_item_
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_constant_item start cstitm=%s insitm=%s",
                   mom_item_cstring(cstitm), mom_item_cstring(insitm));
+  assert (is_locked_item(cstitm));
+  auto cexpnod = mom_dyncast_node(mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(c_expansion)));
+  if (cexpnod != nullptr && cexpnod->nod_connitm == MOM_PREDEFITM(code_chunk))
+    {
+      unsigned cexparity = mom_raw_size(cexpnod);
+      auto sonarr = (momvalue_t*)mom_gc_alloc((cexparity+2)*sizeof(momvalue_t));
+      sonarr[0] = literal_string("(");
+      for (unsigned six=0; six<cexparity; six++)
+        sonarr[six+1] = cexpnod->nod_sons[six];
+      sonarr[cexparity+1] = literal_string(")");
+      auto resnod = mom_boxnode_make(MOM_PREDEFITM(sequence), cexparity+2, sonarr);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_constant_item cstitm=%s cexpansion gives resnod=%s",
+                      mom_item_cstring(cstitm), mom_value_cstring(resnod));
+      return resnod;
+    }
   if (mom_item_space(cstitm) == MOMSPA_PREDEF)
     {
       auto prnod =
@@ -4389,7 +4439,7 @@ MomCEmitter::transform_constant_item(struct mom_item_st*cstitm, struct mom_item_
                             cstitm,
                             literal_string(")"));
       MOM_DEBUGPRINTF(gencod,
-                      "c-transform_constant_item cstitm=%s gives prnod=%s",
+                      "c-transform_constant_item cstitm=%s predefined gives prnod=%s",
                       mom_item_cstring(cstitm), mom_value_cstring(prnod));
       return prnod;
     }
