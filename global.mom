@@ -2133,6 +2133,16 @@ comment
 
 
 
+*return
+1469175229
+^mtime
+(
+comment
+"for return"_
+)attrs
+
+
+
 *reviter
 1457086941
 ^mtime
@@ -2263,6 +2273,7 @@ unit
 
 
 
+
 *signature_loader_paren
 1446020701
 ^mtime
@@ -2270,7 +2281,6 @@ unit
 comment
 "signature of load paren functions"_
 )attrs
-
 
 
 
@@ -2542,6 +2552,7 @@ comment
 
 
 
+
 *to
 1465302282
 ^mtime
@@ -2549,7 +2560,6 @@ comment
 comment
 "for destination, e.g. in assignment"_
 )attrs
-
 
 
 
@@ -2723,6 +2733,7 @@ comment
 
 
 
+
 *web_exchange
 1456934574
 ^mtime
@@ -2730,7 +2741,6 @@ comment
 comment
 "current web exchange"_
 )attrs
-
 
 
 

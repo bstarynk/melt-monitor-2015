@@ -1904,6 +1904,7 @@ sequencecase:
     } //// end switch
     break;
     /////
+#if 0
     case CASE_OPER_MOM(return): ////////////////
       {
       auto retexpv =
@@ -1913,6 +1914,7 @@ sequencecase:
 #warning scan_instr return incomplete
       } //end return
       break;
+#endif
       ////
     default:
     defaultcasedesc: ////
