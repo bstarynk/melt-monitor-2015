@@ -294,6 +294,16 @@ comment
 
 
 
+*constant
+1469181406
+^mtime
+(
+comment
+"for constants"_
+)attrs
+
+
+
 *continue
 1465304130
 ^mtime
@@ -344,6 +354,7 @@ comment
 
 
 
+
 *dbg_red
 1457617248
 ^mtime
@@ -351,7 +362,6 @@ comment
 comment
 "for debug red"_
 )attrs
-
 
 
 
@@ -514,6 +524,7 @@ comment
 
 
 
+
 *fail
 1457596906
 ^mtime
@@ -521,7 +532,6 @@ comment
 comment
 "throw a failure"_
 )attrs
-
 
 
 
@@ -675,6 +685,7 @@ comment
 
 
 
+
 *greater_or_equal
 1457365666
 ^mtime
@@ -682,7 +693,6 @@ comment
 comment
 "test for greater or equal of two values"_
 )attrs
-
 
 
 
@@ -853,6 +863,7 @@ item
 
 
 
+
 *is_node
 1457361540
 ^mtime
@@ -860,7 +871,6 @@ item
 comment
 "test if argument is a node"_
 )attrs
-
 
 
 
@@ -1037,6 +1047,7 @@ comment
 
 
 
+
 *less_or_equal
 1457365666
 ^mtime
@@ -1044,7 +1055,6 @@ comment
 comment
 "test for less or equal of two values"_
 )attrs
-
 
 
 
@@ -1206,6 +1216,7 @@ comment
 
 
 
+
 *node_nth
 1457430266
 ^mtime
@@ -1213,7 +1224,6 @@ comment
 comment
 "get the nth son of a node, or else nil"_
 )attrs
-
 
 
 
@@ -1365,6 +1375,7 @@ comment
 
 
 
+
 *out_indent
 1457095329
 ^mtime
@@ -1372,7 +1383,6 @@ comment
 comment
 "output with more indentation"_
 )attrs
-
 
 
 
@@ -1546,6 +1556,7 @@ comment
 
 
 
+
 *payl_clear
 1456930351
 ^mtime
@@ -1553,7 +1564,6 @@ comment
 comment
 "operation to clear the payload of some item"_
 )attrs
-
 
 
 
@@ -1723,6 +1733,7 @@ comment
 
 
 
+
 *payl_hashmap_put
 1456897878
 ^mtime
@@ -1730,7 +1741,6 @@ comment
 comment
 "operation to put a key in an hashmap"_
 )attrs
-
 
 
 
@@ -1892,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectval_put_nth
 1456840222
 ^mtime
@@ -1899,7 +1910,6 @@ comment
 comment
 "put_nth component in a vector of values"_
 )attrs
-
 
 
 
@@ -2092,6 +2102,7 @@ comment
 
 
 
+
 *range
 1465978097
 ^mtime
@@ -2099,7 +2110,6 @@ comment
 comment
 "for ranges in cases"_
 )attrs
-
 
 
 
@@ -2267,10 +2277,10 @@ unit
 
 
 
+
 *signature_loader_caret
 1445950071
 ^mtime
-
 
 
 
@@ -2542,6 +2552,7 @@ value
 
 
 
+
 *thread_local
 1465299099
 ^mtime
@@ -2549,7 +2560,6 @@ value
 comment
 "for thread-local variables"_
 )attrs
-
 
 
 
@@ -2723,6 +2733,7 @@ comment
 
 
 
+
 *verbatim
 1455468628
 ^mtime
@@ -2730,7 +2741,6 @@ comment
 comment
 "for verbatim"_
 )attrs
-
 
 
 
