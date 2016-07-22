@@ -79,11 +79,19 @@
    ^* type value
 )
 
-^global !signature_value_to_bool (
+
+^global val1 (
+   ^* comment "val1 in cmodbty.mb"
+   ^* descr formal
+   ^* type value
+)
+
+^global !signature_2values_to_bool (
   ^* descr signature
-  ^* formals [ val0 ]
+  ^* formals [ val0 val1 ]
   ^* result bool
 )
+
 
 ^global !signature_value_to_int (
   ^* comment "signature value -> int"
@@ -99,12 +107,23 @@
       "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
 )
 
+^global !same_value_prim (
+  ^* comment "primitive to test identities of 2 values"
+  ^* descr primitive
+  ^* signature signature_2values_to_int
+  ^* c_expansion %code_chunk(
+      "/*same_value_prim*/ (" val0 ") == (" val1 ")" )
+)
+
+
 ^global !empty_slot (
   ^* comment "constant for MOM_EMPTY_SLOT"
   ^* descr constant
   ^* c_expansion %code_chunk(
        "/*empty_slot*/ MOM_EMPTY_SLOT" )
 )
+
+
 
 ^global !valid_value_pointer (
   ^* comment "inline function testing validity of value pointer"
@@ -115,6 +134,29 @@
        ^* descr sequence
        ^* body
        [
+         ^global ?cond (
+	   ^* comment "cond for nil or empty slot or int"
+	   ^* descr cond [
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for nil"
+	       ^* test %not(val0)
+	       ^* then ^global ?return (
+	         ^* descr return
+		 ^* comment "return nil when nil value"
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for empty_slot"
+	       ^* test same_value_prim(val0 empty_slot)
+	       ^* then ^global ?return (
+	         ^* descr return
+		 ^* comment "return nil when empty slot"
+	       )
+	     )
+	   ]
+	 )
        ]
    )
 )
