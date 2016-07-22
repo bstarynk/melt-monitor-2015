@@ -114,10 +114,11 @@ protected:
   traced_set_items_t _ce_localcloseditems;
   traced_node2itemhashmap_t _ce_localnodetypecache;
   struct mom_item_st*_ce_curfunctionitm;
+  struct sigdef_st _ce_cursigdef;
   struct mom_item_st* _ce_emitteritm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -867,6 +868,7 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_localcloseditems {},
                      _ce_localnodetypecache {},
                      _ce_curfunctionitm {nullptr},
+                     _ce_cursigdef {nullptr,nullptr},
 _ce_emitteritm {nullptr}
 {
   if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
@@ -1143,6 +1145,7 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   {
     auto sigr=scan_signature(sigitm,fuitm);
     auto formaltup = sigr.sig_formals;
+    _ce_cursigdef = sigr;
     MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s formaltup=%s",
                     mom_item_cstring(fuitm), mom_value_cstring(formaltup));
   }
@@ -1530,7 +1533,7 @@ sequencecase:
                    insitm, blkitm, rk);
       } /// end sequence (& loop)
       break;
-      //////
+    //////
     case CASE_OPER_MOM(cond): ////////////////////
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
@@ -1904,20 +1907,22 @@ sequencecase:
     } //// end switch
     break;
     /////
-#if 0
     case CASE_OPER_MOM(return): ////////////////
-      {
+    {
       auto retexpv =
         mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(return));
-      MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s",
-		      mom_item_cstring(insitm), mom_value_cstring(retexpv));
+      MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s sigresult=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retexpv),
+                      mom_value_cstring(_ce_cursigdef.sig_result));
+      auto retypv = scan_expr(retexpv,insitm,0,mom_dyncast_item(_ce_cursigdef.sig_result));
+      MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retypv=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retypv));
 #warning scan_instr return incomplete
-      } //end return
-      break;
-#endif
-      ////
+    } //end return
+    break;
+    ////
     default:
-    defaultcasedesc: ////
+defaultcasedesc: ////
       {
         MOM_DEBUGPRINTF(gencod, "scan_instr special before insitm=%s desitm=%s rk#%d blkitm %s",
                         mom_item_cstring(insitm), mom_item_cstring(desitm), rk, mom_item_cstring(blkitm));
@@ -2602,6 +2607,7 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
   lock_item(sigitm);
   {
     auto sigr=scan_signature(sigitm,rtitm);
+    _ce_cursigdef = sigr;
     auto formaltup = sigr.sig_formals;
     MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s formaltup=%s",
                     mom_item_cstring(rtitm), mom_value_cstring(formaltup));
@@ -2614,6 +2620,9 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
   MOM_DEBUGPRINTF(gencod, "scan_routine_element done rtitm=%s\n", mom_item_cstring(rtitm));
 } // end  MomEmitter::scan_routine_element
 
+
+
+////////////////
 MomEmitter::~MomEmitter()
 {
   if (!_ce_failing)
@@ -2640,6 +2649,7 @@ MomEmitter::~MomEmitter()
   _ce_localcloseditems.clear();
   _ce_localnodetypecache.clear();
   _ce_curfunctionitm = nullptr;
+  _ce_cursigdef = sigdef_st {nullptr,nullptr};
 } // end MomEmitter::~MomEmitter
 
 
