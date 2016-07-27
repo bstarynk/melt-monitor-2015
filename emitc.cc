@@ -593,6 +593,7 @@ public:
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
+  const struct mom_boxnode_st* declare_inlineheader_for (struct mom_item_st*sigitm, struct mom_item_st*iltm);
   const struct mom_boxnode_st* transform_inline_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -1553,12 +1554,12 @@ sequencecase:
                                mom_item_cstring(blkitm),
                                ix);
           lock_item(testitm);
-	  MOM_DEBUGPRINTF(gencod,
-			  "scan_instr cond %s #%d in block %s; ix#%d testitm:=%s",
-			  mom_item_cstring(insitm), rk,
-			  mom_item_cstring(blkitm), ix,
-			  mom_item_content_cstring(testitm));
-			  
+          MOM_DEBUGPRINTF(gencod,
+                          "scan_instr cond %s #%d in block %s; ix#%d testitm:=%s",
+                          mom_item_cstring(insitm), rk,
+                          mom_item_cstring(blkitm), ix,
+                          mom_item_content_cstring(testitm));
+
           {
             struct mom_item_st*destestitm = mom_unsync_item_descr(testitm);
             if (destestitm != MOM_PREDEFITM(test))
@@ -1595,8 +1596,8 @@ sequencecase:
             }
           auto thenitm =
             mom_dyncast_item(mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(then)));
-	  MOM_DEBUGPRINTF(gencod, "scan_instr cond %s #%d thenitm %s", mom_item_cstring(insitm), rk,
-			  mom_item_cstring(thenitm));
+          MOM_DEBUGPRINTF(gencod, "scan_instr cond %s #%d thenitm %s", mom_item_cstring(insitm), rk,
+                          mom_item_cstring(thenitm));
           if (thenitm == nullptr)
             throw
             MOM_RUNTIME_PRINTF("cond %s #%d in block %s with test#%d %s without `then`",
@@ -1617,7 +1618,7 @@ sequencecase:
           });
         }
       MOM_DEBUGPRINTF(gencod, "scan_instr cond insitm=%s condtup=%s",
-		      mom_item_cstring(insitm), mom_value_cstring(condtup));
+                      mom_item_cstring(insitm), mom_value_cstring(condtup));
       bind_local(insitm,MOM_PREDEFITM(cond),
                  condtup, blkitm, rk);
     } // end cond
@@ -2456,7 +2457,7 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
   MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
                   mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm:=%s",
-		  mom_item_content_cstring(expitm));
+                  mom_item_content_cstring(expitm));
   assert (is_locked_item(expitm));
   assert (is_locked_item(insitm));
   auto desitm =  mom_unsync_item_descr(expitm);
@@ -2605,11 +2606,16 @@ defaultvardesc:
 struct mom_item_st*
 MomEmitter::scan_constant(struct mom_item_st*cstitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_constant start cstitm=%s insitm=%s typitm=%s",
-                  mom_item_cstring(cstitm),
-		  mom_item_cstring(insitm), mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_constant start cstitm:=%s\n.. insitm=%s typitm=%s",
+                  mom_item_content_cstring(cstitm),
+                  mom_item_cstring(insitm), mom_item_cstring(typitm));
   assert (is_locked_item(cstitm));
   assert(mom_unsync_item_descr(cstitm)==MOM_PREDEFITM(constant));
+  if (typitm == MOM_PREDEFITM(bool) && cstitm==MOM_PREDEFITM(truth))
+    {
+      MOM_DEBUGPRINTF(gencod, "scan_constant special truth bool");
+      return MOM_PREDEFITM(bool);
+    }
   auto cstypitm = //
     mom_dyncast_item(mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(type)));
   if (cstypitm == nullptr)
@@ -3858,8 +3864,8 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_st*descitm)
 {
   const struct mom_boxnode_st*resnod= nullptr;
-  MOM_DEBUGPRINTF(gencod, "c-transform_other_element elitm=%s descitm=%s",
-                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_other_element elitm:=%s\n.. descitm=%s",
+                  mom_item_content_cstring(elitm), mom_item_cstring(descitm));
   assert (is_locked_item(elitm));
   assert (mom_unsync_item_descr(elitm)==descitm);
   if (descitm == MOM_PREDEFITM(type))
@@ -3872,7 +3878,16 @@ MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_s
   else if  (descitm == MOM_PREDEFITM(signature))
     {
       resnod = mom_dyncast_node(declare_signature_type(elitm));
-      MOM_DEBUGPRINTF(gencod, "transform_module_element signature elitm=%s resnod=%s",
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element signature elitm=%s resnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(resnod));
+      return resnod;
+    }
+  else if (descitm == MOM_PREDEFITM(inline))
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element inline elitm=%s",
+                      mom_item_cstring(elitm));
+      resnod = transform_inline_element(elitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element inline elitm=%s resnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
       return resnod;
     }
@@ -5120,21 +5135,164 @@ MOM_FATAPRINTF("unimplemented c-transform_switchinstr insitm=%s whatv=%s",
 } // end of MomCEmitter::transform_switchinstr
 
 
+
+////////////////
 const struct mom_boxnode_st*
-MomCEmitter::transform_routine_element(struct mom_item_st*itm)
+MomCEmitter::transform_routine_element(struct mom_item_st*rtitm)
 {
+assert (is_locked_item(rtitm));
+MOM_DEBUGPRINTF(gencod, "c-transform_routine_element start rtitm:=\n%s\n", mom_item_content_cstring(rtitm));
+auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(signature)));
+auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(body)));
+MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s sigitm %s bdyitm %s",
+                mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+assert (is_locked_item(sigitm));
+assert (is_locked_item(bdyitm));
 #warning unimplemented MomCEmitter::transform_routine_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element itm=%s", mom_item_cstring(itm));
+MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element rtitm=%s", mom_item_cstring(rtitm));
 } // end MomCEmitter::transform_routine_element
 
+
 const struct mom_boxnode_st*
-MomCEmitter::transform_inline_element(struct mom_item_st*itm)
+MomCEmitter::declare_inlineheader_for (struct mom_item_st*sigitm, struct mom_item_st*ilitm)
 {
-#warning unimplemented MomCEmitter::transform_inline_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_inline_element itm=%s", mom_item_cstring(itm));
+assert (is_locked_item(sigitm));
+assert (is_locked_item(ilitm));
+MOM_DEBUGPRINTF(gencod, "c-emitter declare_inlineheader_for start sigitm=%s ilitm:=%s",
+                mom_item_cstring(sigitm), mom_item_content_cstring(ilitm));
+auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+assert (formtup != nullptr);
+auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
+MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s formtup=%s restyv=%s",
+                mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
+int nbform = mom_raw_size(formtup);
+momvalue_t smallformdeclarr[8] = {nullptr};
+momvalue_t *formdeclarr =
+  (nbform<(int)(sizeof(smallformdeclarr)/sizeof(smallformdeclarr[0])))
+  ? smallformdeclarr
+  : (momvalue_t*)mom_gc_alloc(nbform*sizeof(momvalue_t));
+for (int ix=0; ix<nbform; ix++)
+  {
+    momvalue_t curformdeclv = nullptr;
+    struct mom_item_st*curformitm = formtup->seqitem[ix];
+    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s  ix#%d curformitm=%s",
+                    mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
+    assert (is_locked_item(curformitm));
+    struct mom_item_st*formtypitm =
+    mom_dyncast_item(mom_unsync_item_get_phys_attr (curformitm, MOM_PREDEFITM(type)));
+    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for curformitm=%s formtypitm=%s",
+                    mom_item_cstring(curformitm),
+                    mom_item_cstring(formtypitm));
+    assert (is_locked_item(formtypitm));
+    auto formtypnod = declare_type(formtypitm);
+    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for formtypitm=%s formtypnod=%s",
+                    mom_item_cstring(formtypitm), mom_value_cstring(formtypnod));
+    curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                       formtypnod, literal_string(" "),
+                                       literal_string(CFORMAL_PREFIX),
+                                       curformitm);
+    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for ix#%d curformitm=%s curformdeclv=%s",
+                    ix,
+                    mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
+    formdeclarr[ix] = curformdeclv;
+  }
+for (int j=0; j<nbform; j++)
+  MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
+auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
+                                      mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
+if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
+formdeclarr = nullptr;
+MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s formtreev=%s restyv=%s",
+                mom_item_cstring(sigitm), mom_value_cstring(formtreev), mom_value_cstring(restyv));
+momvalue_t restytree = nullptr;
+switch(mom_itype(restyv))
+  {
+  case MOMITY_ITEM:
+    restytree = declare_type((struct mom_item_st*)restyv);
+    break;
+  default:
+    throw MOM_RUNTIME_PRINTF("bad result type %s for signature %s inline %s",
+                             mom_value_cstring(restyv),
+                             mom_item_cstring(sigitm),
+                             mom_item_cstring(ilitm));
+  }
+MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s restyv=%s restytree=%s",
+                mom_item_cstring(sigitm), mom_value_cstring(restyv), mom_value_cstring(restytree));
+auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                 restytree,
+                 literal_string("static inline"),
+                 literal_string(" "),
+                 literal_string(MOM_FUNC_PREFIX),
+                 ilitm,
+                 formtreev );
+MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s ilitm=%s result funheadv=%s",
+                mom_item_cstring(sigitm),
+                mom_item_cstring(ilitm),
+                mom_value_cstring(funheadv));
+return funheadv;
+} // end MomCEmitter::declare_inlineheader_for
+
+
+
+////////////////
+const struct mom_boxnode_st*
+MomCEmitter::transform_inline_element(struct mom_item_st*ilitm)
+{
+assert (is_locked_item(ilitm));
+MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n", mom_item_content_cstring(ilitm));
+assert (mom_unsync_item_descr(ilitm) == MOM_PREDEFITM(inline));
+auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(signature)));
+auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(body)));
+MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s bdyitm %s",
+                mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+assert (is_locked_item(sigitm));
+assert (is_locked_item(bdyitm));
+auto inlhnod = declare_inlineheader_for(sigitm,ilitm);
+MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s inlhnod %s",
+                mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_value_cstring(inlhnod));
+if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+  {
+    _cec_declareditems.insert(sigitm);
+    auto sigtypnod = declare_signature_type(sigitm);
+    MOM_DEBUGPRINTF(gencod, "c-transform_inline_element sigitm %s sigtypnod %s",
+                    mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
+    add_global_decl(sigtypnod);
+  }
+if (_cec_declareditems.find(ilitm) == _cec_declareditems.end())
+  {
+    _cec_declareditems.insert(ilitm);
+    auto inldecl =
+      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                literal_string("static inline"),
+                                literal_string(" "),
+                                literal_string(CSIGNTYPE_PREFIX),
+                                sigitm,
+                                literal_string(" "),
+                                literal_string(MOM_FUNC_PREFIX),
+                                ilitm,
+                                literal_string(";"));
+    add_global_decl(inldecl);
+    MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s inldecl %s", mom_item_cstring(ilitm),
+                    mom_value_cstring(inldecl));
+  }
+auto bdynod = transform_body_element(bdyitm,ilitm);
+MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
+                mom_item_cstring(ilitm), mom_item_cstring(bdyitm),
+                mom_value_cstring(bdynod), mom_value_cstring(inlhnod));
+auto inldef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                  inlhnod,
+                                  literal_string("\n"),
+                                  bdynod);
+MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s result inldef=%s",  mom_item_cstring(ilitm),
+                mom_value_cstring(inldef));
+return inldef;
 } // end MomCEmitter::transform_inline_element
 
 
+
+
+
+////////////////
 MomEmitter::CaseScannerData*
 MomEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm)
 {
