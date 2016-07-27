@@ -1266,8 +1266,8 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
 void
 MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_block start blkitm=%s initm=%s",
-                  mom_item_cstring(blkitm), mom_item_cstring(initm));
+  MOM_DEBUGPRINTF(gencod, "scan_block start blkitm:=%s\n.. initm=%s",
+                  mom_item_content_cstring(blkitm), mom_item_cstring(initm));
   assert (is_locked_item(blkitm));
   if (_ce_blockitems.size() >= NB_MAX_BLOCKS)
     throw  MOM_RUNTIME_PRINTF("in %s block %s overflowing %d",
