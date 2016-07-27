@@ -2455,6 +2455,8 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
 {
   MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
                   mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm:=%s",
+		  mom_item_content_cstring(expitm));
   assert (is_locked_item(expitm));
   assert (is_locked_item(insitm));
   auto desitm =  mom_unsync_item_descr(expitm);
@@ -2604,7 +2606,8 @@ struct mom_item_st*
 MomEmitter::scan_constant(struct mom_item_st*cstitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_constant start cstitm=%s insitm=%s typitm=%s",
-                  mom_item_cstring(cstitm), mom_item_cstring(insitm), mom_item_cstring(typitm));
+                  mom_item_cstring(cstitm),
+		  mom_item_cstring(insitm), mom_item_cstring(typitm));
   assert (is_locked_item(cstitm));
   assert(mom_unsync_item_descr(cstitm)==MOM_PREDEFITM(constant));
   auto cstypitm = //
