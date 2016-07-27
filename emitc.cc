@@ -4542,6 +4542,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 	  goto defaultcaseirole; foundcase_##Nam
   switch (rolitm->hva_hash % NBINSTROLE_MOM)
     {
+      ////
     case CASE_INSTROLE_MOM(run):
     {
       auto runitm = mom_dyncast_item(insbind->vd_what);
@@ -4553,6 +4554,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return transform_runinstr(insitm, runitm, fromitm);
     }
     break;
+    ////
     case CASE_INSTROLE_MOM(assign):
     {
       auto whatnod = mom_dyncast_node(whatv);
@@ -4583,6 +4585,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return assitree;
     }
     break;
+    ////
     case CASE_INSTROLE_MOM(break):
     {
       auto outblkitm = mom_dyncast_item(whatv);
@@ -4611,6 +4614,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return breaktree;
     }
     break;
+    ////
     case CASE_INSTROLE_MOM(continue):
     {
       auto outblkitm = mom_dyncast_item(whatv);
@@ -4639,6 +4643,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       return continuetree;
     }
     break;
+    ////
     case CASE_INSTROLE_MOM(switch):
     {
       MOM_DEBUGPRINTF(gencod,
@@ -4649,6 +4654,78 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                       "c-transform_instruction switch insitm=%s gives switchtree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(switchtree));
       return switchtree;
+    }
+    break;
+    ////
+    case CASE_INSTROLE_MOM(cond):
+    {
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction cond insitm=%s whatv=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(whatv));
+      auto condtup = mom_dyncast_tuple(whatv);
+      assert (condtup != nullptr);
+      unsigned nbcond = mom_size(condtup);
+      traced_vector_values_t vecondtree;
+      vecondtree.reserve(2*nbcond+4);
+      vecondtree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                           literal_string("cond"),
+                           literal_string(" "),
+                           insitm));
+      for (int cix=0; cix<(int)nbcond; cix++)
+        {
+          auto curconditm = condtup->seqitem[cix];
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_instruction cond insitm=%s cix#%d curconditm:=%s",
+                          mom_item_cstring(insitm), cix, mom_item_content_cstring(curconditm));
+          assert (is_locked_item(curconditm));
+          assert (mom_unsync_item_descr(curconditm) == MOM_PREDEFITM(test));
+          momvalue_t iftree = nullptr;
+          momvalue_t thentree = nullptr;
+          auto testexpv = mom_unsync_item_get_phys_attr(curconditm, MOM_PREDEFITM(test));
+          auto thenblkitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(curconditm, MOM_PREDEFITM(then)));
+          assert (is_locked_item(thenblkitm));
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_instruction cond insitm=%s cix#%d testexpv=%s thenblkitm=%s",
+                          mom_item_cstring(insitm), cix,
+                          mom_value_cstring(testexpv), mom_item_cstring(thenblkitm));
+          if (cix+1 < (int)nbcond
+              && testexpv != (momvalue_t)MOM_PREDEFITM(unit)
+              && testexpv != (momvalue_t)MOM_PREDEFITM(truth))
+            {
+              auto testtree = transform_expr(testexpv, insitm);
+              MOM_DEBUGPRINTF(gencod,
+                              "c-transform_instruction cond insitm=%s cix#%d testtree=%s",
+                              mom_item_cstring(insitm), cix,
+                              mom_value_cstring(testtree));
+              iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                            (cix==0)?(literal_string("if ")):literal_string("else if "),
+                                            literal_string("("),
+                                            testtree,
+                                            literal_string(")"));
+
+            }
+          else
+            {
+              iftree = literal_string ("else");
+            }
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_instruction cond insitm=%s cix#%d iftree=%s",
+                          mom_item_cstring(insitm), cix,
+                          mom_value_cstring(iftree));
+          vecondtree.push_back(iftree);
+          thentree = transform_block(thenblkitm, insitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_instruction cond insitm=%s cix#%d thentree=%s",
+                          mom_item_cstring(insitm), cix,
+                          mom_value_cstring(thentree));
+          vecondtree.push_back(thentree);
+        }
+      auto condtree = mom_boxnode_make(MOM_PREDEFITM(brace),vecondtree.size(),vecondtree.data());
+      vecondtree.clear();
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction cond insitm=%s gives condtree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(condtree));
+      return condtree;
     }
     break;
     default:
@@ -4662,6 +4739,9 @@ defaultcaseirole:
 #warning unimplemented MomCEmitter::transform_instruction
   MOM_FATAPRINTF("unimplemented c-transform_instruction insitm=%s", mom_item_cstring(insitm));
 } // end of MomCEmitter::transform_instruction
+
+
+
 
 momvalue_t
 MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm,
