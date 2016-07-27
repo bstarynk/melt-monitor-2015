@@ -951,6 +951,24 @@ MomEmitter::transform_top_module(void)
                         mom_item_cstring(curitm), ix, mom_item_cstring(_ce_topitm));
       });
       flush_todo_list(__LINE__);
+      if (MOM_IS_DEBUGGING(gencod))
+        {
+          MOM_DEBUGPRINTF(gencod, "after scanning %s #%d, %zd global bindings",
+                          mom_item_cstring(curitm), ix, _ce_globalvarmap.size());
+          for (auto it : _ce_localvarmap)
+            {
+              MOM_DEBUGPRINTF(gencod, "local %s bound role %s what %s",
+                              mom_item_cstring(it.first), mom_item_cstring(it.second.vd_rolitm),  mom_value_cstring(it.second.vd_what));
+            };
+          MOM_DEBUGPRINTF(gencod, "after scanning %s #%d, %zd global bindings",
+                          mom_item_cstring(curitm), ix, _ce_globalvarmap.size());
+          for (auto it : _ce_globalvarmap)
+            {
+              MOM_DEBUGPRINTF(gencod, "global %s bound role %s what %s",
+                              mom_item_cstring(it.first), mom_item_cstring(it.second.vd_rolitm),  mom_value_cstring(it.second.vd_what));
+            }
+        }
+      MOM_DEBUGPRINTF(gencod, "transform_top_module scanned curitm=%s", mom_item_cstring(curitm));
       todo([=, &vecval](MomEmitter*em)
       {
         MOM_DEBUGPRINTF(gencod, "transform_top_module before transforming"
@@ -1540,9 +1558,9 @@ sequencecase:
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
       MOM_DEBUGPRINTF(gencod,
-		      "scan_instr cond %s #%d condtup=%s",
-		      mom_item_cstring(insitm), rk,
-		      mom_value_cstring(condtup));
+                      "scan_instr cond %s #%d condtup=%s",
+                      mom_item_cstring(insitm), rk,
+                      mom_value_cstring(condtup));
       if (!condtup)
         throw MOM_RUNTIME_PRINTF("cond %s #%d in block %s without `cond`",
                                  mom_item_cstring(insitm), rk,
