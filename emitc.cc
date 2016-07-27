@@ -1539,11 +1539,16 @@ sequencecase:
     case CASE_OPER_MOM(cond): ////////////////////
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
+      MOM_DEBUGPRINTF(gencod,
+		      "scan_instr cond %s #%d condtup=%s",
+		      mom_item_cstring(insitm), rk,
+		      mom_value_cstring(condtup));
       if (!condtup)
         throw MOM_RUNTIME_PRINTF("cond %s #%d in block %s without `cond`",
                                  mom_item_cstring(insitm), rk,
                                  mom_item_cstring(blkitm));
       unsigned nbcond = mom_raw_size(condtup);
+      bind_local(insitm, MOM_PREDEFITM(cond), condtup, blkitm, rk);
       for (unsigned ix=0; ix<nbcond; ix++)
         {
           auto testitm = condtup->seqitem[ix];
@@ -1619,8 +1624,6 @@ sequencecase:
         }
       MOM_DEBUGPRINTF(gencod, "scan_instr cond insitm=%s condtup=%s",
                       mom_item_cstring(insitm), mom_value_cstring(condtup));
-      bind_local(insitm,MOM_PREDEFITM(cond),
-                 condtup, blkitm, rk);
     } // end cond
     break;
     /////
