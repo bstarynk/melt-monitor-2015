@@ -41,17 +41,17 @@
   ^* descr type
   ^* type struct
   ^* struct [
-      ^global va_itype (
+      ^global !va_itype (
         ^* comment "the field giving the type"
         ^* descr field
         ^* type uint16_t
       )
-      ^global va_ixv (
+      ^global !va_ixv (
         ^* comment "the field giving the index"
         ^* descr field
         ^* type atomic_int16_t
       )
-      ^global va_size (
+      ^global !va_size (
         ^* comment "the field giving the size"
         ^* descr field
         ^* type atomic_int16_t
@@ -65,7 +65,7 @@
   ^* type struct
   ^* extend anyvalue_ty
   ^* struct [
-      ^global hva_hash (
+      ^global !hva_hash (
         ^* comment "the field giving the hash"
         ^* descr field
         ^* type hash_t
@@ -73,14 +73,14 @@
   ]
 )
 
-^global val0 (
+^global !val0 (
    ^* comment "val0 in cmodbty.mb"
    ^* descr formal
    ^* type value
 )
 
 
-^global val1 (
+^global !val1 (
    ^* comment "val1 in cmodbty.mb"
    ^* descr formal
    ^* type value
@@ -92,6 +92,37 @@
   ^* result bool
 )
 
+^global !signature_value_to_bool (
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result bool
+)
+
+
+^global !num0 (
+   ^* comment "num0 in cmodbty.mb"
+   ^* descr formal
+   ^* type int
+)
+
+
+^global !num1 (
+   ^* comment "num1 in cmodbty.mb"
+   ^* descr formal
+   ^* type int
+)
+
+^global !signature_2ints_to_int (
+  ^* descr signature
+  ^* formals [ num0 num1 ]
+  ^* result int
+)
+
+^global !signature_2ints_to_bool (
+  ^* descr signature
+  ^* formals [ num0 num1 ]
+  ^* result bool
+)
 
 ^global !signature_value_to_int (
   ^* comment "signature value -> int"
@@ -107,12 +138,28 @@
       "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
 )
 
+^global !unsafe_int_mod_prim (
+  ^* comment "unsafe primitive for modulus of int"
+  ^* descr primitive
+  ^* signature signature_2ints_to_int
+  ^* c_expansion %code_chunk(
+      "/*unsafe_int_mod_prim*/ ((" num0 ") % (" num1 "))")
+)
+
 ^global !same_value_prim (
   ^* comment "primitive to test identities of 2 values"
   ^* descr primitive
-  ^* signature signature_2values_to_int
+  ^* signature signature_2values_to_bool
   ^* c_expansion %code_chunk(
-      "/*same_value_prim*/ (" val0 ") == (" val1 ")" )
+      "/*same_value_prim*/ ((" val0 ") == (" val1 "))" )
+)
+
+^global !equal_int_prim (
+  ^* comment "primitive to test equality of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") == (" num1 "))" )
 )
 
 
@@ -136,23 +183,56 @@
        [
          ^global ?cond (
 	   ^* comment "cond for nil or empty slot or int"
-	   ^* descr cond [
+	   ^* descr cond
+	   ^* cond [
 	     ^global ?test (
 	       ^* descr test
 	       ^* comment "test for nil"
 	       ^* test %not(val0)
 	       ^* then ^global ?return (
 	         ^* descr return
-		 ^* comment "return nil when nil value"
+		 ^* comment "return false when nil value"
 	       )
 	     )
 	     ^global ?test (
 	       ^* descr test
 	       ^* comment "test for empty_slot"
-	       ^* test same_value_prim(val0 empty_slot)
+	       ^* test %same_value_prim(val0 empty_slot)
 	       ^* then ^global ?return (
 	         ^* descr return
-		 ^* comment "return nil when empty slot"
+		 ^* comment "return false when empty slot"
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for odd addresses"
+	       ^* test
+	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+			              2)
+	       ^* then ^global ?return (
+	         ^* descr return
+		 ^* comment "return false when odd address"
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for odd addresses"
+	       ^* test
+	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+			              2)
+	       ^* then ^global ?return (
+	         ^* descr return
+		 ^* comment "return false when odd address"
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "otherwise return truth
+	       ^* test truth
+	       ^* then ^global ?return (
+	         ^* descr return
+		 ^* comment "return otherwise truth"
+		 ^* return truth
 	       )
 	     )
 	   ]
@@ -160,5 +240,15 @@
        ]
    )
 )
+
+^global !bty_module (
+   ^* comment "our bty_module from cmodbty.mb"
+   ^* descr module
+   ^* module [
+     anyvalue_ty hashedvalue_ty valid_value_pointer 
+   ]
+)
+
+^display "final bty_module:" bty_module
 
 ## eof cmodbty.mb

@@ -118,7 +118,7 @@ protected:
   struct mom_item_st* _ce_emitteritm;
 protected:
   class CaseScannerData
-{
+  {
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -1534,7 +1534,7 @@ sequencecase:
                    insitm, blkitm, rk);
       } /// end sequence (& loop)
       break;
-    //////
+      //////
     case CASE_OPER_MOM(cond): ////////////////////
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
@@ -1566,7 +1566,8 @@ sequencecase:
           }
           auto testexp = mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(test));
           if ((testexp == nullptr
-               || reinterpret_cast<const mom_item_st*>(testexp)==MOM_PREDEFITM(unit)))
+               || mom_dyncast_item(testexp)==MOM_PREDEFITM(unit)
+               || mom_dyncast_item(testexp)==MOM_PREDEFITM(truth)))
             {
               if (ix+1<nbcond)
                 MOM_WARNPRINTF("cond %s #%d in block %s with non-last trivially false test#%d %s",

@@ -117,11 +117,15 @@ predefgc: $(OBJECTS)  predefgc.cc
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
 
-tests: monimelt global.mom test0 test1
+tests: monimelt global.mom test0 test1 testbty
 
-test0: monimelt global.mom 
+test0: monimelt global.mom  tests/cmod0c.mb 
 	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0c.mb --test-arg tiny_module --test-run emitc
 
-test1: monimelt global.mom 
+test1: monimelt global.mom  tests/cmod1j.mb
 	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod1j.mb --test-arg tiny_jmodule --test-run emitjs
+
+
+testbty: monimelt global.mom  tests/cmodbty.mb
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodbty.mb --test-arg bty_module --test-run emitc
 
