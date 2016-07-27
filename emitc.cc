@@ -1553,6 +1553,12 @@ sequencecase:
                                mom_item_cstring(blkitm),
                                ix);
           lock_item(testitm);
+	  MOM_DEBUGPRINTF(gencod,
+			  "scan_instr cond %s #%d in block %s; ix#%d testitm:=%s",
+			  mom_item_cstring(insitm), rk,
+			  mom_item_cstring(blkitm), ix,
+			  mom_item_content_cstring(testitm));
+			  
           {
             struct mom_item_st*destestitm = mom_unsync_item_descr(testitm);
             if (destestitm != MOM_PREDEFITM(test))
@@ -1588,7 +1594,9 @@ sequencecase:
                                    mom_item_cstring(testitm));
             }
           auto thenitm =
-            mom_dyncast_item(mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(test)));
+            mom_dyncast_item(mom_unsync_item_get_phys_attr(testitm, MOM_PREDEFITM(then)));
+	  MOM_DEBUGPRINTF(gencod, "scan_instr cond %s #%d thenitm %s", mom_item_cstring(insitm), rk,
+			  mom_item_cstring(thenitm));
           if (thenitm == nullptr)
             throw
             MOM_RUNTIME_PRINTF("cond %s #%d in block %s with test#%d %s without `then`",
@@ -1608,6 +1616,8 @@ sequencecase:
                             mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
           });
         }
+      MOM_DEBUGPRINTF(gencod, "scan_instr cond insitm=%s condtup=%s",
+		      mom_item_cstring(insitm), mom_value_cstring(condtup));
       bind_local(insitm,MOM_PREDEFITM(cond),
                  condtup, blkitm, rk);
     } // end cond

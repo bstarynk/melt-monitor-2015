@@ -99,6 +99,28 @@
 )
 
 
+^item is_null (
+  ^* descr primitive
+  ^* signature signature_value_to_bool
+  ^* notice not
+  ^* c_expansion %code_chunk(
+    "/*is_null*/ ((" val0 " ) == NULL)"
+  )
+)
+
+^global !flag0 (
+   ^* comment "flag0 in cmodbty.mb"
+   ^* descr formal
+   ^* type bool
+)
+
+^global !signature_bool_to_bool (
+  ^* descr signature
+  ^* formals [ flag0 ]
+  ^* result bool
+)
+
+
 ^global !num0 (
    ^* comment "num0 in cmodbty.mb"
    ^* descr formal
@@ -136,6 +158,14 @@
   ^* signature signature_value_to_int
   ^* c_expansion %code_chunk(
       "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
+)
+
+^global !not_bool_prim (
+  ^* comment "primitive for negation of bool"
+  ^* descr primitive
+  ^* signature signature_bool_to_bool
+  ^* c_expansion %code_chunk(
+      "/*not_bool_prim*/ !(" flag0 ")" )
 )
 
 ^global !unsafe_int_mod_prim (
@@ -188,7 +218,7 @@
 	     ^global ?test (
 	       ^* descr test
 	       ^* comment "test for nil"
-	       ^* test %not(val0)
+	       ^* test %is_null(val0)
 	       ^* then ^global ?return (
 	         ^* descr return
 		 ^* comment "return false when nil value"
