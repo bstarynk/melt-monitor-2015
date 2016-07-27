@@ -1949,6 +1949,11 @@ sequencecase:
                       mom_item_cstring(insitm), mom_value_cstring(retexpv),
                       mom_value_cstring(_ce_cursigdef.sig_result));
       auto retypv = scan_expr(retexpv,insitm,0,mom_dyncast_item(_ce_cursigdef.sig_result));
+      MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s retypv=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retexpv),
+                      mom_value_cstring(retypv));
+      bind_local(insitm,MOM_PREDEFITM(return),retypv,
+                 blkitm, rk);
       MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retypv=%s",
                       mom_item_cstring(insitm), mom_value_cstring(retypv));
 #warning scan_instr return incomplete
@@ -4747,6 +4752,17 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                       "c-transform_instruction cond insitm=%s gives condtree=%s",
                       mom_item_cstring(insitm), mom_value_cstring(condtree));
       return condtree;
+    }
+    break;
+    ////
+    case CASE_INSTROLE_MOM(return):
+    {
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction return insitm=%s whatv=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(whatv));
+      MOM_FATAPRINTF("c-transform_instruction unimplemented return insitm=%s",
+		     mom_item_cstring(insitm));
+#warning c-transform_instruction unimplemented return 
     }
     break;
     default:
