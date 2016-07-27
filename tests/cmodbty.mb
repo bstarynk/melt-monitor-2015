@@ -147,6 +147,7 @@
 )
 
 ^global !signature_value_to_int (
+  ^* descr signature
   ^* comment "signature value -> int"
   ^* formals [ val0 ]
   ^* result int
@@ -219,18 +220,30 @@
 	       ^* descr test
 	       ^* comment "test for nil"
 	       ^* test %is_null(val0)
-	       ^* then ^global ?return (
-	         ^* descr return
-		 ^* comment "return false when nil value"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return false for nil"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* comment "return false when nil value"
+	           )
+		 ]
 	       )
 	     )
 	     ^global ?test (
 	       ^* descr test
 	       ^* comment "test for empty_slot"
 	       ^* test %same_value_prim(val0 empty_slot)
-	       ^* then ^global ?return (
-	         ^* descr return
-		 ^* comment "return false when empty slot"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return false for empty"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+	    	     ^* comment "return false when empty slot"
+	           )
+		 ]
 	       )
 	     )
 	     ^global ?test (
@@ -239,30 +252,31 @@
 	       ^* test
 	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
 			              2)
-	       ^* then ^global ?return (
-	         ^* descr return
-		 ^* comment "return false when odd address"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return false for odd"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* comment "return false when odd address"
+	           )
+		 ]
 	       )
 	     )
 	     ^global ?test (
 	       ^* descr test
-	       ^* comment "test for odd addresses"
-	       ^* test
-	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
-			              2)
-	       ^* then ^global ?return (
-	         ^* descr return
-		 ^* comment "return false when odd address"
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "otherwise return truth
+	       ^* comment "otherwise return truth"
 	       ^* test truth
-	       ^* then ^global ?return (
-	         ^* descr return
-		 ^* comment "return otherwise truth"
-		 ^* return truth
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return true otherwise"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* comment "return otherwise truth"
+		     ^* return truth
+	           )
+		 ]
 	       )
 	     )
 	   ]

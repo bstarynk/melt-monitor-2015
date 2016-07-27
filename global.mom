@@ -2584,11 +2584,13 @@ comment
 
 
 *truth
-1455463429
+1469611513
 ^mtime
 (
 comment
 "for true value"_
+descr
+constant
 )attrs
 
 
