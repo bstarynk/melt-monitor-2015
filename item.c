@@ -1,6 +1,6 @@
 // file item.c - managing items
 
-/**   Copyright (C)  2015, 2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -1828,6 +1828,7 @@ mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
   itm->itm_radix = (struct mom_itemname_tu *) radix;
   itm->itm_hid = hid;
   itm->itm_lid = lid;
+  pthread_mutex_init (&itm->itm_mtx, &item_mtxattr_mom);
   time (&itm->itm_mtime);
   int pos = index_item_in_radix_mom (curad, itm);
   MOM_DEBUGPRINTF (item, "predefined itm@%p '%s' pos %d",
