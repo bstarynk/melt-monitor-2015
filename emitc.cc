@@ -118,7 +118,7 @@ protected:
   struct mom_item_st* _ce_emitteritm;
 protected:
   class CaseScannerData
-  {
+{
   protected:
     MomEmitter*cas_emitter;
     struct mom_item_st*cas_swtypitm;
@@ -588,7 +588,7 @@ public:
   momvalue_t transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*runitm, struct mom_item_st*insideitm);
   momvalue_t transform_switchinstr(struct mom_item_st*insitm, momvalue_t whatv, struct mom_item_st*fromitm);
   momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
-  momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
+  momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool*scalarp= nullptr);
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
@@ -649,7 +649,7 @@ public:
   {
     return "JavaScript-emitter";
   };
-};
+};/// end class MomJavascriptEmitter
 
 
 
@@ -1557,7 +1557,7 @@ sequencecase:
                    insitm, blkitm, rk);
       } /// end sequence (& loop)
       break;
-      //////
+    //////
     case CASE_OPER_MOM(cond): ////////////////////
     {
       auto condtup= mom_dyncast_tuple(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(cond)));
@@ -4287,13 +4287,22 @@ defaultcaseconn:
 
 
 momvalue_t
-MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
+MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mom_item_st*typitm)
 {
-  MOM_DEBUGPRINTF(gencod, "c-transform_expr expv=%s initm=%s",
-                  mom_value_cstring(expv), mom_item_cstring(initm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_expr start expv=%s initm=%s typitm=%s",
+                  mom_value_cstring(expv), mom_item_cstring(initm), mom_item_cstring(typitm));
   unsigned expty = mom_itype(expv);
   switch (expty)
     {
+    case MOMITY_NONE:
+      if (typitm==MOM_PREDEFITM(int))
+        return mom_int_make(0);
+      else if (typitm == MOM_PREDEFITM(bool))
+        return literal_string("false");
+      else if (typitm == MOM_PREDEFITM(double))
+        return mom_boxdouble_make (0.0);
+      else
+        return literal_string("NULL");
     case MOMITY_INT:
     case MOMITY_BOXDOUBLE:
       return expv;
@@ -4363,6 +4372,8 @@ defaultrole:
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_expr expv=%s initm=%s",
                  mom_value_cstring(expv), mom_item_cstring(initm));
 } // end of MomCEmitter::transform_expr
+
+
 
 momvalue_t
 MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* scalarp)
@@ -4572,7 +4583,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 	  goto defaultcaseirole; foundcase_##Nam
   switch (rolitm->hva_hash % NBINSTROLE_MOM)
     {
-      ////
+    ////
     case CASE_INSTROLE_MOM(run):
     {
       auto runitm = mom_dyncast_item(insbind->vd_what);
@@ -4764,9 +4775,29 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_instruction return insitm=%s whatv=%s",
                       mom_item_cstring(insitm), mom_value_cstring(whatv));
-      MOM_FATAPRINTF("c-transform_instruction unimplemented return insitm=%s",
-		     mom_item_cstring(insitm));
-#warning c-transform_instruction unimplemented return 
+      auto retypitm = mom_dyncast_item(whatv);
+      assert (is_locked_item(retypitm));
+      auto retexpv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(return));
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction return insitm=%s retexpv=%s retypitm=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retexpv),
+                      mom_item_cstring(retypitm));
+      momvalue_t retexptree = nullptr;
+      if (retypitm != nullptr && retypitm != MOM_PREDEFITM(unit) && retexpv != nullptr)
+        retexptree = transform_expr(retexpv, insitm, retypitm);
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction return insitm=%s retexptree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retexptree));
+      auto retstmtree = retexptree
+                        ? mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+                                              literal_string("return ("),
+                                              retexptree,
+                                              literal_string(");"))
+                        : literal_string("return;");
+      MOM_DEBUGPRINTF(gencod,
+                      "c-transform_instruction return insitm=%s gives retstmtree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(retstmtree));
+      return retstmtree;
     }
     break;
     default:
