@@ -4329,7 +4329,7 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
         case CASE_ROLE_MOM(item):
         {
           MOM_DEBUGPRINTF(gencod,
-                          "c-transform_expr expitm=%s constant",
+                          "c-transform_expr expitm=%s item",
                           mom_item_cstring(expitm));
           if (mom_item_space(expitm) == MOMSPA_PREDEF)
             {
@@ -4352,6 +4352,16 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
             }
         }
         break;
+        case CASE_ROLE_MOM(constant):
+        {
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_expr expitm=%s constant typitm=%s",
+                          mom_item_cstring(expitm), mom_item_cstring(typitm));
+#warning transform_expr unimplemented constant
+          MOM_FATAPRINTF("transform_expr constant unimplemented expitm=%s rolitm=%s typitm=%s initm=%s",
+			 mom_item_cstring(expitm),  mom_item_cstring(rolitm), mom_item_cstring(typitm), mom_item_cstring(initm));
+	}
+	break;
 defaultrole:
         default:
           MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
