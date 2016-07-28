@@ -4321,9 +4321,24 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
       assert (is_locked_item(expitm));
       auto expbind = get_binding(expitm);
       auto rolitm = expbind?expbind->vd_rolitm:nullptr;
-      MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s bind rol %s what %s",
-                      mom_item_cstring(expitm), mom_item_cstring(rolitm),
+      MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm:=%s\n.. bind rol %s what %s",
+                      mom_item_content_cstring(expitm), mom_item_cstring(rolitm),
                       expbind?mom_value_cstring(expbind->vd_what):"°");
+      if (expitm == MOM_PREDEFITM(truth))
+        {
+          if (typitm == MOM_PREDEFITM(bool))
+            {
+              auto truetree = literal_string("true");
+              MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s gives truetree=%s",
+                              mom_item_cstring(expitm), mom_value_cstring(truetree));
+              return truetree;
+            }
+          auto xtree = transform_constant_item(MOM_PREDEFITM(truth),initm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s got xtree=%s",
+                          mom_item_cstring(expitm), mom_value_cstring(xtree));
+          return xtree;
+        };
+      ////
 #define NBROLE_MOM 31
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
@@ -4377,7 +4392,13 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
                                        expsize,
                                        (momvalue_t*)expnod->nod_sons);
           MOM_DEBUGPRINTF(gencod,
-                          "c-transform_expr const expitm=%s gives exptree=%s",
+                          "c-transform_expr const expitm=%s got exptree=%s",
+                          mom_item_cstring(expitm), mom_value_cstring(exptree));
+          if (exptree)
+            return exptree;
+          exptree =  transform_constant_item(expitm, initm);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_expr const expitm=%s transformed to exptree=%s",
                           mom_item_cstring(expitm), mom_value_cstring(exptree));
           return exptree;
         }
