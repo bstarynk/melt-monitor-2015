@@ -4180,7 +4180,7 @@ defaultcasebrole: // should never happen
 momvalue_t
 MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom_item_st*initm)
 {
-  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s initm=%s",
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr start expnod=%s initm=%s",
                   mom_value_cstring(expnod), mom_item_cstring(initm));
   assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
   auto connitm = expnod->nod_connitm;
@@ -4215,9 +4215,9 @@ orandcase:
     default:
 defaultcaseconn:
       {
-        MOM_DEBUGPRINTF(gencod, "connitm=%s", mom_item_cstring(connitm));
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr connitm=%s", mom_item_cstring(connitm));
         auto conndescitm = mom_unsync_item_descr(connitm);
-        MOM_DEBUGPRINTF(gencod, "conndescitm=%s", mom_item_cstring(conndescitm));
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr conndescitm=%s", mom_item_cstring(conndescitm));
         if (conndescitm == MOM_PREDEFITM(primitive))
           {
             auto sigitm = //
@@ -4229,7 +4229,7 @@ defaultcaseconn:
             unsigned nbformals = mom_size(formaltup);
             auto cxexpnod = //
               mom_dyncast_node(mom_unsync_item_get_phys_attr (connitm, MOM_PREDEFITM(c_expansion)));
-            MOM_DEBUGPRINTF(gencod, "cxexpnod=%s formaltup=%s",
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr cxexpnod=%s formaltup=%s",
                             mom_value_cstring(cxexpnod), mom_value_cstring(formaltup));
             if (!cxexpnod || cxexpnod->nod_connitm != MOM_PREDEFITM(code_chunk))
               throw MOM_RUNTIME_PRINTF("c-transform_node_expr primitive node %s bad cxexpnod=%s",
@@ -4244,11 +4244,18 @@ defaultcaseconn:
               {
                 auto curformitm = formaltup->seqitem[ix];
                 assert (mom_itype(curformitm) == MOMITY_ITEM);
+                assert (is_locked_item(curformitm));
+                auto curftypitm =
+                  mom_dyncast_item(mom_unsync_item_get_phys_attr(curformitm, MOM_PREDEFITM(type)));
                 auto curson = expnod->nod_sons[ix];
-                MOM_DEBUGPRINTF(gencod, "expnod=%s ix#%d curson=%s", mom_value_cstring(expnod),
-                                ix, mom_value_cstring(curson));
-                auto curstree = transform_expr(expnod->nod_sons[ix], initm);
-                MOM_DEBUGPRINTF(gencod, "expnod=%s ix#%d curstree=%s", mom_value_cstring(expnod),
+                MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s ix#%d curson=%s curformitm=%s curftypitm=%s",
+                                mom_value_cstring(expnod),
+                                ix, mom_value_cstring(curson),
+                                mom_item_cstring(curformitm),
+                                mom_item_cstring(curftypitm));
+                auto curstree = transform_expr(expnod->nod_sons[ix], initm, curftypitm);
+                MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s ix#%d curstree=%s",
+                                mom_value_cstring(expnod),
                                 ix, mom_value_cstring(curstree));
                 argmap[curformitm] = curstree;
               }
@@ -4311,6 +4318,7 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
     case MOMITY_ITEM:
     {
       auto expitm = (struct mom_item_st*)expv;
+      assert (is_locked_item(expitm));
       auto expbind = get_binding(expitm);
       auto rolitm = expbind?expbind->vd_rolitm:nullptr;
       MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm=%s bind rol %s what %s",
@@ -4355,13 +4363,25 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
         case CASE_ROLE_MOM(constant):
         {
           MOM_DEBUGPRINTF(gencod,
-                          "c-transform_expr expitm=%s constant typitm=%s",
-                          mom_item_cstring(expitm), mom_item_cstring(typitm));
-#warning transform_expr unimplemented constant
-          MOM_FATAPRINTF("transform_expr constant unimplemented expitm=%s rolitm=%s typitm=%s initm=%s",
-			 mom_item_cstring(expitm),  mom_item_cstring(rolitm), mom_item_cstring(typitm), mom_item_cstring(initm));
-	}
-	break;
+                          "c-transform_expr expitm:=%s\n.. constant typitm=%s",
+                          mom_item_content_cstring(expitm), mom_item_cstring(typitm));
+          auto expnod =
+            mom_dyncast_node(mom_unsync_item_get_phys_attr(expitm, MOM_PREDEFITM(c_expansion)));
+          assert (expnod != nullptr && expnod->nod_connitm == MOM_PREDEFITM(code_chunk));
+          momvalue_t exptree = nullptr;
+          unsigned expsize = mom_size(expnod);
+          if (expsize == 1)
+            exptree = expnod->nod_sons[0];
+          else
+            exptree = mom_boxnode_make(MOM_PREDEFITM(sequence),
+                                       expsize,
+                                       (momvalue_t*)expnod->nod_sons);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_expr const expitm=%s gives exptree=%s",
+                          mom_item_cstring(expitm), mom_value_cstring(exptree));
+          return exptree;
+        }
+        break;
 defaultrole:
         default:
           MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
