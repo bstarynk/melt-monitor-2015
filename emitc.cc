@@ -1394,7 +1394,11 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
 } // end MomEmitter::scan_block
 
 
-void MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm)
+
+
+
+void
+MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blkitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_instr start insitm:=\n%s\n.. rk#%d blkitm=%s",
                   mom_item_content_cstring(insitm), rk, mom_item_cstring(blkitm));
@@ -1996,7 +2000,7 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
   switch (typexp)
     {
     case MOMITY_NONE:
-      return MOM_PREDEFITM(unit);
+      return typitm?typitm:MOM_PREDEFITM(unit);
     case MOMITY_INT:
       if (typitm && typitm != MOM_PREDEFITM(int) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("int.expr %s in instr %s with type mismatch for %s",
