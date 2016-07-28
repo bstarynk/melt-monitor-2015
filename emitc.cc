@@ -697,6 +697,8 @@ bool mom_emit_c_code(struct mom_item_st*itm)
             {
               fputc('\n', fout);
               long nl = ftell(fout);
+              MOM_DEBUGPRINTF(gencod, "declaration #%d: %s",
+                              i, mom_value_cstring(cemit._cec_globdecltree[i]));
               cemit.write_tree(fout,0, nl, cemit._cec_globdecltree[i], itm);
               fputs("\n\n", fout);
             }
@@ -711,6 +713,8 @@ bool mom_emit_c_code(struct mom_item_st*itm)
             {
               fputc('\n', fout);
               long nl = ftell(fout);
+              MOM_DEBUGPRINTF(gencod, "definition #%d: %s",
+                              i, mom_value_cstring(cemit._cec_globdefintree[i]));
               cemit.write_tree(fout,0, nl, cemit._cec_globdefintree[i], itm);
               fputs("\n\n", fout);
             }
@@ -3903,14 +3907,25 @@ MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_s
       resnod = mom_dyncast_node(declare_type(elitm));
       MOM_DEBUGPRINTF(gencod, "c-transform_other_element type elitm=%s resnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
-      return resnod;
+      assert (resnod != nullptr);
+      auto tycomnod = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                          literal_string("type "),
+                                          elitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element type elitm=%s gives tycomnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(tycomnod));
+      return tycomnod;
     }
   else if  (descitm == MOM_PREDEFITM(signature))
     {
       resnod = mom_dyncast_node(declare_signature_type(elitm));
       MOM_DEBUGPRINTF(gencod, "c-transform_other_element signature elitm=%s resnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
-      return resnod;
+      auto sigcomnod = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                           literal_string("signature "),
+                                           elitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element signature elitm=%s gives sigcomnod=%s",
+                      mom_item_cstring(elitm), mom_value_cstring(sigcomnod));
+      return sigcomnod;
     }
   else if (descitm == MOM_PREDEFITM(inline))
     {
@@ -4303,13 +4318,25 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
     {
     case MOMITY_NONE:
       if (typitm==MOM_PREDEFITM(int))
-        return mom_int_make(0);
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_expr nil gives 0 since typitm=%s", mom_item_cstring(typitm));
+          return mom_int_make(0);
+        }
       else if (typitm == MOM_PREDEFITM(bool))
-        return literal_string("false");
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_expr nil gives false since typitm=%s", mom_item_cstring(typitm));
+          return literal_string("false");
+        }
       else if (typitm == MOM_PREDEFITM(double))
-        return mom_boxdouble_make (0.0);
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_expr nil gives 0.0 since typitm=%s", mom_item_cstring(typitm));
+          return mom_boxdouble_make (0.0);
+        }
       else
-        return literal_string("NULL");
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_expr nil gives NULL since typitm=%s", mom_item_cstring(typitm));
+          return literal_string("NULL");
+        }
     case MOMITY_INT:
     case MOMITY_BOXDOUBLE:
       return expv;
@@ -4834,7 +4861,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 			mom_item_cstring(insitm), mom_value_cstring(retexpv),
 			mom_item_cstring(retypitm));
 	momvalue_t retexptree = nullptr;
-	if (retypitm != nullptr && retypitm != MOM_PREDEFITM(unit) && retexpv != nullptr)
+	if (retypitm != nullptr && retypitm != MOM_PREDEFITM(unit))
 	  retexptree = transform_expr(retexpv, insitm, retypitm);
 	MOM_DEBUGPRINTF(gencod,
 			"c-transform_instruction return insitm=%s retexptree=%s",
@@ -6682,6 +6709,7 @@ MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_
 #undef NBSWTYPE_MOM
 #undef CASE_SWTYPE_MOM
 } // end of MomJavascriptEmitter::case_scanner
+
 
 MomJavascriptEmitter::~MomJavascriptEmitter()
 {
