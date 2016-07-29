@@ -153,6 +153,13 @@
   ^* result int
 )
 
+^global !signature_void_to_value (
+  ^* descr signature
+  ^* comment "signature () -> value"
+  ^* formals [  ]
+  ^* result value
+)
+
 ^global !cast_pointer_to_int_prim (
   ^* comment "primitive to cast a pointer to an int"
   ^* descr primitive
@@ -194,11 +201,12 @@
 )
 
 
-^global !empty_slot (
-  ^* comment "constant for MOM_EMPTY_SLOT"
-  ^* descr constant
+^global !empty_slot_prim (
+  ^* comment "primitive for MOM_EMPTY_SLOT"
+  ^* descr primitive
+  ^* signature signature_void_to_value
   ^* c_expansion %code_chunk(
-       "/*empty_slot*/ MOM_EMPTY_SLOT" )
+       "/*empty_slot_prim*/ MOM_EMPTY_SLOT" )
 )
 
 
@@ -234,7 +242,7 @@
 	     ^global ?test (
 	       ^* descr test
 	       ^* comment "test for empty_slot"
-	       ^* test %same_value_prim(val0 empty_slot)
+	       ^* test %same_value_prim(val0 %empty_slot_prim())
 	       ^* then ^global ?block (
 	         ^* descr sequence
 		 ^* comment "block return false for empty"

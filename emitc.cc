@@ -99,6 +99,7 @@ private:
   traced_set_items_t _ce_blockitems;
   traced_set_items_t _ce_instritems;
 protected:
+  traced_set_items_t _ce_constitems;
   traced_map_item2long_t _ce_breakcountmap;
   traced_map_item2long_t _ce_continuecountmap;
   std::map<std::string,momvalue_t,
@@ -304,6 +305,10 @@ public:
                              mom_item_cstring(blkitm));
   }
   void scan_type(struct mom_item_st*typitm);
+  struct mom_item_st*top_item(void) const
+  {
+    return _ce_topitm;
+  };
   struct mom_item_st*current_function(void) const
   {
     return _ce_curfunctionitm;
@@ -317,7 +322,7 @@ public:
       int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
-  struct mom_item_st* scan_constant(struct mom_item_st*constitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
+  struct mom_item_st* scan_constant_item(struct mom_item_st*constitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_closed(struct mom_item_st*varitm, struct mom_item_st*insitm);
 public:
   static int constexpr MAX_DEPTH_EXPR=128;
@@ -442,6 +447,7 @@ public:
     return false;
   }
   const struct mom_boxnode_st*transform_top_module(void);
+  virtual void after_preparation_transform(void) {};
   void scan_module_element(struct mom_item_st*itm);
   const struct mom_boxnode_st*transform_module_element(struct mom_item_st*itm);
   void todo(const todofun_t& tf)
@@ -528,6 +534,7 @@ public:
   static constexpr const char* CFIELD_PREFIX = "momfld_";
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
+  static constexpr const char* CCONSTITEM_PREFIX = "momcstitem_";
   static constexpr const char* CBREAKLAB_PREFIX = "mombreaklab_";
   static constexpr const char* CCONTINUELAB_PREFIX = "momcontilab_";
   static constexpr const char* COTHERWISELAB_PREFIX = "momotherwiselab_";
@@ -579,6 +586,7 @@ public:
                                 struct mom_item_st* initm=nullptr);
   const struct mom_boxnode_st* declare_funheader_for (struct mom_item_st*sigitm, struct mom_item_st*fitm);
   const struct mom_boxnode_st* declare_signature_type (struct mom_item_st*sigitm);
+  virtual void after_preparation_transform(void);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm);
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm);
@@ -866,6 +874,7 @@ MomEmitter::MomEmitter(unsigned magic, struct mom_item_st*itm)
                      _ce_typitems {},
                      _ce_blockitems {},
                      _ce_instritems {},
+                     _ce_constitems {},
                      _ce_todoque {},
                      _ce_doatendque {},
                      _ce_globalvarmap {},
@@ -927,6 +936,11 @@ MomEmitter::transform_top_module(void)
                       mom_item_cstring(_ce_topitm), mom_value_cstring(prepv),
                       mom_item_cstring(emitter_item()));
     }
+  MOM_DEBUGPRINTF(gencod, "transform_top_module module %s before after_preparation_transform",
+                  mom_item_cstring(_ce_topitm));
+  after_preparation_transform();
+  MOM_DEBUGPRINTF(gencod, "transform_top_module module %s after after_preparation_transform",
+                  mom_item_cstring(_ce_topitm));
   auto modulev = mom_unsync_item_get_phys_attr (_ce_topitm,  MOM_PREDEFITM(module));
   MOM_DEBUGPRINTF(gencod, "transform_top_module %s modulev %s prepv %s",
                   kindname(),
@@ -2508,7 +2522,7 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
       return scan_closed(expitm,insitm);
     }
   else if (desitm == MOM_PREDEFITM(constant))
-    return scan_constant(expitm,insitm,typitm);
+    return scan_constant_item(expitm,insitm,typitm);
   auto typexpitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
@@ -2638,16 +2652,16 @@ defaultvardesc:
 
 
 struct mom_item_st*
-MomEmitter::scan_constant(struct mom_item_st*cstitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
+MomEmitter::scan_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm, struct mom_item_st*typitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_constant start cstitm:=%s\n.. insitm=%s typitm=%s",
+  MOM_DEBUGPRINTF(gencod, "scan_constant_item start cstitm:=%s\n.. insitm=%s typitm=%s",
                   mom_item_content_cstring(cstitm),
                   mom_item_cstring(insitm), mom_item_cstring(typitm));
   assert (is_locked_item(cstitm));
   assert(mom_unsync_item_descr(cstitm)==MOM_PREDEFITM(constant));
   if (typitm == MOM_PREDEFITM(bool) && cstitm==MOM_PREDEFITM(truth))
     {
-      MOM_DEBUGPRINTF(gencod, "scan_constant special truth bool");
+      MOM_DEBUGPRINTF(gencod, "scan_constant_item special truth bool");
       return MOM_PREDEFITM(bool);
     }
   auto cstypitm = //
@@ -2659,9 +2673,12 @@ MomEmitter::scan_constant(struct mom_item_st*cstitm, struct mom_item_st*insitm, 
                              mom_item_cstring(cstitm), mom_item_cstring(insitm),
                              mom_item_cstring(cstypitm),
                              mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_constant_item cstitm=%s insitm=%s cstypitm=%s",
+                  mom_item_cstring(cstitm), mom_item_cstring(insitm), mom_item_cstring(cstypitm));
   bind_global(cstitm, MOM_PREDEFITM(constant), cstypitm);
+  _ce_constitems.insert(cstitm);
   return cstypitm;
-} // end MomEmitter::scan_constant
+} // end MomEmitter::scan_constant_item
 
 
 struct mom_item_st*
@@ -2992,6 +3009,40 @@ MomCEmitter::~MomCEmitter()
   _cec_globdefintree.clear();
   _cec_declareditems.clear();
 } // end MomCEmitter::~MomCEmitter
+
+
+
+void
+MomCEmitter::after_preparation_transform(void)
+{
+  MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform start topitm %s %zd constitems",
+                  mom_value_cstring(top_item()),
+                  _ce_constitems.size());
+  for (const mom_item_st* citm : _ce_constitems)
+    {
+      MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform citm=%s", mom_item_cstring(citm));
+      if (mom_item_space((mom_item_st*)citm) == MOMSPA_PREDEF)
+        {
+          auto ctree = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                           literal_string("predefined "),
+                                           citm);
+          MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform predef ctree=%s", mom_value_cstring(ctree));
+          add_global_decl(ctree);
+        }
+      else
+        {
+          auto dtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                           literal_string("static momitem_st* "),
+                                           literal_string(CCONSTITEM_PREFIX),
+                                           citm,
+                                           literal_string(";"));
+          MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform constitm dtree=%s", mom_value_cstring(dtree));
+          add_global_decl(dtree);
+        }
+    }
+  MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform end topitm %s\n",
+                  mom_value_cstring(top_item()));
+} // end of MomCEmitter::after_preparation_transform
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_data_element(struct mom_item_st*itm)
@@ -4212,6 +4263,16 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
     case CASE_EXPCONN_MOM(verbatim):
     {
       assert (nodarity == 1);
+      auto verbv = expnod->nod_sons[0];
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr verbatim verbv=%s", mom_value_cstring(verbv));
+      auto verbitm = mom_dyncast_item(verbv);
+      if (verbitm != nullptr)
+        {
+          auto verbtree = transform_constant_item(verbitm,initm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_node_expr verbatim verbitm=%s gives verbtree=%s",
+                          mom_item_cstring(verbitm), mom_value_cstring(verbtree));
+          return verbtree;
+        }
 #warning MomCEmitter::transform_node_expr verbatim unimplemented
       MOM_FATAPRINTF("unimplemented c-transform_node_expr of verbatim-expr %s in %s",
                      mom_value_cstring(expnod), mom_item_cstring(initm));
@@ -4563,21 +4624,6 @@ MomCEmitter::transform_constant_item(struct mom_item_st*cstitm, struct mom_item_
   MOM_DEBUGPRINTF(gencod, "c-transform_constant_item start cstitm=%s insitm=%s",
                   mom_item_cstring(cstitm), mom_item_cstring(insitm));
   assert (is_locked_item(cstitm));
-  auto cexpnod = mom_dyncast_node(mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(c_expansion)));
-  if (cexpnod != nullptr && cexpnod->nod_connitm == MOM_PREDEFITM(code_chunk))
-    {
-      unsigned cexparity = mom_raw_size(cexpnod);
-      auto sonarr = (momvalue_t*)mom_gc_alloc((cexparity+2)*sizeof(momvalue_t));
-      sonarr[0] = literal_string("(");
-      for (unsigned six=0; six<cexparity; six++)
-        sonarr[six+1] = cexpnod->nod_sons[six];
-      sonarr[cexparity+1] = literal_string(")");
-      auto resnod = mom_boxnode_make(MOM_PREDEFITM(sequence), cexparity+2, sonarr);
-      MOM_DEBUGPRINTF(gencod,
-                      "c-transform_constant_item cstitm=%s cexpansion gives resnod=%s",
-                      mom_item_cstring(cstitm), mom_value_cstring(resnod));
-      return resnod;
-    }
   if (mom_item_space(cstitm) == MOMSPA_PREDEF)
     {
       auto prnod =
