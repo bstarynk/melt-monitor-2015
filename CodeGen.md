@@ -135,5 +135,9 @@ exception. In particular:
   `signature` : *signature-item*, the expression is a primitive
   invocation.  Arguments should obey the type of its *signature-item*
 
+* If the connective is a *type-item* of `descr` : `type`, the node
+  expression should be of arity one, and it is a cast to that
+  *type-item*
+
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 
