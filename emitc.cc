@@ -597,6 +597,7 @@ public:
   momvalue_t transform_switchinstr(struct mom_item_st*insitm, momvalue_t whatv, struct mom_item_st*fromitm);
   momvalue_t transform_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_node_primitive_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
+  momvalue_t transform_node_inline_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_node_cast_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool*scalarp= nullptr);
@@ -4318,6 +4319,13 @@ defaultcaseconn:
                             mom_value_cstring(expnod), mom_value_cstring(primtree));
             return primtree;
           }
+        else if (conndescitm == MOM_PREDEFITM(inline))
+          {
+            auto inltree = transform_node_inline_expr(expnod, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s gives inltree=%s",
+                            mom_value_cstring(expnod), mom_value_cstring(inltree));
+            return inltree;
+          }
         else if (conndescitm == MOM_PREDEFITM(type))
           {
             auto casttree = transform_node_cast_expr(expnod, initm);
@@ -4408,6 +4416,41 @@ MomCEmitter::transform_node_primitive_expr(const struct mom_boxnode_st*expnod, s
                   mom_value_cstring(expnod), mom_value_cstring(nodtree));
   return nodtree;
 } // end MomCEmitter::transform_node_primitive_expr
+
+
+
+
+momvalue_t
+MomCEmitter::transform_node_inline_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm)
+{
+  assert (mom_itype(expnod) == MOMITY_NODE);
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr start expnod=%s insitm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm));
+  auto connitm = expnod->nod_connitm;
+  if (_cec_declareditems.find(connitm) == _cec_declareditems.end())
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr new connitm=%s", mom_item_cstring(connitm));
+      auto inldecl = transform_inline_element(connitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr connitm=%s inldecl=%s",
+                      mom_item_cstring(connitm), mom_value_cstring(inldecl));
+    }
+  unsigned arity = mom_raw_size(expnod);
+  traced_vector_values_t vectree;
+  vectree.reserve(2*arity+5);
+  vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(sequence),
+                                        2, literal_string(MOM_FUNC_PREFIX),  connitm));
+  vectree.push_back(literal_string("("));
+  for (unsigned ix=0; ix<arity; ix++)
+    {
+      if (ix>0) vectree.push_back(literal_string(","));
+      vectree.push_back(transform_expr(expnod->nod_sons[ix],insitm));
+    }
+  vectree.push_back(literal_string(")"));
+  auto itree = mom_boxnode_make(MOM_PREDEFITM(output), vectree.size(), vectree.data());
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr expnod=%s gives itree=%s",
+                  mom_value_cstring(expnod), mom_value_cstring(itree));
+  return itree;
+} // end of MomCEmitter::transform_node_inline_expr
 
 
 
