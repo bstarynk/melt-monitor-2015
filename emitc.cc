@@ -94,11 +94,11 @@ private:
   struct mom_item_st* _ce_topitm;
   std::vector<struct mom_item_st*,traceable_allocator<struct mom_item_st*>> _ce_veclockeditems;
   traced_set_items_t _ce_setlockeditems;
+protected:
   traced_set_items_t _ce_sigitems;
   traced_set_items_t _ce_typitems;
   traced_set_items_t _ce_blockitems;
   traced_set_items_t _ce_instritems;
-protected:
   traced_set_items_t _ce_constitems;
   traced_map_item2long_t _ce_breakcountmap;
   traced_map_item2long_t _ce_continuecountmap;
@@ -1192,6 +1192,7 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
   }
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing or bad body in func %s", mom_item_cstring(fuitm));
+  flush_todo_list(__LINE__);
   lock_item(bdyitm);
   scan_block(bdyitm,fuitm);
   _ce_curfunctionitm = nullptr;
@@ -1209,7 +1210,28 @@ MomEmitter::scan_type(struct mom_item_st*typitm)
   if (desitm != MOM_PREDEFITM(type))
     throw MOM_RUNTIME_PRINTF("type %s has bad descr %s",
                              mom_item_cstring(typitm), mom_item_cstring(desitm));
-  _ce_typitems.insert(typitm);
+  if (_ce_typitems.find(typitm) == _ce_typitems.end())
+    {
+      _ce_typitems.insert(typitm);
+      MOM_DEBUGPRINTF(gencod, "scan_type fresh typitm=%s", mom_item_cstring(typitm));
+      todo([=](MomEmitter*em)
+      {
+        auto cem = dynamic_cast<MomCEmitter*>(em);
+        if (cem != nullptr)
+          {
+            auto bind = get_binding(typitm);
+            MOM_DEBUGPRINTF(gencod, "scan_type should declare typitm=%s bind role %s what %s",
+                            mom_item_cstring(typitm), mom_item_cstring(bind?bind->vd_rolitm:nullptr),
+                            mom_value_cstring(bind?bind->vd_what:nullptr));
+            if (bind == nullptr)
+              {
+                auto dtytree = cem->declare_type(typitm);
+                MOM_DEBUGPRINTF(gencod, "scan_type typitm=%s dtytree=%s",
+                                mom_item_cstring(typitm), mom_value_cstring(dtytree));
+              }
+          }
+      });
+    }
 } // end  MomEmitter::scan_type
 
 
@@ -2527,6 +2549,12 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
   assert (is_locked_item(expitm));
   assert (is_locked_item(insitm));
   auto desitm =  mom_unsync_item_descr(expitm);
+  auto bind = get_binding(expitm);
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm %s desitm %s bind role %s what %s",
+                  mom_item_cstring(expitm),
+                  mom_item_cstring(desitm),
+                  mom_item_cstring(bind?bind->vd_rolitm:NULL),
+                  mom_value_cstring(bind?bind->vd_what:NULL));
   if (desitm == MOM_PREDEFITM(variable) || desitm == MOM_PREDEFITM(global)
       || desitm == MOM_PREDEFITM(thread_local) || desitm == MOM_PREDEFITM(formal))
     return scan_var(expitm,insitm,typitm);
@@ -2555,9 +2583,12 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                                   mom_item_cstring(typitm));
       return typexpitm;
     }
-  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typitm=%s typexpitm=%s",
+  auto oldbind = get_binding(expitm);
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typitm=%s typexpitm=%s oldbind role %s what %s",
                   mom_item_cstring(expitm), mom_item_cstring(typitm),
-                  mom_item_cstring(typexpitm));
+                  mom_item_cstring(typexpitm),
+                  mom_item_cstring(oldbind?oldbind->vd_rolitm:nullptr),
+                  mom_value_cstring(oldbind?oldbind->vd_what:nullptr));
   _ce_localvalueset.insert(expitm);
   bind_local(expitm, MOM_PREDEFITM(item), expitm);
   if (typitm == MOM_PREDEFITM(item))
@@ -2737,6 +2768,7 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
   }
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
+  flush_todo_list(__LINE__);
   lock_item(bdyitm);
   scan_block(bdyitm,rtitm);
   _ce_curfunctionitm = nullptr;
@@ -3058,9 +3090,18 @@ MomCEmitter::after_preparation_transform(void)
           add_global_decl(dtree);
         }
     }
+  MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform topitm %s %zd typeitems",
+                  mom_value_cstring(top_item()),
+                  _ce_typitems.size());
+  for (const mom_item_st* typitm : _ce_typitems)
+    {
+      MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform typitm=%s",
+                      mom_item_cstring(typitm));
+    }
   MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform end topitm %s\n",
                   mom_value_cstring(top_item()));
 } // end of MomCEmitter::after_preparation_transform
+
 
 const struct mom_boxnode_st*
 MomCEmitter::transform_data_element(struct mom_item_st*itm)
@@ -3413,6 +3454,8 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
 } // end of MomCEmitter::declare_enumerator
 
 
+
+
 ////////////////
 momvalue_t
 MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
@@ -3428,6 +3471,18 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if (scalarp)
         *scalarp = true;
       return cextypv;
+    }
+  auto tytree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                                    literal_string(CTYPE_PREFIX),
+                                    typitm);
+  MOM_DEBUGPRINTF(gencod, "typitm=%s has tytree %s",
+                  mom_item_cstring(typitm), mom_value_cstring(tytree));
+  if (_ce_typitems.find(typitm) != _ce_typitems.end())
+    {
+      MOM_DEBUGPRINTF(gencod,
+                      "declare_type known typitm=%s gives tytree=%s",
+                      mom_item_cstring(typitm));
+      return tytree;
     }
   {
     auto tybind = get_binding(typitm);
@@ -3467,11 +3522,6 @@ defaultcasetype:
 #undef CASE_KNOWNTYPE_MOM
   /// temporary binding, will be rebound later
   bind_global(typitm, MOM_PREDEFITM(type), nullptr);
-  auto tytree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
-                                    literal_string(CTYPE_PREFIX),
-                                    typitm);
-  MOM_DEBUGPRINTF(gencod, "typitm=%s has tytree %s",
-                  mom_item_cstring(typitm), mom_value_cstring(tytree));
   if (_cec_declareditems.find(typitm) != _cec_declareditems.end())
     {
       MOM_DEBUGPRINTF(gencod, "typitm=%s known so gives tytree %s",
