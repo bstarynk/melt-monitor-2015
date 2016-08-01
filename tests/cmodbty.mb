@@ -293,11 +293,135 @@
    )
 )
 
+^global !itype_en (
+  ^* comment "enumeration for various value itypes"
+  ^* descr type
+  ^* type enum
+  ^* enum [
+      ^global !ity_none (
+        ^* descr enumerator
+	^* comment "type of nil"
+      )
+      ^global !ity_int (
+        ^* descr enumerator
+	^* comment "itype of integer"
+	^* notice int
+      )
+      ^global !ity_double (
+        ^* descr enumerator
+	^* comment "itype of boxed doubles"
+	^* notice double
+      )    
+      ^global !ity_string (
+        ^* descr enumerator
+	^* comment "itype of string values"
+	^* notice string
+      )       
+      ^global !ity_item (
+        ^* descr enumerator
+	^* comment "itype of items"
+	^* notice item
+      )          
+      ^global !ity_tuple (
+        ^* descr enumerator
+	^* comment "itype of tuples"
+	^* notice tuple
+      )       
+      ^global !ity_set (
+        ^* descr enumerator
+	^* comment "itype of sets"
+	^* notice set
+      )          
+      ^global !ity_node (
+        ^* descr enumerator
+	^* comment "itype of nodes"
+	^* notice node
+      )       
+  ]
+)
+
+
+^global !signature_value_to_itype_en (
+  ^* descr signature
+  ^* comment "signature value -> itype_en"
+  ^* formals [ val0 ]
+  ^* result itype_en
+)
+
+^global !itype  (
+  ^* comment "inline function testing validity of value pointer"
+  ^* descr inline
+  ^* signature signature_value_to_itype_en
+  ^* body  ^global ?itype (
+       ^* comment "body of itype"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+	   ^* comment "cond in itype"
+	   ^* descr cond
+	   ^* cond [
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for nil in itype"
+	       ^* test %is_null(val0)
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return ity_none for nil"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return ity_none
+		     ^* comment "return ity_none when nil value"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for empty_slot"
+	       ^* test %same_value_prim(val0 %empty_slot_prim())
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return ity_none for empty"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return ity_none
+	    	     ^* comment "return ity_none when empty slot"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for odd addresses"
+	       ^* test
+	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+			              2)
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return ity_none for odd addresses"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return ity_none
+		     ^* comment "return ity_none when odd address"
+	           )
+		 ]
+	       )
+	     )
+	   ] ## end cond
+	)
+      ]
+    )
+)
+  
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty valid_value_pointer 
+     anyvalue_ty hashedvalue_ty valid_value_pointer itype
    ]
 )
 
