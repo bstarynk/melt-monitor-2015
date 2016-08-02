@@ -1482,12 +1482,18 @@ momtest_emitc (const char *arg)
     MOM_WARNPRINTF ("momtest_emitc no item for arg=%s", arg);
   else
     {
+      double starealt = mom_clock_time (CLOCK_REALTIME);
+      double stacput = mom_process_cpu_time ();
       MOM_INFORMPRINTF ("momtest_emitc before emitting C code for %s",
                         mom_item_cstring (itm));
       bool ok = mom_emit_c_code (itm);
+      double endrealt = mom_clock_time (CLOCK_REALTIME);
+      double endcput = mom_process_cpu_time ();
       if (ok)
-        MOM_INFORMPRINTF ("momtest_emitc succeeded emitting C code for %s",
-                          mom_item_cstring (itm));
+        MOM_INFORMPRINTF
+          ("momtest_emitc succeeded emitting C code for %s in %.3f real %.4f cpu sec",
+           mom_item_cstring (itm), (endrealt - starealt),
+           (endcput - stacput));
       else
         MOM_FATAPRINTF ("momtest_emitc failed emitting C code for %s",
                         mom_item_cstring (itm));
