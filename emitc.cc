@@ -3036,8 +3036,10 @@ verbatimcase:
                 fputs(strson->cstr, out);
             }
           else
-            write_tree(out, depth+1, lastnl, sonv, forv);
-          write_nl_or_space(out,depth,lastnl);
+            {
+              write_tree(out, depth+1, lastnl, sonv, forv);
+              write_nl_or_space(out,depth,lastnl);
+            }
         }
       fputs("**/", out);
       write_nl_or_space(out,depth,lastnl);
@@ -4274,18 +4276,19 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
         }
       auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
       auto bracetree =
-        mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                            4,
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-                                literal_string("block"),
-                                literal_string(" "),
-                                blkitm),
-                            bodytree, literal_string(";"),
-                            mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
-                                literal_string("endblock"),
-                                literal_string(" "),
-                                blkitm)
-                           );
+        mom_boxnode_make_sentinel(MOM_PREDEFITM(brace),
+                                  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                      literal_string("block"),
+                                      literal_string(" "),
+                                      blkitm),
+                                  bodytree,
+                                  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
+                                      literal_string("endblock"),
+                                      literal_string(" "),
+                                      blkitm)
+                                 );
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s gives bracetree=%s",
                       mom_item_cstring(blkitm), mom_value_cstring(bracetree));
@@ -5157,6 +5160,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       unsigned nbcond = mom_size(condtup);
       traced_vector_values_t vecondtree;
       vecondtree.reserve(2*nbcond+4);
+      vecondtree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
       vecondtree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
                            literal_string("cond"),
                            literal_string(" "),
