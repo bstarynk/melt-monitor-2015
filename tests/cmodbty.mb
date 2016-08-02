@@ -613,7 +613,7 @@
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty valid_value_pointer itype int_val_def
+     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def
    ]
 )
 

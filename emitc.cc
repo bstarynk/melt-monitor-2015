@@ -2541,7 +2541,11 @@ primitivecase:
     {
       auto fldbind = get_binding(connitm);
       auto typval = mom_unsync_item_get_phys_attr(connitm, MOM_PREDEFITM(type));
-      assert (fldbind != nullptr);
+      if (!fldbind)
+	throw MOM_RUNTIME_PRINTF("undeclared field %s in expnod %s instr %s",
+				 mom_item_cstring(connitm),
+				 mom_value_cstring(expnod),
+				 mom_item_cstring(insitm));
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s field bind role %s what %s typval=%s typitm=%s",
                       mom_value_cstring(expnod), mom_item_cstring(fldbind->vd_rolitm),
