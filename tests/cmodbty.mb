@@ -54,7 +54,7 @@
       ^global !va_size (
         ^* comment "the field giving the size"
         ^* descr field
-        ^* type atomic_int16_t
+        ^* type uint32_t
       )
   ]
 )
@@ -432,6 +432,57 @@
     )
 )
   
+^global !valsize  (
+  ^* comment "inline function giving size of value"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?valsize (
+       ^* comment "body of valsize"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+	   ^* comment "cond in valsize"
+	   ^* descr cond
+	   ^* cond [
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for valid in valsize"
+	       ^* test %valid_value_pointer(val0)
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return va_size"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return %va_size(val0)
+		     ^* comment "return va_size of valid val0"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test otherwise in valsize"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return 0"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return 0
+		     ^* comment "return 0 when val0 invalid"
+	           )
+		 ]
+	       )
+	     )
+	   ]
+	 )
+       ]
+  )
+)
+
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
