@@ -599,6 +599,7 @@ public:
   momvalue_t transform_node_primitive_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_node_inline_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_node_cast_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
+  momvalue_t transform_node_field_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm);
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   momvalue_t transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool*scalarp= nullptr);
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
@@ -2433,19 +2434,19 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
         throw MOM_RUNTIME_PRINTF("cast node %s should have one son, but has arity %d", mom_value_cstring(expnod), nodarity);
       return connitm;
       break;
-      /////
+    /////
     case CASE_DESCONN_MOM(routine):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s routine",
                       mom_value_cstring(expnod));
       goto primitivecase;
-      ////
+    ////
     case CASE_DESCONN_MOM(inline):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s inline",
                       mom_value_cstring(expnod));
       goto primitivecase;
-      ////
+    ////
     case CASE_DESCONN_MOM(primitive):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s primitive",
@@ -2535,25 +2536,29 @@ primitivecase:
         return restypitm;
       }
       break;
-      ///
+    ///
     case CASE_DESCONN_MOM(field):
-      {
-	auto fldbind = get_binding(connitm);
-	auto typval = mom_unsync_item_get_phys_attr(connitm, MOM_PREDEFITM(type));
-	assert (fldbind != nullptr);
-	MOM_DEBUGPRINTF(gencod,
-			"scan_node_descr_conn_expr expnod=%s field bind role %s what %s typval=%s",
-			mom_value_cstring(expnod), mom_item_cstring(fldbind->vd_rolitm),
-			mom_value_cstring(fldbind->vd_what), mom_value_cstring(typval));
-	#warning C-scan_node_descr_conn_expr unimplemented field
-	MOM_FATAPRINTF("scan_node_descr_conn_expr unimplemented field expnod=%s", mom_value_cstring(expnod));
-      }
-      break;
+    {
+      auto fldbind = get_binding(connitm);
+      auto typval = mom_unsync_item_get_phys_attr(connitm, MOM_PREDEFITM(type));
+      assert (fldbind != nullptr);
+      MOM_DEBUGPRINTF(gencod,
+                      "scan_node_descr_conn_expr expnod=%s field bind role %s what %s typval=%s typitm=%s",
+                      mom_value_cstring(expnod), mom_item_cstring(fldbind->vd_rolitm),
+                      mom_value_cstring(fldbind->vd_what), mom_value_cstring(typval), mom_item_cstring(typitm));
+      if (mom_itype(typval)==MOMITY_ITEM)
+        {
+          auto typvitm = (mom_item_st*)typval;
+        }
+#warning C-scan_node_descr_conn_expr unimplemented field
+      MOM_FATAPRINTF("scan_node_descr_conn_expr unimplemented field expnod=%s", mom_value_cstring(expnod));
+    }
+    break;
       ////
 defaultdesconn:
-      MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s default desconnitm=%s",
-                      mom_value_cstring(expnod), mom_item_cstring(desconnitm));
-      break;
+    MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s default desconnitm=%s",
+                    mom_value_cstring(expnod), mom_item_cstring(desconnitm));
+    break;
     }
 #undef CASE_DESCONN_MOM
 #undef NBDESCONN_MOM
@@ -4455,6 +4460,13 @@ defaultcaseconn:
                             mom_value_cstring(expnod), mom_value_cstring(casttree));
             return casttree;
           }
+        else if (conndescitm == MOM_PREDEFITM(field))
+          {
+            auto fieldtree = transform_node_field_expr(expnod, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr expnod=%s gives fieldtree=%s",
+                            mom_value_cstring(expnod), mom_value_cstring(fieldtree));
+            return fieldtree;
+          }
 #warning MomCEmitter::transform_node_expr unimplemented
         MOM_FATAPRINTF("unimplemented c-transform_node_expr of default expr %s in %s with conndescitm=%s",
                        mom_value_cstring(expnod), mom_item_cstring(initm), mom_item_cstring(conndescitm));
@@ -4624,6 +4636,52 @@ MomCEmitter::transform_node_cast_expr(const struct mom_boxnode_st*expnod, struct
     }
 } // end MomCEmitter::transform_node_cast_expr
 
+
+momvalue_t
+MomCEmitter::transform_node_field_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm)
+{
+  assert (mom_itype(expnod) == MOMITY_NODE);
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_field_expr start expnod=%s insitm=%s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm));
+  auto connitm = expnod->nod_connitm;
+  assert (mom_size(expnod) == 1);
+  assert (is_locked_item(connitm));
+  assert (mom_unsync_item_descr(connitm)==MOM_PREDEFITM(field));
+  auto fldbind = get_binding(connitm);
+  assert (fldbind != nullptr);
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_field_expr expnod=%s fldbind role=%s what=%s",
+                  mom_value_cstring(expnod),
+                  mom_item_cstring(fldbind->vd_rolitm),
+                  mom_value_cstring(fldbind->vd_what));
+  auto intypitm = mom_dyncast_item(fldbind->vd_what);
+  auto argtree = transform_expr(expnod->nod_sons[0], insitm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_field_expr expnod=%s argtree=%s",
+                  mom_value_cstring(expnod),
+                  mom_value_cstring(argtree));
+  auto fldtree = //
+    mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                              literal_string("("),
+                              literal_string("/*field*/"),
+                              literal_string("("),
+                              literal_string("("),
+                              literal_string(CTYPE_PREFIX),
+                              intypitm,
+                              literal_string("*"),
+                              literal_string(")"),
+                              literal_string(" "),
+                              literal_string("("),
+                              argtree,
+                              literal_string(")"),
+                              literal_string(")"),
+                              literal_string("->"),
+                              literal_string(CFIELD_PREFIX),
+                              connitm,
+                              literal_string(")"));
+  MOM_DEBUGPRINTF(gencod, "c-transform_node_field_expr expnod=%s gives fldtree=%s",
+                  mom_value_cstring(expnod),
+                  mom_value_cstring(fldtree));
+  return fldtree;
+} // end MomCEmitter::transform_node_field_expr
 
 
 momvalue_t

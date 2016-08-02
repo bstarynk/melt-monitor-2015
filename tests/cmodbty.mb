@@ -420,7 +420,7 @@
 	         ^* body [
 	           ^global ?return (
 	             ^* descr return
-		     ^* return %va_itype(val0)
+		     ^* return %itype_en(%va_itype(val0))
 		     ^* comment "return the va_itype when valid"
 		   )
 		 ]
