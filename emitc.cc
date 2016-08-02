@@ -2553,6 +2553,12 @@ primitivecase:
       if (mom_itype(typval)==MOMITY_ITEM)
         {
           auto typvitm = (mom_item_st*)typval;
+	  if (typvitm == typitm || !typitm) {
+	    MOM_DEBUGPRINTF(gencod,
+			    "scan_node_descr_conn_expr expnod=%s gives typvitm=%s",
+			    mom_value_cstring(expnod), mom_item_cstring(typvitm));
+	    return typvitm;
+	  }
         }
 #warning C-scan_node_descr_conn_expr unimplemented field
       MOM_FATAPRINTF("scan_node_descr_conn_expr unimplemented field expnod=%s", mom_value_cstring(expnod));
