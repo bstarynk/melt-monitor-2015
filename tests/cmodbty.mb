@@ -58,6 +58,22 @@
       )
   ]
 )
+
+^global !boxint_ty (
+  ^global
+  ^* comment "the type of boxed integers"
+  ^* descr type
+  ^* type struct
+  ^* extend anyvalue_ty
+  ^* struct [
+      ^global !boxi_int (
+        ^* comment "the field giving the boxed integer"
+        ^* descr field
+        ^* type int
+      )
+  ]
+)
+
   
 ^global !hashedvalue_ty (
   ^* comment "the type of hashed value"
@@ -137,6 +153,12 @@
 ^global !signature_2ints_to_int (
   ^* descr signature
   ^* formals [ num0 num1 ]
+  ^* result int
+)
+
+^global !signature_value_int_to_int (
+  ^* descr signature
+  ^* formals [ val0 num1 ]
   ^* result int
 )
 
@@ -401,12 +423,12 @@
 			              2)
 	       ^* then ^global ?block (
 	         ^* descr sequence
-		 ^* comment "block return ity_none for odd addresses"
+		 ^* comment "block return ity_int for odd addresses"
 		 ^* body [
 	           ^global ?return (
 	             ^* descr return
-		     ^* return ity_none
-		     ^* comment "return ity_none when odd address"
+		     ^* return ity_int
+		     ^* comment "return ity_int when odd address"
 	           )
 		 ]
 	       )
@@ -431,7 +453,111 @@
       ]
     )
 )
-  
+
+
+
+^global !int_val_def (
+  ^* comment "inline function giving integer value or default"
+  ^* descr inline
+  ^* signature signature_value_int_to_int
+  ^* body  ^global ?int_val_def (
+       ^* comment "body of int_val_def"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+	   ^* comment "cond in int_val_def"
+	   ^* descr cond
+	   ^* cond [
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for nil in int_val_def"
+	       ^* test %is_null(val0)
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return num1 for nil"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return num1
+		     ^* comment "return num1 when nil value"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for empty_slot in int_val_def"
+	       ^* test %same_value_prim(val0 %empty_slot_prim())
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return num1 for empty"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return num1
+	    	     ^* comment "return num1 when empty slot"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for odd addresses in itype"
+	       ^* test
+	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+			              2)
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return half for odd addresses"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return %div(%cast_pointer_to_int_prim(val0) 2)
+		     ^* comment "return half when odd address"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test for boxedints in itype"
+	       ^* test
+	         %equal_int_prim (%int(%va_itype(val0)) %int(ity_int))
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return boxi_int for boxedints"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return %boxi_int(val0)
+		     ^* comment "return boxi_int for boxedints"
+	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "test otherwise boxedints"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return num1 othersiwe"
+		 ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return num1
+	    	     ^* comment "return num1 otherwise"
+	           )
+		 ]
+	       )
+	     )
+	   ]
+	 )
+       ]
+     )       
+  )
+
+
 ^global !valsize  (
   ^* comment "inline function giving size of value"
   ^* descr inline
@@ -487,7 +613,7 @@
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty valid_value_pointer itype
+     anyvalue_ty hashedvalue_ty valid_value_pointer itype int_val_def
    ]
 )
 
