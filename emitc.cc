@@ -2601,17 +2601,44 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
       MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s localitem", mom_item_cstring(expitm));
       bind_local(expitm, MOM_PREDEFITM(item), expitm);
     }
-  else {
-    auto rolitm = oldbind->vd_rolitm;
-    auto whatv = oldbind->vd_what;
-    MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s rolitm=%s whatv=%s",
-		    mom_item_cstring(expitm), mom_item_cstring(rolitm),
-		    mom_value_cstring(whatv));
+  else
+    {
+      auto rolitm = oldbind->vd_rolitm;
+      auto whatv = oldbind->vd_what;
+      MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s rolitm=%s whatv=%s typitm=%s",
+                      mom_item_cstring(expitm), mom_item_cstring(rolitm),
+                      mom_value_cstring(whatv), mom_item_cstring(typitm));
+#define NBKNOWNROLE_MOM 31
+#define CASE_KNOWNROLE_MOM(Nam) momhashpredef_##Nam % NBKNOWNROLE_MOM:	\
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+  goto defaultcaserole; foundcase_##Nam
+      switch (rolitm->hva_hash % NBKNOWNROLE_MOM)
+        {
+        case CASE_KNOWNROLE_MOM (enumerator):
+        {
+          assert (mom_itype(whatv) == MOMITY_NODE && mom_size(whatv)>=3);
+          auto roltypitm = mom_dyncast_item(mom_boxnode_nth(whatv, 0));
+          assert (mom_itype(roltypitm)==MOMITY_ITEM);
+          if (!typitm || roltypitm == typitm)
+            {
+              MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s gives enum roltypitm=%s",
+                              mom_item_cstring(expitm), mom_item_cstring(roltypitm));
+              return roltypitm;
+            }
+          // @@@ we should handle extended enum-s...
+          goto defaultcaserole;
+        }
+        break;
+        default:
+defaultcaserole:
 #warning incomplete scan_item_expr with oldbind
-    MOM_FATAPRINTF("unimplemented scan_item_expr expitm=%s with oldbind rolitm=%s whatv=%s",
-		    mom_item_cstring(expitm), mom_item_cstring(rolitm),
-		    mom_value_cstring(whatv));
-  }
+          MOM_FATAPRINTF("unimplemented scan_item_expr expitm=%s with oldbind rolitm=%s whatv=%s",
+                         mom_item_cstring(expitm), mom_item_cstring(rolitm),
+                         mom_value_cstring(whatv));
+        }
+#undef NBKNOWNROLE_MOM
+#undef CASE_KNOWNROLE_MOM
+    }
   if (typitm == MOM_PREDEFITM(item))
     return typitm;
   else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
@@ -3443,7 +3470,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
       do_at_end([=](MomEmitter*em)
       {
         assert (em != nullptr);
-        MOM_DEBUGPRINTF(gencod, "atend enumerator %s at rank %d",
+        MOM_DEBUGPRINTF(gencod, "c-declare_enumerator atend enumerator %s at rank %d",
                         mom_item_cstring(enuritm), rank);
         mom_unsync_item_put_phys_attr(enuritm, MOM_PREDEFITM(at),
                                       mom_int_make(rank));
@@ -4702,6 +4729,16 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
           return exptree;
         }
         break;
+        case CASE_ROLE_MOM(enumerator):
+        {
+          auto exptree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                             literal_string(CENUVAL_PREFIX),
+                                             expitm);
+          MOM_DEBUGPRINTF(gencod,
+                          "c-transform_expr expitm=%s enumerator typitm=%s gives exptree=%s",
+                          mom_item_cstring(expitm), mom_item_cstring(typitm), mom_value_cstring(exptree));
+          return exptree;
+        }
 defaultrole:
         default:
           MOM_FATAPRINTF("transform_expr bad expitm=%s rolitm=%s initm=%s",
