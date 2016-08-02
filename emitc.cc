@@ -2601,6 +2601,17 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
       MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s localitem", mom_item_cstring(expitm));
       bind_local(expitm, MOM_PREDEFITM(item), expitm);
     }
+  else {
+    auto rolitm = oldbind->vd_rolitm;
+    auto whatv = oldbind->vd_what;
+    MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s rolitm=%s whatv=%s",
+		    mom_item_cstring(expitm), mom_item_cstring(rolitm),
+		    mom_value_cstring(whatv));
+#warning incomplete scan_item_expr with oldbind
+    MOM_FATAPRINTF("unimplemented scan_item_expr expitm=%s with oldbind rolitm=%s whatv=%s",
+		    mom_item_cstring(expitm), mom_item_cstring(rolitm),
+		    mom_value_cstring(whatv));
+  }
   if (typitm == MOM_PREDEFITM(item))
     return typitm;
   else if (typitm == nullptr || typitm == MOM_PREDEFITM(value))
