@@ -363,7 +363,7 @@
 	   ^* cond [
 	     ^global ?test (
 	       ^* descr test
-	       ^* comment "test for nil in itype"
+	       ^* comment "test for nil in itype in itype"
 	       ^* test %is_null(val0)
 	       ^* then ^global ?block (
 	         ^* descr sequence
@@ -379,7 +379,7 @@
 	     )
 	     ^global ?test (
 	       ^* descr test
-	       ^* comment "test for empty_slot"
+	       ^* comment "test for empty_slot in itype"
 	       ^* test %same_value_prim(val0 %empty_slot_prim())
 	       ^* then ^global ?block (
 	         ^* descr sequence
@@ -395,7 +395,7 @@
 	     )
 	     ^global ?test (
 	       ^* descr test
-	       ^* comment "test for odd addresses"
+	       ^* comment "test for odd addresses in itype"
 	       ^* test
 	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
 			              2)
@@ -408,6 +408,21 @@
 		     ^* return ity_none
 		     ^* comment "return ity_none when odd address"
 	           )
+		 ]
+	       )
+	     )
+	     ^global ?test (
+	       ^* descr test
+	       ^* comment "otherwise test - valid address in itype"
+	       ^* then ^global ?block (
+	         ^* descr sequence
+		 ^* comment "block return va_itype when valid"
+	         ^* body [
+	           ^global ?return (
+	             ^* descr return
+		     ^* return %va_itype(val0)
+		     ^* comment "return the va_itype when valid"
+		   )
 		 ]
 	       )
 	     )

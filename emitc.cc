@@ -2424,6 +2424,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
       return MOM_PREDEFITM(value);
     }
     break;
+    /////
     case CASE_DESCONN_MOM(type):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s type cast %s",
@@ -2432,16 +2433,19 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
         throw MOM_RUNTIME_PRINTF("cast node %s should have one son, but has arity %d", mom_value_cstring(expnod), nodarity);
       return connitm;
       break;
+      /////
     case CASE_DESCONN_MOM(routine):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s routine",
                       mom_value_cstring(expnod));
       goto primitivecase;
+      ////
     case CASE_DESCONN_MOM(inline):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s inline",
                       mom_value_cstring(expnod));
       goto primitivecase;
+      ////
     case CASE_DESCONN_MOM(primitive):
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s primitive",
@@ -2531,6 +2535,21 @@ primitivecase:
         return restypitm;
       }
       break;
+      ///
+    case CASE_DESCONN_MOM(field):
+      {
+	auto fldbind = get_binding(connitm);
+	auto typval = mom_unsync_item_get_phys_attr(connitm, MOM_PREDEFITM(type));
+	assert (fldbind != nullptr);
+	MOM_DEBUGPRINTF(gencod,
+			"scan_node_descr_conn_expr expnod=%s field bind role %s what %s typval=%s",
+			mom_value_cstring(expnod), mom_item_cstring(fldbind->vd_rolitm),
+			mom_value_cstring(fldbind->vd_what), mom_value_cstring(typval));
+	#warning C-scan_node_descr_conn_expr unimplemented field
+	MOM_FATAPRINTF("scan_node_descr_conn_expr unimplemented field expnod=%s", mom_value_cstring(expnod));
+      }
+      break;
+      ////
 defaultdesconn:
       MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr expnod=%s default desconnitm=%s",
                       mom_value_cstring(expnod), mom_item_cstring(desconnitm));
