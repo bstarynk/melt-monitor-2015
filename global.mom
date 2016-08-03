@@ -565,6 +565,26 @@ comment
 
 
 
+*flatten_set
+1470228357
+^mtime
+(
+comment
+"for flatten_set-s"_
+)attrs
+
+
+
+*flatten_tuple
+1470228357
+^mtime
+(
+comment
+"for flatten_tuple-s"_
+)attrs
+
+
+
 *flexible_array
 1467790128
 ^mtime
@@ -665,6 +685,7 @@ comment
 
 
 
+
 *global
 1465299099
 ^mtime
@@ -682,7 +703,6 @@ comment
 comment
 "test for greater of two values"_
 )attrs
-
 
 
 
@@ -841,6 +861,7 @@ comment
 
 
 
+
 *is_int
 1457358950
 ^mtime
@@ -860,7 +881,6 @@ comment
 notice
 item
 )attrs
-
 
 
 
@@ -1027,6 +1047,7 @@ comment
 
 
 
+
 *left_assoc
 1455871773
 ^mtime
@@ -1044,7 +1065,6 @@ comment
 comment
 "test for less of two values"_
 )attrs
-
 
 
 
@@ -1196,6 +1216,7 @@ node_nth
 
 
 
+
 *node_arity
 1457430266
 ^mtime
@@ -1213,7 +1234,6 @@ comment
 comment
 "get the connective of a node, or else nil"_
 )attrs
-
 
 
 
@@ -1355,6 +1375,7 @@ comment
 
 
 
+
 *out_hexa
 1456812179
 ^mtime
@@ -1372,7 +1393,6 @@ comment
 comment
 "output HTML encoding"_
 )attrs
-
 
 
 
@@ -1536,6 +1556,7 @@ comment
 
 
 
+
 *payl_assovaldata_remove
 1456833278
 ^mtime
@@ -1553,7 +1574,6 @@ comment
 comment
 "give the set of attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1713,6 +1733,7 @@ comment
 
 
 
+
 *payl_hashmap_get
 1456897878
 ^mtime
@@ -1730,7 +1751,6 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -1882,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectval_node
 1456840222
 ^mtime
@@ -1899,7 +1920,6 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
-
 
 
 
@@ -2082,6 +2102,7 @@ comment
 
 
 
+
 *put
 1455358475
 ^mtime
@@ -2099,7 +2120,6 @@ comment
 comment
 "for queues"_
 )attrs
-
 
 
 
@@ -2248,6 +2268,7 @@ comment
 
 
 
+
 *signature_displayer
 1452104741
 ^mtime
@@ -2274,7 +2295,6 @@ itm0
 result
 unit
 )attrs
-
 
 
 
@@ -2528,6 +2548,7 @@ node
 
 
 
+
 *then
 1465566569
 ^mtime
@@ -2549,7 +2570,6 @@ formal
 type
 value
 )attrs
-
 
 
 
@@ -2715,6 +2735,7 @@ comment
 
 
 
+
 *variable
 1464962851
 ^mtime
@@ -2732,7 +2753,6 @@ comment
 comment
 "for vector payload"_
 )attrs
-
 
 
 
