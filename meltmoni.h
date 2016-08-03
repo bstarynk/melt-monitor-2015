@@ -1008,6 +1008,13 @@ mom_boxset_make_arr (unsigned siz, const struct mom_item_st **arr)
 
 const struct mom_boxset_st *mom_boxset_make_va (unsigned siz, ...);
 
+// make a flatten set; for every argument: if it is an item, add it;
+// if it is a node of connective itm, add the items-or-nil sons; if it
+// is a sequence, add its non-nil items
+
+const struct mom_boxset_st *
+mom_boxset_flatten_make_va (struct mom_item_st*itm, unsigned siz, ...);
+
 const struct mom_boxset_st *mom_boxset_make_sentinel_va (struct mom_item_st
     *, ...)
 __attribute__ ((sentinel));

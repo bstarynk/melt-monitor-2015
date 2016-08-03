@@ -665,6 +665,101 @@ mom_boxset_make_sentinel_va (struct mom_item_st *itm1, ...)
 }
 
 const struct mom_boxset_st *
+mom_boxset_flatten_make_va (struct mom_item_st *itm, unsigned siz, ...)
+{
+  va_list args;
+  if (siz >= 2 * MOM_SIZE_MAX / 3)
+    MOM_FATAPRINTF ("too big flat-tuple %d", siz);
+  if (mom_itype (itm) != MOMITY_ITEM)
+    itm = NULL;
+  if (MOM_UNLIKELY (siz == 0))
+    return &empty_boxset_mom;
+  unsigned asiz = mom_prime_above (4 * siz / 3 + 5);
+  unsigned acnt = 0;
+  struct mom_item_st **arr = mom_gc_alloc (asiz * sizeof (void *));
+  va_start (args, siz);
+  for (int aix = 0; aix < (int) siz; aix++)
+    {
+      if (MOM_UNLIKELY (acnt + 1 >= asiz))
+        {
+          unsigned newsiz = mom_prime_above (5 * asiz / 4 + siz / 8 + 9);
+          struct mom_item_st **newarr =
+            mom_gc_alloc (newsiz * sizeof (void *));
+          memcpy (newarr, arr, acnt * sizeof (void *));
+          GC_FREE (arr);
+          arr = newarr;
+          asiz = newsiz;
+        }
+      momvalue_t curarg = va_arg (args, momvalue_t);
+      switch (mom_itype (curarg))
+        {
+        case MOMITY_ITEM:
+          arr[acnt++] = (struct mom_item_st *) curarg;
+          break;
+        case MOMITY_SET:
+        case MOMITY_TUPLE:
+          {
+            unsigned cursiz = mom_raw_size (curarg);
+            const struct mom_seqitems_st *curseq =
+              (const struct mom_seqitems_st *) curarg;
+            if (MOM_UNLIKELY (acnt + cursiz + 1 >= asiz))
+              {
+                unsigned newsiz =
+                  mom_prime_above (5 * asiz / 4 + siz / 8 + cursiz + 9);
+                struct mom_item_st **newarr =
+                  mom_gc_alloc (newsiz * sizeof (void *));
+                memcpy (newarr, arr, acnt * sizeof (void *));
+                GC_FREE (arr);
+                arr = newarr;
+                asiz = newsiz;
+              }
+            for (unsigned six = 0; six < cursiz; six++)
+              {
+                struct mom_item_st *curitm = curseq->seqitem[six];
+                if (curitm)
+                  arr[acnt++] = curitm;
+              }
+          }
+          break;
+        case MOMITY_NODE:
+          {
+            unsigned cursiz = mom_raw_size (curarg);
+            const struct mom_boxnode_st *curnod =
+              (const struct mom_boxnode_st *) curnod;
+            if (itm && curnod->nod_connitm != itm)
+              break;
+            if (MOM_UNLIKELY (acnt + cursiz + 1 >= asiz))
+              {
+                unsigned newsiz =
+                  mom_prime_above (5 * asiz / 4 + siz / 8 + cursiz + 9);
+                struct mom_item_st **newarr =
+                  mom_gc_alloc (newsiz * sizeof (void *));
+                memcpy (newarr, arr, acnt * sizeof (void *));
+                GC_FREE (arr);
+                arr = newarr;
+                asiz = newsiz;
+              }
+            for (unsigned six = 0; six < cursiz; six++)
+              {
+                momvalue_t curson = curnod->nod_sons[six];
+                if (mom_itype (curson) == MOMITY_ITEM)
+                  arr[acnt++] = (struct mom_item_st *) curson;
+              }
+          }
+          break;
+        default:
+          break;
+        }
+    }
+  const struct mom_boxset_st *setv =
+    mom_boxset_make_arr (acnt, (const struct mom_item_st **) arr);
+  GC_FREE (arr);
+  return setv;
+}                               /* end mom_boxset_flatten_make_va */
+
+
+
+const struct mom_boxset_st *
 mom_boxset_union (const struct mom_boxset_st *set1,
                   const struct mom_boxset_st *set2)
 {
