@@ -4503,6 +4503,58 @@ plusmultcase:
         return plusmulttree;
       }
       break;
+    case CASE_EXPCONN_MOM(sub):
+      {
+        assert (nodarity==2);
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub: %s", mom_value_cstring(expnod));
+	auto leftree = transform_expr(expnod->nod_sons[0], initm);
+	auto rightree = transform_expr(expnod->nod_sons[1], initm);
+	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+					   literal_string("("),
+					   literal_string("("),
+					   leftree,
+					   literal_string(") - ("),
+					   rightree,
+					   literal_string(")"),
+					   literal_string(")"));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub gives restree=%s", mom_value_cstring(restree));
+	return restree;
+      }
+      break;
+    case CASE_EXPCONN_MOM(div):
+      {
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div: %s", mom_value_cstring(expnod));
+	auto leftree = transform_expr(expnod->nod_sons[0], initm);
+	auto rightree = transform_expr(expnod->nod_sons[1], initm);
+	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+					   literal_string("("),
+					   literal_string("("),
+					   leftree,
+					   literal_string(") / ("),
+					   rightree,
+					   literal_string(")"),
+					   literal_string(")"));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div gives restree=%s", mom_value_cstring(restree));
+	return restree;
+      }
+      break;
+    case CASE_EXPCONN_MOM(mod):
+      {
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod: %s", mom_value_cstring(expnod));
+	auto leftree = transform_expr(expnod->nod_sons[0], initm);
+	auto rightree = transform_expr(expnod->nod_sons[1], initm);
+	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+					   literal_string("("),
+					   literal_string("("),
+					   leftree,
+					   literal_string(") % ("),
+					   rightree,
+					   literal_string(")"),
+					   literal_string(")"));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod gives restree=%s", mom_value_cstring(restree));
+	return restree;
+      }
+      break;
     default:
 defaultcaseconn:
       {
