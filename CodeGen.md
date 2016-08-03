@@ -128,6 +128,13 @@ exception. In particular:
 * The `tuple` and `set` connectives are variadic expressions to build
   tuples and sets from item arguments.
 
+* the `node` connective is for a variadic expression to build a node,
+  using the first argument (should be an item) as a connective.
+
+* The `flatten_tuple` and `flatten_set` is for a variadic expression
+  to build a flatten set or tuple, using the first argument (should be
+  an item) as the flattening item.
+
 * If the connective is some *signature-item*, the expression is a closure application.
 
 * If the connective is some *routine-item*, the expression is a
