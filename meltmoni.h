@@ -959,6 +959,13 @@ const struct mom_boxtuple_st *mom_boxtuple_make_arr (unsigned siz,
 
 const struct mom_boxtuple_st *mom_boxtuple_make_va (unsigned siz, ...);
 
+// make a flatten tuple; for every argument: if it is an item or
+// nil, add it; if it is a node of connective itm, add the
+// items-or-nil sons; if it is a sequence, add its items
+
+const struct mom_boxtuple_st *
+mom_boxtuple_flatten_make_va (struct mom_item_st*itm, unsigned siz, ...);
+
 const struct mom_boxtuple_st *mom_boxtuple_make_sentinel_va (struct
     mom_item_st *,
     ...)
