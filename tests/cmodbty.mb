@@ -370,6 +370,14 @@
   ^* result itype_en
 )
 
+
+^global !signature_value_to_hash_t (
+  ^* descr signature
+  ^* comment "signature value -> hash_t"
+  ^* formals [ val0 ]
+  ^* result hash_t
+)
+
 ^global !itype  (
   ^* comment "inline function testing validity of value pointer"
   ^* descr inline
@@ -609,11 +617,36 @@
 )
 
 
+^global !typ0l (
+  ^* descr variable
+  ^* type itype_en
+)
+
+^global !value_hash  (
+  ^* comment "inline function giving hash of value"
+  ^* descr inline
+  ^* signature signature_value_to_hash_t
+  ^* body  ^global ?value_hash (
+       ^* comment "body of value_hash"
+       ^* descr sequence
+       ^* locals [ typ0l ]
+       ^* body
+       [
+          ^global !assign (
+	    ^* comment "get type of val0 into typ0l"
+	    ^* descr assign
+	    ^* to typ0l
+	    ^* from %itype(val0)
+	  )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def
+     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def value_hash
    ]
 )
 
