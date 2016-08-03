@@ -4267,10 +4267,32 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                                           mom_item_cstring(locitm), mom_item_cstring(typeitm), mom_item_cstring(tytypitm),
                                           mom_item_cstring(tybind?tybind->vd_rolitm:NULL),
                                           mom_value_cstring(tybind?tybind->vd_what:NULL));
+                          if (tybind && tybind->vd_rolitm == MOM_PREDEFITM(type))
+                            {
+                              typecexp = mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                                                             literal_string(CTYPE_PREFIX),
+                                                             typeitm);
+                              curloctree = //
+                                mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                                          typecexp,
+                                                          literal_string(" "),
+                                                          literal_string(CLOCAL_PREFIX),
+                                                          locitm,
+                                                          literal_string(" = "),
+                                                          literal_string("/*nothing*/0"));
+                              MOM_DEBUGPRINTF(gencod,
+                                              "c-transform_block locitm=%s typeitm=%s typecexp=%s curloctree=%s",
+                                              mom_item_cstring(locitm),
+                                              mom_item_cstring(typeitm),
+                                              mom_value_cstring(typecexp),
+                                              mom_value_cstring(curloctree));
+
+                            }
+                          else
 #warning c-transform_block local with unhandled type
-                          MOM_FATAPRINTF("c-transform_block blkitm=%s lix#%d locitm=%s unhandled typeitm=%s",
-                                         mom_item_cstring(blkitm), lix,
-                                         mom_item_cstring(locitm), mom_item_cstring(typeitm));
+                            MOM_FATAPRINTF("c-transform_block blkitm=%s lix#%d locitm=%s unhandled typeitm=%s",
+                                           mom_item_cstring(blkitm), lix,
+                                           mom_item_cstring(locitm), mom_item_cstring(typeitm));
                         }
                     }
                 }
