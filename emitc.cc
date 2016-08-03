@@ -2312,6 +2312,35 @@ tuplecase:
         return MOM_PREDEFITM(value);
       }
       break;
+    case CASE_EXPCONN_MOM(flatten_set):
+      goto flatupcase;
+    case CASE_EXPCONN_MOM(flatten_tuple):
+flatupcase:
+      {
+        bool isflatset = connitm==MOM_PREDEFITM(flatten_set);
+        if (nodarity==0)
+          throw MOM_RUNTIME_PRINTF("%s expr %s in %s should have at least one argument",
+                                   isflatset?"flatten_set":"flatten_tuple",
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm));
+        if (scan_expr(expnod->nod_sons[0], insitm, depth+1, MOM_PREDEFITM(item)) != MOM_PREDEFITM(item))
+          throw MOM_RUNTIME_PRINTF("%s expr %s in %s starts with non-item",
+                                   isflatset?"flatten_set":"flatten_tuple",
+                                   mom_value_cstring(expnod),
+                                   mom_item_cstring(insitm));
+        for (unsigned ix=1; ix<nodarity; ix++)
+          {
+            auto subexpv = expnod->nod_sons[ix];
+            auto subtypitm = scan_expr(subexpv, insitm, depth+1);
+            if (subtypitm!=MOM_PREDEFITM(value) && subtypitm!=MOM_PREDEFITM(item))
+              throw MOM_RUNTIME_PRINTF("type mismatch for son#%d of %s variadic expr %s in instr %s",
+                                       ix, mom_item_cstring(connitm),
+                                       mom_value_cstring(expnod),
+                                       mom_item_cstring(insitm));
+          }
+        return MOM_PREDEFITM(value);
+      }
+      break;
     default:
 defaultcaseconn:
       {
@@ -4591,6 +4620,47 @@ tuplesetcase:
         vectree.clear();
         MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
                         istuple?"tuple":"set", mom_value_cstring(restree));
+        return restree;
+      }
+      break;
+    ////
+    case CASE_EXPCONN_MOM(flatten_tuple):
+      goto flatuplesetcase;
+    case CASE_EXPCONN_MOM(flatten_set):
+flatuplesetcase:
+      {
+        bool istuple = (connitm == MOM_PREDEFITM(tuple));
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s: %s", istuple?"flatten_tuple":"dlatten_set",
+                        mom_value_cstring(expnod));
+        traced_vector_values_t vectree;
+        vectree.resize(3*nodarity + 7);
+        vectree.push_back(istuple
+                          ?literal_string("/*flatten_tuple*/(mom_boxtuple_flatten_make_va((")
+                          :literal_string("/*flatten_set*/(mom_boxset_flatten_make_va(("));
+        auto itemexp = expnod->nod_sons[0];
+        auto itemtree = transform_expr(itemexp,initm);
+        vectree.push_back(itemtree);
+        vectree.push_back(literal_string("),"));
+        vectree.push_back(mom_int_make(nodarity));
+        for (unsigned ix=1; ix<nodarity; ix++)
+          {
+            auto cursonexp = expnod->nod_sons[ix];
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursonexp=%s",
+                            istuple?"flatten_tuple":"flatten_set", ix, mom_value_cstring(cursonexp));
+            auto cursontree = transform_expr(cursonexp, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursontree=%s",
+                            istuple?"flatten_tuple":"flatten_set", ix, mom_value_cstring(cursontree));
+            vectree.push_back(literal_string(", ("));
+            vectree.push_back(cursontree);
+            vectree.push_back(")");
+          }
+        vectree.push_back(istuple
+                          ?literal_string("))/*endflattentuple*/")
+                          :literal_string("))/*endflattenset*/"));
+        auto restree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
+        vectree.clear();
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
+                        istuple?"flatten_tuple":"flatten_set", mom_value_cstring(restree));
         return restree;
       }
       break;
