@@ -4231,21 +4231,47 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                               mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
               momvalue_t typeval = mom_unsync_item_get_phys_attr (locitm, MOM_PREDEFITM(type));
               auto typeitm = mom_dyncast_item(typeval);
+              MOM_DEBUGPRINTF(gencod,
+                              "c-transform_block blkitm=%s lix#%d locitm=%s typeitm=%s",
+                              mom_item_cstring(blkitm), lix, mom_item_cstring(locitm), mom_item_cstring(typeitm));
               if (typeitm != nullptr)
                 {
                   assert (is_locked_item(typeitm));
+                  MOM_DEBUGPRINTF(gencod,
+                                  "c-transform_block blkitm=%s lix#%d locitm=%s typeitm:=%s",
+                                  mom_item_cstring(blkitm), lix,
+                                  mom_item_cstring(locitm), mom_item_content_cstring(typeitm));
                   momvalue_t typecexp = nullptr;
-                  if (mom_unsync_item_descr(typeitm) == MOM_PREDEFITM(type)
-                      && (typecexp = mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(c_code))) != nullptr)
+                  if (mom_unsync_item_descr(typeitm) == MOM_PREDEFITM(type))
                     {
-                      curloctree = //
-                        mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                                  typecexp,
-                                                  literal_string(" "),
-                                                  literal_string(CLOCAL_PREFIX),
-                                                  locitm,
-                                                  literal_string(" = "),
-                                                  literal_string("/*nothing*/0"));
+
+                      typecexp = mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(c_code));
+                      if (typecexp != nullptr)
+                        {
+                          curloctree = //
+                            mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                                      typecexp,
+                                                      literal_string(" "),
+                                                      literal_string(CLOCAL_PREFIX),
+                                                      locitm,
+                                                      literal_string(" = "),
+                                                      literal_string("/*nothing*/0"));
+                        }
+                      else
+                        {
+                          auto tytypitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(typeitm, MOM_PREDEFITM(type)));
+                          auto tybind = get_binding(typeitm);
+                          MOM_DEBUGPRINTF(gencod,
+                                          "c-transform_block blkitm=%s lix#%d locitm=%s typeitm=%s tytypitm=%s tybind rol=%s what=%s",
+                                          mom_item_cstring(blkitm), lix,
+                                          mom_item_cstring(locitm), mom_item_cstring(typeitm), mom_item_cstring(tytypitm),
+                                          mom_item_cstring(tybind?tybind->vd_rolitm:NULL),
+                                          mom_value_cstring(tybind?tybind->vd_what:NULL));
+#warning c-transform_block local with unhandled type
+                          MOM_FATAPRINTF("c-transform_block blkitm=%s lix#%d locitm=%s unhandled typeitm=%s",
+                                         mom_item_cstring(blkitm), lix,
+                                         mom_item_cstring(locitm), mom_item_cstring(typeitm));
+                        }
                     }
                 }
               else
@@ -4255,12 +4281,14 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                                                      literal_string(CLOCAL_PREFIX),
                                                      locitm);
                   MOM_DEBUGPRINTF(gencod,
-                                  "c-transform_block blkitm=%s lix#%d vartree=%s",
-                                  mom_item_cstring(blkitm), lix, mom_value_cstring(vartree));
+                                  "c-transform_block blkitm=%s lix#%d locitm=%s vartree=%s",
+                                  mom_item_cstring(blkitm), lix,
+                                  mom_item_cstring(locitm), mom_value_cstring(vartree));
                   auto declvtree = transform_type_for(typeval, vartree, &scalar);
                   MOM_DEBUGPRINTF(gencod,
-                                  "c-transform_block blkitm=%s lix#%d declvtree=%s scalar %s",
+                                  "c-transform_block blkitm=%s lix#%d locitm=%s declvtree=%s scalar %s",
                                   mom_item_cstring(blkitm), lix,
+                                  mom_item_cstring(locitm),
                                   mom_value_cstring(declvtree),
                                   scalar?"true":"false");
                   if (scalar)
