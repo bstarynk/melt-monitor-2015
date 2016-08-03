@@ -4504,57 +4504,57 @@ plusmultcase:
       }
       break;
     case CASE_EXPCONN_MOM(sub):
-      {
-        assert (nodarity==2);
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub: %s", mom_value_cstring(expnod));
-	auto leftree = transform_expr(expnod->nod_sons[0], initm);
-	auto rightree = transform_expr(expnod->nod_sons[1], initm);
-	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
-					   literal_string("("),
-					   literal_string("("),
-					   leftree,
-					   literal_string(") - ("),
-					   rightree,
-					   literal_string(")"),
-					   literal_string(")"));
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub gives restree=%s", mom_value_cstring(restree));
-	return restree;
-      }
-      break;
+    {
+      assert (nodarity==2);
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub: %s", mom_value_cstring(expnod));
+      auto leftree = transform_expr(expnod->nod_sons[0], initm);
+      auto rightree = transform_expr(expnod->nod_sons[1], initm);
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+                                         literal_string("("),
+                                         literal_string("("),
+                                         leftree,
+                                         literal_string(") - ("),
+                                         rightree,
+                                         literal_string(")"),
+                                         literal_string(")"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sub gives restree=%s", mom_value_cstring(restree));
+      return restree;
+    }
+    break;
     case CASE_EXPCONN_MOM(div):
-      {
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div: %s", mom_value_cstring(expnod));
-	auto leftree = transform_expr(expnod->nod_sons[0], initm);
-	auto rightree = transform_expr(expnod->nod_sons[1], initm);
-	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
-					   literal_string("("),
-					   literal_string("("),
-					   leftree,
-					   literal_string(") / ("),
-					   rightree,
-					   literal_string(")"),
-					   literal_string(")"));
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div gives restree=%s", mom_value_cstring(restree));
-	return restree;
-      }
-      break;
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div: %s", mom_value_cstring(expnod));
+      auto leftree = transform_expr(expnod->nod_sons[0], initm);
+      auto rightree = transform_expr(expnod->nod_sons[1], initm);
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+                                         literal_string("("),
+                                         literal_string("("),
+                                         leftree,
+                                         literal_string(") / ("),
+                                         rightree,
+                                         literal_string(")"),
+                                         literal_string(")"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr div gives restree=%s", mom_value_cstring(restree));
+      return restree;
+    }
+    break;
     case CASE_EXPCONN_MOM(mod):
-      {
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod: %s", mom_value_cstring(expnod));
-	auto leftree = transform_expr(expnod->nod_sons[0], initm);
-	auto rightree = transform_expr(expnod->nod_sons[1], initm);
-	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
-					   literal_string("("),
-					   literal_string("("),
-					   leftree,
-					   literal_string(") % ("),
-					   rightree,
-					   literal_string(")"),
-					   literal_string(")"));
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod gives restree=%s", mom_value_cstring(restree));
-	return restree;
-      }
-      break;
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod: %s", mom_value_cstring(expnod));
+      auto leftree = transform_expr(expnod->nod_sons[0], initm);
+      auto rightree = transform_expr(expnod->nod_sons[1], initm);
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
+                                         literal_string("("),
+                                         literal_string("("),
+                                         leftree,
+                                         literal_string(") % ("),
+                                         rightree,
+                                         literal_string(")"),
+                                         literal_string(")"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr mod gives restree=%s", mom_value_cstring(restree));
+      return restree;
+    }
+    break;
     default:
 defaultcaseconn:
       {
@@ -4727,7 +4727,7 @@ MomCEmitter::transform_node_cast_expr(const struct mom_boxnode_st*expnod, struct
                   mom_value_cstring(argtree));
   if (ccodetree != nullptr)
     {
-      auto ctree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+      auto ctree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 6,
                                        literal_string("("),
                                        mom_boxnode_make_va(MOM_PREDEFITM(comment),
                                            2,
@@ -5310,7 +5310,8 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                               "c-transform_instruction cond insitm=%s cix#%d testtree=%s",
                               mom_item_cstring(insitm), cix,
                               mom_value_cstring(testtree));
-              iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+              iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+                                            mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
                                             (cix==0)?(literal_string("if ")):literal_string("else if "),
                                             literal_string("("),
                                             testtree,
@@ -5319,7 +5320,10 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
             }
           else
             {
-              iftree = literal_string ("else");
+              iftree =
+                mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                                    mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+                                    literal_string ("else"));
             }
           MOM_DEBUGPRINTF(gencod,
                           "c-transform_instruction cond insitm=%s cix#%d iftree=%s",
