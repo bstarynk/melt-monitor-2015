@@ -4437,6 +4437,7 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
                      mom_value_cstring(expnod), mom_item_cstring(initm));
     }
     break;
+    ////
     case CASE_EXPCONN_MOM(and):
       goto orandcase;
     case CASE_EXPCONN_MOM(or):
@@ -4470,6 +4471,7 @@ orandcase:
         return orandtree;
       }
       break;
+    /////
     case CASE_EXPCONN_MOM(plus):
       goto plusmultcase;
     case CASE_EXPCONN_MOM(mult):
@@ -4555,6 +4557,43 @@ plusmultcase:
       return restree;
     }
     break;
+    case CASE_EXPCONN_MOM(tuple):
+      goto tuplesetcase;
+    case CASE_EXPCONN_MOM(set):
+tuplesetcase:
+      {
+        bool istuple = (connitm == MOM_PREDEFITM(tuple));
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s: %s", istuple?"tuple":"set",
+                        mom_value_cstring(expnod));
+        traced_vector_values_t vectree;
+        vectree.resize(3*nodarity + 4);
+        vectree.push_back(istuple
+                          ?literal_string("/*tuple*/(mom_boxtuple_make_va(")
+                          :literal_string("/*set*/(mom_boxset_make_va("));
+        vectree.push_back(mom_int_make(nodarity));
+        for (unsigned ix=0; ix<nodarity; ix++)
+          {
+            auto cursonexp = expnod->nod_sons[ix];
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursonexp=%s",
+                            istuple?"tuple":"set", ix, mom_value_cstring(cursonexp));
+            auto cursontree = transform_expr(cursonexp, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursontree=%s",
+                            istuple?"tuple":"set", ix, mom_value_cstring(cursontree));
+            vectree.push_back(literal_string(", ("));
+            vectree.push_back(cursontree);
+            vectree.push_back(")");
+          }
+        vectree.push_back(istuple
+                          ?literal_string("))/*endtuple*/")
+                          :literal_string("))/*endset*/"));
+        auto restree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
+        vectree.clear();
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
+                        istuple?"tuple":"set", mom_value_cstring(restree));
+        return restree;
+      }
+      break;
+    ////
     default:
 defaultcaseconn:
       {
