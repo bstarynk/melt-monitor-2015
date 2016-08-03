@@ -369,9 +369,9 @@ mom_boxtuple_make_arr2 (unsigned siz1, const struct mom_item_st *const *arr1,
   tup->va_itype = MOMITY_TUPLE;
   tup->va_size = tsiz;
   for (unsigned ix = 0; ix < siz1; ix++)
-    tup->seqitem[ix] = (struct mom_item_st *) (arr1[ix]);
+    tup->seqitem[ix] = mom_dyncast_item (arr1[ix]);
   for (unsigned ix = 0; ix < siz2; ix++)
-    tup->seqitem[siz1 + ix] = (struct mom_item_st *) (arr2[ix]);
+    tup->seqitem[siz1 + ix] = mom_dyncast_item (arr2[ix]);
   seqitem_hash_compute_mom ((struct mom_seqitems_st *) tup);
   return tup;
 }                               /* end mom_boxtuple_make_arr2 */
@@ -486,14 +486,17 @@ mom_boxset_make_arr2 (unsigned siz1, const struct mom_item_st **arr1,
   unsigned cnt = 0;
   for (unsigned ix = 0; ix < siz1; ix++)
     {
-      if (!arr1[ix] || arr1[ix] == MOM_EMPTY_SLOT)
+      struct mom_item_st *elitm = mom_dyncast_item (arr1[ix]);
+      if (!elitm)
         continue;
-      set->seqitem[cnt++] = (struct mom_item_st *) (arr1[ix]);
+      set->seqitem[cnt++] = elitm;
     }
   for (unsigned ix = 0; ix < siz2; ix++)
     {
-      if (!arr2[ix] || arr2[ix] == MOM_EMPTY_SLOT)
-        set->seqitem[cnt++] = (struct mom_item_st *) (arr2[ix]);
+      struct mom_item_st *elitm = mom_dyncast_item (arr2[ix]);
+      if (!elitm)
+        continue;
+      set->seqitem[cnt++] = elitm;
     }
   if (cnt > 1)
     qsort (set->seqitem, cnt, sizeof (void *), compare_item_ptr_mom);
@@ -537,7 +540,7 @@ mom_boxset_make_va (unsigned siz, ...)
     {
       struct mom_item_st *curitm =
         mom_dyncast_item (va_arg (args, struct mom_item_st *));
-      if (!curitm || curitm == MOM_EMPTY_SLOT)
+      if (!curitm)
         continue;
       arr[cnt++] = curitm;
     };
