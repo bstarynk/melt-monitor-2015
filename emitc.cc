@@ -4557,6 +4557,7 @@ plusmultcase:
       return restree;
     }
     break;
+    ////
     case CASE_EXPCONN_MOM(tuple):
       goto tuplesetcase;
     case CASE_EXPCONN_MOM(set):
@@ -4594,6 +4595,44 @@ tuplesetcase:
       }
       break;
     ////
+    case CASE_EXPCONN_MOM(node):
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr node: %s",
+                      mom_value_cstring(expnod));
+      assert (nodarity>0);
+      traced_vector_values_t vectree;
+      vectree.resize(3*nodarity + 4);
+      vectree.push_back(literal_string("/*node*/(mom_boxnode_make_va(("));
+      {
+        auto connexp = expnod->nod_sons[0];
+        auto conntree = transform_expr(connexp,initm);
+        MOM_DEBUGPRINTF(gencod,
+                        "c-transform_node_expr node connexp=%s conntree=%s",
+                        mom_value_cstring(connexp), mom_value_cstring(conntree));
+        vectree.push_back(conntree);
+      }
+      vectree.push_back(literal_string("),"));
+      vectree.push_back(mom_int_make(nodarity-1));
+      for (int ix=1; ix<(int)nodarity; ix++)
+        {
+          auto cursonexp = expnod->nod_sons[ix];
+          MOM_DEBUGPRINTF(gencod, "c-transform_node_expr node ix#%d cursonexp=%s",
+                          ix, mom_value_cstring(cursonexp));
+          auto cursontree = transform_expr(cursonexp, initm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_node_expr node ix#%d cursontree=%s",
+                          ix, mom_value_cstring(cursontree));
+          vectree.push_back(literal_string(", ("));
+          vectree.push_back(cursontree);
+          vectree.push_back(")");
+        }
+      vectree.push_back(")/*endnode*/");
+      auto restree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
+      vectree.clear();
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_expr node gives %s",
+                      mom_value_cstring(restree));
+      return restree;
+    }
+    break;
     default:
 defaultcaseconn:
       {
