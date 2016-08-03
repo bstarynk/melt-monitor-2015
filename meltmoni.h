@@ -1085,6 +1085,12 @@ mom_boxnode_make (const struct mom_item_st *conn, int size, momvalue_t *sons)
   return mom_boxnode_make_meta (conn, size, sons, NULL, 0);
 }
 
+// return a node with each argument, except that if it is a node of
+// connective itm, we expand to its sons
+const struct mom_boxnode_st *
+mom_boxnode_flatten_make_va (const struct mom_item_st *connitm,
+                             struct mom_item_st *itm, unsigned siz, ...);
+
 const struct mom_boxnode_st *mom_boxnode_meta_make_va (const struct
     mom_item_st *meta,
     momint_t metarank,

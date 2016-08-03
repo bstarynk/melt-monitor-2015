@@ -511,6 +511,7 @@ mom_boxtuple_flatten_make_va (struct mom_item_st *itm, unsigned siz, ...)
           break;
         }
     }
+  va_end (args);
   const struct mom_boxtuple_st *restup =
     mom_boxtuple_make_arr (acnt, (const struct mom_item_st **) arr);
   GC_FREE (arr);
@@ -751,6 +752,7 @@ mom_boxset_flatten_make_va (struct mom_item_st *itm, unsigned siz, ...)
           break;
         }
     }
+  va_end (args);
   const struct mom_boxset_st *setv =
     mom_boxset_make_arr (acnt, (const struct mom_item_st **) arr);
   GC_FREE (arr);
@@ -1031,6 +1033,76 @@ mom_boxnode_make_va (const struct mom_item_st *connitm,
   va_end (args);
   return mom_boxnode_make (connitm, size, arr);
 }                               /* end mom_boxnode_make_va */
+
+
+const struct mom_boxnode_st *
+mom_boxnode_flatten_make_va (const struct mom_item_st *connitm,
+                             struct mom_item_st *itm, unsigned siz, ...)
+{
+  va_list args;
+  if (MOM_UNLIKELY (siz >= 2 * MOM_SIZE_MAX / 3))
+    MOM_FATAPRINTF ("too big flat-node %d", siz);
+  if (mom_itype (connitm) != MOMITY_ITEM)
+    return NULL;
+  if (mom_itype (itm) != MOMITY_ITEM)
+    itm = NULL;
+  if (MOM_UNLIKELY (siz == 0))
+    return mom_boxnode_make_va (connitm, 0);
+  unsigned asiz = mom_prime_above (4 * siz / 3 + 5);
+  unsigned acnt = 0;
+  momvalue_t *arr = mom_gc_alloc (asiz * sizeof (void *));
+  va_start (args, siz);
+  for (int aix = 0; aix < (int) siz; aix++)
+    {
+      if (MOM_UNLIKELY (acnt + 1 >= asiz))
+        {
+          unsigned newsiz = mom_prime_above ((5 * asiz) / 4 + siz / 8 + 9);
+          momvalue_t *newarr = mom_gc_alloc (newsiz * sizeof (void *));
+          memcpy (newarr, arr, acnt * sizeof (void *));
+          GC_FREE (arr);
+          arr = newarr;
+          asiz = newsiz;
+        };
+      momvalue_t curarg = va_arg (args, momvalue_t);
+      unsigned curtyp = mom_itype (curarg);
+      if (curtyp == MOMITY_NONE)
+        curarg = NULL;
+      if (curtyp == MOMITY_NODE)
+        {
+          const struct mom_boxnode_st *curnod =
+            (const struct mom_boxnode_st *) curarg;
+          if (itm && curnod->nod_connitm == itm)
+            {
+              unsigned nodsiz = mom_raw_size (curnod);
+              if (MOM_UNLIKELY (acnt + nodsiz + 1 >= asiz))
+                {
+                  unsigned newsiz =
+                    mom_prime_above ((5 * asiz) / 4 + siz / 8 +
+                                     (5 * nodsiz) / 4 + 9);
+                  momvalue_t *newarr =
+                    mom_gc_alloc (newsiz * sizeof (void *));
+                  memcpy (newarr, arr, acnt * sizeof (void *));
+                  GC_FREE (arr);
+                  arr = newarr;
+                  asiz = newsiz;
+                };
+              memcpy (arr + acnt, curnod->nod_sons,
+                      nodsiz * sizeof (momvalue_t));
+              acnt += nodsiz;
+            }
+          else
+            arr[acnt++] = curarg;
+        }
+      else
+        arr[acnt++] = curarg;
+    }
+  va_end (args);
+  const struct mom_boxnode_st *resnod = mom_boxnode_make (connitm, acnt, arr);
+  GC_FREE (arr);
+  return resnod;
+}                               /* end mom_boxnode_flatten_make_va */
+
+
 
 const struct mom_boxnode_st *
 mom_boxnode_meta_make_sentinel_va (const struct mom_item_st *metaitm,
@@ -2025,3 +2097,5 @@ momf_ldp_nodemeta (struct mom_item_st *itm,
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
                                       nod));
 }                               /* end of momf_ldp_nodemeta */
+
+/* end of file value.c */
