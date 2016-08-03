@@ -4433,7 +4433,7 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
           return verbtree;
         }
 #warning MomCEmitter::transform_node_expr verbatim unimplemented
-      MOM_FATAPRINTF("unimplemented c-transform_node_expr of verbatim-expr %s in %s",
+      MOM_FATAPRINTF("unimplemented c-transform_node_expr of non-item verbatim-expr %s in %s",
                      mom_value_cstring(expnod), mom_item_cstring(initm));
     }
     break;
@@ -4468,6 +4468,39 @@ orandcase:
         MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
                         isor?"or":"and", mom_value_cstring(orandtree));
         return orandtree;
+      }
+      break;
+    case CASE_EXPCONN_MOM(plus):
+      goto plusmultcase;
+    case CASE_EXPCONN_MOM(mult):
+plusmultcase:
+      {
+        bool isplus = connitm == MOM_PREDEFITM(plus);
+        assert (nodarity>0);
+        traced_vector_values_t vectree;
+        vectree.resize(2*nodarity + 4);
+        vectree.push_back(literal_string("("));
+        for (unsigned ix=0; ix<nodarity; ix++)
+          {
+            auto cursonexp = expnod->nod_sons[ix];
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursonexp=%s",
+                            isplus?"plus":"mult", ix, mom_value_cstring(cursonexp));
+            auto cursontree = transform_expr(cursonexp, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursontree=%s",
+                            isplus?"plus":"mult", ix, mom_value_cstring(cursontree));
+            if (ix>0)
+              vectree.push_back(isplus?literal_string(") + ("):literal_string(") * ("));
+            else
+              vectree.push_back("(");
+            vectree.push_back(cursontree);
+          }
+        vectree.push_back(literal_string(")"));
+        vectree.push_back(literal_string(")"));
+        auto plusmulttree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
+        vectree.clear();
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
+                        isplus?"plus":"mult", mom_value_cstring(plusmulttree));
+        return plusmulttree;
       }
       break;
     default:
