@@ -2542,10 +2542,10 @@ primitivecase:
       auto fldbind = get_binding(connitm);
       auto typval = mom_unsync_item_get_phys_attr(connitm, MOM_PREDEFITM(type));
       if (!fldbind)
-	throw MOM_RUNTIME_PRINTF("undeclared field %s in expnod %s instr %s",
-				 mom_item_cstring(connitm),
-				 mom_value_cstring(expnod),
-				 mom_item_cstring(insitm));
+        throw MOM_RUNTIME_PRINTF("undeclared field %s in expnod %s instr %s",
+                                 mom_item_cstring(connitm),
+                                 mom_value_cstring(expnod),
+                                 mom_item_cstring(insitm));
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s field bind role %s what %s typval=%s typitm=%s",
                       mom_value_cstring(expnod), mom_item_cstring(fldbind->vd_rolitm),
@@ -2553,12 +2553,13 @@ primitivecase:
       if (mom_itype(typval)==MOMITY_ITEM)
         {
           auto typvitm = (mom_item_st*)typval;
-	  if (typvitm == typitm || !typitm) {
-	    MOM_DEBUGPRINTF(gencod,
-			    "scan_node_descr_conn_expr expnod=%s gives typvitm=%s",
-			    mom_value_cstring(expnod), mom_item_cstring(typvitm));
-	    return typvitm;
-	  }
+          if (typvitm == typitm || !typitm)
+            {
+              MOM_DEBUGPRINTF(gencod,
+                              "scan_node_descr_conn_expr expnod=%s gives typvitm=%s",
+                              mom_value_cstring(expnod), mom_item_cstring(typvitm));
+              return typvitm;
+            }
         }
 #warning C-scan_node_descr_conn_expr unimplemented field
       MOM_FATAPRINTF("scan_node_descr_conn_expr unimplemented field expnod=%s", mom_value_cstring(expnod));
@@ -4441,9 +4442,32 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
     case CASE_EXPCONN_MOM(or):
 orandcase:
       {
-#warning MomCEmitter::transform_node_expr and/or unimplemented
-        MOM_FATAPRINTF("unimplemented c-transform_node_expr of and/or-expr %s in %s",
-                       mom_value_cstring(expnod), mom_item_cstring(initm));
+        bool isor = connitm == MOM_PREDEFITM(or);
+        assert (nodarity>0);
+        traced_vector_values_t vectree;
+        vectree.resize(2*nodarity + 4);
+        vectree.push_back(literal_string("("));
+        for (unsigned ix=0; ix<nodarity; ix++)
+          {
+            auto cursonexp = expnod->nod_sons[ix];
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursonexp=%s",
+                            isor?"or":"and", ix, mom_value_cstring(cursonexp));
+            auto cursontree = transform_expr(cursonexp, initm);
+            MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s ix#%d cursontree=%s",
+                            isor?"or":"and", ix, mom_value_cstring(cursontree));
+            if (ix>0)
+              vectree.push_back(isor?literal_string(") || ("):literal_string(") && ("));
+            else
+              vectree.push_back("(");
+            vectree.push_back(cursontree);
+          }
+        vectree.push_back(literal_string(")"));
+        vectree.push_back(literal_string(")"));
+        auto orandtree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
+        vectree.clear();
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
+                        isor?"or":"and", mom_value_cstring(orandtree));
+        return orandtree;
       }
       break;
     default:
