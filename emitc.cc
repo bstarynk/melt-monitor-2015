@@ -5257,7 +5257,7 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
           auto comptypv = typnod->nod_sons[0];
           auto flexvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
                                                   vartree,
-                                                  literal_string("[]"));
+                                                  literal_string("[MOM_FLEXIBLE_DIM]"));
           MOM_DEBUGPRINTF(gencod, "c-transform_type_for flexvartree=%s comptypv=%s",
                           mom_value_cstring(flexvartree), mom_value_cstring(comptypv));
           restree = transform_type_for(comptypv, flexvartree);
