@@ -268,7 +268,7 @@ mom_dumpemit_filebuffer_payload (struct mom_dumper_st *du,
     mom_filebuffer_boxstring (fb, MOM_FILEBUFFER_KEEPOPEN);
   if (!bs)
     return;
-  const char *pc = bs->cstr;
+  const char *pc = bs->boxs_cstr;
   unsigned len = mom_raw_size (bs);
   assert (pc[len] == (char) 0);
   const char *end = pc + len;

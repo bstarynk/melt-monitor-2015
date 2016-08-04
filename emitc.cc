@@ -2977,7 +2977,7 @@ MomEmitter::write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, c
     break;
     case MOMITY_BOXSTRING:
     {
-      fputs(((const struct mom_boxstring_st*)val)->cstr, out);
+      fputs(((const struct mom_boxstring_st*)val)->boxs_cstr, out);
     }
     break;
     case MOMITY_NODE:
@@ -3063,7 +3063,7 @@ verbatimcase:
         if (mom_itype(sonv) != MOMITY_BOXSTRING)
           throw  MOM_RUNTIME_PRINTF("expecting string son write_node %s depth=%d forv=%s",
                                     mom_value_cstring(nod), depth, mom_value_cstring(forv));
-        auto str = ((const struct mom_boxstring_st*)sonv)->cstr;
+        auto str = ((const struct mom_boxstring_st*)sonv)->boxs_cstr;
         auto ln = mom_raw_size(sonv);
         if (!verb) fputs(" \"", out);
         mom_output_utf8_encoded (out, str, ln);
@@ -3079,11 +3079,11 @@ verbatimcase:
           if (mom_itype(sonv) == MOMITY_BOXSTRING)
             {
               auto strson = (const mom_boxstring_st*)sonv;
-              if (strstr(strson->cstr, "*/") || strchr(strson->cstr, '\n'))
+              if (strstr(strson->boxs_cstr, "*/") || strchr(strson->boxs_cstr, '\n'))
                 throw MOM_RUNTIME_PRINTF("bad string son in comment: %s",
                                          mom_value_cstring(nod));
               else
-                fputs(strson->cstr, out);
+                fputs(strson->boxs_cstr, out);
             }
           else
             {

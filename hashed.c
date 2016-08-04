@@ -704,7 +704,7 @@ mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass, //
       if (!curkey)
         return NULL;
       if (curkey->hva_hash == h && curkey->va_itype == MOMITY_BOXSTRING
-          && !strcmp (((struct mom_boxstring_st *) curkey)->cstr, cstr))
+          && !strcmp (((struct mom_boxstring_st *) curkey)->boxs_cstr, cstr))
         return hass->hass_ents[ix].hass_val;
     }
   for (unsigned ix = 0; ix < startix; ix++)
@@ -715,7 +715,7 @@ mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass, //
       if (!curkey)
         return NULL;
       if (curkey->hva_hash == h && curkey->va_itype == MOMITY_BOXSTRING
-          && !strcmp (((struct mom_boxstring_st *) curkey)->cstr, cstr))
+          && !strcmp (((struct mom_boxstring_st *) curkey)->boxs_cstr, cstr))
         return hass->hass_ents[ix].hass_val;
     }
   return NULL;

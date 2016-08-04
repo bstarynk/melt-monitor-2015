@@ -812,7 +812,7 @@ struct mom_boxstring_st
 {
   MOM_HASHEDVALUE_FIELDS;
   // here
-  char cstr[MOM_FLEXIBLE_DIM];  /* actual size mom_raw_size+1 */
+  char boxs_cstr[MOM_FLEXIBLE_DIM];  /* actual size mom_raw_size+1 */
 };
 
 static inline const struct mom_boxstring_st *
@@ -828,7 +828,7 @@ mom_boxstring_cstr (const void *p)
 {
   const struct mom_boxstring_st *str = mom_dyncast_boxstring (p);
   if (str)
-    return str->cstr;
+    return str->boxs_cstr;
   return NULL;
 }
 
@@ -1735,7 +1735,7 @@ static inline const char *
 mom_item_radix_str (const struct mom_item_st *itm)
 {
   if (itm)
-    return itm->itm_radix->itname_string.cstr;
+    return itm->itm_radix->itname_string.boxs_cstr;
   else
     return NULL;
 }

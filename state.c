@@ -806,7 +806,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
     }
   while (nbtry < 20 && access (predbuf, F_OK));
   du->du_predefhtmpath = mom_boxstring_make (predbuf);
-  FILE *fpred = fopen (du->du_predefhtmpath->cstr, "w");
+  FILE *fpred = fopen (du->du_predefhtmpath->boxs_cstr, "w");
   if (!fpred)
     {
       int e = errno;
@@ -815,7 +815,7 @@ dump_emit_predefined_header_mom (struct mom_dumper_st *du)
       if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
         strcpy (cwdbuf, "./");
       MOM_FATAPRINTF ("failed to open predefined header %s in %s: %s",
-                      du->du_predefhtmpath->cstr, cwdbuf, strerror (e));
+                      du->du_predefhtmpath->boxs_cstr, cwdbuf, strerror (e));
     }
   mom_output_gplv3_notice (fpred, "///", "", MOM_HEADER_PREDEF);
   fputs ("\n", fpred);
@@ -858,8 +858,8 @@ dump_emit_global_mom (struct mom_dumper_st *du)
     }
   while (nbtry < 20 && access (globuf, F_OK));
   du->du_globaltmpath = mom_boxstring_make (globuf);
-  MOM_DEBUGPRINTF (dump, "globaltmpath %s", du->du_globaltmpath->cstr);
-  FILE *fglob = fopen (du->du_globaltmpath->cstr, "w");
+  MOM_DEBUGPRINTF (dump, "globaltmpath %s", du->du_globaltmpath->boxs_cstr);
+  FILE *fglob = fopen (du->du_globaltmpath->boxs_cstr, "w");
   if (!fglob)
     {
       int e = errno;
@@ -868,7 +868,7 @@ dump_emit_global_mom (struct mom_dumper_st *du)
       if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
         strcpy (cwdbuf, "./");
       MOM_FATAPRINTF ("failed to open global %s in %s: %s",
-                      du->du_globaltmpath->cstr, cwdbuf, strerror (e));
+                      du->du_globaltmpath->boxs_cstr, cwdbuf, strerror (e));
     }
   du->du_emitfile = fglob;
   mom_output_gplv3_notice (fglob, "##", "", MOM_GLOBAL_STATE);
@@ -983,18 +983,18 @@ mom_dump_state (void)
   errno = 0;
   /// should rename the temporary files
   (void) rename ("global.mom", "global.mom%");
-  if (rename (du->du_globaltmpath->cstr, "global.mom"))
+  if (rename (du->du_globaltmpath->boxs_cstr, "global.mom"))
     MOM_FATAPRINTF ("failed to rename %s to global.mom : %m",
-                    du->du_globaltmpath->cstr);
+                    du->du_globaltmpath->boxs_cstr);
   struct stat statprevpredef = { };
   struct stat stattmprefedef = { };
   bool sameheaderfile = false;
   if (!stat (MOM_HEADER_PREDEF, &statprevpredef)
-      && !stat (du->du_predefhtmpath->cstr, &stattmprefedef)
+      && !stat (du->du_predefhtmpath->boxs_cstr, &stattmprefedef)
       && statprevpredef.st_size == stattmprefedef.st_size)
     {
       FILE *prevpf = fopen (MOM_HEADER_PREDEF, "r");
-      FILE *tmpf = fopen (du->du_predefhtmpath->cstr, "r");
+      FILE *tmpf = fopen (du->du_predefhtmpath->boxs_cstr, "r");
       if (prevpf && tmpf)
         {
           sameheaderfile = true;
@@ -1016,17 +1016,17 @@ mom_dump_state (void)
   if (!sameheaderfile)
     {
       (void) rename (MOM_HEADER_PREDEF, MOM_HEADER_PREDEF "%");
-      if (rename (du->du_predefhtmpath->cstr, MOM_HEADER_PREDEF))
+      if (rename (du->du_predefhtmpath->boxs_cstr, MOM_HEADER_PREDEF))
         MOM_FATAPRINTF ("failed to rename %s to " MOM_HEADER_PREDEF " : %m",
-                        du->du_predefhtmpath->cstr);
+                        du->du_predefhtmpath->boxs_cstr);
     }
   else
     {
       MOM_INFORMPRINTF ("header file %s did not change, sized %ld\n",
                         MOM_HEADER_PREDEF, statprevpredef.st_size);
-      if (remove (du->du_predefhtmpath->cstr))
+      if (remove (du->du_predefhtmpath->boxs_cstr))
         MOM_FATAPRINTF ("failed to remove temporary %s : %m",
-                        du->du_predefhtmpath->cstr);
+                        du->du_predefhtmpath->boxs_cstr);
     }
   MOM_DEBUGPRINTF (dump, "itemset=%s",
                    mom_value_cstring ((const struct mom_hashedvalue_st *)

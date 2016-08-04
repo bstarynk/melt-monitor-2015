@@ -196,7 +196,7 @@ mom_boxstring_make (const char *s)
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_size = ln;
   bs->hva_hash = mom_cstring_hash_len (s, ln);
-  memcpy (bs->cstr, s, ln);
+  memcpy (bs->boxs_cstr, s, ln);
   return bs;
 }
 
@@ -220,7 +220,7 @@ mom_boxstring_make_len (const char *s, int len)
   bs->va_itype = MOMITY_BOXSTRING;
   bs->va_size = len;
   bs->hva_hash = mom_cstring_hash_len (s, len);
-  memcpy (bs->cstr, s, len);
+  memcpy (bs->boxs_cstr, s, len);
   return bs;
 }
 
@@ -248,11 +248,11 @@ mom_boxstring_printf (const char *fmt, ...)
       bsv->va_itype = MOMITY_BOXSTRING;
       bsv->va_size = ln;
       va_start (args, fmt);
-      if (MOM_UNLIKELY (ln != vsnprintf (bsv->cstr, ln + 1, fmt, args)))
+      if (MOM_UNLIKELY (ln != vsnprintf (bsv->boxs_cstr, ln + 1, fmt, args)))
         MOM_FATAPRINTF ("mom_boxstring_printf big ln=%d fmt=%s failure",
                         ln, fmt);
       va_end (args);
-      bsv->hva_hash = mom_cstring_hash_len (bsv->cstr, ln);
+      bsv->hva_hash = mom_cstring_hash_len (bsv->boxs_cstr, ln);
     }
   return bsv;
 }                               /* end of mom_boxstring_printf */
@@ -1437,7 +1437,7 @@ mom_dumpemit_value (struct mom_dumper_st *du,
         const struct mom_boxstring_st *vstr
           = (const struct mom_boxstring_st *) val;
         fputc ('"', femit);
-        mom_output_utf8_encoded (femit, vstr->cstr, mom_raw_size (val));
+        mom_output_utf8_encoded (femit, vstr->boxs_cstr, mom_raw_size (val));
         fputs ("\"_\n", femit);
       }
       return;
@@ -1535,7 +1535,7 @@ mom_output_value (FILE *fout, long *plastnl, int depth, const momvalue_t val)
       {
         fputc ('"', fout);
         mom_output_utf8_encoded (fout,
-                                 ((struct mom_boxstring_st *) val)->cstr,
+                                 ((struct mom_boxstring_st *) val)->boxs_cstr,
                                  mom_size (val));
         fputc ('"', fout);
       }
@@ -1776,8 +1776,8 @@ mom_hashedvalue_equal (const struct mom_hashedvalue_st * val1,
         return false;
       }
     case MOMITY_BOXSTRING:
-      return !strcmp (((const struct mom_boxstring_st *) val1)->cstr,
-                      ((const struct mom_boxstring_st *) val2)->cstr);
+      return !strcmp (((const struct mom_boxstring_st *) val1)->boxs_cstr,
+                      ((const struct mom_boxstring_st *) val2)->boxs_cstr);
     case MOMITY_ITEM:
       return val1 == val2;
     case MOMITY_TUPLE:
@@ -1887,8 +1887,8 @@ mom_hashedvalue_cmp (const struct mom_hashedvalue_st *val1,
       }
     case MOMITY_BOXSTRING:
       {
-        int c = strcmp (((const struct mom_boxstring_st *) val1)->cstr,
-                        ((const struct mom_boxstring_st *) val2)->cstr);
+        int c = strcmp (((const struct mom_boxstring_st *) val1)->boxs_cstr,
+                        ((const struct mom_boxstring_st *) val2)->boxs_cstr);
         if (c < 0)
           return -1;
         else if (c > 0)
