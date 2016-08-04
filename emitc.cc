@@ -4218,9 +4218,7 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
       momvalue_t localtree= nullptr;
       if (nblocals>0)
         {
-          momvalue_t smallocarr[8]= {};
-          momvalue_t* locarr = (nblocals<sizeof(smallocarr)/sizeof(momvalue_t)) ? smallocarr
-                               : (momvalue_t*) mom_gc_alloc(nblocals*sizeof(momvalue_t));
+          traced_vector_values_t vecloctree;
           for (int lix=0; lix<(int)nblocals; lix++)
             {
               momvalue_t curloctree = nullptr;
@@ -4295,6 +4293,10 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                                            mom_item_cstring(locitm), mom_item_cstring(typeitm));
                         }
                     }
+                  MOM_DEBUGPRINTF(gencod,
+                                  "c-transform_block lix#%d locitm=%s typeitm=%s curloctree=%s",
+                                  lix, mom_item_cstring(locitm),
+                                  mom_item_cstring(typeitm), mom_value_cstring(curloctree));
                 }
               else
                 {
@@ -4318,13 +4320,13 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                       mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                                 declvtree,
                                                 literal_string(" = "),
-                                                literal_string("/*nothing*/0"));
+                                                literal_string("/*nothing*/0;"));
                   else
                     curloctree = //
                       mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                                 declvtree,
                                                 literal_string(" = "),
-                                                literal_string("/*empty*/{}"));
+                                                literal_string("/*empty*/{};"));
                   MOM_DEBUGPRINTF(gencod,
                                   "c-transform_block blkitm=%s lix#%d locitm=%s curloctree=%s",
                                   mom_item_cstring(blkitm), lix, mom_item_cstring(locitm),
@@ -4337,21 +4339,23 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                 MOM_FATAPRINTF("c-transform_block blkitm=%s unhandled local lix#%d locitm:=\n%s",
                                mom_item_cstring(blkitm), lix, mom_item_content_cstring(locitm));
               else
-                locarr[lix] = curloctree;
+                vecloctree.push_back(curloctree);
             }
-        }
+          localtree = mom_boxnode_make(MOM_PREDEFITM(out_newline), vecloctree.size(), vecloctree.data());
+          vecloctree.clear();
+        } // end if nblocals>0)
       MOM_DEBUGPRINTF(gencod,
                       "c-transform_block blkitm=%s sequence of body %s localtree=%s",
                       mom_item_content_cstring(blkitm), mom_value_cstring(bodytup),
                       mom_value_cstring(localtree));
       int bodylen = mom_raw_size(bodytup);
-      momvalue_t smalbodyarr[8]= {};
-      momvalue_t* bodyarr =
-        (bodylen<((int)(sizeof(smalbodyarr)/sizeof(momvalue_t))))
-        ? smalbodyarr
-        : (momvalue_t*) mom_gc_alloc(bodylen*sizeof(momvalue_t));
+      traced_vector_values_t bodyvec;
+      bodyvec.reserve(3*bodylen+2);
+      if (localtree)
+        bodyvec.push_back(localtree);
       for (int bix=0; bix<bodylen; bix++)
         {
+          bodyvec.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
           struct mom_item_st*insitm = bodytup->seqitem[bix];
           MOM_DEBUGPRINTF(gencod,
                           "c-transform_block blkitm=%s bix#%d insitm:=\n%s",
@@ -4362,9 +4366,11 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                           "c-transform_block insitm=%s instree=%s",
                           mom_item_cstring(insitm), mom_value_cstring(instree));
           assert (instree != nullptr);
-          bodyarr[bix] = instree;
+          bodyvec.push_back(instree);
         }
-      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodylen,bodyarr);
+      bodyvec.push_back(literal_string(";"));
+      auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodyvec.size(),bodyvec.data());
+      bodyvec.clear();
       auto bracetree =
         mom_boxnode_make_sentinel(MOM_PREDEFITM(brace),
                                   mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
@@ -6968,7 +6974,8 @@ switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
     auto bodytree = mom_boxnode_make(MOM_PREDEFITM(semicolon),bodycnt,bodyarr);
     auto bracetree =
       mom_boxnode_make_va(MOM_PREDEFITM(brace),
-                          4,
+                          5,
+                          mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
                           mom_boxnode_make_va(MOM_PREDEFITM(comment),3,
                               literal_string("block"),
                               literal_string(" "),
