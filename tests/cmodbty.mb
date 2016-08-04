@@ -74,7 +74,7 @@
   ]
 )
 
-  
+ 
 ^global !hashedvalue_ty (
   ^* comment "the type of hashed value"
   ^* descr type
@@ -88,6 +88,23 @@
       )
   ]
 )
+
+^global !boxdouble_ty (
+  ^global
+  ^* comment "the type of boxed double"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !boxd_dbl (
+        ^* comment "the field giving the boxed double"
+        ^* descr field
+        ^* type double
+      )
+  ]
+)
+
+  
 
 ^global !val0 (
    ^* comment "val0 in cmodbty.mb"
@@ -740,11 +757,61 @@
   )
 )
 
+^global !dyncast_boxdouble  (
+  ^* comment "inline function to dynamic-cast a boxed double"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_boxdouble (
+       ^* comment "body of dyncast_boxdouble"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_boxdouble"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_double"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_double))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "block return val0"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return val0"
+                      ^* return val0
+                    )
+                  ]
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-double"
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "else block return nil"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def value_hash dyncast_int
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty valid_value_pointer itype
+     int_val_def value_hash dyncast_int dyncast_boxdouble
    ]
 )
 

@@ -446,13 +446,15 @@ comment
 
 
 *double
-1466672331
+1470315691
 ^mtime
 (
 c_code
 "double"_
 comment
 "for double & boxed doubles"_
+descr
+type
 notice
 (
 is_atom
