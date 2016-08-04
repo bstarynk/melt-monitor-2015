@@ -32,7 +32,7 @@
 // see http://stackoverflow.com/a/4413035/841108
 #define MOM_FLEXIBLE_DIM 1
 
-#include <features.h>		// GNU things
+#include <features.h>   // GNU things
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -266,7 +266,7 @@ typedef intptr_t momint_t;
 #ifdef NDEBUG
 #define MOM_PRIVATE static
 #else
-#define MOM_PRIVATE		/*nothing */
+#define MOM_PRIVATE   /*nothing */
 #endif /*NDEBUG*/
 // A non nil address which is *never* dereferencable and can be used
 // as an empty placeholder; in practice all Unix & POSIX systems dont
@@ -292,18 +292,18 @@ void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
 __attribute__ ((format (printf, 3, 4), noreturn));
 
-#define MOM_FATAPRINTF_AT(Fil,Lin,Fmt,...) do {	\
-    mom_fataprintf_at (Fil,Lin,Fmt,		\
-		       ##__VA_ARGS__);		\
+#define MOM_FATAPRINTF_AT(Fil,Lin,Fmt,...) do { \
+    mom_fataprintf_at (Fil,Lin,Fmt,   \
+           ##__VA_ARGS__);    \
   } while(0)
 
-#define MOM_FATAPRINTF_AT_BIS(Fil,Lin,Fmt,...)	\
-  MOM_FATAPRINTF_AT(Fil,Lin,Fmt,		\
-		    ##__VA_ARGS__)
+#define MOM_FATAPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
+  MOM_FATAPRINTF_AT(Fil,Lin,Fmt,    \
+        ##__VA_ARGS__)
 
-#define MOM_FATAPRINTF(Fmt,...)			\
-  MOM_FATAPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
-			##__VA_ARGS__)
+#define MOM_FATAPRINTF(Fmt,...)     \
+  MOM_FATAPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
+      ##__VA_ARGS__)
 
 
 
@@ -346,21 +346,21 @@ static inline char *mom_gc_strdup (const char *s)
 #endif // NDEBUG || !MOM_GCDEBUG
 
 // for debugging; the color level are user-definable:
-#define MOM_DEBUG_LIST_OPTIONS(Dbg)		\
-  Dbg(cmd)					\
-  Dbg(garbcoll)					\
-  Dbg(dump)					\
-  Dbg(gencod)					\
-  Dbg(item)					\
-  Dbg(load)					\
-  Dbg(low)					\
-  Dbg(mutex)					\
-  Dbg(run)					\
-  Dbg(boot)					\
-  Dbg(blue)					\
-  Dbg(green)					\
-  Dbg(red)					\
-  Dbg(yellow)					\
+#define MOM_DEBUG_LIST_OPTIONS(Dbg)   \
+  Dbg(cmd)          \
+  Dbg(garbcoll)         \
+  Dbg(dump)         \
+  Dbg(gencod)         \
+  Dbg(item)         \
+  Dbg(load)         \
+  Dbg(low)          \
+  Dbg(mutex)          \
+  Dbg(run)          \
+  Dbg(boot)         \
+  Dbg(blue)         \
+  Dbg(green)          \
+  Dbg(red)          \
+  Dbg(yellow)         \
   Dbg(web)
 
 #define MOM_DEBUG_DEFINE_OPT(Nam) momdbg_##Nam,
@@ -382,51 +382,51 @@ mom_debugprintf_at (const char *fil, int lin, enum mom_debug_en dbg,
                     const char *fmt, ...)
 __attribute__ ((format (printf, 4, 5)));
 
-#define MOM_DEBUGPRINTF_AT(Fil,Lin,Dbg,Fmt,...) do {	\
-    if (MOM_IS_DEBUGGING(Dbg))				\
-      mom_debugprintf_at (Fil,Lin,momdbg_##Dbg,Fmt,	\
-			  ##__VA_ARGS__);		\
+#define MOM_DEBUGPRINTF_AT(Fil,Lin,Dbg,Fmt,...) do {  \
+    if (MOM_IS_DEBUGGING(Dbg))        \
+      mom_debugprintf_at (Fil,Lin,momdbg_##Dbg,Fmt, \
+        ##__VA_ARGS__);   \
   } while(0)
 
-#define MOM_DEBUGPRINTF_AT_BIS(Fil,Lin,Dbg,Fmt,...)	\
-  MOM_DEBUGPRINTF_AT(Fil,Lin,Dbg,Fmt,			\
-		     ##__VA_ARGS__)
+#define MOM_DEBUGPRINTF_AT_BIS(Fil,Lin,Dbg,Fmt,...) \
+  MOM_DEBUGPRINTF_AT(Fil,Lin,Dbg,Fmt,     \
+         ##__VA_ARGS__)
 
-#define MOM_DEBUGPRINTF(Dbg,Fmt,...)			\
-  MOM_DEBUGPRINTF_AT_BIS(__FILE__,__LINE__,Dbg,Fmt,	\
-			 ##__VA_ARGS__)
+#define MOM_DEBUGPRINTF(Dbg,Fmt,...)      \
+  MOM_DEBUGPRINTF_AT_BIS(__FILE__,__LINE__,Dbg,Fmt, \
+       ##__VA_ARGS__)
 
 
 void
 mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
 __attribute__ ((format (printf, 3, 4)));
 
-#define MOM_INFORMPRINTF_AT(Fil,Lin,Fmt,...) do {	\
-    mom_informprintf_at (Fil,Lin,Fmt,			\
-			 ##__VA_ARGS__);		\
+#define MOM_INFORMPRINTF_AT(Fil,Lin,Fmt,...) do { \
+    mom_informprintf_at (Fil,Lin,Fmt,     \
+       ##__VA_ARGS__);    \
   } while(0)
 
-#define MOM_INFORMPRINTF_AT_BIS(Fil,Lin,Fmt,...)	\
-  MOM_INFORMPRINTF_AT(Fil,Lin,Fmt,			\
-		      ##__VA_ARGS__)
+#define MOM_INFORMPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
+  MOM_INFORMPRINTF_AT(Fil,Lin,Fmt,      \
+          ##__VA_ARGS__)
 
-#define MOM_INFORMPRINTF(Fmt,...)			\
-  MOM_INFORMPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
-			  ##__VA_ARGS__)
+#define MOM_INFORMPRINTF(Fmt,...)     \
+  MOM_INFORMPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
+        ##__VA_ARGS__)
 
 
-#define MOM_WARNPRINTF_AT(Fil,Lin,Fmt,...) do {	\
-    mom_warnprintf_at (Fil,Lin,Fmt,		\
-		       ##__VA_ARGS__);		\
+#define MOM_WARNPRINTF_AT(Fil,Lin,Fmt,...) do { \
+    mom_warnprintf_at (Fil,Lin,Fmt,   \
+           ##__VA_ARGS__);    \
   } while(0)
 
-#define MOM_WARNPRINTF_AT_BIS(Fil,Lin,Fmt,...)	\
-  MOM_WARNPRINTF_AT(Fil,Lin,Fmt,		\
-		    ##__VA_ARGS__)
+#define MOM_WARNPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
+  MOM_WARNPRINTF_AT(Fil,Lin,Fmt,    \
+        ##__VA_ARGS__)
 
-#define MOM_WARNPRINTF(Fmt,...)			\
-  MOM_WARNPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,	\
-			##__VA_ARGS__)
+#define MOM_WARNPRINTF(Fmt,...)     \
+  MOM_WARNPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
+      ##__VA_ARGS__)
 
 /// thread local Mersenne Twister pseudo-random number generation see
 /// file mt19937ar.c a tiny adaptation from
@@ -498,7 +498,7 @@ mom_timespec (double t)
 }
 
 
-double mom_elapsed_real_time (void);	/* relative to start of program */
+double mom_elapsed_real_time (void);  /* relative to start of program */
 double mom_process_cpu_time (void);
 double mom_thread_cpu_time (void);
 
@@ -546,13 +546,13 @@ typedef unsigned __int128 mom_uint128_t;
 enum momitype_en
 {
   MOMITY_NONE,
-  MOMITY_INT,			/// see `int` predefined
-  MOMITY_BOXDOUBLE,		/// see `double` predefined
-  MOMITY_BOXSTRING,		/// see `string` predefined
-  MOMITY_ITEM,			/// see `item` predefined
-  MOMITY_TUPLE,			/// see `tuple` predefined
-  MOMITY_SET,			/// see `set` predefined
-  MOMITY_NODE,			/// see `node` predefined
+  MOMITY_INT,     /// see `int` predefined
+  MOMITY_BOXDOUBLE,   /// see `double` predefined
+  MOMITY_BOXSTRING,   /// see `string` predefined
+  MOMITY_ITEM,      /// see `item` predefined
+  MOMITY_TUPLE,     /// see `tuple` predefined
+  MOMITY_SET,     /// see `set` predefined
+  MOMITY_NODE,      /// see `node` predefined
   /// the types above are for genuine values
   MOMITY__LASTHASHED,
   /// here are the payload types, they can only appear as item
@@ -646,9 +646,9 @@ struct MomValueHash
 #endif /*__cplusplus*/
 
 // the common prefix of all values
-#define MOM_ANYVALUE_FIELDS			\
-  uint16_t va_itype;				\
-  mom_atomic_int16_t va_ixv;			\
+#define MOM_ANYVALUE_FIELDS     \
+  uint16_t va_itype;        \
+  mom_atomic_int16_t va_ixv;      \
   uint32_t va_size
 struct mom_anyvalue_st
 {
@@ -697,8 +697,8 @@ mom_put_size (void *p, unsigned sz)
 }
 
 
-#define MOM_HASHEDVALUE_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
+#define MOM_HASHEDVALUE_FIELDS      \
+  MOM_ANYVALUE_FIELDS;        \
   momhash_t hva_hash
 struct mom_hashedvalue_st
 {
@@ -812,7 +812,7 @@ struct mom_boxstring_st
 {
   MOM_HASHEDVALUE_FIELDS;
   // here
-  char cstr[MOM_FLEXIBLE_DIM];	/* actual size mom_raw_size+1 */
+  char cstr[MOM_FLEXIBLE_DIM];  /* actual size mom_raw_size+1 */
 };
 
 static inline const struct mom_boxstring_st *
@@ -845,9 +845,9 @@ __attribute__ ((format (printf, 1, 2)));
 const char *mom_gc_printf (const char *fmt, ...)
 __attribute__ ((format (printf, 1, 2)));
 
-#define MOM_SEQITEMS_FIELDS						\
-  MOM_HASHEDVALUE_FIELDS;						\
-  struct mom_item_st* seqitem[MOM_FLEXIBLE_DIM]	/* actual size mom_raw_size */
+#define MOM_SEQITEMS_FIELDS           \
+  MOM_HASHEDVALUE_FIELDS;           \
+  struct mom_item_st* seqitem[MOM_FLEXIBLE_DIM] /* actual size mom_raw_size */
 struct mom_seqitems_st
 {
   MOM_SEQITEMS_FIELDS;
@@ -929,7 +929,7 @@ mom_boxtuple_length (const struct mom_boxtuple_st *btup)
   if (mom_itype (btup) != MOMITY_TUPLE)
     return 0;
   return mom_raw_size (btup);
-}				/* end of mom_boxtuple_length */
+}       /* end of mom_boxtuple_length */
 
 static inline struct mom_item_st *
 mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
@@ -942,7 +942,7 @@ mom_boxtuple_nth (const struct mom_boxtuple_st *btup, int rk)
   if (rk >= 0 && rk < (int) sz)
     return (struct mom_item_st *) (btup->seqitem[rk]);
   return NULL;
-}				/* end of mom_boxtuple_nth */
+}       /* end of mom_boxtuple_nth */
 
 
 const struct mom_boxtuple_st *mom_boxtuple_make_arr2 (unsigned siz1,
@@ -978,7 +978,7 @@ mom_boxset_length (const struct mom_boxset_st *bset)
   if (mom_itype (bset) != MOMITY_SET)
     return 0;
   return mom_raw_size (bset);
-}				/* end of mom_boxset_length */
+}       /* end of mom_boxset_length */
 
 static inline const struct mom_item_st *
 mom_boxset_nth (const struct mom_boxset_st *bset, int rk)
@@ -991,7 +991,7 @@ mom_boxset_nth (const struct mom_boxset_st *bset, int rk)
   if (rk >= 0 && rk < (int) sz)
     return bset->seqitem[rk];
   return NULL;
-}				/* end of mom_boxset_nth */
+}       /* end of mom_boxset_nth */
 
 
 const struct mom_boxset_st *mom_boxset_make_arr2 (unsigned siz1,
@@ -1043,7 +1043,7 @@ struct mom_boxnode_st
   momint_t nod_metarank;
   struct mom_item_st *nod_metaitem;
   struct mom_item_st *nod_connitm;
-  momvalue_t nod_sons[MOM_FLEXIBLE_DIM];	/* actual size is the mom_raw_size */
+  momvalue_t nod_sons[MOM_FLEXIBLE_DIM];  /* actual size is the mom_raw_size */
 };
 static inline const struct mom_boxnode_st *
 mom_dyncast_node (const void *p)
@@ -1113,18 +1113,18 @@ const struct mom_boxnode_st *mom_boxnode_meta_make_sentinel_va (const struct
     *conn, ...)
 __attribute__ ((sentinel));
 
-#define mom_boxnode_meta_make_sentinel(MetaItm,MetaRank,Conn,...)	\
-  mom_boxnode_meta_make_sentinel_va((MetaItm),(MetaRank),(Conn),	\
-				    ##__VA_ARGS__,NULL)
+#define mom_boxnode_meta_make_sentinel(MetaItm,MetaRank,Conn,...) \
+  mom_boxnode_meta_make_sentinel_va((MetaItm),(MetaRank),(Conn),  \
+            ##__VA_ARGS__,NULL)
 
-#define mom_boxnode_make_sentinel(Conn,...)		\
-  mom_boxnode_meta_make_sentinel_va(NULL,0,(Conn),	\
-				    ##__VA_ARGS__,NULL)
+#define mom_boxnode_make_sentinel(Conn,...)   \
+  mom_boxnode_meta_make_sentinel_va(NULL,0,(Conn),  \
+            ##__VA_ARGS__,NULL)
 
 
 
-#define MOM_COUNTEDATA_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
+#define MOM_COUNTEDATA_FIELDS     \
+  MOM_ANYVALUE_FIELDS;        \
   uint32_t cda_count
 
 
@@ -1137,9 +1137,9 @@ struct mom_itementry_tu
 
 ////////////////
 
-#define MOM_ASSOVALDATA_FIELDS						\
-  MOM_COUNTEDATA_FIELDS;						\
-  struct mom_itementry_tu ada_ents[MOM_FLEXIBLE_DIM]	/* sorted array of entries */
+#define MOM_ASSOVALDATA_FIELDS            \
+  MOM_COUNTEDATA_FIELDS;            \
+  struct mom_itementry_tu ada_ents[MOM_FLEXIBLE_DIM]  /* sorted array of entries */
 // allocated size of ada_ents is size; used count is cda_count.
 struct mom_assovaldata_st
 {
@@ -1156,7 +1156,7 @@ mom_assovaldata_dyncast (const void *p)
       return ass;
     }
   return NULL;
-}				/* end mom_assovaldata_dyncast */
+}       /* end mom_assovaldata_dyncast */
 
 static inline unsigned
 mom_assovaldata_count (const struct mom_assovaldata_st *ass)
@@ -1166,7 +1166,7 @@ mom_assovaldata_count (const struct mom_assovaldata_st *ass)
   unsigned cnt = ass->cda_count;
   assert (cnt <= mom_raw_size (ass));
   return cnt;
-}				/* end of mom_assovaldata_count */
+}       /* end of mom_assovaldata_count */
 
 const struct mom_boxset_st *mom_assovaldata_set_attrs (const struct
     mom_assovaldata_st
@@ -1193,8 +1193,8 @@ struct mom_assovaldata_st *mom_assovaldata_reserve (struct
 
 ////////////////
 
-#define MOM_VECTVALDATA_FIELDS					\
-  MOM_COUNTEDATA_FIELDS;					\
+#define MOM_VECTVALDATA_FIELDS          \
+  MOM_COUNTEDATA_FIELDS;          \
   struct mom_hashedvalue_st*vecd_valarr[MOM_FLEXIBLE_DIM];
 //// mutable vector
 struct mom_vectvaldata_st
@@ -1274,8 +1274,8 @@ struct mom_vectvaldata_st *mom_vectvaldata_append (struct mom_vectvaldata_st
 ////////////////
 /// for MOMITY_HASHSET
 
-#define MOM_HASHSET_FIELDS				\
-  MOM_COUNTEDATA_FIELDS;				\
+#define MOM_HASHSET_FIELDS        \
+  MOM_COUNTEDATA_FIELDS;        \
   struct mom_item_st*hset_items[MOM_FLEXIBLE_DIM];
 //// mutable hashed set
 struct mom_hashset_st
@@ -1292,7 +1292,7 @@ mom_hashset_dyncast (void *p)
       return hset;
     }
   return NULL;
-}				/* end mom_hashset_dyncast */
+}       /* end mom_hashset_dyncast */
 
 
 /// with a 0 gap, will reorganize
@@ -1323,8 +1323,8 @@ mom_hashset_count (const struct mom_hashset_st *hset)
 
 /// for MOMITY_HASHMAP payload
 
-#define MOM_HASHMAP_FIELDS				\
-  MOM_COUNTEDATA_FIELDS;				\
+#define MOM_HASHMAP_FIELDS        \
+  MOM_COUNTEDATA_FIELDS;        \
   struct mom_itementry_tu hmap_ents[MOM_FLEXIBLE_DIM]
 //// mutable hashed map
 struct mom_hashmap_st
@@ -1339,7 +1339,7 @@ mom_hashmap_dyncast (void *p)
   if (mom_itype (p) == MOMITY_HASHMAP)
     return (struct mom_hashmap_st *) p;
   return NULL;
-}				/* end mom_hashmap_dyncast */
+}       /* end mom_hashmap_dyncast */
 
 
 
@@ -1378,8 +1378,8 @@ struct mom_hassocentry_tu
   const struct mom_hashedvalue_st *hass_val;
 };
 
-#define MOM_HASHASSOC_FIELDS				\
-  MOM_COUNTEDATA_FIELDS;				\
+#define MOM_HASHASSOC_FIELDS        \
+  MOM_COUNTEDATA_FIELDS;        \
   struct mom_hassocentry_tu hass_ents[MOM_FLEXIBLE_DIM]
 //// mutable hashed association
 struct mom_hashassoc_st
@@ -1392,7 +1392,7 @@ mom_hashassoc_dyncast (void *p)
   if (mom_itype (p) == MOMITY_HASHASSOC)
     return (struct mom_hashassoc_st *) p;
   return NULL;
-}				/* end mom_hashassoc_dyncast */
+}       /* end mom_hashassoc_dyncast */
 
 
 
@@ -1400,33 +1400,33 @@ mom_hashassoc_dyncast (void *p)
 struct mom_hashassoc_st *mom_hashassoc_reserve (struct mom_hashassoc_st
     *hass, unsigned gap);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get (const struct mom_hashassoc_st *hass,	//
+const struct mom_hashedvalue_st *mom_hashassoc_get (const struct mom_hashassoc_st *hass,  //
     const struct
     mom_hashedvalue_st *key);
 
 // specialized gets are faster, because they compare specifically the key
-const struct mom_hashedvalue_st *mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass,	//
+const struct mom_hashedvalue_st *mom_hashassoc_get_cstring (const struct mom_hashassoc_st *hass,  //
     const char *cstr);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashassoc_st *hass,	//
+const struct mom_hashedvalue_st *mom_hashassoc_get_item (const struct mom_hashassoc_st *hass, //
     const struct
     mom_item_st *itm);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,	//
+const struct mom_hashedvalue_st *mom_hashassoc_get_int (const struct mom_hashassoc_st *hass,  //
     momint_t num);
 
-const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass,	//
+const struct mom_hashedvalue_st *mom_hashassoc_get_double (const struct mom_hashassoc_st *hass, //
     double d);
 
-struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,	//
-    const struct mom_hashedvalue_st *key,	//
+struct mom_hashassoc_st *mom_hashassoc_put (struct mom_hashassoc_st *hass,  //
+    const struct mom_hashedvalue_st *key, //
     const struct mom_hashedvalue_st
     *val);
 
-struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st *hass,	//
+struct mom_hashassoc_st *mom_hashassoc_remove (struct mom_hashassoc_st *hass, //
     const struct
     mom_hashedvalue_st *key);
-const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,	//
+const struct mom_boxnode_st *mom_hashassoc_sorted_key_node (const struct mom_hashassoc_st *hass,  //
     const struct
     mom_item_st
     *connitm);
@@ -1462,16 +1462,16 @@ enum mom_space_en
 #define MOM_DATAKIND_PREFIX "momkind_"
 
 /* inside an item, va_ixv is the space index */
-#define MOM_ITEM_FIELDS							\
-  MOM_HASHEDVALUE_FIELDS;						\
-  struct mom_itemname_tu* itm_radix;					\
-  pthread_mutex_t itm_mtx;						\
-  uint32_t itm_hid;							\
-  uint64_t itm_lid;							\
-  time_t itm_mtime;							\
-  struct mom_assovaldata_st* itm_pattr;					\
-  struct mom_vectvaldata_st* itm_pcomp;					\
-  struct mom_item_st* itm_paylkind;            				\
+#define MOM_ITEM_FIELDS             \
+  MOM_HASHEDVALUE_FIELDS;           \
+  struct mom_itemname_tu* itm_radix;          \
+  pthread_mutex_t itm_mtx;            \
+  uint32_t itm_hid;             \
+  uint64_t itm_lid;             \
+  time_t itm_mtime;             \
+  struct mom_assovaldata_st* itm_pattr;         \
+  struct mom_vectvaldata_st* itm_pcomp;         \
+  struct mom_item_st* itm_paylkind;                   \
   void* itm_payldata
 
 
@@ -1500,7 +1500,7 @@ mom_item_space (struct mom_item_st *itm)
   if (mom_itype (itm) != MOMITY_ITEM)
     return MOMSPA_NONE;
   return atomic_load (&itm->va_ixv);
-}				/* end of mom_item_space */
+}       /* end of mom_item_space */
 
 static inline struct mom_item_st *
 mom_dyncast_item (const void *p)
@@ -1551,7 +1551,7 @@ mom_find_name_radix_len (const char *str, int len)
       strncpy (cbuf, str, len);
       return mom_find_name_radix (cbuf);
     }
-}				/* end of mom_find_name_radix_len */
+}       /* end of mom_find_name_radix_len */
 
 
 const struct mom_itemname_tu *mom_make_name_radix (const char *str);
@@ -1577,7 +1577,7 @@ mom_make_name_radix_len (const char *str, int len)
       strncpy (cbuf, str, len);
       return mom_make_name_radix (cbuf);
     }
-}				/* end of mom_make_name_radix_len */
+}       /* end of mom_make_name_radix_len */
 
 struct mom_item_st *mom_find_item_from_radix_id (const struct
     mom_itemname_tu *radix,
@@ -1607,7 +1607,7 @@ mom_unsync_item_get_phys_attr (const struct mom_item_st *itm,
   if (!attrs)
     return NULL;
   return mom_assovaldata_get (attrs, itmat);
-}				/* end of mom_unsync_item_get_phys_attr */
+}       /* end of mom_unsync_item_get_phys_attr */
 
 static inline struct mom_item_st *
 mom_unsync_item_descr (const struct mom_item_st *itm)
@@ -1630,7 +1630,7 @@ mom_unsync_item_phys_set_attrs (const struct mom_item_st *itm)
   if (!attrs)
     return NULL;
   return mom_assovaldata_set_attrs (attrs);
-}				/* end of mom_unsync_item_phys_set_attrs */
+}       /* end of mom_unsync_item_phys_set_attrs */
 
 
 // put a physical attribute inside an item
@@ -1812,12 +1812,12 @@ struct mom_statelem_st
   enum mom_statetype_en st_type;
   union
   {
-    void *st_nptr;		/* NULL for MOMSTA_EMPTY */
-    int st_mark;		/* when MOMSTA_MARK */
-    momint_t st_int;		/* when MOMSTA_INT */
-    double st_dbl;		/* when MOMSTA_DBL */
-    const char *st_str;		/* GC-strduped string for when MOMSTA_STRING */
-    struct mom_hashedvalue_st *st_val;	/* when MOMSTA_VAL */
+    void *st_nptr;    /* NULL for MOMSTA_EMPTY */
+    int st_mark;    /* when MOMSTA_MARK */
+    momint_t st_int;    /* when MOMSTA_INT */
+    double st_dbl;    /* when MOMSTA_DBL */
+    const char *st_str;   /* GC-strduped string for when MOMSTA_STRING */
+    struct mom_hashedvalue_st *st_val;  /* when MOMSTA_VAL */
   };
 };
 
@@ -2020,21 +2020,21 @@ mom_ldstate_make_node (const struct mom_boxnode_st *nd)
 }
 
 
-#define MOM_LOADER_MAGIC 0x1f3fd30f	/*524276495 */
+#define MOM_LOADER_MAGIC 0x1f3fd30f /*524276495 */
 
 
 // the mom_raw_size of a loader is the allocatd size of ld_stackarr
 /// for MOMITY_LOADER
-#define MOM_LOADER_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
-  unsigned ld_stacktop;				\
+#define MOM_LOADER_FIELDS     \
+  MOM_ANYVALUE_FIELDS;        \
+  unsigned ld_stacktop;       \
   int ld_prevmark;                              \
-  struct mom_statelem_st *ld_stackarr;		\
-  struct mom_hashset_st *ld_hsetitems;		\
-  /* ld_magic is always MOM_LOADER_MAGIC */	\
-  unsigned ld_magic;				\
-  FILE *ld_file;				\
-  const char *ld_path;				\
+  struct mom_statelem_st *ld_stackarr;    \
+  struct mom_hashset_st *ld_hsetitems;    \
+  /* ld_magic is always MOM_LOADER_MAGIC */ \
+  unsigned ld_magic;        \
+  FILE *ld_file;        \
+  const char *ld_path;        \
   long ld_kindcount[MOMITY__LAST]
 
 struct mom_loader_st
@@ -2076,7 +2076,7 @@ void mom_loader_pop (struct mom_loader_st *ld, unsigned nb);
 void mom_loader_push_at (struct mom_loader_st *ld,
                          const struct mom_statelem_st el,
                          const char *fil, int lineno);
-#define mom_loader_push(Ld,El)				\
+#define mom_loader_push(Ld,El)        \
   mom_loader_push_at((Ld),(El),__FILE__,__LINE__)
 
 // return index of previous mark
@@ -2097,9 +2097,9 @@ struct mom_quelem_st
   struct mom_hashedvalue_st *qu_elems[MOM_NB_QUELEM];
 };
 
-#define MOM_QUEUE_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
-  struct mom_quelem_st* qu_first;		\
+#define MOM_QUEUE_FIELDS      \
+  MOM_ANYVALUE_FIELDS;        \
+  struct mom_quelem_st* qu_first;   \
   struct mom_quelem_st* qu_last
 
 struct mom_queue_st
@@ -2167,7 +2167,7 @@ mom_queue_make (void)
   (struct mom_queue_st *) mom_gc_alloc (sizeof (struct mom_queue_st));
   qu->va_itype = MOMITY_QUEUE;
   return qu;
-}				/* end mom_queue_make */
+}       /* end mom_queue_make */
 
 /// initialize a local queue on the call stack
 static inline void
@@ -2178,8 +2178,8 @@ mom_queue_init (struct mom_queue_st *qu)
 }
 
 /// for MOMITY_JSON payload
-#define MOM_JSON_FIELDS				\
-  MOM_ANYVALUE_FIELDS;				\
+#define MOM_JSON_FIELDS       \
+  MOM_ANYVALUE_FIELDS;        \
   json_t *json
 
 struct mom_json_st
@@ -2198,23 +2198,23 @@ enum mom_webmethod_en
 };
 char *mom_webmethod_name (unsigned);
 
-#define MOM_WEBEXCH_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
+#define MOM_WEBEXCH_FIELDS      \
+  MOM_ANYVALUE_FIELDS;        \
   enum mom_webmethod_en webx_meth;              \
-  double webx_time;				\
-  long webx_count;				\
-  const struct mom_hashedvalue_st*webx_key;	\
-  const struct mom_boxnode_st*webx_clos;	\
-  const struct mom_boxstring_st*webx_restpath;	\
-  onion_request* webx_requ;			\
-  onion_response* webx_resp;			\
-  struct mom_item_st*webx_sessitm;		\
-  char webx_mimetype[48];			\
-  volatile mom_atomic_int_t webx_code; 		\
-  char* webx_outbuf;				\
-  size_t webx_outsiz;				\
-  FILE* webx_outfil;				\
-  pthread_cond_t webx_donecond;			\
+  double webx_time;       \
+  long webx_count;        \
+  const struct mom_hashedvalue_st*webx_key; \
+  const struct mom_boxnode_st*webx_clos;  \
+  const struct mom_boxstring_st*webx_restpath;  \
+  onion_request* webx_requ;     \
+  onion_response* webx_resp;      \
+  struct mom_item_st*webx_sessitm;    \
+  char webx_mimetype[48];     \
+  volatile mom_atomic_int_t webx_code;    \
+  char* webx_outbuf;        \
+  size_t webx_outsiz;       \
+  FILE* webx_outfil;        \
+  pthread_cond_t webx_donecond;     \
   long webx__spare
 
 struct mom_webexch_st
@@ -2235,11 +2235,11 @@ mom_item_unsync_webexch (struct mom_item_st *itm)
 }
 
 
-#define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {		\
-    struct mom_webexch_st*wex_##Lin = (Wex);		\
-    if (mom_itype(wex_##Lin) == MOMITY_WEBEXCH		\
-	&& wex_##Lin->webx_outfil)			\
-      fprintf(wex_##Lin->webx_outfil, __VA_ARGS__);	\
+#define MOM_WEXCH_PRINTF_AT(Lin,Wex,...) do {   \
+    struct mom_webexch_st*wex_##Lin = (Wex);    \
+    if (mom_itype(wex_##Lin) == MOMITY_WEBEXCH    \
+  && wex_##Lin->webx_outfil)      \
+      fprintf(wex_##Lin->webx_outfil, __VA_ARGS__); \
   }while(0)
 // MOM_WEXCH_PRINTF should be used with the owning webexchange item locked
 #define MOM_WEXCH_PRINTF(Wex,...) MOM_WEXCH_PRINTF_AT(__LINE__,(Wex),__VA_ARGS__)
@@ -2287,15 +2287,15 @@ typedef void mom_webhandler_sig_t (struct mom_item_st *wexitm,
 
 
 /// for MOMITY_WEBSESSION payload
-#define MOM_WEBSESSION_FIELDS			\
-  MOM_ANYVALUE_FIELDS;				\
+#define MOM_WEBSESSION_FIELDS     \
+  MOM_ANYVALUE_FIELDS;        \
   uint32_t wbss_rand1, wbss_rand2;              \
-  time_t wbss_obstime;				\
-  onion_websocket* wbss_websock;		\
+  time_t wbss_obstime;        \
+  onion_websocket* wbss_websock;    \
   const struct mom_boxnode_st*wbss_wsnod;       \
-  char* wbss_inbuf;				\
-  unsigned wbss_insiz;				\
-  unsigned wbss_inoff;				\
+  char* wbss_inbuf;       \
+  unsigned wbss_insiz;        \
+  unsigned wbss_inoff;        \
   long wbss__spare
 
 struct mom_websession_st
@@ -2322,14 +2322,14 @@ void mom_websession_payload_cleanup (struct mom_item_st *itm,
 enum mom_dumpstate_en
 { MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 
-#define MOM_DUMPER_FIELDS				\
-  MOM_ANYVALUE_FIELDS;					\
-  enum mom_dumpstate_en du_state;			\
-  const struct mom_boxset_st*du_predefset;		\
-  struct mom_hashset_st*du_itemset;			\
-  const struct mom_boxstring_st*du_predefhtmpath;	\
-  const struct mom_boxstring_st*du_globaltmpath;	\
-  struct mom_queue_st*du_itemque;			\
+#define MOM_DUMPER_FIELDS       \
+  MOM_ANYVALUE_FIELDS;          \
+  enum mom_dumpstate_en du_state;     \
+  const struct mom_boxset_st*du_predefset;    \
+  struct mom_hashset_st*du_itemset;     \
+  const struct mom_boxstring_st*du_predefhtmpath; \
+  const struct mom_boxstring_st*du_globaltmpath;  \
+  struct mom_queue_st*du_itemque;     \
   FILE*du_emitfile
 
 extern bool mom_skip_dump_hooks;
@@ -2490,10 +2490,10 @@ typedef void mom_func_item_to_void_sig_t (const struct mom_boxnode_st *closnod,
     struct mom_item_st*itm0);
 ////////////////
 /**** for MOMITY_FILE & MOMITY_FILEBUFFER *****/
-#define MOM_FILE_FIELDS				\
-  MOM_ANYVALUE_FIELDS;				\
-  mom_atomic_fileptr_t mom_filp;		\
-  long mom_flastnloff;				\
+#define MOM_FILE_FIELDS       \
+  MOM_ANYVALUE_FIELDS;        \
+  mom_atomic_fileptr_t mom_filp;    \
+  long mom_flastnloff;        \
   int mom_findent
 
 //// file payload for MOMITY_FILE
@@ -2503,9 +2503,9 @@ struct mom_file_st
 };
 
 
-#define MOM_FILEBUFFER_FIELDS					\
-  MOM_FILE_FIELDS; /* the mom_file is from open_memstream */	\
-  char*mom_filbuf;						\
+#define MOM_FILEBUFFER_FIELDS         \
+  MOM_FILE_FIELDS; /* the mom_file is from open_memstream */  \
+  char*mom_filbuf;            \
   size_t mom_filbufsiz
 
 //// filebuffer payload for MOMITY_FILEBUFFER
@@ -2559,7 +2559,7 @@ mom_file_last_line_width (const void *mfil)
   if (!f)
     return 0;
   return ftell (f) - mf->mom_flastnloff;
-}				/* end of mom_file_last_line_width */
+}       /* end of mom_file_last_line_width */
 
 void mom_file_set_indentation (void *mfil, int ind);
 
@@ -2615,10 +2615,10 @@ void mom_puts_filebuffer (FILE *outf, struct mom_filebuffer_st *fb,
 
 ////////////////
 /// for MOMITY_TASKSTEPPER payload, sitting in the code segment
-#define MOM_TASKSTEPPER_FIELDS					\
-  /* the mom_size is the number of values in the frame */	\
-  MOM_ANYVALUE_FIELDS;						\
-  /* number of integers and doubles in the frame */		\
+#define MOM_TASKSTEPPER_FIELDS          \
+  /* the mom_size is the number of values in the frame */ \
+  MOM_ANYVALUE_FIELDS;            \
+  /* number of integers and doubles in the frame */   \
   uint16_t tksp_nbint, tksp_nbdbl
 struct mom_taskstepper_st
 {
@@ -2631,20 +2631,20 @@ void mom_dumpemit_taskstepper (struct mom_dumper_st *du,
 
 #define MOM_TASKSTEPPER_PREFIX "momtaskstepper_"
 
-#define MOM_TASKSTEPPER_DEFINE(Itm,NbVal,NbInt,NbDbl)	\
-  static_assert ((NbVal)>=0 && (NbVal)<UINT16_MAX,	\
-                 "too many values " #NbVal		\
-		 " for taskstepper " #Itm);		\
-  static_assert ((NbInt)>=0 && (NbInt)<UINT16_MAX,	\
-		 "too many integers " #NbInt		\
-		 " for taskstepper " #Itm);		\
-  static_assert ((NbDbl)>=0 && (NbDbl)<UINT16_MAX,	\
-		 "too many doubles " #NbDbl		\
-		 " for taskstepper " #Itm);		\
-  const struct mom_taskstepper_st			\
-  momtaskstepper_##Itm =				\
-    { .va_itype= MOMITY_TASKSTEPPER,			\
-      .va_hsiz=0, .va_lsiz= (NbVal),			\
+#define MOM_TASKSTEPPER_DEFINE(Itm,NbVal,NbInt,NbDbl) \
+  static_assert ((NbVal)>=0 && (NbVal)<UINT16_MAX,  \
+                 "too many values " #NbVal    \
+     " for taskstepper " #Itm);   \
+  static_assert ((NbInt)>=0 && (NbInt)<UINT16_MAX,  \
+     "too many integers " #NbInt    \
+     " for taskstepper " #Itm);   \
+  static_assert ((NbDbl)>=0 && (NbDbl)<UINT16_MAX,  \
+     "too many doubles " #NbDbl   \
+     " for taskstepper " #Itm);   \
+  const struct mom_taskstepper_st     \
+  momtaskstepper_##Itm =        \
+    { .va_itype= MOMITY_TASKSTEPPER,      \
+      .va_hsiz=0, .va_lsiz= (NbVal),      \
       .tksp_nbint=(NbInt), .tksp_nbdbl=(NbDbl) }
 
 static inline const struct mom_taskstepper_st *
@@ -2653,7 +2653,7 @@ mom_dyncast_taskstepper (const void *p)
   if (mom_itype (p) == MOMITY_TASKSTEPPER)
     return (const struct mom_taskstepper_st *) p;
   return NULL;
-}				/* end of mom_taskstepper_dyncast */
+}       /* end of mom_taskstepper_dyncast */
 
 
 static inline unsigned
@@ -2691,24 +2691,24 @@ mom_taskstepper_nbdbl (const struct mom_taskstepper_st *tstep)
 
 struct mom_frameoffsets_st
 {
-  unsigned fo_ptroff;		/* offset in pointer zone */
-  unsigned fo_scaoff;		/* offset in scalar zone */
+  unsigned fo_ptroff;   /* offset in pointer zone */
+  unsigned fo_scaoff;   /* offset in scalar zone */
 };
 
-#define MOM_TASKLET_FIELDS						\
-  /* the mom_size is the allocated size in				\
-     #elements of tlk_froffsets */					\
-  MOM_ANYVALUE_FIELDS;							\
-  unsigned tkl_scasiz; /* scalar zone size */				\
-  unsigned tkl_scatop; /* scalar zone top */				\
-  intptr_t *tkl_scalars; /* scalar zone  */				\
-  unsigned tkl_ptrsiz; /* pointer zone size */				\
-  unsigned tkl_ptrtop; /* pointer zone top */				\
-  void **tkl_pointers; /* pointer zone */				\
+#define MOM_TASKLET_FIELDS            \
+  /* the mom_size is the allocated size in        \
+     #elements of tlk_froffsets */          \
+  MOM_ANYVALUE_FIELDS;              \
+  unsigned tkl_scasiz; /* scalar zone size */       \
+  unsigned tkl_scatop; /* scalar zone top */        \
+  intptr_t *tkl_scalars; /* scalar zone  */       \
+  unsigned tkl_ptrsiz; /* pointer zone size */        \
+  unsigned tkl_ptrtop; /* pointer zone top */       \
+  void **tkl_pointers; /* pointer zone */       \
   struct mom_frameoffsets_st*tkl_froffsets; /* array of offset pairs */ \
-  unsigned tkl_frametop;        /* top frame index */			\
+  unsigned tkl_frametop;        /* top frame index */     \
   struct mom_item_st*tkl_statitm; /* state item for nanev_thistatitm */ \
-  const struct mom_boxnode_st*tkl_excnod	/*node to handle nanoexceptions */
+  const struct mom_boxnode_st*tkl_excnod  /*node to handle nanoexceptions */
 
 
 struct mom_tasklet_st
@@ -2751,7 +2751,7 @@ mom_dyncast_tasklet (const void *p)
   if (mom_itype (p) == MOMITY_TASKLET)
     return (struct mom_tasklet_st *) p;
   return NULL;
-}				/* mom_dyncast_tasklet */
+}       /* mom_dyncast_tasklet */
 
 
 static inline struct mom_frame_st
@@ -2776,8 +2776,8 @@ mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)
       assert (tkl->tkl_scatop <= tkl->tkl_scasiz);
       return ((struct mom_frame_st)
       {
-        .fr_sca =		//
-          (struct mom_framescalar_st *) (tkl->tkl_scalars + fo.fo_scaoff),.fr_ptr =	//
+        .fr_sca =   //
+          (struct mom_framescalar_st *) (tkl->tkl_scalars + fo.fo_scaoff),.fr_ptr = //
             (struct mom_framepointer_st *) (tkl->tkl_pointers +
                                             fo.fo_ptroff)
       });
@@ -2786,7 +2786,7 @@ mom_tasklet_nth_frame (const struct mom_tasklet_st *tkl, int rk)
   {
     NULL, NULL
   };
-}				/* end of mom_tasklet_nth_frame */
+}       /* end of mom_tasklet_nth_frame */
 
 static inline struct mom_item_st *
 mom_tasklet_statitm (const struct mom_tasklet_st *tklet)
@@ -2794,7 +2794,7 @@ mom_tasklet_statitm (const struct mom_tasklet_st *tklet)
   if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
     return NULL;
   return tklet->tkl_statitm;
-}				/* end mom_tasklet_statitm */
+}       /* end mom_tasklet_statitm */
 
 void mom_tasklet_put_statitm (struct mom_tasklet_st *tklet,
                               struct mom_item_st *itm);
@@ -2805,7 +2805,7 @@ mom_tasklet_excnode (const struct mom_tasklet_st *tklet)
   if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
     return NULL;
   return tklet->tkl_excnod;
-}				/* end mom_tasklet_excnode */
+}       /* end mom_tasklet_excnode */
 
 void mom_tasklet_put_excnode (struct mom_tasklet_st *tklet,
                               const struct mom_boxnode_st *nod);
@@ -2816,7 +2816,7 @@ mom_tasklet_frame_depth (const struct mom_tasklet_st *tklet)
   if (!tklet || tklet == MOM_EMPTY_SLOT || tklet->va_itype != MOMITY_TASKLET)
     return 0;
   return tklet->tkl_frametop;
-}				/* end mom_tasklet_frame_depth */
+}       /* end mom_tasklet_frame_depth */
 
 ////////////////
 
@@ -2841,12 +2841,12 @@ typedef void mom_closure_void_to_void_sig_t (const struct mom_boxnode_st
     *clonod);
 
 
-#define NANOEVAL_MAGIC_MOM 617373733	/*0x24cc6025 */
+#define NANOEVAL_MAGIC_MOM 617373733  /*0x24cc6025 */
 struct mom_nanoeval_st
 {
-  unsigned nanev_magic;		/* always NANOEVAL_MAGIC_MOM */
+  unsigned nanev_magic;   /* always NANOEVAL_MAGIC_MOM */
   jmp_buf nanev_jb;
-  bool nanev_transient;		/* true to create transient items */
+  bool nanev_transient;   /* true to create transient items */
   long nanev_count;
   long nanev_maxstep;
   struct mom_item_st *nanev_tkitm;
@@ -2857,26 +2857,26 @@ struct mom_nanoeval_st
 void mom_bind_nanoev (struct mom_nanoeval_st *nev,
                       struct mom_item_st *envitm,
                       const struct mom_item_st *varitm, const void *val);
-#define MOM_NANOEVAL_FAILURE(Ne,Expr,Fail) do {			\
-    struct mom_nanoeval_st*_ne = (struct mom_nanoeval_st*)(Ne);	\
-    assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM);	\
-    _ne->nanev_fail = (Fail);					\
-    _ne->nanev_errfile = __FILE__;				\
-    _ne->nanev_expr = (Expr);					\
-    MOM_DEBUGPRINTF						\
-      (run,"nanoeval failing %s\n.. expr %s",			\
-       mom_value_cstring((void*)(_ne->nanev_fail)),		\
-       mom_value_cstring((void*)(_ne->nanev_expr)));		\
-    longjmp(_ne->nanev_jb,__LINE__);				\
+#define MOM_NANOEVAL_FAILURE(Ne,Expr,Fail) do {     \
+    struct mom_nanoeval_st*_ne = (struct mom_nanoeval_st*)(Ne); \
+    assert (_ne && _ne->nanev_magic == NANOEVAL_MAGIC_MOM); \
+    _ne->nanev_fail = (Fail);         \
+    _ne->nanev_errfile = __FILE__;        \
+    _ne->nanev_expr = (Expr);         \
+    MOM_DEBUGPRINTF           \
+      (run,"nanoeval failing %s\n.. expr %s",     \
+       mom_value_cstring((void*)(_ne->nanev_fail)),   \
+       mom_value_cstring((void*)(_ne->nanev_expr)));    \
+    longjmp(_ne->nanev_jb,__LINE__);        \
   } while(0)
 
-#define MOM_NANOTASKSTEP_MAGIC 421788551	/*0x1923fb87 */
+#define MOM_NANOTASKSTEP_MAGIC 421788551  /*0x1923fb87 */
 #define MOM_TASKSTEP_MAX_DATA 8
 
 struct mom_nanotaskstep_st
 {
-  unsigned nats_magic;		/* always MOM_NANOTASKSTEP_MAGIC */
-  unsigned nats_nblevels;	// number of frame levels to push or pop
+  unsigned nats_magic;    /* always MOM_NANOTASKSTEP_MAGIC */
+  unsigned nats_nblevels; // number of frame levels to push or pop
   struct mom_nanoeval_st nats_nanev;
   double nats_startim;
   struct mom_tasklet_st *nats_tasklet;
@@ -2956,11 +2956,11 @@ typedef const void *mom_nanoevalany_sig_t (struct mom_nanoeval_st *nev,
 
 enum mom_taskstep_en
 {
-  MOMTKS_NOP,			/* no effect on tasklet stack */
-  MOMTKS_POP_ONE,		/* pop one frame, so "return" */
-  MOMTKS_REPLACE,		/* replace top frame, à la tail-call */
-  MOMTKS_POP_MANY,		/* pop several frames */
-  MOMTKS_PUSH_ONE,		/* push one frame, so "call" */
+  MOMTKS_NOP,     /* no effect on tasklet stack */
+  MOMTKS_POP_ONE,   /* pop one frame, so "return" */
+  MOMTKS_REPLACE,   /* replace top frame, à la tail-call */
+  MOMTKS_POP_MANY,    /* pop several frames */
+  MOMTKS_PUSH_ONE,    /* push one frame, so "call" */
   // perhaps we need a push-slice and a replace-slice
 };
 
@@ -2971,7 +2971,7 @@ mom_tasklet_what (enum mom_taskstep_en ts, unsigned char nbval,
   assert (nbval + nbint + nbdbl <= 6);
   return (uint32_t) ((nbdbl & 0xf) << 24) | (uint32_t) ((nbint & 0xf) << 16)
          | (uint32_t) ((nbval & 0xf) << 8) | (uint32_t) ts;
-}				/* end of mom_tasklet_what */
+}       /* end of mom_tasklet_what */
 
 static inline unsigned char
 mom_what_nbdbl (uint32_t w)
@@ -3025,10 +3025,10 @@ typedef void mom_test_sig_t (const char *);
 
 // miniedit related
 
-#define MOM_MINEDJS_MAGIC 506568011	/*0x1e319d4b */
+#define MOM_MINEDJS_MAGIC 506568011 /*0x1e319d4b */
 struct mom_minedjs_st
 {
-  unsigned miejs_magic;		/* always MOM_MINEDJS_MAGIC */
+  unsigned miejs_magic;   /* always MOM_MINEDJS_MAGIC */
   jmp_buf miejs_jb;
   long miejs_lastnl;
   const char *miejs_errfile;
@@ -3037,16 +3037,16 @@ struct mom_minedjs_st
   struct mom_item_st *miejs_wexitm;
   struct mom_webexch_st *miejs_wexch;
 };
-#define MOM_MINEDJS_FAILURE(Mj,Expr,Fail) do {				\
-    struct mom_minedjs_st*_mj = (Mj);					\
-    assert (_mj && _mj->miejs_magic==MOM_MINEDJS_MAGIC);		\
-    _mj->miejs_fail = (Fail);						\
-    _mj->miejs_expr = (Expr);						\
-    _mj->miejs_errfile = __FILE__;					\
-    MOM_DEBUGPRINTF(run,"minedjs failing %s\n.. expr %s",		\
-		    mom_value_cstring((void*) _mj->miejs_fail),		\
-		    mom_value_cstring((void*) _mj->miejs_expr));	\
-    longjmp(_mj->miejs_jb,__LINE__);					\
+#define MOM_MINEDJS_FAILURE(Mj,Expr,Fail) do {        \
+    struct mom_minedjs_st*_mj = (Mj);         \
+    assert (_mj && _mj->miejs_magic==MOM_MINEDJS_MAGIC);    \
+    _mj->miejs_fail = (Fail);           \
+    _mj->miejs_expr = (Expr);           \
+    _mj->miejs_errfile = __FILE__;          \
+    MOM_DEBUGPRINTF(run,"minedjs failing %s\n.. expr %s",   \
+        mom_value_cstring((void*) _mj->miejs_fail),   \
+        mom_value_cstring((void*) _mj->miejs_expr));  \
+    longjmp(_mj->miejs_jb,__LINE__);          \
   } while(0)
 
 void mom_boot_file (const char *path);
@@ -3058,7 +3058,7 @@ bool mom_emit_c_code (struct mom_item_st *itm);
 bool mom_emit_javascript_code (struct mom_item_st *itm, FILE *out);
 
 #ifdef __cplusplus
-};				// end extern "C"
+};        // end extern "C"
 #endif /*__cplusplus*/
 
 #endif /*MONIMELT_INCLUDED_ */

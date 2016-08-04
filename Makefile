@@ -30,7 +30,7 @@ INDENT= indent
 ASTYLE= astyle
 MD5SUM= md5sum
 INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
-ASTYLEFLAGS= --style=gnu -s2
+ASTYLEFLAGS= --style=gnu -s2  --convert-tabs
 PACKAGES= glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
 PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))

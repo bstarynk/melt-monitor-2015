@@ -169,7 +169,7 @@ protected:
       cas_rank=0;
       cas_runset.clear();
     };
-  };				// end class CaseScannerData
+  };        // end class CaseScannerData
   class IntCaseScannerData  final : public CaseScannerData
   {
     std::map<long,struct mom_item_st*,std::less<long>,traceable_allocator<long>> cas_num2casemap;
@@ -186,7 +186,7 @@ protected:
     {
       cas_num2casemap.clear();
     };
-  };				// end class IntCaseScannerData
+  };        // end class IntCaseScannerData
   class StringCaseScannerData final : public CaseScannerData
   {
     std::map<std::string,struct mom_item_st*,std::less<std::string>,traceable_allocator<std::string>> cas_string2casemap;
@@ -202,7 +202,7 @@ protected:
     {
       cas_string2casemap.clear();
     };
-  };				// end class StringCaseScannerData
+  };        // end class StringCaseScannerData
   class ItemCaseScannerData final : public CaseScannerData
   {
     traced_map_item2item_t cas_item2casemap;
@@ -501,7 +501,7 @@ public:
   {
     return _ce_magic;
   };
-};				// end of MomEmitter
+};        // end of MomEmitter
 
 /***** acceptable nodes for write_node
        ^string(<string>) -> the doublequoted utf8cencoded <string>
@@ -605,7 +605,15 @@ public:
   momvalue_t transform_constant_item(struct mom_item_st*cstitm, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm);
-  const struct mom_boxnode_st* declare_inlineheader_for (struct mom_item_st*sigitm, struct mom_item_st*iltm);
+  const struct mom_boxnode_st* declare_header_for (struct mom_item_st*sigitm, struct mom_item_st*ilttm, bool inlined);
+  const struct mom_boxnode_st* declare_inlineheader_for (struct mom_item_st*sigitm, struct mom_item_st*ilitm)
+  {
+    return declare_header_for(sigitm,ilitm,true);
+  };
+  const struct mom_boxnode_st* declare_routheader_for (struct mom_item_st*sigitm, struct mom_item_st*rtitm)
+  {
+    return declare_header_for(sigitm,rtitm,false);
+  };
   const struct mom_boxnode_st* transform_inline_element(struct mom_item_st*elitm);
   CaseScannerData* make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
@@ -613,7 +621,7 @@ public:
   {
     return "C-emitter";
   };
-};				// end class MomCEmitter
+};        // end class MomCEmitter
 
 
 ////////////////
@@ -702,9 +710,10 @@ bool mom_emit_c_code(struct mom_item_st*itm)
       mom_output_gplv3_notice (fout, "//", "",  basename(gpath));
       fprintf(fout, "\n\n#include \"meltmoni.h\"\n\n");
       int nbdecl = (int)cemit._cec_globdecltree.size();
+      fprintf(fout, "\n///////@@@BODY %s\n", basename(gpath));
       if (nbdecl>0)
         {
-          fprintf(fout, "\n/// %d declarations:\n", nbdecl);
+          fprintf(fout, "\n\n/// %d declarations:\n", nbdecl);
           for (int i=0; i<nbdecl; i++)
             {
               fputc('\n', fout);
@@ -1007,6 +1016,7 @@ MomEmitter::transform_top_module(void)
         assert (mom_itype(nodelem) == MOMITY_NODE);
         const struct mom_item_st*nodconnitm = nodelem->nod_connitm;
         assert (mom_itype(nodconnitm) == MOMITY_ITEM);
+        vecval.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
         if (nodconnitm == MOM_PREDEFITM(sequence))
           {
             unsigned ln = mom_size(nodelem);
@@ -1046,8 +1056,8 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
 #define NBMODELEMDESC_MOM 61
-#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
-  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:  \
+  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;    \
   goto defaultcasedesc; foundcase_##Nam
   switch (descitm->hva_hash % NBMODELEMDESC_MOM)
     {
@@ -1111,8 +1121,8 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
 #define NBMODELEMDESC_MOM 31
-#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:	\
-  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_DESCR_MOM(Nam) momhashpredef_##Nam % NBMODELEMDESC_MOM:  \
+  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;    \
   goto defaultcasedesc; foundcase_##Nam
   switch (descitm->hva_hash % NBMODELEMDESC_MOM)
     {
@@ -1481,8 +1491,8 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
                                mom_item_cstring(insbind->vd_rolitm));
   }
 #define NBMODOPER_MOM 97
-#define CASE_OPER_MOM(Nam) momhashpredef_##Nam % NBMODOPER_MOM:	\
-  if (desitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
+#define CASE_OPER_MOM(Nam) momhashpredef_##Nam % NBMODOPER_MOM: \
+  if (desitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; \
   goto defaultcasedesc; foundcase_##Nam
   switch (desitm->hva_hash % NBMODOPER_MOM)
     {
@@ -1699,7 +1709,7 @@ sequencecase:
     } // end cond
     break;
     /////
-    case CASE_OPER_MOM(call):	/////////////
+    case CASE_OPER_MOM(call): /////////////
     {
       auto callsigitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(call)));
@@ -1805,7 +1815,7 @@ sequencecase:
     } // end call
     break;
     /////
-    case CASE_OPER_MOM(run):	//////////////////
+    case CASE_OPER_MOM(run):  //////////////////
     {
       auto primitm =
         mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(run)));
@@ -2120,8 +2130,8 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
   unsigned nodarity = mom_size(expnod);
   lock_item(connitm);
 #define NBEXPCONN_MOM 131
-#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
-  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;		\
+#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:  \
+  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;    \
   goto defaultcaseconn; foundcaseconn_##Nam
   switch (connitm->hva_hash % NBEXPCONN_MOM)
     {
@@ -2383,8 +2393,8 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                   mom_value_cstring(expnod),
                   mom_item_cstring(desconnitm), nodarity);
 #define NBDESCONN_MOM 101
-#define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:	\
-  if (desconnitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;		\
+#define CASE_DESCONN_MOM(Nam) momhashpredef_##Nam % NBDESCONN_MOM:  \
+  if (desconnitm == MOM_PREDEFITM(Nam)) goto foundesconn_##Nam;   \
   goto defaultdesconn; foundesconn_##Nam
   switch (desconnitm->hva_hash % NBDESCONN_MOM)
     {
@@ -2673,8 +2683,8 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                       mom_item_cstring(expitm), mom_item_cstring(rolitm),
                       mom_value_cstring(whatv), mom_item_cstring(typitm));
 #define NBKNOWNROLE_MOM 31
-#define CASE_KNOWNROLE_MOM(Nam) momhashpredef_##Nam % NBKNOWNROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_KNOWNROLE_MOM(Nam) momhashpredef_##Nam % NBKNOWNROLE_MOM:  \
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
   goto defaultcaserole; foundcase_##Nam
       switch (rolitm->hva_hash % NBKNOWNROLE_MOM)
         {
@@ -2740,8 +2750,8 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
   MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
 #define NBVARDESC_MOM 43
-#define CASE_VARDESCR_MOM(Nam) momhashpredef_##Nam % NBVARDESC_MOM:	\
-  if (desvaritm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_VARDESCR_MOM(Nam) momhashpredef_##Nam % NBVARDESC_MOM: \
+  if (desvaritm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;    \
   goto defaultvardesc; foundcase_##Nam
   switch (desvaritm->hva_hash % NBVARDESC_MOM)
     {
@@ -3037,8 +3047,8 @@ MomEmitter::write_node(FILE*out, unsigned depth, long &lastnl, const  struct mom
   const struct mom_item_st*connitm = nod->nod_connitm;
   assert (mom_itype(connitm) == MOMITY_ITEM);
 #define NBNODECONN_MOM 97
-#define CASE_NODECONN_MOM(Nam) momhashpredef_##Nam % NBNODECONN_MOM:	\
-  if (connitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_NODECONN_MOM(Nam) momhashpredef_##Nam % NBNODECONN_MOM:  \
+  if (connitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;    \
   goto defaultcaseconn; foundcase_##Nam
   switch (connitm->hva_hash % NBNODECONN_MOM)
     {
@@ -3609,8 +3619,8 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                                mom_value_cstring(tybind->vd_what));
   }
 #define NBKNOWNTYPE_MOM 31
-#define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:	\
-  if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:  \
+  if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
   goto defaultcasetype; foundcase_##Nam
   switch (typitm->hva_hash % NBKNOWNTYPE_MOM)
     {
@@ -4197,8 +4207,8 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                   "c-transform_block blkitm=%s bodytup=%s",
                   mom_item_cstring(blkitm), mom_value_cstring(bodytup));
 #define NBBLOCKROLE_MOM 31
-#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:  \
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
   goto defaultcasebrole; foundcase_##Nam
   switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
     {
@@ -4499,8 +4509,8 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
   lock_item(connitm);
   MOM_DEBUGPRINTF(gencod, "c-transform_node_expr connitm=%s", mom_item_cstring(connitm));
 #define NBEXPCONN_MOM 131
-#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:	\
-  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;		\
+#define CASE_EXPCONN_MOM(Nam) momhashpredef_##Nam % NBEXPCONN_MOM:  \
+  if (connitm == MOM_PREDEFITM(Nam)) goto foundcaseconn_##Nam;    \
   goto defaultcaseconn; foundcaseconn_##Nam
   switch (connitm->hva_hash % NBEXPCONN_MOM)
     {
@@ -5069,9 +5079,9 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
         };
       ////
 #define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:		\
-	if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
-	goto defaultrole; foundrolcase_##Nam
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:    \
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;  \
+goto defaultrole; foundrolcase_##Nam
       switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
         {
         case CASE_ROLE_MOM(formal):
@@ -5311,8 +5321,8 @@ MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm,
                   mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
   momvalue_t vartree = nullptr;
 #define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:  \
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;  \
   goto defaultrole; foundrolcase_##Nam
   switch (rolitm->hva_hash % NBROLE_MOM)
     {
@@ -5362,8 +5372,8 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
   auto whatv = insbind->vd_what;
   assert (mom_itype(rolitm) == MOMITY_ITEM);
 #define NBINSTROLE_MOM 73
-#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:  \
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
   goto defaultcaseirole; foundcase_##Nam
   switch (rolitm->hva_hash % NBINSTROLE_MOM)
     {
@@ -5718,8 +5728,8 @@ MomCEmitter::transform_switchinstr(struct mom_item_st*insitm,  momvalue_t whatv,
   MOM_DEBUGPRINTF(gencod, "argexp=%s argtree=%s",
                   mom_value_cstring(argexp), mom_value_cstring(argtree));
 #define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
-  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:  \
+  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;  \
   goto defaultcaseswtyp; foundcaseswtyp_##Nam
   switch (swtypitm->hva_hash % NBSWTYPE_MOM)
     {
@@ -6093,22 +6103,63 @@ MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s sigitm %s bdyitm %
                 mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
 assert (is_locked_item(sigitm));
 assert (is_locked_item(bdyitm));
-#warning unimplemented MomCEmitter::transform_routine_element
-MOM_FATAPRINTF("unimplemented MomCEmitter::transform_routine_element rtitm=%s", mom_item_cstring(rtitm));
+auto routdnod = declare_routheader_for(sigitm,rtitm);
+MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s routdnod %s",
+                mom_item_cstring(rtitm), mom_value_cstring(routdnod));
+if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+  {
+    _cec_declareditems.insert(sigitm);
+    auto sigtypnod = declare_signature_type(sigitm);
+    MOM_DEBUGPRINTF(gencod, "c-transform_routine_element sigitm %s sigtypnod %s",
+                    mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
+    add_global_decl(sigtypnod);
+  }
+if (_cec_declareditems.find(rtitm) == _cec_declareditems.end())
+  {
+    _cec_declareditems.insert(rtitm);
+    auto rtdecl =
+      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                literal_string("extern"),
+                                literal_string(" "),
+                                literal_string(CSIGNTYPE_PREFIX),
+                                sigitm,
+                                literal_string(" "),
+                                literal_string(MOM_FUNC_PREFIX),
+                                rtitm,
+                                literal_string(";"));
+    add_global_decl(rtdecl);
+    MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s rtdecl %s",
+                    mom_item_cstring(rtitm),
+                    mom_value_cstring(rtdecl));
+  }
+auto bdynod = transform_body_element(bdyitm,rtitm);
+MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s bdyitm %s bdynod %s\n ... routdnod=%s",
+                mom_item_cstring(rtitm), mom_item_cstring(bdyitm),
+                mom_value_cstring(bdynod), mom_value_cstring(routdnod));
+auto rtdef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                 mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("routine:"), rtitm),
+                                 routdnod,
+                                 bdynod,
+                                 mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("endroutine:"), rtitm));
+MOM_DEBUGPRINTF(gencod, "c-transform_routine_element rtitm %s result rtdef=%s",  mom_item_cstring(rtitm),
+                mom_value_cstring(rtdef));
+return rtdef;
 } // end MomCEmitter::transform_routine_element
 
 
+
+
 const struct mom_boxnode_st*
-MomCEmitter::declare_inlineheader_for (struct mom_item_st*sigitm, struct mom_item_st*ilitm)
+MomCEmitter::declare_header_for (struct mom_item_st*sigitm, struct mom_item_st*ilitm, bool inlined)
 {
 assert (is_locked_item(sigitm));
 assert (is_locked_item(ilitm));
-MOM_DEBUGPRINTF(gencod, "c-emitter declare_inlineheader_for start sigitm=%s ilitm:=%s",
-                mom_item_cstring(sigitm), mom_item_content_cstring(ilitm));
+MOM_DEBUGPRINTF(gencod, "c-emitter declare_header_for start sigitm=%s %s ilitm:=%s",
+                mom_item_cstring(sigitm), inlined?"inlined":"plain", mom_item_content_cstring(ilitm));
 auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
 assert (formtup != nullptr);
 auto restyv = mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result));
-MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s formtup=%s restyv=%s",
+MOM_DEBUGPRINTF(gencod, "c-declare_header_for sigitm=%s formtup=%s restyv=%s",
                 mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(restyv));
 int nbform = mom_raw_size(formtup);
 momvalue_t smallformdeclarr[8] = {nullptr};
@@ -6120,34 +6171,34 @@ for (int ix=0; ix<nbform; ix++)
   {
     momvalue_t curformdeclv = nullptr;
     struct mom_item_st*curformitm = formtup->seqitem[ix];
-    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s  ix#%d curformitm=%s",
+    MOM_DEBUGPRINTF(gencod, "c-declare_header_for sigitm=%s  ix#%d curformitm=%s",
                     mom_item_cstring(sigitm), ix, mom_item_cstring(curformitm));
     assert (is_locked_item(curformitm));
     struct mom_item_st*formtypitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr (curformitm, MOM_PREDEFITM(type)));
-    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for curformitm=%s formtypitm=%s",
+    MOM_DEBUGPRINTF(gencod, "c-declare_header_for curformitm=%s formtypitm=%s",
                     mom_item_cstring(curformitm),
                     mom_item_cstring(formtypitm));
     assert (is_locked_item(formtypitm));
     auto formtypnod = declare_type(formtypitm);
-    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for formtypitm=%s formtypnod=%s",
+    MOM_DEBUGPRINTF(gencod, "c-declare_header_for formtypitm=%s formtypnod=%s",
                     mom_item_cstring(formtypitm), mom_value_cstring(formtypnod));
     curformdeclv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
                                        formtypnod, literal_string(" "),
                                        literal_string(CFORMAL_PREFIX),
                                        curformitm);
-    MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for ix#%d curformitm=%s curformdeclv=%s",
+    MOM_DEBUGPRINTF(gencod, "c-declare_header_for ix#%d curformitm=%s curformdeclv=%s",
                     ix,
                     mom_item_cstring(curformitm), mom_value_cstring(curformdeclv));
     formdeclarr[ix] = curformdeclv;
   }
 for (int j=0; j<nbform; j++)
-  MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
+  MOM_DEBUGPRINTF(gencod, "c-declare_header_for formdeclarr[%d] :@%p %s", j, formdeclarr[j], mom_value_cstring(formdeclarr[j]));
 auto formtreev =  mom_boxnode_make_va(MOM_PREDEFITM(parenthesis),1,
                                       mom_boxnode_make(MOM_PREDEFITM(comma),nbform,formdeclarr));
 if (formdeclarr != smallformdeclarr) GC_FREE(formdeclarr);
 formdeclarr = nullptr;
-MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s formtreev=%s restyv=%s",
+MOM_DEBUGPRINTF(gencod, "c-declare_header_for sigitm=%s formtreev=%s restyv=%s",
                 mom_item_cstring(sigitm), mom_value_cstring(formtreev), mom_value_cstring(restyv));
 momvalue_t restytree = nullptr;
 switch(mom_itype(restyv))
@@ -6161,22 +6212,22 @@ switch(mom_itype(restyv))
                              mom_item_cstring(sigitm),
                              mom_item_cstring(ilitm));
   }
-MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s restyv=%s restytree=%s",
+MOM_DEBUGPRINTF(gencod, "c-declare_header_for sigitm=%s restyv=%s restytree=%s",
                 mom_item_cstring(sigitm), mom_value_cstring(restyv), mom_value_cstring(restytree));
 auto funheadv =  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                 literal_string("static inline"),
+                 inlined?literal_string("static inline"):literal_string("/*plain*/"),
                  literal_string(" "),
                  restytree,
                  literal_string(" "),
                  literal_string(MOM_FUNC_PREFIX),
                  ilitm,
                  formtreev );
-MOM_DEBUGPRINTF(gencod, "c-declare_inlineheader_for sigitm=%s ilitm=%s result funheadv=%s",
+MOM_DEBUGPRINTF(gencod, "c-declare_header_for sigitm=%s ilitm=%s result funheadv=%s",
                 mom_item_cstring(sigitm),
                 mom_item_cstring(ilitm),
                 mom_value_cstring(funheadv));
 return funheadv;
-} // end MomCEmitter::declare_inlineheader_for
+} // end MomCEmitter::declare_header_for
 
 
 
@@ -6225,10 +6276,11 @@ auto bdynod = transform_body_element(bdyitm,ilitm);
 MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
                 mom_item_cstring(ilitm), mom_item_cstring(bdyitm),
                 mom_value_cstring(bdynod), mom_value_cstring(inlhnod));
-auto inldef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+auto inldef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("inline:"), ilitm),
                                   inlhnod,
-                                  literal_string("\n"),
-                                  bdynod);
+                                  bdynod,
+                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("endinline:"), ilitm));
 MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s result inldef=%s",  mom_item_cstring(ilitm),
                 mom_value_cstring(inldef));
 return inldef;
@@ -6244,8 +6296,8 @@ MomEmitter::make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_
 {
 assert (is_locked_item(swtypitm));
 #define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
-if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:  \
+if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;  \
 goto defaultcaseswtyp; foundcaseswtyp_##Nam
 switch (swtypitm->hva_hash % NBSWTYPE_MOM)
   {
@@ -6285,8 +6337,8 @@ MOM_DEBUGPRINTF(gencod, "c-case_scanner start swtypitm=%s insitm=%s rk=%d blkitm
                 rk,
                 mom_item_cstring(blkitm));
 #define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
-if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:  \
+if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;  \
 goto defaultcaseswtyp; foundcaseswtyp_##Nam
 switch (swtypitm->hva_hash % NBSWTYPE_MOM)
   {
@@ -6916,8 +6968,8 @@ MOM_DEBUGPRINTF(gencod,
                 "js-transform_block blkitm=%s bodytup=%s",
                 mom_item_cstring(blkitm), mom_value_cstring(bodytup));
 #define NBBLOCKROLE_MOM 31
-#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:	\
-if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_BLOCKROLE_MOM(Nam) momhashpredef_##Nam % NBBLOCKROLE_MOM:  \
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
 goto defaultcasebrole; foundcase_##Nam
 switch (rolitm->hva_hash % NBBLOCKROLE_MOM)
   {
@@ -7106,8 +7158,8 @@ struct mom_item_st*rolitm = insbind->vd_rolitm;
 assert (mom_itype(rolitm) == MOMITY_ITEM);
 auto whatv = insbind->vd_what;
 #define NBINSTROLE_MOM 73
-#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:	\
-if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
+#define CASE_INSTROLE_MOM(Nam) momhashpredef_##Nam % NBINSTROLE_MOM:  \
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;   \
 goto defaultcaseirole; foundcase_##Nam
 switch (rolitm->hva_hash % NBINSTROLE_MOM)
   {
@@ -7297,9 +7349,9 @@ MomJavascriptEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm)
                       mom_item_cstring(expitm), mom_item_cstring(rolitm),
                       expbind?mom_value_cstring(expbind->vd_what):"°");
 #define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:		\
-	if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
-	goto defaultrole; foundrolcase_##Nam
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:    \
+if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;  \
+goto defaultrole; foundrolcase_##Nam
       switch (rolitm?rolitm->hva_hash % NBROLE_MOM : 0)
         {
         case CASE_ROLE_MOM(formal):
@@ -7352,8 +7404,8 @@ MomJavascriptEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_s
                   mom_item_cstring(rolitm), mom_value_cstring(varbind->vd_what));
   momvalue_t vartree = nullptr;
 #define NBROLE_MOM 31
-#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:	\
-  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;	\
+#define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:  \
+  if (rolitm == MOM_PREDEFITM(Nam)) goto foundrolcase_##Nam;  \
   goto defaultrole; foundrolcase_##Nam
   switch (rolitm->hva_hash % NBROLE_MOM)
     {
@@ -7406,8 +7458,8 @@ MomJavascriptEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_
 {
   assert (is_locked_item(swtypitm));
 #define NBSWTYPE_MOM 43
-#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:	\
-  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;	\
+#define CASE_SWTYPE_MOM(Nam) momhashpredef_##Nam % NBSWTYPE_MOM:  \
+  if (swtypitm == MOM_PREDEFITM(Nam)) goto foundcaseswtyp_##Nam;  \
   goto defaultcaseswtyp; foundcaseswtyp_##Nam
   switch (swtypitm->hva_hash % NBSWTYPE_MOM)
     {
