@@ -906,6 +906,71 @@
   )
 )
 
+^global !dyncast_seqitem  (
+  ^* comment "inline function to dynamic-cast a boxed string"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_seqitem (
+       ^* comment "body of dyncast_seqitem"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_seqitem"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_tuple"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "block return val0"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return val0"
+                      ^* return val0
+                    )
+                  ]
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_set"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_set))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "block return val0"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return val0"
+                      ^* return val0
+                    )
+                  ]
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-seq"
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "else block return nil"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
@@ -913,7 +978,8 @@
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty
      valid_value_pointer itype
-     int_val_def value_hash dyncast_int dyncast_boxdouble dyncast_boxstring
+     int_val_def value_hash dyncast_int dyncast_boxdouble
+     dyncast_boxstring dyncast_seqitem
    ]
 )
 
