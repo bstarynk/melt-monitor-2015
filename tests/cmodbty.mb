@@ -649,6 +649,22 @@
             ^* cond [
               ^global ?test (
                 ^* descr test
+                ^* comment "test for ity_none"
+                ^* test %equal_int_prim(%int(typ0loc) %int(ity_none))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "return 0 for none"
+                  ^* body [
+                    ^global ?return (
+                      ^* comment "return 0"
+                      ^* descr return
+                      ^* return %hash_t (0)
+                    )
+                  ]
+                )
+              )
+              ^global ?test (
+                ^* descr test
                 ^* comment "test for ity_int"
                 ^* test %equal_int_prim(%int(typ0loc) %int(ity_int))
                 ^* then ^global ?block (

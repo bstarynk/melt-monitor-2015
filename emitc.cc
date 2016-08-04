@@ -4544,7 +4544,7 @@ orandcase:
             if (ix>0)
               vectree.push_back(isor?literal_string(") || ("):literal_string(") && ("));
             else
-              vectree.push_back("(");
+              vectree.push_back(literal_string("("));
             vectree.push_back(cursontree);
           }
         vectree.push_back(literal_string(")"));
@@ -4578,15 +4578,15 @@ plusmultcase:
             if (ix>0)
               vectree.push_back(isplus?literal_string(") + ("):literal_string(") * ("));
             else
-              vectree.push_back("(");
+              vectree.push_back(literal_string("("));
             vectree.push_back(cursontree);
           }
         vectree.push_back(literal_string(")"));
         vectree.push_back(literal_string(")"));
         auto plusmulttree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
         vectree.clear();
-        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
-                        isplus?"plus":"mult", mom_value_cstring(plusmulttree));
+        MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s: %s gives %s",
+                        isplus?"plus":"mult", mom_value_cstring(expnod), mom_value_cstring(plusmulttree));
         return plusmulttree;
       }
       break;
@@ -4667,7 +4667,7 @@ tuplesetcase:
                             istuple?"tuple":"set", ix, mom_value_cstring(cursontree));
             vectree.push_back(literal_string(", ("));
             vectree.push_back(cursontree);
-            vectree.push_back(")");
+            vectree.push_back(literal_string(")"));
           }
         vectree.push_back(istuple
                           ?literal_string("))/*endtuple*/")
@@ -4708,7 +4708,7 @@ flatuplesetcase:
                             istuple?"flatten_tuple":"flatten_set", ix, mom_value_cstring(cursontree));
             vectree.push_back(literal_string(", ("));
             vectree.push_back(cursontree);
-            vectree.push_back(")");
+            vectree.push_back(literal_string(")"));
           }
         vectree.push_back(istuple
                           ?literal_string("))/*endflattentuple*/")
@@ -4749,9 +4749,9 @@ flatuplesetcase:
                           ix, mom_value_cstring(cursontree));
           vectree.push_back(literal_string(", ("));
           vectree.push_back(cursontree);
-          vectree.push_back(")");
+          vectree.push_back(literal_string(")"));
         }
-      vectree.push_back(")/*endnode*/");
+      vectree.push_back(literal_string(")/*endnode*/"));
       auto restree = mom_boxnode_make(MOM_PREDEFITM(sequence), vectree.size(), vectree.data());
       vectree.clear();
       MOM_DEBUGPRINTF(gencod, "c-transform_node_expr node gives %s",
@@ -5077,6 +5077,8 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
         case CASE_ROLE_MOM(formal):
           return transform_var(expitm,initm,expbind);
         case CASE_ROLE_MOM(locals):
+          return transform_var(expitm,initm,expbind);
+        case CASE_ROLE_MOM(variable):
           return transform_var(expitm,initm,expbind);
         case CASE_ROLE_MOM(item):
         {
@@ -5521,7 +5523,9 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                               "c-transform_instruction cond insitm=%s cix#%d testtree=%s",
                               mom_item_cstring(insitm), cix,
                               mom_value_cstring(testtree));
-              iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),5,
+              iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),7,
+                                            mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+                                            mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("test:"), curconditm),
                                             mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
                                             (cix==0)?(literal_string("if ")):literal_string("else if "),
                                             literal_string("("),
@@ -5532,9 +5536,11 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
           else
             {
               iftree =
-                mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
                                     mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
-                                    literal_string ("else"));
+                                    mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("lastest:"), curconditm),
+                                    literal_string ("else")
+                                   );
             }
           MOM_DEBUGPRINTF(gencod,
                           "c-transform_instruction cond insitm=%s cix#%d iftree=%s",
