@@ -3657,13 +3657,15 @@ defaultcasetype:
   auto tytypitm =  mom_dyncast_item(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s has tytypitm=%s",
                   mom_item_cstring(typitm), mom_item_cstring(tytypitm));
+  auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
+  struct mom_item_st*extenditm = mom_dyncast_item(extendv);
   if (tytypitm == MOM_PREDEFITM(struct))
     {
       const struct mom_boxtuple_st*fieldtup = nullptr;
       auto myfieldtup =
         mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
       auto mynbfields = mom_size(myfieldtup);
-      if (myfieldtup==nullptr || mynbfields == 0)
+      if (extenditm == nullptr && (myfieldtup==nullptr || mynbfields == 0))
         throw MOM_RUNTIME_PRINTF("struct type item %s missing or empty `struct` : field-tuple",
                                  mom_item_cstring(typitm));
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s struct of fields %s",
@@ -3683,15 +3685,12 @@ defaultcasetype:
                       mom_value_cstring(strudecltree));
       add_global_decl(strudecltree);
       _cec_declareditems.insert(typitm);
-      struct mom_item_st*extenditm = nullptr;
       const struct mom_boxtuple_st*extfieldtup = nullptr;
       unsigned extfieldlen = 0;
       traced_vector_values_t vectree;
-      auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
       if (extendv != nullptr)
         {
           traced_vector_items_t vecfields;
-          extenditm = mom_dyncast_item(extendv);
           if (extenditm == nullptr)
             throw MOM_RUNTIME_PRINTF("invalid `extend` %s in struct type %s",
                                      mom_value_cstring(extendv), mom_item_cstring(typitm));
@@ -3798,7 +3797,6 @@ defaultcasetype:
   ////////////////
   else if  (tytypitm == MOM_PREDEFITM(union))
     {
-      struct mom_item_st*extenditm = nullptr;
       const struct mom_seqitems_st*extfieldseq = nullptr;
       unsigned extfieldlen = 0;
       traced_vector_values_t vectree;
@@ -3807,15 +3805,13 @@ defaultcasetype:
       unsigned mynbfields = mom_size(myfieldseq);
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s union of fields %s",
                       mom_item_cstring(typitm), mom_value_cstring(myfieldseq));
-      if( mynbfields==0)
+      if(extenditm == nullptr && mynbfields==0)
         throw MOM_RUNTIME_PRINTF("union type %s with missing or empty `union` sequence",
                                  mom_item_cstring(typitm));
       {
-        auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
         if (extendv != nullptr)
           {
             traced_vector_items_t vecfields;
-            extenditm = mom_dyncast_item(extendv);
             if (extenditm == nullptr)
               throw MOM_RUNTIME_PRINTF("invalid `extend` %s in union type %s",
                                        mom_value_cstring(extendv), mom_item_cstring(typitm));
@@ -3946,7 +3942,6 @@ defaultcasetype:
     {
       const struct mom_boxtuple_st*extenumtup = nullptr;
       unsigned extenumlen = 0;
-      struct mom_item_st*extenditm = nullptr;
       traced_vector_values_t vectree;
       auto myenutup =
         mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(enum)));
@@ -3956,15 +3951,13 @@ defaultcasetype:
       unsigned mynbenur = mom_size(myenutup);
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s enum of enumerators %s",
                       mom_item_cstring(typitm), mom_value_cstring(myenutup));
-      if( mynbenur==0)
+      if(extenditm == nullptr && mynbenur==0)
         throw MOM_RUNTIME_PRINTF("enum type %s with missing or empty `enum` sequence",
                                  mom_item_cstring(typitm));
       int preval = -1;
-      auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
       if (extendv != nullptr)
         {
           traced_vector_items_t vecenurs;
-          extenditm = mom_dyncast_item(extendv);
           if (extenditm == nullptr)
             throw MOM_RUNTIME_PRINTF("invalid `extend` %s in enum type %s",
                                      mom_value_cstring(extendv), mom_item_cstring(typitm));

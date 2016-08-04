@@ -126,6 +126,35 @@
   ]
 )
 
+^global !seqitem_ty (
+  ^* comment "the type of item sequences"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !seqitem (
+        ^* comment "the field giving the item sequence"
+        ^* descr field
+        ^* type %flexible_array(item)
+      )
+  ]
+)
+
+^global !boxtuple_ty (
+  ^* comment "the type of tuples"
+  ^* descr type
+  ^* type struct
+  ^* extend seqitem_ty
+  ^* struct [ ]
+)
+  
+^global !boxset_ty (
+  ^* comment "the type of sets"
+  ^* descr type
+  ^* type struct
+  ^* extend seqitem_ty
+  ^* struct [ ]
+)
   
 
 ^global !val0 (
@@ -881,7 +910,9 @@
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty valid_value_pointer itype
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
+     boxtuple_ty boxset_ty
+     valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble dyncast_boxstring
    ]
 )

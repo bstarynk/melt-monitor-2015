@@ -262,7 +262,8 @@ const char *mom_hostname (void);
 
 typedef const void *momvalue_t;
 typedef intptr_t momint_t;
-
+typedef struct mom_item_st*momitemptr_t;
+  
 #ifdef NDEBUG
 #define MOM_PRIVATE static
 #else
@@ -549,10 +550,10 @@ enum momitype_en
   MOMITY_INT,     /// see `int` predefined
   MOMITY_BOXDOUBLE,   /// see `double` predefined
   MOMITY_BOXSTRING,   /// see `string` predefined
-  MOMITY_ITEM,      /// see `item` predefined
   MOMITY_TUPLE,     /// see `tuple` predefined
   MOMITY_SET,     /// see `set` predefined
   MOMITY_NODE,      /// see `node` predefined
+  MOMITY_ITEM,      /// see `item` predefined
   /// the types above are for genuine values
   MOMITY__LASTHASHED,
   /// here are the payload types, they can only appear as item
