@@ -1,4 +1,4 @@
-# file cmodbty.mb -*- indented-text -*-
+# file cmodbty.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
 
 ^global !uint8_t (
   ^* comment "the uint8_t type of 8 bit unsigned"
@@ -243,74 +243,74 @@
        ^* body
        [
          ^global ?cond (
-	   ^* comment "cond for nil or empty slot or int"
-	   ^* descr cond
-	   ^* cond [
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for nil"
-	       ^* test %is_null(val0)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return false for nil"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* comment "return false when nil value"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for empty_slot"
-	       ^* test %same_value_prim(val0 %empty_slot_prim())
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return false for empty"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-	    	     ^* comment "return false when empty slot"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for odd addresses"
-	       ^* test
-	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
-			              2)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return false for odd"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* comment "return false when odd address"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "otherwise return truth"
-	       ^* test truth
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return true otherwise"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* comment "return otherwise truth"
-		     ^* return truth
-	           )
-		 ]
-	       )
-	     )
-	   ]
-	 )
+           ^* comment "cond for nil or empty slot or int"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil"
+               ^* test %is_null(val0)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return false for nil"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* comment "return false when nil value"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return false for empty"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* comment "return false when empty slot"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return false for odd"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* comment "return false when odd address"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise return truth"
+               ^* test truth
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return true otherwise"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* comment "return otherwise truth"
+                     ^* return truth
+                   )
+                 ]
+               )
+             )
+           ]
+         )
        ]
    )
 )
@@ -322,42 +322,42 @@
   ^* enum [
       ^global !ity_none (
         ^* descr enumerator
-	^* comment "type of nil"
+        ^* comment "type of nil"
       )
       ^global !ity_int (
         ^* descr enumerator
-	^* comment "itype of integer"
-	^* notice int
+        ^* comment "itype of integer"
+        ^* notice int
       )
       ^global !ity_double (
         ^* descr enumerator
-	^* comment "itype of boxed doubles"
-	^* notice double
+        ^* comment "itype of boxed doubles"
+        ^* notice double
       )    
       ^global !ity_string (
         ^* descr enumerator
-	^* comment "itype of string values"
-	^* notice string
+        ^* comment "itype of string values"
+        ^* notice string
       )       
       ^global !ity_item (
         ^* descr enumerator
-	^* comment "itype of items"
-	^* notice item
+        ^* comment "itype of items"
+        ^* notice item
       )          
       ^global !ity_tuple (
         ^* descr enumerator
-	^* comment "itype of tuples"
-	^* notice tuple
+        ^* comment "itype of tuples"
+        ^* notice tuple
       )       
       ^global !ity_set (
         ^* descr enumerator
-	^* comment "itype of sets"
-	^* notice set
+        ^* comment "itype of sets"
+        ^* notice set
       )          
       ^global !ity_node (
         ^* descr enumerator
-	^* comment "itype of nodes"
-	^* notice node
+        ^* comment "itype of nodes"
+        ^* notice node
       )       
   ]
 )
@@ -388,76 +388,76 @@
        ^* body
        [
          ^global ?cond (
-	   ^* comment "cond in itype"
-	   ^* descr cond
-	   ^* cond [
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for nil in itype in itype"
-	       ^* test %is_null(val0)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return ity_none for nil"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return ity_none
-		     ^* comment "return ity_none when nil value"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for empty_slot in itype"
-	       ^* test %same_value_prim(val0 %empty_slot_prim())
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return ity_none for empty"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return ity_none
-	    	     ^* comment "return ity_none when empty slot"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for odd addresses in itype"
-	       ^* test
-	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
-			              2)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return ity_int for odd addresses"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return ity_int
-		     ^* comment "return ity_int when odd address"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "otherwise test - valid address in itype"
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return va_itype when valid"
-	         ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return %itype_en(%va_itype(val0))
-		     ^* comment "return the va_itype when valid"
-		   )
-		 ]
-	       )
-	     )
-	   ] ## end cond
-	)
+           ^* comment "cond in itype"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil in itype in itype"
+               ^* test %is_null(val0)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return ity_none for nil"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return ity_none
+                     ^* comment "return ity_none when nil value"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot in itype"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return ity_none for empty"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return ity_none
+                     ^* comment "return ity_none when empty slot"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses in itype"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return ity_int for odd addresses"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return ity_int
+                     ^* comment "return ity_int when odd address"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise test - valid address in itype"
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return va_itype when valid"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return %itype_en(%va_itype(val0))
+                     ^* comment "return the va_itype when valid"
+                   )
+                 ]
+               )
+             )
+           ] ## end cond
+        )
       ]
     )
 )
@@ -474,93 +474,93 @@
        ^* body
        [
          ^global ?cond (
-	   ^* comment "cond in int_val_def"
-	   ^* descr cond
-	   ^* cond [
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for nil in int_val_def"
-	       ^* test %is_null(val0)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return num1 for nil"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return num1
-		     ^* comment "return num1 when nil value"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for empty_slot in int_val_def"
-	       ^* test %same_value_prim(val0 %empty_slot_prim())
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return num1 for empty"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return num1
-	    	     ^* comment "return num1 when empty slot"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for odd addresses in itype"
-	       ^* test
-	         %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
-			              2)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return half for odd addresses"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return %div(%cast_pointer_to_int_prim(val0) 2)
-		     ^* comment "return half when odd address"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for boxedints in itype"
-	       ^* test
-	         %equal_int_prim (%int(%va_itype(val0)) %int(ity_int))
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return boxi_int for boxedints"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return %boxi_int(val0)
-		     ^* comment "return boxi_int for boxedints"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test otherwise boxedints"
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return num1 othersiwe"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return num1
-	    	     ^* comment "return num1 otherwise"
-	           )
-		 ]
-	       )
-	     )
-	   ]
-	 )
+           ^* comment "cond in int_val_def"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil in int_val_def"
+               ^* test %is_null(val0)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return num1 for nil"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return num1
+                     ^* comment "return num1 when nil value"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot in int_val_def"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return num1 for empty"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return num1
+                     ^* comment "return num1 when empty slot"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses in itype"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return half for odd addresses"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return %div(%cast_pointer_to_int_prim(val0) 2)
+                     ^* comment "return half when odd address"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for boxedints in itype"
+               ^* test
+                 %equal_int_prim (%int(%va_itype(val0)) %int(ity_int))
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return boxi_int for boxedints"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return %boxi_int(val0)
+                     ^* comment "return boxi_int for boxedints"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test otherwise boxedints"
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return num1 othersiwe"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return num1
+                     ^* comment "return num1 otherwise"
+                   )
+                 ]
+               )
+             )
+           ]
+         )
        ]
      )       
   )
@@ -576,50 +576,55 @@
        ^* body
        [
          ^global ?cond (
-	   ^* comment "cond in valsize"
-	   ^* descr cond
-	   ^* cond [
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test for valid in valsize"
-	       ^* test %valid_value_pointer(val0)
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return va_size"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return %va_size(val0)
-		     ^* comment "return va_size of valid val0"
-	           )
-		 ]
-	       )
-	     )
-	     ^global ?test (
-	       ^* descr test
-	       ^* comment "test otherwise in valsize"
-	       ^* then ^global ?block (
-	         ^* descr sequence
-		 ^* comment "block return 0"
-		 ^* body [
-	           ^global ?return (
-	             ^* descr return
-		     ^* return 0
-		     ^* comment "return 0 when val0 invalid"
-	           )
-		 ]
-	       )
-	     )
-	   ]
-	 )
+           ^* comment "cond in valsize"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for valid in valsize"
+               ^* test %valid_value_pointer(val0)
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return va_size"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return %va_size(val0)
+                     ^* comment "return va_size of valid val0"
+                   )
+                 ]
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test otherwise in valsize"
+               ^* then ^global ?block (
+                 ^* descr sequence
+                 ^* comment "block return 0"
+                 ^* body [
+                   ^global ?return (
+                     ^* descr return
+                     ^* return 0
+                     ^* comment "return 0 when val0 invalid"
+                   )
+                 ]
+               )
+             )
+           ]
+         )
        ]
   )
 )
 
 
-^global !typ0l (
+^global !typ0loc (
   ^* descr variable
   ^* type itype_en
+)
+
+^global !nloc (
+  ^* descr variable
+  ^* type int
 )
 
 ^global !value_hash  (
@@ -629,15 +634,37 @@
   ^* body  ^global ?value_hash (
        ^* comment "body of value_hash"
        ^* descr sequence
-       ^* locals [ typ0l ]
+       ^* locals [ typ0loc ]
        ^* body
        [
-          ^global !assign (
-	    ^* comment "get type of val0 into typ0l"
-	    ^* descr assign
-	    ^* to typ0l
-	    ^* from %itype(val0)
-	  )
+          ^global ?assign (
+            ^* comment "get type of val0 into typ0loc"
+            ^* descr assign
+            ^* to typ0loc
+            ^* from %itype(val0)
+          )
+          ^global ?cond (
+            ^* comment "cond on typ0loc for value_hash"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_int"
+                ^* test %equal_int_prim(%int(typ0loc) %int(ity_int))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "return hash of number..."
+                  ^* body [
+                    ^global ?return (
+                      ^* comment "return hash of number val0"
+                      ^* descr return
+                      ^* return %hash_t (%plus (%mod(%int_val_def(val0 0) 1000001137) 1))
+                    )
+                  ]
+                )
+              )
+            ]
+          )
        ]
   )
 )
