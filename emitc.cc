@@ -5314,6 +5314,12 @@ MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm,
                             literal_string(CFORMAL_PREFIX),
                             varitm);
       break;
+    case CASE_ROLE_MOM(variable):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(CLOCAL_PREFIX),
+                            varitm);
+      break;
 defaultrole:
     default:
       break;
@@ -5323,7 +5329,8 @@ defaultrole:
   MOM_DEBUGPRINTF(gencod, "c-transform_var varitm=%s insitm=%s rolitm=%s vartree=%s",
                   mom_item_content_cstring(varitm), mom_item_cstring(insitm),
                   mom_item_cstring(rolitm), mom_value_cstring(vartree));
-  if (vartree) return vartree;
+  if (vartree)
+    return vartree;
 #warning unimplemented MomCEmitter::transform_var
   MOM_FATAPRINTF("unimplemented MomCEmitter::transform_var varitm=%s insitm=%s rolitm=%s",
                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(rolitm));
