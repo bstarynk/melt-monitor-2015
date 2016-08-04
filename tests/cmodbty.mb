@@ -114,6 +114,12 @@
   ^* result bool
 )
 
+^global !signature_value_to_value (
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result value
+)
+
 
 ^item is_null (
   ^* descr primitive
@@ -685,11 +691,60 @@
   )
 )
 
+^global !dyncast_int  (
+  ^* comment "inline function to dynamic-cast an int"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_int (
+       ^* comment "body of dyncast_int"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_int"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_int"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_int))
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "block return val0"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return val0"
+                      ^* return val0
+                    )
+                  ]
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-int"
+                ^* then ^global ?block (
+                  ^* descr sequence
+                  ^* comment "else block return nil"
+                  ^* body [
+                    ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
-     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def value_hash
+     anyvalue_ty hashedvalue_ty boxint_ty valid_value_pointer itype int_val_def value_hash dyncast_int
    ]
 )
 
