@@ -1103,6 +1103,82 @@
   )
 )
 
+^global !dyncast_node  (
+  ^* comment "inline function to dynamic-cast a node"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_node (
+       ^* comment "body of dyncast_node"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_node"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_node"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_node))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-node"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+
+
+^global !dyncast_item  (
+  ^* comment "inline function to dynamic-cast a item"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_item (
+       ^* comment "body of dyncast_item"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_item"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_item"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_item))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-item"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
@@ -1112,7 +1188,8 @@
      itemradix_tu item_ty node_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
-     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
+     dyncast_item
    ]
 )
 
