@@ -314,6 +314,35 @@
   ]
 )
 
+^global !node_ty (
+  ^* comment "the structure of nodes"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !nod_metarank (
+        ^* comment "the field giving the metadata rank in node"
+        ^* descr field
+        ^* type int
+      )
+      ^global !nod_metaitem (
+        ^* comment "the field giving the metadata item in node"
+        ^* descr field
+        ^* type item
+      )
+      ^global !nod_connitm (
+        ^* comment "the field giving the connective item in node"
+        ^* descr field
+        ^* type item
+      )
+      ^global !nod_sons (
+        ^* comment "the field giving the sons in node"
+        ^* descr field
+        ^* type %flexible_array(value)
+      )
+  ]
+)
+
 ^global !val0 (
    ^* comment "val0 in cmodbty.mb"
    ^* descr formal
@@ -1080,7 +1109,7 @@
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
-     itemradix_tu item_ty
+     itemradix_tu item_ty node_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set
