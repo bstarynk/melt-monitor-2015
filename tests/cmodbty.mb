@@ -324,30 +324,18 @@
                ^* descr test
                ^* comment "test for nil in valid_value_pointer"
                ^* test %is_null(val0)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return false in valid_value_pointer for nil"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* comment "return false when nil value"
-                   )
-                 ]
-               )
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return false when nil value"
+               ) 
              )
              ^global ?test (
                ^* descr test
                ^* comment "test for empty_slot"
                ^* test %same_value_prim(val0 %empty_slot_prim())
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return false for empty"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* comment "return false when empty slot"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return false when empty slot"
                )
              )
              ^global ?test (
@@ -356,31 +344,19 @@
                ^* test
                  %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
                                       2)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return false for odd"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* comment "return false when odd address"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return false when odd address"
                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "otherwise return truth"
                ^* test truth
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return true otherwise"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* comment "return otherwise truth"
-                     ^* return truth
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return otherwise truth"
+                 ^* return truth
                )
              )
            ]
@@ -469,33 +445,21 @@
                ^* descr test
                ^* comment "test for nil in itype"
                ^* test %is_null(val0)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return ity_none for nil"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return ity_none
-                     ^* comment "return ity_none when nil value"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return ity_none
+                  ^* comment "return ity_none when nil value"
                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "test for empty_slot in itype"
                ^* test %same_value_prim(val0 %empty_slot_prim())
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return ity_none for empty"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return ity_none
-                     ^* comment "return ity_none when empty slot"
-                   )
-                 ]
-               )
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return ity_none
+                  ^* comment "return ity_none when empty slot"
+                )
              )
              ^global ?test (
                ^* descr test
@@ -503,31 +467,19 @@
                ^* test
                  %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
                                       2)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return ity_int for odd addresses"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return ity_int
-                     ^* comment "return ity_int when odd address"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return ity_int
+                 ^* comment "return ity_int when odd address"
                )
-             )
+             )             
              ^global ?test (
                ^* descr test
                ^* comment "otherwise test - valid address in itype"
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return va_itype when valid"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return %itype_en(%va_itype(val0))
-                     ^* comment "return the va_itype when valid"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %itype_en(%va_itype(val0))
+                 ^* comment "return the va_itype when valid"
                )
              )
            ] ## end cond
@@ -555,32 +507,20 @@
                ^* descr test
                ^* comment "test for nil in int_val_def"
                ^* test %is_null(val0)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return num1 for nil"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return num1
-                     ^* comment "return num1 when nil value"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return num1
+                 ^* comment "return num1 when nil value"
                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "test for empty_slot in int_val_def"
                ^* test %same_value_prim(val0 %empty_slot_prim())
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return num1 for empty"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return num1
-                     ^* comment "return num1 when empty slot"
-                   )
-                 ]
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* return num1
+                  ^* comment "return num1 when empty slot"
                )
              )
              ^global ?test (
@@ -589,49 +529,31 @@
                ^* test
                  %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
                                       2)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return half for odd addresses"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return %div(%cast_pointer_to_int_prim(val0) 2)
-                     ^* comment "return half when odd address"
-                   )
-                 ]
-               )
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return %div(%cast_pointer_to_int_prim(val0) 2)
+                  ^* comment "return half when odd address"
+                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "test for boxedints in itype"
                ^* test
                  %equal_int_prim (%int(%va_itype(val0)) %int(ity_int))
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return boxi_int for boxedints"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return %boxi_int(val0)
-                     ^* comment "return boxi_int for boxedints"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %boxi_int(val0)
+                 ^* comment "return boxi_int for boxedints"
                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "test otherwise boxedints"
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return num1 othersiwe"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return num1
-                     ^* comment "return num1 otherwise"
-                   )
-                 ]
-               )
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* return num1
+                  ^* comment "return num1 otherwise"
+                )
              )
            ]
          )
@@ -657,32 +579,20 @@
                ^* descr test
                ^* comment "test for valid in valsize"
                ^* test %valid_value_pointer(val0)
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return va_size"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return %va_size(val0)
-                     ^* comment "return va_size of valid val0"
-                   )
-                 ]
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %va_size(val0)
+                 ^* comment "return va_size of valid val0"
                )
              )
              ^global ?test (
                ^* descr test
                ^* comment "test otherwise in valsize"
-               ^* then ^global ?block (
-                 ^* descr sequence
-                 ^* comment "block return 0"
-                 ^* body [
-                   ^global ?return (
-                     ^* descr return
-                     ^* return 0
-                     ^* comment "return 0 when val0 invalid"
-                   )
-                 ]
-               )
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return 0
+                  ^* comment "return 0 when val0 invalid"
+                )
              )
            ]
          )
@@ -725,32 +635,21 @@
                 ^* descr test
                 ^* comment "test for ity_none"
                 ^* test %equal_int_prim(%int(typ0loc) %int(ity_none))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "return 0 for none"
-                  ^* body [
-                    ^global ?return (
-                      ^* comment "return 0"
-                      ^* descr return
-                      ^* return %hash_t (0)
-                    )
-                  ]
-                )
+                ^* then  ^global ?return (
+                   ^* comment "return 0"
+                   ^* descr return
+                   ^* return %hash_t (0)
+                 )
               )
               ^global ?test (
                 ^* descr test
                 ^* comment "test for ity_int"
                 ^* test %equal_int_prim(%int(typ0loc) %int(ity_int))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "return hash of number..."
-                  ^* body [
-                    ^global ?return (
-                      ^* comment "return hash of number val0"
-                      ^* descr return
-                      ^* return %hash_t (%plus (%mod(%int_val_def(val0 0) 1000001137) 1))
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* comment "return hash of number val0"
+                  ^* descr return
+                  ^* return %hash_t (%plus
+                        (%mod(%int_val_def(val0 0) 1000001137) 1))
                 )
               )
             ]
@@ -776,30 +675,18 @@
                 ^* descr test
                 ^* comment "test for ity_int"
                 ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_int))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "block return val0"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return val0"
-                      ^* return val0
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
                 )
               )
               ^global ?test (
                 ^* descr test
                 ^* comment "test else non-int"
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "else block return nil"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return nil"
-                    )
-                  ]
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return nil"
                 )
               )
             ]
@@ -825,30 +712,18 @@
                 ^* descr test
                 ^* comment "test for ity_double"
                 ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_double))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "block return val0"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return val0"
-                      ^* return val0
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
                 )
               )
               ^global ?test (
                 ^* descr test
                 ^* comment "test else non-double"
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "else block return nil"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return nil"
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return nil"
                 )
               )
             ]
@@ -874,30 +749,18 @@
                 ^* descr test
                 ^* comment "test for ity_string"
                 ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_string))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "block return val0"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return val0"
-                      ^* return val0
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
                 )
               )
               ^global ?test (
                 ^* descr test
                 ^* comment "test else non-string"
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "else block return nil"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return nil"
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "else return nil"
                 )
               )
             ]
@@ -923,32 +786,20 @@
                 ^* descr test
                 ^* comment "test for ity_tuple"
                 ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "block return val0"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return val0"
-                      ^* return val0
-                    )
-                  ]
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
                 )
               )
               ^global ?test (
                 ^* descr test
                 ^* comment "test for ity_set"
                 ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_set))
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "block return val0"
-                  ^* body [
-                    ^global ?return (
-                      ^* descr return
-                      ^* comment "return val0"
-                      ^* return val0
-                    )
-                  ]
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
                 )
               )
               ^global ?test (
