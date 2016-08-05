@@ -17,10 +17,36 @@
   ^* c_code "uint32_t"
   )
 
+^global !uint64_t (
+  ^* comment "the uint64_t type of 64 bit unsigned"
+  ^* descr type
+  ^* c_code "uint64_t"
+  )
+
+^global !payload_t (
+  ^* comment "the type of payload"
+  ^* descr type
+  ^* c_code "void*"
+  )
+
+
+^global !mutex_t (
+  ^* comment "the type of POSIX mutexes"
+  ^* descr type
+  ^* c_code "pthread_mutex_t"
+  )
+
+
 ^global !hash_t (
   ^* comment "the unsigned type of hash-code"
   ^* descr type
   ^* c_code "momhash_t"
+  )
+
+^global !time_t (
+  ^* comment "the unsigned type of POSIX time"
+  ^* descr type
+  ^* c_code "time_t"
   )
 
 ^global !atomic_int16_t (
@@ -209,13 +235,84 @@
   ^* extend countedata_ty
   ^* struct [
       ^global !vecd_valarr (
-        ^* comment "the field giving the vector's components"
+        ^* comment "the field giving the vector\'s components"
         ^* descr field
-        ^* type %flexible_array(momvalue_t)
+        ^* type %flexible_array(value)
       )
   ]
 )
 
+^global  !itemradix_tu (
+  ^* comment "the structure of item radixes"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global !itrad_rank (
+        ^* comment "the field giving the radix rank"
+        ^* descr field
+        ^* type uint32_t
+      )
+      ^global !itrad_name (
+        ^* comment "the field giving the radix name"
+        ^* descr field
+        ^* type boxstring_ty
+      )
+   ]
+)
+
+^global !item_ty (
+  ^* comment "the structure of items"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !itm_radix (
+        ^* comment "the field giving the item\'s radix"
+        ^* descr field
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itm_mtx (
+        ^* comment "the field giving the item\'s lock"
+        ^* descr field
+        ^* type mutex_t
+      )
+      ^global !itm_hid (
+        ^* comment "the field giving the highbits id"
+        ^* descr field
+        ^* type uint32_t
+      )
+      ^global !itm_lid (
+        ^* comment "the field giving the lowbits id"
+        ^* descr field
+        ^* type uint64_t
+      )
+      ^global !itm_mtime (
+        ^* comment "the field giving the modification time"
+        ^* descr field
+        ^* type time_t
+      )
+      ^global !itm_pattr (
+        ^* comment "the field giving the attributes of the item"
+        ^* descr field
+        ^* type %pointer(assovaldata_ty)
+      )
+      ^global !itm_pcomp (
+        ^* comment "the field giving the components"
+        ^* descr field
+        ^* type %pointer(vectvaldata_ty)
+      )
+      ^global !itm_paylkind (
+        ^* comment "the field giving the payload kind"
+        ^* descr field
+        ^* type item
+      )
+      ^global !itm_payldata (
+        ^* comment "the field giving the payload data"
+        ^* descr field
+        ^* type payload_t
+      )
+  ]
+)
 
 ^global !val0 (
    ^* comment "val0 in cmodbty.mb"
@@ -983,6 +1080,7 @@
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
+     itemradix_tu item_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set
