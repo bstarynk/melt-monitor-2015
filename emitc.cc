@@ -1621,10 +1621,6 @@ sequencecase:
           MOM_DEBUGPRINTF(gencod, "after scanning nested block insitm=%s rk#%d blkitm=%s",
                           mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
         });
-        bind_local_at(insitm,desitm,
-                      insitm,
-                      __LINE__,
-                      blkitm, rk);
       } /// end sequence (& loop)
       break;
     //////
