@@ -516,11 +516,12 @@ public:
 ////////////////
 class MomCEmitter final :public MomEmitter
 {
+  friend bool mom_emit_c_code(struct mom_item_st*itm);
+  friend bool mom_emit_header_code(struct mom_item_st*itm);
   traced_vector_values_t _cec_globdecltree;
   traced_vector_values_t _cec_globdefintree;
   traced_set_items_t _cec_declareditems;
-  friend bool mom_emit_c_code(struct mom_item_st*itm);
-
+  bool _cec_includeheader;
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static constexpr const char* CTYPE_PREFIX = "momty_";
@@ -545,8 +546,8 @@ public:
   static constexpr const char* CVALUE_TYPE = "momvalue_t";
   static constexpr const char* CDOUBLE_TYPE = "double";
   static constexpr const char* CVOID_TYPE = "void";
-  MomCEmitter(struct mom_item_st*itm)
-    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems()
+  MomCEmitter(struct mom_item_st*itm, bool includeh=true)
+    : MomEmitter(MAGIC, itm), _cec_globdecltree(), _cec_declareditems(), _cec_includeheader(includeh)
   {
     auto emititm = mom_clone_item(itm);
     lock_item(emititm);
@@ -816,6 +817,153 @@ bool mom_emit_c_code(struct mom_item_st*itm)
       return false;
     }
 } // end of mom_emit_c_code
+
+
+
+////////////////////////////////////////////////////////////////
+bool mom_emit_header_code(struct mom_item_st*itm)
+{
+  if (!itm || itm==MOM_EMPTY_SLOT || itm->va_itype != MOMITY_ITEM)
+    {
+      MOM_WARNPRINTF("invalid item for mom_emit_header_code");
+      return false;
+    }
+  MOM_DEBUGPRINTF(gencod, "mom_emit_header_code start itm=%s", mom_item_cstring(itm));
+  errno = 0;
+  MomCEmitter hemit {itm,false};
+  try
+    {
+      auto nod = hemit.transform_top_module();
+      hemit.flush_todo_list(__LINE__);
+      hemit.add_definition(nod);
+      long r = 0;
+      do
+        {
+          r= ((momrand_genrand_int32 () % 65536) << 32) |  momrand_genrand_int32();
+        }
+      while (MOM_UNLIKELY(r<100));
+      hemit.flush_todo_list(__LINE__);
+      MOM_DEBUGPRINTF(gencod, "mom_emit_header_code itm=%s nod=%s\n", mom_item_cstring(itm), mom_value_cstring(nod));
+      const char*tmpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.h+%lxp%d.tmp",
+                                        mom_item_cstring(itm), r, (int)getpid());
+      const char*gpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.h", mom_item_cstring(itm));
+      FILE* fout = fopen(tmpath, "w");
+      if (!fout)
+        MOM_FATAPRINTF("failed to fopen %s", tmpath);
+      MOM_DEBUGPRINTF(gencod, "mom_emit_header_code tmpath=%s gpath=%s", tmpath, gpath);
+      errno = 0;
+      fprintf(fout, "// EmitC-generated header file %s ** DO NOT EDIT\n\n",
+              basename(gpath));
+      mom_output_gplv3_notice (fout, "//", "",  basename(gpath));
+      fprintf(fout, "\n\n#ifndef MONIMELT_INCLUDED_\n");
+      fprintf(fout, "#error meltmoni.h should be included before %s\n",  basename(gpath));
+      fprintf(fout, "#endif /*MONIMELT_INCLUDED_*/\n\n");
+      int nbdecl = (int)hemit._cec_globdecltree.size();
+      if (nbdecl>0)
+        {
+          fprintf(fout, "\n\n/// %d declarations:\n", nbdecl);
+          for (int i=0; i<nbdecl; i++)
+            {
+              fputc('\n', fout);
+              long nl = ftell(fout);
+              MOM_DEBUGPRINTF(gencod, "declaration #%d: %s",
+                              i, mom_value_cstring(hemit._cec_globdecltree[i]));
+              hemit.write_tree(fout,0, nl, hemit._cec_globdecltree[i], itm);
+              fputs("\n\n", fout);
+            }
+        }
+      else fputs("// no declarations\n\n", fout);
+      fflush(fout);
+      int nbdef = (int)hemit._cec_globdefintree.size();
+      if (nbdef>0)
+        {
+          fprintf(fout, "\n/// %d definitions:\n", nbdef);
+          for (int i=0; i<nbdef; i++)
+            {
+              fputc('\n', fout);
+              long nl = ftell(fout);
+              MOM_DEBUGPRINTF(gencod, "definition #%d: %s",
+                              i, mom_value_cstring(hemit._cec_globdefintree[i]));
+              hemit.write_tree(fout,0, nl, hemit._cec_globdefintree[i], itm);
+              fputs("\n\n", fout);
+            }
+        }
+      else fputs("// no definitions\n\n", fout);
+      fprintf(fout,"/// end of generated header file %s\n", basename(gpath));
+      if (fclose(fout))
+        MOM_FATAPRINTF("failed to fclose %s", tmpath);
+      FILE*fold = fopen(gpath, "r");
+      fout = fopen(tmpath, "r");
+      if (!fout)
+        MOM_FATAPRINTF("failed to re-fopen %s", tmpath);
+      if (fold == nullptr)
+        {
+          fclose(fout);
+          if (rename (tmpath, gpath))
+            MOM_FATAPRINTF("failed to rename %s to %s", tmpath, gpath);
+        }
+      else
+        {
+          struct ::stat stold = {};
+          struct ::stat stnew = {};
+          if (fstat(fileno(fold),&stold))
+            MOM_FATAPRINTF("failed to fstat#%d for %s", fileno(fold), gpath);
+          if (fstat(fileno(fout), &stnew))
+            MOM_FATAPRINTF("failed to fstat#%d for %s", fileno(fout), tmpath);
+          bool same = stold.st_size == stnew.st_size;
+          while (same)
+            {
+              int ob = fgetc(fold);
+              int nb = fgetc(fout);
+              if (ob != nb) same=false;
+              if (ob == EOF) break;
+            };
+          fclose(fout);
+          fclose(fold);
+          if (same)
+            {
+              MOM_INFORMPRINTF("C code unchanged for header %s in %s", mom_item_cstring(itm), gpath);
+              remove (tmpath);
+            }
+          else
+            {
+              const char*bakpath = mom_gc_printf(MOM_MODULEDIR "/" MOM_CPREFIX_PATH "%s.c~",
+                                                 mom_item_cstring(itm));
+              if (rename(gpath, bakpath))
+                MOM_WARNPRINTF("failed to rename for backup %s -> %s (%m)", gpath, bakpath);
+              else
+                MOM_INFORMPRINTF("backed up %s -> %s", gpath, bakpath);
+              if (rename(tmpath, gpath))
+                MOM_FATAPRINTF("failed to rename %s to %s", tmpath, gpath);
+              MOM_INFORMPRINTF("C code generated for header %s in %s of %ld bytes",
+                               mom_item_cstring(itm), gpath, (long)stnew.st_size);
+            }
+        }
+      return true;
+    }
+  catch (const MomRuntimeErrorAt& e)
+    {
+      hemit.failing();
+      MOM_WARNPRINTF_AT(e.file(), e.lineno(),
+                        "mom_emit_header_code %s failed with MOM runtime exception %s in %s",
+                        mom_item_cstring(itm), mom_gc_strdup(e.what()), mom_item_cstring(hemit.current_function()));
+      return false;
+    }
+  catch (const std::exception& e)
+    {
+      hemit.failing();
+      MOM_WARNPRINTF("mom_emit_header_code %s failed with exception %s in %s",
+                     mom_item_cstring(itm), e.what(), mom_item_cstring(hemit.current_function()));
+      return false;
+    }
+  catch (...)
+    {
+      hemit.failing();
+      MOM_WARNPRINTF("mom_emit_header_code %s failed in %s",
+                     mom_item_cstring(itm), mom_item_cstring(hemit.current_function()));
+      return false;
+    }
+} // end of mom_emit_header_code
 
 
 
@@ -3674,11 +3822,11 @@ defaultcasetype:
       auto myfieldtup =
         mom_dyncast_tuple(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(struct)));
       auto mynbfields = mom_size(myfieldtup);
+      MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s myfieldtup=%s",
+                      mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
       if (extenditm == nullptr && (myfieldtup==nullptr || mynbfields == 0))
         throw MOM_RUNTIME_PRINTF("struct type item %s missing or empty `struct` : field-tuple",
                                  mom_item_cstring(typitm));
-      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s struct of fields %s",
-                      mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
       auto strudecltree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
                                   literal_string("typedef "),
@@ -3689,7 +3837,7 @@ defaultcasetype:
                                   literal_string(CTYPE_PREFIX),
                                   typitm,
                                   literal_string(";"));
-      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s strudecltree=%s",
+      MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s strudecltree=%s",
                       mom_item_cstring(typitm),
                       mom_value_cstring(strudecltree));
       add_global_decl(strudecltree);
@@ -3697,17 +3845,14 @@ defaultcasetype:
       const struct mom_boxtuple_st*extfieldtup = nullptr;
       unsigned extfieldlen = 0;
       traced_vector_values_t vectree;
-      if (extendv != nullptr)
+      traced_vector_items_t vecfields;
+      if (extenditm != nullptr)
         {
-          traced_vector_items_t vecfields;
-          if (extenditm == nullptr)
-            throw MOM_RUNTIME_PRINTF("invalid `extend` %s in struct type %s",
-                                     mom_value_cstring(extendv), mom_item_cstring(typitm));
           auto extendbind = get_global_binding(extenditm);
           if (extendbind == nullptr)
             throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
                                      mom_item_cstring(extenditm), mom_item_cstring(typitm));
-          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s extenditm=%s extendbind role %s what %s",
+          MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s extenditm=%s extendbind role %s what %s",
                           mom_item_cstring(typitm), mom_item_cstring(extenditm),
                           mom_item_cstring(extendbind->vd_rolitm),
                           mom_value_cstring(extendbind->vd_what));
@@ -3717,6 +3862,8 @@ defaultcasetype:
                                       mom_item_cstring(extendbind->vd_rolitm),
                                       mom_value_cstring(extendbind->vd_what));
           extfieldtup = mom_dyncast_tuple(extendbind->vd_what);
+          MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s extenditm=%s extfieldtup=%s",
+                          mom_item_cstring(typitm), mom_item_cstring(extenditm), mom_value_cstring(extfieldtup));
           assert (extfieldtup != nullptr);
           extfieldlen = mom_raw_size(extfieldtup);
           vectree.reserve(extfieldlen+mynbfields+3);
@@ -3726,19 +3873,20 @@ defaultcasetype:
                                 literal_string("/*extending struct "),
                                 extenditm,
                                 literal_string("*/"));
-          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s introtree=%s",
-                          mom_item_cstring(typitm), mom_value_cstring(introtree));
+          MOM_DEBUGPRINTF(gencod, "c-declare_type struct extended typitm=%s introtree=%s\n.. extenditm=%s extfieldtup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(introtree),
+                          mom_item_cstring(extenditm), mom_value_cstring(extfieldtup));
           vectree.push_back(introtree);
           for (int efix=0; efix<(int)extfieldlen; efix++)
             {
               auto curextfitm = extfieldtup->seqitem[efix];
               assert (is_locked_item(curextfitm));
               vecfields.push_back(curextfitm);
-              MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s efix#%d curextfitm=%s",
-                              mom_item_cstring(typitm), efix, mom_item_cstring(curextfitm));
+              MOM_DEBUGPRINTF(gencod, "c-declare_type struct extended typitm=%s extenditm=%s efix#%d curextfitm=%s",
+                              mom_item_cstring(typitm),   mom_item_cstring(extenditm), efix, mom_item_cstring(curextfitm));
               auto curextftree = declare_struct_member_unbound (curextfitm);
-              MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s efix#%d curextfitm=%s curextftree=%s",
-                              mom_item_cstring(typitm), efix,
+              MOM_DEBUGPRINTF(gencod, "c-declare_type struct extended typitm=%s extenditm=%s efix#%d curextfitm=%s curextftree=%s",
+                              mom_item_cstring(typitm),   mom_item_cstring(extenditm), efix,
                               mom_item_cstring(curextfitm), mom_value_cstring(curextftree));
               assert (curextftree != nullptr);
               vectree.push_back(curextftree);
@@ -3753,17 +3901,15 @@ defaultcasetype:
           MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s aftertree=%s",
                           mom_item_cstring(typitm), mom_value_cstring(aftertree));
           vectree.push_back(aftertree);
-          auto allfldtup = mom_boxtuple_make_arr(vecfields.size(), vecfields.data());
-          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s binding allfldtup=%s",
-                          mom_item_cstring(typitm), mom_value_cstring(allfldtup));
-          bind_global_at(typitm, MOM_PREDEFITM(struct), allfldtup,__LINE__);
         }
       else   /* no extension in struct */
         {
-          MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s binding myfieldtup=%s",
+          vecfields.reserve(mynbfields+1);
+          MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s myfieldtup=%s",
                           mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
-          bind_global_at(typitm, MOM_PREDEFITM(struct), myfieldtup,__LINE__);
         }
+      MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s mynbfields#%d",
+                      mom_item_cstring(typitm), mynbfields);
       for (int fix=0; fix<(int)mynbfields; fix++)
         {
           auto curflditm = myfieldtup->seqitem[fix];
@@ -3778,7 +3924,12 @@ defaultcasetype:
                           mom_item_cstring(typitm), fix,
                           mom_item_cstring(curflditm), mom_value_cstring(curftree));
           vectree.push_back(curftree);
+          vecfields.push_back(curflditm);
         }
+      auto allfldtup = mom_boxtuple_make_arr(vecfields.size(), vecfields.data());
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s binding allfldtup=%s",
+                      mom_item_cstring(typitm), mom_value_cstring(allfldtup));
+      bind_global_at(typitm, MOM_PREDEFITM(struct), allfldtup,__LINE__);
       auto endtree =
         mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
                             literal_string("/*ending struct "),
@@ -5194,6 +5345,7 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
       if (desctitm == MOM_PREDEFITM(type))
         {
           auto ccodexp = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(c_code));
+          MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s ccodexp=%s", mom_item_cstring(typitm), mom_value_cstring(ccodexp));
           if (ccodexp)
             {
               if (scalarp)
@@ -5202,17 +5354,24 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
                                               ccodexp,
                                               literal_string(" "),
                                               vartree);
-              MOM_DEBUGPRINTF(gencod, "c-transform_type_for %s gives %s for primitive c-type",
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s gives %s for primitive c-type",
                               mom_item_cstring(typitm), mom_value_cstring(tree));
               return tree;
             }
           else
             {
-              auto dtree = declare_type(typitm, scalarp);
-              MOM_DEBUGPRINTF(gencod, "c-transform_type_for %s gives declared dtree %s (%s)",
+              auto dtytree = declare_type(typitm, scalarp);
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s so dtytree %s (%s)",
                               mom_item_cstring(typitm),
-                              mom_value_cstring(dtree),
+                              mom_value_cstring(dtytree),
                               scalarp?((*scalarp)?"scalar":"aggregate"):"dontcare");
+              auto dtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                               literal_string(CTYPE_PREFIX),
+                                               typitm,
+                                               literal_string(" "),
+                                               vartree);
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for declared typitm=%s gives dtree=%s",
+                              mom_item_cstring(typitm), mom_value_cstring(dtree));
               return dtree;
             }
         }

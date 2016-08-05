@@ -1518,6 +1518,34 @@ momtest_emitc (const char *arg)
 
 
 void
+momtest_emith (const char *arg)
+{
+  MOM_INFORMPRINTF ("start momtest_emith arg=%s", arg);
+  struct mom_item_st *itm = mom_find_item_by_string (arg);
+  if (!itm)
+    MOM_WARNPRINTF ("momtest_emith no item for arg=%s", arg);
+  else
+    {
+      double starealt = mom_clock_time (CLOCK_REALTIME);
+      double stacput = mom_process_cpu_time ();
+      MOM_INFORMPRINTF ("momtest_emith before emitting header code for %s",
+                        mom_item_cstring (itm));
+      bool ok = mom_emit_header_code (itm);
+      double endrealt = mom_clock_time (CLOCK_REALTIME);
+      double endcput = mom_process_cpu_time ();
+      if (ok)
+        MOM_INFORMPRINTF
+          ("momtest_emith succeeded emitting header code for %s in %.3f real %.4f cpu sec",
+           mom_item_cstring (itm), (endrealt - starealt),
+           (endcput - stacput));
+      else
+        MOM_FATAPRINTF ("momtest_emith failed emitting header code for %s",
+                        mom_item_cstring (itm));
+    }
+}                               /* end momtest_emith */
+
+
+void
 momtest_emitjs (const char *arg)
 {
   MOM_INFORMPRINTF ("start momtest_emitjs arg=%s", arg);
