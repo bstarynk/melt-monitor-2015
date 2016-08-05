@@ -1618,7 +1618,7 @@ main (int argc_main, char **argv_main)
   gethostname (hostname_mom, sizeof (hostname_mom) - 1);
   GC_INIT ();
   GC_set_handle_fork (1);
-  GC_register_displacement (offsetof (struct mom_itemradix_tu, itname_string));
+  GC_register_displacement (offsetof (struct mom_itemradix_tu, itrad_string));
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);

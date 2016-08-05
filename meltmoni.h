@@ -1443,8 +1443,8 @@ mom_hashassoc_count (const struct mom_hashassoc_st *ha)
 ////////////////
 struct mom_itemradix_tu
 {
-  uint32_t itname_rank;
-  struct mom_boxstring_st itname_string;
+  uint32_t itrad_rank;
+  struct mom_boxstring_st itrad_string;
 };
 
 enum mom_space_en
@@ -1736,7 +1736,7 @@ static inline const char *
 mom_item_radix_str (const struct mom_item_st *itm)
 {
   if (itm)
-    return itm->itm_radix->itname_string.boxs_cstr;
+    return itm->itm_radix->itrad_string.boxs_cstr;
   else
     return NULL;
 }
