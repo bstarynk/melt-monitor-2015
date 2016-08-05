@@ -203,6 +203,19 @@
   ]
 )
 
+^global !vectvaldata_ty (
+  ^* descr type
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+      ^global !vecd_valarr (
+        ^* comment "the field giving the vector's components"
+        ^* descr field
+        ^* type %flexible_array(momvalue_t)
+      )
+  ]
+)
+
 
 ^global !val0 (
    ^* comment "val0 in cmodbty.mb"
@@ -969,7 +982,7 @@
    ^* descr module
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
-     boxtuple_ty boxset_ty countedata_ty assovaldata_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set

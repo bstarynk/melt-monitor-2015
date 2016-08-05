@@ -1441,7 +1441,7 @@ mom_hashassoc_count (const struct mom_hashassoc_st *ha)
 }
 
 ////////////////
-struct mom_itemname_tu
+struct mom_itemradix_tu
 {
   uint32_t itname_rank;
   struct mom_boxstring_st itname_string;
@@ -1465,7 +1465,7 @@ enum mom_space_en
 /* inside an item, va_ixv is the space index */
 #define MOM_ITEM_FIELDS             \
   MOM_HASHEDVALUE_FIELDS;           \
-  struct mom_itemname_tu* itm_radix;          \
+  struct mom_itemradix_tu* itm_radix;          \
   pthread_mutex_t itm_mtx;            \
   uint32_t itm_hid;             \
   uint64_t itm_lid;             \
@@ -1529,8 +1529,8 @@ mom_valid_name_radix (const char *str)
 }
 
 
-const struct mom_itemname_tu *mom_find_name_radix (const char *str);
-static inline const struct mom_itemname_tu *
+const struct mom_itemradix_tu *mom_find_name_radix (const char *str);
+static inline const struct mom_itemradix_tu *
 mom_find_name_radix_len (const char *str, int len)
 {
   if (!str || str == MOM_EMPTY_SLOT || len == 0)
@@ -1555,8 +1555,8 @@ mom_find_name_radix_len (const char *str, int len)
 }       /* end of mom_find_name_radix_len */
 
 
-const struct mom_itemname_tu *mom_make_name_radix (const char *str);
-static inline const struct mom_itemname_tu *
+const struct mom_itemradix_tu *mom_make_name_radix (const char *str);
+static inline const struct mom_itemradix_tu *
 mom_make_name_radix_len (const char *str, int len)
 {
   if (!str || str == MOM_EMPTY_SLOT || len == 0)
@@ -1581,14 +1581,14 @@ mom_make_name_radix_len (const char *str, int len)
 }       /* end of mom_make_name_radix_len */
 
 struct mom_item_st *mom_find_item_from_radix_id (const struct
-    mom_itemname_tu *radix,
+    mom_itemradix_tu *radix,
     uint16_t hid, uint64_t loid);
 
 static inline struct mom_item_st *
 mom_find_item_from_str_id (const char
                            *str, int len, uint16_t hid, uint64_t loid)
 {
-  const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
+  const struct mom_itemradix_tu *tu = mom_find_name_radix_len (str, len);
   if (tu)
     return mom_find_item_from_radix_id (tu, hid, loid);
   return NULL;
@@ -1678,7 +1678,7 @@ mom_item_unlock_at (struct mom_item_st *itm, const char *fil, int lin)
 #define mom_item_unlock(Itm) mom_item_unlock_at((Itm),__FILE__,__LINE__)
 
 struct mom_item_st *mom_make_item_from_radix_id (const struct
-    mom_itemname_tu *radix,
+    mom_itemradix_tu *radix,
     uint16_t hid, uint64_t loid);
 
 
@@ -1686,19 +1686,19 @@ static inline struct mom_item_st *
 mom_make_item_from_str_id (const char
                            *str, int len, uint16_t hid, uint64_t loid)
 {
-  const struct mom_itemname_tu *tu = mom_find_name_radix_len (str, len);
+  const struct mom_itemradix_tu *tu = mom_find_name_radix_len (str, len);
   if (tu)
     return mom_make_item_from_radix_id (tu, hid, loid);
   return NULL;
 }
 
 static inline struct mom_item_st *
-mom_make_item_from_radix (const struct mom_itemname_tu *radix)
+mom_make_item_from_radix (const struct mom_itemradix_tu *radix)
 {
   return mom_make_item_from_radix_id (radix, 0, 0);
 }
 
-struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemname_tu
+struct mom_item_st *mom_clone_item_from_radix (const struct mom_itemradix_tu
     *radix);
 
 static inline struct mom_item_st *

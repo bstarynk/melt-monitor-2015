@@ -33,7 +33,7 @@ struct radixitems_mom_st;
 
 struct radix_mom_st
 {
-  struct mom_itemname_tu *rad_name;
+  struct mom_itemradix_tu *rad_name;
   uint32_t rad_size;            /* allocated size */
   uint32_t rad_count;           /* used count */
   pthread_mutex_t rad_mtx;
@@ -150,10 +150,10 @@ mom_suffix_to_hi_lo (const char *buf, uint16_t *phi, uint64_t *plo)
 }
 
 
-const struct mom_itemname_tu *
+const struct mom_itemradix_tu *
 mom_find_name_radix (const char *str)
 {
-  struct mom_itemname_tu *tun = NULL;
+  struct mom_itemradix_tu *tun = NULL;
   if (!str || str == MOM_EMPTY_SLOT || !str[0])
     return NULL;
   if (!mom_valid_name_radix (str))
@@ -166,7 +166,7 @@ mom_find_name_radix (const char *str)
   while (lo + 5 < hi)
     {
       int md = (lo + hi) / 2;
-      struct mom_itemname_tu *curad = radix_arr_mom[md]->rad_name;
+      struct mom_itemradix_tu *curad = radix_arr_mom[md]->rad_name;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) md);
       int c = strcmp (str, curad->itname_string.boxs_cstr);
@@ -182,7 +182,7 @@ mom_find_name_radix (const char *str)
     };
   for (int ix = lo; ix < hi; ix++)
     {
-      struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
+      struct mom_itemradix_tu *curad = radix_arr_mom[ix]->rad_name;
       assert (curad != NULL);
       assert (ix == 0
               || strcmp (radix_arr_mom[ix - 1]->rad_name->
@@ -246,7 +246,7 @@ static long makeradixcounter_mom;
 
 struct both_name_and_radix_mom_st
 {
-  struct mom_itemname_tu *btn_name;
+  struct mom_itemradix_tu *btn_name;
   struct radix_mom_st *btn_radix;
 };
 
@@ -257,8 +257,8 @@ put_name_radix_mom (int ix, const char *str)
   assert (str != NULL);
   int len = (int) strlen (str);
   assert (radix_arr_mom[ix] == NULL);
-  struct mom_itemname_tu *newnam =
-    mom_gc_alloc_scalar (((sizeof (struct mom_itemname_tu) + len +
+  struct mom_itemradix_tu *newnam =
+    mom_gc_alloc_scalar (((sizeof (struct mom_itemradix_tu) + len +
                            2) | 3) + 1);
   newnam->itname_rank = ix;
   newnam->itname_string.va_itype = MOMITY_BOXSTRING;
@@ -288,11 +288,11 @@ put_name_radix_mom (int ix, const char *str)
 
 
 
-const struct mom_itemname_tu *
+const struct mom_itemradix_tu *
 mom_make_name_radix (const char *str)
 {
   int tix = -1;
-  struct mom_itemname_tu *tun = NULL;
+  struct mom_itemradix_tu *tun = NULL;
   if (!str || !str[0])
     return NULL;
   int len = (int) strlen (str);
@@ -369,7 +369,7 @@ mom_make_name_radix (const char *str)
     {
       int md = (lo + hi) / 2;
       assert (radix_arr_mom[md]);
-      struct mom_itemname_tu *curad = radix_arr_mom[md]->rad_name;
+      struct mom_itemradix_tu *curad = radix_arr_mom[md]->rad_name;
       assert (curad != NULL);
       MOM_DEBUGPRINTF (item,
                        "make_name_radix loop lo=%d hi=%d md=%d curadname '%s' str '%.*s'",
@@ -393,7 +393,7 @@ mom_make_name_radix (const char *str)
   for (int ix = lo; ix < (int) radix_cnt_mom; ix++)
     {
       assert (radix_arr_mom[ix]);
-      struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
+      struct mom_itemradix_tu *curad = radix_arr_mom[ix]->rad_name;
       assert (curad != NULL);
       assert (curad->itname_rank == (unsigned) ix);
       int c = strcmp (str, curad->itname_string.boxs_cstr);
@@ -507,7 +507,7 @@ mom_find_item_from_string (const char *str, const char **pend)
   const char *end = NULL;
   uint16_t hid = 0;
   uint64_t lid = 0;
-  const struct mom_itemname_tu *radix = NULL;
+  const struct mom_itemradix_tu *radix = NULL;
   radix = mom_find_name_radix_len (str, endradix - str);
   if (!radix)
     goto not_found;
@@ -586,8 +586,8 @@ mom_set_items_prefixed (const char *str, int slen)
           MOM_DEBUGPRINTF (item,
                            "mom_set_items_prefixed str=%.*s lo=%d hi=%d nbloop#%d",
                            slen, str, lo, hi, nbloop);
-          struct mom_itemname_tu *lorad = radix_arr_mom[lo]->rad_name;
-          struct mom_itemname_tu *hirad = radix_arr_mom[hi]->rad_name;
+          struct mom_itemradix_tu *lorad = radix_arr_mom[lo]->rad_name;
+          struct mom_itemradix_tu *hirad = radix_arr_mom[hi]->rad_name;
           assert (lorad != NULL && lorad->itname_rank == (unsigned) lo);
           assert (hirad != NULL && hirad->itname_rank == (unsigned) hi);
           MOM_DEBUGPRINTF (item, "mom_set_items_prefixed loname %s hiname %s",
@@ -601,7 +601,7 @@ mom_set_items_prefixed (const char *str, int slen)
           nbloop++;
           assert (nbloop < 100);
           int md = (lo + hi) / 2;
-          struct mom_itemname_tu *mdrad = radix_arr_mom[md]->rad_name;
+          struct mom_itemradix_tu *mdrad = radix_arr_mom[md]->rad_name;
           assert (mdrad != NULL);
           assert (mdrad->itname_rank == (unsigned) md);
           int c = strncmp (mdrad->itname_string.boxs_cstr, str, slen);
@@ -626,7 +626,7 @@ mom_set_items_prefixed (const char *str, int slen)
       cnt = 0;
       for (int ix = lo; ix <= hi; ix++)
         {
-          struct mom_itemname_tu *curad = radix_arr_mom[ix]->rad_name;
+          struct mom_itemradix_tu *curad = radix_arr_mom[ix]->rad_name;
           assert (curad != NULL && curad->itname_rank == (unsigned) ix);
           MOM_DEBUGPRINTF (item,
                            "mom_set_items_prefixed str=%.*s ix=%d curadname %s",
@@ -652,7 +652,7 @@ mom_set_items_prefixed (const char *str, int slen)
     }
   else
     {                           // we have __ at position postwo 
-      const struct mom_itemname_tu *radix =     //
+      const struct mom_itemradix_tu *radix =     //
         mom_find_name_radix_len (str, postwo);
       if (radix)
         {
@@ -719,7 +719,7 @@ mom_make_item_from_string (const char *str, const char **pend)
   const char *end = NULL;
   uint16_t hid = 0;
   uint64_t lid = 0;
-  const struct mom_itemname_tu *radix = NULL;
+  const struct mom_itemradix_tu *radix = NULL;
   radix = mom_make_name_radix_len (str, endradix - str);
   if (!radix)
     goto not_found;
@@ -757,7 +757,7 @@ not_found:
 
 
 static inline momhash_t
-hash_item_from_radix_id_mom (const struct mom_itemname_tu *radix,
+hash_item_from_radix_id_mom (const struct mom_itemradix_tu *radix,
                              uint16_t hid, uint64_t loid)
 {
   if (!radix)
@@ -778,7 +778,7 @@ hash_item_from_radix_id_mom (const struct mom_itemname_tu *radix,
 
 
 struct mom_item_st *
-mom_find_item_from_radix_id (const struct mom_itemname_tu *radix,
+mom_find_item_from_radix_id (const struct mom_itemradix_tu *radix,
                              uint16_t hid, uint64_t loid)
 {
   struct mom_item_st *itm = NULL;
@@ -945,7 +945,7 @@ mom_cleanup_item (void *itmad, void *clad)
   {
     pthread_mutex_lock (&radix_mtx_mom);
     assert (radix_cnt_mom <= radix_siz_mom);
-    struct mom_itemname_tu *radix = itm->itm_radix;
+    struct mom_itemradix_tu *radix = itm->itm_radix;
     assert (radix != NULL);
     unsigned radrk = radix->itname_rank;
     assert (radrk <= radix_cnt_mom);
@@ -976,7 +976,7 @@ mom_cleanup_item (void *itmad, void *clad)
 
 
 struct mom_item_st *
-mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
+mom_make_item_from_radix_id (const struct mom_itemradix_tu *radix,
                              uint16_t hid, uint64_t loid)
 {
   struct mom_item_st *itm = NULL;
@@ -1036,7 +1036,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     memset (&pseudoitemzon, 0, sizeof (pseudoitemzon));
     pseudoitemzon.va_itype = MOMITY_ITEM;
     pseudoitemzon.hva_hash = hi;
-    pseudoitemzon.itm_radix = (struct mom_itemname_tu *) radix;
+    pseudoitemzon.itm_radix = (struct mom_itemradix_tu *) radix;
     pseudoitemzon.itm_hid = hid;
     pseudoitemzon.itm_lid = loid;
     int pos = index_item_in_radix_mom (curad, &pseudoitemzon);
@@ -1055,7 +1055,7 @@ mom_make_item_from_radix_id (const struct mom_itemname_tu *radix,
     struct mom_item_st *newitm = mom_gc_alloc (sizeof (struct mom_item_st));
     newitm->va_itype = MOMITY_ITEM;
     newitm->hva_hash = hi;
-    newitm->itm_radix = (struct mom_itemname_tu *) radix;
+    newitm->itm_radix = (struct mom_itemradix_tu *) radix;
     curad->rad_items[pos] = newitm;
     curad->rad_count++;
     time (&newitm->itm_mtime);
@@ -1087,7 +1087,7 @@ end:
 
 
 struct mom_item_st *
-mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
+mom_clone_item_from_radix (const struct mom_itemradix_tu *radix)
 {
   struct mom_item_st *itm = NULL;
   if (!radix)
@@ -1150,7 +1150,7 @@ mom_clone_item_from_radix (const struct mom_itemname_tu *radix)
           }
         while (MOM_UNLIKELY (hid == 0 || lid == 0));
         quasitm->va_itype = MOMITY_ITEM;
-        quasitm->itm_radix = (struct mom_itemname_tu *) radix;
+        quasitm->itm_radix = (struct mom_itemradix_tu *) radix;
         quasitm->itm_hid = hid;
         quasitm->itm_lid = lid;
         quasitm->hva_hash = hash_item_from_radix_id_mom (radix, hid, lid);
@@ -1238,8 +1238,8 @@ mom_item_cmp (const struct mom_item_st *itm1, const struct mom_item_st *itm2)
     return 1;
   assert (itm1->va_itype == MOMITY_ITEM);
   assert (itm2->va_itype == MOMITY_ITEM);
-  const struct mom_itemname_tu *rad1 = itm1->itm_radix;
-  const struct mom_itemname_tu *rad2 = itm2->itm_radix;
+  const struct mom_itemradix_tu *rad1 = itm1->itm_radix;
+  const struct mom_itemradix_tu *rad2 = itm2->itm_radix;
   if (rad1 == rad2)
     {
       if (itm1->itm_hid < itm2->itm_hid)
@@ -1780,7 +1780,7 @@ mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
       hid = 0;
       lid = 0;
     };
-  const struct mom_itemname_tu *radix = mom_make_name_radix (name);
+  const struct mom_itemradix_tu *radix = mom_make_name_radix (name);
   if (!radix)
     MOM_FATAPRINTF ("initialize_a_predefined failed to make radix %s", name);
   struct radix_mom_st *curad = NULL;
@@ -1833,7 +1833,7 @@ mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
     };
   assert (curad->rad_items);
   itm->va_itype = MOMITY_ITEM;
-  itm->itm_radix = (struct mom_itemname_tu *) radix;
+  itm->itm_radix = (struct mom_itemradix_tu *) radix;
   itm->itm_hid = hid;
   itm->itm_lid = lid;
   pthread_mutex_init (&itm->itm_mtx, &item_mtxattr_mom);
