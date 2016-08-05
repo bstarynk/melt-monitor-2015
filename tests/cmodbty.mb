@@ -153,9 +153,56 @@
   ^* descr type
   ^* type struct
   ^* extend seqitem_ty
-  ^* struct [ ]
+  ^* struct [ 
+  ]
 )
-  
+
+
+^global !countedata_ty (
+  ^* comment "the type of counted data"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !cda_count (
+        ^* comment "the field giving the count"
+        ^* descr field
+        ^* type uint32_t
+      )
+  ]
+)
+
+^global !itementry_tu (
+  ^* comment "the structure of item entries"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global !ient_item (
+        ^* comment "the field giving the item key"
+        ^* descr field
+        ^* type item
+      )
+      ^global !ient_value (
+        ^* comment "the field giving the corresponding value"
+        ^* descr field
+        ^* type value
+      )
+  ]
+)
+
+^global !assovaldata_ty (
+  ^* descr type
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+      ^global !ada_ents (
+        ^* comment "the field giving the item entries"
+        ^* descr field
+        ^* type %flexible_array(itementry_tu)
+      )
+  ]
+)
+
 
 ^global !val0 (
    ^* comment "val0 in cmodbty.mb"
@@ -770,7 +817,7 @@
 )
 
 ^global !dyncast_seqitem  (
-  ^* comment "inline function to dynamic-cast a boxed string"
+  ^* comment "inline function to dynamic-cast a sequence"
   ^* descr inline
   ^* signature signature_value_to_value
   ^* body  ^global ?dyncast_seqitem (
@@ -784,19 +831,10 @@
             ^* cond [
               ^global ?test (
                 ^* descr test
-                ^* comment "test for ity_tuple"
-                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                ^* comment "test for ity_tuple or ity_set"
+                ^* test %or (%equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                             %equal_int_prim(%int(%itype(val0)) %int(ity_set)))
                 ^* then ^global ?return (
-                  ^* descr return
-                  ^* comment "return val0"
-                  ^* return val0
-                )
-              )
-              ^global ?test (
-                ^* descr test
-                ^* comment "test for ity_set"
-                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_set))
-                ^* then  ^global ?return (
                   ^* descr return
                   ^* comment "return val0"
                   ^* return val0
@@ -821,7 +859,7 @@
    ^* descr module
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
-     boxtuple_ty boxset_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem
