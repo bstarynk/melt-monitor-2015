@@ -366,46 +366,46 @@ public:
   {
     return _ce_globalvarmap.find(itm) != _ce_globalvarmap.end();
   }
-  void bind_global(const struct mom_item_st*itm, const vardef_st& vd)
+  void bind_global_at(const struct mom_item_st*itm, const vardef_st& vd, int lin)
   {
     if (mom_itype(itm) != MOMITY_ITEM)
-      throw MOM_RUNTIME_ERROR("global binding non-item");
+      throw MOM_RUNTIME_PRINTF("global binding non-item lin#%d", lin);
     if (vd.vd_rolitm == MOM_PREDEFITM(data))
-      MOM_DEBUGPRINTF(gencod, "global binding %s to data @%p rank#%ld",
-                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
+      MOM_DEBUGPRINTF(gencod, "global binding %s to data @%p rank#%ld lin#%d",
+                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank, lin);
 
     else
-      MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s detail %s rank#%ld",
+      MOM_DEBUGPRINTF(gencod, "global binding %s to role %s what %s detail %s rank#%ld lin#%d",
                       mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
                       mom_value_cstring(vd.vd_what),
                       mom_value_cstring(vd.vd_detail),
-                      vd.vd_rank);
+                      vd.vd_rank, lin);
     _ce_globalvarmap[itm] = vd;
   }
-  void bind_global(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what,
-                   const void*detail=nullptr, long rank=0)
+  void bind_global_at(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, int lin,
+                      const void*detail=nullptr, long rank=0)
   {
-    bind_global(itm,vardef_st {rolitm,what,detail,rank});
+    bind_global_at(itm,vardef_st {rolitm,what,detail,rank},lin);
   }
-  void bind_local(const struct mom_item_st*itm, const vardef_st& vd)
+  void bind_local_at(const struct mom_item_st*itm, const vardef_st& vd,int lin)
   {
     if (mom_itype(itm) != MOMITY_ITEM)
-      throw MOM_RUNTIME_ERROR("local binding non-item");
+      throw MOM_RUNTIME_PRINTF("local binding non-item lin#%d", lin);
     if (vd.vd_rolitm == MOM_PREDEFITM(data))
-      MOM_DEBUGPRINTF(gencod, "local binding %s to data @%p rank#%ld",
+      MOM_DEBUGPRINTF(gencod, "local binding %s to data @%p rank#%ld lin#%d",
                       mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
 
     else
-      MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s detail %s rank#%ld",
+      MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s detail %s rank#%ld lin#%d",
                       mom_item_cstring(itm), mom_item_cstring(vd.vd_rolitm),
                       mom_value_cstring(vd.vd_what),
                       mom_value_cstring(vd.vd_detail),
-                      vd.vd_rank);
+                      vd.vd_rank, lin);
     _ce_localvarmap[itm] = vd;
   }
-  void bind_local(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, const void*detail=nullptr, long rank=0)
+  void bind_local_at(const struct mom_item_st*itm, struct mom_item_st*rolitm, const void*what, int lin, const void*detail=nullptr, long rank=0)
   {
-    bind_local(itm,vardef_st {rolitm,what,detail,rank});
+    bind_local_at(itm,vardef_st {rolitm,what,detail,rank}, lin);
   }
   void unbind(const struct mom_item_st*itm)
   {
@@ -963,7 +963,7 @@ MomEmitter::transform_top_module(void)
   if (!modulseq)
     throw MOM_RUNTIME_PRINTF("item %s with bad module:%s",
                              mom_item_cstring(_ce_topitm), mom_value_cstring(modulev));
-  bind_global(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm);
+  bind_global_at(MOM_PREDEFITM(module),MOM_PREDEFITM(module),_ce_topitm, __LINE__);
   unsigned nbmodelem = mom_seqitems_length(modulseq);
   vecval.reserve(nbmodelem);
   auto itemsarr = mom_seqitems_arr(modulseq);
@@ -1185,8 +1185,8 @@ MomEmitter::scan_func_element(struct mom_item_st*fuitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_func_element start fuitm=%s", mom_item_cstring(fuitm));
   assert (is_locked_item(fuitm));
-  bind_global(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm);
-  bind_global(fuitm,MOM_PREDEFITM(func),fuitm);
+  bind_global_at(MOM_PREDEFITM(func),MOM_PREDEFITM(func),fuitm, __LINE__);
+  bind_global_at(fuitm,MOM_PREDEFITM(func),fuitm, __LINE__);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (fuitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "scan_func_element fuitm=%s sigitm=%s bdyitm=%s",
@@ -1264,7 +1264,8 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
   if (desitm != MOM_PREDEFITM(signature))
     throw MOM_RUNTIME_PRINTF("in %s signature %s of bad descr %s",
                              mom_item_cstring(initm), mom_item_cstring(sigitm), mom_item_cstring(desitm));
-  if (!nobind) bind_local(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm);
+  if (!nobind)
+    bind_local_at(MOM_PREDEFITM(signature),MOM_PREDEFITM(signature),sigitm,__LINE__);
   auto formv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(formals));
   auto formtup =
     mom_dyncast_tuple(formv);
@@ -1272,7 +1273,8 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
                   mom_item_cstring(sigitm), mom_value_cstring(formtup), mom_value_cstring(formv));
   if (formtup == nullptr)
     throw MOM_RUNTIME_PRINTF("missing formals in signature %s", mom_item_cstring(sigitm));
-  if (!nobind) bind_local(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup);
+  if (!nobind)
+    bind_local_at(MOM_PREDEFITM(formals),MOM_PREDEFITM(formals),formtup,__LINE__);
   unsigned nbformals = mom_boxtuple_length(formtup);
   for (unsigned ix=0; ix<nbformals; ix++)
     {
@@ -1306,7 +1308,8 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
                                  mom_item_cstring(sigitm));
       lock_item(typfitm);
       scan_type(typfitm);
-      if (!nobind) bind_local(curformitm, MOM_PREDEFITM(formal), sigitm, typfitm, ix);
+      if (!nobind)
+        bind_local_at(curformitm, MOM_PREDEFITM(formal), sigitm, __LINE__, typfitm, ix);
     }
   auto resv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(result));
   MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s resv=%s",
@@ -1355,10 +1358,13 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                               (int) (_ce_blockitems.size()));
   struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
   MOM_DEBUGPRINTF(gencod, "scan_block  blkitm=%s desitm=%s",  mom_item_cstring(blkitm), mom_item_cstring(desitm));
-  if (is_bound(blkitm))
-    throw MOM_RUNTIME_PRINTF("in %s block %s already bound",
+  auto blkbind = get_binding(blkitm);
+  if (blkbind != nullptr)
+    throw MOM_RUNTIME_PRINTF("in %s block %s already bound to role %s what %s",
                              mom_item_cstring(initm),
-                             mom_item_cstring(blkitm));
+                             mom_item_cstring(blkitm),
+                             mom_item_cstring(blkbind->vd_rolitm),
+                             mom_value_cstring(blkbind->vd_what));
   auto whilexpv =  mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(while));
   auto bodytup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "scan_block blkitm=%s whilexpv=%s bodytup=%s",
@@ -1375,7 +1381,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                  mom_item_cstring(initm),
                                  mom_item_cstring(blkitm),
                                  mom_value_cstring(whilexpv));
-      bind_local(blkitm, MOM_PREDEFITM(sequence), initm);
+      bind_local_at(blkitm, MOM_PREDEFITM(sequence), initm, __LINE__);
       auto localseq = mom_dyncast_seqitems(mom_unsync_item_get_phys_attr (blkitm, MOM_PREDEFITM(locals)));
       unsigned nblocals = mom_seqitems_length(localseq);
       MOM_DEBUGPRINTF(gencod, "scan_block blkitm=%s localseq=%s", mom_item_cstring(blkitm), mom_value_cstring(localseq));
@@ -1410,7 +1416,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                       locix, mom_item_cstring(curlocitm));
           lock_item(typlocitm);
           scan_type(typlocitm);
-          bind_local(curlocitm, MOM_PREDEFITM(variable), blkitm, typlocitm, locix);
+          bind_local_at(curlocitm, MOM_PREDEFITM(variable), blkitm, __LINE__, typlocitm, locix);
         }
     }
   else if (desitm == MOM_PREDEFITM(loop))
@@ -1421,7 +1427,7 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                  mom_item_cstring(initm),
                                  mom_item_cstring(blkitm),
                                  mom_value_cstring(localsv));
-      bind_local(blkitm, MOM_PREDEFITM(loop), initm);
+      bind_local_at(blkitm, MOM_PREDEFITM(loop), initm, __LINE__);
       if (whilexpv)
         {
           auto whiltypitm = scan_expr(whilexpv,blkitm,0);
@@ -1463,8 +1469,8 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
   MOM_DEBUGPRINTF(gencod, "scan_instr start insitm:=\n%s\n.. rk#%d blkitm=%s",
                   mom_item_content_cstring(insitm), rk, mom_item_cstring(blkitm));
   assert (is_locked_item(insitm));
+  auto insbind = get_binding(insitm);
   {
-    auto insbind = get_local_binding(insitm);
     if (insbind != nullptr)
       throw MOM_RUNTIME_PRINTF("instruction %s rank #%d in block %s already"
                                " locally bound to role %s what %s",
@@ -1484,7 +1490,6 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
                               mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                               (int)(_ce_instritems.size()));
   {
-    auto insbind = get_binding(insitm);
     if (insbind)
       throw MOM_RUNTIME_PRINTF("instr %s #%d of %s already bound with role %s",
                                mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
@@ -1519,10 +1524,11 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
         throw MOM_RUNTIME_PRINTF("assign %s #%d in block %s with incompatible types from type %s to type %s",
                                  mom_item_cstring(insitm), rk,
                                  mom_item_cstring(blkitm), mom_item_cstring(fromtypitm), mom_item_cstring(totypitm));
-      bind_local(insitm,MOM_PREDEFITM(assign),
-                 mom_boxnode_make_va(MOM_PREDEFITM(assign),3,
-                                     tovaritm, fromexp,  totypitm),
-                 blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(assign),
+                    mom_boxnode_make_va(MOM_PREDEFITM(assign),3,
+                                        tovaritm, fromexp,  totypitm),
+                    __LINE__,
+                    blkitm, rk);
     } //// end assign
     break;
     /////
@@ -1550,8 +1556,9 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
                                  mom_item_cstring(blkitm),
                                  mom_item_cstring(outblkitm),
                                  mom_item_cstring(blkbind->vd_rolitm));
-      bind_local(insitm,MOM_PREDEFITM(break),
-                 outblkitm, blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(break),outblkitm,
+                    __LINE__,
+                    blkitm, rk);
       {
         auto it = _ce_breakcountmap.find(outblkitm);
         if (it != _ce_breakcountmap.end())
@@ -1586,8 +1593,9 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
                                  mom_item_cstring(blkitm),
                                  mom_item_cstring(loopitm),
                                  mom_item_cstring(loopbind->vd_rolitm));
-      bind_local(insitm,MOM_PREDEFITM(continue),
-                 loopitm, blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(continue),
+                    loopitm, __LINE__,
+                    blkitm, rk);
       {
         auto it = _ce_continuecountmap.find(loopitm);
         if (it != _ce_continuecountmap.end())
@@ -1613,8 +1621,10 @@ sequencecase:
           MOM_DEBUGPRINTF(gencod, "after scanning nested block insitm=%s rk#%d blkitm=%s",
                           mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
         });
-        bind_local(insitm,desitm,
-                   insitm, blkitm, rk);
+        bind_local_at(insitm,desitm,
+                      insitm,
+                      __LINE__,
+                      blkitm, rk);
       } /// end sequence (& loop)
       break;
     //////
@@ -1630,7 +1640,7 @@ sequencecase:
                                  mom_item_cstring(insitm), rk,
                                  mom_item_cstring(blkitm));
       unsigned nbcond = mom_raw_size(condtup);
-      bind_local(insitm, MOM_PREDEFITM(cond), condtup, blkitm, rk);
+      bind_local_at(insitm, MOM_PREDEFITM(cond), condtup, __LINE__, blkitm, rk);
       for (unsigned ix=0; ix<nbcond; ix++)
         {
           auto testitm = condtup->seqitem[ix];
@@ -1698,7 +1708,7 @@ sequencecase:
             MOM_DEBUGPRINTF(gencod, "before scanning thenitm=%s from insitm=%s rk#%d blkitm=%s",
                             mom_item_cstring(thenitm),
                             mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-            em->scan_block(thenitm, blkitm);
+            em->scan_instr(thenitm, 0, testitm);
             MOM_DEBUGPRINTF(gencod, "after scanning thenitm=%s insitm=%s rk#%d blkitm=%s",
                             mom_item_cstring(thenitm),
                             mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
@@ -1811,7 +1821,7 @@ sequencecase:
                                   "with bad result %s",
                                   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                   mom_value_cstring(resultv));
-      bind_local(insitm,MOM_PREDEFITM(call),callsigitm, blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(call),callsigitm, __LINE__, blkitm, rk);
     } // end call
     break;
     /////
@@ -1926,7 +1936,7 @@ sequencecase:
                                  "with bad result %s",
                                  mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
                                  mom_value_cstring(resultv));
-      bind_local(insitm,MOM_PREDEFITM(run),primitm, blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(run),primitm, __LINE__, blkitm, rk);
     } // end run
     break;
     /////
@@ -2000,8 +2010,8 @@ sequencecase:
                             (momvalue_t)caseseq, (momvalue_t)otherwv);
       MOM_DEBUGPRINTF(gencod, "scaninstr switch insitm=%s bindsw=%s", mom_item_cstring(insitm),
                       mom_value_cstring(bindsw));
-      bind_local(insitm,MOM_PREDEFITM(switch),bindsw,
-                 blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(switch),bindsw, __LINE__,
+                    blkitm, rk);
     } //// end switch
     break;
     /////
@@ -2016,8 +2026,8 @@ sequencecase:
       MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s retypv=%s",
                       mom_item_cstring(insitm), mom_value_cstring(retexpv),
                       mom_value_cstring(retypv));
-      bind_local(insitm,MOM_PREDEFITM(return),retypv,
-                 blkitm, rk);
+      bind_local_at(insitm,MOM_PREDEFITM(return),retypv,__LINE__,
+                    blkitm, rk);
       MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retypv=%s",
                       mom_item_cstring(insitm), mom_value_cstring(retypv));
 #warning scan_instr return incomplete
@@ -2673,7 +2683,7 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
   if (oldbind==nullptr)
     {
       MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s localitem", mom_item_cstring(expitm));
-      bind_local(expitm, MOM_PREDEFITM(item), expitm);
+      bind_local_at(expitm, MOM_PREDEFITM(item), expitm,__LINE__);
     }
   else
     {
@@ -2774,7 +2784,7 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
       auto globvarbind = get_global_binding(varitm);
       if (!globvarbind)
         {
-          bind_global(varitm, MOM_PREDEFITM(global), typitm);
+          bind_global_at(varitm, MOM_PREDEFITM(global), typitm, __LINE__);
         }
       else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(global))
         throw  MOM_RUNTIME_PRINTF("global %s in instruction %s is strangely %s locally bound",
@@ -2791,7 +2801,7 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
           if (magic() == MomJavascriptEmitter::MAGIC)
             throw MOM_RUNTIME_PRINTF("JavaScript forbids thread_local %s in instruction %s",
                                      mom_item_cstring(varitm), mom_item_cstring(insitm));
-          bind_global(varitm, MOM_PREDEFITM(thread_local), typitm);
+          bind_global_at(varitm, MOM_PREDEFITM(thread_local), typitm, __LINE__);
         }
       else if (globvarbind->vd_rolitm !=  MOM_PREDEFITM(thread_local))
         throw  MOM_RUNTIME_PRINTF("thread_local %s in instruction %s is strangely %s locally bound",
@@ -2846,7 +2856,7 @@ MomEmitter::scan_constant_item(struct mom_item_st*cstitm, struct mom_item_st*ins
                              mom_item_cstring(typitm));
   MOM_DEBUGPRINTF(gencod, "scan_constant_item cstitm=%s insitm=%s cstypitm=%s",
                   mom_item_cstring(cstitm), mom_item_cstring(insitm), mom_item_cstring(cstypitm));
-  bind_global(cstitm, MOM_PREDEFITM(constant), cstypitm);
+  bind_global_at(cstitm, MOM_PREDEFITM(constant), cstypitm, __LINE__);
   _ce_constitems.insert(cstitm);
   return cstypitm;
 } // end MomEmitter::scan_constant_item
@@ -2872,8 +2882,8 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
   assert (is_locked_item(rtitm));
   auto descitm = mom_unsync_item_descr(rtitm);
   assert (descitm == MOM_PREDEFITM(routine) || descitm==MOM_PREDEFITM(inline));
-  bind_global(descitm,descitm,rtitm);
-  bind_global(rtitm,descitm,rtitm);
+  bind_global_at(descitm,descitm,rtitm,__LINE__);
+  bind_global_at(rtitm,descitm,rtitm,__LINE__);
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(signature)));
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (rtitm, MOM_PREDEFITM(body)));
   MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s sigitm=%s bdyitm=%s",
@@ -3398,7 +3408,7 @@ MomCEmitter::declare_field (struct mom_item_st*flditm, struct mom_item_st*fromit
                                  rank, mom_item_cstring(fromitm),
                                  mom_item_cstring(fbnd->vd_rolitm),
                                  mom_value_cstring(fbnd->vd_what));
-      bind_global(flditm, MOM_PREDEFITM(field), fromitm, nullptr, rank);
+      bind_global_at(flditm, MOM_PREDEFITM(field), fromitm, __LINE__, nullptr, rank);
       do_at_end([=](MomEmitter*em)
       {
         assert (em != nullptr);
@@ -3451,8 +3461,10 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
                                  mom_item_cstring(memitm), mom_item_cstring(fromitm), rank);
       if (fromitm != nullptr)
         {
-          bind_global(memitm, MOM_PREDEFITM(type), mom_boxnode_make_va(MOM_PREDEFITM(union), 2,
-                      fromitm, mom_int_make(rank)));
+          bind_global_at(memitm, MOM_PREDEFITM(type),
+                         mom_boxnode_make_va(MOM_PREDEFITM(union), 2,
+                                             fromitm, mom_int_make(rank)),
+                         __LINE__);
           do_at_end([=](MomEmitter*em)
           {
             assert (em != nullptr);
@@ -3540,9 +3552,10 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
   }
   if (fromitm != nullptr)
     {
-      bind_global(enuritm, MOM_PREDEFITM(enumerator),
-                  mom_boxnode_make_va(MOM_PREDEFITM(enumerator),3,
-                                      fromitm, mom_int_make(rank), mom_int_make(curival)));
+      bind_global_at(enuritm, MOM_PREDEFITM(enumerator),
+                     mom_boxnode_make_va(MOM_PREDEFITM(enumerator),3,
+                                         fromitm, mom_int_make(rank), mom_int_make(curival)),
+                     __LINE__);
       do_at_end([=](MomEmitter*em)
       {
         assert (em != nullptr);
@@ -3647,7 +3660,7 @@ defaultcasetype:
 #undef NBKNOWNTYPE_MOM
 #undef CASE_KNOWNTYPE_MOM
   /// temporary binding, will be rebound later
-  bind_global(typitm, MOM_PREDEFITM(type), nullptr);
+  bind_global_at(typitm, MOM_PREDEFITM(type), nullptr,__LINE__);
   if (_cec_declareditems.find(typitm) != _cec_declareditems.end())
     {
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s known so gives tytree %s",
@@ -3747,13 +3760,13 @@ defaultcasetype:
           auto allfldtup = mom_boxtuple_make_arr(vecfields.size(), vecfields.data());
           MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s binding allfldtup=%s",
                           mom_item_cstring(typitm), mom_value_cstring(allfldtup));
-          bind_global(typitm, MOM_PREDEFITM(struct), allfldtup);
+          bind_global_at(typitm, MOM_PREDEFITM(struct), allfldtup,__LINE__);
         }
       else   /* no extension in struct */
         {
           MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s binding myfieldtup=%s",
                           mom_item_cstring(typitm), mom_value_cstring(myfieldtup));
-          bind_global(typitm, MOM_PREDEFITM(struct), myfieldtup);
+          bind_global_at(typitm, MOM_PREDEFITM(struct), myfieldtup,__LINE__);
         }
       for (int fix=0; fix<(int)mynbfields; fix++)
         {
@@ -3888,11 +3901,11 @@ defaultcasetype:
             MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s union fullfieldtup=%s",
                             mom_item_cstring(typitm),
                             mom_value_cstring(fullfieldtup));
-            bind_global(typitm, MOM_PREDEFITM(union), fullfieldtup);
+            bind_global_at(typitm, MOM_PREDEFITM(union), fullfieldtup,__LINE__);
           }  // end union with extension
         else   // union without extension
           {
-            bind_global(typitm, MOM_PREDEFITM(union), myfieldseq);
+            bind_global_at(typitm, MOM_PREDEFITM(union), myfieldseq,__LINE__);
             for (int fix=0; fix<(int)mynbfields; fix++)
               {
                 auto curflditm = myfieldseq->seqitem[fix];
@@ -5511,12 +5524,12 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
           momvalue_t iftree = nullptr;
           momvalue_t thentree = nullptr;
           auto testexpv = mom_unsync_item_get_phys_attr(curconditm, MOM_PREDEFITM(test));
-          auto thenblkitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(curconditm, MOM_PREDEFITM(then)));
-          assert (is_locked_item(thenblkitm));
+          auto thenitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(curconditm, MOM_PREDEFITM(then)));
+          assert (is_locked_item(thenitm));
           MOM_DEBUGPRINTF(gencod,
-                          "c-transform_instruction cond insitm=%s cix#%d testexpv=%s thenblkitm=%s",
+                          "c-transform_instruction cond insitm=%s cix#%d testexpv=%s thenitm=%s",
                           mom_item_cstring(insitm), cix,
-                          mom_value_cstring(testexpv), mom_item_cstring(thenblkitm));
+                          mom_value_cstring(testexpv), mom_item_cstring(thenitm));
           if (cix+1 < (int)nbcond
               && testexpv != (momvalue_t)MOM_PREDEFITM(unit)
               && testexpv != (momvalue_t)MOM_PREDEFITM(truth))
@@ -5550,7 +5563,16 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                           mom_item_cstring(insitm), cix,
                           mom_value_cstring(iftree));
           vecondtree.push_back(iftree);
-          thentree = transform_block(thenblkitm, insitm);
+          auto thendescitm = mom_unsync_item_descr(thenitm);
+          if (thendescitm==MOM_PREDEFITM(sequence) || thendescitm==MOM_PREDEFITM(loop))
+            thentree = transform_block(thenitm, insitm);
+          else
+            {
+              auto theninstree = transform_instruction(thenitm, insitm);
+              thentree = mom_boxnode_make_va(MOM_PREDEFITM(brace),2,
+                                             theninstree,
+                                             literal_string(";"));
+            }
           MOM_DEBUGPRINTF(gencod,
                           "c-transform_instruction cond insitm=%s cix#%d thentree=%s",
                           mom_item_cstring(insitm), cix,

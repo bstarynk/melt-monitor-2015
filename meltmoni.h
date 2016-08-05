@@ -263,7 +263,7 @@ const char *mom_hostname (void);
 typedef const void *momvalue_t;
 typedef intptr_t momint_t;
 typedef struct mom_item_st*momitemptr_t;
-  
+
 #ifdef NDEBUG
 #define MOM_PRIVATE static
 #else

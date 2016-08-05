@@ -317,16 +317,16 @@
        ^* body
        [
          ^global ?cond (
-           ^* comment "cond for nil or empty slot or int"
+           ^* comment "cond for nil or empty slot or int in valid_value_pointer"
            ^* descr cond
            ^* cond [
              ^global ?test (
                ^* descr test
-               ^* comment "test for nil"
+               ^* comment "test for nil in valid_value_pointer"
                ^* test %is_null(val0)
                ^* then ^global ?block (
                  ^* descr sequence
-                 ^* comment "block return false for nil"
+                 ^* comment "block return false in valid_value_pointer for nil"
                  ^* body [
                    ^global ?return (
                      ^* descr return
@@ -467,7 +467,7 @@
            ^* cond [
              ^global ?test (
                ^* descr test
-               ^* comment "test for nil in itype in itype"
+               ^* comment "test for nil in itype"
                ^* test %is_null(val0)
                ^* then ^global ?block (
                  ^* descr sequence
@@ -954,16 +954,10 @@
               ^global ?test (
                 ^* descr test
                 ^* comment "test else non-seq"
-                ^* then ^global ?block (
-                  ^* descr sequence
-                  ^* comment "else block return nil"
-                  ^* body [
-                    ^global ?return (
+                ^* then  ^global ?return (
                       ^* descr return
                       ^* comment "return nil"
-                    )
-                  ]
-                )
+                )                
               )
             ]
           )
