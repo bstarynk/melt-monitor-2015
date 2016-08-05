@@ -343,6 +343,23 @@
       "/*equal_int_prim*/ ((" num0 ") == (" num1 "))" )
 )
 
+^global !less_int_prim (
+  ^* comment "primitive to test less than of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") < (" num1 "))" )
+)
+
+
+^global !less_equal_int_prim (
+  ^* comment "primitive to test less equal of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") <= (" num1 "))" )
+)
+
 
 ^global !empty_slot_prim (
   ^* comment "primitive for MOM_EMPTY_SLOT"
@@ -699,6 +716,25 @@
                         (%mod(%int_val_def(val0 0) 1000001137) 1))
                 )
               )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for boxed value"
+                ^* test %less_equal_int_prim(%int(typ0loc) %int(ity_node))
+                ^* then  ^global ?return (
+                  ^* comment "return hva_hash field"
+                  ^* descr return
+                  ^* return %hash_t (%hva_hash(val0))
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "otherwise return 1+the type"
+                ^* then  ^global ?return (
+                  ^* comment "return 1+typ0loc"
+                  ^* descr return
+                  ^* return %hash_t (%plus (1 %int(typ0loc)))
+                )
+              )
             ]
           )
        ]
@@ -854,6 +890,80 @@
   )
 )
 
+^global !dyncast_tuple  (
+  ^* comment "inline function to dynamic-cast a tuple"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_tuple (
+       ^* comment "body of dyncast_tuple"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_tuple"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_tuple"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-tuple"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )                
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_set  (
+  ^* comment "inline function to dynamic-cast a set"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_set (
+       ^* comment "body of dyncast_set"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_set"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_set"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_set))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-set"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )                
+              )
+            ]
+          )
+       ]
+  )
+)
+
 ^global !bty_module (
    ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
@@ -862,7 +972,7 @@
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
-     dyncast_boxstring dyncast_seqitem
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set
    ]
 )
 
