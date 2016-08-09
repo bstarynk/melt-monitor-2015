@@ -375,6 +375,16 @@ comment
 
 
 
+*declare
+1470731351
+^mtime
+(
+comment
+"for declarations"_
+)attrs
+
+
+
 *delimiter
 1452808377
 ^mtime
@@ -516,6 +526,7 @@ comment
 
 
 
+
 *extend
 1467896846
 ^mtime
@@ -523,7 +534,6 @@ comment
 comment
 "for extension of struct-s, union-s, enum-s, etc.."_
 )attrs
-
 
 
 
@@ -677,6 +687,7 @@ comment
 
 
 
+
 *get
 1455358475
 ^mtime
@@ -684,7 +695,6 @@ comment
 comment
 "to get something"_
 )attrs
-
 
 
 
@@ -853,6 +863,7 @@ comment
 
 
 
+
 *is_double
 1457358950
 ^mtime
@@ -860,7 +871,6 @@ comment
 comment
 "to test if argument is a double"_
 )attrs
-
 
 
 
@@ -1041,6 +1051,7 @@ item
 
 
 
+
 *js_expansion
 1467113815
 ^mtime
@@ -1048,7 +1059,6 @@ item
 comment
 "for JavaScript expansion"_
 )attrs
-
 
 
 
@@ -1202,6 +1212,7 @@ comment
 
 
 
+
 *node
 1456146211
 ^mtime
@@ -1217,7 +1228,6 @@ node_connective
 node_nth
 )set
 )attrs
-
 
 
 
@@ -1369,6 +1379,7 @@ comment
 
 
 
+
 *out_gplv3_notice
 1456930526
 ^mtime
@@ -1376,7 +1387,6 @@ comment
 comment
 "output the GPLv3 notice"_
 )attrs
-
 
 
 
@@ -1550,6 +1560,7 @@ comment
 
 
 
+
 *payl_assovaldata_put
 1456833278
 ^mtime
@@ -1557,7 +1568,6 @@ comment
 comment
 "put attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1727,6 +1737,7 @@ payl_hashmap_remove
 
 
 
+
 *payl_hashmap_count
 1456897878
 ^mtime
@@ -1734,7 +1745,6 @@ payl_hashmap_remove
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -1896,6 +1906,7 @@ comment
 
 
 
+
 *payl_vectval_count
 1456840222
 ^mtime
@@ -1903,7 +1914,6 @@ comment
 comment
 "count in a vector of values"_
 )attrs
-
 
 
 
@@ -2096,6 +2106,7 @@ comment
 
 
 
+
 *primitive
 1465807699
 ^mtime
@@ -2103,7 +2114,6 @@ comment
 comment
 "for primitives (operations)"_
 )attrs
-
 
 
 
@@ -2262,6 +2272,7 @@ is_set
 
 
 
+
 *signature
 1455623962
 ^mtime
@@ -2269,7 +2280,6 @@ is_set
 comment
 "signature keyword"_
 )attrs
-
 
 
 
@@ -2438,6 +2448,7 @@ comment
 
 
 
+
 *the_system
 1458218226
 ^mtime
@@ -2548,7 +2559,6 @@ node
 (
 )comps
 #end item the_system
-
 
 
 
@@ -2729,6 +2739,7 @@ comment
 
 
 
+
 *value_types
 1457963722
 ^mtime
@@ -2736,7 +2747,6 @@ comment
 comment
 "hold the types of values"_
 )attrs
-
 
 
 
