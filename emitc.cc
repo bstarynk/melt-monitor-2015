@@ -532,7 +532,7 @@ public:
   static constexpr const char* CENUFROM_INFIX = "_momenfr_";
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
-  static constexpr const char* CFIELD_PREFIX = "momfld_";
+  static constexpr const char* CFIELD_PREFIX = "momfi_";
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static constexpr const char* CCONSTITEM_PREFIX = "momcstitem_";
@@ -559,6 +559,7 @@ public:
   };
   MomCEmitter(const MomCEmitter&) = delete;
   virtual ~MomCEmitter();
+  void declare_item(struct mom_item_st*declitm);
   void add_global_decl(const struct mom_boxnode_st*nod)
   {
     if (mom_itype(nod) == MOMITY_NODE) _cec_globdecltree.push_back(nod);
@@ -3339,13 +3340,40 @@ MomCEmitter::~MomCEmitter()
 } // end MomCEmitter::~MomCEmitter
 
 
+void
+MomCEmitter::declare_item(struct mom_item_st*declitm)
+{
+  MOM_DEBUGPRINTF(gencod, "c-declare_item start declitm:=%s", mom_item_content_cstring(declitm));
+  lock_item(declitm);
+  auto descitm = mom_unsync_item_descr(declitm);
+#warning unimplemented MomCEmitter::declare_item
+  MOM_FATAPRINTF("unimplemented c-declare_item declitm=%s descitm=%s",
+                 mom_item_cstring(declitm), mom_item_cstring(descitm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_item end declitm=%s", mom_item_cstring(declitm));
+} // end MomCEmitter::declare_item
 
 void
 MomCEmitter::after_preparation_transform(void)
 {
   MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform start topitm %s %zd constitems",
-                  mom_value_cstring(top_item()),
+                  mom_item_cstring(top_item()),
                   _ce_constitems.size());
+  auto declv = mom_unsync_item_get_phys_attr(top_item(), MOM_PREDEFITM(declare));
+  auto declseq = mom_dyncast_seqitems(declv);
+  if (declv != nullptr && !declseq)
+    throw MOM_RUNTIME_PRINTF("invalid `declare` %s in c-module %s",
+                             mom_value_cstring(declv), mom_item_cstring(top_item()));
+  if (declseq)
+    {
+      unsigned nbdecl = mom_size(declseq);
+      for (unsigned dix=0; dix<declseq; dix++)
+        {
+          auto declitm = mom_dyncast_item(declseq->seqitem[dix]);
+          MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform dix#%d declitm:=%s",
+                          dix, mom_item_content_cstring(declitm));
+          declare_item(declitm);
+        }
+    }
   for (const mom_item_st* citm : _ce_constitems)
     {
       MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform citm=%s", mom_item_cstring(citm));

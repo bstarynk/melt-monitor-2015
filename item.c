@@ -652,7 +652,7 @@ mom_set_items_prefixed (const char *str, int slen)
     }
   else
     {                           // we have __ at position postwo 
-      const struct mom_itemradix_tu *radix =     //
+      const struct mom_itemradix_tu *radix =    //
         mom_find_name_radix_len (str, postwo);
       if (radix)
         {
