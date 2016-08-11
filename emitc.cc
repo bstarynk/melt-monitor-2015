@@ -3346,6 +3346,69 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
   MOM_DEBUGPRINTF(gencod, "c-declare_item start declitm:=%s", mom_item_content_cstring(declitm));
   lock_item(declitm);
   auto descitm = mom_unsync_item_descr(declitm);
+  if (!descitm)
+    throw MOM_RUNTIME_PRINTF("declared item %s without descr", mom_item_cstring(declitm));
+  #define NBDECLD_MOM 91
+#define CASE_DECLD_MOM(Nam) momhashpredef_##Nam % NBDECLD_MOM: \
+  if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam; \
+  goto defaultcasedescd; foundcase_##Nam
+  switch (descitm->hva_hash % NBDECLD_MOM)
+    {
+      case CASE_DECLD_MOM(type):
+	{
+	  scan_type(declitm);
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item type %s", mom_item_cstring(declitm));
+	  auto dtytree = mom_dyncast_node(declare_type(declitm));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item type %s dtytree=%s",
+			  mom_item_cstring(declitm), mom_value_cstring(dtytree));
+	  if (_cec_declareditems.find(declitm) == _cec_declareditems.end()) {
+	    _cec_declareditems.insert(declitm);
+	    add_global_decl(dtytree);
+	  }
+	}
+      break;
+    case CASE_DECLD_MOM(signature):
+      {
+	scan_signature(declitm,nullptr);
+	MOM_DEBUGPRINTF(gencod, "c-declare_item signature %s", mom_item_cstring(declitm));
+	auto dsigtree= mom_dyncast_node(declare_signature_type(declitm));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item signature %s dsigtree=%s",
+			  mom_item_cstring(declitm), mom_value_cstring(dsigtree));
+	  if (_cec_declareditems.find(declitm) == _cec_declareditems.end()) {
+	    _cec_declareditems.insert(declitm);
+	    add_global_decl(dsigtree);
+	  }
+      }
+      break;
+    case CASE_DECLD_MOM(func):
+      {
+	scan_func_element(declitm);
+	MOM_DEBUGPRINTF(gencod, "c-declare_item func %s", mom_item_cstring(declitm));
+	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
+#warning incomplete declare_item func
+      }
+      break;
+    case CASE_DECLD_MOM(inline):
+      {
+	scan_routine_element(declitm);
+	MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s", mom_item_cstring(declitm));
+#warning incomplete declare_item inline
+      }
+      break;
+    case CASE_DECLD_MOM(routine):
+      {
+	scan_routine_element(declitm);
+	MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s", mom_item_cstring(declitm));
+#warning incomplete declare_item routine
+      }
+      break;
+    defaultcasedescd:
+    default:
+      throw MOM_RUNTIME_PRINTF("declared item %s with strange descr %s",
+			       mom_item_cstring(declitm), mom_item_cstring(descitm));
+    }
+#undef CASE_DECLD_MOM
+#undef NBDECLD_MOM
 #warning unimplemented MomCEmitter::declare_item
   MOM_FATAPRINTF("unimplemented c-declare_item declitm=%s descitm=%s",
                  mom_item_cstring(declitm), mom_item_cstring(descitm));
@@ -3366,7 +3429,7 @@ MomCEmitter::after_preparation_transform(void)
   if (declseq)
     {
       unsigned nbdecl = mom_size(declseq);
-      for (unsigned dix=0; dix<declseq; dix++)
+      for (unsigned dix=0; dix<nbdecl; dix++)
         {
           auto declitm = mom_dyncast_item(declseq->seqitem[dix]);
           MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform dix#%d declitm:=%s",
@@ -6433,55 +6496,55 @@ return funheadv;
 const struct mom_boxnode_st*
 MomCEmitter::transform_inline_element(struct mom_item_st*ilitm)
 {
-assert (is_locked_item(ilitm));
-MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n", mom_item_content_cstring(ilitm));
-assert (mom_unsync_item_descr(ilitm) == MOM_PREDEFITM(inline));
-auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(signature)));
-auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(body)));
-MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s bdyitm %s",
-                mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-assert (is_locked_item(sigitm));
-assert (is_locked_item(bdyitm));
-auto inlhnod = declare_inlineheader_for(sigitm,ilitm);
-MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s inlhnod %s",
-                mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_value_cstring(inlhnod));
-if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
-  {
-    _cec_declareditems.insert(sigitm);
-    auto sigtypnod = declare_signature_type(sigitm);
-    MOM_DEBUGPRINTF(gencod, "c-transform_inline_element sigitm %s sigtypnod %s",
-                    mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
-    add_global_decl(sigtypnod);
-  }
-if (_cec_declareditems.find(ilitm) == _cec_declareditems.end())
-  {
-    _cec_declareditems.insert(ilitm);
-    auto inldecl =
-      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-                                literal_string("static inline"),
-                                literal_string(" "),
-                                literal_string(CSIGNTYPE_PREFIX),
-                                sigitm,
-                                literal_string(" "),
-                                literal_string(MOM_FUNC_PREFIX),
-                                ilitm,
-                                literal_string(";"));
-    add_global_decl(inldecl);
-    MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s inldecl %s", mom_item_cstring(ilitm),
-                    mom_value_cstring(inldecl));
-  }
-auto bdynod = transform_body_element(bdyitm,ilitm);
-MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
-                mom_item_cstring(ilitm), mom_item_cstring(bdyitm),
-                mom_value_cstring(bdynod), mom_value_cstring(inlhnod));
-auto inldef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("inline:"), ilitm),
-                                  inlhnod,
-                                  bdynod,
-                                  mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("endinline:"), ilitm));
-MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s result inldef=%s",  mom_item_cstring(ilitm),
-                mom_value_cstring(inldef));
-return inldef;
+  assert (is_locked_item(ilitm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n", mom_item_content_cstring(ilitm));
+  assert (mom_unsync_item_descr(ilitm) == MOM_PREDEFITM(inline));
+  auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(signature)));
+  auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(body)));
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s bdyitm %s",
+		  mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+  assert (is_locked_item(sigitm));
+  assert (is_locked_item(bdyitm));
+  auto inlhnod = declare_inlineheader_for(sigitm,ilitm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s inlhnod %s",
+		  mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_value_cstring(inlhnod));
+  if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+    {
+      _cec_declareditems.insert(sigitm);
+      auto sigtypnod = declare_signature_type(sigitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_inline_element sigitm %s sigtypnod %s",
+		      mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
+      add_global_decl(sigtypnod);
+    }
+  if (_cec_declareditems.find(ilitm) == _cec_declareditems.end())
+    {
+      _cec_declareditems.insert(ilitm);
+      auto inldecl =
+	mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+				  literal_string("static inline"),
+				  literal_string(" "),
+				  literal_string(CSIGNTYPE_PREFIX),
+				  sigitm,
+				  literal_string(" "),
+				  literal_string(MOM_FUNC_PREFIX),
+				  ilitm,
+				  literal_string(";"));
+      add_global_decl(inldecl);
+      MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s inldecl %s", mom_item_cstring(ilitm),
+		      mom_value_cstring(inldecl));
+    }
+  auto bdynod = transform_body_element(bdyitm,ilitm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s bdyitm %s bdynod %s\n ... funhnod=%s",
+		  mom_item_cstring(ilitm), mom_item_cstring(bdyitm),
+		  mom_value_cstring(bdynod), mom_value_cstring(inlhnod));
+  auto inldef = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+				    mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("inline:"), ilitm),
+				    inlhnod,
+				    bdynod,
+				    mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("endinline:"), ilitm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s result inldef=%s",  mom_item_cstring(ilitm),
+		  mom_value_cstring(inldef));
+  return inldef;
 } // end MomCEmitter::transform_inline_element
 
 
