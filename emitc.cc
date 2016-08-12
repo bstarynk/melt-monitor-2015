@@ -1322,9 +1322,25 @@ MomEmitter::transform_module_element(struct mom_item_st*elitm)
 void
 MomEmitter::scan_data_element(struct mom_item_st*daitm)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_data_element start daitm=%s", mom_item_cstring(daitm));
-#warning MomEmitter::scan_data_element unimplemented
-  MOM_FATAPRINTF("unimplemented scan_data_element daitm=%s", mom_item_cstring(daitm));
+  MOM_DEBUGPRINTF(gencod, "scan_data_element start daitm:=%s",
+		  mom_item_content_cstring(daitm));
+  assert (is_locked_item(daitm));
+  auto dabind = get_binding(daitm);
+  if (dabind)
+    throw MOM_RUNTIME_PRINTF("data element %s already bound to role %s what %s",
+			     mom_item_cstring(daitm),
+			     mom_item_cstring(dabind->vd_rolitm),
+			     mom_value_cstring(dabind->vd_what));
+  auto typitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(daitm,MOM_PREDEFITM(type)));
+  MOM_DEBUGPRINTF(gencod, "scan_data_element daitm=%s typitm=%s",
+		  mom_item_content_cstring(daitm), mom_item_cstring(typitm));
+  if (!typitm)
+    throw MOM_RUNTIME_PRINTF("data element %s without type", mom_item_cstring(daitm));
+  lock_item(typitm);
+  scan_type (typitm);
+  bind_global_at(MOM_PREDEFITM(data),daitm,typitm, __LINE__);
+  MOM_DEBUGPRINTF(gencod, "scan_data_element done daitm=%s",
+		  mom_item_cstring(daitm));
 } // end  MomEmitter::scan_data_element
 
 
