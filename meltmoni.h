@@ -40,6 +40,7 @@
 #include <string.h>
 #include <gc/gc.h>
 
+
 // mark unlikely conditions to help optimization
 #ifdef __GNUC__
 #define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)
@@ -173,6 +174,7 @@ typedef atomic_bool mom_atomic_bool_t;
 typedef atomic_int mom_atomic_int_t;
 typedef atomic_int_least16_t mom_atomic_int16_t;
 typedef FILE *_Atomic mom_atomic_fileptr_t;
+#define thread_local _Thread_local
 #endif /* C++ or C */
 
 #include <stdbool.h>

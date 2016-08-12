@@ -533,6 +533,7 @@ class MomCEmitter final :public MomEmitter
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
   static constexpr const char* CFIELD_PREFIX = "momfi_";
+  static constexpr const char* CDATA_PREFIX = "momda_";
   static constexpr const char* CSIGNTYPE_PREFIX = "momsigty_";
   static constexpr const char* CPREDEFITEM_MACRO = "MOM_PREDEFITM";
   static constexpr const char* CCONSTITEM_PREFIX = "momcstitem_";
@@ -1338,7 +1339,7 @@ MomEmitter::scan_data_element(struct mom_item_st*daitm)
     throw MOM_RUNTIME_PRINTF("data element %s without type", mom_item_cstring(daitm));
   lock_item(typitm);
   scan_type (typitm);
-  bind_global_at(MOM_PREDEFITM(data),daitm,typitm, __LINE__);
+  bind_global_at(daitm,MOM_PREDEFITM(data),typitm, __LINE__);
   MOM_DEBUGPRINTF(gencod, "scan_data_element done daitm=%s",
 		  mom_item_cstring(daitm));
 } // end  MomEmitter::scan_data_element
@@ -3532,8 +3533,49 @@ MomCEmitter::after_preparation_transform(void)
 const struct mom_boxnode_st*
 MomCEmitter::transform_data_element(struct mom_item_st*itm)
 {
-#warning unimplemented MomCEmitter::transform_data_element
-  MOM_FATAPRINTF("unimplemented MomCEmitter::transform_data_element itm=%s", mom_item_cstring(itm));
+  MOM_DEBUGPRINTF(gencod, "c-transform_data_element start itm:=%s",
+		  mom_item_content_cstring(itm));
+  assert (is_locked_item(itm));
+  auto descitm = mom_unsync_item_descr(itm);
+  auto dabind = get_binding(itm);
+  assert (dabind != nullptr);
+  MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s dabind role %s what %s descitm=%s",
+		  mom_item_cstring(itm),
+		  mom_item_cstring(dabind->vd_rolitm),
+		  mom_value_cstring(dabind->vd_what),
+		  mom_item_cstring(descitm));
+  assert (dabind->vd_rolitm == MOM_PREDEFITM(data));
+  auto typval = dabind->vd_what;
+    auto datree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                     literal_string (CDATA_PREFIX), itm);
+  MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s datree=%s",
+                  mom_item_cstring(itm), mom_value_cstring(datree));
+  auto dcltree = transform_type_for(typval,datree);
+  MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s has dcltree=%s",
+                  mom_item_cstring(itm), mom_value_cstring(dcltree));
+  if (descitm == MOM_PREDEFITM(global)) {
+    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+				       literal_string("/*global*/"),
+				       literal_string(" "),
+				       dcltree,
+				       literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
+		      mom_item_cstring(itm), mom_value_cstring(restree));
+      return restree;
+  }
+  else if (descitm== MOM_PREDEFITM(thread_local)) {
+    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+				       literal_string("thread_local"),
+				       literal_string(" "),
+				       dcltree,
+				       literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
+		      mom_item_cstring(itm), mom_value_cstring(restree));
+      return restree;
+  }
+  else
+    MOM_FATAPRINTF("unimplemented c-transform_data_element itm=%s of descr %s",
+		   mom_item_cstring(itm), mom_item_cstring(descitm));
 } // end MomCEmitter::transform_data_element
 
 const struct mom_boxnode_st*
