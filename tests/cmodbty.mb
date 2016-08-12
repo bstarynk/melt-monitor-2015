@@ -36,6 +36,12 @@
   ^* c_code "pthread_mutex_t"
   )
 
+^global !rwlock_t (
+  ^* comment "the type of POSIX read-write locks"
+  ^* descr type
+  ^* c_code "pthread_rwlock_t"
+  )
+
 
 ^global !hash_t (
   ^* comment "the unsigned type of hash-code"
@@ -247,10 +253,20 @@
   ^* descr type
   ^* type struct
   ^* struct [
-      ^global !itrad_rank (
-        ^* comment "the field giving the radix rank"
+      ^global !itrad_left (
+        ^* comment "the field giving the left radix"
         ^* descr field
-        ^* type uint32_t
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itrad_right (
+        ^* comment "the field giving the right radix"
+        ^* descr field
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itrad_mtx (
+        ^* comment "the field giving the radix mutex"
+        ^* descr field
+        ^* type mutex_t
       )
       ^global !itrad_name (
         ^* comment "the field giving the radix name"
@@ -807,6 +823,11 @@
 ^global !typ0loc (
   ^* descr variable
   ^* type itype_en
+  )
+  
+^global !radix_lock (
+  ^* descr global
+  ^* type rwlock_t
 )
 
 ^global !nloc (
@@ -1143,7 +1164,7 @@
 
 
 ^global !dyncast_item  (
-  ^* comment "inline function to dynamic-cast a item"
+  ^* comment "inline function to dynamic-cast an item"
   ^* descr inline
   ^* signature signature_value_to_value
   ^* body  ^global ?dyncast_item (
@@ -1190,6 +1211,7 @@
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
+     radix_lock
    ]
 )
 

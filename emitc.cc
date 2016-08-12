@@ -393,7 +393,7 @@ public:
       throw MOM_RUNTIME_PRINTF("local binding non-item lin#%d", lin);
     if (vd.vd_rolitm == MOM_PREDEFITM(data))
       MOM_DEBUGPRINTF(gencod, "local binding %s to data @%p rank#%ld lin#%d",
-                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank);
+                      mom_item_cstring(itm), vd.vd_what, vd.vd_rank, lin);
 
     else
       MOM_DEBUGPRINTF(gencod, "local binding %s to role %s what %s detail %s rank#%ld lin#%d",
