@@ -248,6 +248,20 @@
   ]
 )
 
+^global !itemhashedset_ty (
+  ^* descr type
+  ^* comment "type of hashed set of items"
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+    ^global !hset_items (
+        ^* comment "the field giving the items hashtable in item hashed set"
+        ^* descr field
+        ^* type %flexible_array(item)
+      )
+  ]
+)
+
 ^global  !itemradix_tu (
   ^* comment "the structure of item radixes"
   ^* descr type
@@ -268,8 +282,18 @@
         ^* descr field
         ^* type mutex_t
       )
+      ^global !itrad_primitem (
+        ^* comment "the field giving the radix primary item"
+        ^* descr field
+        ^* type item
+      )
+      ^global !itrad_hashset (
+        ^* comment "the field giving the radix hashed set of secondary items"
+        ^* descr field
+        ^* type %pointer(itemhashedset_ty)
+      )
       ^global !itrad_name (
-        ^* comment "the field giving the radix name"
+        ^* comment "the field giving the radix name, should be last"
         ^* descr field
         ^* type boxstring_ty
       )
