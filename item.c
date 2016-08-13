@@ -999,10 +999,10 @@ mom_make_item_from_radix_id (const struct mom_itemradix_tu *radix,
   unsigned sz = curad->rad_size;
   unsigned cnt = curad->rad_count;
   assert (cnt <= sz);
-  if (MOM_UNLIKELY (4 * cnt + 3 >= 5 * sz))
+  if (MOM_UNLIKELY (4 * cnt + 7 >= 5 * sz))
     {
       unsigned newsiz =
-        mom_prime_above (4 * cnt / 3 + 10 +
+        mom_prime_above (4 * cnt / 3 + 15 +
                          (((cnt > 100) ? (cnt / 32) : 3) + 1));
       if (newsiz > sz)
         {
