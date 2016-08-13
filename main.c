@@ -1761,14 +1761,15 @@ main (int argc_main, char **argv_main)
       char cmdbuf[128];
       memset (cmdbuf, 0, sizeof (cmdbuf));
       if (snprintf
-          (cmdbuf, sizeof (cmdbuf), "make -j 3 OPTIMFLAGS='%s'",
-           monimelt_optimflags) >= (int) sizeof (cmdbuf) - 1)
+          (cmdbuf, sizeof (cmdbuf), "make -j 3 -f %s OPTIMFLAGS='%s'",
+           monimelt_makefile, monimelt_optimflags)
+	  >= (int) sizeof (cmdbuf) - 1)
         MOM_FATAPRINTF ("too small command buffer %s", cmdbuf);
       int bad = system (cmdbuf);
       if (bad)
         MOM_FATAPRINTF ("%s failed (%d)", cmdbuf, bad);
-      MOM_INFORMPRINTF ("made ok after adding %d predefined",
-                        count_added_predef_mom);
+      MOM_INFORMPRINTF ("made ok ('%s') after adding %d predefined",
+                        cmdbuf, count_added_predef_mom);
     }
   int nbwarn = atomic_load (&mom_nb_warnings);
   if (nbwarn > 0)

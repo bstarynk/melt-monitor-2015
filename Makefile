@@ -82,11 +82,10 @@ _timestamp.c: global.mom Makefile
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS) global.mom
+monimelt: $(OBJECTS) global.mom | _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
-	$(MAKE) _timestamp.c _timestamp.o
 	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
-	rm _timestamp.*
+	$(RM) _timestamp.*
 
 %.i: %.c meltmoni.h $(GENERATED_HEADERS)
 	$(COMPILE.c) -C -E $< -o $@
