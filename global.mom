@@ -768,6 +768,12 @@ comment
 
 
 
+*header_module
+1471074177
+^mtime
+
+
+
 *identity
 1456312882
 ^mtime
@@ -853,6 +859,7 @@ comment
 
 
 
+
 *is_closure
 1457598341
 ^mtime
@@ -860,7 +867,6 @@ comment
 comment
 "test if argument is a closure"_
 )attrs
-
 
 
 
@@ -1037,6 +1043,7 @@ comment
 
 
 
+
 *itm0
 1468324302
 ^mtime
@@ -1048,7 +1055,6 @@ formal
 type
 item
 )attrs
-
 
 
 
@@ -1202,6 +1208,7 @@ comment
 
 
 
+
 *no_assoc
 1455871773
 ^mtime
@@ -1209,7 +1216,6 @@ comment
 comment
 "for non-associative delimiters"_
 )attrs
-
 
 
 
@@ -1369,6 +1375,7 @@ comment
 
 
 
+
 *out_flush
 1456932330
 ^mtime
@@ -1376,7 +1383,6 @@ comment
 comment
 "to flush_output"_
 )attrs
-
 
 
 
@@ -1550,6 +1556,7 @@ payl_assovaldata_set_attrs
 
 
 
+
 *payl_assovaldata_get
 1456833278
 ^mtime
@@ -1557,7 +1564,6 @@ payl_assovaldata_set_attrs
 comment
 "get an attribute in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -1719,6 +1725,7 @@ comment
 
 
 
+
 *payl_hashmap
 1456897878
 ^mtime
@@ -1734,7 +1741,6 @@ payl_hashmap_put
 payl_hashmap_remove
 )set
 )attrs
-
 
 
 
@@ -1896,6 +1902,7 @@ comment
 
 
 
+
 *payl_vectval_append
 1456840222
 ^mtime
@@ -1903,7 +1910,6 @@ comment
 comment
 "append into a vector of values"_
 )attrs
-
 
 
 
@@ -2096,6 +2102,7 @@ comment
 
 
 
+
 *preparation
 1468325324
 ^mtime
@@ -2103,7 +2110,6 @@ comment
 comment
 "git a preparation node"_
 )attrs
-
 
 
 
@@ -2257,6 +2263,7 @@ comment
 
 
 
+
 *set
 1456146211
 ^mtime
@@ -2269,7 +2276,6 @@ is_sequence
 is_set
 )set
 )attrs
-
 
 
 
@@ -2436,6 +2442,7 @@ comment
 
 
 
+
 *the_agenda
 1458227320
 ^mtime
@@ -2445,7 +2452,6 @@ comment
 )attrs
 (
 )payload_queue
-
 
 
 
@@ -2729,6 +2735,7 @@ type
 
 
 
+
 *value_module
 1457332492
 ^mtime
@@ -2736,7 +2743,6 @@ type
 comment
 "the value module"_
 )attrs
-
 
 
 

@@ -1239,6 +1239,21 @@
    ]
 )
 
+^global header_module (
+   ^* comment "our header_module"
+   ^* descr module
+   ^* module [
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
+     itemradix_tu item_ty node_ty
+     valid_value_pointer itype
+     int_val_def value_hash dyncast_int dyncast_boxdouble
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
+     dyncast_item
+     radix_lock
+   ]
+)
+
 ^display "final bty_module:" bty_module
 
 ## eof cmodbty.mb
