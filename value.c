@@ -1633,6 +1633,15 @@ mom_output_item_content (FILE *fout, long *plastnl, struct mom_item_st *itm)
   strftime (timbuf, sizeof (timbuf), "%c %Z",
             localtime_r (&itm->itm_mtime, &tm));
   fprintf (fout, "#mtim: %s\n", timbuf);
+  unsigned isp = mom_item_space (itm);
+  if (isp == MOMSPA_NONE)
+    fputs ("#nospace\n", fout);
+  else if (isp == MOMSPA_PREDEF)
+    fputs ("#predef\n", fout);
+  else if (isp == MOMSPA_GLOBAL)
+    fputs ("#global\n", fout);
+  else
+    fprintf (fout, "#space#%u\n", isp);
   // output attributes
   struct mom_assovaldata_st *attrs = itm->itm_pattr;
   if (attrs && attrs != MOM_EMPTY_SLOT

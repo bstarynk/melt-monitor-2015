@@ -768,8 +768,16 @@ momtok_inside_item (struct mom_item_st *itm,
       else if (curtok->mtok_itm == MOM_PREDEFITM (global))
         {
           topos++;
-          mom_item_put_space (itm, MOMSPA_GLOBAL);
-          MOM_INFORMPRINTF ("item %s is made global", mom_item_cstring (itm));
+          if (mom_item_space (itm) == MOMSPA_PREDEF)
+            MOM_WARNPRINTF
+              ("item %s already predefined cannot be made global",
+               mom_item_cstring (itm));
+          else
+            {
+              mom_item_put_space (itm, MOMSPA_GLOBAL);
+              MOM_INFORMPRINTF ("item %s is made global",
+                                mom_item_cstring (itm));
+            }
         }
       else
         MOM_FATAPRINTF
@@ -1284,8 +1292,13 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
       if (!itm)
         MOM_FATAPRINTF ("bad item for ^global at line %d of file %s",
                         curtok->mtok_lin, tovec->mtv_filename);
-      mom_item_put_space (itm, MOMSPA_GLOBAL);
-
+      if (mom_item_space (itm) == MOMSPA_PREDEF)
+        MOM_WARNPRINTF ("item %s already predefined cannot be made global",
+                        mom_item_cstring (itm));
+      else
+        {
+          mom_item_put_space (itm, MOMSPA_GLOBAL);
+        }
       momtok_inside_item (itm, tovec, topos, &topos);
       *endposptr = topos;
       MOM_DEBUGPRINTF (boot, "topos#%d done global %s", topos,

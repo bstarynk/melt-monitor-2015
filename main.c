@@ -1763,7 +1763,7 @@ main (int argc_main, char **argv_main)
       if (snprintf
           (cmdbuf, sizeof (cmdbuf), "make -j 3 -f %s OPTIMFLAGS='%s'",
            monimelt_makefile, monimelt_optimflags)
-	  >= (int) sizeof (cmdbuf) - 1)
+          >= (int) sizeof (cmdbuf) - 1)
         MOM_FATAPRINTF ("too small command buffer %s", cmdbuf);
       int bad = system (cmdbuf);
       if (bad)

@@ -1224,8 +1224,8 @@
   )
 )
 
-^global !bty_module (
-   ^* comment "our bty_module from cmodbty.mb"
+^global header_module (
+   ^* comment "our header_module"
    ^* descr module
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
@@ -1239,8 +1239,18 @@
    ]
 )
 
-^global header_module (
-   ^* comment "our header_module"
+^display "our header_module:" header_module
+
+
+
+
+
+
+
+
+
+^global !bty_module (
+   ^* comment "our bty_module from cmodbty.mb"
    ^* descr module
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
