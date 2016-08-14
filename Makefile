@@ -65,7 +65,7 @@ clean:
 
 
 
-_timestamp.c: global.mom Makefile
+_timestamp.c: global.mom Makefile | $(OBJECTS)
 	@date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
 	@(echo -n 'const char monimelt_lastgitcommit[]="' ; \
 	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
@@ -82,10 +82,10 @@ _timestamp.c: global.mom Makefile
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS) global.mom | _timestamp.o
+monimelt: $(OBJECTS) global.mom  _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
-	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS) $(LIBES) -o $@  _timestamp.o
-	$(RM) _timestamp.*
+	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
+
 
 %.i: %.c meltmoni.h $(GENERATED_HEADERS)
 	$(COMPILE.c) -C -E $< -o $@
