@@ -1,0 +1,1375 @@
+# file cmodheader.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
+
+^global !uint8_t (
+  ^* comment "the uint8_t type of 8 bit unsigned"
+  ^* descr type
+  ^* c_code "uint8_t"
+  )
+
+^global !uint16_t (
+  ^* comment "the uint16_t type of 16 bit unsigned"
+  ^* descr type
+  ^* c_code "uint16_t"
+  )
+^global !uint32_t (
+  ^* comment "the uint32_t type of 32 bit unsigned"
+  ^* descr type
+  ^* c_code "uint32_t"
+  )
+
+^global !uint64_t (
+  ^* comment "the uint64_t type of 64 bit unsigned"
+  ^* descr type
+  ^* c_code "uint64_t"
+  )
+
+^global !payload_t (
+  ^* comment "the type of payload"
+  ^* descr type
+  ^* c_code "void*"
+  )
+
+
+^global !mutex_t (
+  ^* comment "the type of POSIX mutexes"
+  ^* descr type
+  ^* c_code "pthread_mutex_t"
+  )
+
+^global !rwlock_t (
+  ^* comment "the type of POSIX read-write locks"
+  ^* descr type
+  ^* c_code "pthread_rwlock_t"
+  )
+
+
+^global !hash_t (
+  ^* comment "the unsigned type of hash-code"
+  ^* descr type
+  ^* c_code "momhash_t"
+  )
+
+^global !time_t (
+  ^* comment "the unsigned type of POSIX time"
+  ^* descr type
+  ^* c_code "time_t"
+  )
+
+^global !atomic_int16_t (
+  ^* comment "the atomic_int16_t type of 16 bit signed and atomic"
+  ^* descr type
+  ^* c_code "mom_atomic_int16_t"
+  )
+
+^global !bool (
+  ^* comment "the type for booleans"
+  ^* descr type
+  ^* c_code "bool"
+)
+
+^global !anyvalue_ty (
+  ^global
+  ^* comment "the type of any value"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global !va_itype (
+        ^* comment "the field giving the type"
+        ^* descr field
+        ^* type uint16_t
+      )
+      ^global !va_ixv (
+        ^* comment "the field giving the index"
+        ^* descr field
+        ^* type atomic_int16_t
+      )
+      ^global !va_size (
+        ^* comment "the field giving the size"
+        ^* descr field
+        ^* type uint32_t
+      )
+  ]
+)
+
+^global !boxint_ty (
+  ^global
+  ^* comment "the type of boxed integers"
+  ^* descr type
+  ^* type struct
+  ^* extend anyvalue_ty
+  ^* struct [
+      ^global !boxi_int (
+        ^* comment "the field giving the boxed integer"
+        ^* descr field
+        ^* type int
+      )
+  ]
+)
+
+ 
+^global !hashedvalue_ty (
+  ^* comment "the type of hashed value"
+  ^* descr type
+  ^* type struct
+  ^* extend anyvalue_ty
+  ^* struct [
+      ^global !hva_hash (
+        ^* comment "the field giving the hash"
+        ^* descr field
+        ^* type hash_t
+      )
+  ]
+)
+
+^global !boxdouble_ty (
+  ^global
+  ^* comment "the type of boxed double"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !boxd_dbl (
+        ^* comment "the field giving the boxed double"
+        ^* descr field
+        ^* type double
+      )
+  ]
+)
+
+^global !char (
+  ^* comment "the type of char"
+  ^* descr type
+  ^* c_code "char"
+  
+)
+
+
+^global !boxstring_ty (
+  ^* comment "the type of boxed string"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !boxs_cstr (
+        ^* comment "the field giving the boxed string"
+        ^* descr field
+        ^* type %flexible_array(char)
+      )
+  ]
+)
+
+^global !seqitem_ty (
+  ^* comment "the type of item sequences"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !seqitem (
+        ^* comment "the field giving the item sequence"
+        ^* descr field
+        ^* type %flexible_array(item)
+      )
+  ]
+)
+
+^global !boxtuple_ty (
+  ^* comment "the type of tuples"
+  ^* descr type
+  ^* type struct
+  ^* extend seqitem_ty
+  ^* struct [ ]
+)
+  
+^global !boxset_ty (
+  ^* comment "the type of sets"
+  ^* descr type
+  ^* type struct
+  ^* extend seqitem_ty
+  ^* struct [ 
+  ]
+)
+
+
+^global !countedata_ty (
+  ^* comment "the type of counted data"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !cda_count (
+        ^* comment "the field giving the count"
+        ^* descr field
+        ^* type uint32_t
+      )
+  ]
+)
+
+^global !itementry_tu (
+  ^* comment "the structure of item entries"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global !ient_item (
+        ^* comment "the field giving the item key"
+        ^* descr field
+        ^* type item
+      )
+      ^global !ient_value (
+        ^* comment "the field giving the corresponding value"
+        ^* descr field
+        ^* type value
+      )
+  ]
+)
+
+^global !assovaldata_ty (
+  ^* descr type
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+      ^global !ada_ents (
+        ^* comment "the field giving the item entries"
+        ^* descr field
+        ^* type %flexible_array(itementry_tu)
+      )
+  ]
+)
+
+^global !vectvaldata_ty (
+  ^* descr type
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+      ^global !vecd_valarr (
+        ^* comment "the field giving the vector\'s components"
+        ^* descr field
+        ^* type %flexible_array(value)
+      )
+  ]
+)
+
+^global !itemhashedset_ty (
+  ^* descr type
+  ^* comment "type of hashed set of items"
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+    ^global !hset_items (
+        ^* comment "the field giving the items hashtable in item hashed set"
+        ^* descr field
+        ^* type %flexible_array(item)
+      )
+  ]
+)
+
+^global  !itemradix_tu (
+  ^* comment "the structure of item radixes"
+  ^* descr type
+  ^* type struct
+  ^* struct [
+      ^global !itrad_left (
+        ^* comment "the field giving the left radix"
+        ^* descr field
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itrad_right (
+        ^* comment "the field giving the right radix"
+        ^* descr field
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itrad_mtx (
+        ^* comment "the field giving the radix mutex"
+        ^* descr field
+        ^* type mutex_t
+      )
+      ^global !itrad_primitem (
+        ^* comment "the field giving the radix primary item"
+        ^* descr field
+        ^* type item
+      )
+      ^global !itrad_hashset (
+        ^* comment "the field giving the radix hashed set of secondary items"
+        ^* descr field
+        ^* type %pointer(itemhashedset_ty)
+      )
+      ^global !itrad_name (
+        ^* comment "the field giving the radix name, should be last"
+        ^* descr field
+        ^* type boxstring_ty
+      )
+   ]
+)
+
+^global !item_ty (
+  ^* comment "the structure of items"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !itm_radix (
+        ^* comment "the field giving the item\'s radix"
+        ^* descr field
+        ^* type %pointer(itemradix_tu)
+      )
+      ^global !itm_mtx (
+        ^* comment "the field giving the item\'s lock"
+        ^* descr field
+        ^* type mutex_t
+      )
+      ^global !itm_hid (
+        ^* comment "the field giving the highbits id"
+        ^* descr field
+        ^* type uint32_t
+      )
+      ^global !itm_lid (
+        ^* comment "the field giving the lowbits id"
+        ^* descr field
+        ^* type uint64_t
+      )
+      ^global !itm_mtime (
+        ^* comment "the field giving the modification time"
+        ^* descr field
+        ^* type time_t
+      )
+      ^global !itm_pattr (
+        ^* comment "the field giving the attributes of the item"
+        ^* descr field
+        ^* type %pointer(assovaldata_ty)
+      )
+      ^global !itm_pcomp (
+        ^* comment "the field giving the components"
+        ^* descr field
+        ^* type %pointer(vectvaldata_ty)
+      )
+      ^global !itm_paylkind (
+        ^* comment "the field giving the payload kind"
+        ^* descr field
+        ^* type item
+      )
+      ^global !itm_payldata (
+        ^* comment "the field giving the payload data"
+        ^* descr field
+        ^* type payload_t
+      )
+  ]
+)
+
+^global !node_ty (
+  ^* comment "the structure of nodes"
+  ^* descr type
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+      ^global !nod_metarank (
+        ^* comment "the field giving the metadata rank in node"
+        ^* descr field
+        ^* type int
+      )
+      ^global !nod_metaitem (
+        ^* comment "the field giving the metadata item in node"
+        ^* descr field
+        ^* type item
+      )
+      ^global !nod_connitm (
+        ^* comment "the field giving the connective item in node"
+        ^* descr field
+        ^* type item
+      )
+      ^global !nod_sons (
+        ^* comment "the field giving the sons in node"
+        ^* descr field
+        ^* type %flexible_array(value)
+      )
+  ]
+)
+
+^global !val0 (
+   ^* comment "val0 in cmodheader.mb"
+   ^* descr formal
+   ^* type value
+)
+
+
+^global !val1 (
+   ^* comment "val1 in cmodheader.mb"
+   ^* descr formal
+   ^* type value
+)
+
+^global !signature_2values_to_bool (
+  ^* descr signature
+  ^* formals [ val0 val1 ]
+  ^* result bool
+)
+
+^global !signature_value_to_bool (
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result bool
+)
+
+^global !signature_value_to_value (
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result value
+)
+
+
+^item is_null (
+  ^* descr primitive
+  ^* signature signature_value_to_bool
+  ^* notice not
+  ^* c_expansion %code_chunk(
+    "/*is_null*/ ((" val0 " ) == NULL)"
+  )
+)
+
+^global !flag0 (
+   ^* comment "flag0 in cmodheader.mb"
+   ^* descr formal
+   ^* type bool
+)
+
+^global !signature_bool_to_bool (
+  ^* descr signature
+  ^* formals [ flag0 ]
+  ^* result bool
+)
+
+
+^global !num0 (
+   ^* comment "num0 in cmodheader.mb"
+   ^* descr formal
+   ^* type int
+)
+
+
+^global !num1 (
+   ^* comment "num1 in cmodheader.mb"
+   ^* descr formal
+   ^* type int
+)
+
+^global !signature_2ints_to_int (
+  ^* descr signature
+  ^* formals [ num0 num1 ]
+  ^* result int
+)
+
+^global !signature_value_int_to_int (
+  ^* descr signature
+  ^* formals [ val0 num1 ]
+  ^* result int
+)
+
+^global !signature_2ints_to_bool (
+  ^* descr signature
+  ^* formals [ num0 num1 ]
+  ^* result bool
+)
+
+^global !signature_value_to_int (
+  ^* descr signature
+  ^* comment "signature value -> int"
+  ^* formals [ val0 ]
+  ^* result int
+)
+
+^global !signature_void_to_value (
+  ^* descr signature
+  ^* comment "signature () -> value"
+  ^* formals [  ]
+  ^* result value
+)
+
+^global !cast_pointer_to_int_prim (
+  ^* comment "primitive to cast a pointer to an int"
+  ^* descr primitive
+  ^* signature signature_value_to_int
+  ^* c_expansion %code_chunk(
+      "/*cast_pointer_to_int_prim*/ (intptr_t)(" val0 ")" )
+)
+
+^global !not_bool_prim (
+  ^* comment "primitive for negation of bool"
+  ^* descr primitive
+  ^* signature signature_bool_to_bool
+  ^* c_expansion %code_chunk(
+      "/*not_bool_prim*/ !(" flag0 ")" )
+)
+
+^global !unsafe_int_mod_prim (
+  ^* comment "unsafe primitive for modulus of int"
+  ^* descr primitive
+  ^* signature signature_2ints_to_int
+  ^* c_expansion %code_chunk(
+      "/*unsafe_int_mod_prim*/ ((" num0 ") % (" num1 "))")
+)
+
+^global !same_value_prim (
+  ^* comment "primitive to test identities of 2 values"
+  ^* descr primitive
+  ^* signature signature_2values_to_bool
+  ^* c_expansion %code_chunk(
+      "/*same_value_prim*/ ((" val0 ") == (" val1 "))" )
+)
+
+^global !equal_int_prim (
+  ^* comment "primitive to test equality of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") == (" num1 "))" )
+)
+
+^global !less_int_prim (
+  ^* comment "primitive to test less than of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") < (" num1 "))" )
+)
+
+
+^global !less_equal_int_prim (
+  ^* comment "primitive to test less equal of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") <= (" num1 "))" )
+)
+
+
+^global !empty_slot_prim (
+  ^* comment "primitive for MOM_EMPTY_SLOT"
+  ^* descr primitive
+  ^* signature signature_void_to_value
+  ^* c_expansion %code_chunk(
+       "/*empty_slot_prim*/ MOM_EMPTY_SLOT" )
+)
+
+
+
+^global !valid_value_pointer (
+  ^* comment "inline function testing validity of value pointer"
+  ^* descr inline
+  ^* signature signature_value_to_bool
+  ^* body  ^global ?valid_value_pointer (
+       ^* comment "body of valid_value_pointer"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* comment "cond for nil or empty slot or int in valid_value_pointer"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil in valid_value_pointer"
+               ^* test %is_null(val0)
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return false when nil value"
+               ) 
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return false when empty slot"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return false when odd address"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise return truth"
+               ^* test truth
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* comment "return otherwise truth"
+                 ^* return truth
+               )
+             )
+           ]
+         )
+       ]
+   )
+)
+
+^global !itype_en (
+  ^* comment "enumeration for various value itypes"
+  ^* descr type
+  ^* type enum
+  ^* enum [
+      ^global !ity_none (
+        ^* descr enumerator
+        ^* comment "type of nil"
+      )
+      ^global !ity_int (
+        ^* descr enumerator
+        ^* comment "itype of integer"
+        ^* notice int
+      )
+      ^global !ity_double (
+        ^* descr enumerator
+        ^* comment "itype of boxed doubles"
+        ^* notice double
+      )    
+      ^global !ity_string (
+        ^* descr enumerator
+        ^* comment "itype of string values"
+        ^* notice string
+      )       
+      ^global !ity_item (
+        ^* descr enumerator
+        ^* comment "itype of items"
+        ^* notice item
+      )          
+      ^global !ity_tuple (
+        ^* descr enumerator
+        ^* comment "itype of tuples"
+        ^* notice tuple
+      )       
+      ^global !ity_set (
+        ^* descr enumerator
+        ^* comment "itype of sets"
+        ^* notice set
+      )          
+      ^global !ity_node (
+        ^* descr enumerator
+        ^* comment "itype of nodes"
+        ^* notice node
+      )       
+  ]
+)
+
+
+^global !signature_value_to_itype_en (
+  ^* descr signature
+  ^* comment "signature value -> itype_en"
+  ^* formals [ val0 ]
+  ^* result itype_en
+)
+
+
+^global !signature_value_to_hash_t (
+  ^* descr signature
+  ^* comment "signature value -> hash_t"
+  ^* formals [ val0 ]
+  ^* result hash_t
+)
+
+^global !itype  (
+  ^* comment "inline function testing validity of value pointer"
+  ^* descr inline
+  ^* signature signature_value_to_itype_en
+  ^* body  ^global ?itype (
+       ^* comment "body of itype"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* comment "cond in itype"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil in itype"
+               ^* test %is_null(val0)
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return ity_none
+                  ^* comment "return ity_none when nil value"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot in itype"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return ity_none
+                  ^* comment "return ity_none when empty slot"
+                )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses in itype"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return ity_int
+                 ^* comment "return ity_int when odd address"
+               )
+             )             
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise test - valid address in itype"
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %itype_en(%va_itype(val0))
+                 ^* comment "return the va_itype when valid"
+               )
+             )
+           ] ## end cond
+        )
+      ]
+    )
+)
+
+
+
+^global !int_val_def (
+  ^* comment "inline function giving integer value or default"
+  ^* descr inline
+  ^* signature signature_value_int_to_int
+  ^* body  ^global ?int_val_def (
+       ^* comment "body of int_val_def"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* comment "cond in int_val_def"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for nil in int_val_def"
+               ^* test %is_null(val0)
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return num1
+                 ^* comment "return num1 when nil value"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for empty_slot in int_val_def"
+               ^* test %same_value_prim(val0 %empty_slot_prim())
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* return num1
+                  ^* comment "return num1 when empty slot"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for odd addresses in itype"
+               ^* test
+                 %unsafe_int_mod_prim(%cast_pointer_to_int_prim(val0)
+                                      2)
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return %div(%cast_pointer_to_int_prim(val0) 2)
+                  ^* comment "return half when odd address"
+                )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for boxedints in itype"
+               ^* test
+                 %equal_int_prim (%int(%va_itype(val0)) %int(ity_int))
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %boxi_int(val0)
+                 ^* comment "return boxi_int for boxedints"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test otherwise boxedints"
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* return num1
+                  ^* comment "return num1 otherwise"
+                )
+             )
+           ]
+         )
+       ]
+     )       
+  )
+
+
+^global !valsize  (
+  ^* comment "inline function giving size of value"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?valsize (
+       ^* comment "body of valsize"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* comment "cond in valsize"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test for valid in valsize"
+               ^* test %valid_value_pointer(val0)
+               ^* then  ^global ?return (
+                 ^* descr return
+                 ^* return %va_size(val0)
+                 ^* comment "return va_size of valid val0"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test otherwise in valsize"
+               ^* then  ^global ?return (
+                  ^* descr return
+                  ^* return 0
+                  ^* comment "return 0 when val0 invalid"
+                )
+             )
+           ]
+         )
+       ]
+  )
+)
+
+
+^global !typ0loc (
+  ^* descr variable
+  ^* type itype_en
+  )
+  
+^global !radix_lock (
+  ^* comment "the global rwlock for radixes"
+  ^* descr global
+  ^* type rwlock_t
+)
+
+
+^global !radix_root (
+  ^* descr global
+  ^* type %pointer(itemradix_tu)
+  ^* comment "the global radix root"
+)
+
+^global !nloc (
+  ^* descr variable
+  ^* type int
+)
+
+^global !value_hash  (
+  ^* comment "inline function giving hash of value"
+  ^* descr inline
+  ^* signature signature_value_to_hash_t
+  ^* body  ^global ?value_hash (
+       ^* comment "body of value_hash"
+       ^* descr sequence
+       ^* locals [ typ0loc ]
+       ^* body
+       [
+          ^global ?assign (
+            ^* comment "get type of val0 into typ0loc"
+            ^* descr assign
+            ^* to typ0loc
+            ^* from %itype(val0)
+          )
+          ^global ?cond (
+            ^* comment "cond on typ0loc for value_hash"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_none"
+                ^* test %equal_int_prim(%int(typ0loc) %int(ity_none))
+                ^* then  ^global ?return (
+                   ^* comment "return 0"
+                   ^* descr return
+                   ^* return %hash_t (0)
+                 )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_int"
+                ^* test %equal_int_prim(%int(typ0loc) %int(ity_int))
+                ^* then  ^global ?return (
+                  ^* comment "return hash of number val0"
+                  ^* descr return
+                  ^* return %hash_t (%plus
+                        (%mod(%int_val_def(val0 0) 1000001137) 1))
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for boxed value"
+                ^* test %less_equal_int_prim(%int(typ0loc) %int(ity_node))
+                ^* then  ^global ?return (
+                  ^* comment "return hva_hash field"
+                  ^* descr return
+                  ^* return %hash_t (%hva_hash(val0))
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "otherwise return 1+the type"
+                ^* then  ^global ?return (
+                  ^* comment "return 1+typ0loc"
+                  ^* descr return
+                  ^* return %hash_t (%plus (1 %int(typ0loc)))
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_int  (
+  ^* comment "inline function to dynamic-cast an int"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_int (
+       ^* comment "body of dyncast_int"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_int"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_int"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_int))
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-int"
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_boxdouble  (
+  ^* comment "inline function to dynamic-cast a boxed double"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_boxdouble (
+       ^* comment "body of dyncast_boxdouble"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_boxdouble"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_double"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_double))
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-double"
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_boxstring  (
+  ^* comment "inline function to dynamic-cast a boxed string"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_boxstring (
+       ^* comment "body of dyncast_boxstring"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_boxstring"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_string"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_string))
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-string"
+                ^* then  ^global ?return (
+                  ^* descr return
+                  ^* comment "else return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_seqitem  (
+  ^* comment "inline function to dynamic-cast a sequence"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_seqitem (
+       ^* comment "body of dyncast_seqitem"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_seqitem"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_tuple or ity_set"
+                ^* test %or (%equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                             %equal_int_prim(%int(%itype(val0)) %int(ity_set)))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-seq"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )                
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_tuple  (
+  ^* comment "inline function to dynamic-cast a tuple"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_tuple (
+       ^* comment "body of dyncast_tuple"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_tuple"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_tuple"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_tuple))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-tuple"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )                
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_set  (
+  ^* comment "inline function to dynamic-cast a set"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_set (
+       ^* comment "body of dyncast_set"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_set"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_set"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_set))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-set"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )                
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !dyncast_node  (
+  ^* comment "inline function to dynamic-cast a node"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_node (
+       ^* comment "body of dyncast_node"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_node"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_node"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_node))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-node"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+
+
+^global !dyncast_item  (
+  ^* comment "inline function to dynamic-cast an item"
+  ^* descr inline
+  ^* signature signature_value_to_value
+  ^* body  ^global ?dyncast_item (
+       ^* comment "body of dyncast_item"
+       ^* descr sequence
+       ^* body
+       [
+          ^global ?cond (
+            ^* comment "cond on val0 for dyncast_item"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for ity_item"
+                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_item))
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return val0"
+                  ^* return val0
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "test else non-item"
+                ^* then  ^global ?return (
+                      ^* descr return
+                      ^* comment "return nil"
+                )
+              )
+            ]
+          )
+       ]
+  )
+)
+
+^global !lockarg (
+  ^* descr formal
+  ^* type rwlock_t
+  ^* comment "formal for lock"
+)
+
+^global !signature_lock_to_void (
+  ^* comment "signature lock -> void for locking primitives"
+  ^* descr signature
+  ^* formals [ lockarg ]
+  ^* result unit
+)
+
+^global !lock_read (
+  ^* descr primitive
+  ^* comment "primitive for read-locking"
+  ^* signature signature_lock_to_void
+  ^* c_expansion %code_chunk("/*lock_read*/ pthread_rwlock_rdlock(&"
+                             lockarg ")")
+)
+
+^global !lock_write (
+  ^* descr primitive
+  ^* comment "primitive for write-locking"
+  ^* signature signature_lock_to_void
+  ^* c_expansion %code_chunk("/*lock_write*/ pthread_rwlock_wrlock(&"
+                             lockarg ")")
+)
+
+^global !unlock (
+  ^* descr primitive
+  ^* comment "primitive for unlocking"
+  ^* signature signature_lock_to_void
+  ^* c_expansion %code_chunk("/*unlock*/ pthread_rwlock_unlock(&"
+                             lockarg ")")
+)
+
+^global !cstring_t (
+  ^* descr type
+  ^* comment "type for constant c strings"
+  ^* c_code "const char*"
+)
+
+^global !cnamarg (
+  ^* comment "argument for cname"
+  ^* descr variable
+  ^* type cstring_t
+)
+
+^global !curadix (
+  ^* descr variable
+  ^* type %pointer(itemradix_tu)
+)
+
+
+^global !radixarg (
+  ^* descr variable
+  ^* type %pointer(itemradix_tu)
+)
+
+^global !signature_cstring_to_itemradixptr (
+  ^* descr signature
+  ^* formals  [cnamarg]
+  ^* result %pointer(itemradix_tu)
+)
+
+^global !signature_itemradix_cstring_to_itemradixptr (
+  ^* descr signature
+  ^* formals  [radixarg cnamarg]
+  ^* result %pointer(itemradix_tu)
+)
+
+
+^global !find_radix_unlocked (
+  ^* comment "find unlocked radix"
+  ^* descr routine
+  ^* signature signature_itemradix_cstring_to_itemradixptr
+  ^* body [
+  ]
+)
+
+^global !radix_of_cname (
+  ^* comment "get radix of name"
+  ^* descr inline
+  ^* signature signature_cstring_to_itemradixptr
+  ^* body ^global ?radix_of_cname (
+    ^* descr sequence
+    ^* locals [ curadix ]
+    ^* body [
+       ^global ?lock_read (
+         ^* descr run
+         ^* run lock_read
+         ^: (
+           radix_lock
+         )
+       )
+       ^global ?find_radix_unlocked (
+         ^* descr run
+         ^* run find_radix_unlocked
+         ^* result curadix
+         ^: (
+           radix_root
+           cnamarg
+         )
+       )
+       ^global ?unlock (
+         ^* descr run
+         ^* run unlock
+         ^: (
+           radix_lock
+         )
+       )
+       ^global ?return (
+         ^* descr return
+         ^* return curadix
+       )
+    ]
+  )
+)
+
+^global header_module (
+   ^* comment "our header_module"
+   ^* descr module
+   ^* declare [ radix_lock radix_root ]
+   ^* module [
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
+     itemradix_tu item_ty node_ty
+     valid_value_pointer itype
+     int_val_def value_hash dyncast_int dyncast_boxdouble
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
+     dyncast_item
+     radix_of_cname
+   ]
+)
+
+^display "our header_module:" header_module
+
+
+
+## eof cmodheader.mb
