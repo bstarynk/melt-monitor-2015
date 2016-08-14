@@ -3357,6 +3357,7 @@ MomCEmitter::~MomCEmitter()
 } // end MomCEmitter::~MomCEmitter
 
 
+
 void
 MomCEmitter::declare_item(struct mom_item_st*declitm)
 {
@@ -3381,6 +3382,7 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 			mom_item_cstring(declitm), mom_value_cstring(dtytree));
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
+	    MOM_DEBUGPRINTF(gencod, "c-declare_item new type %s", mom_item_cstring(declitm));
 	    _cec_declareditems.insert(declitm);
 	    add_global_decl(dtytree);
 	  }
@@ -3504,11 +3506,9 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
     }
 #undef CASE_DECLD_MOM
 #undef NBDECLD_MOM
-#warning unimplemented MomCEmitter::declare_item
-  MOM_FATAPRINTF("unimplemented c-declare_item declitm=%s descitm=%s",
-                 mom_item_cstring(declitm), mom_item_cstring(descitm));
-  MOM_DEBUGPRINTF(gencod, "c-declare_item end declitm=%s", mom_item_cstring(declitm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_item end declitm=%s\n", mom_item_cstring(declitm));
 } // end MomCEmitter::declare_item
+
 
 void
 MomCEmitter::after_preparation_transform(void)
@@ -5587,6 +5587,8 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
             }
           else
             {
+	      MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s declaring",
+			      mom_item_cstring(typitm));
               auto dtytree = declare_type(typitm, scalarp);
               MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s so dtytree %s (%s)",
                               mom_item_cstring(typitm),
