@@ -3369,6 +3369,7 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 #define CASE_DECLD_MOM(Nam) momhashpredef_##Nam % NBDECLD_MOM:	\
   if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
   goto defaultcasedescd; foundcase_##Nam
+  const char*varqual=nullptr;
   switch (descitm->hva_hash % NBDECLD_MOM)
     {
     case CASE_DECLD_MOM(type):
@@ -3458,6 +3459,25 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	    add_global_decl(dftree);
 	    _cec_declareditems.insert(declitm);
 	  }
+      }
+      break;
+      
+    case CASE_DECLD_MOM(global):
+      varqual = "/*global*/";
+      goto declare_data;
+    case CASE_DECLD_MOM(thread_local):
+      varqual = "thread_local";
+      goto declare_data;
+    declare_data:
+      {
+	MOM_DEBUGPRINTF(gencod, "c-declare_item data %s varqual:%s", mom_item_cstring(declitm), varqual);
+	if (_cec_declareditems.find(declitm) == _cec_declareditems.end()) {
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item new data %s varqual:%s", mom_item_cstring(declitm), varqual);
+	  auto dtree = transform_data_element(declitm);
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item data %s dtree=%s", mom_item_cstring(declitm), mom_value_cstring(dtree));
+	}
+	MOM_FATAPRINTF("unimplemented c-declare_item data %s", mom_item_cstring(declitm));
+#warning c-declare_item data unimplemented
       }
       break;
     defaultcasedescd:
