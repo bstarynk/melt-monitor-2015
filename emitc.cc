@@ -3988,20 +3988,28 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                   mom_item_cstring(typitm), mom_value_cstring(tytree),
                   mom_item_cstring(tybind?tybind->vd_rolitm:nullptr),
                   mom_value_cstring(tybind?tybind->vd_what:nullptr));
-  if (_ce_typitems.find(typitm) != _ce_typitems.end() && tybind != nullptr)
+  if (tybind != nullptr)
     {
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s bound to role %s what %s",
+		      mom_item_cstring(typitm),
+		      mom_item_cstring(tybind->vd_rolitm),
+		      mom_value_cstring(tybind->vd_what));
+      if (tybind->vd_rolitm != MOM_PREDEFITM(type))
+	throw MOM_RUNTIME_PRINTF("type %s already bound to role %s",
+				 mom_item_cstring(typitm), mom_item_cstring(tybind->vd_rolitm));
       MOM_DEBUGPRINTF(gencod,
                       "c-declare_type known typitm=%s gives tytree=%s",
                       mom_item_cstring(typitm), mom_value_cstring(tytree));
       return tytree;
     }
-  {
-    if (tybind != nullptr)
-      throw MOM_RUNTIME_PRINTF("declared type %s already bound to role %s what %s",
-                               mom_item_cstring(typitm),
-                               mom_item_cstring(tybind->vd_rolitm),
-                               mom_value_cstring(tybind->vd_what));
+  else {
+      MOM_DEBUGPRINTF(gencod,
+                      "c-declare_type fresh typitm=%s",
+		      mom_item_cstring(typitm));
+      /// temporary binding, will be rebound later
+      bind_global_at(typitm, MOM_PREDEFITM(type), nullptr,__LINE__);
   }
+
 #define NBKNOWNTYPE_MOM 31
 #define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:  \
   if (typitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;		\
@@ -4030,8 +4038,6 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
     }
 #undef NBKNOWNTYPE_MOM
 #undef CASE_KNOWNTYPE_MOM
-  /// temporary binding, will be rebound later
-  bind_global_at(typitm, MOM_PREDEFITM(type), nullptr,__LINE__);
   if (_cec_declareditems.find(typitm) != _cec_declareditems.end())
     {
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s known so gives tytree %s",
@@ -4075,6 +4081,17 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       traced_vector_items_t vecfields;
       if (extenditm != nullptr)
         {
+	  MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s extenditm=%s",
+			  mom_item_cstring(typitm), mom_item_cstring(extenditm));
+	  lock_item(extenditm);
+	  if (!is_bound(extenditm)) {
+	    MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s unbound extenditm=%s",
+			    mom_item_cstring(typitm), mom_item_cstring(extenditm));
+	    auto extree = declare_type(extenditm);
+	    MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s with extenditm=%s extree=%s",
+			    mom_item_cstring(typitm), mom_item_cstring(extenditm),
+			    mom_value_cstring(extree));
+	  }
           auto extendbind = get_global_binding(extenditm);
           if (extendbind == nullptr)
             throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
@@ -4202,7 +4219,16 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
             if (extenditm == nullptr)
               throw MOM_RUNTIME_PRINTF("invalid `extend` %s in union type %s",
                                        mom_value_cstring(extendv), mom_item_cstring(typitm));
-            auto extendbind = get_global_binding(extenditm);
+	    lock_item(extenditm);
+	    if (!is_bound(extenditm)) {
+	      MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s unbound extenditm=%s",
+			      mom_item_cstring(typitm), mom_item_cstring(extenditm));
+	      auto extree = declare_type(extenditm);
+	      MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s with extenditm=%s extree=%s",
+			      mom_item_cstring(typitm), mom_item_cstring(extenditm),
+			      mom_value_cstring(extree));
+	    }
+	    auto extendbind = get_global_binding(extenditm);
             if (extendbind == nullptr)
               throw MOM_RUNTIME_PRINTF(" `extend` %s in union type %s is unbound",
                                        mom_item_cstring(extenditm), mom_item_cstring(typitm));
@@ -4341,6 +4367,15 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if(extenditm == nullptr && mynbenur==0)
         throw MOM_RUNTIME_PRINTF("enum type %s with missing or empty `enum` sequence",
                                  mom_item_cstring(typitm));
+      lock_item(extenditm);
+      if (!is_bound(extenditm)) {
+	MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s unbound extenditm=%s",
+			mom_item_cstring(typitm), mom_item_cstring(extenditm));
+	auto extree = declare_type(extenditm);
+	MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s with extenditm=%s extree=%s",
+			mom_item_cstring(typitm), mom_item_cstring(extenditm),
+			mom_value_cstring(extree));
+      }
       int preval = -1;
       if (extendv != nullptr)
         {
