@@ -3473,11 +3473,28 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	MOM_DEBUGPRINTF(gencod, "c-declare_item data %s varqual:%s", mom_item_cstring(declitm), varqual);
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end()) {
 	  MOM_DEBUGPRINTF(gencod, "c-declare_item new data %s varqual:%s", mom_item_cstring(declitm), varqual);
-	  auto dtree = transform_data_element(declitm);
+	  _cec_declareditems.insert(declitm);
+	  auto typval = mom_unsync_item_get_phys_attr(declitm, MOM_PREDEFITM(type));
+	  if (typval == nullptr)
+	    throw MOM_RUNTIME_PRINTF("declared %s data %s without type",
+				     varqual, mom_item_cstring(declitm));
+	  auto vartree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+					     literal_string(CDATA_PREFIX),
+					     declitm);
+	  bind_global_at(declitm,descitm,typval,__LINE__);
+	  auto dtree = transform_type_for(typval,vartree);
 	  MOM_DEBUGPRINTF(gencod, "c-declare_item data %s dtree=%s", mom_item_cstring(declitm), mom_value_cstring(dtree));
+	  auto decltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
+					      literal_string("extern"),
+					      literal_string(" "),
+					      literal_string(varqual),
+					      literal_string(" "),
+					      dtree,
+					      literal_string(";"));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item declitm %s with decltree %s",
+			  mom_item_cstring(declitm), mom_value_cstring(decltree));
+	  add_global_decl(decltree);
 	}
-	MOM_FATAPRINTF("unimplemented c-declare_item data %s", mom_item_cstring(declitm));
-#warning c-declare_item data unimplemented
       }
       break;
     defaultcasedescd:
