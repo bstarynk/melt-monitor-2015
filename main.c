@@ -479,7 +479,7 @@ mom_input_quoted_utf8 (FILE *f)
       int c = fgetc (f);
       if (c == EOF)
         break;
-      if (iscntrl (c) || c == '\'' || c == '"')
+      if (iscntrl (c) || c == '"')
         {
           ungetc (c, f);
           break;
