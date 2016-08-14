@@ -1002,8 +1002,7 @@ mom_make_item_from_radix_id (const struct mom_itemradix_tu *radix,
   if (MOM_UNLIKELY (4 * cnt + 7 >= 5 * sz))
     {
       unsigned newsiz =
-        mom_prime_above (4 * cnt / 3 + 15 +
-                         (((cnt > 100) ? (cnt / 32) : 3) + 1));
+        mom_prime_above (4 * cnt / 3 + cnt/16 + 15);
       if (newsiz > sz)
         {
           struct mom_item_st **oldarr = curad->rad_items;
@@ -1030,6 +1029,7 @@ mom_make_item_from_radix_id (const struct mom_itemradix_tu *radix,
           sz = newsiz;
         }
     };
+  assert (cnt < sz);
   assert (curad->rad_items);
   {
     struct mom_item_st pseudoitemzon;
