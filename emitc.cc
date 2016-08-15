@@ -2045,6 +2045,10 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	  throw MOM_RUNTIME_PRINTF("missing primitive to `run` in instr %s rk#%d in block %s",
 				   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
 	auto resultv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(result));
+	MOM_DEBUGPRINTF(gencod,"run instr %s runitm %s resultv %s",
+			mom_item_cstring(insitm),
+			mom_item_cstring(runitm),
+			mom_value_cstring(resultv));
 	lock_item(runitm);
 	auto rundescitm =  mom_unsync_item_descr(runitm);
 	if (rundescitm != MOM_PREDEFITM(primitive)
@@ -2099,27 +2103,28 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 				       rk, mom_value_cstring(curargv),
 				       mom_item_cstring(curtypitm));
 	  };
+	MOM_DEBUGPRINTF(gencod,
+			"run instr %s resultv %s runsigitm %s sresultv %s",
+			mom_item_cstring(insitm),
+			mom_value_cstring(resultv),
+			mom_item_cstring(runsigitm),
+			mom_value_cstring(sresultv));
 	auto resity = mom_itype(resultv);
 	if (resity == MOMITY_ITEM)
 	  {
-	    auto formresitm = mom_dyncast_item(sresultv);
-	    if (formresitm == nullptr)
-	      throw  MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
-					"with signature %s of non-item result %s",
-					mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-					mom_item_cstring(runsigitm), mom_value_cstring(resultv));
-	    assert (is_locked_item(formresitm));
-	    auto formrestypitm =
-	      mom_dyncast_item(mom_unsync_item_get_phys_attr(formresitm, MOM_PREDEFITM(type)));
-	    assert (formrestypitm != nullptr);
-	    assert (is_locked_item(formrestypitm));
+	    auto formrtypitm = mom_dyncast_item(sresultv);
+	    assert (is_locked_item(formrtypitm));
+	    MOM_DEBUGPRINTF(gencod,
+			    "run instr %s formrtypitm %s",
+			    mom_value_cstring(insitm),
+			    mom_item_cstring(formrtypitm));
 	    auto resvaritm = (struct mom_item_st*)resultv;
 	    lock_item(resvaritm);
-	    if (scan_var(resvaritm, insitm, formrestypitm) != formrestypitm)
+	    if (scan_var(resvaritm, insitm, formrtypitm) != formrtypitm)
 	      throw  MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
 					"with mistyped result %s, expecting %s",
 					mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-					mom_item_cstring(resvaritm), mom_item_cstring(formrestypitm));
+					mom_item_cstring(resvaritm), mom_item_cstring(formrtypitm));
 
 	  }
 	else if (resity == MOMITY_TUPLE)
