@@ -2972,7 +2972,7 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
     throw MOM_RUNTIME_PRINTF("variable %s in instruction %s without descr",
                              mom_item_cstring(varitm), mom_item_cstring(insitm));
   auto typvarv =
-   mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type));
+    mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type));
   if (!typvarv)
     throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
                               mom_item_cstring(varitm), mom_item_cstring(insitm));
@@ -4563,8 +4563,8 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
     MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s tydecltree=%s",
 		    mom_item_cstring(typitm),
 		    mom_value_cstring(tydecltree));
-      add_global_decl(tydecltree);
-      _cec_declareditems.insert(typitm);
+    add_global_decl(tydecltree);
+    _cec_declareditems.insert(typitm);
   }
   ////////////////
   else
