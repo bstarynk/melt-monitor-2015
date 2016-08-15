@@ -1277,8 +1277,14 @@
 
 ^global !cnamarg (
   ^* comment "argument for cname"
-  ^* descr variable
+  ^* descr formal
   ^* type cstring_t
+)
+
+^global !itemradixptr_t (
+  ^* descr type
+  ^* comment "type of pointers to itemradix_tu"
+  ^* type %pointer(itemradix_tu)
 )
 
 ^global !curadix (
@@ -1295,13 +1301,13 @@
 ^global !signature_cstring_to_itemradixptr (
   ^* descr signature
   ^* formals  [cnamarg]
-  ^* result %pointer(itemradix_tu)
+  ^* result itemradixptr_t
 )
 
 ^global !signature_itemradix_cstring_to_itemradixptr (
   ^* descr signature
   ^* formals  [radixarg cnamarg]
-  ^* result %pointer(itemradix_tu)
+  ^* result itemradixptr_t
 )
 
 

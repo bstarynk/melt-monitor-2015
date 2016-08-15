@@ -25,7 +25,7 @@ A *signature-item* has `descr` : `signature` and some `formals` :
 *formals-tuple* (with *formal-item*s inside), with an optional
 `result` : *type-item*.
 
-A *formal-item* has `descr` : `formal` and `type` : *type-item*. The *type-item* cannot be `unit`.
+A *formal-item* has `descr` : `formal` and `type` : *type-expr*. The *type-item* cannot be `unit`.
 
 A *block-item* is either an *instructionseq-item* or a *loop-item*. Both have
 a `body` : *instructions-tuple* which is a tuple made of
@@ -150,6 +150,11 @@ exception. In particular:
 * If the connective is a *type-item* of `descr` : `type`, the node
   expression should be of arity one, and it is a cast to that
   *type-item*
+
+A *type-expr* is either some *type-item* or a unary node of connective
+`pointer` (for data pointers), the son being some *type-expr*, or of
+connective `signature` (for function pointer), the son being some
+*signature-item*.
 
 [GCCJIT]: http://gcc.gnu.org/onlinedocs/jit/
 
