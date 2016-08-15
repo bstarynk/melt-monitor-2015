@@ -4109,9 +4109,10 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                       mom_item_cstring(typitm), mom_value_cstring(tytree));
       return tytree;
     }
-  auto tytypitm =  mom_dyncast_item(mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(type)));
-  MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s has tytypitm=%s",
-                  mom_item_cstring(typitm), mom_item_cstring(tytypitm));
+  auto tytypv =  (mom_unsync_item_get_phys_attr (typitm, MOM_PREDEFITM(type)));
+  auto tytypitm = mom_dyncast_item(tytypv);
+  MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s has tytypv=%s",
+                  mom_item_cstring(typitm), mom_value_cstring(tytypv));
   auto extendv = mom_unsync_item_get_phys_attr(typitm, MOM_PREDEFITM(extend));
   struct mom_item_st*extenditm = mom_dyncast_item(extendv);
   if (tytypitm == MOM_PREDEFITM(struct))
@@ -4540,6 +4541,31 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       add_global_decl(enumdecltree);
       _cec_declareditems.insert(typitm);
     }/// end enum
+  else if (tytypv != nullptr) {
+    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s with tytypv=%s",
+		    mom_item_cstring(typitm),
+		    mom_value_cstring(tytypv));
+    scan_type_expr(tytypv, typitm);
+    auto typtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+				       literal_string(CTYPE_PREFIX),
+				       typitm);
+    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s typtree=%s",
+		    mom_item_cstring(typitm),
+		    mom_value_cstring(typtree));
+    auto decltree = transform_type_for(tytypv, typtree);
+    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s decltree=%s",
+		    mom_item_cstring(typitm),
+		    mom_value_cstring(decltree));
+    auto tydecltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+					  literal_string("typedef "),
+					  decltree,
+					  literal_string(";"));
+    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s tydecltree=%s",
+		    mom_item_cstring(typitm),
+		    mom_value_cstring(tydecltree));
+      add_global_decl(tydecltree);
+      _cec_declareditems.insert(typitm);
+  }
   ////////////////
   else
     throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
@@ -5574,6 +5600,8 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
 	    return transform_var(expitm,initm,expbind);
 	  case CASE_ROLE_MOM(variable):
 	    return transform_var(expitm,initm,expbind);
+	  case CASE_ROLE_MOM(global):
+	    return transform_var(expitm,initm,expbind);
 	  case CASE_ROLE_MOM(item):
 	    {
 	      MOM_DEBUGPRINTF(gencod,
@@ -5847,6 +5875,12 @@ MomCEmitter::transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm,
       vartree =
         mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
                             literal_string(CLOCAL_PREFIX),
+                            varitm);
+      break;
+    case CASE_ROLE_MOM(global):
+      vartree =
+        mom_boxnode_make_va(MOM_PREDEFITM(sequence),2,
+                            literal_string(CDATA_PREFIX),
                             varitm);
       break;
     defaultrole:
@@ -6215,6 +6249,19 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
                       mom_item_cstring(insitm), mom_value_cstring(treev));
       return treev;
+    }
+  else  if (desrunitm == MOM_PREDEFITM(routine))
+    {
+      auto sigitm = //
+        mom_dyncast_item(mom_unsync_item_get_phys_attr (runitm, MOM_PREDEFITM(signature)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine runitm=%s sigitm:=\n%s",
+                      mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
+      assert (is_locked_item(sigitm));
+      auto formaltup = //
+        mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine runitm=%s formaltup=%s", mom_item_cstring(runitm), mom_value_cstring(formaltup));
+      assert (formaltup != nullptr);
+      unsigned nbformals = mom_size(formaltup);
     }
 #warning unimplemented MomCEmitter::transform_runinstr
   MOM_FATAPRINTF("unimplemented c-transform_runinstr insitm=%s", mom_item_cstring(insitm));

@@ -856,9 +856,15 @@
 )
 
 
+^global !itemradixptr_t (
+  ^* descr type
+  ^* comment "type of pointers to itemradix_tu"
+  ^* type %pointer(itemradix_tu)
+)
+
 ^global !radix_root (
   ^* descr global
-  ^* type %pointer(itemradix_tu)
+  ^* type itemradixptr_t
   ^* comment "the global radix root"
 )
 
@@ -1281,21 +1287,15 @@
   ^* type cstring_t
 )
 
-^global !itemradixptr_t (
-  ^* descr type
-  ^* comment "type of pointers to itemradix_tu"
-  ^* type %pointer(itemradix_tu)
-)
-
 ^global !curadix (
   ^* descr variable
-  ^* type %pointer(itemradix_tu)
+  ^* type itemradixptr_t
 )
 
 
 ^global !radixarg (
   ^* descr formal
-  ^* type %pointer(itemradix_tu)
+  ^* type itemradixptr_t
 )
 
 ^global !signature_cstring_to_itemradixptr (
@@ -1361,7 +1361,7 @@
 ^global header_module (
    ^* comment "our header_module"
    ^* descr module
-   ^* declare [ radix_lock radix_root ]
+   ^* declare [ itemradixptr_t radix_lock radix_root ]
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
