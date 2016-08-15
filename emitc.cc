@@ -1391,8 +1391,11 @@ MomEmitter::scan_type_expr(momvalue_t tyval, struct mom_item_st*initm)
   MOM_DEBUGPRINTF(gencod, "scan_type_expr start tyval=%s initm=%s",
 		  mom_value_cstring(tyval), mom_item_cstring(initm));
   auto ity = mom_itype(tyval);
-  if (ity == MOMITY_ITEM)
-    scan_type_item((struct mom_item_st*)tyval);
+  if (ity == MOMITY_ITEM) {
+    auto typitm = (struct mom_item_st*)tyval;
+    lock_item(typitm);
+    scan_type_item(typitm);
+  }
   else if (ity == MOMITY_NODE) {
     auto tynod = (const struct mom_boxnode_st*)tyval;
     unsigned tysiz = mom_raw_size(tynod);
@@ -1511,18 +1514,17 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
                                  ix, mom_item_cstring(curformitm),
 				 mom_item_cstring(mom_unsync_item_descr(curformitm)),
                                  mom_item_cstring(sigitm));
-      struct mom_item_st*typfitm =
-	mom_dyncast_item(mom_unsync_item_get_phys_attr(curformitm,MOM_PREDEFITM(type)));
+      auto typfv =
+	mom_unsync_item_get_phys_attr(curformitm,MOM_PREDEFITM(type));
       MOM_DEBUGPRINTF(gencod, "formal#%d %s has type %s",
-                      ix, mom_item_cstring(curformitm), mom_item_cstring(typfitm));
-      if (!typfitm)
+                      ix, mom_item_cstring(curformitm), mom_value_cstring(typfv));
+      if (!typfv)
         throw MOM_RUNTIME_PRINTF("untyped formal#%d %s in signature %s",
                                  ix, mom_item_cstring(curformitm),
                                  mom_item_cstring(sigitm));
-      lock_item(typfitm);
-      scan_type_item(typfitm);
+      scan_type_expr(typfv, curformitm);
       if (!nobind)
-        bind_local_at(curformitm, MOM_PREDEFITM(formal), sigitm, __LINE__, typfitm, ix);
+        bind_local_at(curformitm, MOM_PREDEFITM(formal), sigitm, __LINE__, typfv, ix);
     }
   auto resv = mom_unsync_item_get_phys_attr(sigitm, MOM_PREDEFITM(result));
   MOM_DEBUGPRINTF(gencod, "scan_signature sigitm=%s resv=%s",
@@ -2037,24 +2039,27 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
       /////
     case CASE_OPER_MOM(run):  //////////////////
       {
-	auto primitm =
+	auto runitm =
 	  mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(run)));
-	if (!primitm)
+	if (!runitm)
 	  throw MOM_RUNTIME_PRINTF("missing primitive to `run` in instr %s rk#%d in block %s",
 				   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
 	auto resultv = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(result));
-	lock_item(primitm);
-	auto primdescitm =  mom_unsync_item_descr(primitm);
-	if (primdescitm != MOM_PREDEFITM(primitive))
-	  throw MOM_RUNTIME_PRINTF("bad primitive %s to `run` in instr %s rk#%d in block %s",
-				   mom_item_cstring(primitm), mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-	auto primsigitm =
-	  mom_dyncast_item(mom_unsync_item_get_phys_attr(primitm, MOM_PREDEFITM(signature)));
-	if (!primsigitm)
+	lock_item(runitm);
+	auto rundescitm =  mom_unsync_item_descr(runitm);
+	if (rundescitm != MOM_PREDEFITM(primitive)
+	    && rundescitm != MOM_PREDEFITM(routine))
+	  throw MOM_RUNTIME_PRINTF("bad primitive %s (of wrong descr %s) to `run` in instr %s rk#%d in block %s",
+				   mom_item_cstring(runitm),
+				   mom_item_cstring(rundescitm),
+				   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+	auto runsigitm =
+	  mom_dyncast_item(mom_unsync_item_get_phys_attr(runitm, MOM_PREDEFITM(signature)));
+	if (!runsigitm)
 	  throw  MOM_RUNTIME_PRINTF("primitive %s without signature to `run` in instr %s rk#%d in block %s",
-				    mom_item_cstring(primitm), mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
-	lock_item(primsigitm);
-	auto sigr = scan_nonbinding_signature(primsigitm, insitm);
+				    mom_item_cstring(runitm), mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+	lock_item(runsigitm);
+	auto sigr = scan_nonbinding_signature(runsigitm, insitm);
 	auto sformaltup = sigr.sig_formals;
 	auto sresultv = sigr.sig_result;
 	unsigned sigarity = mom_boxtuple_length(sformaltup);
@@ -2066,23 +2071,28 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 			    mom_item_cstring(insitm), rk);
 	    MOM_DEBUGPRINTF(gencod, "badarity blkitm %s nbcomp %d sigarity %d",
 			    mom_item_cstring(blkitm), nbcomp, sigarity);
-	    MOM_DEBUGPRINTF(gencod, "badarity primsigitm %s", mom_item_cstring(primsigitm));
+	    MOM_DEBUGPRINTF(gencod, "badarity runsigitm %s", mom_item_cstring(runsigitm));
 	    throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s with wrong arity,"
 				     " got %d expecting %d for signature %s",
 				     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-				     nbcomp, sigarity, mom_item_cstring(primsigitm));
+				     nbcomp, sigarity, mom_item_cstring(runsigitm));
 	  }
 	for (unsigned ix=0; ix<nbcomp; ix++)
 	  {
 	    auto curformitm = mom_boxtuple_nth(sformaltup, ix);
+	    MOM_DEBUGPRINTF(gencod, "scan_instr run insitm=%s ix#%d curformitm=%s",
+			    mom_item_cstring(insitm), ix,
+			    mom_item_cstring(curformitm));
 	    assert (curformitm != nullptr);
 	    assert (is_locked_item(curformitm));
-	    auto curtypitm =
-	      mom_dyncast_item(mom_unsync_item_get_phys_attr(curformitm, MOM_PREDEFITM(type)));
-	    assert (curtypitm != nullptr);
-	    assert (is_locked_item(curtypitm));
+	    auto curtypv =
+	      mom_unsync_item_get_phys_attr(curformitm, MOM_PREDEFITM(type));
+	    assert (curtypv != nullptr);
+	    auto curtypitm = mom_dyncast_item(curtypv);
+	    assert (curtypitm==nullptr || is_locked_item(curtypitm));
 	    auto curargv = mom_vectvaldata_nth(comps,ix);
-	    if (scan_expr(curargv, insitm, 1, curtypitm) != curtypitm)
+	    if (scan_expr(curargv, insitm, 1, curtypitm) != curtypitm
+		&& curtypitm != nullptr)
 	      throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
 				       "with mistyped arg#%d %s (expecting %s)",
 				       mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
@@ -2097,7 +2107,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	      throw  MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
 					"with signature %s of non-item result %s",
 					mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-					mom_item_cstring(primsigitm), mom_value_cstring(resultv));
+					mom_item_cstring(runsigitm), mom_value_cstring(resultv));
 	    assert (is_locked_item(formresitm));
 	    auto formrestypitm =
 	      mom_dyncast_item(mom_unsync_item_get_phys_attr(formresitm, MOM_PREDEFITM(type)));
@@ -2122,7 +2132,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	      throw  MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
 					"with %d results, expecting %d from signature %s",
 					mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
-					nbresults, nbformresults, mom_item_cstring(primsigitm));
+					nbresults, nbformresults, mom_item_cstring(runsigitm));
 	    for (unsigned resix=0; resix < nbresults; resix++)
 	      {
 		struct mom_item_st* curformresitm = ::mom_boxtuple_nth(formrestup, resix);
@@ -2138,7 +2148,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 					   "with mistyped result#%d %s, expecting type %s from signature %s",
 					   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
 					   resix, mom_item_cstring(curesvaritm),
-					   mom_item_cstring(curformrestypitm), mom_item_cstring(primsigitm));
+					   mom_item_cstring(curformrestypitm), mom_item_cstring(runsigitm));
 	      }
 	  }
 	else if (resity != MOMITY_NONE)
@@ -2146,7 +2156,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 				   "with bad result %s",
 				   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
 				   mom_value_cstring(resultv));
-	bind_local_at(insitm,MOM_PREDEFITM(run),primitm, __LINE__, blkitm, rk);
+	bind_local_at(insitm,MOM_PREDEFITM(run),runitm, __LINE__, blkitm, rk);
       } // end run
       break;
       /////
@@ -2956,11 +2966,13 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
   if (!desvaritm)
     throw MOM_RUNTIME_PRINTF("variable %s in instruction %s without descr",
                              mom_item_cstring(varitm), mom_item_cstring(insitm));
-  struct mom_item_st*typvaritm =
-    mom_dyncast_item(mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type)));
-  if (!typvaritm)
+  auto typvarv =
+   mom_unsync_item_get_phys_attr(varitm,MOM_PREDEFITM(type));
+  if (!typvarv)
     throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
                               mom_item_cstring(varitm), mom_item_cstring(insitm));
+  scan_type_expr(typvarv, varitm);
+  auto typvaritm = mom_dyncast_item(typvarv);
   if (!typitm)
     typitm = typvaritm;
   else if (typitm != typvaritm)

@@ -77,7 +77,7 @@ variable item or tuple of variables; the call arguments are the
 components of the instruction.
 
 * a *run-item* with `descr` : `run`, `run` : a node whose connective
-is a primitive, and optional `result` as before.
+is a primitive or a routine, and optional `result` as before.
 
 * a *switch-item* with `descr` : `switch`, `switch` : `int` or `item` or
 `string`, `arg` : an expression, and `case` : a tuple or set of

@@ -1294,7 +1294,7 @@
 
 
 ^global !radixarg (
-  ^* descr variable
+  ^* descr formal
   ^* type %pointer(itemradix_tu)
 )
 
