@@ -262,43 +262,6 @@
   ]
 )
 
-^global  !itemradix_tu (
-  ^* comment "the structure of item radixes"
-  ^* descr type
-  ^* type struct
-  ^* struct [
-      ^global !itrad_left (
-        ^* comment "the field giving the left radix"
-        ^* descr field
-        ^* type %pointer(itemradix_tu)
-      )
-      ^global !itrad_right (
-        ^* comment "the field giving the right radix"
-        ^* descr field
-        ^* type %pointer(itemradix_tu)
-      )
-      ^global !itrad_mtx (
-        ^* comment "the field giving the radix mutex"
-        ^* descr field
-        ^* type mutex_t
-      )
-      ^global !itrad_primitem (
-        ^* comment "the field giving the radix primary item"
-        ^* descr field
-        ^* type item
-      )
-      ^global !itrad_hashset (
-        ^* comment "the field giving the radix hashed set of secondary items"
-        ^* descr field
-        ^* type %pointer(itemhashedset_ty)
-      )
-      ^global !itrad_name (
-        ^* comment "the field giving the radix name, should be last"
-        ^* descr field
-        ^* type boxstring_ty
-      )
-   ]
-)
 
 ^global !item_ty (
   ^* comment "the structure of items"
@@ -306,15 +269,15 @@
   ^* type struct
   ^* extend hashedvalue_ty
   ^* struct [
-      ^global !itm_radix (
-        ^* comment "the field giving the item\'s radix"
-        ^* descr field
-        ^* type %pointer(itemradix_tu)
-      )
       ^global !itm_mtx (
         ^* comment "the field giving the item\'s lock"
         ^* descr field
         ^* type mutex_t
+      )
+      ^global !itm_namix (
+        ^* comment "the field giving the item\'s name index"
+        ^* descr field
+        ^* type uint32_t
       )
       ^global !itm_hid (
         ^* comment "the field giving the highbits id"
@@ -608,6 +571,50 @@
    )
 )
 
+^global !space_en (
+  ^* comment "enumeration for spaces"
+  ^* descr type
+  ^* type enum
+  ^* enum [
+    ^global !spa_none (
+      ^* descr enumerator
+      ^* comment "without space, i.e. transient"
+    )
+    ^global !spa_predef (
+      ^* descr enumerator
+      ^* comment "space for predefined items"
+    )
+    ^global !spa_global (
+      ^* descr enumerator
+      ^* comment "space for global items"
+    )
+    ^global !spa_user (
+      ^* descr enumerator
+      ^* comment "space for user items"
+    )
+  ]
+)
+
+^global !signature_space_to_item (
+  ^* descr signature
+  ^* formals [ ^global !spacarg (
+     ^* descr formal
+     ^* type space_en
+     ^* comment "argument giving the space"
+  ) ]
+)
+
+^global !make_item (
+  ^* descr routine
+  ^* comment "make an item in some space"
+  ^* signature signature_space_to_item
+  ^* body ^global ?make_item (
+    ^* descr sequence
+    ^* body [
+    ]
+  )
+)
+
 ^global !itype_en (
   ^* comment "enumeration for various value itypes"
   ^* descr type
@@ -849,24 +856,6 @@
   ^* type itype_en
   )
   
-^global !radix_lock (
-  ^* comment "the global rwlock for radixes"
-  ^* descr global
-  ^* type rwlock_t
-)
-
-
-^global !itemradixptr_t (
-  ^* descr type
-  ^* comment "type of pointers to itemradix_tu"
-  ^* type %pointer(itemradix_tu)
-)
-
-^global !radix_root (
-  ^* descr global
-  ^* type itemradixptr_t
-  ^* comment "the global radix root"
-)
 
 ^global !nloc (
   ^* descr variable
@@ -1287,90 +1276,19 @@
   ^* type cstring_t
 )
 
-^global !curadix (
-  ^* descr variable
-  ^* type itemradixptr_t
-)
-
-
-^global !radixarg (
-  ^* descr formal
-  ^* type itemradixptr_t
-)
-
-^global !signature_cstring_to_itemradixptr (
-  ^* descr signature
-  ^* formals  [cnamarg]
-  ^* result itemradixptr_t
-)
-
-^global !signature_itemradix_cstring_to_itemradixptr (
-  ^* descr signature
-  ^* formals  [radixarg cnamarg]
-  ^* result itemradixptr_t
-)
-
-
-^global !find_radix_unlocked (
-  ^* comment "find unlocked radix"
-  ^* descr routine
-  ^* signature signature_itemradix_cstring_to_itemradixptr
-  ^* body [
-  ]
-)
-
-^global !radix_of_cname (
-  ^* comment "get radix of name"
-  ^* descr inline
-  ^* signature signature_cstring_to_itemradixptr
-  ^* body ^global ?radix_of_cname (
-    ^* descr sequence
-    ^* locals [ curadix ]
-    ^* body [
-       ^global ?lock_read (
-         ^* descr run
-         ^* run lock_read
-         ^: (
-           radix_lock
-         )
-       )
-       ^global ?find_radix_unlocked (
-         ^* descr run
-         ^* run find_radix_unlocked
-         ^* result curadix
-         ^: (
-           radix_root
-           cnamarg
-         )
-       )
-       ^global ?unlock (
-         ^* descr run
-         ^* run unlock
-         ^: (
-           radix_lock
-         )
-       )
-       ^global ?return (
-         ^* descr return
-         ^* return curadix
-       )
-    ]
-  )
-)
 
 ^global header_module (
    ^* comment "our header_module"
    ^* descr module
-   ^* declare [ itemradixptr_t radix_lock radix_root ]
+   ^* declare [ make_item ]
    ^* module [
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
-     itemradix_tu item_ty node_ty
+     item_ty node_ty
      valid_value_pointer itype
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
-     radix_of_cname
    ]
 )
 
