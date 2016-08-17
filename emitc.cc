@@ -3472,8 +3472,16 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	scan_func_element(declitm);
 	MOM_DEBUGPRINTF(gencod, "c-declare_item func %s", mom_item_cstring(declitm));
 	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
+	  _cec_declareditems.insert(sigitm);
+	  auto dsigtree= mom_dyncast_node(declare_signature_type(declitm));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item func %s sigitm=%s dsigtree=%s",
+			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	  add_global_decl(dsigtree);
+	}
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
+	    _cec_declareditems.insert(declitm);
 	    auto dftree =
 	      mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
 					literal_string("extern"),
@@ -3487,13 +3495,20 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	    MOM_DEBUGPRINTF(gencod, "c-declare_item func %s dftree %s", mom_item_cstring(declitm),
 			    mom_value_cstring(dftree));
 	    add_global_decl(dftree);
-	    _cec_declareditems.insert(declitm);
 	  }
       }
       break;
     case CASE_DECLD_MOM(inline):
       {
 	MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s", mom_item_cstring(declitm));
+	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
+	  _cec_declareditems.insert(sigitm);
+	  auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s sigitm=%s dsigtree=%s",
+			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	  add_global_decl(dsigtree);
+	}
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
 	    auto iltree = transform_inline_element(declitm);
@@ -3509,6 +3524,18 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	scan_routine_element(declitm);
 	MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s", mom_item_cstring(declitm));
 	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
+	if (!sigitm)
+	  throw MOM_RUNTIME_PRINTF("c-declare_item routine %s without signature",
+				   mom_item_cstring(declitm));
+	lock_item(sigitm);
+	scan_signature(sigitm, declitm, true);
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
+	  _cec_declareditems.insert(sigitm);
+	  auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
+	  MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s sigitm=%s dsigtree=%s",
+			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	  add_global_decl(dsigtree);
+	}
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
 	    auto dftree =
@@ -3763,8 +3790,11 @@ const struct mom_boxnode_st*
 MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 {
   assert (is_locked_item(sigitm));
-  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type start sigitm=%s", mom_item_cstring(sigitm));
+  MOM_DEBUGPRINTF(gencod, "c-declare_signature_type start sigitm:=%s",
+		  mom_item_content_cstring(sigitm));
   auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
+  if (formtup == nullptr)
+    throw MOM_RUNTIME_PRINTF("signature %s without formals", mom_item_cstring(sigitm));
   assert (formtup != nullptr);
   auto restyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(result)));
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s formtup=%s restyitm=%s",

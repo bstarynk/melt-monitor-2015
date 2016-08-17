@@ -602,6 +602,7 @@
      ^* type space_en
      ^* comment "argument giving the space"
   ) ]
+  ^* result item
 )
 
 ^global !make_item (
