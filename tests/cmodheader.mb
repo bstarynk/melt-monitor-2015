@@ -371,6 +371,21 @@
   ^* result bool
 )
 
+
+^global !itm0 (
+   ^* comment "itm0 in cmodheader.mb"
+   ^* descr formal
+   ^* type item
+)
+
+
+^global !signature_item_to_bool (
+  ^* descr signature
+  ^* formals [ itm0 ]
+  ^* result bool
+)
+
+
 ^global !signature_value_to_value (
   ^* descr signature
   ^* formals [ val0 ]
@@ -571,6 +586,7 @@
    )
 )
 
+
 ^global !space_en (
   ^* comment "enumeration for spaces"
   ^* descr type
@@ -661,6 +677,53 @@
         ^* notice node
       )       
   ]
+)
+
+
+
+^global !valid_item_pointer (
+  ^* comment "inline function testing validity of item pointer"
+  ^* descr inline
+  ^* signature signature_item_to_bool
+  ^* body  ^global ?valid_item_pointer (
+       ^* comment "body of valid_value_pointer"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test invalidity in valid_item_pointer"
+               ^* test %not_bool_prim(%valid_value_pointer(%value(itm0)))
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return false when invalid itm0"
+               ) 
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test itemness in valid_item_pointer"
+               ^* test %equal_int_prim(%int(%va_itype(itm0)) %int(ity_item))
+               ^* then ^global ?return (
+                 ^* descr return
+                 ^* return truth
+                 ^* comment "return true when itm0 is genuine item"
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise return false"
+               ^* then ^global ?return (
+                 ^* descr return
+                 ^* comment "return false when non-item"
+               )
+             )
+           ]
+         )
+      ]
+  )
 )
 
 
@@ -1206,8 +1269,8 @@
             ^* cond [
               ^global ?test (
                 ^* descr test
-                ^* comment "test for ity_item"
-                ^* test %equal_int_prim(%int(%itype(val0)) %int(ity_item))
+                ^* comment "test for valid item"
+                ^* test %valid_item_pointer (%item(val0))
                 ^* then ^global ?return (
                   ^* descr return
                   ^* comment "return val0"
@@ -1287,6 +1350,7 @@
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
      item_ty node_ty
      valid_value_pointer itype
+     valid_item_pointer
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
