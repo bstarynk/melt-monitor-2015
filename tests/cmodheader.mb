@@ -434,6 +434,18 @@
   ^* result int
 )
 
+^global !signature_int_to_value (
+  ^* descr signature
+  ^* formals [ num0 ]
+  ^* result int
+)
+
+^global !signature_int_to_bool (
+  ^* descr signature
+  ^* formals [ num0 ]
+  ^* result bool
+)
+
 ^global !signature_value_int_to_int (
   ^* descr signature
   ^* formals [ val0 num1 ]
@@ -458,6 +470,14 @@
   ^* comment "signature () -> value"
   ^* formals [  ]
   ^* result value
+)
+
+^global !small_int_prim (
+  ^* comment "primitive to test small integers"
+  ^* descr primitive
+  ^* signature signature_int_to_bool
+  ^* c_expansion %code_chunk(
+    "/*small_int_prim*/(" num0 " > -INTPTR_MAX/4 && " num0 " <INTPTR_MAX/4)")
 )
 
 ^global !cast_pointer_to_int_prim (

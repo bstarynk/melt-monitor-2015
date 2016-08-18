@@ -4730,6 +4730,16 @@ comment
 
 
 
+*sizeof
+1471511230
+^mtime
+(
+comment
+"sizeof operator"_
+)attrs
+
+
+
 *spa_global
 1471508646
 ^mtime
@@ -4841,6 +4851,7 @@ is_string
 
 
 
+
 *struct
 1467813167
 ^mtime
@@ -4848,7 +4859,6 @@ is_string
 comment
 "for structures"_
 )attrs
-
 
 
 
@@ -5098,6 +5108,7 @@ return__2xXCg8MmKN1M0i
 
 
 
+
 *test__1IWI0RtB0UR2pM
 1471508646
 ^mtime
@@ -5118,7 +5129,6 @@ unsafe_int_mod_prim
 then
 return__06Ct26DxuMkmw5
 )attrs
-
 
 
 
@@ -5456,6 +5466,7 @@ return__0RTpCjLpMvmRzv
 
 
 
+
 *test__7g6giR7LaVc7sK
 1471508646
 ^mtime
@@ -5472,7 +5483,6 @@ is_null
 then
 return__1pHG1msZAkHnHr
 )attrs
-
 
 
 
@@ -5857,6 +5867,7 @@ type
 
 
 
+
 *to
 1465302282
 ^mtime
@@ -5864,7 +5875,6 @@ type
 comment
 "for destination, e.g. in assignment"_
 )attrs
-
 
 
 
@@ -6067,6 +6077,7 @@ uint16_t
 
 
 
+
 *va_ixv
 1471508646
 ^mtime
@@ -6078,7 +6089,6 @@ field
 type
 atomic_int16_t
 )attrs
-
 
 
 
@@ -6296,6 +6306,7 @@ comment
 
 
 
+
 *vectvaldata_ty
 1471508646
 ^mtime
@@ -6311,7 +6322,6 @@ vecd_valarr
 type
 struct
 )attrs
-
 
 
 
@@ -6483,6 +6493,7 @@ enumerator
 
 
 
+
 *xty_lastvalue
 1471508646
 ^mtime
@@ -6492,7 +6503,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 

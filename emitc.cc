@@ -2396,6 +2396,45 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 				   mom_item_cstring(typitm));
       }
       break;
+    case CASE_EXPCONN_MOM(sizeof):
+      {
+	const char *badmsg = "?";
+	  
+	if (nodarity != 1)
+	  throw MOM_RUNTIME_PRINTF("sizeof expr %s of bad arity in instr %s with type %s",
+				   mom_value_cstring(expnod), mom_item_cstring(insitm),
+				   mom_item_cstring(typitm));
+	auto sztypitm = mom_dyncast_item(expnod->nod_sons[0]);
+	vardef_st* sztybind = nullptr;
+	MOM_DEBUGPRINTF(gencod, "sizeof expr %s with sztypitm %s",
+			mom_value_cstring(expnod), mom_item_cstring(sztypitm));
+	if (sztypitm == nullptr) {
+	  badmsg = "non-item arg";
+	  goto badsizeof;
+	}
+	lock_item(sztypitm);
+	sztybind = get_binding(sztypitm);
+	if (!sztybind) {
+	  scan_type_item(sztypitm);
+	  sztybind = get_binding(sztypitm);
+	}
+	if (!is_type_binding(sztybind)) {
+	  badmsg = "non-type arg";
+	  goto badsizeof;
+	}
+	if (typitm && typitm != MOM_PREDEFITM(int)) {
+	  badmsg = "ill typed";
+	  goto badsizeof;
+	}
+	MOM_DEBUGPRINTF(gencod, "sizeof expr %s gives int", mom_value_cstring(expnod));
+	return MOM_PREDEFITM(int);
+      badsizeof:
+	throw MOM_RUNTIME_PRINTF("bad sizeof expr %s in instr %s with type %s (%s)",
+				 mom_value_cstring(expnod), mom_item_cstring(insitm),
+				 mom_item_cstring(typitm), badmsg);
+	
+      }
+      break;
     case CASE_EXPCONN_MOM(and):
       goto orcase;
     case CASE_EXPCONN_MOM(or):
@@ -5094,6 +5133,29 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 #warning MomCEmitter::transform_node_expr verbatim unimplemented
 	MOM_FATAPRINTF("unimplemented c-transform_node_expr of non-item verbatim-expr %s in %s",
 		       mom_value_cstring(expnod), mom_item_cstring(initm));
+      }
+      break;
+      ////
+    case CASE_EXPCONN_MOM(sizeof):
+      {
+	assert (nodarity == 1);
+	auto sztypitm = mom_dyncast_item(expnod->nod_sons[0]);
+		MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s",
+				mom_item_cstring(sztypitm));
+	assert (is_locked_item(sztypitm));
+	if (_cec_declareditems.find(sztypitm) == _cec_declareditems.end()) {
+	  auto dtree = declare_type(sztypitm);
+	  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s dtree=%s",
+			  mom_item_cstring(sztypitm), mom_value_cstring(dtree));
+	}
+	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+					   literal_string("sizeof("),
+					   literal_string(CTYPE_PREFIX),
+					   sztypitm,
+					   literal_string(")"));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s gives restree=%s",
+			mom_item_cstring(sztypitm), mom_value_cstring(restree));
+	return restree;
       }
       break;
       ////
