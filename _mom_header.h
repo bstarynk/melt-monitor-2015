@@ -553,7 +553,8 @@ static inline momhash_t
 momf_value_hash (momvalue_t momarg_val0)
 {
    /**block value_hash__2gvgl2u88BdTkh **/
-  momty_itype_en momloc_typ0loc = /*nothing */ 0;
+  momty_itype_en momloc_typ0loc = (momty_itype_en /*nothing */ )0;
+
   ;
   momloc_typ0loc = momf_itype (momarg_val0);
   ;

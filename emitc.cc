@@ -4802,8 +4802,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 							literal_string(" "),
 							literal_string(CLOCAL_PREFIX),
 							locitm,
-							literal_string(" = "),
-							literal_string("/*nothing*/0"));
+							literal_string(" = ("),
+							typecexp,
+							literal_string("/*nothing*/)0"));
 			  }
 			else
 			  {
@@ -4826,8 +4827,9 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 							    literal_string(" "),
 							    literal_string(CLOCAL_PREFIX),
 							    locitm,
-							    literal_string(" = "),
-							    literal_string("/*nothing*/0"));
+							    literal_string(" = ("),
+							    typecexp,
+							    literal_string("/*nothing*/)0"));
 				MOM_DEBUGPRINTF(gencod,
 						"c-transform_block locitm=%s typeitm=%s typecexp=%s curloctree=%s",
 						mom_item_cstring(locitm),

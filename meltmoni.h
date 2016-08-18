@@ -546,6 +546,8 @@ typedef uint32_t momhash_t;
 typedef __int128 mom_int128_t;
 typedef unsigned __int128 mom_uint128_t;
 
+#include "_mom_header.h"
+  
 enum momitype_en
 {
   MOMITY_NONE,
