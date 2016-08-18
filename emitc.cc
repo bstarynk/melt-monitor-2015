@@ -38,7 +38,7 @@ public:
   typedef std::function<void(MomEmitter*)> todofun_t;
   typedef std::vector<momvalue_t,
 		      traceable_allocator<momvalue_t> >
-  traced_vector_values_t;
+    traced_vector_values_t;
   typedef std::vector<struct mom_item_st*,
 		      traceable_allocator<struct mom_item_st*> >
   traced_vector_items_t;
@@ -252,7 +252,8 @@ protected:
   MomEmitter(unsigned magic, struct mom_item_st*itm);
   MomEmitter(const MomEmitter&) = delete;
   virtual ~MomEmitter();
-  bool is_type_binding(const struct vardef_st*vd) {
+  bool is_type_binding(const struct vardef_st*vd)
+  {
     return vd !=nullptr
       && (vd->vd_rolitm == MOM_PREDEFITM(type)
 	  || vd->vd_rolitm == MOM_PREDEFITM(struct)
@@ -322,13 +323,15 @@ public:
     return _ce_curfunctionitm;
   };
   // scanning of expressions & variables return their type item
-  struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
-  struct mom_item_st* scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+  // when lvar is true, we require a location
+  struct mom_item_st* scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr, bool lvar=false);
+  struct mom_item_st* scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr, bool lvar=false);
   struct mom_item_st* scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
 						struct mom_item_st*desconnitm,
 						struct mom_item_st*insitm,
-						int depth, struct mom_item_st*typitm=nullptr);
-  struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr);
+						int depth, struct mom_item_st*typitm=nullptr,
+						bool lvar=false);
+  struct mom_item_st* scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm=nullptr, bool lvar=false);
   struct mom_item_st* scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_constant_item(struct mom_item_st*constitm, struct mom_item_st*insitm, struct mom_item_st*typitm=nullptr);
   struct mom_item_st* scan_closed(struct mom_item_st*varitm, struct mom_item_st*insitm);
@@ -1332,24 +1335,24 @@ void
 MomEmitter::scan_data_element(struct mom_item_st*daitm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_data_element start daitm:=%s",
-		  mom_item_content_cstring(daitm));
+                  mom_item_content_cstring(daitm));
   assert (is_locked_item(daitm));
   auto dabind = get_binding(daitm);
   if (dabind)
     throw MOM_RUNTIME_PRINTF("data element %s already bound to role %s what %s",
-			     mom_item_cstring(daitm),
-			     mom_item_cstring(dabind->vd_rolitm),
-			     mom_value_cstring(dabind->vd_what));
+                             mom_item_cstring(daitm),
+                             mom_item_cstring(dabind->vd_rolitm),
+                             mom_value_cstring(dabind->vd_what));
   auto typitm = mom_dyncast_item(mom_unsync_item_get_phys_attr(daitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_data_element daitm=%s typitm=%s",
-		  mom_item_content_cstring(daitm), mom_item_cstring(typitm));
+                  mom_item_content_cstring(daitm), mom_item_cstring(typitm));
   if (!typitm)
     throw MOM_RUNTIME_PRINTF("data element %s without type", mom_item_cstring(daitm));
   lock_item(typitm);
   scan_type_item (typitm);
   bind_global_at(daitm,MOM_PREDEFITM(data),typitm, __LINE__);
   MOM_DEBUGPRINTF(gencod, "scan_data_element done daitm=%s",
-		  mom_item_cstring(daitm));
+                  mom_item_cstring(daitm));
 } // end  MomEmitter::scan_data_element
 
 
@@ -1389,42 +1392,46 @@ void
 MomEmitter::scan_type_expr(momvalue_t tyval, struct mom_item_st*initm)
 {
   MOM_DEBUGPRINTF(gencod, "scan_type_expr start tyval=%s initm=%s",
-		  mom_value_cstring(tyval), mom_item_cstring(initm));
+                  mom_value_cstring(tyval), mom_item_cstring(initm));
   auto ity = mom_itype(tyval);
-  if (ity == MOMITY_ITEM) {
-    auto typitm = (struct mom_item_st*)tyval;
-    lock_item(typitm);
-    scan_type_item(typitm);
-  }
-  else if (ity == MOMITY_NODE) {
-    auto tynod = (const struct mom_boxnode_st*)tyval;
-    unsigned tysiz = mom_raw_size(tynod);
-    auto tyconnitm = tynod->nod_connitm;
-    if (tyconnitm == MOM_PREDEFITM(pointer) && tysiz == 1) {
-      auto dereftypv = tynod->nod_sons[0];
-      MOM_DEBUGPRINTF(gencod, "scan_type_expr tyval=%s dereftypv=%s",
-		      mom_value_cstring(tyval), mom_value_cstring(dereftypv));
-      scan_type_expr(dereftypv, initm);
+  if (ity == MOMITY_ITEM)
+    {
+      auto typitm = (struct mom_item_st*)tyval;
+      lock_item(typitm);
+      scan_type_item(typitm);
     }
-    else if (tyconnitm == MOM_PREDEFITM(signature) && tysiz == 1) {
-      auto sigitm = mom_dyncast_item(tynod->nod_sons[0]);
-      if (!sigitm)
-	goto invalidtype;
-      lock_item(sigitm);
-      MOM_DEBUGPRINTF(gencod, "scan_type_expr tyval=%s sigitm=%s",
-		      mom_value_cstring(tyval), mom_item_cstring(sigitm));
-      scan_signature(sigitm,initm);
+  else if (ity == MOMITY_NODE)
+    {
+      auto tynod = (const struct mom_boxnode_st*)tyval;
+      unsigned tysiz = mom_raw_size(tynod);
+      auto tyconnitm = tynod->nod_connitm;
+      if (tyconnitm == MOM_PREDEFITM(pointer) && tysiz == 1)
+        {
+          auto dereftypv = tynod->nod_sons[0];
+          MOM_DEBUGPRINTF(gencod, "scan_type_expr tyval=%s dereftypv=%s",
+                          mom_value_cstring(tyval), mom_value_cstring(dereftypv));
+          scan_type_expr(dereftypv, initm);
+        }
+      else if (tyconnitm == MOM_PREDEFITM(signature) && tysiz == 1)
+        {
+          auto sigitm = mom_dyncast_item(tynod->nod_sons[0]);
+          if (!sigitm)
+            goto invalidtype;
+          lock_item(sigitm);
+          MOM_DEBUGPRINTF(gencod, "scan_type_expr tyval=%s sigitm=%s",
+                          mom_value_cstring(tyval), mom_item_cstring(sigitm));
+          scan_signature(sigitm,initm);
+        }
+      else goto invalidtype;
     }
-    else goto invalidtype;
-  }
   else
   invalidtype:
     throw MOM_RUNTIME_PRINTF("invalid type expression %s in %s",
-			     mom_value_cstring(tyval), mom_item_cstring(initm));
+                             mom_value_cstring(tyval), mom_item_cstring(initm));
   MOM_DEBUGPRINTF(gencod, "scan_type_expr end tyval=%s initm=%s",
-		  mom_value_cstring(tyval), mom_item_cstring(initm));
+                  mom_value_cstring(tyval), mom_item_cstring(initm));
 } // end MomEmitter::scan_type_expr
-	 
+
 
 ////////////////
 void
@@ -1512,10 +1519,10 @@ MomEmitter::scan_signature(struct mom_item_st*sigitm, struct mom_item_st*initm, 
       if (mom_unsync_item_descr(curformitm) != MOM_PREDEFITM(formal))
         throw MOM_RUNTIME_PRINTF("bad formal#%d %s (of descr %s not `formal`) in signature %s",
                                  ix, mom_item_cstring(curformitm),
-				 mom_item_cstring(mom_unsync_item_descr(curformitm)),
+                                 mom_item_cstring(mom_unsync_item_descr(curformitm)),
                                  mom_item_cstring(sigitm));
       auto typfv =
-	mom_unsync_item_get_phys_attr(curformitm,MOM_PREDEFITM(type));
+        mom_unsync_item_get_phys_attr(curformitm,MOM_PREDEFITM(type));
       MOM_DEBUGPRINTF(gencod, "formal#%d %s has type %s",
                       ix, mom_item_cstring(curformitm), mom_value_cstring(typfv));
       if (!typfv)
@@ -1622,10 +1629,10 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                                      mom_item_cstring(blkitm),
                                      locix, mom_item_cstring(curlocitm));
           auto typlocv =
-	    mom_unsync_item_get_phys_attr(curlocitm,MOM_PREDEFITM(type));
+            mom_unsync_item_get_phys_attr(curlocitm,MOM_PREDEFITM(type));
           MOM_DEBUGPRINTF(gencod, "in block %s local %s has type %s",
-			  mom_item_cstring(blkitm),
-			  mom_item_cstring(curlocitm), mom_value_cstring(typlocv));
+                          mom_item_cstring(blkitm),
+                          mom_item_cstring(curlocitm), mom_value_cstring(typlocv));
           if (!typlocv)
             throw  MOM_RUNTIME_PRINTF("in %s sequence %s with local#%d %s without type",
                                       mom_item_cstring(initm),
@@ -2279,10 +2286,11 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 
 
 struct mom_item_st*
-MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
+MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm, bool lvar)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d typitm=%s",
-                  mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_expr start expv=%s insitm=%s depth#%d typitm=%s %s",
+                  mom_value_cstring(expv), mom_item_cstring(insitm), depth, mom_item_cstring(typitm),
+                  lvar?"lvar":"expr");
   if (depth >= MAX_DEPTH_EXPR)
     throw  MOM_RUNTIME_PRINTF("expr %s in instr %s is too deep (%d)",
                               mom_value_cstring(expv), mom_item_cstring(insitm), depth);
@@ -2295,18 +2303,22 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
   switch (typexp)
     {
     case MOMITY_NONE:
+      if (lvar) goto nonlvar;
       return typitm?typitm:MOM_PREDEFITM(unit);
     case MOMITY_INT:
+      if (lvar) goto nonlvar;
       if (typitm && typitm != MOM_PREDEFITM(int) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("int.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
       return typitm?typitm:MOM_PREDEFITM(int);
     case MOMITY_BOXSTRING:
+      if (lvar) goto nonlvar;
       if (typitm && typitm != MOM_PREDEFITM(string) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("string.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
       return typitm?typitm:MOM_PREDEFITM(string);
     case MOMITY_BOXDOUBLE:
+      if (lvar) goto nonlvar;
       if (typitm && typitm != MOM_PREDEFITM(double) && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("double.expr %s in instr %s with type mismatch for %s",
                                  mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
@@ -2315,7 +2327,7 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
       {
 	auto itmexp = (struct mom_item_st*)expv;
 	lock_item(itmexp);
-	return scan_item_expr(itmexp,insitm,depth,typitm);
+	return scan_item_expr(itmexp,insitm,depth,typitm,lvar);
       }
     case MOMITY_NODE:
       {
@@ -2323,7 +2335,7 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
 	auto it =_ce_localnodetypecache.find(nodexp);
 	if (it == _ce_localnodetypecache.end())
 	  {
-	    auto ntypitm = scan_node_expr(nodexp,insitm,depth,typitm);
+	    auto ntypitm = scan_node_expr(nodexp,insitm,depth,typitm,lvar);
 	    if (typitm && ntypitm != typitm)
 	      throw MOM_RUNTIME_PRINTF("node expr %s in instr %s has incompatible type, got %s but expecting %s",
 				       mom_value_cstring(nodexp), mom_item_cstring(insitm),
@@ -2349,16 +2361,22 @@ MomEmitter::scan_expr(const void*expv, struct mom_item_st*insitm, int depth, str
       throw MOM_RUNTIME_PRINTF("unexpected expr %s in instr %s with type %s",
                                mom_value_cstring(expv), mom_item_cstring(insitm), mom_item_cstring(typitm));
     }
+ nonlvar:
+  throw MOM_RUNTIME_PRINTF("expr %s in instr %s with type %s should be a left-var",
+                           mom_value_cstring(expv),
+                           mom_item_cstring(insitm),
+                           mom_item_cstring(typitm));
 } // end of MomEmitter::scan_expr
 
 
 
 struct mom_item_st*
 MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_st*insitm,
-                           int depth, struct mom_item_st*typitm)
+                           int depth, struct mom_item_st*typitm, bool lvar)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s",
-                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_node_expr start expnod=%s insitm=%s depth#%d typitm=%s %s",
+                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm),
+                  lvar?"lvar":"expr");
   assert (expnod != nullptr && expnod->va_itype==MOMITY_NODE);
   auto connitm = expnod->nod_connitm;
   assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
@@ -2372,6 +2390,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     {
     case CASE_EXPCONN_MOM(verbatim):
       {
+	if (lvar) goto nonlvar;
 	if (nodarity != 1)
 	  throw MOM_RUNTIME_PRINTF("verbatim expr %s of bad arity in instr %s with type %s",
 				   mom_value_cstring(expnod), mom_item_cstring(insitm),
@@ -2399,7 +2418,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(sizeof):
       {
 	const char *badmsg = "?";
-	  
+	if (lvar) goto nonlvar;
 	if (nodarity != 1)
 	  throw MOM_RUNTIME_PRINTF("sizeof expr %s of bad arity in instr %s with type %s",
 				   mom_value_cstring(expnod), mom_item_cstring(insitm),
@@ -2408,31 +2427,35 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 	vardef_st* sztybind = nullptr;
 	MOM_DEBUGPRINTF(gencod, "sizeof expr %s with sztypitm %s",
 			mom_value_cstring(expnod), mom_item_cstring(sztypitm));
-	if (sztypitm == nullptr) {
-	  badmsg = "non-item arg";
-	  goto badsizeof;
-	}
+	if (sztypitm == nullptr)
+	  {
+	    badmsg = "non-item arg";
+	    goto badsizeof;
+	  }
 	lock_item(sztypitm);
 	sztybind = get_binding(sztypitm);
-	if (!sztybind) {
-	  scan_type_item(sztypitm);
-	  sztybind = get_binding(sztypitm);
-	}
-	if (!is_type_binding(sztybind)) {
-	  badmsg = "non-type arg";
-	  goto badsizeof;
-	}
-	if (typitm && typitm != MOM_PREDEFITM(int)) {
-	  badmsg = "ill typed";
-	  goto badsizeof;
-	}
+	if (!sztybind)
+	  {
+	    scan_type_item(sztypitm);
+	    sztybind = get_binding(sztypitm);
+	  }
+	if (!is_type_binding(sztybind))
+	  {
+	    badmsg = "non-type arg";
+	    goto badsizeof;
+	  }
+	if (typitm && typitm != MOM_PREDEFITM(int))
+	  {
+	    badmsg = "ill typed";
+	    goto badsizeof;
+	  }
 	MOM_DEBUGPRINTF(gencod, "sizeof expr %s gives int", mom_value_cstring(expnod));
 	return MOM_PREDEFITM(int);
       badsizeof:
 	throw MOM_RUNTIME_PRINTF("bad sizeof expr %s in instr %s with type %s (%s)",
 				 mom_value_cstring(expnod), mom_item_cstring(insitm),
 				 mom_item_cstring(typitm), badmsg);
-	
+
       }
       break;
     case CASE_EXPCONN_MOM(and):
@@ -2440,6 +2463,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(or):
     orcase:
       {
+        if (lvar) goto nonlvar;
         if (nodarity == 0)
           {
             if (!typitm)
@@ -2469,6 +2493,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     break;
     case CASE_EXPCONN_MOM(sequence):
       {
+	if (lvar) goto nonlvar;
 	if (nodarity == 0)
 	  {
 	    if (!typitm)
@@ -2505,6 +2530,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(mult):
     multcase:
       {
+        if (lvar) goto nonlvar;
         if (nodarity == 0)
           throw MOM_RUNTIME_PRINTF("empty %s expr in instr %s",
                                    mom_value_cstring(expnod), mom_item_cstring(insitm));
@@ -2532,6 +2558,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(div):
     divcase:
       {
+        if (lvar) goto nonlvar;
         if (nodarity != 2)
           throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
                                    mom_value_cstring(expnod), mom_item_cstring(insitm));
@@ -2553,6 +2580,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     break;
     case CASE_EXPCONN_MOM(mod):
       {
+	if (lvar) goto nonlvar;
 	if (nodarity != 2)
 	  throw MOM_RUNTIME_PRINTF("bad arity %s expr in instr %s",
 				   mom_value_cstring(expnod), mom_item_cstring(insitm));
@@ -2583,6 +2611,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(tuple):
     tuplecase:
       {
+        if (lvar) goto nonlvar;
         for (unsigned ix=0; ix<nodarity; ix++)
           {
             auto subexpv = expnod->nod_sons[ix];
@@ -2601,6 +2630,7 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
     case CASE_EXPCONN_MOM(flatten_tuple):
     flatupcase:
       {
+        if (lvar) goto nonlvar;
         bool isflatset = connitm==MOM_PREDEFITM(flatten_set);
         if (nodarity==0)
           throw MOM_RUNTIME_PRINTF("%s expr %s in %s should have at least one argument",
@@ -2636,13 +2666,18 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
                                    mom_value_cstring(expnod),
                                    mom_item_cstring(insitm));
         lock_item(desconnitm);
-        return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm);
+        return scan_node_descr_conn_expr(expnod, desconnitm, insitm, depth, typitm, lvar);
       }
     } // end switch connitm
 #undef NBEXPCONN_MOM
 #undef CASE_EXPCONN_MOM
   MOM_FATAPRINTF("impossible scan_node_expr expnod=%s insitm=%s depth#%d typitm=%s",
                  mom_value_cstring(expnod), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+ nonlvar:
+  throw MOM_RUNTIME_PRINTF("expr %s in instr %s depth %d is not an lvar for type %s",
+                           mom_value_cstring(expnod), mom_item_cstring(insitm),
+                           depth,
+                           mom_item_cstring(typitm));
 } // end of MomEmitter::scan_node_expr
 
 
@@ -2652,12 +2687,14 @@ struct mom_item_st*
 MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                                       struct mom_item_st*desconnitm,
                                       struct mom_item_st*insitm,
-                                      int depth, struct mom_item_st*typitm)
+                                      int depth, struct mom_item_st*typitm,
+                                      bool lvar)
 {
   MOM_DEBUGPRINTF(gencod, "scan_node_descr_conn_expr start expnod=%s desconnitm=%s"
-                  " insitm=%s depth#%d typitm=%s",
+                  " insitm=%s depth#%d typitm=%s %s",
                   mom_value_cstring(expnod), mom_value_cstring(desconnitm),
-                  mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+                  mom_item_cstring(insitm), depth, mom_item_cstring(typitm),
+                  lvar?"lvar":"expr");
   auto connitm = expnod->nod_connitm;
   assert (connitm != nullptr && connitm->va_itype==MOMITY_ITEM);
   unsigned nodarity = mom_size(expnod);
@@ -2675,6 +2712,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
     case CASE_DESCONN_MOM(signature):
       {
 	// an unknown closure application
+	if (lvar) goto nonlvar;
 	auto sigr=scan_nonbinding_signature(connitm,insitm);
 	auto sformaltup = sigr.sig_formals;
 	auto sresultv = sigr.sig_result;
@@ -2743,6 +2781,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
       MOM_DEBUGPRINTF(gencod,
                       "scan_node_descr_conn_expr expnod=%s type cast %s",
                       mom_value_cstring(expnod), mom_item_cstring(connitm));
+      if (lvar) goto nonlvar;
       if (nodarity != 1)
         throw MOM_RUNTIME_PRINTF("cast node %s should have one son, but has arity %d", mom_value_cstring(expnod), nodarity);
       return connitm;
@@ -2766,6 +2805,7 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
                       mom_value_cstring(expnod));
     primitivecase:
       {
+        if (lvar) goto nonlvar;
         // a known routine or primitive application
         auto routsigitm =
           mom_dyncast_item(mom_unsync_item_get_phys_attr
@@ -2889,21 +2929,28 @@ MomEmitter::scan_node_descr_conn_expr(const struct mom_boxnode_st*expnod,
   throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in instr %s depth %d",
                             mom_value_cstring(expnod), mom_item_cstring(connitm),
                             mom_item_cstring(desconnitm), mom_value_cstring(insitm), depth);
+ nonlvar:
+  throw  MOM_RUNTIME_PRINTF("expnod %s has unexpected connective %s of descr %s in instr %s depth %d is not lvar",
+                            mom_value_cstring(expnod), mom_item_cstring(connitm),
+                            mom_item_cstring(desconnitm), mom_value_cstring(insitm), depth);
 } // end of MomEmitter::scan_node_descr_conn_expr
 
 
 
 struct mom_item_st*
-MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm)
+MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm, int depth, struct mom_item_st*typitm, bool lvar)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s",
-                  mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm));
+  MOM_DEBUGPRINTF(gencod, "scan_item_expr start expitm=%s insitm=%s depth#%d typitm=%s %s",
+                  mom_item_cstring(expitm), mom_item_cstring(insitm), depth, mom_item_cstring(typitm),
+                  lvar?"lvar":"expr");
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm:=%s",
                   mom_item_content_cstring(expitm));
   assert (is_locked_item(expitm));
   assert (is_locked_item(insitm));
   auto desitm =  mom_unsync_item_descr(expitm);
   auto bind = get_binding(expitm);
+  vardef_st* oldbind = nullptr;
+  struct mom_item_st* typexpitm = nullptr;
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm %s desitm %s bind role %s what %s",
                   mom_item_cstring(expitm),
                   mom_item_cstring(desitm),
@@ -2914,6 +2961,7 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
     return scan_var(expitm,insitm,typitm);
   else if (desitm == MOM_PREDEFITM(closed))
     {
+      if (lvar) goto nonlvar;
       if (typitm && typitm != MOM_PREDEFITM(value))
         throw MOM_RUNTIME_PRINTF("closed item %s in instr %s but expecting non-value type %s",
                                  mom_item_cstring(expitm),
@@ -2921,9 +2969,11 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                                  mom_item_cstring(typitm));
       return scan_closed(expitm,insitm);
     }
-  else if (desitm == MOM_PREDEFITM(constant))
+  else if (desitm == MOM_PREDEFITM(constant)) {
+    if (lvar) goto nonlvar;
     return scan_constant_item(expitm,insitm,typitm);
-  auto typexpitm =
+  }
+  typexpitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
                   mom_item_cstring(expitm), mom_item_cstring(typexpitm), mom_item_cstring(desitm));
@@ -2937,7 +2987,7 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                                   mom_item_cstring(typitm));
       return typexpitm;
     }
-  auto oldbind = get_binding(expitm);
+  oldbind = get_binding(expitm);
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typitm=%s typexpitm=%s oldbind role %s what %s",
                   mom_item_cstring(expitm), mom_item_cstring(typitm),
                   mom_item_cstring(typexpitm),
@@ -2996,6 +3046,12 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                               mom_item_cstring(expitm),
                               mom_item_cstring(insitm),
                               mom_item_cstring(typitm));
+ nonlvar:
+  if (lvar)
+    throw MOM_RUNTIME_PRINTF("item %s in instr %s (type %s) is not lvar",
+			     mom_item_cstring(expitm),
+			     mom_item_cstring(insitm),
+			     mom_item_cstring(typitm));
 } // end of MomEmitter::scan_item_expr
 
 
@@ -3471,7 +3527,7 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("declared item %s without descr", mom_item_cstring(declitm));
 #define NBDECLD_MOM 91
-#define CASE_DECLD_MOM(Nam) momhashpredef_##Nam % NBDECLD_MOM:	\
+#define CASE_DECLD_MOM(Nam) momhashpredef_##Nam % NBDECLD_MOM:  \
   if (descitm == MOM_PREDEFITM(Nam)) goto foundcase_##Nam;	\
   goto defaultcasedescd; foundcase_##Nam
   const char*varqual=nullptr;
@@ -3511,13 +3567,14 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	scan_func_element(declitm);
 	MOM_DEBUGPRINTF(gencod, "c-declare_item func %s", mom_item_cstring(declitm));
 	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
-	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
-	  _cec_declareditems.insert(sigitm);
-	  auto dsigtree= mom_dyncast_node(declare_signature_type(declitm));
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item func %s sigitm=%s dsigtree=%s",
-			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
-	  add_global_decl(dsigtree);
-	}
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+	  {
+	    _cec_declareditems.insert(sigitm);
+	    auto dsigtree= mom_dyncast_node(declare_signature_type(declitm));
+	    MOM_DEBUGPRINTF(gencod, "c-declare_item func %s sigitm=%s dsigtree=%s",
+			    mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	    add_global_decl(dsigtree);
+	  }
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
 	    _cec_declareditems.insert(declitm);
@@ -3541,13 +3598,14 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
       {
 	MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s", mom_item_cstring(declitm));
 	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
-	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
-	  _cec_declareditems.insert(sigitm);
-	  auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s sigitm=%s dsigtree=%s",
-			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
-	  add_global_decl(dsigtree);
-	}
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+	  {
+	    _cec_declareditems.insert(sigitm);
+	    auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
+	    MOM_DEBUGPRINTF(gencod, "c-declare_item inline %s sigitm=%s dsigtree=%s",
+			    mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	    add_global_decl(dsigtree);
+	  }
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
 	    auto iltree = transform_inline_element(declitm);
@@ -3568,13 +3626,14 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 				   mom_item_cstring(declitm));
 	lock_item(sigitm);
 	scan_signature(sigitm, declitm, true);
-	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end()) {
-	  _cec_declareditems.insert(sigitm);
-	  auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s sigitm=%s dsigtree=%s",
-			  mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
-	  add_global_decl(dsigtree);
-	}
+	if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
+	  {
+	    _cec_declareditems.insert(sigitm);
+	    auto dsigtree= mom_dyncast_node(declare_signature_type(sigitm));
+	    MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s sigitm=%s dsigtree=%s",
+			    mom_item_cstring(declitm), mom_item_cstring(sigitm), mom_value_cstring(dsigtree));
+	    add_global_decl(dsigtree);
+	  }
 	if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
 	  {
 	    auto dftree =
@@ -3594,7 +3653,7 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
 	  }
       }
       break;
-      
+
     case CASE_DECLD_MOM(global):
       varqual = "/*global*/";
       goto declare_data;
@@ -3603,31 +3662,32 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
       goto declare_data;
     declare_data:
       {
-	MOM_DEBUGPRINTF(gencod, "c-declare_item data %s varqual:%s", mom_item_cstring(declitm), varqual);
-	if (_cec_declareditems.find(declitm) == _cec_declareditems.end()) {
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item new data %s varqual:%s", mom_item_cstring(declitm), varqual);
-	  _cec_declareditems.insert(declitm);
-	  auto typval = mom_unsync_item_get_phys_attr(declitm, MOM_PREDEFITM(type));
-	  if (typval == nullptr)
-	    throw MOM_RUNTIME_PRINTF("declared %s data %s without type",
-				     varqual, mom_item_cstring(declitm));
-	  auto vartree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-					     literal_string(CDATA_PREFIX),
-					     declitm);
-	  bind_global_at(declitm,descitm,typval,__LINE__);
-	  auto dtree = transform_type_for(typval,vartree);
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item data %s dtree=%s", mom_item_cstring(declitm), mom_value_cstring(dtree));
-	  auto decltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
-					      literal_string("extern"),
-					      literal_string(" "),
-					      literal_string(varqual),
-					      literal_string(" "),
-					      dtree,
-					      literal_string(";"));
-	  MOM_DEBUGPRINTF(gencod, "c-declare_item declitm %s with decltree %s",
-			  mom_item_cstring(declitm), mom_value_cstring(decltree));
-	  add_global_decl(decltree);
-	}
+        MOM_DEBUGPRINTF(gencod, "c-declare_item data %s varqual:%s", mom_item_cstring(declitm), varqual);
+        if (_cec_declareditems.find(declitm) == _cec_declareditems.end())
+          {
+            MOM_DEBUGPRINTF(gencod, "c-declare_item new data %s varqual:%s", mom_item_cstring(declitm), varqual);
+            _cec_declareditems.insert(declitm);
+            auto typval = mom_unsync_item_get_phys_attr(declitm, MOM_PREDEFITM(type));
+            if (typval == nullptr)
+              throw MOM_RUNTIME_PRINTF("declared %s data %s without type",
+                                       varqual, mom_item_cstring(declitm));
+            auto vartree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                               literal_string(CDATA_PREFIX),
+                                               declitm);
+            bind_global_at(declitm,descitm,typval,__LINE__);
+            auto dtree = transform_type_for(typval,vartree);
+            MOM_DEBUGPRINTF(gencod, "c-declare_item data %s dtree=%s", mom_item_cstring(declitm), mom_value_cstring(dtree));
+            auto decltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
+                                                literal_string("extern"),
+                                                literal_string(" "),
+                                                literal_string(varqual),
+                                                literal_string(" "),
+                                                dtree,
+                                                literal_string(";"));
+            MOM_DEBUGPRINTF(gencod, "c-declare_item declitm %s with decltree %s",
+                            mom_item_cstring(declitm), mom_value_cstring(decltree));
+            add_global_decl(decltree);
+          }
       }
       break;
     defaultcasedescd:
@@ -3702,48 +3762,50 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_data_element(struct mom_item_st*itm)
 {
   MOM_DEBUGPRINTF(gencod, "c-transform_data_element start itm:=%s",
-		  mom_item_content_cstring(itm));
+                  mom_item_content_cstring(itm));
   assert (is_locked_item(itm));
   auto descitm = mom_unsync_item_descr(itm);
   auto dabind = get_binding(itm);
   assert (dabind != nullptr);
   MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s dabind role %s what %s descitm=%s",
-		  mom_item_cstring(itm),
-		  mom_item_cstring(dabind->vd_rolitm),
-		  mom_value_cstring(dabind->vd_what),
-		  mom_item_cstring(descitm));
+                  mom_item_cstring(itm),
+                  mom_item_cstring(dabind->vd_rolitm),
+                  mom_value_cstring(dabind->vd_what),
+                  mom_item_cstring(descitm));
   assert (dabind->vd_rolitm == MOM_PREDEFITM(data));
   auto typval = dabind->vd_what;
   auto datree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-				    literal_string (CDATA_PREFIX), itm);
+                                    literal_string (CDATA_PREFIX), itm);
   MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s datree=%s",
                   mom_item_cstring(itm), mom_value_cstring(datree));
   auto dcltree = transform_type_for(typval,datree);
   MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s has dcltree=%s",
                   mom_item_cstring(itm), mom_value_cstring(dcltree));
-  if (descitm == MOM_PREDEFITM(global)) {
-    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-				       literal_string("/*global*/"),
-				       literal_string(" "),
-				       dcltree,
-				       literal_string(";"));
-    MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
-		    mom_item_cstring(itm), mom_value_cstring(restree));
-    return restree;
-  }
-  else if (descitm== MOM_PREDEFITM(thread_local)) {
-    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
-				       literal_string("thread_local"),
-				       literal_string(" "),
-				       dcltree,
-				       literal_string(";"));
-    MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
-		    mom_item_cstring(itm), mom_value_cstring(restree));
-    return restree;
-  }
+  if (descitm == MOM_PREDEFITM(global))
+    {
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                         literal_string("/*global*/"),
+                                         literal_string(" "),
+                                         dcltree,
+                                         literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
+                      mom_item_cstring(itm), mom_value_cstring(restree));
+      return restree;
+    }
+  else if (descitm== MOM_PREDEFITM(thread_local))
+    {
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                         literal_string("thread_local"),
+                                         literal_string(" "),
+                                         dcltree,
+                                         literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "c-transform_data_element itm=%s gives restree=%s",
+                      mom_item_cstring(itm), mom_value_cstring(restree));
+      return restree;
+    }
   else
     MOM_FATAPRINTF("unimplemented c-transform_data_element itm=%s of descr %s",
-		   mom_item_cstring(itm), mom_item_cstring(descitm));
+                   mom_item_cstring(itm), mom_item_cstring(descitm));
 } // end MomCEmitter::transform_data_element
 
 const struct mom_boxnode_st*
@@ -3830,7 +3892,7 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
 {
   assert (is_locked_item(sigitm));
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_type start sigitm:=%s",
-		  mom_item_content_cstring(sigitm));
+                  mom_item_content_cstring(sigitm));
   auto formtup = mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
   if (formtup == nullptr)
     throw MOM_RUNTIME_PRINTF("signature %s without formals", mom_item_cstring(sigitm));
@@ -4125,24 +4187,25 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
   if (tybind != nullptr)
     {
       MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s bound to role %s what %s",
-		      mom_item_cstring(typitm),
-		      mom_item_cstring(tybind->vd_rolitm),
-		      mom_value_cstring(tybind->vd_what));
+                      mom_item_cstring(typitm),
+                      mom_item_cstring(tybind->vd_rolitm),
+                      mom_value_cstring(tybind->vd_what));
       if (tybind && !is_type_binding(tybind))
-	throw MOM_RUNTIME_PRINTF("type %s already bound to role %s",
-				 mom_item_cstring(typitm), mom_item_cstring(tybind->vd_rolitm));
+        throw MOM_RUNTIME_PRINTF("type %s already bound to role %s",
+                                 mom_item_cstring(typitm), mom_item_cstring(tybind->vd_rolitm));
       MOM_DEBUGPRINTF(gencod,
                       "c-declare_type known typitm=%s gives tytree=%s",
                       mom_item_cstring(typitm), mom_value_cstring(tytree));
       return tytree;
     }
-  else {
-    MOM_DEBUGPRINTF(gencod,
-		    "c-declare_type fresh typitm=%s",
-		    mom_item_cstring(typitm));
-    /// temporary binding, will be rebound later
-    bind_global_at(typitm, MOM_PREDEFITM(type), nullptr,__LINE__);
-  }
+  else
+    {
+      MOM_DEBUGPRINTF(gencod,
+                      "c-declare_type fresh typitm=%s",
+                      mom_item_cstring(typitm));
+      /// temporary binding, will be rebound later
+      bind_global_at(typitm, MOM_PREDEFITM(type), nullptr,__LINE__);
+    }
 
 #define NBKNOWNTYPE_MOM 31
 #define CASE_KNOWNTYPE_MOM(Nam) momhashpredef_##Nam % NBKNOWNTYPE_MOM:  \
@@ -4216,17 +4279,18 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       traced_vector_items_t vecfields;
       if (extenditm != nullptr)
         {
-	  MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s extenditm=%s",
-			  mom_item_cstring(typitm), mom_item_cstring(extenditm));
-	  lock_item(extenditm);
-	  if (!is_bound(extenditm)) {
-	    MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s unbound extenditm=%s",
-			    mom_item_cstring(typitm), mom_item_cstring(extenditm));
-	    auto extree = declare_type(extenditm);
-	    MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s with extenditm=%s extree=%s",
-			    mom_item_cstring(typitm), mom_item_cstring(extenditm),
-			    mom_value_cstring(extree));
-	  }
+          MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s extenditm=%s",
+                          mom_item_cstring(typitm), mom_item_cstring(extenditm));
+          lock_item(extenditm);
+          if (!is_bound(extenditm))
+            {
+              MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s unbound extenditm=%s",
+                              mom_item_cstring(typitm), mom_item_cstring(extenditm));
+              auto extree = declare_type(extenditm);
+              MOM_DEBUGPRINTF(gencod, "c-declare_type struct typitm=%s with extenditm=%s extree=%s",
+                              mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                              mom_value_cstring(extree));
+            }
           auto extendbind = get_global_binding(extenditm);
           if (extendbind == nullptr)
             throw MOM_RUNTIME_PRINTF(" `extend` %s in struct type %s is unbound",
@@ -4354,16 +4418,17 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
             if (extenditm == nullptr)
               throw MOM_RUNTIME_PRINTF("invalid `extend` %s in union type %s",
                                        mom_value_cstring(extendv), mom_item_cstring(typitm));
-	    lock_item(extenditm);
-	    if (!is_bound(extenditm)) {
-	      MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s unbound extenditm=%s",
-			      mom_item_cstring(typitm), mom_item_cstring(extenditm));
-	      auto extree = declare_type(extenditm);
-	      MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s with extenditm=%s extree=%s",
-			      mom_item_cstring(typitm), mom_item_cstring(extenditm),
-			      mom_value_cstring(extree));
-	    }
-	    auto extendbind = get_global_binding(extenditm);
+            lock_item(extenditm);
+            if (!is_bound(extenditm))
+              {
+                MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s unbound extenditm=%s",
+                                mom_item_cstring(typitm), mom_item_cstring(extenditm));
+                auto extree = declare_type(extenditm);
+                MOM_DEBUGPRINTF(gencod, "c-declare_type union typitm=%s with extenditm=%s extree=%s",
+                                mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                                mom_value_cstring(extree));
+              }
+            auto extendbind = get_global_binding(extenditm);
             if (extendbind == nullptr)
               throw MOM_RUNTIME_PRINTF(" `extend` %s in union type %s is unbound",
                                        mom_item_cstring(extenditm), mom_item_cstring(typitm));
@@ -4502,19 +4567,21 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       if(extenditm == nullptr && mynbenur==0)
         throw MOM_RUNTIME_PRINTF("enum type %s with missing or empty `enum` sequence",
                                  mom_item_cstring(typitm));
-      if (extenditm) {
-	MOM_DEBUGPRINTF(gencod, "c-declare_type %s enum extenditm %s",
-			mom_item_cstring(typitm), mom_item_cstring(extenditm));
-	lock_item(extenditm);
-	if (!is_bound(extenditm)) {
-	  MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s unbound extenditm=%s",
-			  mom_item_cstring(typitm), mom_item_cstring(extenditm));
-	  auto extree = declare_type(extenditm);
-	  MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s with extenditm=%s extree=%s",
-			  mom_item_cstring(typitm), mom_item_cstring(extenditm),
-			  mom_value_cstring(extree));
-	}
-      }
+      if (extenditm)
+        {
+          MOM_DEBUGPRINTF(gencod, "c-declare_type %s enum extenditm %s",
+                          mom_item_cstring(typitm), mom_item_cstring(extenditm));
+          lock_item(extenditm);
+          if (!is_bound(extenditm))
+            {
+              MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s unbound extenditm=%s",
+                              mom_item_cstring(typitm), mom_item_cstring(extenditm));
+              auto extree = declare_type(extenditm);
+              MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm=%s with extenditm=%s extree=%s",
+                              mom_item_cstring(typitm), mom_item_cstring(extenditm),
+                              mom_value_cstring(extree));
+            }
+        }
       int preval = -1;
       if (extendv != nullptr)
         {
@@ -4581,16 +4648,16 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                 throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
               lock_item(curenuritm);
               auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
-	      vecenurs.push_back(curenuritm);
+              vecenurs.push_back(curenuritm);
               MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s nix#%d curenuritm=%s enurtree=%s",
                               mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
                               mom_value_cstring(enurtree));
               vectree.push_back(enurtree);
             }
-	  auto xenurtup = mom_boxtuple_make_arr(vecenurs.size(), vecenurs.data());
-	  MOM_DEBUGPRINTF(gencod, "c-declare_type extendedenum typitm %s xenurtup=%s",
-			  mom_item_cstring(typitm), mom_value_cstring(xenurtup));
-	  bind_global_at(typitm, MOM_PREDEFITM(enum), xenurtup, __LINE__);
+          auto xenurtup = mom_boxtuple_make_arr(vecenurs.size(), vecenurs.data());
+          MOM_DEBUGPRINTF(gencod, "c-declare_type extendedenum typitm %s xenurtup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(xenurtup));
+          bind_global_at(typitm, MOM_PREDEFITM(enum), xenurtup, __LINE__);
         }
       else   // enum without extension
         {
@@ -4608,9 +4675,9 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                               mom_value_cstring(enurtree));
               vectree.push_back(enurtree);
             }
-	  MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s myenutup=%s",
-			  mom_item_cstring(typitm), mom_value_cstring(myenutup));
-	  bind_global_at(typitm, MOM_PREDEFITM(enum), myenutup, __LINE__);
+          MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s myenutup=%s",
+                          mom_item_cstring(typitm), mom_value_cstring(myenutup));
+          bind_global_at(typitm, MOM_PREDEFITM(enum), myenutup, __LINE__);
         }
       auto enumdecltree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
@@ -4632,31 +4699,32 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
       add_global_decl(enumdecltree);
       _cec_declareditems.insert(typitm);
     }/// end enum
-  else if (tytypv != nullptr) {
-    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s with tytypv=%s",
-		    mom_item_cstring(typitm),
-		    mom_value_cstring(tytypv));
-    scan_type_expr(tytypv, typitm);
-    auto typtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
-				       literal_string(CTYPE_PREFIX),
-				       typitm);
-    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s typtree=%s",
-		    mom_item_cstring(typitm),
-		    mom_value_cstring(typtree));
-    auto decltree = transform_type_for(tytypv, typtree);
-    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s decltree=%s",
-		    mom_item_cstring(typitm),
-		    mom_value_cstring(decltree));
-    auto tydecltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-					  literal_string("typedef "),
-					  decltree,
-					  literal_string(";"));
-    MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s tydecltree=%s",
-		    mom_item_cstring(typitm),
-		    mom_value_cstring(tydecltree));
-    add_global_decl(tydecltree);
-    _cec_declareditems.insert(typitm);
-  }
+  else if (tytypv != nullptr)
+    {
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s with tytypv=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(tytypv));
+      scan_type_expr(tytypv, typitm);
+      auto typtree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 2,
+                                         literal_string(CTYPE_PREFIX),
+                                         typitm);
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s typtree=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(typtree));
+      auto decltree = transform_type_for(tytypv, typtree);
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s decltree=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(decltree));
+      auto tydecltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                            literal_string("typedef "),
+                                            decltree,
+                                            literal_string(";"));
+      MOM_DEBUGPRINTF(gencod, "c-declare_type typitm=%s tydecltree=%s",
+                      mom_item_cstring(typitm),
+                      mom_value_cstring(tydecltree));
+      add_global_decl(tydecltree);
+      _cec_declareditems.insert(typitm);
+    }
   ////////////////
   else
     throw MOM_RUNTIME_PRINTF("invalid type item %s", mom_item_cstring(typitm));
@@ -5140,14 +5208,15 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
       {
 	assert (nodarity == 1);
 	auto sztypitm = mom_dyncast_item(expnod->nod_sons[0]);
-		MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s",
-				mom_item_cstring(sztypitm));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s",
+			mom_item_cstring(sztypitm));
 	assert (is_locked_item(sztypitm));
-	if (_cec_declareditems.find(sztypitm) == _cec_declareditems.end()) {
-	  auto dtree = declare_type(sztypitm);
-	  MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s dtree=%s",
-			  mom_item_cstring(sztypitm), mom_value_cstring(dtree));
-	}
+	if (_cec_declareditems.find(sztypitm) == _cec_declareditems.end())
+	  {
+	    auto dtree = declare_type(sztypitm);
+	    MOM_DEBUGPRINTF(gencod, "c-transform_node_expr sizeof sztypitm=%s dtree=%s",
+			    mom_item_cstring(sztypitm), mom_value_cstring(dtree));
+	  }
 	auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
 					   literal_string("sizeof("),
 					   literal_string(CTYPE_PREFIX),
@@ -5835,8 +5904,8 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
             }
           else
             {
-	      MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s declaring",
-			      mom_item_cstring(typitm));
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s declaring",
+                              mom_item_cstring(typitm));
               auto dtytree = declare_type(typitm, scalarp);
               MOM_DEBUGPRINTF(gencod, "c-transform_type_for typitm=%s so dtytree %s (%s)",
                               mom_item_cstring(typitm),
@@ -5877,22 +5946,22 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
             *scalarp = true;
         }
       else if (connitm == MOM_PREDEFITM(signature) && sz == 1)
-	{
+        {
           auto sigitm = mom_dyncast_item(typnod->nod_sons[0]);
-	  assert (is_locked_item(sigitm));
-	  auto sigvartree =
-	    mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
-				literal_string("/*signaturetype*/"),
-				literal_string(CSIGNTYPE_PREFIX),
-				sigitm,
-				literal_string("* "),
-				vartree);
-	  if (scalarp)
-	    *scalarp = true;
+          assert (is_locked_item(sigitm));
+          auto sigvartree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
+                                literal_string("/*signaturetype*/"),
+                                literal_string(CSIGNTYPE_PREFIX),
+                                sigitm,
+                                literal_string("* "),
+                                vartree);
+          if (scalarp)
+            *scalarp = true;
           MOM_DEBUGPRINTF(gencod, "c-transform_type_for sigvartree=%s sigitm=%s",
                           mom_value_cstring(sigvartree), mom_item_cstring(sigitm));
-	  restree = sigvartree;
-	}
+          restree = sigvartree;
+        }
       else if (connitm == MOM_PREDEFITM(array) && sz == 2)
         {
           auto comptypv = typnod->nod_sons[0];
@@ -6366,18 +6435,19 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       treev = mom_boxnode_make(MOM_PREDEFITM(sequence),treecnt,treearr);
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s treev=%s",
                       mom_item_cstring(insitm), mom_value_cstring(treev));
-      if (resexp != nullptr) {
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resexp=%s",
-			mom_item_cstring(insitm), mom_value_cstring(resexp));
-	auto restree = transform_expr(resexp, insitm);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s restree=%s",
-			mom_item_cstring(insitm), mom_value_cstring(restree));
-	treev = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-				    restree, literal_string(" = "),
-				    restree);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resulting treev=%s",
-			mom_item_cstring(insitm), mom_value_cstring(treev));	
-      }
+      if (resexp != nullptr)
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resexp=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(resexp));
+          auto restree = transform_expr(resexp, insitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s restree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(restree));
+          treev = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                      restree, literal_string(" = "),
+                                      restree);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resulting treev=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(treev));
+        }
       return treev;
     } // end if desrunitm is primitive
   else  if (desrunitm == MOM_PREDEFITM(routine))
@@ -6387,34 +6457,35 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine runitm=%s sigitm:=\n%s",
                       mom_item_cstring(runitm), mom_item_content_cstring(sigitm));
       assert (is_locked_item(sigitm));
-      
+
       if (_cec_declareditems.find(sigitm) == _cec_declareditems.end())
-	{
-	  _cec_declareditems.insert(sigitm);
-	  auto sigtypnod = declare_signature_type(sigitm);
-	  MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s sigitm %s sigtypnod %s",
-			  mom_item_cstring(insitm),
-			  mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
-	  add_global_decl(sigtypnod);
-	}
-      if (_cec_declareditems.find(runitm) == _cec_declareditems.end()) {
-	_cec_declareditems.insert(runitm);
-	auto rtdecl =
-	  mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
-				    literal_string("extern"),
-				    literal_string(" "),
-				    literal_string(CSIGNTYPE_PREFIX),
-				    sigitm,
-				    literal_string(" "),
-				    literal_string(MOM_FUNC_PREFIX),
-				    runitm,
-				    literal_string(";"));
-	add_global_decl(rtdecl);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s runitm %s rtdecl %s",
-			mom_item_cstring(insitm),
-			mom_item_cstring(runitm),
-			mom_value_cstring(rtdecl));
-      }
+        {
+          _cec_declareditems.insert(sigitm);
+          auto sigtypnod = declare_signature_type(sigitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s sigitm %s sigtypnod %s",
+                          mom_item_cstring(insitm),
+                          mom_item_cstring(sigitm), mom_value_cstring(sigtypnod));
+          add_global_decl(sigtypnod);
+        }
+      if (_cec_declareditems.find(runitm) == _cec_declareditems.end())
+        {
+          _cec_declareditems.insert(runitm);
+          auto rtdecl =
+            mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                      literal_string("extern"),
+                                      literal_string(" "),
+                                      literal_string(CSIGNTYPE_PREFIX),
+                                      sigitm,
+                                      literal_string(" "),
+                                      literal_string(MOM_FUNC_PREFIX),
+                                      runitm,
+                                      literal_string(";"));
+          add_global_decl(rtdecl);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s runitm %s rtdecl %s",
+                          mom_item_cstring(insitm),
+                          mom_item_cstring(runitm),
+                          mom_value_cstring(rtdecl));
+        }
       auto formaltup = //
         mom_dyncast_tuple(mom_unsync_item_get_phys_attr (sigitm, MOM_PREDEFITM(formals)));
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine runitm=%s formaltup=%s", mom_item_cstring(runitm), mom_value_cstring(formaltup));
@@ -6423,49 +6494,51 @@ MomCEmitter::transform_runinstr(struct mom_item_st*insitm, struct mom_item_st*ru
       assert (nbformals == nbcomp);
       traced_vector_values_t vecargtree;
       vecargtree.reserve (nbformals+1);
-      for (unsigned aix=0; aix<nbcomp; aix++) {
-	auto curarg = mom_vectvaldata_nth(inscomp, aix);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s aix#%d curarg: %s",
-			mom_item_cstring(insitm),
-			aix,
-			mom_value_cstring(curarg));
-	auto argtree =  transform_expr(curarg, insitm);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s aix#%d curarg: %s argtree=%s",
-			mom_item_cstring(insitm),
-			aix,
-			mom_value_cstring(curarg), mom_value_cstring(argtree));
-	vecargtree.push_back(argtree);
-      }
+      for (unsigned aix=0; aix<nbcomp; aix++)
+        {
+          auto curarg = mom_vectvaldata_nth(inscomp, aix);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s aix#%d curarg: %s",
+                          mom_item_cstring(insitm),
+                          aix,
+                          mom_value_cstring(curarg));
+          auto argtree =  transform_expr(curarg, insitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s aix#%d curarg: %s argtree=%s",
+                          mom_item_cstring(insitm),
+                          aix,
+                          mom_value_cstring(curarg), mom_value_cstring(argtree));
+          vecargtree.push_back(argtree);
+        }
       auto argstree = mom_boxnode_make(MOM_PREDEFITM(comma),
-				       vecargtree.size(),
-				       vecargtree.data());
+                                       vecargtree.size(),
+                                       vecargtree.data());
       MOM_DEBUGPRINTF(gencod, "c-transform_runinstr routine insitm=%s argstree=%s",
-		      mom_item_cstring(insitm),
-		      mom_value_cstring(argstree));
+                      mom_item_cstring(insitm),
+                      mom_value_cstring(argstree));
       auto calltree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),
-					  6,
-					  literal_string(MOM_FUNC_PREFIX),
-					  runitm,
-					  literal_string("("),
-					  argstree,
-					  literal_string(")"),
-					  literal_string(";"));
+                                          6,
+                                          literal_string(MOM_FUNC_PREFIX),
+                                          runitm,
+                                          literal_string("("),
+                                          argstree,
+                                          literal_string(")"),
+                                          literal_string(";"));
       momvalue_t treev = calltree;
-      if (resexp != nullptr) {
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resexp=%s",
-			mom_item_cstring(insitm), mom_value_cstring(resexp));
-	auto restree = transform_expr(resexp, insitm);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s restree=%s",
-			mom_item_cstring(insitm), mom_value_cstring(restree));
-	treev = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
-				    restree, literal_string(" = "),
-				    restree);
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resulting treev=%s",
-			mom_item_cstring(insitm), mom_value_cstring(treev));	
-      }
+      if (resexp != nullptr)
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resexp=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(resexp));
+          auto restree = transform_expr(resexp, insitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s restree=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(restree));
+          treev = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                      restree, literal_string(" = "),
+                                      restree);
+          MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s resulting treev=%s",
+                          mom_item_cstring(insitm), mom_value_cstring(treev));
+        }
       else
-	MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s gives treev=%s",
-			mom_item_cstring(insitm), mom_value_cstring(treev));	
+        MOM_DEBUGPRINTF(gencod, "c-transform_runinstr insitm=%s gives treev=%s",
+                        mom_item_cstring(insitm), mom_value_cstring(treev));
       return treev;
     } // end if desrunitm is routine
 #warning unimplemented MomCEmitter::transform_runinstr
