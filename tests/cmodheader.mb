@@ -679,6 +679,64 @@
   ]
 )
 
+^global !xtype_en (
+  ^* comment "extended enumeration for various value & payload types"
+  ^* descr type
+  ^* type enum
+  ^* extend itype_en
+  ^* enum  [
+    ^global !xty_lastvalue (
+      ^* descr enumerator
+      ^* comment "xtype for last value"
+    )
+    ^global !xty_assovaldata (
+      ^* descr enumerator
+      ^* comment "xtype for assovaldata"
+      ^* notice assovaldata_ty
+    )
+    ^global !xty_vectvaldata (
+      ^* descr enumerator
+      ^* comment "xtype for vectvaldata"
+      ^* notice vectvaldata_ty
+    )
+    ^global !xty_queue (
+      ^* descr enumerator
+      ^* comment "xtype for queues"
+    )
+    ^global !xty_hashset (
+      ^* descr enumerator
+      ^* comment "xtype for hashed sets"
+    )
+    ^global !xty_hashmap (
+      ^* descr enumerator
+      ^* comment "xtype for hashed maps"
+    )
+    ^global !xty_hashassoc (
+      ^* descr enumerator
+      ^* comment "xtype for hashed associations"
+    )
+    ^global !xty_loader (
+      ^* descr enumerator
+      ^* comment "xtype for loader"
+    )
+    ^global !xty_dumper (
+      ^* descr enumerator
+      ^* comment "xtype for dumper"
+    )
+    ^global !xty_json (
+      ^* descr enumerator
+      ^* comment "xtype for json"
+    )
+    ^global !xty_file (
+      ^* descr enumerator
+      ^* comment "xtype for file"
+    )
+    ^global !xty_filebuffer (
+      ^* descr enumerator
+      ^* comment "xtype for filebuffer"
+    )
+  ]
+)
 
 
 ^global !valid_item_pointer (
@@ -1349,6 +1407,8 @@
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
      item_ty node_ty
+     itype_en
+     xtype_en
      valid_value_pointer itype
      valid_item_pointer
      int_val_def value_hash dyncast_int dyncast_boxdouble
