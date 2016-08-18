@@ -1726,18 +1726,24 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
     {
     case CASE_OPER_MOM(assign): //////////
       {
-	auto tovaritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(to)));
+	auto destexp = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(to));
 	auto fromexp = mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(from));
+	MOM_DEBUGPRINTF(gencod, "scan_instr assign %s destexp %s fromexp %s",
+			mom_item_cstring(insitm),
+			mom_value_cstring(destexp),
+			mom_value_cstring(fromexp));
 	if (insitm->itm_pcomp && mom_vectvaldata_count(insitm->itm_pcomp)>0)
 	  throw  MOM_RUNTIME_PRINTF("assign %s #%d in block %s with unexpected %d components",
 				    mom_item_cstring(insitm), rk,
 				    mom_item_cstring(blkitm),
 				    mom_vectvaldata_count(insitm->itm_pcomp));
-	if (!tovaritm)
+	if (!destexp)
 	  throw  MOM_RUNTIME_PRINTF("assign %s #%d in block %s of %s without `to`",
 				    mom_item_cstring(insitm), rk,
 				    mom_item_cstring(blkitm), mom_item_cstring(blkitm));
-	auto totypitm = scan_var(tovaritm,insitm);
+	auto totypitm = scan_expr(destexp,insitm,0,nullptr,true);
+	MOM_DEBUGPRINTF(gencod, "scan_instr assign %s totypitm %s",
+			mom_item_cstring(insitm), mom_item_cstring(totypitm));
 	auto fromtypitm = fromexp?scan_expr(fromexp,insitm,0,totypitm):totypitm;
 	if (!fromtypitm)
 	  throw MOM_RUNTIME_PRINTF("assign %s #%d in block %s with untypable `from` %s",
@@ -1749,7 +1755,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 				   mom_item_cstring(blkitm), mom_item_cstring(fromtypitm), mom_item_cstring(totypitm));
 	bind_local_at(insitm,MOM_PREDEFITM(assign),
 		      mom_boxnode_make_va(MOM_PREDEFITM(assign),3,
-					  tovaritm, fromexp,  totypitm),
+					  destexp, fromexp,  totypitm),
 		      __LINE__,
 		      blkitm, rk);
       } //// end assign
@@ -2163,6 +2169,18 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 					   mom_item_cstring(curformrestypitm), mom_item_cstring(runsigitm));
 	      }
 	  }
+	else if (resity == MOMITY_NODE) {
+	  auto formrtypitm = mom_dyncast_item(sresultv);
+	  if(formrtypitm == nullptr)
+	    throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s with bad formal result %s for result expr %s",
+				     mom_item_cstring(insitm), rk, mom_item_cstring(blkitm),
+				     mom_value_cstring(sresultv),
+				     mom_value_cstring(resultv));
+	  MOM_DEBUGPRINTF(gencod, "scan run instr %s formtypitm %s resultv %s",
+			  mom_item_cstring(insitm), mom_item_cstring(formrtypitm),
+			  mom_value_cstring(resultv));
+	  scan_node_expr (mom_dyncast_node(resultv), insitm, 0, formrtypitm, true);
+	}
 	else if (resity != MOMITY_NONE)
 	  throw MOM_RUNTIME_PRINTF("run instr %s rk#%d in block %s "
 				   "with bad result %s",

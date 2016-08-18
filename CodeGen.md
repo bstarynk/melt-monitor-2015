@@ -128,6 +128,8 @@ exception. In particular:
 * The `tuple` and `set` connectives are variadic expressions to build
   tuples and sets from item arguments.
 
+* The `sizeof` connective requires a single son, which should be a *type-item*
+
 * the `node` connective is for a variadic expression to build a node,
   using the first argument (should be an item) as a connective.
 
