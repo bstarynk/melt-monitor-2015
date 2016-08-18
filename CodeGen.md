@@ -130,8 +130,12 @@ exception. In particular:
 
 * The `sizeof` connective requires a single son, which should be a *type-item*
 
-* The `get` binary connective with left son a value or item and right
-  son a *field-item* is accessing that field.
+* The `get` binary connective (used as `%get(`*ptr* *field*`)` ....)
+  with left son a value or item and right son a *field-item* is
+  accessing that field.
+
+* The `at` ternary connective (used as `%at(`*ptr* *field* *index*`)` ....)
+access an array (or flexible array) field
 
 * the `node` connective is for a variadic expression to build a node,
   using the first argument (should be an item) as a connective.
