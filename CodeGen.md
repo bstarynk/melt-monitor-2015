@@ -130,6 +130,9 @@ exception. In particular:
 
 * The `sizeof` connective requires a single son, which should be a *type-item*
 
+* The `get` binary connective with left son a value or item and right
+  son a *field-item* is accessing that field.
+
 * the `node` connective is for a variadic expression to build a node,
   using the first argument (should be an item) as a connective.
 

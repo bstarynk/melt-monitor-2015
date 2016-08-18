@@ -2543,6 +2543,56 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 	return typitm;
       }
       break;
+    case CASE_EXPCONN_MOM(get):
+      {
+	if (nodarity == 2) {
+	  auto ptrexpv = expnod->nod_sons[0];
+	  auto flditm = mom_dyncast_item(expnod->nod_sons[1]);
+	  MOM_DEBUGPRINTF(gencod, "scan get expr %s in instr %s ptrexpv=%s flditm=%s",
+			  mom_value_cstring(expnod), mom_item_cstring(insitm),
+			  mom_value_cstring(ptrexpv),
+			  mom_item_cstring(flditm));
+	  auto ptrtypitm = scan_expr(ptrexpv, insitm, depth+1);
+	  if (ptrtypitm != MOM_PREDEFITM(value) && ptrtypitm != MOM_PREDEFITM(item))
+	    throw MOM_RUNTIME_PRINTF("in get expr %s in instr %s left son is not value or item but %s",
+				     mom_value_cstring(expnod),
+				     mom_item_cstring(insitm),
+				     mom_item_cstring(ptrtypitm));
+	  if (flditm == nullptr)
+	    throw MOM_RUNTIME_PRINTF("in get expr %s in instr %s bad right son",
+				     mom_value_cstring(expnod),
+				     mom_item_cstring(insitm));
+	  lock_item(flditm);
+	  auto fldbind = get_binding(flditm);
+	  if (!fldbind)
+	    throw  MOM_RUNTIME_PRINTF("in get expr %s in instr %s unknown field %s",
+				     mom_value_cstring(expnod),
+				      mom_item_cstring(insitm),
+				      mom_item_cstring(flditm));
+	  MOM_DEBUGPRINTF(gencod, "scan get expr %s in instr %s field %s role %s what %s",
+			  mom_value_cstring(expnod), mom_item_cstring(insitm),
+			  mom_item_cstring(flditm), mom_item_cstring(fldbind->vd_rolitm),
+			  mom_value_cstring(fldbind->vd_what));
+	  if (fldbind->vd_rolitm != MOM_PREDEFITM(field))
+	    throw  MOM_RUNTIME_PRINTF("in get expr %s in instr %s bad field %s with role %s",
+				     mom_value_cstring(expnod),
+				      mom_item_cstring(insitm),
+				      mom_item_cstring(flditm),
+				      mom_item_cstring(fldbind->vd_rolitm));
+	  auto fldtypitm = mom_dyncast_item(fldbind->vd_what);
+	  assert (is_locked_item(fldtypitm));
+	  MOM_DEBUGPRINTF(gencod, "scan get expr %s in instr %s gives fldtypitm %s",
+				     mom_value_cstring(expnod),
+				      mom_item_cstring(insitm),
+			  mom_item_cstring(fldtypitm));
+	  return fldtypitm;
+	}
+	else
+	  throw MOM_RUNTIME_PRINTF("get expr %s in instr %s should be binary",
+				   mom_value_cstring(expnod),
+				   mom_item_cstring(insitm));
+      }
+      break;
     case CASE_EXPCONN_MOM(plus):
       goto multcase;
     case CASE_EXPCONN_MOM(mult):
@@ -5219,6 +5269,38 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 #warning MomCEmitter::transform_node_expr verbatim unimplemented
 	MOM_FATAPRINTF("unimplemented c-transform_node_expr of non-item verbatim-expr %s in %s",
 		       mom_value_cstring(expnod), mom_item_cstring(initm));
+      }
+      break;
+      ////
+    case CASE_EXPCONN_MOM(get):
+      {
+	assert (nodarity == 2);
+	auto ptrexpv = expnod->nod_sons[0];
+	auto flditm = mom_dyncast_item(expnod->nod_sons[1]);
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr get ptrexpv %s flditm %s",
+			mom_value_cstring(ptrexpv), mom_item_cstring(flditm));
+	assert (is_locked_item(flditm));
+	auto fldbind = get_binding(flditm);
+	assert (fldbind != nullptr && fldbind->vd_rolitm == MOM_PREDEFITM(field));
+	auto ptrtree = transform_expr(ptrexpv, initm);
+	auto fldtypitm = mom_dyncast_item(fldbind->vd_what);
+	assert (fldtypitm != nullptr);
+	auto restree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence), 
+					   literal_string("(/*get*/"),
+					   literal_string("("),
+					   literal_string(CTYPE_PREFIX),
+					   fldtypitm,
+					   literal_string("*)"),
+					   literal_string("("),
+					   ptrtree,
+					   literal_string(")->"),
+					   literal_string(CFIELD_PREFIX),
+					   flditm,
+					   literal_string(")"));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr %s gives %s",
+			mom_value_cstring(expnod),
+			mom_value_cstring(restree));
+	return restree;
       }
       break;
       ////
