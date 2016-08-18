@@ -965,13 +965,15 @@ mom_dump_state (void)
   struct mom_dumper_st *du = mom_gc_alloc (sizeof (struct mom_dumper_st));
   du->va_itype = MOMITY_DUMPER;
   du->du_state = MOMDUMP_NONE;
+  char cwdbuf[128];
+  memset (cwdbuf, 0, sizeof (cwdbuf));
   {
-    char cwdbuf[128];
-    memset (cwdbuf, 0, sizeof (cwdbuf));
     if (getcwd (cwdbuf, sizeof (cwdbuf) - 1))
       MOM_INFORMPRINTF ("start of dump in %s", cwdbuf);
-    else
+    else {
+      strcpy(cwdbuf, "./");
       MOM_INFORMPRINTF ("start of dump");
+    }
   }
   du->du_itemset = mom_hashset_reserve (NULL, 100);
   du->du_itemque = mom_gc_alloc (sizeof (struct mom_queue_st));
@@ -1013,6 +1015,12 @@ mom_dump_state (void)
       if (tmpf)
         fclose (tmpf);
     }
+  if (access (MOM_MODULEDIR, F_OK)) {
+    if (mkdir (MOM_MODULEDIR, 0750)) {
+      MOM_FATAPRINTF("failed to make directory %s in %s (%m)",
+		     MOM_MODULEDIR, cwdbuf);
+    }
+  }
   if (!sameheaderfile)
     {
       (void) rename (MOM_HEADER_PREDEF, MOM_HEADER_PREDEF "%");
@@ -1032,15 +1040,20 @@ mom_dump_state (void)
                    mom_value_cstring ((const struct mom_hashedvalue_st *)
                                       mom_hashset_to_boxset
                                       (du->du_itemset)));
+  if (!mom_emit_header_code(MOM_PREDEFITM(header_module)))
+    MOM_FATAPRINTF("failed to emit header module");
+  else {
+    const char* cmd = "indent  " MOM_MODULEDIR "/momg_header_module.h -o _mom_header.h";
+    int errind = system(cmd);
+    if (errind)
+      MOM_FATAPRINTF("failed to run %s (%d)", cmd, errind);
+    MOM_INFORMPRINTF("emitted and generated _mom_header.h");
+  }
   if (mom_dont_make_after_dump)
     MOM_INFORMPRINTF ("don't run make after dump");
   else
     run_make_after_dump_mom ();
   {
-    char cwdbuf[MOM_PATH_MAX];
-    memset (cwdbuf, 0, sizeof (cwdbuf));
-    if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
-      strcpy (cwdbuf, "./");
     unsigned nbitems = du->du_itemset->cda_count;
     double endrealtime = mom_elapsed_real_time ();
     double endcputime = mom_process_cpu_time ();
