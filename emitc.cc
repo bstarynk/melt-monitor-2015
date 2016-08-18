@@ -1737,13 +1737,17 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 				    mom_item_cstring(insitm), rk,
 				    mom_item_cstring(blkitm),
 				    mom_vectvaldata_count(insitm->itm_pcomp));
+	MOM_DEBUGPRINTF(gencod, "scan_instr assign %s destexp %s",
+			mom_item_cstring(insitm),
+			mom_value_cstring(destexp));
 	if (!destexp)
 	  throw  MOM_RUNTIME_PRINTF("assign %s #%d in block %s of %s without `to`",
 				    mom_item_cstring(insitm), rk,
 				    mom_item_cstring(blkitm), mom_item_cstring(blkitm));
 	auto totypitm = scan_expr(destexp,insitm,0,nullptr,true);
-	MOM_DEBUGPRINTF(gencod, "scan_instr assign %s totypitm %s",
-			mom_item_cstring(insitm), mom_item_cstring(totypitm));
+	MOM_DEBUGPRINTF(gencod, "scan_instr assign %s totypitm %s fromexp %s",
+			mom_item_cstring(insitm), mom_item_cstring(totypitm),
+			mom_value_cstring(fromexp));
 	auto fromtypitm = fromexp?scan_expr(fromexp,insitm,0,totypitm):totypitm;
 	if (!fromtypitm)
 	  throw MOM_RUNTIME_PRINTF("assign %s #%d in block %s with untypable `from` %s",
@@ -2273,7 +2277,8 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s sigresult=%s",
 			mom_item_cstring(insitm), mom_value_cstring(retexpv),
 			mom_value_cstring(_ce_cursigdef.sig_result));
-	auto retypv = scan_expr(retexpv,insitm,0,mom_dyncast_item(_ce_cursigdef.sig_result));
+	auto curestypitm = mom_dyncast_item(_ce_cursigdef.sig_result);	
+	auto retypv = scan_expr(retexpv,insitm,0,curestypitm);
 	MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s retypv=%s",
 			mom_item_cstring(insitm), mom_value_cstring(retexpv),
 			mom_value_cstring(retypv));
@@ -2455,14 +2460,26 @@ MomEmitter::scan_node_expr(const struct mom_boxnode_st*expnod, struct mom_item_s
 	sztybind = get_binding(sztypitm);
 	if (!sztybind)
 	  {
+	    MOM_DEBUGPRINTF(gencod, "sizeof expr %s with fresh sztypitm %s",
+			    mom_value_cstring(expnod),
+			    mom_item_cstring(sztypitm));
 	    scan_type_item(sztypitm);
 	    sztybind = get_binding(sztypitm);
 	  }
+	assert (sztybind != nullptr);
+	MOM_DEBUGPRINTF(gencod, "sizeof expr %s sztypitm %s sztybind role %s what %s",
+			mom_value_cstring(expnod),
+			mom_item_cstring(sztypitm),
+			mom_item_cstring(sztybind->vd_rolitm),
+			mom_value_cstring(sztybind->vd_what));
 	if (!is_type_binding(sztybind))
 	  {
 	    badmsg = "non-type arg";
 	    goto badsizeof;
 	  }
+	MOM_DEBUGPRINTF(gencod, "sizeof expr %s typitm %s",
+			mom_value_cstring(expnod),
+			mom_item_cstring(typitm));
 	if (typitm && typitm != MOM_PREDEFITM(int))
 	  {
 	    badmsg = "ill typed";
@@ -3369,8 +3386,9 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
     auto sigr=scan_signature(sigitm,rtitm);
     _ce_cursigdef = sigr;
     auto formaltup = sigr.sig_formals;
-    MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s formaltup=%s",
-                    mom_item_cstring(rtitm), mom_value_cstring(formaltup));
+    auto restypv = sigr.sig_result;
+    MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s formaltup=%s restypv=%s",
+                    mom_item_cstring(rtitm), mom_value_cstring(formaltup), mom_value_cstring(restypv));
   }
   if (bdyitm == nullptr)
     throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));

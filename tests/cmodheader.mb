@@ -437,7 +437,7 @@
 ^global !signature_int_to_value (
   ^* descr signature
   ^* formals [ num0 ]
-  ^* result int
+  ^* result value
 )
 
 ^global !signature_int_to_bool (
@@ -1369,6 +1369,13 @@
   )
 )
 
+
+^global !locval (
+  ^* descr variable
+  ^* type value
+  ^*comment "locval variable"
+)
+       
 ^global !lockarg (
   ^* descr formal
   ^* type rwlock_t
@@ -1406,6 +1413,27 @@
                              lockarg ")")
 )
 
+^global !gc_alloc (
+  ^* descr primitive
+  ^* comment "primitive to allocate GC-ed memory"
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc*/ mom_gc_alloc(" num0 ")")
+)
+
+^global !gc_alloc_scalar (
+  ^* descr primitive
+  ^* comment "primitive to allocate GC-ed scalar memory"
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc_scalar*/ mom_gc_alloc_scalar(" num0
+  ")")
+)
+
+^global !gc_alloc_uncollectable (
+  ^* descr primitive
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc_uncollectable*/ mom_gc_alloc_uncollectable(" num0 ")")
+)
+
 ^global !cstring_t (
   ^* descr type
   ^* comment "type for constant c strings"
@@ -1416,6 +1444,68 @@
   ^* comment "argument for cname"
   ^* descr formal
   ^* type cstring_t
+)
+
+
+^global !int_make  (
+  ^* comment "inline function to make a boxed int"
+  ^* descr inline
+  ^* signature signature_int_to_value
+  ^* body  ^global ?int_make (
+       ^* comment "body of int_make"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+            ^* comment "cond on num0 for int_make"
+            ^* descr cond
+            ^* cond [
+              ^global ?test (
+                ^* descr test
+                ^* comment "test for small num0"
+                ^* test %small_int_prim(num0)
+                ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return tagged num0"
+                  ^* return %value(%plus (%mult (2 num0) 1))
+                )
+              )
+              ^global ?test (
+                ^* descr test
+                ^* comment "otherwise make boxed int"
+                ^* then ^global ?sequence (
+                  ^* descr sequence
+                  ^* locals [ locval ]
+                  ^* body [
+                    ^global ?assign (
+                      ^* descr assign
+                      ^* to locval
+                      ^* from %gc_alloc_scalar(%sizeof(boxint_ty))
+                    )
+                    ^global ?assign (
+                      ^* descr assign
+                      ^* comment "assign locval->va_itype ity_int"
+                      ^* to %get(locval va_itype)
+                      ^* from ity_int
+                    )
+                    ^global ?assign (
+                      ^* descr assign
+                      ^* comment "assign locval->box_int"
+                      ^* to %get(locval boxi_int)
+                      ^* from num0
+                    )
+                    ^global ?return (
+                      ^* comment "return locval"
+                      ^* descr return
+                      ^* return locval
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+       ]
+  )
 )
 
 
@@ -1434,6 +1524,7 @@
      int_val_def value_hash dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
+     int_make
    ]
 )
 
