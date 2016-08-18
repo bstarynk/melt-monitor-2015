@@ -4519,7 +4519,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               vecenurs.push_back(curxenuritm);
               auto curxenurbind = get_binding(curxenuritm);
               assert (curxenurbind != nullptr && curxenurbind->vd_rolitm == MOM_PREDEFITM(enumerator));
-              auto curxenurtree = declare_enumerator(curxenuritm, typitm, eix, preval, extenditm);
+              auto curxenurtree = declare_enumerator(curxenuritm, nullptr, eix, preval, extenditm);
               MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s eix#%d curxenuritm=%s curxenurtree=%s",
                               mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm),
                               mom_value_cstring(curxenurtree));
@@ -4533,6 +4533,25 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
           vectree.push_back(aftertree);
           MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s aftertree=%s",
                           mom_item_cstring(typitm), mom_value_cstring(aftertree));
+          for (int nix=0; nix<(int)mynbenur; nix++)
+            {
+              auto curenuritm = myenutup->seqitem[nix];
+              MOM_DEBUGPRINTF(gencod, "c-declare_type extenum typitm %s nix#%d curenuritm=%s",
+                              mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm));
+              if (curenuritm==nullptr)
+                throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
+              lock_item(curenuritm);
+              auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
+	      vecenurs.push_back(curenuritm);
+              MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s nix#%d curenuritm=%s enurtree=%s",
+                              mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
+                              mom_value_cstring(enurtree));
+              vectree.push_back(enurtree);
+            }
+	  auto xenurtup = mom_boxtuple_make_arr(vecenurs.size(), vecenurs.data());
+	  MOM_DEBUGPRINTF(gencod, "c-declare_type extendedenum typitm %s xenurtup=%s",
+			  mom_item_cstring(typitm), mom_value_cstring(xenurtup));
+	  bind_global_at(typitm, MOM_PREDEFITM(enum), xenurtup, __LINE__);
         }
       else   // enum without extension
         {
@@ -4550,6 +4569,9 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                               mom_value_cstring(enurtree));
               vectree.push_back(enurtree);
             }
+	  MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s myenutup=%s",
+			  mom_item_cstring(typitm), mom_value_cstring(myenutup));
+	  bind_global_at(typitm, MOM_PREDEFITM(enum), myenutup, __LINE__);
         }
       auto enumdecltree = //
         mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
