@@ -392,6 +392,18 @@
   ^* result value
 )
 
+^global !signature_value_int_to_value (
+  ^* descr signature
+  ^* formals [ val0 num0 ]
+  ^* result value
+)
+
+^global !signature_value_int_to_item (
+  ^* descr signature
+  ^* formals [ val0 num0 ]
+  ^* result item
+)
+
 
 ^item is_null (
   ^* descr primitive
@@ -535,6 +547,24 @@
   ^* signature signature_2ints_to_bool
   ^* c_expansion %code_chunk(
       "/*equal_int_prim*/ ((" num0 ") <= (" num1 "))" )
+)
+
+
+^global !greater_int_prim (
+  ^* comment "primitive to test greater than of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") > (" num1 "))" )
+)
+
+
+^global !greater_equal_int_prim (
+  ^* comment "primitive to test greater equal of 2 ints"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int_prim*/ ((" num0 ") >= (" num1 "))" )
 )
 
 
@@ -1509,6 +1539,75 @@
 )
 
 
+^global !seqitem_nth (
+  ^* comment "inline function to get the nth component in a sequence"
+  ^* descr inline
+  ^* signature signature_value_int_to_item
+  ^* body  ^global ?seqitem_nth (
+    ^* comment "body of seqitem_nth"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in seqitem_nth"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on seqitem"
+              ^* test %dyncast_seqitem(val0)
+              ^* then ^global ?sequence (
+                ^* descr sequence
+                ^* locals [ nloc ]
+                ^* body [
+                  ^global ?assign (
+                    ^* descr assign
+                    ^* comment "compute nloc <-> size(val0)"
+                    ^* to nloc
+                    ^* from %int(%get (val0 va_size))
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0<0"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %less_int_prim (num0 0)
+                        ^* then ^global ?assign (
+                          ^* descr assign
+                          ^* to num0
+                          ^* from %plus (nloc num0)
+                        )
+                      )
+                    ]
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0 >= 0 && num0 < nloc"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %and (%greater_equal_int_prim (num0 0)
+                                      %less_int_prim (num0 nloc))
+                        ^* then ^global ?return (
+                          ^* descr return
+                          ^* return %at(val0 seqitem num0)
+                        )
+                      )
+                    ]
+                  )
+                ]
+              )
+            )
+          ]
+        )
+        ^global ?return (
+          ^* descr return
+          ^* comment "return nil"
+        )
+    ]
+  )
+)
+
 ^global header_module (
    ^* comment "our header_module"
    ^* descr module
@@ -1525,6 +1624,7 @@
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
      int_make
+     seqitem_nth
    ]
 )
 

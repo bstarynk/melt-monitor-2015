@@ -5434,18 +5434,30 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 	assert (is_locked_item(flditm));
 	auto fldbind = get_binding(flditm);
 	assert (fldbind != nullptr && fldbind->vd_rolitm == MOM_PREDEFITM(field));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr at flditm %s role %s what %s detail %s",
+			mom_item_cstring(flditm),
+			mom_item_cstring(fldbind->vd_rolitm),
+			mom_value_cstring(fldbind->vd_what),
+			mom_value_cstring(fldbind->vd_detail));
+	auto intypitm = mom_dyncast_item(fldbind->vd_what);
+	auto fldtypv = (fldbind->vd_detail);
+	assert (fldtypv != nullptr);
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr at flditm %s ptrexpv %s fldtypv %s intypitm=%s",
+			mom_item_cstring(flditm), mom_value_cstring(ptrexpv),
+			mom_value_cstring(fldtypv), mom_item_cstring(intypitm));
 	auto ptrtree = transform_expr(ptrexpv, initm);
-	auto fldtypitm = mom_dyncast_item(fldbind->vd_detail);
-	assert (fldtypitm != nullptr);
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr at flditm %s ptrexpv %s ptrtree %s",
+			mom_item_cstring(flditm), mom_value_cstring(ptrexpv),
+			mom_value_cstring(ptrtree));
 	auto indextree = transform_expr(indexpv, initm);
-	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr at flditm=%s fldtypitm=%s indextree=%s",
-			mom_item_cstring(flditm), mom_item_cstring(fldtypitm),
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr at flditm=%s fldtypv=%s indextree=%s",
+			mom_item_cstring(flditm), mom_value_cstring(fldtypv),
 			mom_value_cstring(indextree));
 	auto restree = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
 						 literal_string("(/*at*/"),
 						 literal_string("(("),
 						 literal_string(CTYPE_PREFIX),
-						 fldtypitm,
+						 intypitm,
 						 literal_string("*)"),
 						 literal_string("("),
 						 ptrtree,
