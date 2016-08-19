@@ -6496,8 +6496,9 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
     case CASE_INSTROLE_MOM(cond):
       {
 	MOM_DEBUGPRINTF(gencod,
-			"c-transform_instruction cond insitm=%s whatv=%s",
-			mom_item_cstring(insitm), mom_value_cstring(whatv));
+			"c-transform_instruction cond insitm:=%s\n... whatv=%s",
+			mom_item_content_cstring(insitm),
+			mom_value_cstring(whatv));
 	auto condtup = mom_dyncast_tuple(whatv);
 	assert (condtup != nullptr);
 	unsigned nbcond = mom_size(condtup);
@@ -6546,12 +6547,34 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 	      }
 	    else
 	      {
-		iftree =
-		  mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-				      mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
-				      mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("lastest:"), curconditm),
-				      literal_string ("else")
-				      );
+		MOM_DEBUGPRINTF(gencod,
+				"c-transform_instruction cond insitm=%s cix#%d lastestexpv=%s curconditm=%s thenitm=%s",
+				mom_item_cstring(insitm), cix,
+				mom_value_cstring(testexpv),
+				mom_item_cstring(curconditm),
+				mom_item_cstring(thenitm));
+		if (testexpv == nullptr || testexpv == (momvalue_t)MOM_PREDEFITM(unit) || testexpv == (momvalue_t)MOM_PREDEFITM(truth)) {
+		  iftree =
+		    mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+					mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+					mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("lastunitest:"), curconditm),
+					literal_string ("else")
+					);
+		}
+		else {
+		  auto latestree = transform_expr(testexpv, insitm);
+		  MOM_DEBUGPRINTF(gencod,
+				  "c-transform_expr cond insitm=%s cix#%d latestree= %s",
+				  mom_item_cstring(insitm), cix, latestree);
+		  iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),7,
+						mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+						mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("latest:"), curconditm),
+						mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+						(cix==0)?(literal_string("if ")):literal_string("else if "),
+						literal_string("("),
+						latestree,
+						literal_string(")"));
+		}
 	      }
 	    MOM_DEBUGPRINTF(gencod,
 			    "c-transform_instruction cond insitm=%s cix#%d iftree=%s",

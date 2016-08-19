@@ -134,4 +134,8 @@ testbty: monimelt global.mom  tests/cmodbty.mb
 testheader: monimelt global.mom  tests/cmodheader.mb
 	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodheader.mb --test-arg header_module --test-run emith
 	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
 
