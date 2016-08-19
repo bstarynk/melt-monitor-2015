@@ -5393,8 +5393,13 @@ MomCEmitter::transform_node_expr(const struct mom_boxnode_st* expnod, struct mom
 	assert (is_locked_item(flditm));
 	auto fldbind = get_binding(flditm);
 	assert (fldbind != nullptr && fldbind->vd_rolitm == MOM_PREDEFITM(field));
+	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr get flditm=%s role %s what %s detail %s",
+			mom_item_cstring(flditm),
+			mom_item_cstring(fldbind->vd_rolitm),
+			mom_value_cstring(fldbind->vd_what),
+			mom_value_cstring(fldbind->vd_detail));
 	auto ptrtree = transform_expr(ptrexpv, initm);
-	auto fldtypitm = mom_dyncast_item(fldbind->vd_detail);
+	auto fldtypitm = mom_dyncast_item(fldbind->vd_what);
 	assert (fldtypitm != nullptr);
 	MOM_DEBUGPRINTF(gencod, "c-transform_node_expr get flditm=%s fldtypitm=%s",
 			mom_item_cstring(flditm), mom_item_cstring(fldtypitm));
