@@ -21,7 +21,7 @@
 
 
 *ada_ents
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -49,7 +49,7 @@ comment
 
 
 *anyvalue_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -130,8 +130,69 @@ comment
 
 
 
-*assign__3bHcV4ubY176wT
-1471588133
+*assign__2G4j4rV09JnjcI
+1471638455
+^mtime
+(
+comment
+"assign locval->box_int"_
+descr
+assign
+from
+num0
+to
+(
+locval
+boxi_int
+get
+)node
+)attrs
+
+
+
+*assign__33aXCU5A0ckTS4
+1471638455
+^mtime
+(
+descr
+assign
+from
+(
+nloc
+num0
+plus
+)node
+to
+num0
+)attrs
+
+
+
+*assign__3ot3bB70nVnN2E
+1471638455
+^mtime
+(
+comment
+"compute nloc <-> size(val0)"_
+descr
+assign
+from
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+to
+nloc
+)attrs
+
+
+
+*assign__5cFCWI8hPXmLRr
+1471638455
 ^mtime
 (
 descr
@@ -150,27 +211,8 @@ locval
 
 
 
-*assign__60rmPVScwn1e0l
-1471588133
-^mtime
-(
-comment
-"get type of val0 into typ0loc"_
-descr
-assign
-from
-(
-val0
-itype
-)node
-to
-typ0loc
-)attrs
-
-
-
-*assign__68HrJqtgeX4ecD
-1471588133
+*assign__5Br1xMT7I90sfW
+1471638455
 ^mtime
 (
 comment
@@ -192,22 +234,21 @@ get
 
 
 
-*assign__8mblxjbMPFy0jj
-1471588133
+*assign__7fNMq3ZDFXcnMu
+1471638455
 ^mtime
 (
 comment
-"assign locval->box_int"_
+"get type of val0 into typ0loc"_
 descr
 assign
 from
-num0
-to
 (
-locval
-boxi_int
-get
+val0
+itype
 )node
+to
+typ0loc
 )attrs
 
 
@@ -223,7 +264,7 @@ comment
 
 
 *assovaldata_ty
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -240,6 +281,7 @@ struct
 
 
 
+
 *at
 1464845393
 ^mtime
@@ -251,7 +293,7 @@ comment
 
 
 *atomic_int16_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -261,7 +303,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -296,7 +337,7 @@ comment
 
 
 *bool
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -310,7 +351,7 @@ type
 
 
 *boxd_dbl
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -324,7 +365,7 @@ double
 
 
 *boxdouble_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -344,7 +385,7 @@ struct
 
 
 *boxi_int
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -358,7 +399,7 @@ int
 
 
 *boxint_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -378,7 +419,7 @@ struct
 
 
 *boxs_cstr
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -395,7 +436,7 @@ flexible_array
 
 
 *boxset_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -414,7 +455,7 @@ struct
 
 
 *boxstring_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -434,7 +475,7 @@ struct
 
 
 *boxtuple_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -472,6 +513,7 @@ comment
 
 
 
+
 *break
 1465304130
 ^mtime
@@ -489,7 +531,6 @@ comment
 comment
 "give C code"_
 )attrs
-
 
 
 
@@ -524,7 +565,7 @@ comment
 
 
 *cast_pointer_to_int_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -545,7 +586,7 @@ signature_value_to_int
 
 
 *cda_count
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -559,7 +600,7 @@ uint32_t
 
 
 *char
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -642,106 +683,18 @@ comment
 
 
 
-*cond__1bJuFVsMN0YqjD
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_int"_
-cond
-(
-test__0izW1AP4egUy4p
-test__43mAM0JwD71PVd
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__1rN0RLSKyYffBP
-1471588133
-^mtime
-(
-comment
-"cond on num0 for int_make"_
-cond
-(
-test__7qqtfeiX3vYwS7
-test__7Nhxje4DdXqi8m
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__1GszmNXnc3pBMc
-1471588133
-^mtime
-(
-comment
-"cond on typ0loc for value_hash"_
-cond
-(
-test__6rr7yM82pijApC
-test__3nUBYxaRF5lJVM
-test__83uTiDD5BaANpZ
-test__3KpffHjcZH4u8x
-)tuple
-descr
-cond
-)attrs
-
-
-
-
-*cond__1LMyIXm4KKLtgC
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_boxstring"_
-cond
-(
-test__4k8d1Hd8GuX5yg
-test__0n26p94c6D5Zjr
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__2eKhxUTpGX36Yz
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_node"_
-cond
-(
-test__4SajjvIR9lBTA6
-test__0JNq2PP6IMZeSY
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__2rd4l9jLwLdqmJ
-1471588133
+*cond__0GACL0nCUAo1Ne
+1471638455
 ^mtime
 (
 comment
 "cond in itype"_
 cond
 (
-test__90NrFeVPdBXKYw
-test__39tp448fzBrPtJ
-test__8rzrHS2Sr2Fw3I
-test__92caHTKcg9hhpF
+test__0liYe8YykXBrWb
+test__49Ey3Yk0putI62
+test__4zEy98m08TADW1
+test__4uYHPy0I1zxzPg
 )tuple
 descr
 cond
@@ -749,16 +702,82 @@ cond
 
 
 
-*cond__37AVtHCT9UTvs0
-1471588133
+
+*cond__1YEEitzucqldLX
+1471638455
+^mtime
+(
+comment
+"test num0<0"_
+cond
+(
+test__6rZKVneZJcaLg4
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__2Z8K4sXT5RC341
+1471638455
+^mtime
+(
+comment
+"cond on val0 in seqitem_nth"_
+cond
+(
+test__0Sa8YKx7k90vFy
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__3bD9LGHVF2u0H2
+1471638455
+^mtime
+(
+cond
+(
+test__93jlC1m6mzUN6q
+test__0JsdHo6raURNLT
+test__4qBFT2X1gshppK
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__3U61YU8PT1uLcK
+1471638455
+^mtime
+(
+comment
+"cond on num0 for int_make"_
+cond
+(
+test__5bnCLKyvPNvcsR
+test__7NnjLVhYH4YIEP
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__43CLvppIj0AY1k
+1471638455
 ^mtime
 (
 comment
 "cond on val0 for dyncast_boxdouble"_
 cond
 (
-test__4fka7wrFeqycXH
-test__8yJl1aUE8fy5Td
+test__4ZiGh1AjxV4jjv
+test__3jGZ3AJpJWbLqu
 )tuple
 descr
 cond
@@ -766,18 +785,18 @@ cond
 
 
 
-*cond__3lz37gG3xneXey
-1471588133
+*cond__4ycCRe9jL7Rtrn
+1471638455
 ^mtime
 (
 comment
-"cond for nil or empty slot or int in valid_value_pointer"_
+"cond on typ0loc for value_hash"_
 cond
 (
-test__5n9FXKnzbhj8Sc
-test__76KKuh5apmaWMz
-test__4TL6GtHZZj21qd
-test__4PXiICkbgA1Pnw
+test__3UnhsCA7SUAZUt
+test__0pWd9D47LXAZDA
+test__7B6aN7xzxIsYGA
+test__2BrqtzzpAjTrJF
 )tuple
 descr
 cond
@@ -785,87 +804,16 @@ cond
 
 
 
-*cond__3qm8v6tSAButII
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_set"_
-cond
-(
-test__7BmUaopVMT3Nvz
-test__7G46aSBpTKFltn
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__41clSJcEAl4ggr
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_tuple"_
-cond
-(
-test__2aGqgT1ihFeL7n
-test__2KqGT4yNwrpu0I
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__4qxXWN4V8FUx2C
-1471588133
-^mtime
-(
-comment
-"cond on val0 for dyncast_seqitem"_
-cond
-(
-test__0fRouJFxAzUFie
-test__5dfLvMwcfwz4J9
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__4JBemPM9dowJ2z
-1471588133
-^mtime
-(
-comment
-"cond in int_val_def"_
-cond
-(
-test__11KVJEGaJiixSm
-test__0kKmCFchU5if1H
-test__1lJa8nhU6lcyJS
-test__8KwYL7YV7fhlnE
-test__1g54nWJyFfneDB
-)tuple
-descr
-cond
-)attrs
-
-
-
-*cond__6hgqkDL55vkuRx
-1471588133
+*cond__5m49oytX2m75A4
+1471638455
 ^mtime
 (
 comment
 "cond on val0 for dyncast_item"_
 cond
 (
-test__1ttp5c6M296ABu
-test__3c3limevrH8jlc
+test__1bknMBo2oEq7NL
+test__6sI8VtYkIcKoDh
 )tuple
 descr
 cond
@@ -873,19 +821,161 @@ cond
 
 
 
-*cond__7CsZ4jbV6LRGm3
-1471588133
+*cond__5nI0EE0IjwHR6u
+1471638455
 ^mtime
 (
+comment
+"cond on val0 for dyncast_int"_
 cond
 (
-test__85YbYClNRDdAtl
-test__461tKL4sl8iZbT
-test__6UFTcIj4pTudj4
+test__36yV4E2bL0oLR3
+test__6vgJhCjCClXkqC
 )tuple
 descr
 cond
 )attrs
+
+
+
+*cond__5TUme4u8Dl1dCE
+1471638455
+^mtime
+(
+comment
+"cond on val0 for dyncast_node"_
+cond
+(
+test__4Rkdw4afF8etSp
+test__0iFzqdYKjLJiwM
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__6ijgNm8dZM8jmR
+1471638455
+^mtime
+(
+comment
+"cond on val0 for dyncast_boxstring"_
+cond
+(
+test__2c6TpALyMKahEG
+test__6ixMupJ8eBkwVw
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__6NZEmKT6uGjCxx
+1471638455
+^mtime
+(
+comment
+"test num0 >= 0 && num0 < nloc"_
+cond
+(
+test__1bHvsDGewAs1xD
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__6Rzerp0GrZlHGs
+1471638455
+^mtime
+(
+comment
+"cond on val0 for dyncast_set"_
+cond
+(
+test__0Xz79U0AA4t3Ic
+test__6zvWyzoyWcuz4F
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__7mu2mYzsGkMTeH
+1471638455
+^mtime
+(
+comment
+"cond for nil or empty slot or int in valid_value_pointer"_
+cond
+(
+test__6hl9b1lhJzHLVh
+test__1MwjJhMFVF5V7P
+test__41j3eojFCh5zhu
+test__0lD7PaTvkX9ZK1
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__8deKjL0VXsIdwK
+1471638455
+^mtime
+(
+comment
+"cond in int_val_def"_
+cond
+(
+test__03GazxE5CNhiq7
+test__2XvZz2NYur3AxV
+test__6dhdACJ3CDqHSK
+test__1XJJgeEkmHtl4G
+test__4qtdJBc3nMTI8l
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__91fWd5RL8cJZcU
+1471638455
+^mtime
+(
+comment
+"cond on val0 for dyncast_seqitem"_
+cond
+(
+test__21Fmiq6KHcf4ci
+test__8TZ87d9iEgwMZu
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__951q7MTTLHzd1R
+1471638455
+^mtime
+(
+comment
+"cond on val0 for dyncast_tuple"_
+cond
+(
+test__7qL72bETZ31MrE
+test__11YhJHC63u7txf
+)tuple
+descr
+cond
+)attrs
+
 
 
 
@@ -920,7 +1010,7 @@ comment
 
 
 *countedata_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -946,7 +1036,6 @@ struct
 comment
 "for raw data"_
 )attrs
-
 
 
 
@@ -1060,6 +1149,7 @@ comment
 
 
 
+
 *dive
 1458107663
 ^mtime
@@ -1092,11 +1182,11 @@ is_scalar
 
 
 *dyncast_boxdouble
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_boxdouble__2M9rw9eLyR4Man
+dyncast_boxdouble__2G4YZRMsX3aScK
 comment
 "inline function to dynamic-cast a boxed double"_
 descr
@@ -1107,13 +1197,13 @@ signature_value_to_value
 
 
 
-*dyncast_boxdouble__2M9rw9eLyR4Man
-1471588133
+*dyncast_boxdouble__2G4YZRMsX3aScK
+1471638455
 ^mtime
 (
 body
 (
-cond__37AVtHCT9UTvs0
+cond__43CLvppIj0AY1k
 )tuple
 comment
 "body of dyncast_boxdouble"_
@@ -1124,11 +1214,11 @@ sequence
 
 
 *dyncast_boxstring
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_boxstring__55pap04ih8WpIZ
+dyncast_boxstring__0Lvftz4X7T4f9a
 comment
 "inline function to dynamic-cast a boxed string"_
 descr
@@ -1139,14 +1229,13 @@ signature_value_to_value
 
 
 
-
-*dyncast_boxstring__55pap04ih8WpIZ
-1471588133
+*dyncast_boxstring__0Lvftz4X7T4f9a
+1471638455
 ^mtime
 (
 body
 (
-cond__1LMyIXm4KKLtgC
+cond__6ijgNm8dZM8jmR
 )tuple
 comment
 "body of dyncast_boxstring"_
@@ -1157,11 +1246,11 @@ sequence
 
 
 *dyncast_int
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_int__1tRRNbzeHI7hn7
+dyncast_int__4D96VPaj8eim9n
 comment
 "inline function to dynamic-cast an int"_
 descr
@@ -1172,13 +1261,13 @@ signature_value_to_value
 
 
 
-*dyncast_int__1tRRNbzeHI7hn7
-1471588133
+*dyncast_int__4D96VPaj8eim9n
+1471638455
 ^mtime
 (
 body
 (
-cond__1bJuFVsMN0YqjD
+cond__5nI0EE0IjwHR6u
 )tuple
 comment
 "body of dyncast_int"_
@@ -1189,11 +1278,11 @@ sequence
 
 
 *dyncast_item
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_item__1eaelJSCtGAfv5
+dyncast_item__2ZyBbdWWAXnjcH
 comment
 "inline function to dynamic-cast an item"_
 descr
@@ -1204,13 +1293,13 @@ signature_value_to_value
 
 
 
-*dyncast_item__1eaelJSCtGAfv5
-1471588133
+*dyncast_item__2ZyBbdWWAXnjcH
+1471638455
 ^mtime
 (
 body
 (
-cond__6hgqkDL55vkuRx
+cond__5m49oytX2m75A4
 )tuple
 comment
 "body of dyncast_item"_
@@ -1221,11 +1310,11 @@ sequence
 
 
 *dyncast_node
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_node__8nb8715JlSCDtk
+dyncast_node__68V8kfxgZfCJSl
 comment
 "inline function to dynamic-cast a node"_
 descr
@@ -1236,13 +1325,13 @@ signature_value_to_value
 
 
 
-*dyncast_node__8nb8715JlSCDtk
-1471588133
+*dyncast_node__68V8kfxgZfCJSl
+1471638455
 ^mtime
 (
 body
 (
-cond__2eKhxUTpGX36Yz
+cond__5TUme4u8Dl1dCE
 )tuple
 comment
 "body of dyncast_node"_
@@ -1253,11 +1342,11 @@ sequence
 
 
 *dyncast_seqitem
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_seqitem__1KaKiV0Njc0SwU
+dyncast_seqitem__7JrfVnlafuUuSm
 comment
 "inline function to dynamic-cast a sequence"_
 descr
@@ -1268,13 +1357,13 @@ signature_value_to_value
 
 
 
-*dyncast_seqitem__1KaKiV0Njc0SwU
-1471588133
+*dyncast_seqitem__7JrfVnlafuUuSm
+1471638455
 ^mtime
 (
 body
 (
-cond__4qxXWN4V8FUx2C
+cond__91fWd5RL8cJZcU
 )tuple
 comment
 "body of dyncast_seqitem"_
@@ -1285,11 +1374,11 @@ sequence
 
 
 *dyncast_set
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_set__05TUJ8Df6kGnhm
+dyncast_set__5nF5qWTtUtzH8K
 comment
 "inline function to dynamic-cast a set"_
 descr
@@ -1300,13 +1389,13 @@ signature_value_to_value
 
 
 
-*dyncast_set__05TUJ8Df6kGnhm
-1471588133
+*dyncast_set__5nF5qWTtUtzH8K
+1471638455
 ^mtime
 (
 body
 (
-cond__3qm8v6tSAButII
+cond__6Rzerp0GrZlHGs
 )tuple
 comment
 "body of dyncast_set"_
@@ -1316,12 +1405,13 @@ sequence
 
 
 
+
 *dyncast_tuple
-1471588133
+1471638455
 ^mtime
 (
 body
-dyncast_tuple__3JonKT8iwrk8lp
+dyncast_tuple__6Lz56XmCYkjDbw
 comment
 "inline function to dynamic-cast a tuple"_
 descr
@@ -1332,13 +1422,13 @@ signature_value_to_value
 
 
 
-*dyncast_tuple__3JonKT8iwrk8lp
-1471588133
+*dyncast_tuple__6Lz56XmCYkjDbw
+1471638455
 ^mtime
 (
 body
 (
-cond__41clSJcEAl4ggr
+cond__951q7MTTLHzd1R
 )tuple
 comment
 "body of dyncast_tuple"_
@@ -1359,7 +1449,7 @@ comment
 
 
 *empty_slot_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -1387,7 +1477,6 @@ comment
 
 
 
-
 *enumerator
 1468139992
 ^mtime
@@ -1409,7 +1498,7 @@ comment
 
 
 *equal_int_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -1482,7 +1571,7 @@ comment
 
 
 *flag0
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1512,6 +1601,7 @@ comment
 comment
 "for flatten_set-s"_
 )attrs
+
 
 
 
@@ -1562,7 +1652,6 @@ comment
 comment
 "primitive for fold left with index (nodefun,inival,compval)"_
 )attrs
-
 
 
 
@@ -1617,7 +1706,7 @@ comment
 
 
 *gc_alloc_scalar
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -1667,6 +1756,29 @@ comment
 
 
 
+*greater_equal_int_prim
+1471638455
+^mtime
+(
+c_expansion
+(
+"/*equal_int_prim*/ (("_
+num0
+") >= ("_
+num1
+"))"_
+code_chunk
+)node
+comment
+"primitive to test greater equal of 2 ints"_
+descr
+primitive
+signature
+signature_2ints_to_bool
+)attrs
+
+
+
 *greater_or_equal
 1457365666
 ^mtime
@@ -1674,6 +1786,7 @@ comment
 comment
 "test for greater or equal of two values"_
 )attrs
+
 
 
 
@@ -1688,7 +1801,7 @@ comment
 
 
 *hash_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -1712,7 +1825,7 @@ comment
 
 
 *hashedvalue_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1751,9 +1864,8 @@ comment
 
 
 
-
 *header_module
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1795,13 +1907,14 @@ dyncast_set
 dyncast_node
 dyncast_item
 int_make
+seqitem_nth
 )tuple
 )attrs
 
 
 
 *hva_hash
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1829,7 +1942,7 @@ parenthesis
 
 
 *ient_item
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1843,7 +1956,7 @@ item
 
 
 *ient_value
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -1917,12 +2030,13 @@ is_scalar
 
 
 
+
 *int_make
-1471588133
+1471638455
 ^mtime
 (
 body
-int_make__6sGvh3LgWxkSxf
+int_make__8AtttY24fI5ubn
 comment
 "inline function to make a boxed int"_
 descr
@@ -1933,13 +2047,13 @@ signature_int_to_value
 
 
 
-*int_make__6sGvh3LgWxkSxf
-1471588133
+*int_make__8AtttY24fI5ubn
+1471638455
 ^mtime
 (
 body
 (
-cond__1rN0RLSKyYffBP
+cond__3U61YU8PT1uLcK
 )tuple
 comment
 "body of int_make"_
@@ -1950,11 +2064,11 @@ sequence
 
 
 *int_val_def
-1471588133
+1471638455
 ^mtime
 (
 body
-int_val_def__4F8D7JpJroxAWo
+int_val_def__7MvK2wtkprmW0K
 comment
 "inline function giving integer value or default"_
 descr
@@ -1965,13 +2079,13 @@ signature_value_int_to_int
 
 
 
-*int_val_def__4F8D7JpJroxAWo
-1471588133
+*int_val_def__7MvK2wtkprmW0K
+1471638455
 ^mtime
 (
 body
 (
-cond__4JBemPM9dowJ2z
+cond__8deKjL0VXsIdwK
 )tuple
 comment
 "body of int_val_def"_
@@ -1998,7 +2112,6 @@ comment
 comment
 "test if argument is a closure"_
 )attrs
-
 
 
 
@@ -2045,7 +2158,7 @@ comment
 
 
 *is_null
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -2122,6 +2235,7 @@ comment
 
 
 
+
 *is_tuple
 1457361164
 ^mtime
@@ -2165,7 +2279,7 @@ comment
 
 
 *item_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2193,7 +2307,7 @@ struct
 
 
 *itementry_tu
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2221,7 +2335,6 @@ comment
 
 
 
-
 *iterix
 1457079401
 ^mtime
@@ -2233,7 +2346,7 @@ comment
 
 
 *itm0
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2247,7 +2360,7 @@ item
 
 
 *itm_hid
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2261,7 +2374,7 @@ uint32_t
 
 
 *itm_lid
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2275,7 +2388,7 @@ uint64_t
 
 
 *itm_mtime
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2289,7 +2402,7 @@ time_t
 
 
 *itm_mtx
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2303,7 +2416,7 @@ mutex_t
 
 
 *itm_namix
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2317,7 +2430,7 @@ uint32_t
 
 
 *itm_pattr
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2334,7 +2447,7 @@ pointer
 
 
 *itm_payldata
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2348,7 +2461,7 @@ payload_t
 
 
 *itm_paylkind
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2361,8 +2474,9 @@ item
 
 
 
+
 *itm_pcomp
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2379,7 +2493,7 @@ pointer
 
 
 *ity_double
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2393,7 +2507,7 @@ double
 
 
 *ity_int
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2407,7 +2521,7 @@ int
 
 
 *ity_item
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2421,7 +2535,7 @@ item
 
 
 *ity_node
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2435,7 +2549,7 @@ node
 
 
 *ity_none
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2446,9 +2560,8 @@ enumerator
 
 
 
-
 *ity_set
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2462,7 +2575,7 @@ set
 
 
 *ity_string
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2476,7 +2589,7 @@ string
 
 
 *ity_tuple
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2490,11 +2603,11 @@ tuple
 
 
 *itype
-1471588133
+1471638455
 ^mtime
 (
 body
-itype__0r1Afslh3NLEWW
+itype__4ng6DLaXempkJG
 comment
 "inline function testing validity of value pointer"_
 descr
@@ -2505,13 +2618,13 @@ signature_value_to_itype_en
 
 
 
-*itype__0r1Afslh3NLEWW
-1471588133
+*itype__4ng6DLaXempkJG
+1471638455
 ^mtime
 (
 body
 (
-cond__2rd4l9jLwLdqmJ
+cond__0GACL0nCUAo1Ne
 )tuple
 comment
 "body of itype"_
@@ -2522,7 +2635,7 @@ sequence
 
 
 *itype_en
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2577,7 +2690,7 @@ comment
 
 
 *less_equal_int_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -2591,6 +2704,30 @@ code_chunk
 )node
 comment
 "primitive to test less equal of 2 ints"_
+descr
+primitive
+signature
+signature_2ints_to_bool
+)attrs
+
+
+
+
+*less_int_prim
+1471638455
+^mtime
+(
+c_expansion
+(
+"/*equal_int_prim*/ (("_
+num0
+") < ("_
+num1
+"))"_
+code_chunk
+)node
+comment
+"primitive to test less than of 2 ints"_
 descr
 primitive
 signature
@@ -2640,7 +2777,7 @@ comment
 
 
 *locval
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2663,7 +2800,6 @@ comment
 
 
 
-
 *main_module
 1458208784
 ^mtime
@@ -2675,11 +2811,11 @@ comment
 
 
 *make_item
-1471588133
+1471638455
 ^mtime
 (
 body
-make_item__6Srm3DpfmPAHAV
+make_item__0rxD1pbHAH7XVA
 comment
 "make an item in some space"_
 descr
@@ -2690,8 +2826,8 @@ signature_space_to_item
 
 
 
-*make_item__6Srm3DpfmPAHAV
-1471588133
+*make_item__0rxD1pbHAH7XVA
+1471638455
 ^mtime
 (
 body
@@ -2754,7 +2890,7 @@ comment
 
 
 *mutex_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -2767,12 +2903,25 @@ type
 
 
 
+
 *name
 1452697324
 ^mtime
 (
 comment
 "for unknown names"_
+)attrs
+
+
+
+*nloc
+1471638455
+^mtime
+(
+descr
+variable
+type
+int
 )attrs
 
 
@@ -2788,7 +2937,7 @@ comment
 
 
 *nod_connitm
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2802,7 +2951,7 @@ item
 
 
 *nod_metaitem
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2816,7 +2965,7 @@ item
 
 
 *nod_metarank
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2830,7 +2979,7 @@ int
 
 
 *nod_sons
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2861,7 +3010,6 @@ node_connective
 node_nth
 )set
 )attrs
-
 
 
 
@@ -2896,7 +3044,7 @@ comment
 
 
 *node_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2941,7 +3089,7 @@ is_null
 
 
 *not_bool_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -2967,8 +3115,9 @@ signature_bool_to_bool
 
 
 
+
 *num0
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -2982,7 +3131,7 @@ int
 
 
 *num1
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -3052,7 +3201,6 @@ comment
 comment
 "for output of item content"_
 )attrs
-
 
 
 
@@ -3133,6 +3281,7 @@ comment
 comment
 "give the indentation of some output"_
 )attrs
+
 
 
 
@@ -3222,7 +3371,6 @@ out_puts
 comment
 "attribute giving parent"_
 )attrs
-
 
 
 
@@ -3317,6 +3465,7 @@ comment
 
 
 
+
 *payl_file
 1457031403
 ^mtime
@@ -3402,7 +3551,6 @@ comment
 comment
 "put in an hashassoc item"_
 )attrs
-
 
 
 
@@ -3494,6 +3642,7 @@ comment
 
 
 
+
 *payl_hashset
 1456841456
 ^mtime
@@ -3582,7 +3731,6 @@ comment
 
 
 
-
 *payl_queue
 1457031308
 ^mtime
@@ -3660,6 +3808,7 @@ comment
 comment
 "reserve in a vector of values"_
 )attrs
+
 
 
 
@@ -3763,7 +3912,7 @@ comment
 
 
 *payload_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -3783,7 +3932,6 @@ type
 comment
 "for persistent item-making expressions"_
 )attrs
-
 
 
 
@@ -3867,6 +4015,7 @@ comment
 
 
 
+
 *raw
 1452095862
 ^mtime
@@ -3907,144 +4056,51 @@ comment
 
 
 
-*return__063c3VNJD9nAGM
-1471588133
+*return__08jk3csRqozFeF
+1471638455
 ^mtime
 (
 comment
-"return false when nil value"_
-descr
-return
-)attrs
-
-
-
-*return__10rT5yTMp3uyxS
-1471588133
-^mtime
-(
-comment
-"return num1 when empty slot"_
-descr
-return
-return
-num1
-)attrs
-
-
-
-*return__1hXauiTKDM1z6E
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-*return__1kuCAbqZ3W4xNp
-1471588133
-^mtime
-(
-comment
-"return num1 when nil value"_
-descr
-return
-return
-num1
-)attrs
-
-
-
-
-*return__1oUXDyALeRZHwN
-1471588133
-^mtime
-(
-comment
-"return false when invalid itm0"_
-descr
-return
-)attrs
-
-
-
-*return__1pM0yrUs8U8kIK
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-*return__1HckptAJryAXLW
-1471588133
-^mtime
-(
-comment
-"return ity_none when nil value"_
-descr
-return
-return
-ity_none
-)attrs
-
-
-
-*return__1Pt4EN48dZ1Hcg
-1471588133
-^mtime
-(
-comment
-"return locval"_
-descr
-return
-return
-locval
-)attrs
-
-
-
-*return__1RhJsTGU7ycrY0
-1471588133
-^mtime
-(
-comment
-"return boxi_int for boxedints"_
+"return 0"_
 descr
 return
 return
 (
-val0
-boxi_int
+0_
+hash_t
 )node
 )attrs
 
 
 
-*return__1VNoliAUAqGne7
-1471588133
+*return__0eqSq1LPILipwG
+1471638455
 ^mtime
 (
 comment
-"return ity_none when empty slot"_
+"return otherwise truth"_
 descr
 return
 return
-ity_none
+truth
 )attrs
 
 
 
-*return__2aXf2WxA6YoFcj
-1471588133
+*return__0lt4YpdcjHxE0B
+1471638455
+^mtime
+(
+comment
+"return false when odd address"_
+descr
+return
+)attrs
+
+
+
+*return__0stswyEvr27lTR
+1471638455
 ^mtime
 (
 comment
@@ -4055,8 +4111,75 @@ return
 
 
 
-*return__2fLZpbuAm1epbz
-1471588133
+*return__0t9E2vEgXaXfMj
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__0Ati9uifecSsyU
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__0CYZX1s1s5AiDr
+1471638455
+^mtime
+(
+comment
+"return num1 otherwise"_
+descr
+return
+return
+num1
+)attrs
+
+
+
+*return__17Jvv4XDPEAfF2
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__1tuIItyciCDtWp
+1471638455
+^mtime
+(
+descr
+return
+return
+(
+val0
+seqitem
+num0
+at
+)node
+)attrs
+
+
+
+*return__1zsS7KgcGsn7ct
+1471638455
 ^mtime
 (
 comment
@@ -4069,8 +4192,35 @@ val0
 
 
 
-*return__2hqGvZjde3XtDM
-1471588133
+*return__1AjHVKbIVH2FEN
+1471638455
+^mtime
+(
+comment
+"return false when nil value"_
+descr
+return
+)attrs
+
+
+
+*return__1I5LGv3zGHRe9L
+1471638455
+^mtime
+(
+comment
+"return val0"_
+descr
+return
+return
+val0
+)attrs
+
+
+
+
+*return__1Yq5aqGGViqTD3
+1471638455
 ^mtime
 (
 comment
@@ -4093,46 +4243,8 @@ hash_t
 
 
 
-*return__3c5bgCrMJAK2kD
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-*return__3gef3UtNpAsavz
-1471588133
-^mtime
-(
-comment
-"return otherwise truth"_
-descr
-return
-return
-truth
-)attrs
-
-
-
-*return__3wnBRd9rsKowTp
-1471588133
-^mtime
-(
-comment
-"return false when odd address"_
-descr
-return
-)attrs
-
-
-
-*return__3yc2bor9FMSPdg
-1471588133
+*return__1YvSfGfz2JV88I
+1471638455
 ^mtime
 (
 comment
@@ -4145,8 +4257,8 @@ val0
 
 
 
-*return__3SazTtFu5wDRBw
-1471588133
+*return__25Msgh5upm7pem
+1471638455
 ^mtime
 (
 comment
@@ -4157,67 +4269,20 @@ return
 
 
 
-*return__3WI94D43gqHVzG
-1471588133
+*return__2lofw4Te3BBfd2
+1471638455
 ^mtime
 (
 comment
-"return hva_hash field"_
+"return false when empty slot"_
 descr
 return
-return
-(
-(
-val0
-hva_hash
-)node
-hash_t
-)node
 )attrs
 
 
 
-*return__4fjAXKRukL6Z8y
-1471588133
-^mtime
-(
-comment
-"return 0"_
-descr
-return
-return
-(
-0_
-hash_t
-)node
-)attrs
-
-
-
-
-*return__4ho5eVY4dBaTRu
-1471588133
-^mtime
-(
-comment
-"return half when odd address"_
-descr
-return
-return
-(
-(
-val0
-cast_pointer_to_int_prim
-)node
-2_
-div
-)node
-)attrs
-
-
-
-*return__4yHXvZunZJRf4d
-1471588133
+*return__2nmcTbB4XbKMBS
+1471638455
 ^mtime
 (
 comment
@@ -4230,8 +4295,22 @@ val0
 
 
 
-*return__4zmSXM6oZTE9Lk
-1471588133
+*return__2x9mKxRBhqnZyn
+1471638455
+^mtime
+(
+comment
+"return num1 when nil value"_
+descr
+return
+return
+num1
+)attrs
+
+
+
+*return__2zKcTZLgnCNfB8
+1471638455
 ^mtime
 (
 comment
@@ -4259,8 +4338,149 @@ hash_t
 
 
 
-*return__51KM9TlKcCRLeG
-1471588133
+*return__3ubnIF4FsDYLhE
+1471638455
+^mtime
+(
+comment
+"return val0"_
+descr
+return
+return
+val0
+)attrs
+
+
+
+*return__3wGJINGlkKUZu7
+1471638455
+^mtime
+(
+comment
+"return false when invalid itm0"_
+descr
+return
+)attrs
+
+
+
+*return__3yPddSoxrrmKTa
+1471638455
+^mtime
+(
+comment
+"return val0"_
+descr
+return
+return
+val0
+)attrs
+
+
+
+*return__3FvNvL8F8npiFN
+1471638455
+^mtime
+(
+comment
+"return the va_itype when valid"_
+descr
+return
+return
+(
+(
+val0
+va_itype
+)node
+itype_en
+)node
+)attrs
+
+
+
+*return__3WIowe4T2DWdx5
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__3ZCbKe1IDa7nlP
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__4d7AoJlnGKH6cT
+1471638455
+^mtime
+(
+comment
+"return num1 when empty slot"_
+descr
+return
+return
+num1
+)attrs
+
+
+
+*return__4p98j203sphgs8
+1471638455
+^mtime
+(
+comment
+"return val0"_
+descr
+return
+return
+val0
+)attrs
+
+
+
+*return__4V7g5HInFyhB1E
+1471638455
+^mtime
+(
+comment
+"return locval"_
+descr
+return
+return
+locval
+)attrs
+
+
+
+
+*return__5tcqNxiHpC7vhX
+1471638455
+^mtime
+(
+comment
+"return ity_none when empty slot"_
+descr
+return
+return
+ity_none
+)attrs
+
+
+
+*return__5uxAwKWlnRMgpD
+1471638455
 ^mtime
 (
 comment
@@ -4273,8 +4493,8 @@ ity_int
 
 
 
-*return__5HolaTZbzU4Xgo
-1471588133
+*return__5xnZ0sW44RyFoq
+1471638455
 ^mtime
 (
 comment
@@ -4285,22 +4505,132 @@ return
 
 
 
-*return__5Y4k9qEoSZI5vt
-1471588133
+*return__5yETcuy8YAHj3Z
+1471638455
 ^mtime
 (
 comment
-"return num1 otherwise"_
+"return val0"_
 descr
 return
 return
-num1
+val0
 )attrs
 
 
 
-*return__67u8a9lCPT1Sq5
-1471588133
+*return__6jvxZkE1NgIWwG
+1471638455
+^mtime
+(
+comment
+"return ity_none when nil value"_
+descr
+return
+return
+ity_none
+)attrs
+
+
+
+*return__7jKJkzV9ycDd2L
+1471638455
+^mtime
+(
+comment
+"return hva_hash field"_
+descr
+return
+return
+(
+(
+val0
+hva_hash
+)node
+hash_t
+)node
+)attrs
+
+
+
+*return__7paSdC4YX1zAZv
+1471638455
+^mtime
+(
+comment
+"return boxi_int for boxedints"_
+descr
+return
+return
+(
+val0
+boxi_int
+)node
+)attrs
+
+
+
+*return__7pbuR0KvJqsVD3
+1471638455
+^mtime
+(
+comment
+"return half when odd address"_
+descr
+return
+return
+(
+(
+val0
+cast_pointer_to_int_prim
+)node
+2_
+div
+)node
+)attrs
+
+
+
+*return__7xC5iGFoqDYzZB
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__8jrS2Ed5eyzS0S
+1471638455
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__8BfMn8cfqHYlBs
+1471638455
+^mtime
+(
+comment
+"return true when itm0 is genuine item"_
+descr
+return
+return
+truth
+)attrs
+
+
+
+*return__8Zd0Eq1ZXMiZTI
+1471638455
 ^mtime
 (
 comment
@@ -4319,159 +4649,6 @@ mult
 plus
 )node
 value
-)node
-)attrs
-
-
-
-*return__686NV6D0Y7lEaA
-1471588133
-^mtime
-(
-comment
-"return val0"_
-descr
-return
-return
-val0
-)attrs
-
-
-
-*return__6sMoDyFlyLIfU9
-1471588133
-^mtime
-(
-comment
-"return val0"_
-descr
-return
-return
-val0
-)attrs
-
-
-
-*return__6YB9o95E0fdJvm
-1471588133
-^mtime
-(
-comment
-"return false when empty slot"_
-descr
-return
-)attrs
-
-
-
-*return__7gGF36FS4eHjkb
-1471588133
-^mtime
-(
-comment
-"return val0"_
-descr
-return
-return
-val0
-)attrs
-
-
-
-*return__7sBrzjaCjGzpae
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-*return__7VCDxHHx4elH35
-1471588133
-^mtime
-(
-comment
-"return val0"_
-descr
-return
-return
-val0
-)attrs
-
-
-
-*return__7ZhLp91lBCMxlp
-1471588133
-^mtime
-(
-comment
-"return true when itm0 is genuine item"_
-descr
-return
-return
-truth
-)attrs
-
-
-
-*return__8jkF90uN1wEIo5
-1471588133
-^mtime
-(
-comment
-"return val0"_
-descr
-return
-return
-val0
-)attrs
-
-
-
-*return__8TeM4lafbjX8mG
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-
-*return__95zvCG4cCldJqt
-1471588133
-^mtime
-(
-comment
-"return nil"_
-descr
-return
-)attrs
-
-
-
-*return__98NYEWyk5emlDT
-1471588133
-^mtime
-(
-comment
-"return the va_itype when valid"_
-descr
-return
-return
-(
-(
-val0
-va_itype
-)node
-itype_en
 )node
 )attrs
 
@@ -4517,6 +4694,7 @@ comment
 
 
 
+
 *same
 1457364041
 ^mtime
@@ -4528,7 +4706,7 @@ comment
 
 
 *same_value_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -4561,7 +4739,7 @@ comment
 
 
 *seqitem
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4577,8 +4755,41 @@ flexible_array
 
 
 
+*seqitem_nth
+1471638455
+^mtime
+(
+body
+seqitem_nth__7rdkEIplBfs4gy
+comment
+"inline function to get the nth component in a sequence"_
+descr
+inline
+signature
+signature_value_int_to_item
+)attrs
+
+
+
+*seqitem_nth__7rdkEIplBfs4gy
+1471638455
+^mtime
+(
+body
+(
+cond__2Z8K4sXT5RC341
+return__7xC5iGFoqDYzZB
+)tuple
+comment
+"body of seqitem_nth"_
+descr
+sequence
+)attrs
+
+
+
 *seqitem_ty
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4607,16 +4818,36 @@ comment
 
 
 
-*sequence__5mcei6KCKPNvMy
-1471588133
+*sequence__1Sc1C6sxt8Zbt3
+1471638455
 ^mtime
 (
 body
 (
-assign__3bHcV4ubY176wT
-assign__68HrJqtgeX4ecD
-assign__8mblxjbMPFy0jj
-return__1Pt4EN48dZ1Hcg
+assign__3ot3bB70nVnN2E
+cond__1YEEitzucqldLX
+cond__6NZEmKT6uGjCxx
+)tuple
+descr
+sequence
+locals
+(
+nloc
+)tuple
+)attrs
+
+
+
+*sequence__8yA1Ztd7gBMnNH
+1471638455
+^mtime
+(
+body
+(
+assign__5cFCWI8hPXmLRr
+assign__5Br1xMT7I90sfW
+assign__2G4j4rV09JnjcI
+return__4V7g5HInFyhB1E
 )tuple
 descr
 sequence
@@ -4654,7 +4885,7 @@ comment
 
 
 *signature_2ints_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4670,9 +4901,8 @@ bool
 
 
 
-
 *signature_2ints_to_int
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4689,7 +4919,7 @@ int
 
 
 *signature_2values_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4706,7 +4936,7 @@ bool
 
 
 *signature_bool_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4718,6 +4948,7 @@ flag0
 result
 bool
 )attrs
+
 
 
 
@@ -4751,7 +4982,7 @@ unit
 
 
 *signature_int_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4767,7 +4998,7 @@ bool
 
 
 *signature_int_to_value
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4783,7 +5014,7 @@ value
 
 
 *signature_item_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4815,7 +5046,7 @@ comment
 
 
 *signature_space_to_item
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4841,7 +5072,7 @@ comment
 
 
 *signature_value_int_to_int
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4857,8 +5088,25 @@ int
 
 
 
+*signature_value_int_to_item
+1471638455
+^mtime
+(
+descr
+signature
+formals
+(
+val0
+num0
+)tuple
+result
+item
+)attrs
+
+
+
 *signature_value_to_bool
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4874,7 +5122,7 @@ bool
 
 
 *signature_value_to_hash_t
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4892,7 +5140,7 @@ hash_t
 
 
 *signature_value_to_int
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4909,9 +5157,8 @@ int
 
 
 
-
 *signature_value_to_itype_en
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4929,7 +5176,7 @@ itype_en
 
 
 *signature_value_to_value
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -4944,8 +5191,9 @@ value
 
 
 
+
 *signature_void_to_value
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -4982,7 +5230,7 @@ comment
 
 
 *small_int_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -5005,7 +5253,7 @@ signature_int_to_bool
 
 
 *spa_global
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5017,7 +5265,7 @@ enumerator
 
 
 *spa_none
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5029,7 +5277,7 @@ enumerator
 
 
 *spa_predef
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5041,7 +5289,7 @@ enumerator
 
 
 *spa_user
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5053,7 +5301,7 @@ enumerator
 
 
 *spacarg
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5067,7 +5315,7 @@ space_en
 
 
 *space_en
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -5135,7 +5383,6 @@ comment
 
 
 
-
 *switch
 1465882737
 ^mtime
@@ -5153,6 +5400,7 @@ comment
 comment
 "to switch on items"_
 )attrs
+
 
 
 
@@ -5176,8 +5424,292 @@ comment
 
 
 
-*test__0fRouJFxAzUFie
-1471588133
+*test__03GazxE5CNhiq7
+1471638455
+^mtime
+(
+comment
+"test for nil in int_val_def"_
+descr
+test
+test
+(
+val0
+is_null
+)node
+then
+return__2x9mKxRBhqnZyn
+)attrs
+
+
+
+*test__0iFzqdYKjLJiwM
+1471638455
+^mtime
+(
+comment
+"test else non-node"_
+descr
+test
+then
+return__0stswyEvr27lTR
+)attrs
+
+
+
+*test__0liYe8YykXBrWb
+1471638455
+^mtime
+(
+comment
+"test for nil in itype"_
+descr
+test
+test
+(
+val0
+is_null
+)node
+then
+return__6jvxZkE1NgIWwG
+)attrs
+
+
+
+*test__0lD7PaTvkX9ZK1
+1471638455
+^mtime
+(
+comment
+"otherwise return truth"_
+descr
+test
+test
+truth
+then
+return__0eqSq1LPILipwG
+)attrs
+
+
+
+*test__0pWd9D47LXAZDA
+1471638455
+^mtime
+(
+comment
+"test for ity_int"_
+descr
+test
+test
+(
+(
+typ0loc
+int
+)node
+(
+ity_int
+int
+)node
+equal_int_prim
+)node
+then
+return__2zKcTZLgnCNfB8
+)attrs
+
+
+
+*test__0JsdHo6raURNLT
+1471638455
+^mtime
+(
+comment
+"test itemness in valid_item_pointer"_
+descr
+test
+test
+(
+(
+(
+itm0
+va_itype
+)node
+int
+)node
+(
+ity_item
+int
+)node
+equal_int_prim
+)node
+then
+return__8BfMn8cfqHYlBs
+)attrs
+
+
+
+*test__0Sa8YKx7k90vFy
+1471638455
+^mtime
+(
+comment
+"test on seqitem"_
+descr
+test
+test
+(
+val0
+dyncast_seqitem
+)node
+then
+sequence__1Sc1C6sxt8Zbt3
+)attrs
+
+
+
+*test__0Xz79U0AA4t3Ic
+1471638455
+^mtime
+(
+comment
+"test for ity_set"_
+descr
+test
+test
+(
+(
+(
+val0
+itype
+)node
+int
+)node
+(
+ity_set
+int
+)node
+equal_int_prim
+)node
+then
+return__3yPddSoxrrmKTa
+)attrs
+
+
+
+*test__11YhJHC63u7txf
+1471638455
+^mtime
+(
+comment
+"test else non-tuple"_
+descr
+test
+then
+return__3ZCbKe1IDa7nlP
+)attrs
+
+
+
+*test__1bknMBo2oEq7NL
+1471638455
+^mtime
+(
+comment
+"test for valid item"_
+descr
+test
+test
+(
+(
+val0
+item
+)node
+valid_item_pointer
+)node
+then
+return__1YvSfGfz2JV88I
+)attrs
+
+
+
+*test__1bHvsDGewAs1xD
+1471638455
+^mtime
+(
+descr
+test
+test
+(
+(
+num0
+0_
+greater_equal_int_prim
+)node
+(
+num0
+nloc
+less_int_prim
+)node
+and
+)node
+then
+return__1tuIItyciCDtWp
+)attrs
+
+
+
+*test__1MwjJhMFVF5V7P
+1471638455
+^mtime
+(
+comment
+"test for empty_slot"_
+descr
+test
+test
+(
+val0
+(
+empty_slot_prim
+)node
+same_value_prim
+)node
+then
+return__2lofw4Te3BBfd2
+)attrs
+
+
+
+*test__1XJJgeEkmHtl4G
+1471638455
+^mtime
+(
+comment
+"test for boxedints in itype"_
+descr
+test
+test
+(
+(
+(
+val0
+va_itype
+)node
+int
+)node
+(
+ity_int
+int
+)node
+equal_int_prim
+)node
+then
+return__7paSdC4YX1zAZv
+)attrs
+
+
+
+*test__21Fmiq6KHcf4ci
+1471638455
 ^mtime
 (
 comment
@@ -5217,362 +5749,14 @@ equal_int_prim
 or
 )node
 then
-return__2fLZpbuAm1epbz
-)attrs
-
-
-
-*test__0izW1AP4egUy4p
-1471588133
-^mtime
-(
-comment
-"test for ity_int"_
-descr
-test
-test
-(
-(
-(
-val0
-itype
-)node
-int
-)node
-(
-ity_int
-int
-)node
-equal_int_prim
-)node
-then
-return__7VCDxHHx4elH35
-)attrs
-
-
-
-*test__0kKmCFchU5if1H
-1471588133
-^mtime
-(
-comment
-"test for empty_slot in int_val_def"_
-descr
-test
-test
-(
-val0
-(
-empty_slot_prim
-)node
-same_value_prim
-)node
-then
-return__10rT5yTMp3uyxS
-)attrs
-
-
-
-*test__0n26p94c6D5Zjr
-1471588133
-^mtime
-(
-comment
-"test else non-string"_
-descr
-test
-then
-return__5HolaTZbzU4Xgo
-)attrs
-
-
-
-*test__0JNq2PP6IMZeSY
-1471588133
-^mtime
-(
-comment
-"test else non-node"_
-descr
-test
-then
-return__2aXf2WxA6YoFcj
-)attrs
-
-
-
-*test__11KVJEGaJiixSm
-1471588133
-^mtime
-(
-comment
-"test for nil in int_val_def"_
-descr
-test
-test
-(
-val0
-is_null
-)node
-then
-return__1kuCAbqZ3W4xNp
-)attrs
-
-
-
-*test__1g54nWJyFfneDB
-1471588133
-^mtime
-(
-comment
-"test otherwise boxedints"_
-descr
-test
-then
-return__5Y4k9qEoSZI5vt
-)attrs
-
-
-
-*test__1lJa8nhU6lcyJS
-1471588133
-^mtime
-(
-comment
-"test for odd addresses in itype"_
-descr
-test
-test
-(
-(
-val0
-cast_pointer_to_int_prim
-)node
-2_
-unsafe_int_mod_prim
-)node
-then
-return__4ho5eVY4dBaTRu
-)attrs
-
-
-
-*test__1ttp5c6M296ABu
-1471588133
-^mtime
-(
-comment
-"test for valid item"_
-descr
-test
-test
-(
-(
-val0
-item
-)node
-valid_item_pointer
-)node
-then
-return__7gGF36FS4eHjkb
-)attrs
-
-
-
-*test__2aGqgT1ihFeL7n
-1471588133
-^mtime
-(
-comment
-"test for ity_tuple"_
-descr
-test
-test
-(
-(
-(
-val0
-itype
-)node
-int
-)node
-(
-ity_tuple
-int
-)node
-equal_int_prim
-)node
-then
-return__4yHXvZunZJRf4d
-)attrs
-
-
-
-*test__2KqGT4yNwrpu0I
-1471588133
-^mtime
-(
-comment
-"test else non-tuple"_
-descr
-test
-then
-return__1hXauiTKDM1z6E
-)attrs
-
-
-
-*test__39tp448fzBrPtJ
-1471588133
-^mtime
-(
-comment
-"test for empty_slot in itype"_
-descr
-test
-test
-(
-val0
-(
-empty_slot_prim
-)node
-same_value_prim
-)node
-then
-return__1VNoliAUAqGne7
+return__4p98j203sphgs8
 )attrs
 
 
 
 
-*test__3c3limevrH8jlc
-1471588133
-^mtime
-(
-comment
-"test else non-item"_
-descr
-test
-then
-return__7sBrzjaCjGzpae
-)attrs
-
-
-
-*test__3nUBYxaRF5lJVM
-1471588133
-^mtime
-(
-comment
-"test for ity_int"_
-descr
-test
-test
-(
-(
-typ0loc
-int
-)node
-(
-ity_int
-int
-)node
-equal_int_prim
-)node
-then
-return__4zmSXM6oZTE9Lk
-)attrs
-
-
-
-*test__3KpffHjcZH4u8x
-1471588133
-^mtime
-(
-comment
-"otherwise return 1+the type"_
-descr
-test
-then
-return__2hqGvZjde3XtDM
-)attrs
-
-
-
-*test__43mAM0JwD71PVd
-1471588133
-^mtime
-(
-comment
-"test else non-int"_
-descr
-test
-then
-return__95zvCG4cCldJqt
-)attrs
-
-
-
-*test__461tKL4sl8iZbT
-1471588133
-^mtime
-(
-comment
-"test itemness in valid_item_pointer"_
-descr
-test
-test
-(
-(
-(
-itm0
-va_itype
-)node
-int
-)node
-(
-ity_item
-int
-)node
-equal_int_prim
-)node
-then
-return__7ZhLp91lBCMxlp
-)attrs
-
-
-
-*test__4fka7wrFeqycXH
-1471588133
-^mtime
-(
-comment
-"test for ity_double"_
-descr
-test
-test
-(
-(
-(
-val0
-itype
-)node
-int
-)node
-(
-ity_double
-int
-)node
-equal_int_prim
-)node
-then
-return__3yc2bor9FMSPdg
-)attrs
-
-
-
-*test__4k8d1Hd8GuX5yg
-1471588133
+*test__2c6TpALyMKahEG
+1471638455
 ^mtime
 (
 comment
@@ -5595,29 +5779,228 @@ int
 equal_int_prim
 )node
 then
-return__8jkF90uN1wEIo5
+return__2nmcTbB4XbKMBS
 )attrs
 
 
 
-*test__4PXiICkbgA1Pnw
-1471588133
+*test__2BrqtzzpAjTrJF
+1471638455
 ^mtime
 (
 comment
-"otherwise return truth"_
+"otherwise return 1+the type"_
 descr
 test
-test
-truth
 then
-return__3gef3UtNpAsavz
+return__1Yq5aqGGViqTD3
 )attrs
 
 
 
-*test__4SajjvIR9lBTA6
-1471588133
+*test__2XvZz2NYur3AxV
+1471638455
+^mtime
+(
+comment
+"test for empty_slot in int_val_def"_
+descr
+test
+test
+(
+val0
+(
+empty_slot_prim
+)node
+same_value_prim
+)node
+then
+return__4d7AoJlnGKH6cT
+)attrs
+
+
+
+*test__36yV4E2bL0oLR3
+1471638455
+^mtime
+(
+comment
+"test for ity_int"_
+descr
+test
+test
+(
+(
+(
+val0
+itype
+)node
+int
+)node
+(
+ity_int
+int
+)node
+equal_int_prim
+)node
+then
+return__1zsS7KgcGsn7ct
+)attrs
+
+
+
+*test__3jGZ3AJpJWbLqu
+1471638455
+^mtime
+(
+comment
+"test else non-double"_
+descr
+test
+then
+return__8jrS2Ed5eyzS0S
+)attrs
+
+
+
+*test__3UnhsCA7SUAZUt
+1471638455
+^mtime
+(
+comment
+"test for ity_none"_
+descr
+test
+test
+(
+(
+typ0loc
+int
+)node
+(
+ity_none
+int
+)node
+equal_int_prim
+)node
+then
+return__08jk3csRqozFeF
+)attrs
+
+
+
+*test__41j3eojFCh5zhu
+1471638455
+^mtime
+(
+comment
+"test for odd addresses"_
+descr
+test
+test
+(
+(
+val0
+cast_pointer_to_int_prim
+)node
+2_
+unsafe_int_mod_prim
+)node
+then
+return__0lt4YpdcjHxE0B
+)attrs
+
+
+
+*test__49Ey3Yk0putI62
+1471638455
+^mtime
+(
+comment
+"test for empty_slot in itype"_
+descr
+test
+test
+(
+val0
+(
+empty_slot_prim
+)node
+same_value_prim
+)node
+then
+return__5tcqNxiHpC7vhX
+)attrs
+
+
+
+*test__4qtdJBc3nMTI8l
+1471638455
+^mtime
+(
+comment
+"test otherwise boxedints"_
+descr
+test
+then
+return__0CYZX1s1s5AiDr
+)attrs
+
+
+
+*test__4qBFT2X1gshppK
+1471638455
+^mtime
+(
+comment
+"otherwise return false"_
+descr
+test
+then
+return__25Msgh5upm7pem
+)attrs
+
+
+
+*test__4uYHPy0I1zxzPg
+1471638455
+^mtime
+(
+comment
+"otherwise test - valid address in itype"_
+descr
+test
+then
+return__3FvNvL8F8npiFN
+)attrs
+
+
+
+*test__4zEy98m08TADW1
+1471638455
+^mtime
+(
+comment
+"test for odd addresses in itype"_
+descr
+test
+test
+(
+(
+val0
+cast_pointer_to_int_prim
+)node
+2_
+unsafe_int_mod_prim
+)node
+then
+return__5uxAwKWlnRMgpD
+)attrs
+
+
+
+*test__4Rkdw4afF8etSp
+1471638455
 ^mtime
 (
 comment
@@ -5640,155 +6023,17 @@ int
 equal_int_prim
 )node
 then
-return__686NV6D0Y7lEaA
+return__5yETcuy8YAHj3Z
 )attrs
 
 
 
-*test__4TL6GtHZZj21qd
-1471588133
+*test__4ZiGh1AjxV4jjv
+1471638455
 ^mtime
 (
 comment
-"test for odd addresses"_
-descr
-test
-test
-(
-(
-val0
-cast_pointer_to_int_prim
-)node
-2_
-unsafe_int_mod_prim
-)node
-then
-return__3wnBRd9rsKowTp
-)attrs
-
-
-
-*test__5dfLvMwcfwz4J9
-1471588133
-^mtime
-(
-comment
-"test else non-seq"_
-descr
-test
-then
-return__3c5bgCrMJAK2kD
-)attrs
-
-
-
-*test__5n9FXKnzbhj8Sc
-1471588133
-^mtime
-(
-comment
-"test for nil in valid_value_pointer"_
-descr
-test
-test
-(
-val0
-is_null
-)node
-then
-return__063c3VNJD9nAGM
-)attrs
-
-
-
-*test__6rr7yM82pijApC
-1471588133
-^mtime
-(
-comment
-"test for ity_none"_
-descr
-test
-test
-(
-(
-typ0loc
-int
-)node
-(
-ity_none
-int
-)node
-equal_int_prim
-)node
-then
-return__4fjAXKRukL6Z8y
-)attrs
-
-
-
-*test__6UFTcIj4pTudj4
-1471588133
-^mtime
-(
-comment
-"otherwise return false"_
-descr
-test
-then
-return__3SazTtFu5wDRBw
-)attrs
-
-
-
-*test__76KKuh5apmaWMz
-1471588133
-^mtime
-(
-comment
-"test for empty_slot"_
-descr
-test
-test
-(
-val0
-(
-empty_slot_prim
-)node
-same_value_prim
-)node
-then
-return__6YB9o95E0fdJvm
-)attrs
-
-
-
-*test__7qqtfeiX3vYwS7
-1471588133
-^mtime
-(
-comment
-"test for small num0"_
-descr
-test
-test
-(
-num0
-small_int_prim
-)node
-then
-return__67u8a9lCPT1Sq5
-)attrs
-
-
-
-
-*test__7BmUaopVMT3Nvz
-1471588133
-^mtime
-(
-comment
-"test for ity_set"_
+"test for ity_double"_
 descr
 test
 test
@@ -5801,19 +6046,141 @@ itype
 int
 )node
 (
-ity_set
+ity_double
 int
 )node
 equal_int_prim
 )node
 then
-return__6sMoDyFlyLIfU9
+return__1I5LGv3zGHRe9L
 )attrs
 
 
 
-*test__7G46aSBpTKFltn
-1471588133
+*test__5bnCLKyvPNvcsR
+1471638455
+^mtime
+(
+comment
+"test for small num0"_
+descr
+test
+test
+(
+num0
+small_int_prim
+)node
+then
+return__8Zd0Eq1ZXMiZTI
+)attrs
+
+
+
+*test__6dhdACJ3CDqHSK
+1471638455
+^mtime
+(
+comment
+"test for odd addresses in itype"_
+descr
+test
+test
+(
+(
+val0
+cast_pointer_to_int_prim
+)node
+2_
+unsafe_int_mod_prim
+)node
+then
+return__7pbuR0KvJqsVD3
+)attrs
+
+
+
+
+*test__6hl9b1lhJzHLVh
+1471638455
+^mtime
+(
+comment
+"test for nil in valid_value_pointer"_
+descr
+test
+test
+(
+val0
+is_null
+)node
+then
+return__1AjHVKbIVH2FEN
+)attrs
+
+
+
+*test__6ixMupJ8eBkwVw
+1471638455
+^mtime
+(
+comment
+"test else non-string"_
+descr
+test
+then
+return__5xnZ0sW44RyFoq
+)attrs
+
+
+
+*test__6rZKVneZJcaLg4
+1471638455
+^mtime
+(
+descr
+test
+test
+(
+num0
+0_
+less_int_prim
+)node
+then
+assign__33aXCU5A0ckTS4
+)attrs
+
+
+
+*test__6sI8VtYkIcKoDh
+1471638455
+^mtime
+(
+comment
+"test else non-item"_
+descr
+test
+then
+return__17Jvv4XDPEAfF2
+)attrs
+
+
+
+*test__6vgJhCjCClXkqC
+1471638455
+^mtime
+(
+comment
+"test else non-int"_
+descr
+test
+then
+return__0Ati9uifecSsyU
+)attrs
+
+
+
+*test__6zvWyzoyWcuz4F
+1471638455
 ^mtime
 (
 comment
@@ -5821,27 +6188,42 @@ comment
 descr
 test
 then
-return__8TeM4lafbjX8mG
+return__0t9E2vEgXaXfMj
 )attrs
 
 
 
-*test__7Nhxje4DdXqi8m
-1471588133
+*test__7qL72bETZ31MrE
+1471638455
 ^mtime
 (
 comment
-"otherwise make boxed int"_
+"test for ity_tuple"_
 descr
 test
+test
+(
+(
+(
+val0
+itype
+)node
+int
+)node
+(
+ity_tuple
+int
+)node
+equal_int_prim
+)node
 then
-sequence__5mcei6KCKPNvMy
+return__3ubnIF4FsDYLhE
 )attrs
 
 
 
-*test__83uTiDD5BaANpZ
-1471588133
+*test__7B6aN7xzxIsYGA
+1471638455
 ^mtime
 (
 comment
@@ -5861,13 +6243,41 @@ int
 less_equal_int_prim
 )node
 then
-return__3WI94D43gqHVzG
+return__7jKJkzV9ycDd2L
 )attrs
 
 
 
-*test__85YbYClNRDdAtl
-1471588133
+*test__7NnjLVhYH4YIEP
+1471638455
+^mtime
+(
+comment
+"otherwise make boxed int"_
+descr
+test
+then
+sequence__8yA1Ztd7gBMnNH
+)attrs
+
+
+
+*test__8TZ87d9iEgwMZu
+1471638455
+^mtime
+(
+comment
+"test else non-seq"_
+descr
+test
+then
+return__3WIowe4T2DWdx5
+)attrs
+
+
+
+*test__93jlC1m6mzUN6q
+1471638455
 ^mtime
 (
 comment
@@ -5886,106 +6296,7 @@ valid_value_pointer
 not_bool_prim
 )node
 then
-return__1oUXDyALeRZHwN
-)attrs
-
-
-
-*test__8rzrHS2Sr2Fw3I
-1471588133
-^mtime
-(
-comment
-"test for odd addresses in itype"_
-descr
-test
-test
-(
-(
-val0
-cast_pointer_to_int_prim
-)node
-2_
-unsafe_int_mod_prim
-)node
-then
-return__51KM9TlKcCRLeG
-)attrs
-
-
-
-*test__8yJl1aUE8fy5Td
-1471588133
-^mtime
-(
-comment
-"test else non-double"_
-descr
-test
-then
-return__1pM0yrUs8U8kIK
-)attrs
-
-
-
-*test__8KwYL7YV7fhlnE
-1471588133
-^mtime
-(
-comment
-"test for boxedints in itype"_
-descr
-test
-test
-(
-(
-(
-val0
-va_itype
-)node
-int
-)node
-(
-ity_int
-int
-)node
-equal_int_prim
-)node
-then
-return__1RhJsTGU7ycrY0
-)attrs
-
-
-
-*test__90NrFeVPdBXKYw
-1471588133
-^mtime
-(
-comment
-"test for nil in itype"_
-descr
-test
-test
-(
-val0
-is_null
-)node
-then
-return__1HckptAJryAXLW
-)attrs
-
-
-
-*test__92caHTKcg9hhpF
-1471588133
-^mtime
-(
-comment
-"otherwise test - valid address in itype"_
-descr
-test
-then
-return__98NYEWyk5emlDT
+return__3wGJINGlkKUZu7
 )attrs
 
 
@@ -6150,8 +6461,9 @@ comment
 
 
 
+
 *time_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -6161,7 +6473,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -6213,7 +6524,7 @@ is_tuple
 
 
 *typ0loc
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -6256,7 +6567,7 @@ comment
 
 
 *uint16_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -6270,7 +6581,7 @@ type
 
 
 *uint32_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -6284,7 +6595,7 @@ type
 
 
 *uint64_t
-1471588133
+1471638455
 ^mtime
 (
 c_code
@@ -6338,7 +6649,7 @@ type
 
 
 *unsafe_int_mod_prim
-1471588133
+1471638455
 ^mtime
 (
 c_expansion
@@ -6360,8 +6671,9 @@ signature_2ints_to_int
 
 
 
+
 *va_itype
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6374,9 +6686,8 @@ uint16_t
 
 
 
-
 *va_ixv
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6390,7 +6701,7 @@ atomic_int16_t
 
 
 *va_size
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6404,7 +6715,7 @@ uint32_t
 
 
 *val0
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6418,7 +6729,7 @@ value
 
 
 *val1
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6432,11 +6743,11 @@ value
 
 
 *valid_item_pointer
-1471588133
+1471638455
 ^mtime
 (
 body
-valid_item_pointer__6Z8Ri1TypfSIka
+valid_item_pointer__1tTnuqhhVwG81p
 comment
 "inline function testing validity of item pointer"_
 descr
@@ -6447,13 +6758,13 @@ signature_item_to_bool
 
 
 
-*valid_item_pointer__6Z8Ri1TypfSIka
-1471588133
+*valid_item_pointer__1tTnuqhhVwG81p
+1471638455
 ^mtime
 (
 body
 (
-cond__7CsZ4jbV6LRGm3
+cond__3bD9LGHVF2u0H2
 )tuple
 comment
 "body of valid_value_pointer"_
@@ -6464,11 +6775,11 @@ sequence
 
 
 *valid_value_pointer
-1471588133
+1471638455
 ^mtime
 (
 body
-valid_value_pointer__5HPLzj8VciDngG
+valid_value_pointer__0K3vxlNHLKzp1p
 comment
 "inline function testing validity of value pointer"_
 descr
@@ -6479,13 +6790,13 @@ signature_value_to_bool
 
 
 
-*valid_value_pointer__5HPLzj8VciDngG
-1471588133
+*valid_value_pointer__0K3vxlNHLKzp1p
+1471638455
 ^mtime
 (
 body
 (
-cond__3lz37gG3xneXey
+cond__7mu2mYzsGkMTeH
 )tuple
 comment
 "body of valid_value_pointer"_
@@ -6510,11 +6821,11 @@ type
 
 
 *value_hash
-1471588133
+1471638455
 ^mtime
 (
 body
-value_hash__89g1Rv0Y09IEn5
+value_hash__58npNVtYY45TXT
 comment
 "inline function giving hash of value"_
 descr
@@ -6525,14 +6836,14 @@ signature_value_to_hash_t
 
 
 
-*value_hash__89g1Rv0Y09IEn5
-1471588133
+*value_hash__58npNVtYY45TXT
+1471638455
 ^mtime
 (
 body
 (
-assign__60rmPVScwn1e0l
-cond__1GszmNXnc3pBMc
+assign__7fNMq3ZDFXcnMu
+cond__4ycCRe9jL7Rtrn
 )tuple
 comment
 "body of value_hash"_
@@ -6577,7 +6888,7 @@ comment
 
 
 *vecd_valarr
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6593,6 +6904,7 @@ flexible_array
 
 
 
+
 *vector
 1464719561
 ^mtime
@@ -6603,9 +6915,8 @@ comment
 
 
 
-
 *vectvaldata_ty
-1471588133
+1471638455
 ^mtime
 (
 descr
@@ -6693,7 +7004,7 @@ comment
 
 
 *xty_assovaldata
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6707,7 +7018,7 @@ assovaldata_ty
 
 
 *xty_dumper
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6719,7 +7030,7 @@ enumerator
 
 
 *xty_file
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6731,7 +7042,7 @@ enumerator
 
 
 *xty_filebuffer
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6743,7 +7054,7 @@ enumerator
 
 
 *xty_hashassoc
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6755,7 +7066,7 @@ enumerator
 
 
 *xty_hashmap
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6767,7 +7078,7 @@ enumerator
 
 
 *xty_hashset
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6778,8 +7089,9 @@ enumerator
 
 
 
+
 *xty_json
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6790,9 +7102,8 @@ enumerator
 
 
 
-
 *xty_lastvalue
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6804,7 +7115,7 @@ enumerator
 
 
 *xty_loader
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6816,7 +7127,7 @@ enumerator
 
 
 *xty_queue
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6828,7 +7139,7 @@ enumerator
 
 
 *xty_vectvaldata
-1471588133
+1471638455
 ^mtime
 (
 comment
@@ -6842,7 +7153,7 @@ vectvaldata_ty
 
 
 *xtype_en
-1471588133
+1471638455
 ^mtime
 (
 comment
