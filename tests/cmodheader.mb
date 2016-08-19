@@ -1486,7 +1486,7 @@
                       ^* descr assign
                       ^* comment "assign locval->va_itype ity_int"
                       ^* to %get(locval va_itype)
-                      ^* from ity_int
+                      ^* from %uint16_t(ity_int)
                     )
                     ^global ?assign (
                       ^* descr assign

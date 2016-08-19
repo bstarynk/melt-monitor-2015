@@ -3192,6 +3192,11 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
 				mom_item_cstring(expitm), mom_item_cstring(roltypitm));
 		return roltypitm;
 	      }
+	    else
+	      throw MOM_RUNTIME_PRINTF("expitm %s is enumerator of type %s, but expecting %s",
+				       mom_item_cstring(expitm),
+				       mom_item_cstring(roltypitm),
+				       mom_item_cstring(typitm));
 	    // @@@ we should handle extended enum-s...
 	    goto defaultcaserole;
 	  }
@@ -3221,6 +3226,10 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                              mom_item_cstring(expitm),
                              mom_item_cstring(insitm),
                              mom_item_cstring(typitm));
+  MOM_FATAPRINTF("unexpected item %s in instr %s (type %s)",
+		 mom_item_cstring(expitm),
+		 mom_item_cstring(insitm),
+		 mom_item_cstring(typitm));
 } // end of MomEmitter::scan_item_expr
 
 
@@ -6369,21 +6378,21 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
       {
 	auto whatnod = mom_dyncast_node(whatv);
 	assert (whatnod != nullptr && whatnod->nod_connitm == MOM_PREDEFITM(assign) && mom_raw_size(whatnod) == 3);
-	auto tovaritm = mom_dyncast_item(whatnod->nod_sons[0]);
+	auto toexp = whatnod->nod_sons[0];
 	auto fromexp = whatnod->nod_sons[1];
 	auto totypitm = mom_dyncast_item(whatnod->nod_sons[2]);
 	MOM_DEBUGPRINTF(gencod,
-			"c-transform_instruction assign insitm=%s tovaritm=%s fromexp=%s totypitm=%s",
-			mom_item_cstring(insitm), mom_item_cstring(tovaritm),
+			"c-transform_instruction assign insitm=%s toexp=%s fromexp=%s totypitm=%s",
+			mom_item_cstring(insitm), mom_value_cstring(toexp),
 			mom_value_cstring(fromexp), mom_item_cstring(totypitm));
-	assert (tovaritm != nullptr);
+	assert (toexp != nullptr);
 	assert (totypitm != nullptr);
 	auto fromtree =  transform_expr(fromexp, insitm);
 	// perhaps should handle the lack of fromtree when non-scalar totypitm
 	MOM_DEBUGPRINTF(gencod,
 			"c-transform_instruction assign insitm=%s fromtree=%s",
 			mom_item_cstring(insitm), mom_value_cstring(fromtree));
-	auto totree = transform_var(tovaritm, insitm);
+	auto totree = transform_expr(toexp, insitm);
 	MOM_DEBUGPRINTF(gencod,
 			"c-transform_instruction assign insitm=%s totree=%s",
 			mom_item_cstring(insitm), mom_value_cstring(totree));
