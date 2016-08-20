@@ -850,6 +850,14 @@
   ^* result hash_t
 )
 
+^global !signature_item_to_hash_t (
+  ^* descr signature
+  ^* comment "signature item -> hash_t"
+  ^* formals [ itm0 ]
+  ^* result hash_t
+)
+
+
 ^global !itype  (
   ^* comment "inline function testing validity of value pointer"
   ^* descr inline
@@ -1098,6 +1106,54 @@
           )
        ]
   )
+)
+
+^global !item_hash  (
+  ^* comment "inline function computing hash of item"
+  ^* descr inline
+  ^* signature signature_item_to_hash_t
+  ^* body  ^global ?item_hash (
+       ^* comment "body of item_hash"
+       ^* descr sequence
+       ^* body
+       [
+         ^global ?cond (
+           ^* comment "cond in tem_hash"
+           ^* descr cond
+           ^* cond [
+             ^global ?test (
+               ^* descr test
+               ^* comment "test invalid itm0"
+               ^* test %not_bool_prim(%valid_value_pointer (%value(itm0)))
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return 0 for invalid itm0"
+                  ^* return %hash_t(0)
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "test non-item itm0"
+               ^* test %not_bool_prim(%equal_int_prim (%int(%get (itm0 va_itype)) %int(ity_item)))
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return 0 for non-item itm0"
+                  ^* return %hash_t(0)
+               )
+             )
+             ^global ?test (
+               ^* descr test
+               ^* comment "otherwise good itm0"
+               ^* then ^global ?return (
+                  ^* descr return
+                  ^* comment "return itm0->hva_hash"
+                  ^* return %get(itm0 hva_hash)
+               )
+             )
+           ]
+         )
+       ]
+     )
 )
 
 ^global !dyncast_int  (
@@ -1620,7 +1676,9 @@
      xtype_en
      valid_value_pointer itype
      valid_item_pointer
-     int_val_def value_hash dyncast_int dyncast_boxdouble
+     int_val_def value_hash
+     item_hash
+     dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
      int_make
