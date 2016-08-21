@@ -247,13 +247,14 @@ typedef enum momenum_itype_en
 
 
 typedef enum momenum_xtype_en
-{ /*extending enum itype_en */ momenuva_ity_none_momenfr_itype_en = 0,
-  momenuva_ity_int_momenfr_itype_en =
-    1, momenuva_ity_double_momenfr_itype_en = 2,
-  momenuva_ity_string_momenfr_itype_en =
-    3, momenuva_ity_item_momenfr_itype_en = 4,
-  momenuva_ity_tuple_momenfr_itype_en = 5, momenuva_ity_set_momenfr_itype_en =
-    6,
+{				/*extending enum itype_en */
+  momenuva_ity_none_momenfr_itype_en = 0,
+  momenuva_ity_int_momenfr_itype_en = 1,
+  momenuva_ity_double_momenfr_itype_en = 2,
+  momenuva_ity_string_momenfr_itype_en = 3,
+  momenuva_ity_item_momenfr_itype_en = 4,
+  momenuva_ity_tuple_momenfr_itype_en = 5,
+  momenuva_ity_set_momenfr_itype_en = 6,
   momenuva_ity_node_momenfr_itype_en = 7,	/*extended enum itype_en */
   momenuva_xty_lastvalue = 8, momenuva_xty_assovaldata =
     9, momenuva_xty_vectvaldata = 10,

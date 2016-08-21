@@ -4792,7 +4792,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
                           mom_item_cstring(typitm), mom_value_cstring(extenumtup));
           assert (extenumtup != nullptr);
           extenumlen = mom_raw_size(extenumtup);
-          vecenurs.reserve(extenumlen+mynbenur+1);
+          vecenurs.reserve(2*extenumlen+2*mynbenur+1);
           auto introtree =
             mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
                                 literal_string("/*extending enum "),
@@ -4814,6 +4814,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s eix#%d curxenuritm=%s curxenurtree=%s",
                               mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm),
                               mom_value_cstring(curxenurtree));
+	      vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
               vectree.push_back(curxenurtree);
             }
           auto aftertree =

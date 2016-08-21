@@ -51,7 +51,7 @@ CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
 .PHONY: all tags modules plugins clean  predefgc tests \
-        test0 test1 testbty testheader
+        test0 test1 testbty testheader testheader2
 
 all: monimelt
 
@@ -118,7 +118,7 @@ predefgc: $(OBJECTS)  predefgc.cc
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
 
-tests: monimelt global.mom test0 test1 testbty testheader
+tests: monimelt global.mom test0 test1 testbty testheader testheader2
 
 test0: monimelt global.mom  tests/cmod0c.mb 
 	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0c.mb --test-arg tiny_module --test-run emitc
@@ -133,6 +133,15 @@ testbty: monimelt global.mom  tests/cmodbty.mb
 
 testheader: monimelt global.mom  tests/cmodheader.mb
 	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodheader.mb --test-arg header_module --test-run emith
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+	$(INDENT) modules/momg_header_module.h
+
+
+testheader2: monimelt global.mom  tests/cmodheader2.mb
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodheader2.mb --test-arg header_module --test-run emith
 	$(INDENT) modules/momg_header_module.h
 	$(INDENT) modules/momg_header_module.h
 	$(INDENT) modules/momg_header_module.h
