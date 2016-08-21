@@ -1,0 +1,312 @@
+# file cmodheader2.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
+
+
+^global !gc_alloc (
+  ^* descr primitive
+  ^* comment "primitive to allocate GC-ed memory"
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc*/ mom_gc_alloc(" num0 ")")
+)
+
+^global !gc_alloc_scalar (
+  ^* descr primitive
+  ^* comment "primitive to allocate GC-ed scalar memory"
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc_scalar*/ mom_gc_alloc_scalar(" num0
+  ")")
+)
+
+^global !gc_alloc_uncollectable (
+  ^* descr primitive
+  ^* signature signature_int_to_value
+  ^* c_expansion %code_chunk("/*gc_alloc_uncollectable*/ mom_gc_alloc_uncollectable(" num0 ")")
+)
+
+^global !seqitem_size (
+  ^* comment "inline function to get the size of a seqitem"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?seqitem_size (
+    ^* comment "body of seqitem_size"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in seqitem_size"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on seqitem"
+              ^* test %dyncast_seqitem(val0)
+              ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return size"
+		^* return %int(%get(val0 va_size))
+              )
+	    )
+	    ^global ?test (
+	      ^* descr test
+	      ^* comment "else return 0"
+	      ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return 0"
+		^* return 0
+              )
+	   )
+	 ]
+       )
+    ]
+  )
+)
+
+
+
+^global !tuple_size (
+  ^* comment "inline function to get the size of a tuple"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?tuple_size (
+    ^* comment "body of tuple_size"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in tuple_size"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on tuple"
+              ^* test %dyncast_tuple(val0)
+              ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return size"
+		^* return %int(%get(val0 va_size))
+              )
+	    )
+	    ^global ?test (
+	      ^* descr test
+	      ^* comment "else return 0"
+	      ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return 0"
+		^* return 0
+              )
+	   )
+	 ]
+       )
+    ]
+  )
+)
+
+
+^global !set_size (
+  ^* comment "inline function to get the size of a set"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?set_size (
+    ^* comment "body of set_size"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in set_size"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on set"
+              ^* test %dyncast_set(val0)
+              ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return size"
+		^* return %int(%get(val0 va_size))
+              )
+	    )
+	    ^global ?test (
+	      ^* descr test
+	      ^* comment "else return 0"
+	      ^* then ^global ?return (
+	        ^* descr return
+		^* comment "return 0"
+		^* return 0
+              )
+	   )
+	 ]
+       )
+    ]
+  )
+)
+
+
+
+
+^global !tuple_nth (
+  ^* comment "inline function to get the nth component in a tuple"
+  ^* descr inline
+  ^* signature signature_value_int_to_item
+  ^* body  ^global ?tuple_nth (
+    ^* comment "body of tuple_nth"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in tuple_nth"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on tuple"
+              ^* test %dyncast_tuple(val0)
+              ^* then ^global ?sequence (
+                ^* descr sequence
+                ^* locals [ nloc ]
+                ^* body [
+                  ^global ?assign (
+                    ^* descr assign
+                    ^* comment "compute nloc <-> size(val0)"
+                    ^* to nloc
+                    ^* from %int(%get (val0 va_size))
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0<0"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %less_int_prim (num0 0)
+                        ^* then ^global ?assign (
+                          ^* descr assign
+                          ^* to num0
+                          ^* from %plus (nloc num0)
+                        )
+                      )
+                    ]
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0 >= 0 && num0 < nloc"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %and (%greater_equal_int_prim (num0 0)
+                                      %less_int_prim (num0 nloc))
+                        ^* then ^global ?return (
+                          ^* descr return
+                          ^* return %at(val0 seqitem num0)
+                        )
+                      )
+                    ]
+                  )
+                ]
+              )
+            )
+          ]
+        )
+        ^global ?return (
+          ^* descr return
+          ^* comment "return nil"
+        )
+    ]
+  )
+)
+
+
+^global !set_nth (
+  ^* comment "inline function to get the nth component in a set"
+  ^* descr inline
+  ^* signature signature_value_int_to_item
+  ^* body  ^global ?set_nth (
+    ^* comment "body of set_nth"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in set_nth"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on set"
+              ^* test %dyncast_set(val0)
+              ^* then ^global ?sequence (
+                ^* descr sequence
+                ^* locals [ nloc ]
+                ^* body [
+                  ^global ?assign (
+                    ^* descr assign
+                    ^* comment "compute nloc <-> size(val0)"
+                    ^* to nloc
+                    ^* from %int(%get (val0 va_size))
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0<0"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %less_int_prim (num0 0)
+                        ^* then ^global ?assign (
+                          ^* descr assign
+                          ^* to num0
+                          ^* from %plus (nloc num0)
+                        )
+                      )
+                    ]
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0 >= 0 && num0 < nloc"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %and (%greater_equal_int_prim (num0 0)
+                                      %less_int_prim (num0 nloc))
+                        ^* then ^global ?return (
+                          ^* descr return
+                          ^* return %at(val0 seqitem num0)
+                        )
+                      )
+                    ]
+                  )
+                ]
+              )
+            )
+          ]
+        )
+        ^global ?return (
+          ^* descr return
+          ^* comment "return nil"
+        )
+    ]
+  )
+)
+
+
+
+^global header_module (
+   ^* comment "our header_module"
+   ^* descr module
+   ^* declare [ make_item ]
+   ^* notice { gc_alloc gc_alloc_scalar gc_alloc_uncollectable }
+   ^* module [
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
+     item_ty node_ty
+     itype_en
+     xtype_en
+     valid_value_pointer itype
+     valid_item_pointer
+     int_val_def value_hash
+     item_hash
+     dyncast_int dyncast_boxdouble
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
+     dyncast_item
+     int_make
+     seqitem_nth
+     tuple_nth
+     set_nth
+     seqitem_size
+     tuple_size
+     set_size
+   ]
+)
+
+^display "our header_module:" header_module
+
