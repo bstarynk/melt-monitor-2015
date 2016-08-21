@@ -148,6 +148,24 @@ num0
 
 
 
+*assign__0pGGh2RuTxBne5
+1471770275
+^mtime
+(
+descr
+assign
+from
+(
+nloc
+num0
+plus
+)node
+to
+num0
+)attrs
+
+
+
 *assign__168BNUrxoXTRdf
 1471713325
 ^mtime
@@ -184,6 +202,94 @@ itype
 to
 typ0loc
 )attrs
+
+
+
+*assign__1Psgm0Vo1Zlou5
+1471770275
+^mtime
+(
+comment
+"compute nloc <-> size(val0)"_
+descr
+assign
+from
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+to
+nloc
+)attrs
+
+
+
+*assign__2KYo8pMdomKjZv
+1471770275
+^mtime
+(
+descr
+assign
+from
+(
+nloc
+num0
+plus
+)node
+to
+num0
+)attrs
+
+
+
+*assign__3Dj3wsYpePxKZo
+1471770275
+^mtime
+(
+comment
+"compute nloc <-> size(val0)"_
+descr
+assign
+from
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+to
+nloc
+)attrs
+
+
+
+*assign__5JsIMZS0imbUkb
+1471770275
+^mtime
+(
+comment
+"compute nloc <-> size(val0)"_
+descr
+assign
+from
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+to
+nloc
+)attrs
+
 
 
 
@@ -253,6 +359,24 @@ nloc
 
 
 
+*assign__8ucBBXDHKeBAXH
+1471770275
+^mtime
+(
+descr
+assign
+from
+(
+nloc
+num0
+plus
+)node
+to
+num0
+)attrs
+
+
+
 *associativity
 1455871773
 ^mtime
@@ -278,7 +402,6 @@ ada_ents
 type
 struct
 )attrs
-
 
 
 
@@ -418,6 +541,7 @@ struct
 
 
 
+
 *boxs_cstr
 1471713325
 ^mtime
@@ -510,7 +634,6 @@ comment
 comment
 "for brackets []"_
 )attrs
-
 
 
 
@@ -633,6 +756,7 @@ comment
 
 
 
+
 *code_chunk
 1466095429
 ^mtime
@@ -683,6 +807,22 @@ comment
 
 
 
+*cond__0izjyMP46oYfA0
+1471770275
+^mtime
+(
+comment
+"cond on val0 in set_nth"_
+cond
+(
+test__0tsSCrFCqwKcpk
+)tuple
+descr
+cond
+)attrs
+
+
+
 *cond__0sy5zWU7ef8m8m
 1471713325
 ^mtime
@@ -702,7 +842,6 @@ cond
 
 
 
-
 *cond__0JYeqaDeIYaZGL
 1471713325
 ^mtime
@@ -713,6 +852,39 @@ cond
 (
 test__2kUM0g7KYR5eM2
 test__0awihFol5jgjqg
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__0Ph7G2KNGJvfrt
+1471770275
+^mtime
+(
+comment
+"cond on val0 in node_metaitem"_
+cond
+(
+test__6acTFUcGEwHZvq
+test__98A0323g0C95f2
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__0SY1LDEZo66y5u
+1471770275
+^mtime
+(
+comment
+"test num0<0"_
+cond
+(
+test__2Suk0AtUjX8U4f
 )tuple
 descr
 cond
@@ -771,6 +943,23 @@ cond
 
 
 
+*cond__274yawau2MAM2N
+1471770275
+^mtime
+(
+comment
+"cond on val0 in node_conn"_
+cond
+(
+test__4c8vV9FH31Veqa
+test__2BwIvPRGfrbHL6
+)tuple
+descr
+cond
+)attrs
+
+
+
 *cond__2je2bFhsDpT86L
 1471713325
 ^mtime
@@ -790,6 +979,56 @@ cond
 
 
 
+*cond__2CrNDXb5NWebUo
+1471770275
+^mtime
+(
+comment
+"test num0 >= 0 && num0 < nloc"_
+cond
+(
+test__7s3XoFBz06VBJ0
+)tuple
+descr
+cond
+)attrs
+
+
+
+
+*cond__2Rg8K4LzPjIo39
+1471770275
+^mtime
+(
+comment
+"cond on val0 in node_metarank"_
+cond
+(
+test__9aJ6kthq0wMPay
+test__1czRsvFFa5KFyR
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__32py9BI1Lwpjgi
+1471770275
+^mtime
+(
+comment
+"test num0 >= 0 && num0 < nloc"_
+cond
+(
+test__0v5EkR5LobSixf
+)tuple
+descr
+cond
+)attrs
+
+
+
 *cond__3ck1YiXouWk3na
 1471713325
 ^mtime
@@ -800,6 +1039,38 @@ cond
 (
 test__0BqaAtCotMYr6G
 test__970ph6zdukCYcn
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__3i4W9RKYTzdBUs
+1471770275
+^mtime
+(
+comment
+"test num0<0"_
+cond
+(
+test__0uPRzKpbxGzt1w
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__3J2hzl02WJ9rxv
+1471770275
+^mtime
+(
+comment
+"test num0 >= 0 && num0 < nloc"_
+cond
+(
+test__6SVHJL8hRjZrVl
 )tuple
 descr
 cond
@@ -837,6 +1108,40 @@ test__2jobdKJ3h8zwIr
 test__2HjoDl66r5LsLb
 test__0dVwnFElnicZ0P
 test__5CGML1k75sNs6e
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__5MMZckMbNAJUtz
+1471770275
+^mtime
+(
+comment
+"cond on val0 in tuple_size"_
+cond
+(
+test__2SnjFLVYYg2s5P
+test__10tH3cvIXCj4xJ
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__6hPT5Jl2PGFtmA
+1471770275
+^mtime
+(
+comment
+"cond on val0 in node_size"_
+cond
+(
+test__08m3dpe8iKaPcE
+test__6DLfYnofsXmGiZ
 )tuple
 descr
 cond
@@ -893,6 +1198,40 @@ cond
 
 
 
+*cond__6sbtCC5hmCuZ7h
+1471770275
+^mtime
+(
+comment
+"cond on val0 in seqitem_size"_
+cond
+(
+test__0VU2UJWVYl7h2s
+test__2kvn8Z2abYJA9P
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__6Y9jYvDNJ6pZXv
+1471770275
+^mtime
+(
+comment
+"cond on val0 in set_size"_
+cond
+(
+test__35iRqViXqhDWSv
+test__7PT42YHgNXoUcd
+)tuple
+descr
+cond
+)attrs
+
+
+
 *cond__7Gd5VgTJhXN08I
 1471713325
 ^mtime
@@ -926,6 +1265,23 @@ cond
 
 
 
+
+*cond__85FDUnMFewmJLm
+1471770275
+^mtime
+(
+comment
+"test num0<0"_
+cond
+(
+test__13GlI6Utu61L9J
+)tuple
+descr
+cond
+)attrs
+
+
+
 *cond__8bjVVK6X00kKz9
 1471713325
 ^mtime
@@ -937,6 +1293,38 @@ cond
 test__3phL9nJnz6UTe6
 test__8FtPntJ9hPCCvf
 test__8cs58KiUutyD8Z
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__8e60x4jVEbYwYc
+1471770275
+^mtime
+(
+comment
+"cond on val0 in tuple_nth"_
+cond
+(
+test__11sRBaZRj914LJ
+)tuple
+descr
+cond
+)attrs
+
+
+
+*cond__8losdq7ZwHrDei
+1471770275
+^mtime
+(
+comment
+"cond on val0 in node_nth"_
+cond
+(
+test__7hTwCWMH4qNlPd
 )tuple
 descr
 cond
@@ -974,7 +1362,6 @@ test__6jDXekXmnAYXUC
 descr
 cond
 )attrs
-
 
 
 
@@ -1097,6 +1484,7 @@ comment
 
 
 
+
 *declare
 1470731351
 ^mtime
@@ -1154,7 +1542,6 @@ comment
 comment
 "attribute giving the displayer closure"_
 )attrs
-
 
 
 
@@ -1311,6 +1698,7 @@ signature_value_to_value
 
 
 
+
 *dyncast_item__7NFvWke2ptiCnk
 1471713325
 ^mtime
@@ -1404,7 +1792,6 @@ inline
 signature
 signature_value_to_value
 )attrs
-
 
 
 
@@ -1548,6 +1935,7 @@ comment
 
 
 
+
 *extend
 1467896846
 ^mtime
@@ -1609,7 +1997,6 @@ bool
 comment
 "to make a node, but flattening some arguments"_
 )attrs
-
 
 
 
@@ -1713,6 +2100,7 @@ comment
 
 
 
+
 *func
 1455800324
 ^mtime
@@ -1723,8 +2111,29 @@ comment
 
 
 
+*gc_alloc
+1471770275
+^mtime
+(
+c_expansion
+(
+"/*gc_alloc*/ mom_gc_alloc("_
+num0
+")"_
+code_chunk
+)node
+comment
+"primitive to allocate GC-ed memory"_
+descr
+primitive
+signature
+signature_int_to_value
+)attrs
+
+
+
 *gc_alloc_scalar
-1471713325
+1471770275
 ^mtime
 (
 c_expansion
@@ -1736,6 +2145,25 @@ code_chunk
 )node
 comment
 "primitive to allocate GC-ed scalar memory"_
+descr
+primitive
+signature
+signature_int_to_value
+)attrs
+
+
+
+*gc_alloc_uncollectable
+1471770275
+^mtime
+(
+c_expansion
+(
+"/*gc_alloc_uncollectable*/ mom_gc_alloc_uncollectable("_
+num0
+")"_
+code_chunk
+)node
 descr
 primitive
 signature
@@ -1794,7 +2222,6 @@ primitive
 signature
 signature_2ints_to_bool
 )attrs
-
 
 
 
@@ -1883,7 +2310,7 @@ comment
 
 
 *header_module
-1471713325
+1471770275
 ^mtime
 (
 comment
@@ -1927,8 +2354,25 @@ dyncast_node
 dyncast_item
 int_make
 seqitem_nth
+tuple_nth
+set_nth
+seqitem_size
+tuple_size
+set_size
+node_size
+node_conn
+node_nth
+node_metarank
+node_metaitem
 )tuple
+notice
+(
+gc_alloc
+gc_alloc_scalar
+gc_alloc_uncollectable
+)set
 )attrs
+
 
 
 
@@ -2025,7 +2469,6 @@ comment
 comment
 "for instructions"_
 )attrs
-
 
 
 
@@ -2144,6 +2587,7 @@ comment
 
 
 
+
 *is_int
 1457358950
 ^mtime
@@ -2241,7 +2685,6 @@ comment
 notice
 set
 )attrs
-
 
 
 
@@ -2376,6 +2819,7 @@ struct
 
 
 
+
 *iter
 1457079401
 ^mtime
@@ -2477,7 +2921,6 @@ field
 type
 uint32_t
 )attrs
-
 
 
 
@@ -2596,6 +3039,7 @@ enumerator
 notice
 node
 )attrs
+
 
 
 
@@ -2720,7 +3164,6 @@ comment
 
 
 
-
 *left_assoc
 1455871773
 ^mtime
@@ -2827,6 +3270,7 @@ comment
 
 
 
+
 *locval
 1471713325
 ^mtime
@@ -2912,7 +3356,6 @@ comment
 comment
 "for modules"_
 )attrs
-
 
 
 
@@ -3014,6 +3457,7 @@ int
 
 
 
+
 *nod_sons
 1471713325
 ^mtime
@@ -3059,6 +3503,38 @@ comment
 
 
 
+*node_conn
+1471770275
+^mtime
+(
+body
+node_conn__1abUUmg4fXnvGj
+comment
+"inline function to get the connective item of a node"_
+descr
+inline
+signature
+signature_value_to_item
+)attrs
+
+
+
+*node_conn__1abUUmg4fXnvGj
+1471770275
+^mtime
+(
+body
+(
+cond__274yawau2MAM2N
+)tuple
+comment
+"body of node_conn"_
+descr
+sequence
+)attrs
+
+
+
 *node_connective
 1457430266
 ^mtime
@@ -3069,12 +3545,131 @@ comment
 
 
 
-*node_nth
-1457430266
+*node_metaitem
+1471770275
 ^mtime
 (
+body
+node_metaitem__4Il0AiXdoCCq9k
 comment
-"get the nth son of a node, or else nil"_
+"inline function to get the metaitem of a node"_
+descr
+inline
+signature
+signature_value_to_item
+)attrs
+
+
+
+*node_metaitem__4Il0AiXdoCCq9k
+1471770275
+^mtime
+(
+body
+(
+cond__0Ph7G2KNGJvfrt
+)tuple
+comment
+"body of node_metaitem"_
+descr
+sequence
+)attrs
+
+
+
+*node_metarank
+1471770275
+^mtime
+(
+body
+node_metarank__5wio2KMnLMrIHj
+comment
+"inline function to get the metarank of a node"_
+descr
+inline
+signature
+signature_value_to_int
+)attrs
+
+
+
+*node_metarank__5wio2KMnLMrIHj
+1471770275
+^mtime
+(
+body
+(
+cond__2Rg8K4LzPjIo39
+)tuple
+comment
+"body of node_metarank"_
+descr
+sequence
+)attrs
+
+
+
+*node_nth
+1471770275
+^mtime
+(
+body
+node_nth__198xNnPcbgbUhX
+comment
+"inline function to get the nth son in a node"_
+descr
+inline
+signature
+signature_value_int_to_value
+)attrs
+
+
+
+*node_nth__198xNnPcbgbUhX
+1471770275
+^mtime
+(
+body
+(
+cond__8losdq7ZwHrDei
+return__88bvoTCB3rnwsq
+)tuple
+comment
+"body of node_nth"_
+descr
+sequence
+)attrs
+
+
+
+*node_size
+1471770275
+^mtime
+(
+body
+node_size__5NeS7HUjMge1Ub
+comment
+"inline function to get the size of a node"_
+descr
+inline
+signature
+signature_value_to_int
+)attrs
+
+
+
+*node_size__5NeS7HUjMge1Ub
+1471770275
+^mtime
+(
+body
+(
+cond__6hPT5Jl2PGFtmA
+)tuple
+comment
+"body of node_size"_
+descr
+sequence
 )attrs
 
 
@@ -3112,6 +3707,7 @@ comment
 
 
 
+
 *not
 1457428465
 ^mtime
@@ -3121,7 +3717,6 @@ comment
 notice
 is_null
 )attrs
-
 
 
 
@@ -3290,6 +3885,7 @@ comment
 
 
 
+
 *out_html
 1456812179
 ^mtime
@@ -3297,7 +3893,6 @@ comment
 comment
 "output HTML encoding"_
 )attrs
-
 
 
 
@@ -3471,6 +4066,7 @@ comment
 
 
 
+
 *payl_assovaldata_set_attrs
 1456833278
 ^mtime
@@ -3478,7 +4074,6 @@ comment
 comment
 "give the set of attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -3648,6 +4243,7 @@ comment
 
 
 
+
 *payl_hashmap_keyset
 1456897878
 ^mtime
@@ -3655,7 +4251,6 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -3817,6 +4412,7 @@ comment
 
 
 
+
 *payl_vectval_nth
 1456840222
 ^mtime
@@ -3824,7 +4420,6 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
-
 
 
 
@@ -4021,6 +4616,7 @@ comment
 
 
 
+
 *put
 1455358475
 ^mtime
@@ -4028,7 +4624,6 @@ comment
 comment
 "to put something"_
 )attrs
-
 
 
 
@@ -4088,6 +4683,23 @@ comment
 (
 comment
 "for return"_
+)attrs
+
+
+
+*return__09r7CXywNKR849
+1471770275
+^mtime
+(
+descr
+return
+return
+(
+val0
+seqitem
+num0
+at
+)node
 )attrs
 
 
@@ -4209,6 +4821,7 @@ locval
 
 
 
+
 *return__16DZKIWAZeUSWZ
 1471713325
 ^mtime
@@ -4230,7 +4843,6 @@ comment
 descr
 return
 )attrs
-
 
 
 
@@ -4274,6 +4886,24 @@ return
 
 
 
+*return__1qKNm0MWSaSYi3
+1471770275
+^mtime
+(
+comment
+"return metaitem"_
+descr
+return
+return
+(
+val0
+nod_metaitem
+get
+)node
+)attrs
+
+
+
 *return__1MudAfEsD0V7CE
 1471713325
 ^mtime
@@ -4282,6 +4912,23 @@ comment
 "return nil"_
 descr
 return
+)attrs
+
+
+
+*return__2bCn2gwfck4RAw
+1471770275
+^mtime
+(
+descr
+return
+return
+(
+val0
+nod_sons
+num0
+at
+)node
 )attrs
 
 
@@ -4340,6 +4987,20 @@ hash_t
 
 
 
+*return__3KAt2f8IS108sv
+1471770275
+^mtime
+(
+comment
+"return 0"_
+descr
+return
+return
+0_
+)attrs
+
+
+
 *return__4cCxyHbw81GzdX
 1471713325
 ^mtime
@@ -4362,6 +5023,20 @@ descr
 return
 return
 val0
+)attrs
+
+
+
+*return__4HEPCau78dBrls
+1471770275
+^mtime
+(
+comment
+"return 0"_
+descr
+return
+return
+0_
 )attrs
 
 
@@ -4395,6 +5070,7 @@ hash_t
 
 
 
+
 *return__4SegjC5M3naquf
 1471713325
 ^mtime
@@ -4419,6 +5095,27 @@ descr
 return
 return
 ity_int
+)attrs
+
+
+
+*return__4V736e7sJsgtS5
+1471770275
+^mtime
+(
+comment
+"return size"_
+descr
+return
+return
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
 )attrs
 
 
@@ -4486,6 +5183,29 @@ ity_none
 
 
 
+*return__5wCSvRAbfqjWp4
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__5z00EMDKE09SXP
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
 
 *return__5H8gmeVeJ0EcaJ
 1471713325
@@ -4495,6 +5215,125 @@ comment
 "return false when nil value"_
 descr
 return
+)attrs
+
+
+
+*return__6e0Jy2nEqGyvE9
+1471770275
+^mtime
+(
+comment
+"return size"_
+descr
+return
+return
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+)attrs
+
+
+
+*return__6jnol6Z9I40fAP
+1471770275
+^mtime
+(
+comment
+"return conn"_
+descr
+return
+return
+(
+val0
+nod_connitm
+get
+)node
+)attrs
+
+
+
+*return__6CX7d7Wy5M3S5Z
+1471770275
+^mtime
+(
+comment
+"return size"_
+descr
+return
+return
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+)attrs
+
+
+
+*return__6SfesUFYBZLD5P
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__6U0bEZ4d7W4Rlu
+1471770275
+^mtime
+(
+comment
+"return 0"_
+descr
+return
+return
+0_
+)attrs
+
+
+
+*return__6VLufmy217RLbl
+1471770275
+^mtime
+(
+comment
+"return 0"_
+descr
+return
+return
+0_
+)attrs
+
+
+
+
+*return__7dxhaqeZ0oFPnF
+1471770275
+^mtime
+(
+comment
+"return metarank"_
+descr
+return
+return
+(
+val0
+nod_metarank
+get
+)node
 )attrs
 
 
@@ -4600,6 +5439,27 @@ val0
 
 
 
+*return__7VuXegjDakhtNk
+1471770275
+^mtime
+(
+comment
+"return size"_
+descr
+return
+return
+(
+(
+val0
+va_size
+get
+)node
+int
+)node
+)attrs
+
+
+
 *return__86YJuedzLyb0IS
 1471713325
 ^mtime
@@ -4610,6 +5470,47 @@ descr
 return
 return
 val0
+)attrs
+
+
+
+*return__88bvoTCB3rnwsq
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
+)attrs
+
+
+
+*return__88mhPUsIT6vz8k
+1471770275
+^mtime
+(
+descr
+return
+return
+(
+val0
+seqitem
+num0
+at
+)node
+)attrs
+
+
+
+*return__8eAy7esdVXVVcu
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
 )attrs
 
 
@@ -4663,6 +5564,7 @@ return
 return
 val0
 )attrs
+
 
 
 
@@ -4728,7 +5630,6 @@ return
 
 
 
-
 *return__97TwJN4BymS6xn
 1471713325
 ^mtime
@@ -4739,6 +5640,18 @@ descr
 return
 return
 ity_none
+)attrs
+
+
+
+*return__99Nba6UJsBCgb8
+1471770275
+^mtime
+(
+comment
+"return nil"_
+descr
+return
 )attrs
 
 
@@ -4876,6 +5789,39 @@ sequence
 
 
 
+
+*seqitem_size
+1471770275
+^mtime
+(
+body
+seqitem_size__0Isxzw7or8Moch
+comment
+"inline function to get the size of a seqitem"_
+descr
+inline
+signature
+signature_value_to_int
+)attrs
+
+
+
+*seqitem_size__0Isxzw7or8Moch
+1471770275
+^mtime
+(
+body
+(
+cond__6sbtCC5hmCuZ7h
+)tuple
+comment
+"body of seqitem_size"_
+descr
+sequence
+)attrs
+
+
+
 *seqitem_ty
 1471713325
 ^mtime
@@ -4902,6 +5848,26 @@ struct
 (
 comment
 "for sequences"_
+)attrs
+
+
+
+*sequence__4eFTucGgPvwELP
+1471770275
+^mtime
+(
+body
+(
+assign__3Dj3wsYpePxKZo
+cond__0SY1LDEZo66y5u
+cond__3J2hzl02WJ9rxv
+)tuple
+descr
+sequence
+locals
+(
+nloc
+)tuple
 )attrs
 
 
@@ -4947,6 +5913,46 @@ locval
 
 
 
+*sequence__6P1nvHXB4E8e8R
+1471770275
+^mtime
+(
+body
+(
+assign__1Psgm0Vo1Zlou5
+cond__3i4W9RKYTzdBUs
+cond__32py9BI1Lwpjgi
+)tuple
+descr
+sequence
+locals
+(
+nloc
+)tuple
+)attrs
+
+
+
+*sequence__7Z6RVE7EWAg5CV
+1471770275
+^mtime
+(
+body
+(
+assign__5JsIMZS0imbUkb
+cond__85FDUnMFewmJLm
+cond__2CrNDXb5NWebUo
+)tuple
+descr
+sequence
+locals
+(
+nloc
+)tuple
+)attrs
+
+
+
 *set
 1456146211
 ^mtime
@@ -4960,6 +5966,70 @@ is_set
 )set
 )attrs
 
+
+
+*set_nth
+1471770275
+^mtime
+(
+body
+set_nth__2Hd3ymh59bfUGJ
+comment
+"inline function to get the nth component in a set"_
+descr
+inline
+signature
+signature_value_int_to_item
+)attrs
+
+
+
+*set_nth__2Hd3ymh59bfUGJ
+1471770275
+^mtime
+(
+body
+(
+cond__0izjyMP46oYfA0
+return__5z00EMDKE09SXP
+)tuple
+comment
+"body of set_nth"_
+descr
+sequence
+)attrs
+
+
+
+*set_size
+1471770275
+^mtime
+(
+body
+set_size__6yktxFGh5czivo
+comment
+"inline function to get the size of a set"_
+descr
+inline
+signature
+signature_value_to_int
+)attrs
+
+
+
+*set_size__6yktxFGh5czivo
+1471770275
+^mtime
+(
+body
+(
+cond__6Y9jYvDNJ6pZXv
+)tuple
+comment
+"body of set_size"_
+descr
+sequence
+)attrs
 
 
 
@@ -4987,6 +6057,7 @@ num1
 result
 bool
 )attrs
+
 
 
 
@@ -5194,7 +6265,6 @@ int
 
 
 
-
 *signature_value_int_to_item
 1471713325
 ^mtime
@@ -5209,6 +6279,26 @@ num0
 result
 item
 )attrs
+
+
+
+*signature_value_int_to_value
+1471770275
+^mtime
+(
+comment
+"signature value, int -> value"_
+descr
+signature
+formals
+(
+val0
+num0
+)tuple
+result
+value
+)attrs
+
 
 
 
@@ -5260,6 +6350,24 @@ val0
 )tuple
 result
 int
+)attrs
+
+
+
+*signature_value_to_item
+1471770275
+^mtime
+(
+comment
+"signature value -> item"_
+descr
+signature
+formals
+(
+val0
+)tuple
+result
+item
 )attrs
 
 
@@ -5553,6 +6661,25 @@ return__4SrZRDKm86VbEl
 
 
 
+*test__08m3dpe8iKaPcE
+1471770275
+^mtime
+(
+comment
+"test on node"_
+descr
+test
+test
+(
+val0
+dyncast_node
+)node
+then
+return__4V736e7sJsgtS5
+)attrs
+
+
+
 *test__0awihFol5jgjqg
 1471713325
 ^mtime
@@ -5615,6 +6742,70 @@ valid_item_pointer
 then
 return__0raRiej7sI2Ehl
 )attrs
+
+
+
+*test__0tsSCrFCqwKcpk
+1471770275
+^mtime
+(
+comment
+"test on set"_
+descr
+test
+test
+(
+val0
+dyncast_set
+)node
+then
+sequence__7Z6RVE7EWAg5CV
+)attrs
+
+
+
+*test__0uPRzKpbxGzt1w
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+num0
+0_
+less_int_prim
+)node
+then
+assign__2KYo8pMdomKjZv
+)attrs
+
+
+
+*test__0v5EkR5LobSixf
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+(
+num0
+0_
+greater_equal_int_prim
+)node
+(
+num0
+nloc
+less_int_prim
+)node
+and
+)node
+then
+return__88mhPUsIT6vz8k
+)attrs
+
 
 
 
@@ -5687,6 +6878,90 @@ return__3mNWjkwy5c5p1N
 
 
 
+*test__0VU2UJWVYl7h2s
+1471770275
+^mtime
+(
+comment
+"test on seqitem"_
+descr
+test
+test
+(
+val0
+dyncast_seqitem
+)node
+then
+return__6CX7d7Wy5M3S5Z
+)attrs
+
+
+
+*test__10tH3cvIXCj4xJ
+1471770275
+^mtime
+(
+comment
+"else return 0"_
+descr
+test
+then
+return__3KAt2f8IS108sv
+)attrs
+
+
+
+*test__11sRBaZRj914LJ
+1471770275
+^mtime
+(
+comment
+"test on tuple"_
+descr
+test
+test
+(
+val0
+dyncast_tuple
+)node
+then
+sequence__6P1nvHXB4E8e8R
+)attrs
+
+
+
+*test__13GlI6Utu61L9J
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+num0
+0_
+less_int_prim
+)node
+then
+assign__8ucBBXDHKeBAXH
+)attrs
+
+
+
+*test__1czRsvFFa5KFyR
+1471770275
+^mtime
+(
+comment
+"else return nil"_
+descr
+test
+then
+return__6SfesUFYBZLD5P
+)attrs
+
+
+
 *test__1ekHharbwEGA6N
 1471713325
 ^mtime
@@ -5698,7 +6973,6 @@ test
 then
 return__1eS5p39gjaoTpX
 )attrs
-
 
 
 
@@ -5793,6 +7067,20 @@ return__8LPXIkD70lF5va
 
 
 
+*test__2kvn8Z2abYJA9P
+1471770275
+^mtime
+(
+comment
+"else return 0"_
+descr
+test
+then
+return__6VLufmy217RLbl
+)attrs
+
+
+
 *test__2kUM0g7KYR5eM2
 1471713325
 ^mtime
@@ -5826,6 +7114,21 @@ return__8MAb1x0Cd1aasN
 
 
 
+
+*test__2BwIvPRGfrbHL6
+1471770275
+^mtime
+(
+comment
+"else return nil"_
+descr
+test
+then
+return__99Nba6UJsBCgb8
+)attrs
+
+
+
 *test__2HjoDl66r5LsLb
 1471713325
 ^mtime
@@ -5845,6 +7148,43 @@ unsafe_int_mod_prim
 )node
 then
 return__8Knwngzq0m87NE
+)attrs
+
+
+
+*test__2SnjFLVYYg2s5P
+1471770275
+^mtime
+(
+comment
+"test on tuple"_
+descr
+test
+test
+(
+val0
+dyncast_tuple
+)node
+then
+return__7VuXegjDakhtNk
+)attrs
+
+
+
+*test__2Suk0AtUjX8U4f
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+num0
+0_
+less_int_prim
+)node
+then
+assign__0pGGh2RuTxBne5
 )attrs
 
 
@@ -5887,6 +7227,25 @@ is_null
 )node
 then
 return__5H8gmeVeJ0EcaJ
+)attrs
+
+
+
+*test__35iRqViXqhDWSv
+1471770275
+^mtime
+(
+comment
+"test on set"_
+descr
+test
+test
+(
+val0
+dyncast_set
+)node
+then
+return__6e0Jy2nEqGyvE9
 )attrs
 
 
@@ -6012,6 +7371,25 @@ return__4NZWiuSjV6H8wH
 
 
 
+*test__4c8vV9FH31Veqa
+1471770275
+^mtime
+(
+comment
+"test on node"_
+descr
+test
+test
+(
+val0
+dyncast_node
+)node
+then
+return__6jnol6Z9I40fAP
+)attrs
+
+
+
 *test__4mAs673KV0LdZT
 1471713325
 ^mtime
@@ -6040,7 +7418,6 @@ return__18HzPakaFnKKaD
 
 
 
-
 *test__4uufJofKRKuNro
 1471713325
 ^mtime
@@ -6063,6 +7440,7 @@ not_bool_prim
 then
 return__8j33lGx7Lc8Kta
 )attrs
+
 
 
 
@@ -6116,6 +7494,25 @@ return__8memwFf9R7Vm5L
 
 
 
+*test__6acTFUcGEwHZvq
+1471770275
+^mtime
+(
+comment
+"test on node"_
+descr
+test
+test
+(
+val0
+dyncast_node
+)node
+then
+return__1qKNm0MWSaSYi3
+)attrs
+
+
+
 *test__6jDXekXmnAYXUC
 1471713325
 ^mtime
@@ -6144,6 +7541,65 @@ descr
 test
 then
 return__1MudAfEsD0V7CE
+)attrs
+
+
+
+*test__6DLfYnofsXmGiZ
+1471770275
+^mtime
+(
+comment
+"else return 0"_
+descr
+test
+then
+return__4HEPCau78dBrls
+)attrs
+
+
+
+*test__6SVHJL8hRjZrVl
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+(
+num0
+0_
+greater_equal_int_prim
+)node
+(
+num0
+nloc
+less_int_prim
+)node
+and
+)node
+then
+return__2bCn2gwfck4RAw
+)attrs
+
+
+
+*test__7hTwCWMH4qNlPd
+1471770275
+^mtime
+(
+comment
+"test on node"_
+descr
+test
+test
+(
+val0
+dyncast_node
+)node
+then
+sequence__4eFTucGgPvwELP
 )attrs
 
 
@@ -6194,6 +7650,32 @@ return__0CLAyKrchiu2uH
 
 
 
+*test__7s3XoFBz06VBJ0
+1471770275
+^mtime
+(
+descr
+test
+test
+(
+(
+num0
+0_
+greater_equal_int_prim
+)node
+(
+num0
+nloc
+less_int_prim
+)node
+and
+)node
+then
+return__09r7CXywNKR849
+)attrs
+
+
+
 *test__7tcay7jHglSr3B
 1471713325
 ^mtime
@@ -6228,6 +7710,20 @@ dyncast_seqitem
 )node
 then
 sequence__4IBtXhcbtmo8Ip
+)attrs
+
+
+
+*test__7PT42YHgNXoUcd
+1471770275
+^mtime
+(
+comment
+"else return 0"_
+descr
+test
+then
+return__6U0bEZ4d7W4Rlu
 )attrs
 
 
@@ -6269,6 +7765,7 @@ test
 then
 return__0kzrnICYtVD6Ls
 )attrs
+
 
 
 
@@ -6389,7 +7886,6 @@ return__7r3geKEFKPAUKh
 
 
 
-
 *test__8FtPntJ9hPCCvf
 1471713325
 ^mtime
@@ -6476,6 +7972,39 @@ descr
 test
 then
 return__8h3KEJdjzGdTbR
+)attrs
+
+
+
+*test__98A0323g0C95f2
+1471770275
+^mtime
+(
+comment
+"else return nil"_
+descr
+test
+then
+return__8eAy7esdVXVVcu
+)attrs
+
+
+
+*test__9aJ6kthq0wMPay
+1471770275
+^mtime
+(
+comment
+"test on node"_
+descr
+test
+test
+(
+val0
+dyncast_node
+)node
+then
+return__7dxhaqeZ0oFPnF
 )attrs
 
 
@@ -6640,6 +8169,7 @@ comment
 
 
 
+
 *time_t
 1471713325
 ^mtime
@@ -6701,6 +8231,71 @@ is_tuple
 
 
 
+*tuple_nth
+1471770275
+^mtime
+(
+body
+tuple_nth__8CcWVtWUKd7dzr
+comment
+"inline function to get the nth component in a tuple"_
+descr
+inline
+signature
+signature_value_int_to_item
+)attrs
+
+
+
+*tuple_nth__8CcWVtWUKd7dzr
+1471770275
+^mtime
+(
+body
+(
+cond__8e60x4jVEbYwYc
+return__5wCSvRAbfqjWp4
+)tuple
+comment
+"body of tuple_nth"_
+descr
+sequence
+)attrs
+
+
+
+*tuple_size
+1471770275
+^mtime
+(
+body
+tuple_size__0HtBGtJaxh09bv
+comment
+"inline function to get the size of a tuple"_
+descr
+inline
+signature
+signature_value_to_int
+)attrs
+
+
+
+*tuple_size__0HtBGtJaxh09bv
+1471770275
+^mtime
+(
+body
+(
+cond__5MMZckMbNAJUtz
+)tuple
+comment
+"body of tuple_size"_
+descr
+sequence
+)attrs
+
+
+
 *typ0loc
 1471713325
 ^mtime
@@ -6731,7 +8326,6 @@ set
 node
 )tuple
 )attrs
-
 
 
 
@@ -6794,6 +8388,7 @@ type
 comment
 "for undefined result"_
 )attrs
+
 
 
 
@@ -6952,7 +8547,6 @@ sequence
 
 
 
-
 *valid_value_pointer
 1471713325
 ^mtime
@@ -7033,6 +8627,7 @@ locals
 typ0loc
 )tuple
 )attrs
+
 
 
 
@@ -7161,7 +8756,6 @@ comment
 
 
 
-
 *while
 1455520074
 ^mtime
@@ -7217,6 +8811,7 @@ comment
 descr
 enumerator
 )attrs
+
 
 
 

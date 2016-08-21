@@ -39,21 +39,21 @@
               ^* comment "test on seqitem"
               ^* test %dyncast_seqitem(val0)
               ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return size"
-		^* return %int(%get(val0 va_size))
+                ^* descr return
+                ^* comment "return size"
+                ^* return %int(%get(val0 va_size))
               )
-	    )
-	    ^global ?test (
-	      ^* descr test
-	      ^* comment "else return 0"
-	      ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return 0"
-		^* return 0
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return 0"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return 0"
+                ^* return 0
               )
-	   )
-	 ]
+           )
+         ]
        )
     ]
   )
@@ -78,21 +78,21 @@
               ^* comment "test on tuple"
               ^* test %dyncast_tuple(val0)
               ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return size"
-		^* return %int(%get(val0 va_size))
+                ^* descr return
+                ^* comment "return size"
+                ^* return %int(%get(val0 va_size))
               )
-	    )
-	    ^global ?test (
-	      ^* descr test
-	      ^* comment "else return 0"
-	      ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return 0"
-		^* return 0
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return 0"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return 0"
+                ^* return 0
               )
-	   )
-	 ]
+           )
+         ]
        )
     ]
   )
@@ -116,21 +116,21 @@
               ^* comment "test on set"
               ^* test %dyncast_set(val0)
               ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return size"
-		^* return %int(%get(val0 va_size))
+                ^* descr return
+                ^* comment "return size"
+                ^* return %int(%get(val0 va_size))
               )
-	    )
-	    ^global ?test (
-	      ^* descr test
-	      ^* comment "else return 0"
-	      ^* then ^global ?return (
-	        ^* descr return
-		^* comment "return 0"
-		^* return 0
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return 0"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return 0"
+                ^* return 0
               )
-	   )
-	 ]
+           )
+         ]
        )
     ]
   )
@@ -280,6 +280,241 @@
 
 
 
+
+^global !node_size (
+  ^* comment "inline function to get the size of a node"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?node_size (
+    ^* comment "body of node_size"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in node_size"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on node"
+              ^* test %dyncast_node(val0)
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return size"
+                ^* return %int(%get(val0 va_size))
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return 0"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return 0"
+                ^* return 0
+              )
+           )
+         ]
+       )
+    ]
+  )
+)
+
+^global !signature_value_to_item (
+  ^* comment "signature value -> item
+  ^* descr signature
+  ^* formals [ val0 ]
+  ^* result item
+)
+
+^global !node_conn (
+  ^* comment "inline function to get the connective item of a node"
+  ^* descr inline
+  ^* signature signature_value_to_item
+  ^* body  ^global ?node_conn (
+    ^* comment "body of node_conn"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in node_conn"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on node"
+              ^* test %dyncast_node(val0)
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return conn"
+                ^* return %get(val0 nod_connitm)
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return nil"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return nil"
+              )
+           )
+         ]
+       )
+    ]
+  )
+)
+
+^global !node_metaitem (
+  ^* comment "inline function to get the metaitem of a node"
+  ^* descr inline
+  ^* signature signature_value_to_item
+  ^* body  ^global ?node_metaitem (
+    ^* comment "body of node_metaitem"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in node_metaitem"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on node"
+              ^* test %dyncast_node(val0)
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return metaitem"
+                ^* return %get(val0 nod_metaitem)
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return nil"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return nil"
+              )
+           )
+         ]
+       )
+    ]
+  )
+)
+
+
+^global !node_metarank (
+  ^* comment "inline function to get the metarank of a node"
+  ^* descr inline
+  ^* signature signature_value_to_int
+  ^* body  ^global ?node_metarank (
+    ^* comment "body of node_metarank"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in node_metarank"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on node"
+              ^* test %dyncast_node(val0)
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return metarank"
+                ^* return %get(val0 nod_metarank)
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "else return nil"
+              ^* then ^global ?return (
+                ^* descr return
+                ^* comment "return nil"
+              )
+           )
+         ]
+       )
+    ]
+  )
+)
+
+
+^global !signature_value_int_to_value (
+  ^* comment "signature value, int -> value
+  ^* descr signature
+  ^* formals [ val0 num0 ]
+  ^* result value
+)
+
+^global !node_nth (
+  ^* comment "inline function to get the nth son in a node"
+  ^* descr inline
+  ^* signature signature_value_int_to_value
+  ^* body  ^global ?node_nth (
+    ^* comment "body of node_nth"
+    ^* descr sequence 
+    ^* body [
+        ^global ?cond (
+          ^* descr cond
+          ^* comment "cond on val0 in node_nth"
+          ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test on node"
+              ^* test %dyncast_node(val0)
+              ^* then ^global ?sequence (
+                ^* descr sequence
+                ^* locals [ nloc ]
+                ^* body [
+                  ^global ?assign (
+                    ^* descr assign
+                    ^* comment "compute nloc <-> size(val0)"
+                    ^* to nloc
+                    ^* from %int(%get (val0 va_size))
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0<0"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %less_int_prim (num0 0)
+                        ^* then ^global ?assign (
+                          ^* descr assign
+                          ^* to num0
+                          ^* from %plus (nloc num0)
+                        )
+                      )
+                    ]
+                  )
+                  ^global ?cond (
+                    ^* descr cond
+                    ^* comment "test num0 >= 0 && num0 < nloc"
+                    ^* cond [
+                      ^global ?test (
+                        ^* descr test
+                        ^* test %and (%greater_equal_int_prim (num0 0)
+                                      %less_int_prim (num0 nloc))
+                        ^* then ^global ?return (
+                          ^* descr return
+                          ^* return %at(val0 nod_sons num0)
+                        )
+                      )
+                    ]
+                  )
+                ]
+              )
+            )
+          ]
+        )
+        ^global ?return (
+          ^* descr return
+          ^* comment "return nil"
+        )
+    ]
+  )
+)
+
+
+
+
+
 ^global header_module (
    ^* comment "our header_module"
    ^* descr module
@@ -305,6 +540,11 @@
      seqitem_size
      tuple_size
      set_size
+     node_size
+     node_conn
+     node_nth
+     node_metarank
+     node_metaitem
    ]
 )
 
