@@ -2370,6 +2370,8 @@ mom_dumped_value (struct mom_dumper_st *du,
   assert (du && du->va_itype == MOMITY_DUMPER);
   if (!val || val == MOM_EMPTY_SLOT)
     return true;
+  if ((intptr_t)val %2)
+    return true;
   if (val->va_itype == MOMITY_ITEM)
     return mom_dumped_item (du, ((const struct mom_item_st *) val));
   else if (val->va_itype == MOMITY_NODE)
