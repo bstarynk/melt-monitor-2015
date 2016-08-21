@@ -6572,7 +6572,7 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 		  auto latestree = transform_expr(testexpv, insitm);
 		  MOM_DEBUGPRINTF(gencod,
 				  "c-transform_expr cond insitm=%s cix#%d latestree= %s",
-				  mom_item_cstring(insitm), cix, latestree);
+				  mom_item_cstring(insitm), cix, mom_value_cstring(latestree));
 		  iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),7,
 						mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
 						mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("latest:"), curconditm),
