@@ -2862,30 +2862,15 @@ comment
 
 
 *make_item
-1471713325
+1471764544
 ^mtime
 (
-body
-make_item__1DdXTuSpkIarE0
 comment
 "make an item in some space"_
 descr
 routine
 signature
 signature_space_to_item
-)attrs
-
-
-
-*make_item__1DdXTuSpkIarE0
-1471713325
-^mtime
-(
-body
-(
-)tuple
-descr
-sequence
 )attrs
 
 
@@ -2920,7 +2905,6 @@ comment
 
 
 
-
 *module
 1464869956
 ^mtime
@@ -2928,6 +2912,7 @@ comment
 comment
 "for modules"_
 )attrs
+
 
 
 
@@ -3127,7 +3112,6 @@ comment
 
 
 
-
 *not
 1457428465
 ^mtime
@@ -3137,6 +3121,7 @@ comment
 notice
 is_null
 )attrs
+
 
 
 
@@ -3305,7 +3290,6 @@ comment
 
 
 
-
 *out_html
 1456812179
 ^mtime
@@ -3313,6 +3297,7 @@ comment
 comment
 "output HTML encoding"_
 )attrs
+
 
 
 
@@ -3486,7 +3471,6 @@ comment
 
 
 
-
 *payl_assovaldata_set_attrs
 1456833278
 ^mtime
@@ -3494,6 +3478,7 @@ comment
 comment
 "give the set of attributes in given item assocvaldata payload"_
 )attrs
+
 
 
 
@@ -3663,7 +3648,6 @@ comment
 
 
 
-
 *payl_hashmap_keyset
 1456897878
 ^mtime
@@ -3671,6 +3655,7 @@ comment
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
+
 
 
 
@@ -3832,7 +3817,6 @@ comment
 
 
 
-
 *payl_vectval_nth
 1456840222
 ^mtime
@@ -3840,6 +3824,7 @@ comment
 comment
 "nth component in a vector of values"_
 )attrs
+
 
 
 
@@ -4036,7 +4021,6 @@ comment
 
 
 
-
 *put
 1455358475
 ^mtime
@@ -4044,6 +4028,7 @@ comment
 comment
 "to put something"_
 )attrs
+
 
 
 
@@ -4236,7 +4221,6 @@ return
 
 
 
-
 *return__18HzPakaFnKKaD
 1471713325
 ^mtime
@@ -4246,6 +4230,7 @@ comment
 descr
 return
 )attrs
+
 
 
 
@@ -4487,7 +4472,6 @@ value
 
 
 
-
 *return__5vGR2Hk991HGkW
 1471713325
 ^mtime
@@ -4499,6 +4483,7 @@ return
 return
 ity_none
 )attrs
+
 
 
 
@@ -4731,7 +4716,6 @@ at
 
 
 
-
 *return__8MAb1x0Cd1aasN
 1471713325
 ^mtime
@@ -4741,6 +4725,7 @@ comment
 descr
 return
 )attrs
+
 
 
 
@@ -4962,7 +4947,6 @@ locval
 
 
 
-
 *set
 1456146211
 ^mtime
@@ -4975,6 +4959,7 @@ is_sequence
 is_set
 )set
 )attrs
+
 
 
 
@@ -5192,7 +5177,6 @@ comment
 
 
 
-
 *signature_value_int_to_int
 1471713325
 ^mtime
@@ -5207,6 +5191,7 @@ num1
 result
 int
 )attrs
+
 
 
 
@@ -5435,7 +5420,6 @@ space_en
 
 
 
-
 *space_en
 1471713325
 ^mtime
@@ -5454,6 +5438,7 @@ spa_user
 type
 enum
 )attrs
+
 
 
 
@@ -5702,7 +5687,6 @@ return__3mNWjkwy5c5p1N
 
 
 
-
 *test__1ekHharbwEGA6N
 1471713325
 ^mtime
@@ -5714,6 +5698,7 @@ test
 then
 return__1eS5p39gjaoTpX
 )attrs
+
 
 
 
@@ -6041,7 +6026,6 @@ return__16DZKIWAZeUSWZ
 
 
 
-
 *test__4mDY1aqrYNAzF1
 1471713325
 ^mtime
@@ -6053,6 +6037,7 @@ test
 then
 return__18HzPakaFnKKaD
 )attrs
+
 
 
 
@@ -6390,7 +6375,6 @@ return__0Y7hV6cP0rEfsU
 
 
 
-
 *test__8yuRFc83wrudyR
 1471713325
 ^mtime
@@ -6402,6 +6386,7 @@ test
 then
 return__7r3geKEFKPAUKh
 )attrs
+
 
 
 
@@ -6728,7 +6713,6 @@ itype_en
 
 
 
-
 *type
 1456146499
 ^mtime
@@ -6747,6 +6731,7 @@ set
 node
 )tuple
 )attrs
+
 
 
 
@@ -6951,7 +6936,6 @@ signature_item_to_bool
 
 
 
-
 *valid_item_pointer__2xrtjZN0fTXAVN
 1471713325
 ^mtime
@@ -6965,6 +6949,7 @@ comment
 descr
 sequence
 )attrs
+
 
 
 
@@ -7166,7 +7151,6 @@ comment
 
 
 
-
 *when
 1455462590
 ^mtime
@@ -7174,6 +7158,7 @@ comment
 comment
 "inside conditionals"_
 )attrs
+
 
 
 
@@ -7373,7 +7358,6 @@ itype_en
 type
 enum
 )attrs
-
 
 
 ### eof global.mom
