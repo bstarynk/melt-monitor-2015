@@ -289,7 +289,7 @@ public:
   }
   virtual void scan_data_element(struct mom_item_st*itm);
   virtual void scan_func_element(struct mom_item_st*itm);
-  virtual void scan_routine_element(struct mom_item_st*itm);
+  virtual void scan_routine_element(struct mom_item_st*itm, bool ignorebody=false);
   virtual const struct mom_boxnode_st* transform_data_element(struct mom_item_st*itm) =0;
   virtual const struct mom_boxnode_st* transform_body_element(struct mom_item_st*bdyitm, struct mom_item_st*routitm) =0;
   virtual const struct mom_boxnode_st* transform_func_element(struct mom_item_st*itm) =0;
@@ -651,7 +651,7 @@ class MomJavascriptEmitter final : public MomEmitter
   MomJavascriptEmitter(struct mom_item_st*itm) : MomEmitter(MAGIC, itm) {};
   MomJavascriptEmitter(const MomJavascriptEmitter&) = delete;
   virtual ~MomJavascriptEmitter();
-  virtual void scan_routine_element(struct mom_item_st*elitm)
+  virtual void scan_routine_element(struct mom_item_st*elitm, bool ignorebody)
   {
     throw MOM_RUNTIME_PRINTF("routine element %s unsupported for JavaScript", mom_item_cstring(elitm));
   };
@@ -3375,9 +3375,11 @@ MomEmitter::scan_closed(struct mom_item_st*cloitm, struct mom_item_st*insitm)
 
 
 void
-MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
+MomEmitter::scan_routine_element(struct mom_item_st*rtitm, bool ignorebody)
 {
-  MOM_DEBUGPRINTF(gencod, "scan_routine_element start rtitm:=%s", mom_item_content_cstring(rtitm));
+  MOM_DEBUGPRINTF(gencod, "scan_routine_element start %s rtitm:=%s",
+		  ignorebody?"ignorebody":"scanbody",
+		  mom_item_content_cstring(rtitm));
   _ce_curfunctionitm = rtitm;
   assert (is_locked_item(rtitm));
   auto descitm = mom_unsync_item_descr(rtitm);
@@ -3399,11 +3401,15 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm)
     MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s formaltup=%s restypv=%s",
                     mom_item_cstring(rtitm), mom_value_cstring(formaltup), mom_value_cstring(restypv));
   }
-  if (bdyitm == nullptr)
-    throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
   flush_todo_list(__LINE__);
-  lock_item(bdyitm);
-  scan_block(bdyitm,rtitm);
+  if (!ignorebody) {
+    MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s sigitm=%s doing bdyitm=%s",
+		    mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+    if (bdyitm == nullptr)
+      throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
+    lock_item(bdyitm);
+    scan_block(bdyitm,rtitm);
+  };
   _ce_curfunctionitm = nullptr;
   MOM_DEBUGPRINTF(gencod, "scan_routine_element done rtitm=%s\n", mom_item_cstring(rtitm));
 } // end  MomEmitter::scan_routine_element
@@ -3797,7 +3803,7 @@ MomCEmitter::declare_item(struct mom_item_st*declitm)
       break;
     case CASE_DECLD_MOM(routine):
       {
-	scan_routine_element(declitm);
+	scan_routine_element(declitm, true);
 	MOM_DEBUGPRINTF(gencod, "c-declare_item routine %s", mom_item_cstring(declitm));
 	auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (declitm, MOM_PREDEFITM(signature)));
 	if (!sigitm)
