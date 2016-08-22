@@ -4838,6 +4838,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s nix#%d curenuritm=%s enurtree=%s",
                               mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
                               mom_value_cstring(enurtree));
+	      vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
               vectree.push_back(enurtree);
             }
           auto xenurtup = mom_boxtuple_make_arr(vecenurs.size(), vecenurs.data());
