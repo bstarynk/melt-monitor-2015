@@ -106,6 +106,8 @@ protected:
 	   std::less<std::string>,
 	   traceable_allocator<std::pair<std::string,momvalue_t>>> _ce_literalstringmap;
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoque;
+  /* postpone something, but do it between module elements, e.g. because it might make some bindings, etc... */
+  std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_todoafterelementque;
   /* perhaps we want to modify some items after a successful
      compilation, e.g. put ranks of fields inside them, etc.. */
   std::deque<todofun_t,traceable_allocator<todofun_t>> _ce_doatendque;
@@ -465,6 +467,10 @@ public:
   {
     _ce_todoque.push_back(tf);
   };
+  void todo_after_element(const todofun_t& tf)
+  {
+    _ce_todoafterelementque.push_back(tf);
+  };
   void do_at_end(const todofun_t& tf)
   {
     _ce_doatendque.push_back(tf);
@@ -495,6 +501,30 @@ public:
                          kindname(), count);
     else
       MOM_DEBUGPRINTF(gencod,"flush_todo_list %s done %ld todos",
+                      kindname(), count);
+  };
+  void flush_todo_after_element_list(int lin=0)
+  {
+    long count = 0;
+    if (lin)
+      MOM_DEBUGPRINTF_AT(__FILE__,lin,gencod,"flush_todo_after_element_list %s with %ld todos",
+                         kindname(), nb_todos());
+    else
+      MOM_DEBUGPRINTF(gencod,"flush_todo_after_element_list %s with %ld todos",
+                      kindname(), nb_todos());
+    while (!_ce_todoafterelementque.empty())
+      {
+        auto tf = _ce_todoafterelementque.front();
+        _ce_todoafterelementque.pop_front();
+        tf(this);
+        count++;
+      }
+    _ce_todoafterelementque.shrink_to_fit();
+    if (lin)
+      MOM_DEBUGPRINTF_AT(__FILE__,lin,gencod,"flush_todo_after_element_list %s done %ld todos",
+                         kindname(), count);
+    else
+      MOM_DEBUGPRINTF(gencod,"flush_todo_after_list %s done %ld todos",
                       kindname(), count);
   };
   void write_tree(FILE*out, unsigned depth, long &lastnl, const void*val, const void*forv=nullptr);
@@ -1581,17 +1611,18 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
   struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
   _ce_blockitems.insert(blkitm);
   MOM_DEBUGPRINTF(gencod, "scan_block  blkitm=%s desitm=%s",  mom_item_cstring(blkitm), mom_item_cstring(desitm));
-  if (desitm == MOM_PREDEFITM(indirect)) {
-    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
-    MOM_DEBUGPRINTF(gencod, "scan_block indirect blkitm=%s indiritm=%s",
-		    mom_item_cstring(blkitm), mom_item_cstring(indiritm));
-    if (indiritm == nullptr)
-      throw MOM_RUNTIME_PRINTF("indirect block %s in %s with bad `indirect`",
-			       mom_item_cstring(blkitm), mom_item_cstring(initm));
-    lock_item(indiritm);
-    scan_block(indiritm, initm);
-    return;
-  }
+  if (desitm == MOM_PREDEFITM(indirect))
+    {
+      auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
+      MOM_DEBUGPRINTF(gencod, "scan_block indirect blkitm=%s indiritm=%s",
+                      mom_item_cstring(blkitm), mom_item_cstring(indiritm));
+      if (indiritm == nullptr)
+        throw MOM_RUNTIME_PRINTF("indirect block %s in %s with bad `indirect`",
+                                 mom_item_cstring(blkitm), mom_item_cstring(initm));
+      lock_item(indiritm);
+      scan_block(indiritm, initm);
+      return;
+    }
   auto blkbind = get_binding(blkitm);
   if (blkbind != nullptr)
     throw MOM_RUNTIME_PRINTF("in %s block %s already bound to role %s what %s",
@@ -2288,7 +2319,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s sigresult=%s",
 			mom_item_cstring(insitm), mom_value_cstring(retexpv),
 			mom_value_cstring(_ce_cursigdef.sig_result));
-	auto curestypitm = mom_dyncast_item(_ce_cursigdef.sig_result);	
+	auto curestypitm = mom_dyncast_item(_ce_cursigdef.sig_result);
 	auto retypv = scan_expr(retexpv,insitm,0,curestypitm);
 	MOM_DEBUGPRINTF(gencod, "scaninstr return insitm=%s retexpv=%s retypv=%s",
 			mom_item_cstring(insitm), mom_value_cstring(retexpv),
@@ -3170,15 +3201,15 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
     {
       auto indexpv = mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(indirect));
       MOM_DEBUGPRINTF(gencod, "scan_item_expr indirect expitm=%s indexpv=%s",
-		      mom_item_cstring(expitm), mom_value_cstring(indexpv));
+                      mom_item_cstring(expitm), mom_value_cstring(indexpv));
       if (indexpv == nullptr)
-	throw MOM_RUNTIME_PRINTF("indirect item %s in instr %s without `indirect`", mom_item_cstring(expitm), mom_item_cstring(insitm));
+        throw MOM_RUNTIME_PRINTF("indirect item %s in instr %s without `indirect`", mom_item_cstring(expitm), mom_item_cstring(insitm));
       auto intypitm = scan_expr(indexpv, insitm, depth+1, typitm, lvar);
       MOM_DEBUGPRINTF(gencod, "scan_item_expr indirect expitm=%s gives intypitm=%s",
-		      mom_item_cstring(expitm), mom_item_cstring(intypitm));
+                      mom_item_cstring(expitm), mom_item_cstring(intypitm));
       return intypitm;
     }
-  
+
   typexpitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
@@ -3264,9 +3295,9 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
                              mom_item_cstring(insitm),
                              mom_item_cstring(typitm));
   MOM_FATAPRINTF("unexpected item %s in instr %s (type %s)",
-		 mom_item_cstring(expitm),
-		 mom_item_cstring(insitm),
-		 mom_item_cstring(typitm));
+                 mom_item_cstring(expitm),
+                 mom_item_cstring(insitm),
+                 mom_item_cstring(typitm));
 } // end of MomEmitter::scan_item_expr
 
 
@@ -3287,19 +3318,20 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
     throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
                               mom_item_cstring(varitm), mom_item_cstring(insitm));
   MOM_DEBUGPRINTF(gencod, "scan_var varitm=%s insitm=%s typitm=%s typvarv=%s",
-		  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm), mom_value_cstring(typvarv));
+                  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm), mom_value_cstring(typvarv));
   scan_type_expr(typvarv, varitm);
   auto typvaritm = mom_dyncast_item(typvarv);
   if (!typitm)
     typitm = typvaritm;
-  else if (typitm != typvaritm) {
-    MOM_DEBUGPRINTF(gencod, "scan_var illtyped varitm:=%s\n .. insitm:=%s\n .. typitm:=%s\n.. typvaritm=%s",
-		    mom_item_content_cstring(varitm), mom_item_content_cstring(insitm), mom_item_content_cstring(typitm),
-		    mom_item_content_cstring(typvaritm));
-    throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
-                              mom_item_cstring(varitm), mom_item_cstring(insitm),
-                              mom_item_cstring(typvaritm), mom_item_cstring(typitm));
-  }
+  else if (typitm != typvaritm)
+    {
+      MOM_DEBUGPRINTF(gencod, "scan_var illtyped varitm:=%s\n .. insitm:=%s\n .. typitm:=%s\n.. typvaritm=%s",
+                      mom_item_content_cstring(varitm), mom_item_content_cstring(insitm), mom_item_content_cstring(typitm),
+                      mom_item_content_cstring(typvaritm));
+      throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
+                                mom_item_cstring(varitm), mom_item_cstring(insitm),
+                                mom_item_cstring(typvaritm), mom_item_cstring(typitm));
+    }
   MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
 #define NBVARDESC_MOM 43
@@ -3421,8 +3453,8 @@ void
 MomEmitter::scan_routine_element(struct mom_item_st*rtitm, bool ignorebody)
 {
   MOM_DEBUGPRINTF(gencod, "scan_routine_element start %s rtitm:=%s",
-		  ignorebody?"ignorebody":"scanbody",
-		  mom_item_content_cstring(rtitm));
+                  ignorebody?"ignorebody":"scanbody",
+                  mom_item_content_cstring(rtitm));
   _ce_curfunctionitm = rtitm;
   assert (is_locked_item(rtitm));
   auto descitm = mom_unsync_item_descr(rtitm);
@@ -3445,14 +3477,15 @@ MomEmitter::scan_routine_element(struct mom_item_st*rtitm, bool ignorebody)
                     mom_item_cstring(rtitm), mom_value_cstring(formaltup), mom_value_cstring(restypv));
   }
   flush_todo_list(__LINE__);
-  if (!ignorebody) {
-    MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s sigitm=%s doing bdyitm=%s",
-		    mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-    if (bdyitm == nullptr)
-      throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
-    lock_item(bdyitm);
-    scan_block(bdyitm,rtitm);
-  };
+  if (!ignorebody)
+    {
+      MOM_DEBUGPRINTF(gencod, "scan_routine_element rtitm=%s sigitm=%s doing bdyitm=%s",
+                      mom_item_cstring(rtitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
+      if (bdyitm == nullptr)
+        throw MOM_RUNTIME_PRINTF("missing or bad body in routine %s", mom_item_cstring(rtitm));
+      lock_item(bdyitm);
+      scan_block(bdyitm,rtitm);
+    };
   _ce_curfunctionitm = nullptr;
   MOM_DEBUGPRINTF(gencod, "scan_routine_element done rtitm=%s\n", mom_item_cstring(rtitm));
 } // end  MomEmitter::scan_routine_element
@@ -4857,7 +4890,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               MOM_DEBUGPRINTF(gencod, "c-declare_type typitm %s eix#%d curxenuritm=%s curxenurtree=%s",
                               mom_item_cstring(typitm), eix, mom_item_cstring(curxenuritm),
                               mom_value_cstring(curxenurtree));
-	      vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
+              vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
               vectree.push_back(curxenurtree);
             }
           auto aftertree =
@@ -4881,7 +4914,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s nix#%d curenuritm=%s enurtree=%s",
                               mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
                               mom_value_cstring(enurtree));
-	      vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
+              vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
               vectree.push_back(enurtree);
             }
           auto xenurtup = mom_boxtuple_make_arr(vecenurs.size(), vecenurs.data());
@@ -5093,23 +5126,24 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
                   mom_item_cstring(initm), mom_item_content_cstring(blkitm));
   assert (is_locked_item(blkitm));
   auto desitm = mom_unsync_item_descr(blkitm);
-  if (desitm == MOM_PREDEFITM(indirect)) {
-    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
-    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s",
-		    mom_item_cstring(blkitm), mom_item_cstring(indiritm));
-    assert (is_locked_item(indiritm));
-    auto indtree = transform_block(indiritm, initm);
-    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s indtree=%s",
-		    mom_item_cstring(blkitm), mom_item_cstring(indiritm), mom_value_cstring(indtree));
-    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
-				       literal_string("/*indirblock "),
-				       blkitm,
-				       literal_string(":*/"),
-				       indtree);
-    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s gives restree=%s",
-		    mom_item_cstring(blkitm), mom_value_cstring(restree));
-    return restree;
-  }
+  if (desitm == MOM_PREDEFITM(indirect))
+    {
+      auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s",
+                      mom_item_cstring(blkitm), mom_item_cstring(indiritm));
+      assert (is_locked_item(indiritm));
+      auto indtree = transform_block(indiritm, initm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s indtree=%s",
+                      mom_item_cstring(blkitm), mom_item_cstring(indiritm), mom_value_cstring(indtree));
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                         literal_string("/*indirblock "),
+                                         blkitm,
+                                         literal_string(":*/"),
+                                         indtree);
+      MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s gives restree=%s",
+                      mom_item_cstring(blkitm), mom_value_cstring(restree));
+      return restree;
+    }
   auto blkbind = get_local_binding(blkitm);
   assert (blkbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
@@ -5934,10 +5968,22 @@ MomCEmitter::transform_node_inline_expr(const struct mom_boxnode_st*expnod, stru
   auto connitm = expnod->nod_connitm;
   if (_cec_declareditems.find(connitm) == _cec_declareditems.end())
     {
-      MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr new connitm=%s", mom_item_cstring(connitm));
-      auto inldecl = transform_inline_element(connitm);
-      MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr connitm=%s inldecl=%s",
-                      mom_item_cstring(connitm), mom_value_cstring(inldecl));
+      _cec_declareditems.insert(connitm);
+#warning we probably should call todo_after_element to make the transformation
+      todo_after_element([=](MomEmitter*em)
+			 {
+			   MomCEmitter*cem = dynamic_cast<MomCEmitter*>(em);
+			   assert (cem != nullptr);
+			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr new connitm=%s", mom_item_cstring(connitm));
+			   cem->_ce_localvarmap.clear();
+			   cem->scan_module_element(connitm);
+			   flush_todo_list(__LINE__);
+			   auto inldecl = cem->transform_inline_element(connitm);
+			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr connitm=%s inldecl=%s",
+					   mom_item_cstring(connitm), mom_value_cstring(inldecl));
+			   flush_todo_list(__LINE__);
+			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr handled new connitm=%s", mom_item_cstring(connitm));
+			 });
     }
   unsigned arity = mom_raw_size(expnod);
   traced_vector_values_t vectree;
@@ -6094,22 +6140,23 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
 	auto expitm = (struct mom_item_st*)expv;
 	assert (is_locked_item(expitm));
 	auto descitm = mom_unsync_item_descr(expitm);
-	if (descitm == MOM_PREDEFITM(indirect)) {
-	  auto indexpv = mom_unsync_item_get_phys_attr(expitm, MOM_PREDEFITM(indirect));
-	  MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s indexpv=%s",
-			  mom_item_cstring(expitm), mom_value_cstring(indexpv));
-	  auto indtree = transform_expr(indexpv, initm, typitm);
-	  auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
-					     literal_string("("),
-					     literal_string("/*indirectexp "),
-					     expitm,
-					     literal_string(":*/"),
-					     indtree,
-					     literal_string(")"));
-	  MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s gives restree=%s",
-			  mom_item_cstring(expitm), mom_value_cstring(restree));
-	  return restree;
-	}
+	if (descitm == MOM_PREDEFITM(indirect))
+	  {
+	    auto indexpv = mom_unsync_item_get_phys_attr(expitm, MOM_PREDEFITM(indirect));
+	    MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s indexpv=%s",
+			    mom_item_cstring(expitm), mom_value_cstring(indexpv));
+	    auto indtree = transform_expr(indexpv, initm, typitm);
+	    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
+					       literal_string("("),
+					       literal_string("/*indirectexp "),
+					       expitm,
+					       literal_string(":*/"),
+					       indtree,
+					       literal_string(")"));
+	    MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s gives restree=%s",
+			    mom_item_cstring(expitm), mom_value_cstring(restree));
+	    return restree;
+	  }
 	auto expbind = get_binding(expitm);
 	auto rolitm = expbind?expbind->vd_rolitm:nullptr;
 	MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm:=%s\n.. bind rol %s what %s",
@@ -6450,23 +6497,24 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
                   mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
   assert (is_locked_item(insitm));
   auto descitm = mom_unsync_item_descr(insitm);
-  if (descitm == MOM_PREDEFITM(indirect)) {
-    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(indirect)));
-    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s",
-		    mom_item_cstring(insitm), mom_item_cstring(indiritm));
-    assert (is_locked_item(indiritm));
-    auto indirtree = transform_instruction(indiritm, fromitm);
-    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s indirtree=%s",
-		    mom_item_cstring(insitm), mom_item_cstring(indiritm), mom_value_cstring(indirtree));
-    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
-				       literal_string("/*indirectinstr "),
-				       insitm,
-				       literal_string(":*/"),
-				       indirtree);
-    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s gives restree=%s",
-		    mom_item_cstring(insitm), mom_value_cstring(restree));
-    return restree;
-  }
+  if (descitm == MOM_PREDEFITM(indirect))
+    {
+      auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(indirect)));
+      MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(indiritm));
+      assert (is_locked_item(indiritm));
+      auto indirtree = transform_instruction(indiritm, fromitm);
+      MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s indirtree=%s",
+                      mom_item_cstring(insitm), mom_item_cstring(indiritm), mom_value_cstring(indirtree));
+      auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+                                         literal_string("/*indirectinstr "),
+                                         insitm,
+                                         literal_string(":*/"),
+                                         indirtree);
+      MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s gives restree=%s",
+                      mom_item_cstring(insitm), mom_value_cstring(restree));
+      return restree;
+    }
   auto insbind = get_local_binding(insitm);
   assert (insbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
@@ -6657,28 +6705,30 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
 				mom_value_cstring(testexpv),
 				mom_item_cstring(curconditm),
 				mom_item_cstring(thenitm));
-		if (testexpv == nullptr || testexpv == (momvalue_t)MOM_PREDEFITM(unit) || testexpv == (momvalue_t)MOM_PREDEFITM(truth)) {
-		  iftree =
-		    mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
-					mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
-					mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("lastunitest:"), curconditm),
-					literal_string ("else")
-					);
-		}
-		else {
-		  auto latestree = transform_expr(testexpv, insitm);
-		  MOM_DEBUGPRINTF(gencod,
-				  "c-transform_expr cond insitm=%s cix#%d latestree= %s",
-				  mom_item_cstring(insitm), cix, mom_value_cstring(latestree));
-		  iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),7,
-						mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
-						mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("latest:"), curconditm),
-						mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
-						(cix==0)?(literal_string("if ")):literal_string("else if "),
-						literal_string("("),
-						latestree,
-						literal_string(")"));
-		}
+		if (testexpv == nullptr || testexpv == (momvalue_t)MOM_PREDEFITM(unit) || testexpv == (momvalue_t)MOM_PREDEFITM(truth))
+		  {
+		    iftree =
+		      mom_boxnode_make_va(MOM_PREDEFITM(sequence),3,
+					  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+					  mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("lastunitest:"), curconditm),
+					  literal_string ("else")
+					  );
+		  }
+		else
+		  {
+		    auto latestree = transform_expr(testexpv, insitm);
+		    MOM_DEBUGPRINTF(gencod,
+				    "c-transform_expr cond insitm=%s cix#%d latestree= %s",
+				    mom_item_cstring(insitm), cix, mom_value_cstring(latestree));
+		    iftree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence),7,
+						  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+						  mom_boxnode_make_va(MOM_PREDEFITM(comment), 2, literal_string("latest:"), curconditm),
+						  mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0),
+						  (cix==0)?(literal_string("if ")):literal_string("else if "),
+						  literal_string("("),
+						  latestree,
+						  literal_string(")"));
+		  }
 	      }
 	    MOM_DEBUGPRINTF(gencod,
 			    "c-transform_instruction cond insitm=%s cix#%d iftree=%s",
