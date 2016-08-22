@@ -45,23 +45,23 @@ public:
   typedef std::set<const struct mom_item_st*,
 		   MomItemLess,
 		   traceable_allocator<struct mom_item_st*>>
-    traced_set_items_t;
+  traced_set_items_t;
   typedef std::map<const struct mom_item_st*,struct mom_item_st*,
 		   MomItemLess,
 		   traceable_allocator<std::pair<struct mom_item_st*,struct mom_item_st*>>>
-    traced_map_item2item_t;
+  traced_map_item2item_t;
   typedef std::map<const struct mom_item_st*,long,
 		   MomItemLess,
 		   traceable_allocator<std::pair<struct mom_item_st*,long>>>
-    traced_map_item2long_t;
+  traced_map_item2long_t;
   typedef std::map<const struct mom_item_st*,momvalue_t,
 		   MomItemLess,
 		   traceable_allocator<std::pair<struct mom_item_st*,momvalue_t>>>
-    traced_map_item2value_t;
+  traced_map_item2value_t;
   typedef std::set<const void*,
 		   MomValueLess,
 		   traceable_allocator<void*>>
-    traced_set_values_t;
+  traced_set_values_t;
   struct vardef_st
   {
     struct mom_item_st* vd_rolitm;
@@ -78,7 +78,7 @@ public:
 		   vardef_st,
 		   MomItemLess,
 		   traceable_allocator<struct mom_item_st*>>
-    traced_varmap_t;
+  traced_varmap_t;
   typedef std::unordered_map
   <const struct mom_boxnode_st*,
    struct mom_item_st*,
@@ -533,7 +533,7 @@ class MomCEmitter final :public MomEmitter
   traced_vector_values_t _cec_globdefintree;
   traced_set_items_t _cec_declareditems;
   bool _cec_includeheader;
- public:
+public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static constexpr const char* CTYPE_PREFIX = "momty_";
   static constexpr const char* CSTRUCT_PREFIX = "momstruct_";
@@ -642,7 +642,7 @@ class MomCEmitter final :public MomEmitter
 class MomJavascriptEmitter final : public MomEmitter
 {
   friend bool mom_emit_javascript_code(struct mom_item_st*itm, FILE*out);
- public:
+public:
   static unsigned constexpr MAGIC = 852389659 /*0x32ce6f1b*/;
   static   constexpr const char* JSFUNC_PREFIX = "momjs_";
   static   constexpr const char* JSFORMAL_PREFIX = "momjarg_";
@@ -673,7 +673,7 @@ class MomJavascriptEmitter final : public MomEmitter
   momvalue_t transform_expr(momvalue_t expv, struct mom_item_st*insitm);
   momvalue_t transform_var(struct mom_item_st*varitm, struct mom_item_st*insitm, const vardef_st*varbind=nullptr);
   virtual MomEmitter::CaseScannerData*
-    make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
+  make_case_scanner_data(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual std::function<void(struct mom_item_st*,unsigned,CaseScannerData*)> case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm, unsigned rk, struct mom_item_st*blkitm);
   virtual const struct mom_boxnode_st* transform_routine_element(struct mom_item_st*elitm)
   {
@@ -1579,7 +1579,19 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
                               mom_item_cstring(blkitm),
                               (int) (_ce_blockitems.size()));
   struct mom_item_st*desitm = mom_unsync_item_descr(blkitm);
+  _ce_blockitems.insert(blkitm);
   MOM_DEBUGPRINTF(gencod, "scan_block  blkitm=%s desitm=%s",  mom_item_cstring(blkitm), mom_item_cstring(desitm));
+  if (desitm == MOM_PREDEFITM(indirect)) {
+    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
+    MOM_DEBUGPRINTF(gencod, "scan_block indirect blkitm=%s indiritm=%s",
+		    mom_item_cstring(blkitm), mom_item_cstring(indiritm));
+    if (indiritm == nullptr)
+      throw MOM_RUNTIME_PRINTF("indirect block %s in %s with bad `indirect`",
+			       mom_item_cstring(blkitm), mom_item_cstring(initm));
+    lock_item(indiritm);
+    scan_block(indiritm, initm);
+    return;
+  }
   auto blkbind = get_binding(blkitm);
   if (blkbind != nullptr)
     throw MOM_RUNTIME_PRINTF("in %s block %s already bound to role %s what %s",
@@ -1595,7 +1607,6 @@ MomEmitter::scan_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
     throw  MOM_RUNTIME_PRINTF("in %s block %s without body",
                               mom_item_cstring(initm),
                               mom_item_cstring(blkitm));
-  _ce_blockitems.insert(blkitm);
   if (desitm ==  MOM_PREDEFITM(sequence))
     {
       if (whilexpv != nullptr)
@@ -2288,6 +2299,19 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 			mom_item_cstring(insitm), mom_value_cstring(retypv));
 #warning scan_instr return incomplete
       } //end return
+      break;
+    case CASE_OPER_MOM(indirect): //////////
+      {
+	auto indiritm =
+	  mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(indirect)));
+	MOM_DEBUGPRINTF(gencod, "scaninstr indirect insitm=%s  indiritm=%s",
+			mom_item_cstring(insitm), mom_item_cstring(indiritm));
+	if (indiritm==nullptr)
+	  throw MOM_RUNTIME_PRINTF("indirect instruction %s rk#%d block %s with missing indirect item",
+				   mom_item_cstring(insitm), rk, mom_item_cstring(blkitm));
+	lock_item(indiritm);
+	scan_instr(indiritm, rk, blkitm);
+      }
       break;
       ////
     default:
@@ -3142,6 +3166,19 @@ MomEmitter::scan_item_expr(struct mom_item_st*expitm, struct mom_item_st*insitm,
       if (lvar) goto nonlvar;
       return scan_constant_item(expitm,insitm,typitm);
     }
+  else if (desitm == MOM_PREDEFITM(indirect))
+    {
+      auto indexpv = mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(indirect));
+      MOM_DEBUGPRINTF(gencod, "scan_item_expr indirect expitm=%s indexpv=%s",
+		      mom_item_cstring(expitm), mom_value_cstring(indexpv));
+      if (indexpv == nullptr)
+	throw MOM_RUNTIME_PRINTF("indirect item %s in instr %s without `indirect`", mom_item_cstring(expitm), mom_item_cstring(insitm));
+      auto intypitm = scan_expr(indexpv, insitm, depth+1, typitm, lvar);
+      MOM_DEBUGPRINTF(gencod, "scan_item_expr indirect expitm=%s gives intypitm=%s",
+		      mom_item_cstring(expitm), mom_item_cstring(intypitm));
+      return intypitm;
+    }
+  
   typexpitm =
     mom_dyncast_item(mom_unsync_item_get_phys_attr(expitm,MOM_PREDEFITM(type)));
   MOM_DEBUGPRINTF(gencod, "scan_item_expr expitm=%s typexpitm=%s desitm=%s",
@@ -5049,6 +5086,24 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
   MOM_DEBUGPRINTF(gencod, "c-transform_block initm=%s blkitm:=\n%s",
                   mom_item_cstring(initm), mom_item_content_cstring(blkitm));
   assert (is_locked_item(blkitm));
+  auto desitm = mom_unsync_item_descr(blkitm);
+  if (desitm == MOM_PREDEFITM(indirect)) {
+    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(blkitm, MOM_PREDEFITM(indirect)));
+    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s",
+		    mom_item_cstring(blkitm), mom_item_cstring(indiritm));
+    assert (is_locked_item(indiritm));
+    auto indtree = transform_block(indiritm, initm);
+    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s indiritm=%s indtree=%s",
+		    mom_item_cstring(blkitm), mom_item_cstring(indiritm), mom_value_cstring(indtree));
+    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+				       literal_string("/*indirblock "),
+				       blkitm,
+				       literal_string(":*/"),
+				       indtree);
+    MOM_DEBUGPRINTF(gencod, "c-transform_block indirect blkitm=%s gives restree=%s",
+		    mom_item_cstring(blkitm), mom_value_cstring(restree));
+    return restree;
+  }
   auto blkbind = get_local_binding(blkitm);
   assert (blkbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
@@ -6032,6 +6087,23 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
       {
 	auto expitm = (struct mom_item_st*)expv;
 	assert (is_locked_item(expitm));
+	auto descitm = mom_unsync_item_descr(expitm);
+	if (descitm == MOM_PREDEFITM(indirect)) {
+	  auto indexpv = mom_unsync_item_get_phys_attr(expitm, MOM_PREDEFITM(indirect));
+	  MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s indexpv=%s",
+			  mom_item_cstring(expitm), mom_value_cstring(indexpv));
+	  auto indtree = transform_expr(indexpv, initm, typitm);
+	  auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence),6,
+					     literal_string("("),
+					     literal_string("/*indirectexp "),
+					     expitm,
+					     literal_string(":*/"),
+					     indtree,
+					     literal_string(")"));
+	  MOM_DEBUGPRINTF(gencod, "c-transform_expr indirect expitm=%s gives restree=%s",
+			  mom_item_cstring(expitm), mom_value_cstring(restree));
+	  return restree;
+	}
 	auto expbind = get_binding(expitm);
 	auto rolitm = expbind?expbind->vd_rolitm:nullptr;
 	MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm:=%s\n.. bind rol %s what %s",
@@ -6371,6 +6443,24 @@ MomCEmitter::transform_instruction(struct mom_item_st*insitm, struct mom_item_st
   MOM_DEBUGPRINTF(gencod, "c-transform_instruction fromitm=%s insitm:=\n%s",
                   mom_item_cstring(fromitm), mom_item_content_cstring(insitm));
   assert (is_locked_item(insitm));
+  auto descitm = mom_unsync_item_descr(insitm);
+  if (descitm == MOM_PREDEFITM(indirect)) {
+    auto indiritm = mom_dyncast_item(mom_unsync_item_get_phys_attr(insitm, MOM_PREDEFITM(indirect)));
+    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s",
+		    mom_item_cstring(insitm), mom_item_cstring(indiritm));
+    assert (is_locked_item(indiritm));
+    auto indirtree = transform_instruction(indiritm, fromitm);
+    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s indiritm=%s indirtree=%s",
+		    mom_item_cstring(insitm), mom_item_cstring(indiritm), mom_value_cstring(indirtree));
+    auto restree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
+				       literal_string("/*indirectinstr "),
+				       insitm,
+				       literal_string(":*/"),
+				       indirtree);
+    MOM_DEBUGPRINTF(gencod, "c-transform_instruction indirect insitm=%s gives restree=%s",
+		    mom_item_cstring(insitm), mom_value_cstring(restree));
+    return restree;
+  }
   auto insbind = get_local_binding(insitm);
   assert (insbind != nullptr);
   MOM_DEBUGPRINTF(gencod,
@@ -7491,167 +7581,167 @@ MomCEmitter::case_scanner(struct mom_item_st*swtypitm, struct mom_item_st*insitm
     {
     case CASE_SWTYPE_MOM(int):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-	{
-	  assert (is_locked_item(casitm));
-	  auto runitm =
-	    mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-	  auto casev =
-	    mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-	  MOM_DEBUGPRINTF(gencod, "C-case_scanner intcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-			  mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-			  mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-	  if (runitm==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `run` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  lock_item(runitm);
-	  if (casev==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `case` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
-	  assert (intcasdata != nullptr);
-	  if (intcasdata->has_runitm(runitm))
-	    throw  MOM_RUNTIME_PRINTF("intcase#%d %s with reused run %s "
+	     {
+	       assert (is_locked_item(casitm));
+	       auto runitm =
+		 mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+	       auto casev =
+		 mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+	       MOM_DEBUGPRINTF(gencod, "C-case_scanner intcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+			       mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+			       mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+	       if (runitm==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `run` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       lock_item(runitm);
+	       if (casev==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("intcase#%d %s  without `case` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       auto intcasdata = dynamic_cast<IntCaseScannerData*>(casdata);
+	       assert (intcasdata != nullptr);
+	       if (intcasdata->has_runitm(runitm))
+		 throw  MOM_RUNTIME_PRINTF("intcase#%d %s with reused run %s "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(runitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       intcasdata->process_intcase(casev,casitm,runitm);
+	       todo([=](MomEmitter*em)
+		    {
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner before intcase#%d %s run %s "
 				      "in switch instr %s #%d in block %s",
 				      casix, mom_item_cstring(casitm),
 				      mom_item_cstring(runitm),
 				      mom_item_cstring(insitm),
 				      rk, mom_item_cstring(blkitm));
-	  intcasdata->process_intcase(casev,casitm,runitm);
-	  todo([=](MomEmitter*em)
-	       {
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner before intcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-		 em->scan_instr(runitm,casix,insitm);
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner after intcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-	       });
-	  intcasdata->add_runitm(runitm);
-	};
+		      em->scan_instr(runitm,casix,insitm);
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner after intcase#%d %s run %s "
+				      "in switch instr %s #%d in block %s",
+				      casix, mom_item_cstring(casitm),
+				      mom_item_cstring(runitm),
+				      mom_item_cstring(insitm),
+				      rk, mom_item_cstring(blkitm));
+		    });
+	       intcasdata->add_runitm(runitm);
+	     };
       /////
     case CASE_SWTYPE_MOM(string):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-	{
-	  assert (is_locked_item(casitm));
-	  auto runitm =
-	    mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-	  auto casev =
-	    mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-	  MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-			  mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-			  mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-	  if (runitm==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  if (casev==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata);
-	  assert (strcasdata != nullptr);
-	  if (strcasdata->has_runitm(runitm))
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+	     {
+	       assert (is_locked_item(casitm));
+	       auto runitm =
+		 mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+	       auto casev =
+		 mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+	       MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+			       mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+			       mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+	       if (runitm==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       if (casev==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       auto strcasdata = dynamic_cast<StringCaseScannerData*>(casdata);
+	       assert (strcasdata != nullptr);
+	       if (strcasdata->has_runitm(runitm))
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(runitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       strcasdata->process_stringcase(casev,casitm,runitm);
+	       todo([=](MomEmitter*em)
+		    {
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner before stringcase#%d %s run %s "
 				      "in switch instr %s #%d in block %s",
 				      casix, mom_item_cstring(casitm),
 				      mom_item_cstring(runitm),
 				      mom_item_cstring(insitm),
 				      rk, mom_item_cstring(blkitm));
-	  strcasdata->process_stringcase(casev,casitm,runitm);
-	  todo([=](MomEmitter*em)
-	       {
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner before stringcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-		 em->scan_instr(runitm,casix,insitm);
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner after stringcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-	       });
-	  strcasdata->add_runitm(runitm);
-	};
+		      em->scan_instr(runitm,casix,insitm);
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner after stringcase#%d %s run %s "
+				      "in switch instr %s #%d in block %s",
+				      casix, mom_item_cstring(casitm),
+				      mom_item_cstring(runitm),
+				      mom_item_cstring(insitm),
+				      rk, mom_item_cstring(blkitm));
+		    });
+	       strcasdata->add_runitm(runitm);
+	     };
       /////
     case CASE_SWTYPE_MOM(item):
       return [=](struct mom_item_st*casitm,unsigned casix,MomEmitter::CaseScannerData*casdata)
-	{
-	  assert (is_locked_item(casitm));
-	  auto runitm =
-	    mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
-	  auto casev =
-	    mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
-	  MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
-			  mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
-			  mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
-	  if (runitm==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  lock_item(runitm);
-	  if (casev==nullptr)
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
-				      "in switch instr %s #%d in block %s",
-				      casix, mom_item_cstring(casitm),
-				      mom_item_cstring(insitm),
-				      rk, mom_item_cstring(blkitm));
-	  auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata);
-	  assert (itemcasdata != nullptr);
-	  if (itemcasdata->has_runitm(runitm))
-	    throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+	     {
+	       assert (is_locked_item(casitm));
+	       auto runitm =
+		 mom_dyncast_item(mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(run)));
+	       auto casev =
+		 mom_unsync_item_get_phys_attr(casitm,MOM_PREDEFITM(case));
+	       MOM_DEBUGPRINTF(gencod, "C-case_scanner stringcase %s casix %d casdata@%p (%s) insitm=%s runitm=%s casev=%s",
+			       mom_item_cstring(casitm), casix, (void*)casdata, casdata->name(),
+			       mom_item_cstring(insitm), mom_item_cstring(runitm), mom_value_cstring(casev));
+	       if (runitm==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `run` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       lock_item(runitm);
+	       if (casev==nullptr)
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s  without `case` "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       auto itemcasdata = dynamic_cast<ItemCaseScannerData*>(casdata);
+	       assert (itemcasdata != nullptr);
+	       if (itemcasdata->has_runitm(runitm))
+		 throw  MOM_RUNTIME_PRINTF("stringcase#%d %s with reused run %s "
+					   "in switch instr %s #%d in block %s",
+					   casix, mom_item_cstring(casitm),
+					   mom_item_cstring(runitm),
+					   mom_item_cstring(insitm),
+					   rk, mom_item_cstring(blkitm));
+	       itemcasdata->process_itemcase(casev,casitm,runitm);
+	       todo([=](MomEmitter*em)
+		    {
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner before stringcase#%d %s run %s "
 				      "in switch instr %s #%d in block %s",
 				      casix, mom_item_cstring(casitm),
 				      mom_item_cstring(runitm),
 				      mom_item_cstring(insitm),
 				      rk, mom_item_cstring(blkitm));
-	  itemcasdata->process_itemcase(casev,casitm,runitm);
-	  todo([=](MomEmitter*em)
-	       {
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner before stringcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-		 em->scan_instr(runitm,casix,insitm);
-		 MOM_DEBUGPRINTF(gencod,
-				 "C-case_scanner after stringcase#%d %s run %s "
-				 "in switch instr %s #%d in block %s",
-				 casix, mom_item_cstring(casitm),
-				 mom_item_cstring(runitm),
-				 mom_item_cstring(insitm),
-				 rk, mom_item_cstring(blkitm));
-	       });
-	  itemcasdata->add_runitm(runitm);
-	};
+		      em->scan_instr(runitm,casix,insitm);
+		      MOM_DEBUGPRINTF(gencod,
+				      "C-case_scanner after stringcase#%d %s run %s "
+				      "in switch instr %s #%d in block %s",
+				      casix, mom_item_cstring(casitm),
+				      mom_item_cstring(runitm),
+				      mom_item_cstring(insitm),
+				      rk, mom_item_cstring(blkitm));
+		    });
+	       itemcasdata->add_runitm(runitm);
+	     };
     defaultcaseswtyp:
     default:
       throw  MOM_RUNTIME_PRINTF("switch instr %s rk#%d in block %s "

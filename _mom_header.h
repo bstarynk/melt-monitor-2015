@@ -256,14 +256,19 @@ typedef enum momenum_xtype_en
   momenuva_ity_tuple_momenfr_itype_en = 5,
   momenuva_ity_set_momenfr_itype_en = 6,
   momenuva_ity_node_momenfr_itype_en = 7,	/*extended enum itype_en */
-  momenuva_xty_lastvalue = 8, momenuva_xty_assovaldata =
-    9, momenuva_xty_vectvaldata = 10,
-  momenuva_xty_queue = 11, momenuva_xty_hashset = 12, momenuva_xty_hashmap =
-    13,
-  momenuva_xty_hashassoc = 14, momenuva_xty_loader = 15, momenuva_xty_dumper =
-    16,
-  momenuva_xty_json = 17, momenuva_xty_file = 18, momenuva_xty_filebuffer =
-    19,
+
+  momenuva_xty_lastvalue = 8,
+  momenuva_xty_assovaldata = 9,
+  momenuva_xty_vectvaldata = 10,
+  momenuva_xty_queue = 11,
+  momenuva_xty_hashset = 12,
+  momenuva_xty_hashmap = 13,
+  momenuva_xty_hashassoc = 14,
+  momenuva_xty_loader = 15,
+  momenuva_xty_dumper = 16,
+  momenuva_xty_json = 17,
+  momenuva_xty_file = 18,
+  momenuva_xty_filebuffer = 19,
 } momty_xtype_en;
 
 

@@ -2442,6 +2442,16 @@ comment
 
 
 
+*indirect
+1471850149
+^mtime
+(
+comment
+"for indirections"_
+)attrs
+
+
+
 *initial_modules
 1457332482
 ^mtime
@@ -2577,6 +2587,7 @@ comment
 
 
 
+
 *is_double
 1457358950
 ^mtime
@@ -2584,7 +2595,6 @@ comment
 comment
 "to test if argument is a double"_
 )attrs
-
 
 
 
@@ -2800,6 +2810,7 @@ struct
 
 
 
+
 *itementry_tu
 1471713325
 ^mtime
@@ -2816,7 +2827,6 @@ ient_value
 type
 struct
 )attrs
-
 
 
 
@@ -3028,6 +3038,7 @@ item
 
 
 
+
 *ity_node
 1471713325
 ^mtime
@@ -3039,7 +3050,6 @@ enumerator
 notice
 node
 )attrs
-
 
 
 
@@ -3260,6 +3270,7 @@ comment
 
 
 
+
 *locals
 1465201575
 ^mtime
@@ -3267,7 +3278,6 @@ comment
 comment
 "for local variables inside blocks"_
 )attrs
-
 
 
 
@@ -3443,6 +3453,7 @@ item
 
 
 
+
 *nod_metarank
 1471713325
 ^mtime
@@ -3454,7 +3465,6 @@ field
 type
 int
 )attrs
-
 
 
 
@@ -3697,6 +3707,7 @@ struct
 
 
 
+
 *none
 1457014740
 ^mtime
@@ -3704,7 +3715,6 @@ struct
 comment
 "pseudo type for nil"_
 )attrs
-
 
 
 
@@ -3875,6 +3885,7 @@ comment
 
 
 
+
 *out_hexa
 1456812179
 ^mtime
@@ -3882,7 +3893,6 @@ comment
 comment
 "output hexa"_
 )attrs
-
 
 
 
@@ -4056,6 +4066,7 @@ comment
 
 
 
+
 *payl_assovaldata_remove
 1456833278
 ^mtime
@@ -4063,7 +4074,6 @@ comment
 comment
 "remove attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -4233,6 +4243,7 @@ comment
 
 
 
+
 *payl_hashmap_get
 1456897878
 ^mtime
@@ -4240,7 +4251,6 @@ comment
 comment
 "operation to get a key in an hashmap"_
 )attrs
-
 
 
 
@@ -4402,6 +4412,7 @@ comment
 
 
 
+
 *payl_vectval_node
 1456840222
 ^mtime
@@ -4409,7 +4420,6 @@ comment
 comment
 "make node from vector of values payload"_
 )attrs
-
 
 
 
@@ -4606,6 +4616,7 @@ comment
 
 
 
+
 *primitive
 1465807699
 ^mtime
@@ -4613,7 +4624,6 @@ comment
 comment
 "for primitives (operations)"_
 )attrs
-
 
 
 
@@ -4807,6 +4817,7 @@ val0
 
 
 
+
 *return__13BAAtBuj3ZumI
 1471713325
 ^mtime
@@ -4818,7 +4829,6 @@ return
 return
 locval
 )attrs
-
 
 
 
@@ -5041,6 +5051,7 @@ return
 
 
 
+
 *return__4NZWiuSjV6H8wH
 1471713325
 ^mtime
@@ -5067,7 +5078,6 @@ plus
 hash_t
 )node
 )attrs
-
 
 
 
@@ -5305,6 +5315,7 @@ return
 
 
 
+
 *return__6VLufmy217RLbl
 1471770275
 ^mtime
@@ -5316,7 +5327,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -5553,6 +5563,7 @@ num1
 
 
 
+
 *return__8uVBKgA1pUt0Nk
 1471713325
 ^mtime
@@ -5564,7 +5575,6 @@ return
 return
 val0
 )attrs
-
 
 
 
@@ -5772,6 +5782,7 @@ signature_value_int_to_item
 
 
 
+
 *seqitem_nth__4kcMjtxDDTGBNI
 1471713325
 ^mtime
@@ -5786,7 +5797,6 @@ comment
 descr
 sequence
 )attrs
-
 
 
 
@@ -6043,6 +6053,7 @@ comment
 
 
 
+
 *signature_2ints_to_bool
 1471713325
 ^mtime
@@ -6057,7 +6068,6 @@ num1
 result
 bool
 )attrs
-
 
 
 
@@ -6282,6 +6292,7 @@ item
 
 
 
+
 *signature_value_int_to_value
 1471770275
 ^mtime
@@ -6298,7 +6309,6 @@ num0
 result
 value
 )attrs
-
 
 
 
@@ -6528,6 +6538,7 @@ space_en
 
 
 
+
 *space_en
 1471713325
 ^mtime
@@ -6546,7 +6557,6 @@ spa_user
 type
 enum
 )attrs
-
 
 
 
@@ -6782,6 +6792,7 @@ assign__2KYo8pMdomKjZv
 
 
 
+
 *test__0v5EkR5LobSixf
 1471770275
 ^mtime
@@ -6805,7 +6816,6 @@ and
 then
 return__88mhPUsIT6vz8k
 )attrs
-
 
 
 
@@ -7100,6 +7110,7 @@ return__5t6ehRq543I5ER
 
 
 
+
 *test__2xvy97EAAVLVgz
 1471713325
 ^mtime
@@ -7111,7 +7122,6 @@ test
 then
 return__8MAb1x0Cd1aasN
 )attrs
-
 
 
 
@@ -7418,6 +7428,7 @@ return__18HzPakaFnKKaD
 
 
 
+
 *test__4uufJofKRKuNro
 1471713325
 ^mtime
@@ -7440,7 +7451,6 @@ not_bool_prim
 then
 return__8j33lGx7Lc8Kta
 )attrs
-
 
 
 
@@ -7754,6 +7764,7 @@ return__2fyoZAee8WZwK7
 
 
 
+
 *test__8cs58KiUutyD8Z
 1471713325
 ^mtime
@@ -7765,7 +7776,6 @@ test
 then
 return__0kzrnICYtVD6Ls
 )attrs
-
 
 
 
@@ -8159,6 +8169,7 @@ value
 
 
 
+
 *thread_local
 1465299099
 ^mtime
@@ -8166,7 +8177,6 @@ value
 comment
 "for thread-local variables"_
 )attrs
-
 
 
 
@@ -8381,6 +8391,7 @@ type
 
 
 
+
 *undefined_result
 1456139800
 ^mtime
@@ -8388,7 +8399,6 @@ type
 comment
 "for undefined result"_
 )attrs
-
 
 
 
@@ -8609,6 +8619,7 @@ signature_value_to_hash_t
 
 
 
+
 *value_hash__3X8CfLq055h966
 1471713325
 ^mtime
@@ -8627,7 +8638,6 @@ locals
 typ0loc
 )tuple
 )attrs
-
 
 
 
@@ -8802,6 +8812,7 @@ enumerator
 
 
 
+
 *xty_file
 1471713325
 ^mtime
@@ -8811,7 +8822,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 
