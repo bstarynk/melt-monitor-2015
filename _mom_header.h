@@ -1076,7 +1076,7 @@ momf_seqitem_nth (momvalue_t momarg_val0, long momarg_num0)
 	{
 	/**cond cond__7RAACMlkZ7Ex8C **/
 	 /**latest:test__2jIHu8z0uETFxh **/
-	  if ((( /*equal_int_prim */ ((momarg_num0) >= (0)))
+	  if ((( /*greater_int_prim */ ((momarg_num0) >= (0)))
 	       && ( /*equal_int_prim */ ((momarg_num0) < (momloc_nloc)))))
 	    {
 	      return (( /*at */
@@ -1130,7 +1130,7 @@ momf_tuple_nth (momvalue_t momarg_val0, long momarg_num0)
 	{
 	/**cond cond__32py9BI1Lwpjgi **/
 	 /**latest:test__0v5EkR5LobSixf **/
-	  if ((( /*equal_int_prim */ ((momarg_num0) >= (0)))
+	  if ((( /*greater_int_prim */ ((momarg_num0) >= (0)))
 	       && ( /*equal_int_prim */ ((momarg_num0) < (momloc_nloc)))))
 	    {
 	      return (( /*at */
@@ -1184,7 +1184,7 @@ momf_set_nth (momvalue_t momarg_val0, long momarg_num0)
 	{
 	/**cond cond__2CrNDXb5NWebUo **/
 	 /**latest:test__7s3XoFBz06VBJ0 **/
-	  if ((( /*equal_int_prim */ ((momarg_num0) >= (0)))
+	  if ((( /*greater_int_prim */ ((momarg_num0) >= (0)))
 	       && ( /*equal_int_prim */ ((momarg_num0) < (momloc_nloc)))))
 	    {
 	      return (( /*at */
@@ -1391,7 +1391,7 @@ momf_node_nth (momvalue_t momarg_val0, long momarg_num0)
 	{
 	/**cond cond__3J2hzl02WJ9rxv **/
 	 /**latest:test__6SVHJL8hRjZrVl **/
-	  if ((( /*equal_int_prim */ ((momarg_num0) >= (0)))
+	  if ((( /*greater_int_prim */ ((momarg_num0) >= (0)))
 	       && ( /*equal_int_prim */ ((momarg_num0) < (momloc_nloc)))))
 	    {
 	      return (( /*at */

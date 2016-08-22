@@ -1903,7 +1903,7 @@ comment
 
 
 *equal_int_prim
-1471713325
+1471861468
 ^mtime
 (
 c_expansion
@@ -2203,12 +2203,12 @@ comment
 
 
 *greater_equal_int_prim
-1471713325
+1471861468
 ^mtime
 (
 c_expansion
 (
-"/*equal_int_prim*/ (("_
+"/*greater_int_prim*/ (("_
 num0
 ") >= ("_
 num1
@@ -2217,6 +2217,37 @@ code_chunk
 )node
 comment
 "primitive to test greater equal of 2 ints"_
+descr
+primitive
+notice
+(
+equal_int_prim
+greater_equal_int_prim
+greater_int_prim
+less_equal_int_prim
+less_int_prim
+)set
+signature
+signature_2ints_to_bool
+)attrs
+
+
+
+*greater_int_prim
+1471861468
+^mtime
+(
+c_expansion
+(
+"/*equal_int_prim*/ (("_
+num0
+") > ("_
+num1
+"))"_
+code_chunk
+)node
+comment
+"primitive to test greater than of 2 ints"_
 descr
 primitive
 signature
@@ -2309,6 +2340,7 @@ comment
 
 
 
+
 *header_module
 1471770275
 ^mtime
@@ -2372,7 +2404,6 @@ gc_alloc_scalar
 gc_alloc_uncollectable
 )set
 )attrs
-
 
 
 
@@ -2577,6 +2608,7 @@ comment
 
 
 
+
 *is_closure
 1457598341
 ^mtime
@@ -2584,7 +2616,6 @@ comment
 comment
 "test if argument is a closure"_
 )attrs
-
 
 
 
@@ -2782,6 +2813,7 @@ comment
 
 
 
+
 *item_ty
 1471713325
 ^mtime
@@ -2807,7 +2839,6 @@ itm_payldata
 type
 struct
 )attrs
-
 
 
 
@@ -3024,6 +3055,7 @@ int
 
 
 
+
 *ity_item
 1471713325
 ^mtime
@@ -3035,7 +3067,6 @@ enumerator
 notice
 item
 )attrs
-
 
 
 
@@ -3195,7 +3226,7 @@ comment
 
 
 *less_equal_int_prim
-1471713325
+1471861468
 ^mtime
 (
 c_expansion
@@ -3218,7 +3249,7 @@ signature_2ints_to_bool
 
 
 *less_int_prim
-1471713325
+1471861468
 ^mtime
 (
 c_expansion
@@ -3260,6 +3291,7 @@ comment
 
 
 
+
 *letrec
 1455623664
 ^mtime
@@ -3267,7 +3299,6 @@ comment
 comment
 "letrec keyword"_
 )attrs
-
 
 
 
@@ -3439,6 +3470,7 @@ item
 
 
 
+
 *nod_metaitem
 1471713325
 ^mtime
@@ -3450,7 +3482,6 @@ field
 type
 item
 )attrs
-
 
 
 
@@ -3684,6 +3715,7 @@ sequence
 
 
 
+
 *node_ty
 1471713325
 ^mtime
@@ -3704,7 +3736,6 @@ nod_sons
 type
 struct
 )attrs
-
 
 
 
@@ -3875,6 +3906,7 @@ comment
 
 
 
+
 *out_gplv3_notice
 1456930526
 ^mtime
@@ -3882,7 +3914,6 @@ comment
 comment
 "output the GPLv3 notice"_
 )attrs
-
 
 
 
@@ -4056,6 +4087,7 @@ comment
 
 
 
+
 *payl_assovaldata_put
 1456833278
 ^mtime
@@ -4063,7 +4095,6 @@ comment
 comment
 "put attributes in given item assocvaldata payload"_
 )attrs
-
 
 
 
@@ -4233,6 +4264,7 @@ payl_hashmap_remove
 
 
 
+
 *payl_hashmap_count
 1456897878
 ^mtime
@@ -4240,7 +4272,6 @@ payl_hashmap_remove
 comment
 "operation to obtain the set of keys in an hashmap"_
 )attrs
-
 
 
 
@@ -4402,6 +4433,7 @@ comment
 
 
 
+
 *payl_vectval_count
 1456840222
 ^mtime
@@ -4409,7 +4441,6 @@ comment
 comment
 "count in a vector of values"_
 )attrs
-
 
 
 
@@ -4606,6 +4637,7 @@ comment
 
 
 
+
 *preparation
 1468325324
 ^mtime
@@ -4613,7 +4645,6 @@ comment
 comment
 "git a preparation node"_
 )attrs
-
 
 
 
@@ -4803,6 +4834,7 @@ return
 
 
 
+
 *return__0Y7hV6cP0rEfsU
 1471713325
 ^mtime
@@ -4814,7 +4846,6 @@ return
 return
 val0
 )attrs
-
 
 
 
@@ -5037,6 +5068,7 @@ val0
 
 
 
+
 *return__4HEPCau78dBrls
 1471770275
 ^mtime
@@ -5048,7 +5080,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -5301,6 +5332,7 @@ return
 
 
 
+
 *return__6U0bEZ4d7W4Rlu
 1471770275
 ^mtime
@@ -5312,7 +5344,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -5549,6 +5580,7 @@ return
 
 
 
+
 *return__8memwFf9R7Vm5L
 1471713325
 ^mtime
@@ -5560,7 +5592,6 @@ return
 return
 num1
 )attrs
-
 
 
 
@@ -5766,6 +5797,7 @@ flexible_array
 
 
 
+
 *seqitem_nth
 1471713325
 ^mtime
@@ -5779,7 +5811,6 @@ inline
 signature
 signature_value_int_to_item
 )attrs
-
 
 
 
@@ -6043,6 +6074,7 @@ sequence
 
 
 
+
 *signature
 1455623962
 ^mtime
@@ -6050,7 +6082,6 @@ sequence
 comment
 "signature keyword"_
 )attrs
-
 
 
 
@@ -6275,6 +6306,7 @@ int
 
 
 
+
 *signature_value_int_to_item
 1471713325
 ^mtime
@@ -6289,7 +6321,6 @@ num0
 result
 item
 )attrs
-
 
 
 
@@ -6524,6 +6555,7 @@ enumerator
 
 
 
+
 *spacarg
 1471713325
 ^mtime
@@ -6535,7 +6567,6 @@ formal
 type
 space_en
 )attrs
-
 
 
 
@@ -6774,6 +6805,7 @@ sequence__7Z6RVE7EWAg5CV
 
 
 
+
 *test__0uPRzKpbxGzt1w
 1471770275
 ^mtime
@@ -6789,7 +6821,6 @@ less_int_prim
 then
 assign__2KYo8pMdomKjZv
 )attrs
-
 
 
 
@@ -7091,6 +7122,7 @@ return__6VLufmy217RLbl
 
 
 
+
 *test__2kUM0g7KYR5eM2
 1471713325
 ^mtime
@@ -7107,7 +7139,6 @@ small_int_prim
 then
 return__5t6ehRq543I5ER
 )attrs
-
 
 
 
@@ -7414,6 +7445,7 @@ return__16DZKIWAZeUSWZ
 
 
 
+
 *test__4mDY1aqrYNAzF1
 1471713325
 ^mtime
@@ -7425,7 +7457,6 @@ test
 then
 return__18HzPakaFnKKaD
 )attrs
-
 
 
 
@@ -7738,6 +7769,7 @@ return__6U0bEZ4d7W4Rlu
 
 
 
+
 *test__89XIlU60oSmGyb
 1471713325
 ^mtime
@@ -7761,7 +7793,6 @@ equal_int_prim
 then
 return__2fyoZAee8WZwK7
 )attrs
-
 
 
 
@@ -8155,6 +8186,7 @@ comment
 
 
 
+
 *this_closure
 1465746870
 ^mtime
@@ -8166,7 +8198,6 @@ formal
 type
 value
 )attrs
-
 
 
 
@@ -8377,6 +8408,7 @@ type
 
 
 
+
 *uint64_t
 1471713325
 ^mtime
@@ -8388,7 +8420,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -8603,6 +8634,7 @@ type
 
 
 
+
 *value_hash
 1471713325
 ^mtime
@@ -8616,7 +8648,6 @@ inline
 signature
 signature_value_to_hash_t
 )attrs
-
 
 
 
@@ -8800,6 +8831,7 @@ assovaldata_ty
 
 
 
+
 *xty_dumper
 1471713325
 ^mtime
@@ -8809,7 +8841,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 
