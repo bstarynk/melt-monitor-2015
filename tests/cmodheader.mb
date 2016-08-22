@@ -564,7 +564,8 @@
   ^* descr primitive
   ^* signature signature_2ints_to_bool
   ^* c_expansion %code_chunk(
-      "/*equal_int_prim*/ ((" num0 ") >= (" num1 "))" )
+      "/*greater_int_prim*/ ((" num0 ") >= (" num1 "))" )
+  ^* notice { equal_int_prim less_int_prim less_equal_int_prim greater_int_prim greater_equal_int_prim }
 )
 
 

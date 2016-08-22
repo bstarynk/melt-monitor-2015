@@ -1922,7 +1922,7 @@ MomEmitter::scan_instr(struct mom_item_st*insitm, int rk, struct mom_item_st*blk
 	      }
 	    else
 	      {
-		auto testypitm = scan_expr(testexp,insitm,1);
+		auto testypitm = scan_expr(testexp,testitm,1);
 		if (!testypitm)
 		  throw
 		    MOM_RUNTIME_PRINTF("cond %s #%d in block %s with untypable test#%d %s",
@@ -3286,14 +3286,20 @@ MomEmitter::scan_var(struct mom_item_st*varitm, struct mom_item_st*insitm, struc
   if (!typvarv)
     throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s without `type`",
                               mom_item_cstring(varitm), mom_item_cstring(insitm));
+  MOM_DEBUGPRINTF(gencod, "scan_var varitm=%s insitm=%s typitm=%s typvarv=%s",
+		  mom_item_cstring(varitm), mom_item_cstring(insitm), mom_item_cstring(typitm), mom_value_cstring(typvarv));
   scan_type_expr(typvarv, varitm);
   auto typvaritm = mom_dyncast_item(typvarv);
   if (!typitm)
     typitm = typvaritm;
-  else if (typitm != typvaritm)
+  else if (typitm != typvaritm) {
+    MOM_DEBUGPRINTF(gencod, "scan_var illtyped varitm:=%s\n .. insitm:=%s\n .. typitm:=%s\n.. typvaritm=%s",
+		    mom_item_content_cstring(varitm), mom_item_content_cstring(insitm), mom_item_content_cstring(typitm),
+		    mom_item_content_cstring(typvaritm));
     throw  MOM_RUNTIME_PRINTF("variable %s in instruction %s has `type`:%s incompatible with %s",
                               mom_item_cstring(varitm), mom_item_cstring(insitm),
                               mom_item_cstring(typvaritm), mom_item_cstring(typitm));
+  }
   MOM_DEBUGPRINTF(gencod, "scan_var end varitm=%s type %s desvaritm=%s",
                   mom_item_cstring(varitm), mom_item_cstring(typitm), mom_item_cstring(desvaritm));
 #define NBVARDESC_MOM 43
@@ -7476,11 +7482,15 @@ MomCEmitter::transform_inline_element(struct mom_item_st*ilitm)
   MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n", mom_item_content_cstring(ilitm));
   assert (mom_unsync_item_descr(ilitm) == MOM_PREDEFITM(inline));
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(signature)));
+  if (!sigitm)
+    throw MOM_RUNTIME_PRINTF("missing signature in inline %s", mom_item_cstring(ilitm));
+  lock_item(sigitm);
   auto bdyitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(body)));
+  if (!bdyitm)
+    throw MOM_RUNTIME_PRINTF("missing body in inline %s", mom_item_cstring(ilitm));
+  lock_item(bdyitm);
   MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s bdyitm %s",
 		  mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_item_cstring(bdyitm));
-  assert (is_locked_item(sigitm));
-  assert (is_locked_item(bdyitm));
   auto inlhnod = declare_inlineheader_for(sigitm,ilitm);
   MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s sigitm %s inlhnod %s",
 		  mom_item_cstring(ilitm), mom_item_cstring(sigitm), mom_value_cstring(inlhnod));

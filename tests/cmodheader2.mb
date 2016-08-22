@@ -1,6 +1,12 @@
 # file cmodheader2.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
 
 
+^global !int64_t (
+  ^* comment "the int64_t type of signed 64 bits"
+  ^* descr type
+  ^* c_code "int64_t"
+  )
+  
 ^global !gc_alloc (
   ^* descr primitive
   ^* comment "primitive to allocate GC-ed memory"
@@ -511,8 +517,283 @@
   )
 )
 
+^global !itm1 (
+^* descr formal
+^* type item
+)
 
 
+^global !itmvar_l (
+^* descr variable
+^* type item
+)
+
+^global !itmvar_r (
+^* descr variable
+^* type item
+)
+
+^global !signature_2items_to_int (
+  ^* comment "signauture: item item -> int"
+  ^* descr signature
+  ^* formals [ itm0 itm1 ]
+  ^* result int
+)
+
+^global !signature_2items_to_bool (
+  ^* comment "signauture: item item -> bool"
+  ^* descr signature
+  ^* formals [ itm0 itm1 ]
+  ^* result bool
+)
+
+^global !lng0 (
+   ^* comment "lng0 in cmodheader2.mb"
+   ^* descr formal
+   ^* type int64_t
+)
+
+^global !lng1 (
+   ^* comment "lng1 in cmodheader2.mb"
+   ^* descr formal
+   ^* type int64_t
+)
+
+^global !signature_2int64t_to_bool (
+  ^* comment "signature: int64_t int64_t -> bool"
+  ^* descr signature
+  ^* formals [ lng0 lng1 ]
+  ^* result bool
+)
+
+^global !equal_int64_prim (
+  ^* comment "primitive to test equality of 2 int64_t"
+  ^* descr primitive
+  ^* signature signature_2int64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int64_prim*/ ((" lng0 ") == (" lng1 "))" )
+)
+
+^global !less_int64_prim (
+  ^* comment "primitive to test less than of 2 int64_t"
+  ^* descr primitive
+  ^* signature signature_2int64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_int64_prim*/ ((" lng0 ") < (" lng1 "))" )
+)
+
+
+^global !less_equal_int64_prim (
+  ^* comment "primitive to test less equal of 2 int64_t"
+  ^* descr primitive
+  ^* signature signature_2int64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*less_equal_int64_prim*/ ((" lng0 ") <= (" lng1 "))" )
+)
+
+
+^global !greater_int64_prim (
+  ^* comment "primitive to test greater than of 2 int64_t"
+  ^* descr primitive
+  ^* signature signature_2int64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*greater_int64_prim*/ ((" lng0 ") > (" lng1 "))" )
+)
+
+
+^global !greater_equal_int64_prim (
+  ^* comment "primitive to test greater equal of 2 int64_t"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*greater_equal_int64_prim*/ ((" num0 ") >= (" num1 "))" )
+)
+
+
+^global !signature_2int64t_to_bool (
+  ^* descr signature
+  ^* formals [ lng0 lng1 ]
+  ^* result bool
+  ^* notice {greater_equal_int64_prim greater_int64_prim less_equal_int64_prim less_int64_prim equal_int64_prim}
+)
+
+^global !ulng0 (
+   ^* comment "ulng0 in cmodheader2.mb"
+   ^* descr formal
+   ^* type uint64_t
+)
+
+^global !ulng1 (
+   ^* comment "ulng1 in cmodheader2.mb"
+   ^* descr formal
+   ^* type uint64_t
+)
+
+^global !signature_2uint64t_to_bool (
+  ^* comment "signature: uint64_t uint64_t -> bool"
+  ^* descr signature
+  ^* formals [ ulng0 ulng1 ]
+  ^* result bool
+)
+
+^global !equal_uint64_prim (
+  ^* comment "primitive to test equality of 2 uint64_t"
+  ^* descr primitive
+  ^* signature signature_2uint64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_uint64_prim*/ ((" ulng0 ") == (" ulng1 "))" )
+)
+
+^global !less_uint64_prim (
+  ^* comment "primitive to test less than of 2 uint64_t"
+  ^* descr primitive
+  ^* signature signature_2uint64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*equal_uint64_prim*/ ((" ulng0 ") < (" ulng1 "))" )
+)
+
+
+^global !less_equal_uint64_prim (
+  ^* comment "primitive to test less equal of 2 uint64_t"
+  ^* descr primitive
+  ^* signature signature_2uint64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*less_equal_uint64_prim*/ ((" ulng0 ") <= (" ulng1 "))" )
+)
+
+
+^global !greater_uint64_prim (
+  ^* comment "primitive to test greater than of 2 uint64_t"
+  ^* descr primitive
+  ^* signature signature_2uint64t_to_bool
+  ^* c_expansion %code_chunk(
+      "/*greater_uint64_prim*/ ((" ulng0 ") > (" ulng1 "))" )
+)
+
+
+^global !greater_equal_uint64_prim (
+  ^* comment "primitive to test greater equal of 2 uint64_t"
+  ^* descr primitive
+  ^* signature signature_2ints_to_bool
+  ^* c_expansion %code_chunk(
+      "/*greater_equal_uint64_prim*/ ((" num0 ") >= (" num1 "))" )
+)
+
+
+^global !signature_2uint64t_to_bool (
+  ^* descr signature
+  ^* formals [ ulng0 ulng1 ]
+  ^* result bool
+  ^* notice {greater_equal_uint64_prim greater_uint64_prim less_equal_uint64_prim less_uint64_prim equal_uint64_prim}
+)
+
+^global !same_item_prim (
+  ^* comment "primitive to test identities of 2 items"
+  ^* descr primitive
+  ^* signature signature_2items_to_bool
+  ^* c_expansion %code_chunk(
+      "/*same_item_prim*/ ((" itm0 ") == (" itm1 "))" )
+)
+
+^global !item_cmp (
+  ^* comment "item compare"
+  ^* descr inline
+  ^* signature signature_2items_to_int
+  ^* signature signature_value_int_to_value
+  ^* body  ^global ?item_cmp (
+    ^* descr sequence
+    ^* locals [ itmvar_l itmvar_r ]
+    ^* body [
+      ^global ?assign (
+        ^* descr assign
+        ^* to itmvar_l
+        ^* from %item(%dyncast_item(itm0))
+      )
+      ^global ?assign (
+        ^* descr assign
+        ^* to itmvar_r
+        ^* from %item(%dyncast_item(itm1))
+      )
+      ^global ?cond (
+        ^* descr cond
+        ^* comment "cond on both itmvar_l & itmvar_r"
+        ^* cond [
+            ^global ?test (
+              ^* descr test
+              ^* comment "test same items"
+              ^* test %same_item_prim (itmvar_l itmvar_r)
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return 0
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "no left item"
+              ^* test %is_null (%value(itmvar_l))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return -1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "no right item"
+              ^* test %is_null (%value(itmvar_r))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return 1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "left hid < right hid"
+              ^* test %less_int_prim (%int(%get (itmvar_l itm_hid)) %int(%get (itmvar_r itm_hid)))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return -1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "left hid > right hid"
+              ^* test %greater_int_prim (%int(%get (itmvar_l itm_hid)) %int(%get (itmvar_r itm_hid)))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return 1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "left lid < right lid"
+              ^* test %less_uint64_prim (%get (itmvar_l itm_lid) %get (itmvar_r itm_lid))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return -1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "left lid > right lid"
+              ^* test %greater_uint64_prim (%get (itmvar_l itm_lid) %get (itmvar_r itm_lid))
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return 1
+              )
+            )
+            ^global ?test (
+              ^* descr test
+              ^* comment "otherwise should not happen, but"
+              ^* then  ^global ?return (
+                    ^* descr return
+                    ^* return 0
+              )
+            )              
+        ]
+      )
+    ]
+  )
+)
 
 
 ^global header_module (
@@ -521,6 +802,8 @@
    ^* declare [ make_item ]
    ^* notice { gc_alloc gc_alloc_scalar gc_alloc_uncollectable }
    ^* module [
+     signature_2int64t_to_bool
+     signature_2uint64t_to_bool
      anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
      boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
      item_ty node_ty
@@ -530,6 +813,7 @@
      valid_item_pointer
      int_val_def value_hash
      item_hash
+     item_cmp
      dyncast_int dyncast_boxdouble
      dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
      dyncast_item
