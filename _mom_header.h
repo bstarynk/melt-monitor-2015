@@ -29,7 +29,7 @@
 /// 73 declarations:
 
 typedef enum momenum_space_en
-{				/*pristine enum  of 4 */
+{				/*pristine enum space_en of 4 */
   momenuva_spa_none = 0,
   momenuva_spa_predef = 1,
   momenuva_spa_global = 2,
@@ -243,7 +243,7 @@ struct momstruct_node_ty
 
 
 typedef enum momenum_itype_en
-{				/*pristine enum  of 8 */
+{				/*pristine enum itype_en of 8 */
   momenuva_ity_none = 0,
   momenuva_ity_int = 1,
   momenuva_ity_double = 2,
@@ -257,14 +257,14 @@ typedef enum momenum_itype_en
 
 typedef enum momenum_xtype_en
 {				/*extending enum itype_en */
-  momenuva_ity_none_momenfr_itype_en = 0,
-  momenuva_ity_int_momenfr_itype_en = 1,
-  momenuva_ity_double_momenfr_itype_en = 2,
-  momenuva_ity_string_momenfr_itype_en = 3,
-  momenuva_ity_item_momenfr_itype_en = 4,
-  momenuva_ity_tuple_momenfr_itype_en = 5,
-  momenuva_ity_set_momenfr_itype_en = 6,
-  momenuva_ity_node_momenfr_itype_en = 7,	/*extended enum itype_en */
+  momenuvx_ity_none__momenfr__itype_en = 0,
+  momenuvx_ity_int__momenfr__itype_en = 1,
+  momenuvx_ity_double__momenfr__itype_en = 2,
+  momenuvx_ity_string__momenfr__itype_en = 3,
+  momenuvx_ity_item__momenfr__itype_en = 4,
+  momenuvx_ity_tuple__momenfr__itype_en = 5,
+  momenuvx_ity_set__momenfr__itype_en = 6,
+  momenuvx_ity_node__momenfr__itype_en = 7,	/*extended enum itype_en */
 
   momenuva_xty_lastvalue = 8,
   momenuva_xty_assovaldata = 9,
