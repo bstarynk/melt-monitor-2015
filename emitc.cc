@@ -841,7 +841,7 @@ bool mom_emit_c_code(struct mom_item_st*itm)
     {
       cemit.failing();
       MOM_WARNPRINTF_AT(e.file(), e.lineno(),
-                        "mom_emit_c_code %s failed with MOM runtime exception %s in %s",
+                        "mom_emit_c_code %s failed with MOM runtime exception %s in function %s",
                         mom_item_cstring(itm), mom_gc_strdup(e.what()), mom_item_cstring(cemit.current_function()));
       return false;
     }
@@ -6157,11 +6157,6 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
 			    mom_item_cstring(expitm), mom_value_cstring(restree));
 	    return restree;
 	  }
-	auto expbind = get_binding(expitm);
-	auto rolitm = expbind?expbind->vd_rolitm:nullptr;
-	MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm:=%s\n.. bind rol %s what %s",
-			mom_item_content_cstring(expitm), mom_item_cstring(rolitm),
-			expbind?mom_value_cstring(expbind->vd_what):"°");
 	if (expitm == MOM_PREDEFITM(truth))
 	  {
 	    if (typitm == MOM_PREDEFITM(bool))
@@ -6176,6 +6171,14 @@ MomCEmitter::transform_expr(momvalue_t expv, struct mom_item_st*initm, struct mo
 			    mom_item_cstring(expitm), mom_value_cstring(xtree));
 	    return xtree;
 	  };
+	auto expbind = get_binding(expitm);
+	if (!expbind)
+	  throw MOM_RUNTIME_PRINTF("c-transform_item expitm=%s unbound in initm=%s",
+				   mom_item_cstring(expitm), mom_value_cstring(initm));
+	auto rolitm = expbind?expbind->vd_rolitm:nullptr;
+	MOM_DEBUGPRINTF(gencod, "c-transform_expr expitm:=%s\n.. bind rol %s what %s",
+			mom_item_content_cstring(expitm), mom_item_cstring(rolitm),
+			expbind?mom_value_cstring(expbind->vd_what):"°");
 	////
 #define NBROLE_MOM 31
 #define CASE_ROLE_MOM(Nam) momhashpredef_##Nam % NBROLE_MOM:		\
@@ -7529,8 +7532,11 @@ const struct mom_boxnode_st*
 MomCEmitter::transform_inline_element(struct mom_item_st*ilitm)
 {
   assert (is_locked_item(ilitm));
-  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n", mom_item_content_cstring(ilitm));
+  auto prevfunitm = _ce_curfunctionitm;
+  MOM_DEBUGPRINTF(gencod, "c-transform_inline_element start ilitm:=\n%s\n.. prevfunitm=%s",
+		  mom_item_content_cstring(ilitm), mom_item_cstring(prevfunitm));
   assert (mom_unsync_item_descr(ilitm) == MOM_PREDEFITM(inline));
+  _ce_curfunctionitm = ilitm;
   auto sigitm = mom_dyncast_item(mom_unsync_item_get_phys_attr (ilitm, MOM_PREDEFITM(signature)));
   if (!sigitm)
     throw MOM_RUNTIME_PRINTF("missing signature in inline %s", mom_item_cstring(ilitm));
@@ -7580,6 +7586,7 @@ MomCEmitter::transform_inline_element(struct mom_item_st*ilitm)
 				    mom_boxnode_make_va(MOM_PREDEFITM(comment),2,literal_string("endinline:"), ilitm));
   MOM_DEBUGPRINTF(gencod, "c-transform_inline_element ilitm %s result inldef=%s",  mom_item_cstring(ilitm),
 		  mom_value_cstring(inldef));
+  _ce_curfunctionitm = prevfunitm;
   return inldef;
 } // end MomCEmitter::transform_inline_element
 
