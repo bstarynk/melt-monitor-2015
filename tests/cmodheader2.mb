@@ -699,7 +699,6 @@
   ^* comment "item compare"
   ^* descr inline
   ^* signature signature_2items_to_int
-  ^* signature signature_value_int_to_value
   ^* body  ^global ?item_cmp (
     ^* descr sequence
     ^* locals [ itmvar_l itmvar_r ]
