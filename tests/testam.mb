@@ -1,0 +1,33 @@
+^global !hid (
+  ^* descr formal
+  ^* type uint16_t
+  ^* comment "formal for high-id num (uint16_t)"
+)
+
+^global !loid (
+  ^* descr formal
+  ^* type uint64_t
+  ^* comment "formal for low-id num (uint64_t)"
+)
+
+^global !signature_hid_loid_space_to_item (
+  ^* descr signature
+  ^* comment "signature: hid loid space -> item"
+  ^* formals [ hid loid spacarg ]
+  ^* result item
+)
+
+
+^global !make_item (
+  ^* descr routine
+  ^* comment "make an item in some space"
+  ^* signature signature_space_to_item
+)
+
+^global !make_item_from_id  (
+  ^* descr routine
+  ^* comment "make an item from its id in some space"
+  ^* signature signature_hid_loid_space_to_item
+)
+
+^item header_module ( ^put declare [ make_item make_item_from_id ] )
