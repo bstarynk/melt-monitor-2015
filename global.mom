@@ -762,6 +762,21 @@ uint32_t
 
 
 
+*cfile_t
+1471959461
+^mtime
+(
+c_code
+"FILE*"_
+comment
+"C <stdio.h> file handle pointer"_
+descr
+type
+)attrs
+
+
+
+
 *char
 1471713325
 ^mtime
@@ -773,7 +788,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -984,6 +998,7 @@ cond
 
 
 
+
 *cond__2je2bFhsDpT86L
 1471713325
 ^mtime
@@ -1000,7 +1015,6 @@ test__8lslFtrlBehI0R
 descr
 cond
 )attrs
-
 
 
 
@@ -1262,6 +1276,7 @@ cond
 
 
 
+
 *cond__6PqvmjTNGteezP
 1471940701
 ^mtime
@@ -1275,7 +1290,6 @@ test__57l8TNBdnT6u2t
 descr
 cond
 )attrs
-
 
 
 
@@ -1497,6 +1511,21 @@ struct
 
 
 
+*cptr_t
+1471959461
+^mtime
+(
+c_code
+"const void*"_
+comment
+"raw C pointer type"_
+descr
+type
+)attrs
+
+
+
+
 *data
 1464941668
 ^mtime
@@ -1514,7 +1543,6 @@ comment
 comment
 "for debug blue"_
 )attrs
-
 
 
 
@@ -1649,6 +1677,202 @@ is_scalar
 
 
 
+*du_emitfile
+1471959461
+^mtime
+(
+comment
+"dumper emit file"_
+descr
+field
+type
+cfile_t
+)attrs
+
+
+
+*du_globalhtmpath
+1471959461
+^mtime
+(
+comment
+"dumper temporary path for global state"_
+descr
+field
+type
+(
+boxstring_ty
+pointer
+)node
+)attrs
+
+
+
+
+*du_itemhset
+1471959461
+^mtime
+(
+comment
+"dumper hashed set of items"_
+descr
+field
+type
+(
+itemhashedset_ty
+pointer
+)node
+)attrs
+
+
+
+*du_itemsque
+1471959461
+^mtime
+(
+comment
+"dumper queue of items to scan"_
+descr
+field
+type
+(
+queue_ty
+pointer
+)node
+)attrs
+
+
+
+*du_predefhtmpath
+1471959461
+^mtime
+(
+comment
+"dumper temporary path for predefined items"_
+descr
+field
+type
+(
+boxstring_ty
+pointer
+)node
+)attrs
+
+
+
+*du_predefset
+1471959461
+^mtime
+(
+comment
+"dumper set of predefined"_
+descr
+field
+type
+(
+boxset_ty
+pointer
+)node
+)attrs
+
+
+
+*du_state
+1471959461
+^mtime
+(
+comment
+"dumper state"_
+descr
+field
+type
+dumpstate_en
+)attrs
+
+
+
+*dumper_ty
+1471959461
+^mtime
+(
+comment
+"type for dumper"_
+descr
+type
+extend
+hashedvalue_ty
+struct
+(
+du_state
+du_predefset
+du_itemhset
+du_predefhtmpath
+du_globalhtmpath
+du_itemsque
+du_emitfile
+)tuple
+type
+struct
+)attrs
+
+
+
+*dumpstate_en
+1471959461
+^mtime
+(
+comment
+"type for dump state"_
+descr
+type
+enum
+(
+dumsta_none
+dumsta_scan
+dumsta_emit
+)tuple
+type
+enum
+)attrs
+
+
+
+*dumsta_emit
+1471959461
+^mtime
+(
+comment
+"emitting dump state"_
+descr
+enumerator
+)attrs
+
+
+
+*dumsta_none
+1471959461
+^mtime
+(
+comment
+"invalid dump state"_
+descr
+enumerator
+)attrs
+
+
+
+*dumsta_scan
+1471959461
+^mtime
+(
+comment
+"scanning dump state"_
+descr
+enumerator
+)attrs
+
+
+
 *dyncast_boxdouble
 1471713325
 ^mtime
@@ -1713,7 +1937,6 @@ sequence
 
 
 
-
 *dyncast_int
 1471713325
 ^mtime
@@ -1743,6 +1966,7 @@ comment
 descr
 sequence
 )attrs
+
 
 
 
@@ -1955,7 +2179,6 @@ comment
 
 
 
-
 *equal
 1457364041
 ^mtime
@@ -1986,6 +2209,7 @@ primitive
 signature
 signature_2int64t_to_bool
 )attrs
+
 
 
 
@@ -2159,7 +2383,6 @@ comment
 
 
 
-
 *foldix_left
 1457090580
 ^mtime
@@ -2177,6 +2400,7 @@ comment
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 )attrs
+
 
 
 
@@ -2411,7 +2635,6 @@ signature_2int64t_to_bool
 
 
 
-
 *greater_int_prim
 1471861468
 ^mtime
@@ -2442,6 +2665,7 @@ signature_2ints_to_bool
 comment
 "test for greater or equal of two values"_
 )attrs
+
 
 
 
@@ -2543,7 +2767,7 @@ comment
 
 
 *header_module
-1471940701
+1471959461
 ^mtime
 (
 comment
@@ -2600,6 +2824,16 @@ node_conn
 node_nth
 node_metarank
 node_metaitem
+nb_quelem
+quelem_st
+queue_ty
+ldstatkind_en
+ldstatelem_ty
+loader_ty
+signature_loader_caret
+signature_loader_paren
+dumpstate_en
+dumper_ty
 )tuple
 notice
 (
@@ -2607,6 +2841,23 @@ gc_alloc
 gc_alloc_scalar
 gc_alloc_uncollectable
 )set
+)attrs
+
+
+
+*hset_items
+1471959461
+^mtime
+(
+comment
+"the field giving the items hashtable in item hashed set"_
+descr
+field
+type
+(
+item
+flexible_array
+)node
 )attrs
 
 
@@ -2687,7 +2938,6 @@ comment
 
 
 
-
 *initial_modules
 1457332482
 ^mtime
@@ -2695,6 +2945,7 @@ comment
 comment
 "give the initial modules to be generated"_
 )attrs
+
 
 
 
@@ -2735,6 +2986,20 @@ is_int
 is_number
 is_scalar
 )set
+)attrs
+
+
+
+*int32_t
+1471959461
+^mtime
+(
+c_code
+"int32_t"_
+comment
+"signed 32 bits integer type"_
+descr
+type
 )attrs
 
 
@@ -3116,6 +3381,26 @@ struct
 
 
 
+*itemhashedset_ty
+1471959461
+^mtime
+(
+comment
+"type of hashed set of items"_
+descr
+type
+extend
+countedata_ty
+struct
+(
+hset_items
+)tuple
+type
+struct
+)attrs
+
+
+
 *iter
 1457079401
 ^mtime
@@ -3126,6 +3411,7 @@ comment
 
 
 
+
 *iterix
 1457079401
 ^mtime
@@ -3133,7 +3419,6 @@ comment
 comment
 "to iterate a function on a composite value and its index"_
 )attrs
-
 
 
 
@@ -3347,6 +3632,7 @@ int
 
 
 
+
 *ity_item
 1471713325
 ^mtime
@@ -3358,7 +3644,6 @@ enumerator
 notice
 item
 )attrs
-
 
 
 
@@ -3493,6 +3778,217 @@ enum
 (
 comment
 "for JavaScript expansion"_
+)attrs
+
+
+
+*ld_file
+1471959461
+^mtime
+(
+comment
+"loader file"_
+descr
+field
+type
+cfile_t
+)attrs
+
+
+
+*ld_hsetitems
+1471959461
+^mtime
+(
+comment
+"loader stack hashed set of items"_
+descr
+field
+type
+(
+itemhashedset_ty
+pointer
+)node
+)attrs
+
+
+
+*ld_magic
+1471959461
+^mtime
+(
+comment
+"loader stack magic, always MOM_LOADER_MAGIC"_
+descr
+field
+type
+uint32_t
+)attrs
+
+
+
+*ld_pathstr
+1471959461
+^mtime
+(
+comment
+"loader path string"_
+descr
+field
+type
+(
+boxstring_ty
+pointer
+)node
+)attrs
+
+
+
+*ld_prevmark
+1471959461
+^mtime
+(
+comment
+"loader stack previous mark index"_
+descr
+field
+type
+int32_t
+)attrs
+
+
+
+*ld_stackarr
+1471959461
+^mtime
+(
+comment
+"loader stack array"_
+descr
+field
+type
+(
+ldstatelem_ty
+pointer
+)node
+)attrs
+
+
+
+
+*ld_stacktop
+1471959461
+^mtime
+(
+comment
+"loader stack top index"_
+descr
+field
+type
+int32_t
+)attrs
+
+
+
+*ldelems
+1471959461
+^mtime
+(
+comment
+"formal for loader state array"_
+descr
+formal
+type
+loaderstatelemptr_t
+)attrs
+
+
+
+*ldf
+1471959461
+^mtime
+(
+comment
+"formal for loader"_
+descr
+formal
+type
+loaderptr_t
+)attrs
+
+
+
+*ldstatelem_ty
+1471959461
+^mtime
+(
+comment
+"type for load state element"_
+descr
+type
+struct
+(
+lst_kind
+ldstatelem_ty__86lKxhR8mi02mY
+)tuple
+type
+struct
+)attrs
+
+
+
+*ldstatelem_ty__86lKxhR8mi02mY
+1471959461
+^mtime
+(
+comment
+"the anonymous union of a loader element"_
+descr
+union
+union
+(
+lst_ptr
+lst_mark
+lst_int
+lst_dbl
+lst_val
+)tuple
+)attrs
+
+
+
+*ldstatkind_en
+1471959461
+^mtime
+(
+comment
+"type for load state kind"_
+descr
+type
+enum
+(
+lstk_empty
+lstk_mark
+lstk_int
+lstk_dbl
+lstk_val
+)tuple
+type
+enum
+)attrs
+
+
+
+*ldsz
+1471959461
+^mtime
+(
+comment
+"formal for loader state size"_
+descr
+formal
+type
+uint32_t
 )attrs
 
 
@@ -3632,7 +4128,6 @@ signature_2ints_to_bool
 
 
 
-
 *less_or_equal
 1457365666
 ^mtime
@@ -3663,6 +4158,7 @@ primitive
 signature
 signature_2uint64t_to_bool
 )attrs
+
 
 
 
@@ -3714,6 +4210,66 @@ int64_t
 
 
 
+*loader_ty
+1471959461
+^mtime
+(
+comment
+"type for loader"_
+descr
+type
+extend
+hashedvalue_ty
+struct
+(
+ld_stacktop
+ld_prevmark
+ld_stackarr
+ld_hsetitems
+ld_magic
+ld_file
+ld_pathstr
+)tuple
+type
+struct
+)attrs
+
+
+
+*loaderptr_t
+1471959461
+^mtime
+(
+comment
+"type of pointer to loader"_
+descr
+type
+type
+(
+loader_ty
+pointer
+)node
+)attrs
+
+
+
+*loaderstatelemptr_t
+1471959461
+^mtime
+(
+comment
+"type of pointer to loader state element"_
+descr
+type
+type
+(
+ldstatelem_ty
+pointer
+)node
+)attrs
+
+
+
 *locals
 1465201575
 ^mtime
@@ -3744,6 +4300,151 @@ value
 (
 comment
 "for looping blocks or loops"_
+)attrs
+
+
+
+*lst_dbl
+1471959461
+^mtime
+(
+comment
+"double field  in loader stack"_
+descr
+field
+type
+double
+)attrs
+
+
+
+*lst_int
+1471959461
+^mtime
+(
+comment
+"int field  in loader stack"_
+descr
+field
+type
+int
+)attrs
+
+
+
+*lst_kind
+1471959461
+^mtime
+(
+comment
+"give the kind of a loader element"_
+descr
+field
+type
+ldstatkind_en
+)attrs
+
+
+
+*lst_mark
+1471959461
+^mtime
+(
+comment
+"mark field  in loader stack"_
+descr
+field
+type
+uint32_t
+)attrs
+
+
+
+*lst_ptr
+1471959461
+^mtime
+(
+comment
+"raw pointer field in loader stack"_
+descr
+field
+type
+cptr_t
+)attrs
+
+
+
+*lst_val
+1471959461
+^mtime
+(
+comment
+"value field  in loader stack"_
+descr
+field
+type
+value
+)attrs
+
+
+
+
+*lstk_dbl
+1471959461
+^mtime
+(
+comment
+"for double load element"_
+descr
+enumerator
+)attrs
+
+
+
+*lstk_empty
+1471959461
+^mtime
+(
+comment
+"for empty load element"_
+descr
+enumerator
+)attrs
+
+
+
+*lstk_int
+1471959461
+^mtime
+(
+comment
+"for int load element"_
+descr
+enumerator
+)attrs
+
+
+
+*lstk_mark
+1471959461
+^mtime
+(
+comment
+"for marking load element"_
+descr
+enumerator
+)attrs
+
+
+
+*lstk_val
+1471959461
+^mtime
+(
+comment
+"for value load element"_
+descr
+enumerator
 )attrs
 
 
@@ -3822,7 +4523,6 @@ comment
 
 
 
-
 *mutex_t
 1471713325
 ^mtime
@@ -3847,6 +4547,20 @@ comment
 
 
 
+*nb_quelem
+1471959461
+^mtime
+(
+descr
+constant
+type
+int
+value
+7_
+)attrs
+
+
+
 *nloc
 1471713325
 ^mtime
@@ -3856,6 +4570,7 @@ variable
 type
 int
 )attrs
+
 
 
 
@@ -4046,7 +4761,6 @@ signature_value_to_int
 
 
 
-
 *node_metarank__0ykiFoLZ3aMhVu
 1471940701
 ^mtime
@@ -4093,6 +4807,7 @@ comment
 descr
 sequence
 )attrs
+
 
 
 
@@ -4268,7 +4983,6 @@ comment
 
 
 
-
 *out_apply
 1456930526
 ^mtime
@@ -4296,6 +5010,7 @@ comment
 comment
 "output decimal"_
 )attrs
+
 
 
 
@@ -4429,7 +5144,6 @@ comment
 
 
 
-
 *output
 1456812179
 ^mtime
@@ -4470,6 +5184,7 @@ notice
 identity
 )tuple
 )attrs
+
 
 
 
@@ -4618,7 +5333,6 @@ comment
 
 
 
-
 *payl_hashassoc_get
 1456910539
 ^mtime
@@ -4646,6 +5360,7 @@ comment
 comment
 "remove in an hashassoc item"_
 )attrs
+
 
 
 
@@ -4795,7 +5510,6 @@ comment
 
 
 
-
 *payl_json
 1457031335
 ^mtime
@@ -4823,6 +5537,7 @@ comment
 comment
 "queue payload"_
 )attrs
+
 
 
 
@@ -4995,7 +5710,6 @@ comment
 
 
 
-
 *payload_t
 1471713325
 ^mtime
@@ -5027,6 +5741,7 @@ comment
 comment
 "for addition of numbers"_
 )attrs
+
 
 
 
@@ -5080,12 +5795,121 @@ comment
 
 
 
+*qu_elems
+1471959461
+^mtime
+(
+comment
+"small chunk of elements"_
+descr
+field
+type
+(
+value
+nb_quelem
+array
+)node
+)attrs
+
+
+
+*qu_first
+1471959461
+^mtime
+(
+comment
+"the first pointer"_
+descr
+field
+type
+(
+quelem_st
+pointer
+)node
+)attrs
+
+
+
+*qu_last
+1471959461
+^mtime
+(
+comment
+"the last pointer"_
+descr
+field
+type
+(
+quelem_st
+pointer
+)node
+)attrs
+
+
+
+*qu_next
+1471959461
+^mtime
+(
+comment
+"the next pointer"_
+descr
+field
+type
+(
+quelem_st
+pointer
+)node
+)attrs
+
+
+
+*quelem_st
+1471959461
+^mtime
+(
+comment
+"internal struct for queue element chunks"_
+descr
+type
+struct
+(
+qu_next
+qu_elems
+)tuple
+type
+struct
+)attrs
+
+
+
 *queue
 1452423077
 ^mtime
 (
 comment
 "for queues"_
+)attrs
+
+
+
+*queue_ty
+1471959461
+^mtime
+(
+descr
+type
+extend
+anyvalue_ty
+notice
+xty_queue
+struct
+(
+qu_first
+qu_last
+)tuple
+type
+struct
 )attrs
 
 
@@ -5130,6 +5954,7 @@ comment
 
 
 
+
 *return
 1469175229
 ^mtime
@@ -5166,7 +5991,6 @@ comment
 descr
 return
 )attrs
-
 
 
 
@@ -5348,6 +6172,7 @@ val0
 
 
 
+
 *return__1eS5p39gjaoTpX
 1471713325
 ^mtime
@@ -5383,7 +6208,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -5589,6 +6413,7 @@ at
 
 
 
+
 *return__4oZ7G962dU2EyD
 1471940701
 ^mtime
@@ -5624,7 +6449,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -5846,6 +6670,7 @@ return
 
 
 
+
 *return__7hVbXnaMW3ywe4
 1471940701
 ^mtime
@@ -5887,7 +6712,6 @@ va_itype
 itype_en
 )node
 )attrs
-
 
 
 
@@ -6080,6 +6904,7 @@ return
 
 
 
+
 *return__8IVg5q1dl83ieZ
 1471713325
 ^mtime
@@ -6127,7 +6952,6 @@ num0
 at
 )node
 )attrs
-
 
 
 
@@ -6312,6 +7136,7 @@ comment
 
 
 
+
 *seqitem
 1471713325
 ^mtime
@@ -6359,7 +7184,6 @@ comment
 descr
 sequence
 )attrs
-
 
 
 
@@ -6590,6 +7414,7 @@ signature_value_to_int
 
 
 
+
 *set_size__5gJV37ruDuiA4e
 1471940701
 ^mtime
@@ -6638,7 +7463,6 @@ less_int64_prim
 result
 bool
 )attrs
-
 
 
 
@@ -6867,18 +7691,43 @@ hash_t
 
 
 
+
 *signature_loader_caret
-1445950071
+1471959461
 ^mtime
+(
+comment
+"signature: loaderptr item -> unit for carets in loadfile"_
+descr
+signature
+formals
+(
+itm0
+ldf
+)tuple
+result
+unit
+)attrs
 
 
 
 *signature_loader_paren
-1446020701
+1471959461
 ^mtime
 (
 comment
-"signature of load paren functions"_
+"signature: loaderptr item -> unit for carets in loadfile"_
+descr
+signature
+formals
+(
+itm0
+ldf
+ldelems
+ldsz
+)tuple
+result
+unit
 )attrs
 
 
@@ -6896,7 +7745,6 @@ spacarg
 result
 item
 )attrs
-
 
 
 
@@ -7104,6 +7952,7 @@ comment
 
 
 
+
 *small_int_prim
 1471713325
 ^mtime
@@ -7148,7 +7997,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 
@@ -7322,6 +8170,7 @@ return__4SrZRDKm86VbEl
 
 
 
+
 *test__0awihFol5jgjqg
 1471713325
 ^mtime
@@ -7381,7 +8230,6 @@ dyncast_node
 then
 return__8bekIohNg6mcab
 )attrs
-
 
 
 
@@ -7665,6 +8513,7 @@ return__7q6xlVIIdujEx2
 
 
 
+
 *test__2bsf2h5d1xq2IA
 1471940701
 ^mtime
@@ -7725,7 +8574,6 @@ same_value_prim
 then
 return__4SegjC5M3naquf
 )attrs
-
 
 
 
@@ -8008,6 +8856,7 @@ return__5vGR2Hk991HGkW
 
 
 
+
 *test__3kzpissfqqHxYu
 1471940701
 ^mtime
@@ -8058,7 +8907,6 @@ test
 then
 return__0AI6JMLlCptfMF
 )attrs
-
 
 
 
@@ -8330,6 +9178,7 @@ return__8memwFf9R7Vm5L
 
 
 
+
 *test__5UM2RTrIgUeEou
 1471940701
 ^mtime
@@ -8385,7 +9234,6 @@ and
 then
 return__2T2qXJxjk8l0aA
 )attrs
-
 
 
 
@@ -8653,6 +9501,7 @@ return__1a2ps9xDD5KbqP
 
 
 
+
 *test__8mF5kAWenhmlEa
 1471713325
 ^mtime
@@ -8737,7 +9586,6 @@ equal_int_prim
 then
 return__0Y7hV6cP0rEfsU
 )attrs
-
 
 
 
@@ -9047,6 +9895,7 @@ type
 
 
 
+
 *to
 1465302282
 ^mtime
@@ -9076,7 +9925,6 @@ comment
 descr
 constant
 )attrs
-
 
 
 
@@ -9273,6 +10121,7 @@ uint64_t
 
 
 
+
 *undefined_result
 1456139800
 ^mtime
@@ -9300,7 +10149,6 @@ comment
 comment
 "for unions"_
 )attrs
-
 
 
 
@@ -9501,6 +10349,7 @@ signature_value_to_hash_t
 
 
 
+
 *value_hash__3X8CfLq055h966
 1471713325
 ^mtime
@@ -9539,7 +10388,6 @@ comment
 comment
 "hold the types of values"_
 )attrs
-
 
 
 
@@ -9694,6 +10542,7 @@ enumerator
 
 
 
+
 *xty_file
 1471713325
 ^mtime
@@ -9727,7 +10576,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 

@@ -26,7 +26,7 @@
 
 
 
-/// 73 declarations:
+/// 94 declarations:
 
 typedef enum momenum_space_en
 {				/*pristine enum space_en of 4 */
@@ -41,6 +41,12 @@ typedef momitemptr_t momsigty_signature_space_to_item (momty_space_en);
 
 
 extern momsigty_signature_space_to_item momf_make_item;
+
+
+typedef bool momsigty_signature_2int64t_to_bool (int64_t, int64_t);
+
+
+typedef bool momsigty_signature_2uint64t_to_bool (uint64_t, uint64_t);
 
 
 typedef struct momstruct_anyvalue_ty momty_anyvalue_ty;
@@ -401,6 +407,138 @@ static inline momsigty_signature_value_to_int momf_node_metarank;
 static inline momsigty_signature_value_to_item momf_node_metaitem;
 
 
+#define MOMK_nb_quelem /*constint*/ 7
+
+
+typedef struct momstruct_quelem_st momty_quelem_st;
+
+
+struct momstruct_quelem_st
+{
+  momty_quelem_st *momfi_qu_next;
+  momvalue_t momfi_qu_elems[ /*constdim:nb_quelem */ 7];
+  /*ending struct quelem_st */ };
+
+
+typedef struct momstruct_queue_ty momty_queue_ty;
+
+
+struct momstruct_queue_ty
+{ /*extending struct anyvalue_ty */ ;
+  uint16_t momfi_va_itype;
+  mom_atomic_int16_t momfi_va_ixv;
+  uint32_t momfi_va_size; /*extended struct anyvalue_ty in queue_ty */ ;
+  momty_quelem_st *momfi_qu_first;
+  momty_quelem_st *momfi_qu_last;
+  /*ending struct queue_ty */ };
+
+
+typedef enum momenum_ldstatkind_en
+{				/*pristine enum ldstatkind_en of 5 */
+
+  momenuva_lstk_empty = 0,
+  momenuva_lstk_mark = 1,
+  momenuva_lstk_int = 2,
+  momenuva_lstk_dbl = 3,
+  momenuva_lstk_val = 4,
+} momty_ldstatkind_en;
+
+
+typedef struct momstruct_ldstatelem_ty momty_ldstatelem_ty;
+
+
+struct momstruct_ldstatelem_ty
+{
+  momty_ldstatkind_en momfi_lst_kind;
+  union /*ldstatelem_ty__86lKxhR8mi02mY */
+  {
+    const void *momfi_lst_ptr;
+    uint32_t momfi_lst_mark;
+    long momfi_lst_int;
+    double momfi_lst_dbl;
+    momvalue_t momfi_lst_val;;
+  };				/*ending struct ldstatelem_ty */
+};
+
+
+typedef struct momstruct_loader_ty momty_loader_ty;
+
+
+typedef struct momstruct_itemhashedset_ty momty_itemhashedset_ty;
+
+
+struct momstruct_itemhashedset_ty
+{ /*extending struct countedata_ty */ ;
+  uint16_t momfi_va_itype;
+  mom_atomic_int16_t momfi_va_ixv;
+  uint32_t momfi_va_size;
+  momhash_t momfi_hva_hash;
+  uint32_t momfi_cda_count;
+    /*extended struct countedata_ty in itemhashedset_ty */ ;
+  momitemptr_t momfi_hset_items[MOM_FLEXIBLE_DIM];	/*ending struct itemhashedset_ty */
+};
+
+
+struct momstruct_loader_ty
+{ /*extending struct hashedvalue_ty */ ;
+  uint16_t momfi_va_itype;
+  mom_atomic_int16_t momfi_va_ixv;
+  uint32_t momfi_va_size;
+  momhash_t momfi_hva_hash; /*extended struct hashedvalue_ty in loader_ty */ ;
+  int32_t momfi_ld_stacktop;
+  int32_t momfi_ld_prevmark;
+  momty_ldstatelem_ty *momfi_ld_stackarr;
+  momty_itemhashedset_ty *momfi_ld_hsetitems;
+  uint32_t momfi_ld_magic;
+  FILE *momfi_ld_file;
+  momty_boxstring_ty *momfi_ld_pathstr;	/*ending struct loader_ty */
+};
+
+
+typedef momty_loader_ty *momty_loaderptr_t;
+
+
+typedef /*unitres */ void momsigty_signature_loader_caret (momitemptr_t,
+							   momty_loaderptr_t);
+
+
+typedef momty_ldstatelem_ty *momty_loaderstatelemptr_t;
+
+
+typedef /*unitres */ void momsigty_signature_loader_paren (momitemptr_t,
+							   momty_loaderptr_t,
+							   momty_loaderstatelemptr_t,
+							   uint32_t);
+
+
+typedef enum momenum_dumpstate_en
+{				/*pristine enum dumpstate_en of 3 */
+
+  momenuva_dumsta_none = 0,
+  momenuva_dumsta_scan = 1,
+  momenuva_dumsta_emit = 2,
+} momty_dumpstate_en;
+
+
+typedef struct momstruct_dumper_ty momty_dumper_ty;
+
+
+struct momstruct_dumper_ty
+{ /*extending struct hashedvalue_ty */ ;
+  uint16_t momfi_va_itype;
+  mom_atomic_int16_t momfi_va_ixv;
+  uint32_t momfi_va_size;
+  momhash_t momfi_hva_hash; /*extended struct hashedvalue_ty in dumper_ty */ ;
+  momty_dumpstate_en momfi_du_state;
+  momty_boxset_ty *momfi_du_predefset;
+  momty_itemhashedset_ty *momfi_du_itemhset;
+  momty_boxstring_ty *momfi_du_predefhtmpath;
+  momty_boxstring_ty *momfi_du_globalhtmpath;
+  momty_queue_ty *momfi_du_itemsque;
+  FILE *momfi_du_emitfile;	/*ending struct dumper_ty */
+};
+
+
 /// 1 definitions:
 
 
@@ -671,8 +809,8 @@ static inline momhash_t
 momf_value_hash (momvalue_t momarg_val0)
 {
    /**block value_hash__3X8CfLq055h966 **/
-  /**1 locals in block:value_hash__3X8CfLq055h966 **/ momty_itype_en
-    momloc_typ0loc = (momty_itype_en /*nothing */ )0;;
+    /**1 locals in block:value_hash__3X8CfLq055h966 **/
+  momty_itype_en momloc_typ0loc = (momty_itype_en /*nothing */ )0;;
 
   ;
   momloc_typ0loc = momf_itype (momarg_val0);
@@ -781,8 +919,8 @@ static inline long
 momf_item_cmp (momitemptr_t momarg_itm0, momitemptr_t momarg_itm1)
 {
    /**block item_cmp__5RimGd2eJ1nW44 **/
-  /**2 locals in block:item_cmp__5RimGd2eJ1nW44 **/ momitemptr_t
-    momloc_itmvar_l = (momitemptr_t /*nothing */ ) 0;
+    /**2 locals in block:item_cmp__5RimGd2eJ1nW44 **/
+  momitemptr_t momloc_itmvar_l = (momitemptr_t /*nothing */ ) 0;
   momitemptr_t momloc_itmvar_r = (momitemptr_t /*nothing */ ) 0;;
 
   ;
@@ -1124,9 +1262,8 @@ momf_int_make (long momarg_num0)
     else
       {
       /**block sequence__5oTybmSy8WCmPC **/
-	/**1 locals in block:sequence__5oTybmSy8WCmPC **/ momvalue_t
-	  momloc_locval = (momvalue_t /*nothing */ ) 0;;
-
+       /**1 locals in block:sequence__5oTybmSy8WCmPC **/
+	momvalue_t momloc_locval = (momvalue_t /*nothing */ ) 0;;
 	;
 	momloc_locval =
 	  /*gc_alloc_scalar */ mom_gc_alloc_scalar (sizeof (momty_boxint_ty));
@@ -1165,9 +1302,8 @@ momf_seqitem_nth (momvalue_t momarg_val0, long momarg_num0)
     if (momf_dyncast_seqitem (momarg_val0))
       {
       /**block sequence__4IBtXhcbtmo8Ip **/
-	/**1 locals in block:sequence__4IBtXhcbtmo8Ip **/ long momloc_nloc =
-	  (long /*nothing */ ) 0;;
-
+       /**1 locals in block:sequence__4IBtXhcbtmo8Ip **/
+	long momloc_nloc = (long /*nothing */ ) 0;;
 	;
 	momloc_nloc =
 	  ( /**cast int **/ long) (( /*get */
@@ -1221,9 +1357,8 @@ momf_tuple_nth (momvalue_t momarg_val0, long momarg_num0)
     if (momf_dyncast_tuple (momarg_val0))
       {
       /**block sequence__22ukS5jpdBDwaW **/
-	/**1 locals in block:sequence__22ukS5jpdBDwaW **/ long momloc_nloc =
-	  (long /*nothing */ ) 0;;
-
+       /**1 locals in block:sequence__22ukS5jpdBDwaW **/
+	long momloc_nloc = (long /*nothing */ ) 0;;
 	;
 	momloc_nloc =
 	  ( /**cast int **/ long) (( /*get */
@@ -1277,9 +1412,8 @@ momf_set_nth (momvalue_t momarg_val0, long momarg_num0)
     if (momf_dyncast_set (momarg_val0))
       {
       /**block sequence__08ipPa0U033aha **/
-	/**1 locals in block:sequence__08ipPa0U033aha **/ long momloc_nloc =
-	  (long /*nothing */ ) 0;;
-
+       /**1 locals in block:sequence__08ipPa0U033aha **/
+	long momloc_nloc = (long /*nothing */ ) 0;;
 	;
 	momloc_nloc =
 	  ( /**cast int **/ long) (( /*get */
@@ -1486,9 +1620,8 @@ momf_node_nth (momvalue_t momarg_val0, long momarg_num0)
     if (momf_dyncast_node (momarg_val0))
       {
       /**block sequence__1MZwzdDLAy9q5q **/
-	/**1 locals in block:sequence__1MZwzdDLAy9q5q **/ long momloc_nloc =
-	  (long /*nothing */ ) 0;;
-
+       /**1 locals in block:sequence__1MZwzdDLAy9q5q **/
+	long momloc_nloc = (long /*nothing */ ) 0;;
 	;
 	momloc_nloc =
 	  ( /**cast int **/ long) (( /*get */
@@ -1583,6 +1716,56 @@ momf_node_metaitem (momvalue_t momarg_val0)
    /**endblock node_metaitem__2fNZC3x1WjCaaa **/ }
 
 /**endinline:node_metaitem **/
+
+
+
+
+/**constint nb_quelem **/
+
+
+
+
+/**type quelem_st **/
+
+
+
+
+/**type queue_ty **/
+
+
+
+
+/**type ldstatkind_en **/
+
+
+
+
+/**type ldstatelem_ty **/
+
+
+
+
+/**type loader_ty **/
+
+
+
+
+/**signature signature_loader_caret **/
+
+
+
+
+/**signature signature_loader_paren **/
+
+
+
+
+/**type dumpstate_en **/
+
+
+
+
+/**type dumper_ty **/
 
 
 /// end of generated header file momg_header_module.h
