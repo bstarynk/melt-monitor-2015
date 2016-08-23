@@ -1,52 +1,52 @@
 // file bparse.c - boot parser
 
 /**   Copyright (C)  2016  Basile Starynkevitch and later the FSF
-    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
-    This file is part of GCC.
+      MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+      This file is part of GCC.
   
-    GCC is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3, or (at your option)
-    any later version.
+      GCC is free software; you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation; either version 3, or (at your option)
+      any later version.
   
-    GCC is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING3.   If not see
-    <http://www.gnu.org/licenses/>.
+      GCC is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+      You should have received a copy of the GNU General Public License
+      along with GCC; see the file COPYING3.   If not see
+      <http://www.gnu.org/licenses/>.
 **/
 
 #include "meltmoni.h"
 
 enum momlexkind_en
-{
-  MOLEX__NONE,
-  MOLEX_DELIM,
-  MOLEX_INT,
-  MOLEX_STRING,
-  MOLEX_NAMESTR,
-  MOLEX_ITEM,
-  MOLEX_OPERITEM,
-  MOLEX_CODECHUNK,
-};
+  {
+    MOLEX__NONE,
+    MOLEX_DELIM,
+    MOLEX_INT,
+    MOLEX_STRING,
+    MOLEX_NAMESTR,
+    MOLEX_ITEM,
+    MOLEX_OPERITEM,
+    MOLEX_CODECHUNK,
+  };
 
 enum momdelim_en
-{
-  MODLM__NONE,
-  MODLM_LPAR,                   /// (
-  MODLM_RPAR,                   /// )
-  MODLM_LBRACE,                 /// {
-  MODLM_RBRACE,                 /// }
-  MODLM_LBRACKET,               /// [
-  MODLM_RBRACKET,               /// ]
-  MODLM_PERCENT,                /// %
-  MODLM_COMMA,                  /// ,
-  MODLM_COLON,                  /// :
-  MODLM_SLASH,                  /// /
-  MODLM_TILDE,                  /// ~
-};
+  {
+    MODLM__NONE,
+    MODLM_LPAR,                   /// (
+    MODLM_RPAR,                   /// )
+    MODLM_LBRACE,                 /// {
+    MODLM_RBRACE,                 /// }
+    MODLM_LBRACKET,               /// [
+    MODLM_RBRACKET,               /// ]
+    MODLM_PERCENT,                /// %
+    MODLM_COMMA,                  /// ,
+    MODLM_COLON,                  /// :
+    MODLM_SLASH,                  /// /
+    MODLM_TILDE,                  /// ~
+  };
 
 struct momtoken_st
 {
@@ -326,8 +326,8 @@ momtok_tokenize (const char *filnam)
               MOM_DEBUGPRINTF (boot, "lineno#%d num=%lld", lineno, num);
               tovec = momtok_append (tovec, (struct momtoken_st)
                                      {
-                                     .mtok_kind = MOLEX_INT,.mtok_lin =
-                                     lineno,.mtok_int = num});
+				       .mtok_kind = MOLEX_INT,.mtok_lin =
+					 lineno,.mtok_int = num});
               ptok = endnum;
               continue;
             }
@@ -345,8 +345,8 @@ momtok_tokenize (const char *filnam)
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_ITEM,.mtok_lin =
-                                 lineno,.mtok_itm = itm});
+				   .mtok_kind = MOLEX_ITEM,.mtok_lin =
+				     lineno,.mtok_itm = itm});
           continue;
         }
       if (*ptok == '!' && isalpha (ptok[1]))    /// '!foo2' is a made item
@@ -363,8 +363,8 @@ momtok_tokenize (const char *filnam)
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_ITEM,.mtok_lin =
-                                 lineno,.mtok_itm = itm});
+				   .mtok_kind = MOLEX_ITEM,.mtok_lin =
+				     lineno,.mtok_itm = itm});
           continue;
         }
       if (*ptok == '$' && isalpha (ptok[1]))    //// '$xy2z' is a name
@@ -380,9 +380,9 @@ momtok_tokenize (const char *filnam)
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_NAMESTR,    //
-                                 .mtok_lin = lineno,    //
-                                 .mtok_str = bs});
+				   .mtok_kind = MOLEX_NAMESTR,    //
+				     .mtok_lin = lineno,    //
+				     .mtok_str = bs});
           continue;
         }
       if (*ptok == '?' && isalpha (ptok[1]))    //// '?abc1' is a cloned item
@@ -403,8 +403,8 @@ momtok_tokenize (const char *filnam)
                            mom_item_cstring (itm), mom_item_cstring (clitm));
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_ITEM,.mtok_lin =
-                                 lineno,.mtok_itm = clitm});
+				   .mtok_kind = MOLEX_ITEM,.mtok_lin =
+				     lineno,.mtok_itm = clitm});
           continue;
         }
       if (*ptok == '^' && isalpha (ptok[1]))
@@ -421,8 +421,8 @@ momtok_tokenize (const char *filnam)
           ptok = (char *) endnam;
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
-                                 lineno,.mtok_itm = itm});
+				   .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
+				     lineno,.mtok_itm = itm});
           continue;
         }
       // ^* is a shorthand for ^at
@@ -430,8 +430,8 @@ momtok_tokenize (const char *filnam)
         {
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
-                                 lineno,.mtok_itm = MOM_PREDEFITM (at)});
+				   .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
+				     lineno,.mtok_itm = MOM_PREDEFITM (at)});
           ptok += 2;
           continue;
         }
@@ -440,9 +440,9 @@ momtok_tokenize (const char *filnam)
         {
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
-                                 lineno,.mtok_itm =
-                                 MOM_PREDEFITM (sequence)});
+				   .mtok_kind = MOLEX_OPERITEM,.mtok_lin =
+				     lineno,.mtok_itm =
+				     MOM_PREDEFITM (sequence)});
           ptok += 2;
           continue;
         }
@@ -462,8 +462,8 @@ momtok_tokenize (const char *filnam)
           fseek (fil, oldoff, SEEK_SET);
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_STRING,.mtok_lin =
-                                 lineno,.mtok_str = bstr});
+				   .mtok_kind = MOLEX_STRING,.mtok_lin =
+				     lineno,.mtok_str = bstr});
           continue;
         }
       if (*ptok == '(')
@@ -472,8 +472,8 @@ momtok_tokenize (const char *filnam)
                            lineno, (int) (ptok - linbuf));
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                                 lineno,.mtok_delim = MODLM_LPAR});
+				   .mtok_kind = MOLEX_DELIM,.mtok_lin =
+				     lineno,.mtok_delim = MODLM_LPAR});
           ptok++;
           continue;
         }
@@ -484,8 +484,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_RPAR});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_RPAR});
           ptok++;
           continue;
         }
@@ -495,8 +495,8 @@ momtok_tokenize (const char *filnam)
                            lineno, (int) (ptok - linbuf));
           tovec = momtok_append (tovec, (struct momtoken_st)
                                  {
-                                 .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                                 lineno,.mtok_delim = MODLM_LBRACKET});
+				   .mtok_kind = MOLEX_DELIM,.mtok_lin =
+				     lineno,.mtok_delim = MODLM_LBRACKET});
           ptok++;
           continue;
         }
@@ -507,8 +507,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_RBRACKET});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_RBRACKET});
           ptok++;
           continue;
         }
@@ -519,8 +519,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_LBRACE});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_LBRACE});
           ptok++;
           continue;
         }
@@ -531,8 +531,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_RBRACE});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_RBRACE});
           ptok++;
           continue;
         }
@@ -543,8 +543,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_PERCENT});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_PERCENT});
           ptok++;
           continue;
         }
@@ -555,8 +555,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_SLASH});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_SLASH});
           ptok++;
           continue;
         }
@@ -567,8 +567,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_COLON});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_COLON});
           ptok++;
           continue;
         }
@@ -579,8 +579,8 @@ momtok_tokenize (const char *filnam)
           tovec =               //
             momtok_append (tovec, (struct momtoken_st)
                            {
-                           .mtok_kind = MOLEX_DELIM,.mtok_lin =
-                           lineno,.mtok_delim = MODLM_TILDE});
+			     .mtok_kind = MOLEX_DELIM,.mtok_lin =
+			       lineno,.mtok_delim = MODLM_TILDE});
           ptok++;
           continue;
         }
@@ -1115,6 +1115,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
         {
           atrk = tovec->mtv_arr[topos].mtok_int;
           atindex = true;
+          MOM_DEBUGPRINTF (boot,
+                           "momtok_parse ^put fromitm=%s atrk#%d",
+                           mom_item_cstring (fromitm), atrk);
         }
       else
         atval = momtok_parse (tovec, topos, &topos);
@@ -1124,8 +1127,10 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
                        atindex ? "true" : "false", topos);
       newval = momtok_parse (tovec, topos, &topos);
       MOM_DEBUGPRINTF (boot,
-                       "momtok_parse ^put newval=%s topos#%d",
-                       mom_value_cstring (newval), topos);
+                       "momtok_parse ^put fromitm=%s newval=%s topos#%d atindex %s ",
+                       mom_item_cstring (fromitm),
+                       mom_value_cstring (newval), topos,
+                       atindex ? "true" : "false");
       if (atindex)
         {
           mom_item_lock (fromitm);
@@ -1133,6 +1138,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           fromitm->itm_mtime = time (NULL);
           mom_item_unlock (fromitm);
           *endposptr = topos;
+          MOM_DEBUGPRINTF (boot,
+                           "momtok_parse ^put updated atindex topos#%d fromitm:=%s",
+                           topos, mom_item_content_cstring (fromitm));
           return fromitm;
         }
       unsigned atyp = mom_itype (atval);
@@ -1144,6 +1152,9 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           fromitm->itm_mtime = time (NULL);
           mom_item_unlock (fromitm);
           *endposptr = topos;
+          MOM_DEBUGPRINTF (boot,
+                           "momtok_parse ^put updated rk#%d topos#%d fromitm:=%s",
+                           rk, topos, mom_item_content_cstring (fromitm));
           return fromitm;
         }
       else if (atyp == MOMITY_ITEM)
@@ -1154,6 +1165,10 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
           fromitm->itm_mtime = time (NULL);
           mom_item_unlock (fromitm);
           *endposptr = topos;
+          MOM_DEBUGPRINTF (boot,
+                           "momtok_parse ^put updated atitm=%s topos#%d fromitm:=%s",
+                           mom_item_cstring (atitm),
+                           topos, mom_item_content_cstring (fromitm));
           return fromitm;
         }
       else if (atyp != MOMITY_NONE)
@@ -1162,8 +1177,8 @@ momtok_parse (struct momtokvect_st *tovec, int topos, int *endposptr)
                         mom_item_cstring (fromitm),
                         mom_value_cstring (atval));
       *endposptr = topos;
-      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d put %s", topos,
-                       mom_item_cstring (fromitm));
+      MOM_DEBUGPRINTF (boot, "momtok_parse topos#%d did put fromitm:=%s",
+                       topos, mom_item_content_cstring (fromitm));
       return fromitm;
     }
   if (curtok->mtok_kind == MOLEX_OPERITEM

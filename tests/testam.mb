@@ -30,4 +30,8 @@
   ^* signature signature_hid_loid_space_to_item
 )
 
-^item header_module ( ^put declare [ make_item make_item_from_id ] )
+^put header_module declare [ make_item make_item_from_id ]
+
+^display "updated header_module:" header_module
+
+# eof 
