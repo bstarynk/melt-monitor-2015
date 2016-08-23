@@ -4332,7 +4332,7 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
           auto curftree = declare_field(curfitm, fromitm, rank);
           MOM_DEBUGPRINTF(gencod, "c-declare_struct_member curfitm=%s uix#%d curftree=%s",
                           mom_item_cstring(curfitm), uix, mom_value_cstring(curftree));
-          vecomptree.push_back(curfitm);
+          vecomptree.push_back(curftree);
           MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d done curfitm=%s",
 			  mom_item_cstring(memitm), uix, mom_item_cstring(curfitm));
         }
