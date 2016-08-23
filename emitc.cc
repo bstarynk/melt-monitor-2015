@@ -4936,6 +4936,15 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
         }
       else   // enum without extension
         {
+	  vectree.reserve(mynbenur+2);
+          auto prologtree =
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+                                literal_string("/*pristine enum "),
+                                extenditm,
+				literal_string(" of "),
+				mom_int_make(mynbenur),
+                                literal_string("*/"));
+	  vectree.push_back(prologtree);
           for (int nix=0; nix<(int)mynbenur; nix++)
             {
               auto curenuritm = myenutup->seqitem[nix];
@@ -4944,6 +4953,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
               if (curenuritm==nullptr)
                 throw MOM_RUNTIME_PRINTF("enum %s missing enumerator #%d", mom_item_cstring(typitm), nix);
               lock_item(curenuritm);
+              vectree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline),0));
               auto enurtree = declare_enumerator(curenuritm, typitm, nix, preval);
               MOM_DEBUGPRINTF(gencod, "c-declare_type enum typitm %s nix#%d curenuritm=%s enurtree=%s",
                               mom_item_cstring(typitm), nix, mom_item_cstring(curenuritm),
