@@ -2767,7 +2767,7 @@ comment
 
 
 *header_module
-1471959461
+1471970474
 ^mtime
 (
 comment
@@ -2775,6 +2775,7 @@ comment
 declare
 (
 make_item
+make_item_from_id
 )tuple
 descr
 module
@@ -2841,6 +2842,20 @@ gc_alloc
 gc_alloc_scalar
 gc_alloc_uncollectable
 )set
+)attrs
+
+
+
+*hid
+1471970474
+^mtime
+(
+comment
+"formal for high-id num (uint16_t)"_
+descr
+formal
+type
+uint16_t
 )attrs
 
 
@@ -2938,6 +2953,7 @@ comment
 
 
 
+
 *initial_modules
 1457332482
 ^mtime
@@ -2945,7 +2961,6 @@ comment
 comment
 "give the initial modules to be generated"_
 )attrs
-
 
 
 
@@ -3144,6 +3159,7 @@ comment
 
 
 
+
 *is_null
 1471713325
 ^mtime
@@ -3162,7 +3178,6 @@ not
 signature
 signature_value_to_bool
 )attrs
-
 
 
 
@@ -3401,6 +3416,7 @@ struct
 
 
 
+
 *iter
 1457079401
 ^mtime
@@ -3408,7 +3424,6 @@ struct
 comment
 "to iterate a function on a composite value"_
 )attrs
-
 
 
 
@@ -3618,6 +3633,7 @@ double
 
 
 
+
 *ity_int
 1471713325
 ^mtime
@@ -3629,7 +3645,6 @@ enumerator
 notice
 int
 )attrs
-
 
 
 
@@ -3858,6 +3873,7 @@ int32_t
 
 
 
+
 *ld_stackarr
 1471959461
 ^mtime
@@ -3872,7 +3888,6 @@ ldstatelem_ty
 pointer
 )node
 )attrs
-
 
 
 
@@ -4138,6 +4153,7 @@ comment
 
 
 
+
 *less_uint64_prim
 1471940701
 ^mtime
@@ -4158,7 +4174,6 @@ primitive
 signature
 signature_2uint64t_to_bool
 )attrs
-
 
 
 
@@ -4294,6 +4309,20 @@ value
 
 
 
+*loid
+1471970474
+^mtime
+(
+comment
+"formal for low-id num (uint64_t)"_
+descr
+formal
+type
+uint64_t
+)attrs
+
+
+
 *loop
 1465200679
 ^mtime
@@ -4360,6 +4389,7 @@ uint32_t
 
 
 
+
 *lst_ptr
 1471959461
 ^mtime
@@ -4385,7 +4415,6 @@ field
 type
 value
 )attrs
-
 
 
 
@@ -4460,7 +4489,7 @@ comment
 
 
 *make_item
-1471764544
+1471970474
 ^mtime
 (
 comment
@@ -4469,6 +4498,20 @@ descr
 routine
 signature
 signature_space_to_item
+)attrs
+
+
+
+*make_item_from_id
+1471970474
+^mtime
+(
+comment
+"make an item from its id in some space"_
+descr
+routine
+signature
+signature_hid_loid_space_to_item
 )attrs
 
 
@@ -4537,6 +4580,7 @@ type
 
 
 
+
 *name
 1452697324
 ^mtime
@@ -4570,7 +4614,6 @@ variable
 type
 int
 )attrs
-
 
 
 
@@ -4761,6 +4804,7 @@ signature_value_to_int
 
 
 
+
 *node_metarank__0ykiFoLZ3aMhVu
 1471940701
 ^mtime
@@ -4807,7 +4851,6 @@ comment
 descr
 sequence
 )attrs
-
 
 
 
@@ -4983,6 +5026,7 @@ comment
 
 
 
+
 *out_apply
 1456930526
 ^mtime
@@ -5010,7 +5054,6 @@ comment
 comment
 "output decimal"_
 )attrs
-
 
 
 
@@ -5144,6 +5187,7 @@ comment
 
 
 
+
 *output
 1456812179
 ^mtime
@@ -5184,7 +5228,6 @@ notice
 identity
 )tuple
 )attrs
-
 
 
 
@@ -5333,6 +5376,7 @@ comment
 
 
 
+
 *payl_hashassoc_get
 1456910539
 ^mtime
@@ -5360,7 +5404,6 @@ comment
 comment
 "remove in an hashassoc item"_
 )attrs
-
 
 
 
@@ -5510,6 +5553,7 @@ comment
 
 
 
+
 *payl_json
 1457031335
 ^mtime
@@ -5537,7 +5581,6 @@ comment
 comment
 "queue payload"_
 )attrs
-
 
 
 
@@ -5710,6 +5753,7 @@ comment
 
 
 
+
 *payload_t
 1471713325
 ^mtime
@@ -5741,7 +5785,6 @@ comment
 comment
 "for addition of numbers"_
 )attrs
-
 
 
 
@@ -5924,6 +5967,7 @@ comment
 
 
 
+
 *raw
 1452095862
 ^mtime
@@ -5951,7 +5995,6 @@ comment
 comment
 "for result"_
 )attrs
-
 
 
 
@@ -6132,6 +6175,7 @@ return
 
 
 
+
 *return__18HzPakaFnKKaD
 1471713325
 ^mtime
@@ -6169,7 +6213,6 @@ return
 return
 val0
 )attrs
-
 
 
 
@@ -6372,6 +6415,7 @@ hash_t
 
 
 
+
 *return__46Wn85bZFlNcyV
 1471940701
 ^mtime
@@ -6410,7 +6454,6 @@ num0
 at
 )node
 )attrs
-
 
 
 
@@ -6617,6 +6660,7 @@ int
 
 
 
+
 *return__6NInEAMjUTRkK1
 1471940701
 ^mtime
@@ -6667,7 +6711,6 @@ return
 return
 0_
 )attrs
-
 
 
 
@@ -6866,6 +6909,7 @@ num1
 
 
 
+
 *return__8uVBKgA1pUt0Nk
 1471713325
 ^mtime
@@ -6901,7 +6945,6 @@ comment
 descr
 return
 )attrs
-
 
 
 
@@ -7080,6 +7123,7 @@ comment
 
 
 
+
 *same_item_prim
 1471940701
 ^mtime
@@ -7133,7 +7177,6 @@ signature_2values_to_bool
 comment
 "for semicolon separated output"_
 )attrs
-
 
 
 
@@ -7365,6 +7408,7 @@ is_set
 
 
 
+
 *set_nth
 1471940701
 ^mtime
@@ -7411,7 +7455,6 @@ inline
 signature
 signature_value_to_int
 )attrs
-
 
 
 
@@ -7625,6 +7668,27 @@ unit
 
 
 
+*signature_hid_loid_space_to_item
+1471970474
+^mtime
+(
+comment
+"signature: hid loid space -> item"_
+descr
+signature
+formals
+(
+hid
+loid
+spacarg
+)tuple
+result
+item
+)attrs
+
+
+
+
 *signature_int_to_bool
 1471713325
 ^mtime
@@ -7688,7 +7752,6 @@ itm0
 result
 hash_t
 )attrs
-
 
 
 
@@ -7899,6 +7962,7 @@ itype_en
 
 
 
+
 *signature_value_to_value
 1471713325
 ^mtime
@@ -7949,7 +8013,6 @@ comment
 comment
 "sizeof operator"_
 )attrs
-
 
 
 
@@ -8117,6 +8180,7 @@ comment
 
 
 
+
 *switch_item
 1457337792
 ^mtime
@@ -8167,7 +8231,6 @@ unsafe_int_mod_prim
 then
 return__4SrZRDKm86VbEl
 )attrs
-
 
 
 
@@ -8438,6 +8501,7 @@ return__1eS5p39gjaoTpX
 
 
 
+
 *test__1uAS2wI4JUBFWE
 1471940701
 ^mtime
@@ -8510,7 +8574,6 @@ test
 then
 return__7q6xlVIIdujEx2
 )attrs
-
 
 
 
@@ -8767,6 +8830,7 @@ return__5H8gmeVeJ0EcaJ
 
 
 
+
 *test__36xViyfSAeumVS
 1471940701
 ^mtime
@@ -8853,7 +8917,6 @@ is_null
 then
 return__5vGR2Hk991HGkW
 )attrs
-
 
 
 
@@ -9090,6 +9153,7 @@ sequence__22ukS5jpdBDwaW
 
 
 
+
 *test__58ruCnSKrmuNwP
 1471940701
 ^mtime
@@ -9175,7 +9239,6 @@ test
 then
 return__8memwFf9R7Vm5L
 )attrs
-
 
 
 
@@ -9427,6 +9490,7 @@ return__9bm40SXupWi943
 
 
 
+
 *test__857Cp7oIjAwSmv
 1471940701
 ^mtime
@@ -9498,7 +9562,6 @@ truth
 then
 return__1a2ps9xDD5KbqP
 )attrs
-
 
 
 
@@ -9847,6 +9910,7 @@ node
 
 
 
+
 *then
 1465566569
 ^mtime
@@ -9892,7 +9956,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -10065,6 +10128,7 @@ type
 
 
 
+
 *uint32_t
 1471713325
 ^mtime
@@ -10118,7 +10182,6 @@ formal
 type
 uint64_t
 )attrs
-
 
 
 
@@ -10287,6 +10350,7 @@ sequence
 
 
 
+
 *valid_value_pointer
 1471713325
 ^mtime
@@ -10346,7 +10410,6 @@ inline
 signature
 signature_value_to_hash_t
 )attrs
-
 
 
 
@@ -10496,6 +10559,7 @@ comment
 
 
 
+
 *while
 1455520074
 ^mtime
@@ -10539,7 +10603,6 @@ comment
 descr
 enumerator
 )attrs
-
 
 
 
