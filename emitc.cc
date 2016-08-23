@@ -4938,7 +4938,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
         {
 	  vectree.reserve(mynbenur+2);
           auto prologtree =
-            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 3,
+            mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
                                 literal_string("/*pristine enum "),
                                 extenditm,
 				literal_string(" of "),
