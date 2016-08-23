@@ -4002,6 +4002,7 @@ MomCEmitter::after_preparation_transform(void)
           MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform dix#%d declitm:=%s",
                           dix, mom_item_content_cstring(declitm));
           declare_item(declitm);
+	  _ce_localvarmap.clear();
         }
     }
   for (const mom_item_st* citm : _ce_constitems)
@@ -4025,6 +4026,7 @@ MomCEmitter::after_preparation_transform(void)
           MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform constitm dtree=%s", mom_value_cstring(dtree));
           add_global_decl(dtree);
         }
+      _ce_localvarmap.clear();
     }
   MOM_DEBUGPRINTF(gencod, "c-after_preparation_transform topitm %s %zd typeitems",
                   mom_value_cstring(top_item()),
