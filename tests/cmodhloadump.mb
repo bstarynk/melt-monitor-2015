@@ -51,7 +51,7 @@
       ^* comment "give the kind of a loader element"
       ^* type ldstatkind_en
     )
-    ^global ?lstatelem (
+    ^global ?ldstatelem_ty (
       ^* descr union
       ^* comment "the anonymous union of a loader element"
       ^* union [
@@ -105,10 +105,8 @@
           ^* descr field
           ^* comment "loader stack array"
           ^* type %pointer(ldstatelem_ty)
-          )
-    ## missing hash set
-    )
-  ]
+          )  ## missing hash set
+    ]
 )
 
 
@@ -117,8 +115,6 @@
    ^* descr module
    ^* declare [ ]
    ^* module [
-     cptr_t
-     int32_t
      ldstatkind_en
      ldstatelem_ty
      loader_ty
