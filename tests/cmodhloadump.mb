@@ -1,0 +1,128 @@
+# file cmodhloadump.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
+
+
+^global !ldstatkind_en (
+  ^* descr type
+  ^* comment "type for load state kind"
+  ^* type enum
+  ^* enum [
+    ^global !lstk_empty (
+      ^* descr enumerator
+      ^* comment "for empty load element"
+    )
+    ^global !lstk_mark (
+      ^* descr enumerator
+      ^* comment "for marking load element"
+    )
+    ^global !lstk_int (
+      ^* descr enumerator
+      ^* comment "for int load element"
+    )
+    ^global !lstk_dbl (
+      ^* descr enumerator
+      ^* comment "for double load element"
+    )
+    ^global !lstk_val (
+      ^* descr enumerator
+      ^* comment "for value load element"
+    )
+  ]
+)
+
+^global !cptr_t (
+  ^* descr type
+  ^* c_code "const void*"
+  ^* comment "raw C pointer type"
+)
+
+^global !int32_t (
+  ^* descr type
+  ^* c_code "int32_t"
+  ^* comment "signed 32 bits integer type"
+)
+
+^global !ldstatelem_ty (
+  ^* descr type
+  ^* comment "type for load state element"
+  ^* type struct
+  ^* struct [
+    ^global !lst_kind (
+      ^* descr field
+      ^* comment "give the kind of a loader element"
+      ^* type ldstatkind_en
+    )
+    ^global ?lstatelem (
+      ^* descr union
+      ^* comment "the anonymous union of a loader element"
+      ^* union [
+        ^global !lst_ptr (
+          ^* descr field
+          ^* comment "raw pointer field in loader stack"
+          ^* type cptr_t
+         )
+        ^global !lst_mark (
+          ^* descr field
+          ^* comment "mark field  in loader stack"
+          ^* type uint32_t
+         )
+        ^global !lst_int (
+          ^* descr field
+          ^* comment "int field  in loader stack"
+          ^* type int
+         )
+        ^global !lst_dbl (
+          ^* descr field
+          ^* comment "double field  in loader stack"
+          ^* type double
+         )
+        ^global !lst_val (
+          ^* descr field
+          ^* comment "value field  in loader stack"
+          ^* type value
+         )
+      ]
+    )
+  ]
+)
+
+^global !loader_ty  (
+  ^* descr type
+  ^* comment "type for loader"
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+    ^global !ld_stacktop (
+          ^* descr field
+          ^* comment "loader stack top index"
+          ^* type int32_t
+          )
+    ^global !ld_prevmark (
+          ^* descr field
+          ^* comment "loader stack previous mark index"
+          ^* type int32_t
+          )
+    ^global !ld_stackarr (
+          ^* descr field
+          ^* comment "loader stack array"
+          ^* type %pointer(ldstatelem_ty)
+          )
+    ## missing hash set
+    )
+  ]
+)
+
+
+^global !loader_module (
+   ^* comment "our loader_module"
+   ^* descr module
+   ^* declare [ ]
+   ^* module [
+     cptr_t
+     int32_t
+     ldstatkind_en
+     ldstatelem_ty
+     loader_ty
+   ]
+ )
+ 
+^display "our loader_module:" loader_module

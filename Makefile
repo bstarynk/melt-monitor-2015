@@ -51,7 +51,7 @@ CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
 .PHONY: all tags modules plugins clean  predefgc tests \
-        test0 test1 testbty testheader testheader2
+        test0 test1 testbty testheader testheader2 testhloadump
 
 all: monimelt
 
@@ -148,3 +148,11 @@ testheader2: monimelt global.mom  tests/cmodheader2.mb
 	$(INDENT) modules/momg_header_module.h
 	$(INDENT) modules/momg_header_module.h
 
+
+testhloadump: monimelt global.mom  tests/cmodhloadump.mb
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodhloadump.mb --test-arg loader_module --test-run emith
+	cp  modules/momg_loader_module.h  modules/momg_loader_module.h.orig
+	$(INDENT) modules/momg_loader_module.h
+	$(INDENT) modules/momg_loader_module.h
+	$(INDENT) modules/momg_loader_module.h
+	$(INDENT) modules/momg_loader_module.h
