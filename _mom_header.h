@@ -29,8 +29,11 @@
 /// 73 declarations:
 
 typedef enum momenum_space_en
-{ momenuva_spa_none = 0, momenuva_spa_predef = 1,
-  momenuva_spa_global = 2, momenuva_spa_user = 3,
+{				/*pristine enum  of 4 */
+  momenuva_spa_none = 0,
+  momenuva_spa_predef = 1,
+  momenuva_spa_global = 2,
+  momenuva_spa_user = 3,
 } momty_space_en;
 
 
@@ -240,9 +243,15 @@ struct momstruct_node_ty
 
 
 typedef enum momenum_itype_en
-{ momenuva_ity_none = 0, momenuva_ity_int = 1,
-  momenuva_ity_double = 2, momenuva_ity_string = 3, momenuva_ity_item = 4,
-  momenuva_ity_tuple = 5, momenuva_ity_set = 6, momenuva_ity_node = 7,
+{				/*pristine enum  of 8 */
+  momenuva_ity_none = 0,
+  momenuva_ity_int = 1,
+  momenuva_ity_double = 2,
+  momenuva_ity_string = 3,
+  momenuva_ity_item = 4,
+  momenuva_ity_tuple = 5,
+  momenuva_ity_set = 6,
+  momenuva_ity_node = 7,
 } momty_itype_en;
 
 

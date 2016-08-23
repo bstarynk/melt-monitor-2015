@@ -4940,7 +4940,7 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
           auto prologtree =
             mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
                                 literal_string("/*pristine enum "),
-                                extenditm,
+                                typitm,
 				literal_string(" of "),
 				mom_int_make(mynbenur),
                                 literal_string("*/"));
