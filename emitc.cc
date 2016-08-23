@@ -4320,6 +4320,8 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
       for (int uix=0; uix<(int)ufldlen; uix++)
         {
           auto curfitm = ufldseq->seqitem[uix];
+          MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d\n.. curfitm:=%s",
+			  mom_item_cstring(memitm), uix, mom_item_content_cstring(curfitm));
           if (curfitm == nullptr)
             throw
 	      MOM_RUNTIME_PRINTF("member %s from %s rk#%d is union with null #%d component",
@@ -4331,6 +4333,8 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
           MOM_DEBUGPRINTF(gencod, "c-declare_struct_member curfitm=%s uix#%d curftree=%s",
                           mom_item_cstring(curfitm), uix, mom_value_cstring(curftree));
           vecomptree.push_back(curfitm);
+          MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d done curfitm=%s",
+			  mom_item_cstring(memitm), uix, mom_item_cstring(curfitm));
         }
       vecomptree.push_back(literal_string(";"));
       auto bractree = //
