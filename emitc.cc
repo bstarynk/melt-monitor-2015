@@ -5180,6 +5180,11 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 	if (nblocals>0)
 	  {
 	    traced_vector_values_t vecloctree;
+	    vecloctree.reserve(nblocals+2);
+	    vecloctree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(comment), 3,
+							   mom_int_make(nblocals),
+							   literal_string("locals in block:"),
+							   blkitm));
 	    for (int lix=0; lix<(int)nblocals; lix++)
 	      {
 		momvalue_t curloctree = nullptr;
@@ -5215,7 +5220,7 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 							locitm,
 							literal_string(" = ("),
 							typecexp,
-							literal_string("/*nothing*/)0"));
+							literal_string("/*nothing*/)0;"));
 			  }
 			else
 			  {
@@ -5240,7 +5245,7 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 							    locitm,
 							    literal_string(" = ("),
 							    typecexp,
-							    literal_string("/*nothing*/)0"));
+							    literal_string("/*nothing*/)0;"));
 				MOM_DEBUGPRINTF(gencod,
 						"c-transform_block locitm=%s typeitm=%s typecexp=%s curloctree=%s",
 						mom_item_cstring(locitm),
