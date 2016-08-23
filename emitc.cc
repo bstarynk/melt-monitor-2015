@@ -570,7 +570,8 @@ public:
   static constexpr const char* CUNION_PREFIX = "momunion_";
   static constexpr const char* CENUM_PREFIX = "momenum_";
   static constexpr const char* CENUVAL_PREFIX = "momenuva_";
-  static constexpr const char* CENUFROM_INFIX = "_momenfr_";
+  static constexpr const char* CENUVALEXT_PREFIX = "momenuvx_";
+  static constexpr const char* CENUFROM_INFIX = "__momenfr__";
   static constexpr const char* CLOCAL_PREFIX = "momloc_";
   static constexpr const char* CFORMAL_PREFIX = "momarg_";
   static constexpr const char* CFIELD_PREFIX = "momfi_";
@@ -4410,7 +4411,7 @@ MomCEmitter::declare_enumerator(struct mom_item_st*enuritm,  struct mom_item_st*
   momvalue_t enutree = nullptr;
   if (initm)
     enutree = mom_boxnode_make_va(MOM_PREDEFITM(sequence), 7,
-                                  literal_string(CENUVAL_PREFIX),
+                                  literal_string(CENUVALEXT_PREFIX),
                                   enuritm,
                                   literal_string(CENUFROM_INFIX),
                                   initm,
