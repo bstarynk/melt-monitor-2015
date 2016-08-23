@@ -1161,6 +1161,8 @@ MomEmitter::transform_top_module(void)
   for (unsigned ix=0; ix<nbmodelem; ix++)
     {
       auto curitm = itemsarr[ix];
+      MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d startloop\n.. curitm:=%s\n",
+		      ix, mom_item_content_cstring(curitm));
       if (curitm==nullptr) continue;
       assert (mom_itype(curitm)==MOMITY_ITEM);
       lock_item(curitm);
@@ -1220,8 +1222,18 @@ MomEmitter::transform_top_module(void)
 		 vecval.push_back(nodelem);
 	       }
 	   });
+      MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d curitm=%s beforeflushtodo",
+		      ix, mom_item_cstring(curitm));
       flush_todo_list(__LINE__);
       _ce_localvarmap.clear();
+      _ce_localcloseditems.clear();
+      _ce_localnodetypecache.clear();
+      _ce_curfunctionitm = nullptr;
+      MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d finishingloop curitm=%s before flushtodoafter\n",
+		      ix, mom_item_cstring(curitm));
+      flush_todo_after_element_list(__LINE__);
+      MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d finishedloop curitm=%s\n",
+		      ix, mom_item_cstring(curitm));
       _ce_localvarmap.clear();
       _ce_localcloseditems.clear();
       _ce_localnodetypecache.clear();
@@ -5973,8 +5985,9 @@ MomCEmitter::transform_node_inline_expr(const struct mom_boxnode_st*expnod, stru
   auto connitm = expnod->nod_connitm;
   if (_cec_declareditems.find(connitm) == _cec_declareditems.end())
     {
-      _cec_declareditems.insert(connitm);
-#warning we probably should call todo_after_element to make the transformation
+      MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr expnod=%s with fresh connitm=%s in insitm=%s",
+		      mom_value_cstring(expnod), mom_item_cstring(connitm), mom_item_cstring(insitm));
+      /// dont declare the inline now, but postponed after element
       todo_after_element([=](MomEmitter*em)
 			 {
 			   MomCEmitter*cem = dynamic_cast<MomCEmitter*>(em);
@@ -5983,9 +5996,9 @@ MomCEmitter::transform_node_inline_expr(const struct mom_boxnode_st*expnod, stru
 			   cem->_ce_localvarmap.clear();
 			   cem->scan_module_element(connitm);
 			   flush_todo_list(__LINE__);
-			   auto inldecl = cem->transform_inline_element(connitm);
-			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr connitm=%s inldecl=%s",
-					   mom_item_cstring(connitm), mom_value_cstring(inldecl));
+			   auto inldeftree = cem->transform_inline_element(connitm);
+			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr connitm=%s @@@inldeftree=%s",
+					   mom_item_cstring(connitm), mom_value_cstring(inldeftree));
 			   flush_todo_list(__LINE__);
 			   MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr handled new connitm=%s", mom_item_cstring(connitm));
 			 });
