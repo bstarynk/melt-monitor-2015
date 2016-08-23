@@ -221,7 +221,7 @@ struct momstruct_item_ty
   /*extended struct hashedvalue_ty in item_ty */ ;
   pthread_mutex_t momfi_itm_mtx;
   uint32_t momfi_itm_namix;
-  uint32_t momfi_itm_hid;
+  uint16_t momfi_itm_hid;
   uint64_t momfi_itm_lid;
   time_t momfi_itm_mtime;
   momty_assovaldata_ty *momfi_itm_pattr;
