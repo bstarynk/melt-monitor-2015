@@ -22,7 +22,7 @@
 
 bool mom_skip_dump_hooks;
 bool mom_dont_make_after_dump;
-
+unsigned mom_debugflags;
 atomic_int mom_nb_warnings;
 
 static char hostname_mom[80];

@@ -150,9 +150,9 @@ testheader2: monimelt global.mom  tests/cmodheader2.mb
 
 
 testhloadump: monimelt global.mom  tests/cmodhloadump.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodhloadump.mb --test-arg loader_module --test-run emith
-	cp  modules/momg_loader_module.h  modules/momg_loader_module.h.orig
-	$(INDENT) modules/momg_loader_module.h
-	$(INDENT) modules/momg_loader_module.h
-	$(INDENT) modules/momg_loader_module.h
-	$(INDENT) modules/momg_loader_module.h
+	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodhloadump.mb --test-arg loadump_module --test-run emith
+	cp  modules/momg_loadump_module.h  modules/momg_loadump_module.h.orig
+	$(INDENT) modules/momg_loadump_module.h
+	$(INDENT) modules/momg_loadump_module.h
+	$(INDENT) modules/momg_loadump_module.h
+	$(INDENT) modules/momg_loadump_module.h

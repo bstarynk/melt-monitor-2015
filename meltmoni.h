@@ -373,7 +373,7 @@ enum mom_debug_en
   MOM_DEBUG_LIST_OPTIONS (MOM_DEBUG_DEFINE_OPT) momdbg__last
 };
 
-unsigned mom_debugflags;
+extern unsigned mom_debugflags;
 
 #define MOM_IS_DEBUGGING(Dbg) (mom_debugflags & (1<<momdbg_##Dbg))
 

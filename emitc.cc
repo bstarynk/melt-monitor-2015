@@ -566,6 +566,7 @@ class MomCEmitter final :public MomEmitter
 public:
   static const unsigned constexpr MAGIC = 508723037 /*0x1e527f5d*/;
   static constexpr const char* CTYPE_PREFIX = "momty_";
+  static constexpr const char* CONSTMAC_PREFIX = "MOMK_";
   static constexpr const char* CSTRUCT_PREFIX = "momstruct_";
   static constexpr const char* CUNION_PREFIX = "momunion_";
   static constexpr const char* CENUM_PREFIX = "momenum_";
@@ -1163,7 +1164,7 @@ MomEmitter::transform_top_module(void)
     {
       auto curitm = itemsarr[ix];
       MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d startloop\n.. curitm:=%s\n",
-		      ix, mom_item_content_cstring(curitm));
+                      ix, mom_item_content_cstring(curitm));
       if (curitm==nullptr) continue;
       assert (mom_itype(curitm)==MOMITY_ITEM);
       lock_item(curitm);
@@ -1224,17 +1225,17 @@ MomEmitter::transform_top_module(void)
 	       }
 	   });
       MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d curitm=%s beforeflushtodo",
-		      ix, mom_item_cstring(curitm));
+                      ix, mom_item_cstring(curitm));
       flush_todo_list(__LINE__);
       _ce_localvarmap.clear();
       _ce_localcloseditems.clear();
       _ce_localnodetypecache.clear();
       _ce_curfunctionitm = nullptr;
       MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d finishingloop curitm=%s before flushtodoafter\n",
-		      ix, mom_item_cstring(curitm));
+                      ix, mom_item_cstring(curitm));
       flush_todo_after_element_list(__LINE__);
       MOM_DEBUGPRINTF(gencod, "transform_top_module ix#%d finishedloop curitm=%s\n",
-		      ix, mom_item_cstring(curitm));
+                      ix, mom_item_cstring(curitm));
       _ce_localvarmap.clear();
       _ce_localcloseditems.clear();
       _ce_localnodetypecache.clear();
@@ -1253,10 +1254,10 @@ void
 MomEmitter::scan_module_element(struct mom_item_st*elitm)
 {
   struct mom_item_st*descitm = mom_unsync_item_descr(elitm);
-  MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s elitm=%s descitm=%s",
+  MOM_DEBUGPRINTF(gencod, "scan_module_element %s topitm=%s descitm=%s\n.. elitm:=%s",
                   kindname(),
                   mom_item_cstring(_ce_topitm),
-                  mom_item_cstring(elitm), mom_item_cstring(descitm));
+                  mom_item_cstring(descitm), mom_item_content_cstring(elitm));
   if (!descitm)
     throw MOM_RUNTIME_PRINTF("module element %s without descr", mom_item_cstring(elitm));
 #define NBMODELEMDESC_MOM 61
@@ -1301,6 +1302,12 @@ MomEmitter::scan_module_element(struct mom_item_st*elitm)
       todo([=](MomEmitter*thisemit)
 	   {
 	     thisemit->scan_signature(elitm,(_ce_topitm));
+	   });
+      break;
+    case CASE_DESCR_MOM (constant):
+      todo([=](MomEmitter*thisemit)
+	   {
+	     thisemit->scan_constant_item(elitm,nullptr);
 	   });
       break;
     defaultcasedesc:
@@ -3433,8 +3440,8 @@ MomEmitter::scan_constant_item(struct mom_item_st*cstitm, struct mom_item_st*ins
       MOM_DEBUGPRINTF(gencod, "scan_constant_item special truth bool");
       return MOM_PREDEFITM(bool);
     }
-  auto cstypitm = //
-    mom_dyncast_item(mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(type)));
+  auto cstypv = mom_unsync_item_get_phys_attr(cstitm, MOM_PREDEFITM(type));
+  auto cstypitm = mom_dyncast_item(cstypv);
   if (cstypitm == nullptr)
     cstypitm = MOM_PREDEFITM(value);
   if (typitm != nullptr && typitm != cstypitm)
@@ -4321,7 +4328,7 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
         {
           auto curfitm = ufldseq->seqitem[uix];
           MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d\n.. curfitm:=%s",
-			  mom_item_cstring(memitm), uix, mom_item_content_cstring(curfitm));
+                          mom_item_cstring(memitm), uix, mom_item_content_cstring(curfitm));
           if (curfitm == nullptr)
             throw
 	      MOM_RUNTIME_PRINTF("member %s from %s rk#%d is union with null #%d component",
@@ -4334,7 +4341,7 @@ MomCEmitter::declare_struct_member (struct mom_item_st*memitm, struct mom_item_s
                           mom_item_cstring(curfitm), uix, mom_value_cstring(curftree));
           vecomptree.push_back(curftree);
           MOM_DEBUGPRINTF(gencod, "c-declare_struct_member union memitm=%s uix#%d done curfitm=%s",
-			  mom_item_cstring(memitm), uix, mom_item_cstring(curfitm));
+                          mom_item_cstring(memitm), uix, mom_item_cstring(curfitm));
         }
       vecomptree.push_back(literal_string(";"));
       auto bractree = //
@@ -4941,15 +4948,15 @@ MomCEmitter::declare_type (struct mom_item_st*typitm, bool*scalarp)
         }
       else   // enum without extension
         {
-	  vectree.reserve(mynbenur+2);
+          vectree.reserve(mynbenur+2);
           auto prologtree =
             mom_boxnode_make_va(MOM_PREDEFITM(sequence), 5,
                                 literal_string("/*pristine enum "),
                                 typitm,
-				literal_string(" of "),
-				mom_int_make(mynbenur),
+                                literal_string(" of "),
+                                mom_int_make(mynbenur),
                                 literal_string("*/"));
-	  vectree.push_back(prologtree);
+          vectree.push_back(prologtree);
           for (int nix=0; nix<(int)mynbenur; nix++)
             {
               auto curenuritm = myenutup->seqitem[nix];
@@ -5145,8 +5152,76 @@ MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_s
                       mom_item_cstring(elitm), mom_value_cstring(resnod));
       return resnod;
     }
+  else if (descitm == MOM_PREDEFITM(constant))
+    {
+      MOM_DEBUGPRINTF(gencod, "c-transform_other_element constant elitm:=%s",
+                      mom_item_content_cstring(elitm));
+      auto valexpv = mom_unsync_item_get_phys_attr(elitm, MOM_PREDEFITM(value));
+      auto cxhkv = mom_unsync_item_get_phys_attr(elitm, MOM_PREDEFITM(c_expansion));
+      auto typexpv = mom_unsync_item_get_phys_attr(elitm, MOM_PREDEFITM(type));
+      unsigned chkty = mom_itype(cxhkv);
+      if (chkty == MOMITY_INT
+          || chkty == MOMITY_BOXDOUBLE || chkty == MOMITY_BOXSTRING)
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_other_element constantchunk elitm=%s", mom_item_cstring(elitm));
+          auto kdecltree
+            = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                        literal_string("#define "),
+                                        literal_string(CONSTMAC_PREFIX),
+                                        elitm,
+                                        literal_string(" "),
+                                        cxhkv);
+          add_global_decl(kdecltree);
+          _cec_declareditems.insert(elitm);
+          auto kcomnod = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                             literal_string("constmacro "),
+                                             elitm);
+          MOM_DEBUGPRINTF(gencod, "c-transform_other_element constantchunk elitm=%s kdecltree=%s gives kcomnod=%s",
+                          mom_item_cstring(elitm), mom_value_cstring(kdecltree), mom_value_cstring(kcomnod));
+          return kcomnod;
+        }
+      else if (mom_itype(valexpv)==MOMITY_INT && typexpv == (momvalue_t)MOM_PREDEFITM(int))
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_other_element constantint elitm=%s", mom_item_cstring(elitm));
+          auto kdecltree
+            = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                        literal_string("#define "),
+                                        literal_string(CONSTMAC_PREFIX),
+                                        elitm,
+                                        literal_string(" /*constint*/ "),
+                                        valexpv);
+          add_global_decl(kdecltree);
+          _cec_declareditems.insert(elitm);
+          auto kcomnod = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                             literal_string("constint "),
+                                             elitm);
+          return kcomnod;
+        }
+      else if (mom_itype(valexpv)==MOMITY_BOXDOUBLE && typexpv == (momvalue_t)MOM_PREDEFITM(double))
+        {
+          MOM_DEBUGPRINTF(gencod, "c-transform_other_element constantdbl elitm=%s", mom_item_cstring(elitm));
+          auto kdecltree
+            = mom_boxnode_make_sentinel(MOM_PREDEFITM(sequence),
+                                        literal_string("#define "),
+                                        literal_string(CONSTMAC_PREFIX),
+                                        elitm,
+                                        literal_string(" /*constdbl*/ "),
+                                        valexpv);
+          add_global_decl(kdecltree);
+          _cec_declareditems.insert(elitm);
+          auto kcomnod = mom_boxnode_make_va(MOM_PREDEFITM(comment), 2,
+                                             literal_string("constdbl "),
+                                             elitm);
+          return kcomnod;
+        }
+      else
+        throw MOM_RUNTIME_PRINTF("c-transform_other_element failed to handle constant %s", mom_item_cstring(elitm));
+
+    }
+  MOM_WARNPRINTF("c-transform_other_element elitm=%s failing",
+                 mom_item_cstring(elitm));
   return nullptr;
-}
+} // end MomCEmitter::transform_other_element
 
 momvalue_t
 MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm)
@@ -5209,11 +5284,12 @@ MomCEmitter::transform_block(struct mom_item_st*blkitm, struct mom_item_st*initm
 	if (nblocals>0)
 	  {
 	    traced_vector_values_t vecloctree;
-	    vecloctree.reserve(nblocals+2);
+	    vecloctree.reserve(nblocals+4);
 	    vecloctree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(comment), 3,
-							   mom_int_make(nblocals),
-							   literal_string("locals in block:"),
-							   blkitm));
+						     mom_int_make(nblocals),
+						     literal_string("locals in block:"),
+						     blkitm));
+	    vecloctree.push_back(mom_boxnode_make_va(MOM_PREDEFITM(out_newline), 0));
 	    for (int lix=0; lix<(int)nblocals; lix++)
 	      {
 		momvalue_t curloctree = nullptr;
@@ -6003,7 +6079,7 @@ MomCEmitter::transform_node_inline_expr(const struct mom_boxnode_st*expnod, stru
   if (_cec_declareditems.find(connitm) == _cec_declareditems.end())
     {
       MOM_DEBUGPRINTF(gencod, "c-transform_node_inline_expr expnod=%s with fresh connitm=%s in insitm=%s",
-		      mom_value_cstring(expnod), mom_item_cstring(connitm), mom_item_cstring(insitm));
+                      mom_value_cstring(expnod), mom_item_cstring(connitm), mom_item_cstring(insitm));
       /// dont declare the inline now, but postponed after element
       todo_after_element([=](MomEmitter*em)
 			 {
@@ -6408,6 +6484,23 @@ MomCEmitter::transform_type_for(momvalue_t typexpv, momvalue_t vartree, bool* sc
         {
           auto comptypv = typnod->nod_sons[0];
           auto dimv = typnod->nod_sons[1];
+          auto dimitm = mom_dyncast_item(dimv);
+          if (dimitm != nullptr)
+            {
+              dimv = nullptr;
+              MOM_DEBUGPRINTF(gencod, "c-transform_type_for dimitm=%s in typnod=%s",
+                              mom_item_cstring(dimitm), mom_value_cstring(typnod));
+              lock_item(dimitm);
+              momvalue_t dimvalv = nullptr;
+              if (mom_unsync_item_descr(dimitm) == MOM_PREDEFITM(constant)
+                  && (dimvalv = mom_unsync_item_get_phys_attr(dimitm, MOM_PREDEFITM(value))) != nullptr
+                  && mom_int_val_def(dimvalv, -1) >=0)
+                dimv = mom_boxnode_make_va(MOM_PREDEFITM(sequence),4,
+                                           literal_string("/*constdim:"), dimitm, literal_string("*/"), dimvalv);
+              else
+                throw MOM_RUNTIME_PRINTF("bad dimension %s in array typnod %s",
+                                         mom_item_cstring(dimitm), mom_value_cstring(typnod));
+            }
           auto arrvartree =  mom_boxnode_make_va(MOM_PREDEFITM(sequence), 4,
                                                  vartree,
                                                  literal_string("["),

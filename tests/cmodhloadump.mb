@@ -193,17 +193,130 @@
    ^* result unit
    )
    
-^global !loader_module (
-   ^* comment "our loader_module"
+^global !dumpstate_en (
+  ^* descr type
+  ^* comment "type for dump state"
+  ^* type enum
+  ^* enum [
+    ^global !dumsta_none (
+      ^* descr enumerator
+      ^* comment "invalid dump state"
+    )
+    ^global !dumsta_scan  (
+      ^* descr enumerator
+      ^* comment "scanning dump state"
+    )
+    ^global !dumsta_emit  (
+      ^* descr enumerator
+      ^* comment "emitting dump state"
+    )
+  ]
+)
+
+^global !nb_quelem (
+  ^* descr constant
+  ^* type int
+  ^* value 7
+)
+
+^global !quelem_st (
+  ^* descr type
+  ^* comment "internal struct for queue element chunks"
+  ^* type struct
+  ^* struct [
+    ^global !qu_next (
+      ^* descr field
+      ^* comment "the next pointer"
+      ^* type %pointer(quelem_st)      
+    )
+    ^global !qu_elems (
+      ^* descr field
+      ^* comment "small chunk of elements"
+      ^* type %array(value nb_quelem)
+    )
+  ]
+)
+
+^global !queue_ty (
+  ^* descr type
+  ^* notice xty_queue
+  ^* type struct
+  ^* extend anyvalue_ty
+  ^* struct [
+    ^global !qu_first (
+      ^* descr field
+      ^* comment "the first pointer"
+      ^* type %pointer(quelem_st)      
+    )
+    ^global !qu_last (
+      ^* descr field
+      ^* comment "the last pointer"
+      ^* type %pointer(quelem_st)      
+    )
+  ]
+)
+
+^global !dumper_ty  (
+  ^* descr type
+  ^* comment "type for dumper"
+  ^* type struct
+  ^* extend hashedvalue_ty
+  ^* struct [
+    ^global !du_state (
+       ^* descr field
+       ^* comment "dumper state"
+       ^* type dumpstate_en
+       )
+    ^global !du_predefset (
+       ^* descr field
+       ^* comment "dumper set of predefined"
+       ^* type %pointer(boxset_ty)
+       )
+    ^global !du_itemhset (
+       ^* descr field
+       ^* comment "dumper hashed set of items"
+       ^* type %pointer(itemhashedset_ty)
+       )
+    ^global !du_predefhtmpath (
+       ^* descr field
+       ^* comment "dumper temporary path for predefined items"
+       ^* type %pointer(boxstring_ty)
+    )
+    ^global !du_globalhtmpath (
+       ^* descr field
+       ^* comment "dumper temporary path for global state"
+       ^* type %pointer(boxstring_ty)
+    )
+    ^global !du_itemsque (
+      ^* descr field
+      ^* comment "dumper queue of items to scan"
+      ^* type %pointer(queue_ty)
+    )
+    ^global !du_emitfile (
+      ^* descr field
+      ^* comment "dumper emit file"
+      ^* type cfile_t
+    )
+  ]
+)
+
+
+^global !loadump_module (
+   ^* comment "our loadump_module"
    ^* descr module
    ^* declare [ ]
    ^* module [
+     nb_quelem
+     quelem_st
+     queue_ty
      ldstatkind_en
      ldstatelem_ty
      loader_ty
      signature_loader_caret
      signature_loader_paren
+     dumpstate_en
+     dumper_ty
    ]
  )
  
-^display "our loader_module:" loader_module
+^display "our loadump_module:" loadump_module
