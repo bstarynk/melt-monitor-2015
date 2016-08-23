@@ -21,6 +21,23 @@
 #include "meltmoni.h"
 
 
+static inline momhash_t
+hash_item_from_hid_and_loid_MOM(uint16_t hid, uint64_t loid)
+{
+  if (MOM_UNLIKELY(hid==0 || loid==0))
+    MOM_FATAPRINTF("hash_item_from_hid_and_lid: invalid hid=%u loid=%llu",
+		   (unsigned) hid, (unsigned long long) loid);
+  momhash_t h =
+    41 * hid +
+    ((643 * (uint32_t) (loid >> 32)) ^
+     (839 * (uint32_t) (loid & 0xffffffffULL) - hid % 9839));
+  if (MOM_UNLIKELY(h == 0)) {
+    h = (loid % 1000000663ULL) + (hid % 45179U) + 4;
+    assert (h>0);
+  }
+  return h;
+}
+
 momitemptr_t momf_make_item(momty_space_en sp)
 {
 #warning momf_make_item unimplemented
