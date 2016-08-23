@@ -4203,7 +4203,7 @@ MomCEmitter::declare_signature_type (struct mom_item_st*sigitm)
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s formtytree=%s restyitm=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(formtytree), mom_item_cstring(restyitm));
   assert (is_locked_item(restyitm));
-  auto restytree = declare_type(restyitm);
+  auto restytree = (restyitm==MOM_PREDEFITM(unit))?literal_string("/*unitres*/ void"):declare_type(restyitm);
   MOM_DEBUGPRINTF(gencod, "c-declare_signature_type sigitm=%s restytree=%s",
                   mom_item_cstring(sigitm), mom_value_cstring(restytree));
   auto sigdeclv = //
@@ -5132,6 +5132,8 @@ MomCEmitter::transform_other_element(struct mom_item_st*elitm, struct mom_item_s
                                            elitm);
       MOM_DEBUGPRINTF(gencod, "c-transform_other_element signature elitm=%s gives sigcomnod=%s",
                       mom_item_cstring(elitm), mom_value_cstring(sigcomnod));
+      add_global_decl(resnod);
+      _cec_declareditems.insert(elitm);
       return sigcomnod;
     }
   else if (descitm == MOM_PREDEFITM(inline))

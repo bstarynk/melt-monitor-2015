@@ -179,14 +179,14 @@
   ^* comment "formal for loader state size"
 )
 
-^global !signature_loader_caret (
+^item signature_loader_caret (
    ^* comment "signature: loaderptr item -> unit for carets in loadfile"
    ^* descr signature
    ^* formals [ itm0 ldf ]
    ^* result unit
    )
    
-^global !signature_loader_paren (
+^item signature_loader_paren (
    ^* comment "signature: loaderptr item -> unit for carets in loadfile"
    ^* descr signature
    ^* formals [ itm0 ldf ldelems ldsz ]
