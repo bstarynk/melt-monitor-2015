@@ -35,6 +35,12 @@
   ^* comment "raw C pointer type"
 )
 
+^global !cfile_t (
+  ^* descr type
+  ^* c_code "FILE*"
+  ^* comment "C <stdio.h> file handle pointer"
+)
+
 ^global !int32_t (
   ^* descr type
   ^* c_code "int32_t"
@@ -85,6 +91,20 @@
   ]
 )
 
+^global !itemhashedset_ty (
+  ^* descr type
+  ^* comment "type of hashed set of items"
+  ^* type struct
+  ^* extend countedata_ty
+  ^* struct [
+    ^global !hset_items (
+        ^* comment "the field giving the items hashtable in item hashed set"
+        ^* descr field
+        ^* type %flexible_array(item)
+      )
+  ]
+)
+
 ^global !loader_ty  (
   ^* descr type
   ^* comment "type for loader"
@@ -105,11 +125,74 @@
           ^* descr field
           ^* comment "loader stack array"
           ^* type %pointer(ldstatelem_ty)
-          )  ## missing hash set
+          )
+    ^global !ld_hsetitems (
+          ^* descr field
+          ^* comment "loader stack hashed set of items"
+          ^* type %pointer(itemhashedset_ty)
+          )
+    ^global !ld_magic (
+          ^* descr field
+          ^* comment "loader stack magic, always MOM_LOADER_MAGIC"
+          ^* type uint32_t
+          )
+    ^global !ld_file (
+          ^* descr field
+          ^* comment "loader file"
+          ^* type cfile_t
+          )
+    ^global !ld_pathstr (
+          ^* descr field
+          ^* comment "loader path string"
+          ^* type %pointer(boxstring_ty)
+          )
     ]
 )
 
+^global !loaderptr_t (
+  ^* comment "type of pointer to loader"
+  ^* descr type
+  ^* type %pointer(loader_ty)
+)
 
+^global !loaderstatelemptr_t (
+  ^* comment "type of pointer to loader state element"
+  ^* descr type
+  ^* type %pointer(ldstatelem_ty)
+)
+
+^global !ldf (
+  ^* descr formal
+  ^* type loaderptr_t
+  ^* comment "formal for loader"
+)
+
+^global !ldelems (
+  ^* descr formal
+  ^* type loaderstatelemptr_t
+  ^* comment "formal for loader state array"
+)
+
+^global !ldsz (
+  ^* descr formal
+  ^* type uint32_t
+  ^* comment "formal for loader state size"
+)
+
+^global !signature_loader_caret (
+   ^* comment "signature: loaderptr item -> unit for carets in loadfile"
+   ^* descr signature
+   ^* formals [ itm0 ldf ]
+   ^* result unit
+   )
+   
+^global !signature_loader_paren (
+   ^* comment "signature: loaderptr item -> unit for carets in loadfile"
+   ^* descr signature
+   ^* formals [ itm0 ldf ldelems ldsz ]
+   ^* result unit
+   )
+   
 ^global !loader_module (
    ^* comment "our loader_module"
    ^* descr module
@@ -118,6 +201,8 @@
      ldstatkind_en
      ldstatelem_ty
      loader_ty
+     signature_loader_caret
+     signature_loader_paren
    ]
  )
  
