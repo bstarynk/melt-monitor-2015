@@ -1,9 +1,144 @@
 # file testassovaldata.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
 
+^global !signature_value_to_uint32_t (
+  ^* descr signature
+  ^* comment "signature: value -> uint32_t"
+  ^* formals [ val0 ]
+  ^* result uint32_t
+)
+
+^global !assovaldata_size (
+  ^* descr inline
+  ^* comment "return the size of an assovaldata or else 0"
+  ^* signature signature_value_to_uint32_t
+  ^* body  ^global ?assovaldata_size (
+    ^* comment "body of assovaldata_size"
+    ^* descr sequence
+    ^* locals [ locval ]
+    ^* body [
+      ^* global ?assign (
+        ^* descr assign
+        ^* to locval
+        ^* from %dyncast_assovaldata (val0)
+      )
+      ^global ?cond (
+        ^* descr cond
+        ^* cond [
+          ^global ?test (
+            ^* descr test
+            ^* test locval
+            ^* then ^global ?return (
+              ^* descr return
+              ^* return %get (val0 va_size)
+            )
+          )
+          ^global ?test (
+            ^* descr test
+            ^* then ^global ?return (
+              ^* descr return
+            )
+          )
+        ]
+      )
+    ]
+  )
+)
+
+^global !assovaldata_count (
+  ^* descr inline
+  ^* comment "return the filled count of an assovaldata or else 0"
+  ^* signature signature_value_to_uint32_t
+  ^* body  ^global ?assovaldata_count (
+    ^* comment "body of assovaldata_count"
+    ^* descr sequence
+    ^* locals [ locval ]
+    ^* body [
+      ^* global ?assign (
+        ^* descr assign
+        ^* to locval
+        ^* from %dyncast_assovaldata (val0)
+      )
+      ^global ?cond (
+        ^* descr cond
+        ^* cond [
+          ^global ?test (
+            ^* descr test
+            ^* test locval
+            ^* then ^global ?return (
+              ^* descr return
+              ^* return %get (val0 cda_count)
+            )
+          )
+          ^global ?test (
+            ^* descr test
+            ^* then ^global ?return (
+              ^* descr return
+            )
+          )
+        ]
+      )
+    ]
+  )
+)
+
+^global !signature_value_item_to_value (
+  ^* descr signature
+  ^* comment "signature: value item -> value"
+  ^* formals [ val0 itm1 ]
+  ^* result value
+)
+
+^global !val2 (
+  ^* descr formal
+  ^* type value
+)
+
+^global !assovaldata_get (
+  ^* descr routine
+  ^* comment "return the value associated in some assovaldata val0 to an item itm1 or else nil"
+  ^* signature signature_value_item_to_value
+)
+
+^global !signature_value_item_value_to_value (
+  ^* descr signature
+  ^* comment "signature: value item value -> value"
+  ^* formals [ val0 itm1 val2 ]
+  ^* result value
+)
+
+
+^global !assovaldata_put (
+  ^* descr routine
+  ^* comment "update an assovaldata val0 by putting item itm1 with value val2 and return the update or else nil"
+  ^* signature signature_value_item_value_to_value
+)
+
+^global !assovaldata_remove (
+  ^* descr routine
+  ^* comment "update an assovaldata val0 by removing item itm1, return the update or else nil"
+  ^* signature signature_value_item_to_value
+)
+
+^global !assovaldata_set_attrs (
+  ^* descr routine
+  ^* comment "gives the set of attributes inside an assocdata val0 or else nil"
+  ^* signature signature_value_to_value
+)
+
+^global !assovaldata_reserve (
+  ^* descr routine
+  ^* comment "reserve in assocvaldata val0 some more num1 slots and return the update; would allocate a fresh assocvaldata when val0 is nil"
+  ^* signature signature_value_int_to_value 
+)
+
 ^global header_module (
    ^* comment "our header_module"
    ^* descr module
-   ^* declare [ make_item make_item_from_id find_item_of_id ]
+   ^* declare [
+     make_item make_item_from_id find_item_of_id
+     assovaldata_get assovaldata_put assovaldata_remove
+     assovaldata_set_attrs
+   ]
    ^* notice { gc_alloc gc_alloc_scalar gc_alloc_uncollectable }
    ^* module [
      signature_2int64t_to_bool
@@ -33,6 +168,8 @@
      node_nth
      node_metarank
      node_metaitem
+     assovaldata_size
+     assovaldata_count
    ]
 )
 
