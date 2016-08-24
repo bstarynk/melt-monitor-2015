@@ -18,6 +18,14 @@
 )
 
 
+^global !signature_hid_loid_to_item (
+  ^* descr signature
+  ^* comment "signature: hid loid -> item"
+  ^* formals [ hid loid ]
+  ^* result item
+)
+
+
 ^global !make_item (
   ^* descr routine
   ^* comment "make an item in some space"
@@ -30,7 +38,13 @@
   ^* signature signature_hid_loid_space_to_item
 )
 
-^put header_module declare [ make_item make_item_from_id ]
+^global !find_item_of_id  (
+  ^* descr routine
+  ^* comment "find an item from its id"
+  ^* signature signature_hid_loid_to_item
+)
+
+^put header_module declare [ make_item make_item_from_id find_item_of_id ]
 
 ^display "updated header_module:" header_module
 

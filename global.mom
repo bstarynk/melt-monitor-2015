@@ -2299,6 +2299,20 @@ comment
 
 
 
+*find_item_of_id
+1472012715
+^mtime
+(
+comment
+"find an item from its id"_
+descr
+routine
+signature
+signature_hid_loid_to_item
+)attrs
+
+
+
 *first
 1456995334
 ^mtime
@@ -2393,6 +2407,7 @@ comment
 
 
 
+
 *foldix_right
 1457090580
 ^mtime
@@ -2400,7 +2415,6 @@ comment
 comment
 "primitive for fold right with index (nodefun,compval,inival)"_
 )attrs
-
 
 
 
@@ -2658,6 +2672,7 @@ signature_2ints_to_bool
 
 
 
+
 *greater_or_equal
 1457365666
 ^mtime
@@ -2665,7 +2680,6 @@ signature_2ints_to_bool
 comment
 "test for greater or equal of two values"_
 )attrs
-
 
 
 
@@ -2767,7 +2781,7 @@ comment
 
 
 *header_module
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -2776,6 +2790,7 @@ declare
 (
 make_item
 make_item_from_id
+find_item_of_id
 )tuple
 descr
 module
@@ -2847,7 +2862,7 @@ gc_alloc_uncollectable
 
 
 *hid
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -2943,6 +2958,7 @@ comment
 
 
 
+
 *indirect
 1471850149
 ^mtime
@@ -2950,7 +2966,6 @@ comment
 comment
 "for indirections"_
 )attrs
-
 
 
 
@@ -3149,6 +3164,7 @@ item
 
 
 
+
 *is_node
 1457361540
 ^mtime
@@ -3156,7 +3172,6 @@ item
 comment
 "test if argument is a node"_
 )attrs
-
 
 
 
@@ -3396,6 +3411,7 @@ struct
 
 
 
+
 *itemhashedset_ty
 1471959461
 ^mtime
@@ -3413,7 +3429,6 @@ hset_items
 type
 struct
 )attrs
-
 
 
 
@@ -3619,6 +3634,7 @@ item
 
 
 
+
 *ity_double
 1471713325
 ^mtime
@@ -3630,7 +3646,6 @@ enumerator
 notice
 double
 )attrs
-
 
 
 
@@ -3859,6 +3874,7 @@ pointer
 
 
 
+
 *ld_prevmark
 1471959461
 ^mtime
@@ -3870,7 +3886,6 @@ field
 type
 int32_t
 )attrs
-
 
 
 
@@ -4143,6 +4158,7 @@ signature_2ints_to_bool
 
 
 
+
 *less_or_equal
 1457365666
 ^mtime
@@ -4150,7 +4166,6 @@ signature_2ints_to_bool
 comment
 "test for less or equal of two values"_
 )attrs
-
 
 
 
@@ -4310,7 +4325,7 @@ value
 
 
 *loid
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -4375,6 +4390,7 @@ ldstatkind_en
 
 
 
+
 *lst_mark
 1471959461
 ^mtime
@@ -4386,7 +4402,6 @@ field
 type
 uint32_t
 )attrs
-
 
 
 
@@ -4489,7 +4504,7 @@ comment
 
 
 *make_item
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -4503,7 +4518,7 @@ signature_space_to_item
 
 
 *make_item_from_id
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -4566,6 +4581,7 @@ comment
 
 
 
+
 *mutex_t
 1471713325
 ^mtime
@@ -4577,7 +4593,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -4788,6 +4803,7 @@ sequence
 
 
 
+
 *node_metarank
 1471940701
 ^mtime
@@ -4801,7 +4817,6 @@ inline
 signature
 signature_value_to_int
 )attrs
-
 
 
 
@@ -5016,6 +5031,7 @@ comment
 
 
 
+
 *otherwise
 1465882737
 ^mtime
@@ -5023,7 +5039,6 @@ comment
 comment
 "otherwise case in switches"_
 )attrs
-
 
 
 
@@ -5177,6 +5192,7 @@ comment
 
 
 
+
 *out_utf8enc
 1456812179
 ^mtime
@@ -5184,7 +5200,6 @@ comment
 comment
 "output UTF8 C/JSON encoding"_
 )attrs
-
 
 
 
@@ -5366,6 +5381,7 @@ payl_hashassoc_sorted_key_node
 
 
 
+
 *payl_hashassoc_count
 1456921741
 ^mtime
@@ -5373,7 +5389,6 @@ payl_hashassoc_sorted_key_node
 comment
 "get a node with sorted keys"_
 )attrs
-
 
 
 
@@ -5543,6 +5558,7 @@ comment
 
 
 
+
 *payl_hashset_reserve
 1456841817
 ^mtime
@@ -5550,7 +5566,6 @@ comment
 comment
 "reserve in an hashed set payload"_
 )attrs
-
 
 
 
@@ -5743,6 +5758,7 @@ payl_filebuffer
 
 
 
+
 *payload_module
 1457332521
 ^mtime
@@ -5750,7 +5766,6 @@ payl_filebuffer
 comment
 "the payload module"_
 )attrs
-
 
 
 
@@ -5957,6 +5972,7 @@ struct
 
 
 
+
 *range
 1465978097
 ^mtime
@@ -5964,7 +5980,6 @@ struct
 comment
 "for ranges in cases"_
 )attrs
-
 
 
 
@@ -6163,6 +6178,7 @@ locval
 
 
 
+
 *return__16DZKIWAZeUSWZ
 1471713325
 ^mtime
@@ -6172,7 +6188,6 @@ comment
 descr
 return
 )attrs
-
 
 
 
@@ -6395,6 +6410,7 @@ int
 
 
 
+
 *return__3mNWjkwy5c5p1N
 1471713325
 ^mtime
@@ -6412,7 +6428,6 @@ hva_hash
 hash_t
 )node
 )attrs
-
 
 
 
@@ -6639,6 +6654,7 @@ return
 
 
 
+
 *return__6oVahaMuZdKTyi
 1471940701
 ^mtime
@@ -6657,7 +6673,6 @@ get
 int
 )node
 )attrs
-
 
 
 
@@ -6895,6 +6910,7 @@ return
 
 
 
+
 *return__8memwFf9R7Vm5L
 1471713325
 ^mtime
@@ -6906,7 +6922,6 @@ return
 return
 num1
 )attrs
-
 
 
 
@@ -7113,6 +7128,7 @@ comment
 
 
 
+
 *same
 1457364041
 ^mtime
@@ -7120,7 +7136,6 @@ comment
 comment
 "test for identity of two values"_
 )attrs
-
 
 
 
@@ -7393,6 +7408,7 @@ locval
 
 
 
+
 *set
 1456146211
 ^mtime
@@ -7405,7 +7421,6 @@ is_sequence
 is_set
 )set
 )attrs
-
 
 
 
@@ -7668,8 +7683,9 @@ unit
 
 
 
+
 *signature_hid_loid_space_to_item
-1471970474
+1472012715
 ^mtime
 (
 comment
@@ -7686,6 +7702,24 @@ result
 item
 )attrs
 
+
+
+*signature_hid_loid_to_item
+1472012715
+^mtime
+(
+comment
+"signature: hid loid -> item"_
+descr
+signature
+formals
+(
+hid
+loid
+)tuple
+result
+item
+)attrs
 
 
 
@@ -7926,6 +7960,7 @@ int
 
 
 
+
 *signature_value_to_item
 1471940701
 ^mtime
@@ -7959,7 +7994,6 @@ val0
 result
 itype_en
 )attrs
-
 
 
 
@@ -8160,6 +8194,7 @@ comment
 
 
 
+
 *sub
 1465727643
 ^mtime
@@ -8177,7 +8212,6 @@ comment
 comment
 "for switch instructions"_
 )attrs
-
 
 
 
@@ -8461,6 +8495,7 @@ return__5IZL8G32ooPRLm
 
 
 
+
 *test__0Ped7vIB0Sk27a
 1471713325
 ^mtime
@@ -8498,7 +8533,6 @@ test
 then
 return__1eS5p39gjaoTpX
 )attrs
-
 
 
 
@@ -8788,6 +8822,7 @@ return__1LsxRiBX5G3mWX
 
 
 
+
 *test__2WSuPK151m39fG
 1471713325
 ^mtime
@@ -8827,7 +8862,6 @@ is_null
 then
 return__5H8gmeVeJ0EcaJ
 )attrs
-
 
 
 
@@ -9112,6 +9146,7 @@ return__78A9xSakCbqkxq
 
 
 
+
 *test__4TXGvnHsvamPh1
 1471713325
 ^mtime
@@ -9150,7 +9185,6 @@ dyncast_tuple
 then
 sequence__22ukS5jpdBDwaW
 )attrs
-
 
 
 
@@ -9449,6 +9483,7 @@ sequence__4IBtXhcbtmo8Ip
 
 
 
+
 *test__7FjmYlYKiw7Ujq
 1471940701
 ^mtime
@@ -9487,7 +9522,6 @@ dyncast_node
 then
 return__9bm40SXupWi943
 )attrs
-
 
 
 
@@ -9784,6 +9818,7 @@ return__2P6zPJDzK1qhiy
 
 
 
+
 *the_agenda
 1458227320
 ^mtime
@@ -9906,7 +9941,6 @@ node
 (
 )comps
 #end item the_system
-
 
 
 
@@ -10104,6 +10138,7 @@ node
 
 
 
+
 *type_error
 1455914086
 ^mtime
@@ -10125,7 +10160,6 @@ comment
 descr
 type
 )attrs
-
 
 
 
@@ -10318,6 +10352,7 @@ value
 
 
 
+
 *valid_item_pointer
 1471713325
 ^mtime
@@ -10347,7 +10382,6 @@ comment
 descr
 sequence
 )attrs
-
 
 
 
@@ -10539,6 +10573,7 @@ comment
 
 
 
+
 *web_session
 1446110845
 ^mtime
@@ -10556,7 +10591,6 @@ comment
 comment
 "inside conditionals"_
 )attrs
-
 
 
 
@@ -10725,6 +10759,7 @@ enumerator
 notice
 vectvaldata_ty
 )attrs
+
 
 
 

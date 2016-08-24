@@ -26,7 +26,7 @@
 
 
 
-/// 96 declarations:
+/// 98 declarations:
 
 typedef enum momenum_space_en
 {				/*pristine enum space_en of 4 */
@@ -49,6 +49,12 @@ typedef momitemptr_t momsigty_signature_hid_loid_space_to_item (uint16_t,
 
 
 extern momsigty_signature_hid_loid_space_to_item momf_make_item_from_id;
+
+
+typedef momitemptr_t momsigty_signature_hid_loid_to_item (uint16_t, uint64_t);
+
+
+extern momsigty_signature_hid_loid_to_item momf_find_item_of_id;
 
 
 typedef bool momsigty_signature_2int64t_to_bool (int64_t, int64_t);
