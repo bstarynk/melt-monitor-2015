@@ -35,7 +35,10 @@ struct Mom_itemaddr_t
   };
   Mom_itemaddr_t(const Mom_itemaddr_t&) = default;
   Mom_itemaddr_t(Mom_itemaddr_t&&) = default;
-  void* ptr() const { return (void*)(~itad_ptrbits); };
+  void* ptr() const
+  {
+    return (void*)(~itad_ptrbits);
+  };
 };
 
 GC_DECLARE_PTRFREE(Mom_itemaddr_t);
@@ -99,12 +102,31 @@ mom_item_indexbu_from_id (uint16_t hid, uint64_t loid)
   return (loid + (unsigned)hid) % Mom_nbitem_buckets;
 }
 
+static void payload_cleanup_item_MOM(momty_item_ty*itm, momitemptr_t paylkind, void *payl)
+{
+  assert (itm != NULL && itm->momfi_va_itype == momenuva_ity_item);
+  MOM_WARNPRINTF("unimplemented payload_cleanup_item_MOM itm=%s paylkind=%s",
+                 mom_item_cstring((momitemptr_t)itm), mom_item_cstring(paylkind));
+#warning payload_cleanup_item_MOM unimplemented
+} // end payload_cleanup_item_MOM
+
 static void cleanup_item_MOM(void *itmad, void *clad)
 {
   assert (itmad != NULL);
   assert (clad == NULL);
   auto itmdata = (momty_item_ty*)itmad;
-  #warning cleanup_item_MOM unimplemented
+  assert (itmdata->momfi_va_itype == momenuva_ity_item);
+  auto hid = itmdata->momfi_itm_hid;
+  auto loid = itmdata->momfi_itm_lid;
+  assert (hid>0 && loid>0);
+  void* payl = itmdata->momfi_itm_payldata;
+  auto pkind = itmdata->momfi_itm_paylkind;
+  itmdata->momfi_itm_paylkind = nullptr;
+  itmdata->momfi_itm_payldata = nullptr;
+  if (pkind != nullptr && pkind != MOM_EMPTY_SLOT && payl != nullptr && payl != MOM_EMPTY_SLOT)
+    payload_cleanup_item_MOM(itmdata, pkind, payl);
+  unsigned bix = mom_item_indexbu_from_id(hid, loid);
+#warning cleanup_item_MOM unimplemented
   MOM_FATAPRINTF("cleanup_item_MOM unimplemented itmad=%p", itmad);
   pthread_mutex_destroy (&itmdata->momfi_itm_mtx);
 } // end cleanup_item_MOM
@@ -134,23 +156,22 @@ extern "C" momitemptr_t momf_make_item(momty_space_en spa)
       auto it = buck.find(mom_idpair_t {hid,loid});
       if (MOM_LIKELY(it == buck.end()))
         {
-	  auto itmdata = (momty_item_ty*)mom_gc_alloc(sizeof(momty_item_ty));
-	  itmdata->momfi_va_itype = momenuva_ity_item;
-	  itmdata->momfi_va_ixv =  spa;
-	  itmdata->momfi_hva_hash = hash_item_from_hid_and_loid_MOM(hid,loid);
-	  itmdata->momfi_itm_hid = hid;
-	  itmdata->momfi_itm_lid = loid;
-	  pthread_mutex_init (&itmdata->momfi_itm_mtx, &mom_item_mtxattr);
-	  time(&itmdata->momfi_itm_mtime);
-	  itm = (momitemptr_t) itmdata;
+          auto itmdata = (momty_item_ty*)mom_gc_alloc(sizeof(momty_item_ty));
+          itmdata->momfi_va_itype = momenuva_ity_item;
+          itmdata->momfi_va_ixv =  spa;
+          itmdata->momfi_hva_hash = hash_item_from_hid_and_loid_MOM(hid,loid);
+          itmdata->momfi_itm_hid = hid;
+          itmdata->momfi_itm_lid = loid;
+          pthread_mutex_init (&itmdata->momfi_itm_mtx, &mom_item_mtxattr);
+          time(&itmdata->momfi_itm_mtime);
+          itm = (momitemptr_t) itmdata;
           buck.emplace(mom_idpair_t {hid,loid},Mom_itemaddr_t {itm});
-	  GC_REGISTER_FINALIZER_IGNORE_SELF (itmdata, cleanup_item_MOM, NULL, NULL,
-				       NULL);
+          GC_REGISTER_FINALIZER_IGNORE_SELF (itmdata, cleanup_item_MOM, NULL, NULL,
+                                             NULL);
         }
     }
-  while (itm == nullptr);
-
-#warning momf_make_item unimplemented
+  while (MOM_UNLIKELY(itm == nullptr));
+  return itm;
 } // end momf_make_item
 
 // momf_make_item_from_id is declared in header_module
