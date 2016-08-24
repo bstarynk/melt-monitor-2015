@@ -137,7 +137,7 @@
    ^* declare [
      make_item make_item_from_id find_item_of_id
      assovaldata_get assovaldata_put assovaldata_remove
-     assovaldata_set_attrs
+     assovaldata_set_attrs assovaldata_reserve
    ]
    ^* notice { gc_alloc gc_alloc_scalar gc_alloc_uncollectable }
    ^* module [
