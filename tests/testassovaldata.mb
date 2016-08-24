@@ -1,0 +1,42 @@
+# file testassovaldata.mb -*- mode: indented-text; indent-tabs-mode: nil -*-
+
+^global header_module (
+   ^* comment "our header_module"
+   ^* descr module
+   ^* declare [ make_item make_item_from_id find_item_of_id ]
+   ^* notice { gc_alloc gc_alloc_scalar gc_alloc_uncollectable }
+   ^* module [
+     signature_2int64t_to_bool
+     signature_2uint64t_to_bool
+     anyvalue_ty hashedvalue_ty boxint_ty boxdouble_ty boxstring_ty seqitem_ty
+     boxtuple_ty boxset_ty countedata_ty assovaldata_ty vectvaldata_ty
+     item_ty node_ty
+     itype_en
+     xtype_en
+     valid_value_pointer itype
+     valid_item_pointer
+     int_val_def value_hash
+     item_hash
+     item_cmp
+     dyncast_int dyncast_boxdouble
+     dyncast_boxstring dyncast_seqitem dyncast_tuple dyncast_set dyncast_node
+     dyncast_item
+     int_make
+     seqitem_nth
+     tuple_nth
+     set_nth
+     seqitem_size
+     tuple_size
+     set_size
+     node_size
+     node_conn
+     node_nth
+     node_metarank
+     node_metaitem
+   ]
+)
+
+^display "our header_module:" header_module
+
+
+# eof testassovaldata.mb
