@@ -1444,6 +1444,7 @@ mom_hashassoc_count (const struct mom_hashassoc_st *ha)
   return ha->cda_count;
 }
 
+  extern pthread_mutexattr_t mom_item_mtxattr;
 ////////////////
 struct mom_itemradix_tu
 {

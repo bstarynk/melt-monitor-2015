@@ -24,7 +24,7 @@
 /// we temporarily store the radix in a sorted dynamic array
 static pthread_mutex_t radix_mtx_mom = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_mutexattr_t item_mtxattr_mom;
+pthread_mutexattr_t mom_item_mtxattr;
 
 // radix_arr_mom is mom_gc_alloc-ed but each itemname is
 // mom_gc_alloc_scalar-ed
@@ -1057,7 +1057,7 @@ mom_make_item_from_radix_id (const struct mom_itemradix_tu *radix,
     curad->rad_items[pos] = newitm;
     curad->rad_count++;
     time (&newitm->itm_mtime);
-    pthread_mutex_init (&newitm->itm_mtx, &item_mtxattr_mom);
+    pthread_mutex_init (&newitm->itm_mtx, &mom_item_mtxattr);
     newitm->itm_hid = hid;
     newitm->itm_lid = loid;
     if (!hid && !loid)
@@ -1166,7 +1166,7 @@ mom_clone_item_from_radix (const struct mom_itemradix_tu *radix)
       }
     while (MOM_UNLIKELY (collided));
     time (&quasitm->itm_mtime);
-    pthread_mutex_init (&quasitm->itm_mtx, &item_mtxattr_mom);
+    pthread_mutex_init (&quasitm->itm_mtx, &mom_item_mtxattr);
     GC_REGISTER_FINALIZER_IGNORE_SELF (quasitm, mom_cleanup_item, NULL, NULL,
 				       NULL);
     itm = quasitm;
@@ -1834,7 +1834,7 @@ mom_initialize_a_predefined (struct mom_item_st *itm, const char *name,
   itm->itm_radix = (struct mom_itemradix_tu *) radix;
   itm->itm_hid = hid;
   itm->itm_lid = lid;
-  pthread_mutex_init (&itm->itm_mtx, &item_mtxattr_mom);
+  pthread_mutex_init (&itm->itm_mtx, &mom_item_mtxattr);
   time (&itm->itm_mtime);
   int pos = index_item_in_radix_mom (curad, itm);
   MOM_DEBUGPRINTF (item, "predefined itm@%p '%s' pos %d",
@@ -1856,8 +1856,8 @@ mom_initialize_items (void)
   if (inited)
     return;
   inited = true;
-  pthread_mutexattr_init (&item_mtxattr_mom);
-  pthread_mutexattr_settype (&item_mtxattr_mom, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutexattr_init (&mom_item_mtxattr);
+  pthread_mutexattr_settype (&mom_item_mtxattr, PTHREAD_MUTEX_RECURSIVE);
   predef_hset_mom =
     mom_hashset_reserve (NULL,
 			 (4 * MOM_NB_PREDEFINED / 3 +
