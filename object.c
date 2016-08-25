@@ -1,6 +1,6 @@
-// file predefitems.c - defining predefined items
+// file object.c - generic object support
 
-/**   Copyright (C)  2016  Basile Starynkevitch and later the FSF
+/**   Copyright (C) 2016  Basile Starynkevitch and later the FSF
     MONIMELT is a monitor for MELT - see http://gcc-melt.org/
     This file is part of GCC.
   
@@ -20,24 +20,16 @@
 
 #include "meltmoni.h"
 
-#define MOM_HAS_PREDEFINED(Nam,Hash)		\
-  struct mom_item_st mompredef_##Nam = {	\
-  .va_itype = MOMITY_ITEM,			\
-  .hva_hash = Hash,				\
-  .itm_hid = 0,					\
-  .itm_lid = 0,					\
-  };
-#include "_mom_predef.h"
-
-
-void
-mom_initialize_predefined_items (void)
+bool mom_valid_name (const char*nam)
 {
-  static bool initialized;
-  if (initialized)
-    MOM_FATAPRINTF ("already initialized items");
-  initialized = true;
-#define MOM_HAS_PREDEFINED(Nam,Hash) \
-  mom_initialize_a_predefined (&mompredef_##Nam, #Nam, Hash);
-#include "_mom_predef.h"
-}                               /* end mom_initialize_predefined_items */
+  if (!nam || nam==MOM_EMPTY_SLOT) return false;
+  if (!isalpha(nam[0])) return false;
+  for (const char*p=nam+1; *p; p++) {
+    if (isalnum(*p)) continue;
+    if (*p=='_') {
+      if (p[-1]=='_') return false;
+      if (!isalnum(p[1])) return false;
+    }
+  }
+  return true;
+} // end mom_valid_name

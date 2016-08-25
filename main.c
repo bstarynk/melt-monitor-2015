@@ -20,25 +20,8 @@
 
 #include "meltmoni.h"
 
-bool mom_skip_dump_hooks;
-bool mom_dont_make_after_dump;
-unsigned mom_debugflags;
-atomic_int mom_nb_warnings;
+#define BASE_YEAR_MOM 2015
 
-static char hostname_mom[80];
-
-void *mom_prog_dlhandle;
-const char *mom_webdir[MOM_MAX_WEBDIR];
-volatile atomic_bool mom_should_run;
-#define MOM_DEFAULT_NB_JOBS 3
-unsigned mom_nbjobs = MOM_DEFAULT_NB_JOBS;
-static bool syslogging_mom;
-static bool should_run_mom;
-static bool should_dump_mom;
-static bool skipmadecheck_mom;
-static char *dir_after_load_mom;
-static char *load_state_mom;
-static char *web_service_mom;
 
 #define MAX_ADDED_PREDEF_MOM 16
 struct predefadd_mom_st
@@ -49,33 +32,16 @@ struct predefadd_mom_st
 static struct predefadd_mom_st added_predef_mom[MAX_ADDED_PREDEF_MOM];
 static unsigned count_added_predef_mom;
 
-#define MAX_UNPREDEF_MOM 24
-static const char *unpredefined_mom[MAX_UNPREDEF_MOM];
-static int count_unpredef_mom;
-
-#define MAX_BOOTFILE_MOM 32
-static const char *bootf_mom[MAX_BOOTFILE_MOM];
-static int count_bootf_mom;
-
-
-#define BASE_YEAR_MOM 2015
-
-#define MAX_TEST_MOM 16
-struct test_mom_st
-{
-  const char *test_name;
-  const char *test_arg;
-};
-static struct test_mom_st testarr_mom[MAX_TEST_MOM];
-static unsigned testcount_mom;
-
-#define MAX_OUTPUTCONTENT_MOM 24
-static const char *outcont_name_mom[MAX_OUTPUTCONTENT_MOM];
-unsigned outcont_count_mom;
+void *mom_prog_dlhandle;
 
 const char *
 mom_hostname (void)
 {
+  static char hostname_mom[80];
+  if (MOM_UNLIKELY(hostname_mom[0]==(char)0)) {
+    if (gethostname(hostname_mom, sizeof(hostname_mom)-1))
+      MOM_FATAPRINTF("gethostname failed");
+  }
   return hostname_mom;
 };
 
@@ -574,76 +540,6 @@ mom_input_quoted_utf8 (FILE *f)
 
 
 
-static pthread_mutex_t dbgmtx_mom = PTHREAD_MUTEX_INITIALIZER;
-static const char *dbg_level_mom (enum mom_debug_en dbg);
-void
-mom_debugprintf_at (const char *fil, int lin, enum mom_debug_en dbg,
-                    const char *fmt, ...)
-{
-  static long countdbg;
-  char thrname[24];
-  char buf[160];
-  char timbuf[64];
-  int len = 0;
-  char *msg = NULL;
-  char *bigbuf = NULL;
-  memset (thrname, 0, sizeof (thrname));
-  memset (buf, 0, sizeof (buf));
-  memset (timbuf, 0, sizeof (timbuf));
-  pthread_getname_np (pthread_self (), thrname, sizeof (thrname) - 1);
-  fflush (NULL);
-  mom_now_strftime_bufcenti (timbuf, "%H:%M:%S.__ ");
-  va_list alist;
-  va_start (alist, fmt);
-  len = vsnprintf (buf, sizeof (buf), fmt, alist);
-  va_end (alist);
-  if (MOM_UNLIKELY (len >= (int) sizeof (buf) - 1))
-    {
-      char *bigbuf = malloc (len + 10);
-      if (bigbuf)
-        {
-          memset (bigbuf, 0, len + 10);
-          va_start (alist, fmt);
-          (void) vsnprintf (bigbuf, len + 1, fmt, alist);
-          va_end (alist);
-          msg = bigbuf;
-        }
-    }
-  else
-    msg = buf;
-  {
-    pthread_mutex_lock (&dbgmtx_mom);
-    long nbdbg = countdbg++;
-#define DEBUG_DATE_PERIOD_MOM 64
-    char datebuf[48] = { 0 };
-    if (nbdbg % DEBUG_DATE_PERIOD_MOM == 0)
-      {
-        mom_now_strftime_bufcenti (datebuf, "%Y-%b-%d@%H:%M:%S.__ %Z");
-      };
-    if (syslogging_mom)
-      {
-        syslog (LOG_DEBUG, "MONIMELT DEBUG %7s <%s> @%s:%d %s %s",
-                dbg_level_mom (dbg), thrname, fil, lin, timbuf, msg);
-        if (nbdbg % DEBUG_DATE_PERIOD_MOM == 0)
-          syslog (LOG_DEBUG, "MONIMELT DEBUG#%04ld ~ %s *^*^*", nbdbg,
-                  datebuf);
-      }
-    else
-      {
-        fprintf (stderr, "MONIMELT DEBUG %7s <%s> @%s:%d %s %s\n",
-                 dbg_level_mom (dbg), thrname, fil, lin, timbuf, msg);
-        fflush (stderr);
-        if (nbdbg % DEBUG_DATE_PERIOD_MOM == 0)
-          fprintf (stderr, "MONIMELT DEBUG#%04ld ~ %s *^*^*\n", nbdbg,
-                   datebuf);
-        fflush (NULL);
-      }
-    pthread_mutex_unlock (&dbgmtx_mom);
-  }
-  if (bigbuf)
-    free (bigbuf);
-}
-
 
 /************************* inform *************************/
 
@@ -678,14 +574,7 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
           msg = bigbuf;
         }
     }
-  else
     msg = buf;
-  if (syslogging_mom)
-    {
-      syslog (LOG_INFO, "MONIMELT INFORM @%s:%d <%s:%d> %s %s",
-              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-    }
-  else
     {
       fprintf (stderr, "MONIMELT INFORM @%s:%d <%s:%d> %s %s\n",
                fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
@@ -697,6 +586,7 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
 
 /************************* warning *************************/
 
+atomic_int mom_nb_warnings;
 void
 mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
 {
@@ -732,27 +622,16 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
     }
   else
     msg = buf;
-  if (syslogging_mom)
-    {
-      if (err)
-        syslog (LOG_WARNING, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)",
-                nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
-                msg, strerror (err));
-      else
-        syslog (LOG_WARNING, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s",
-                nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-    }
-  else
-    {
-      if (err)
-        fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)\n",
-                 nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
-                 msg, strerror (err));
-      else
-        fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s\n",
-                 nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-      fflush (NULL);
-    }
+  {
+    if (err)
+      fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)\n",
+	       nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
+	       msg, strerror (err));
+    else
+      fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s\n",
+	       nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+    fflush (NULL);
+  }
   if (bigbuf)
     free (bigbuf);
 }                               /* end of mom_warnprintf_at */
@@ -800,31 +679,18 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
   memset (bbuf, 0, sizeof (bbuf));
   blev = backtrace (bbuf, BACKTRACE_MAX_MOM - 1);
   char **bsym = backtrace_symbols (bbuf, blev);
-  if (syslogging_mom)
-    {
-      if (err)
-        syslog (LOG_ALERT, "MONIMELT FATAL! @%s:%d <%s:%d> %s %s (%s)",
-                fil, lin, thrname, (int) mom_gettid (), timbuf,
-                msg, strerror (err));
-      else
-        syslog (LOG_ALERT, "MONIMELT FATAL! @%s:%d <%s:%d> %s %s",
-                fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-      for (int i = 0; i < blev; i++)
-        syslog (LOG_ALERT, "MONIMELTB![%d]: %s", i, bsym[i]);
-    }
-  else
-    {
-      if (err)
-        fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s (%s)\n",
-                 fil, lin, thrname, (int) mom_gettid (), timbuf,
-                 msg, strerror (err));
-      else
-        fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s\n",
-                 fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-      for (int i = 0; i < blev; i++)
-        fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
-      fflush (NULL);
-    }
+  {
+    if (err)
+      fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s (%s)\n",
+	       fil, lin, thrname, (int) mom_gettid (), timbuf,
+	       msg, strerror (err));
+    else
+      fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s\n",
+	       fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+    for (int i = 0; i < blev; i++)
+      fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
+    fflush (NULL);
+  }
 #endif
   if (bigbuf)
     free (bigbuf);
@@ -877,8 +743,7 @@ mom_gc_calloc (size_t nmemb, size_t size)
 
 static int randomfd_mom;
 
-MOM_PRIVATE void
-closerandomfile_mom (void)
+void closerandomfile_mom (void)
 {
   if (randomfd_mom > 2)
     {
@@ -933,32 +798,6 @@ mom_thread_cpu_time (void)
   clock_gettime (CLOCK_THREAD_CPUTIME_ID, &curts);
   return 1.0 * (curts.tv_sec) + 1.0e-9 * (curts.tv_nsec);
 }
-
-
-
-static const char *
-dbg_level_mom (enum mom_debug_en dbg)
-{
-#define LEVDBG(Dbg) case momdbg_##Dbg: return #Dbg;
-  switch (dbg)
-    {
-      MOM_DEBUG_LIST_OPTIONS (LEVDBG);
-    default:
-      {
-        static char dbglev[16];
-        snprintf (dbglev, sizeof (dbglev), "?DBG?%d", (int) dbg);
-        return GC_STRDUP (dbglev);
-      }
-    }
-#undef LEVDBG
-}
-
-const char *const mom_debug_names[momdbg__last] = {
-#define DEFINE_DBG_NAME_MOM(Dbg) [momdbg_##Dbg]= #Dbg,
-  MOM_DEBUG_LIST_OPTIONS (DEFINE_DBG_NAME_MOM)
-};
-
-#undef DEFINE_DBG_NAME_MOM
 
 
 
@@ -1026,112 +865,25 @@ mom_print_sizes (void)
   PRINT_SIZEOF (long);
   PRINT_SIZEOF (void *);
   PRINT_SIZEOF (pthread_mutex_t);
+  PRINT_SIZEOF (pthread_rwlock_t);
   PRINT_SIZEOF (pthread_cond_t);
-  PRINT_SIZEOF (struct mom_anyvalue_st);
-  PRINT_SIZEOF (struct mom_boxint_st);
-  PRINT_SIZEOF (struct mom_boxdouble_st);
-  PRINT_SIZEOF (struct mom_boxstring_st);
-  PRINT_SIZEOF (struct mom_seqitems_st);
-  PRINT_SIZEOF (struct mom_boxnode_st);
-  PRINT_SIZEOF (struct mom_assovaldata_st);
-  PRINT_SIZEOF (struct mom_vectvaldata_st);
-  PRINT_SIZEOF (struct mom_tasklet_st);
-  PRINT_SIZEOF (struct mom_taskstepper_st);
-  PRINT_SIZEOF (struct mom_item_st);
-  PRINT_SIZEOF (struct mom_nanoeval_st);
-  PRINT_SIZEOF (struct mom_nanotaskstep_st);
-}
-
-void
-mom_set_debugging (const char *dbgopt)
-{
-  char dbuf[256];
-  if (!dbgopt)
-    return;
-  memset (dbuf, 0, sizeof (dbuf));
-  if (strlen (dbgopt) >= sizeof (dbuf) - 1)
-    MOM_FATAPRINTF ("too long debug option %s", dbgopt);
-  strcpy (dbuf, dbgopt);
-  char *comma = NULL;
-  if (!strcmp (dbuf, ".") || !strcmp (dbuf, "_"))
-    {
-      mom_debugflags = ~0;
-      MOM_INFORMPRINTF ("set all debugging");
-    }
-  else
-    for (char *pc = dbuf; pc != NULL; pc = comma ? comma + 1 : NULL)
-      {
-        comma = strchr (pc, ',');
-        if (comma)
-          *comma = (char) 0;
-#define MOM_TEST_DEBUG_OPTION(Nam)			\
-	if (!strcmp(pc,#Nam))		{		\
-	  mom_debugflags |=  (1<<momdbg_##Nam); } else	\
-	  if (!strcmp(pc,"!"#Nam))			\
-	    mom_debugflags &=  ~(1<<momdbg_##Nam); else
-        if (!pc)
-          break;
-        MOM_DEBUG_LIST_OPTIONS (MOM_TEST_DEBUG_OPTION) if (pc && *pc)
-          MOM_WARNPRINTF ("unrecognized debug flag %s", pc);
-      }
-  char alldebugflags[2 * sizeof (dbuf) + 120];
-  memset (alldebugflags, 0, sizeof (alldebugflags));
-  int nbdbg = 0;
-#define MOM_SHOW_DEBUG_OPTION(Nam) do {		\
-    if (mom_debugflags & (1<<momdbg_##Nam)) {	\
-     strcat(alldebugflags, " " #Nam);		\
-     assert (strlen(alldebugflags)		\
-	     <sizeof(alldebugflags)-3);		\
-     nbdbg++;					\
-    } } while(0);
-  MOM_DEBUG_LIST_OPTIONS (MOM_SHOW_DEBUG_OPTION);
-  if (nbdbg > 0)
-    MOM_INFORMPRINTF ("%d debug flags active:%s.", nbdbg, alldebugflags);
-  else
-    MOM_INFORMPRINTF ("no debug flags active.");
-}
+} /* end mom_print_sizes */
 
 
 /* Option specification for getopt_long.  */
 enum extraopt_en
 {
   xtraopt__none = 0,
-  xtraopt_chdir_first = 1024,
-  xtraopt_chdir_after_load,
+  xtraopt_info = 1024,
   xtraopt_addpredef,
   xtraopt_commentpredef,
-  xtraopt_unpredef,
-  xtraopt_webdir,
-  xtraopt_skipmadecheck,
-  xtraopt_skipdumphooks,
-  xtraopt_dontmakeafterdump,
-  xtraopt_info,
-  xtraopt_testarg,
-  xtraopt_testrun,
 };
 
 static const struct option mom_long_options[] = {
   {"help", no_argument, NULL, 'h'},
   {"version", no_argument, NULL, 'V'},
-  {"debug", required_argument, NULL, 'D'},
-  {"load", required_argument, NULL, 'L'},
-  {"web", required_argument, NULL, 'W'},
-  {"jobs", required_argument, NULL, 'J'},
-  {"boot", required_argument, NULL, 'B'},
-  {"dump", no_argument, NULL, 'd'},
-  {"syslog", no_argument, NULL, 's'},
-  {"skip-made-check", no_argument, NULL, xtraopt_skipmadecheck},
-  {"skip-dump-hooks", no_argument, NULL, xtraopt_skipdumphooks},
-  {"dont-make-after-dump", no_argument, NULL, xtraopt_dontmakeafterdump},
-  {"chdir-first", required_argument, NULL, xtraopt_chdir_first},
-  {"chdir-after-load", required_argument, NULL, xtraopt_chdir_after_load},
-  {"add-predefined", required_argument, NULL, xtraopt_addpredef},
-  {"unpredef", required_argument, NULL, xtraopt_unpredef},
-  {"comment-predefined", required_argument, NULL, xtraopt_commentpredef},
-  {"output-content", required_argument, NULL, 'O'},
-  {"test-arg", required_argument, NULL, xtraopt_testarg},
-  {"test-run", required_argument, NULL, xtraopt_testrun},
-  {"webdir", required_argument, NULL, xtraopt_webdir},
+  {"add-predef", required_argument, NULL, xtraopt_addpredef},
+  {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
   {"info", no_argument, NULL, xtraopt_info},
   /* Terminating NULL placeholder.  */
   {NULL, no_argument, NULL, 0},
@@ -1144,38 +896,9 @@ usage_mom (const char *argv0)
   printf ("Usage: %s\n", argv0);
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
-  printf ("\t -B | --boot <bootfile>" " \t# bootfile after load\n");
-  printf ("\t -W | --web <webservice>"
-          " \t# start a web service, e.g. localhost.localdomain:8085 or _:8085\n");
-  printf ("\t -J | --jobs <nbjobs>"
-          " \t#set number of jobs, default %d, max %d\n", mom_nbjobs,
-          MOM_JOB_MAX);
-  printf ("\t -d | --dump " " \t# Dump the state.\n");
-  printf ("\t -s | --syslog " " \t# Use system log.\n");
-  printf ("\t -D | --debug <debug-features>"
-          " \t# Debugging comma separated features\n\t\t##");
-  for (unsigned ix = 1; ix < momdbg__last; ix++)
-    printf (" %s", mom_debug_names[ix]);
-  putchar ('\n');
-  printf ("\t -L | --load statefile" " \t#Load a state \n");
-  printf ("\t -O | --output-content <item>"
-          " \t#output the content of given <item>\n");
-  printf ("\t -R | --run" " \t#forcibly run\n");
-  printf ("\t --chdir-first dirpath" " \t#Change directory at first \n");
-  printf ("\t --chdir-after-load dirpath"
-          " \t#Change directory after load\n");
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
-  printf ("\t --skip-made-check"
-          " \t#Skip the check that the binary is made up to date\n");
-  printf ("\t --skip-dump-hooks"
-          " \t#Ignore the `dump_before` and `dump_after` hooks\n");
-  printf ("\t --dont-make-after-dump"
-          " \t#Don't rebuild with make the binary after a dump\n");
-  printf ("\t --test-arg <testarg>" " \t#Argument to next test.\n");
-  printf ("\t --unpredef <predefname>" " \t#Unpredefine an item.\n");
-  printf ("\t --test-run <testname>" " \t#Name of test to run after load.\n");
   printf ("\t --info" " \t#Give various information\n");
 }
 
@@ -1189,16 +912,14 @@ print_version_mom (const char *argv0)
 }
 
 
-MOM_PRIVATE void
+static void
 parse_program_arguments_mom (int *pargc, char ***pargv)
 {
   int argc = *pargc;
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
-  char *testargstr = NULL;
-  char *suffix = NULL;
-  while ((opt = getopt_long (argc, argv, "hVdsRD:L:W:J:B:O:",
+  while ((opt = getopt_long (argc, argv, "hV",
                              mom_long_options, NULL)) >= 0)
     {
       switch (opt)
@@ -1214,117 +935,13 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           print_version_mom (argv[0]);
           exit (EXIT_SUCCESS);
           return;
-        case 'W':              /* --web */
-          if (!optarg)
-            MOM_FATAPRINTF ("missing web service");
-          web_service_mom = optarg;
-          break;
-        case 'R':              /* --run */
-          should_run_mom = true;
-          break;
-        case 'd':              /* --dump */
-          should_dump_mom = true;
-          break;
-        case 'D':              /* --debug */
-          mom_set_debugging (optarg);
-          break;
-        case 'L':              /* load */
-          if (!optarg || access (optarg, R_OK))
-            MOM_FATAPRINTF ("bad load state %s : %m", optarg);
-          load_state_mom = optarg;
-          break;
-        case 's':              /* --syslog */
-          openlog ("monimelt", LOG_PID | LOG_PERROR, LOG_LOCAL1);
-          syslogging_mom = true;
-          MOM_INFORMPRINTF ("syslogging activated");
-          break;
-        case 'J':              /* --jobs <nbjobs> */
-          {
-            if (!optarg)
-              MOM_FATAPRINTF ("--jobs require a <nb-jobs>");
-            int n = atoi (optarg);
-            if (n < 2 || n > MOM_JOB_MAX)
-              MOM_FATAPRINTF
-                ("bad number %d of jobs, should be at least 2 and less than %d",
-                 n, MOM_JOB_MAX);
-            mom_nbjobs = n;
-          }
-          break;
-        case 'B':              /* --boot <bootfile> */
-          {
-            if (!optarg)
-              MOM_FATAPRINTF ("--boot requires a <bootfile>");
-            if (count_bootf_mom >= MAX_BOOTFILE_MOM)
-              MOM_FATAPRINTF ("too many %d bootfiles", count_bootf_mom);
-            bootf_mom[count_bootf_mom++] = optarg;
-          }
-          break;
-        case 'O':              /* --output-content item */
-          if (optarg)
-            suffix = strstr (optarg, "__");
-          if (!suffix && optarg)
-            suffix = optarg + strlen (optarg);
-          if (!optarg || !isalpha (optarg[0])
-              || !mom_valid_name_radix_len (optarg, suffix - optarg))
-            MOM_FATAPRINTF ("missing or invalid name %s for --output-content",
-                            optarg ? optarg : "??");
-          if (outcont_count_mom >= MAX_OUTPUTCONTENT_MOM)
-            MOM_FATAPRINTF
-              ("too many %d items for --output-content (last is %s)",
-               outcont_count_mom, optarg);
-          outcont_name_mom[outcont_count_mom++] = optarg;
-          break;
-        case xtraopt_chdir_first:      /* --chdir-first <dirpath> */
-          {
-            if (!optarg)
-              MOM_FATAPRINTF ("missing --chdir-first argument");
-            if (chdir (optarg))
-              MOM_FATAPRINTF ("--chdir-first %s failed %m", optarg);
-            char cwdbuf[256];
-            memset (cwdbuf, 0, sizeof (cwdbuf));
-            if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
-              strcpy (cwdbuf, ".");
-            MOM_INFORMPRINTF ("changed directory at first to %s", cwdbuf);
-          }
-          break;
-        case xtraopt_chdir_after_load: /* --chdir-after-load <dirpath> */
-          {
-            if (!optarg)
-              MOM_FATAPRINTF ("missing --chdir-after-load argument");
-            if (access (optarg, F_OK))
-              {
-                if (mkdir (optarg, 0750))
-                  MOM_FATAPRINTF ("failed to mkdir %s (for after load) : %m",
-                                  optarg);
-                else
-                  MOM_INFORMPRINTF ("made directory %s (for after load)",
-                                    optarg);
-              }
-            struct stat stdir = { 0 };
-            if (stat (optarg, &stdir) || (stdir.st_mode & S_IFMT) != S_IFDIR)
-              MOM_WARNPRINTF ("%s is not a directory for --chdir-after-load",
-                              optarg);
-            dir_after_load_mom = mom_gc_strdup (optarg);
-          }
-          break;
-        case xtraopt_skipmadecheck:
-          skipmadecheck_mom = true;
-          break;
-        case xtraopt_skipdumphooks:
-          mom_skip_dump_hooks = true;
-          MOM_INFORMPRINTF ("dump hooks will be skipped");
-          break;
-        case xtraopt_dontmakeafterdump:
-          mom_dont_make_after_dump = true;
-          MOM_INFORMPRINTF ("won't run make after dump");
-          break;
         case xtraopt_commentpredef:
           commentstr = optarg;
           break;
         case xtraopt_addpredef:
           if (!optarg)
             MOM_FATAPRINTF ("missing predefined name for --add-predefined");
-          if (!isalpha (optarg[0]) || !mom_valid_name_radix (optarg))
+          if (!isalpha (optarg[0]) || !mom_valid_name (optarg))
             MOM_FATAPRINTF ("invalid predefined name %s", optarg);
           if (count_added_predef_mom >= MAX_ADDED_PREDEF_MOM)
             MOM_FATAPRINTF ("too many %d added predefined",
@@ -1333,68 +950,11 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           added_predef_mom[count_added_predef_mom].predef_comment =
             commentstr;
           commentstr = NULL;
-          should_dump_mom = true;
           count_added_predef_mom++;
-          break;
-        case xtraopt_unpredef:
-          if (!optarg)
-            MOM_FATAPRINTF ("missing predefined name for --unpredef");
-          if (!isalpha (optarg[0]) || !mom_valid_name_radix (optarg))
-            MOM_FATAPRINTF ("invalid unpredefined name %s", optarg);
-          if (count_unpredef_mom >= MAX_UNPREDEF_MOM)
-            MOM_FATAPRINTF ("too many %d unpredefined", count_unpredef_mom);
-          unpredefined_mom[count_unpredef_mom] = optarg;
-          count_unpredef_mom++;
-          should_dump_mom = true;
-          break;
-        case xtraopt_testarg:
-          testargstr = optarg;
-          break;
-        case xtraopt_testrun:
-          {
-            const char *testarg = testargstr ? GC_strdup (testargstr) : NULL;
-            testargstr = NULL;
-            const char *testname = optarg;
-            if (testcount_mom >= MAX_TEST_MOM)
-              MOM_FATAPRINTF ("too many %d tests", testcount_mom);
-            for (const char *tp = testname; *tp; tp++)
-              if (!isalnum (*tp) && *tp != '_')
-                MOM_FATAPRINTF ("invalid testname %s", testname);
-            testarr_mom[testcount_mom].test_name = testname;
-            testarr_mom[testcount_mom].test_arg = testarg;
-            testcount_mom++;
-          }
           break;
         case xtraopt_info:
           mom_print_sizes ();
           break;
-        case xtraopt_webdir:
-          {
-            if (!optarg)
-              MOM_FATAPRINTF ("missing --webdir");
-            char *rwdirpath = realpath (optarg, NULL);
-            char *rwdirdup = mom_gc_strdup (rwdirpath);
-            struct stat rwdirstat = { 0 };
-            free (rwdirpath), rwdirpath = NULL;
-            int olderrno = errno;
-            errno = ENOTDIR;
-            if (stat (rwdirdup, &rwdirstat)
-                || (rwdirstat.st_mode & S_IFMT) != S_IFDIR)
-              MOM_FATAPRINTF ("invalid webdir %s (%m)", rwdirdup);
-            errno = olderrno;
-            int wix = -1;
-            for (int ix = 0; ix < MOM_MAX_WEBDIR; ix++)
-              if (!mom_webdir[ix])
-                {
-                  wix = ix;
-                  break;
-                };
-            if (wix < 0)
-              MOM_FATAPRINTF ("too many (%d) webdir for %s", MOM_MAX_WEBDIR,
-                              optarg);
-            mom_webdir[wix] = rwdirdup;
-            MOM_DEBUGPRINTF (web, "webdir#%d %s", wix, rwdirdup);
-          }
         default:
           MOM_FATAPRINTF ("bad option (%c) at %d", isalpha (opt) ? opt : '?',
                           optind);
@@ -1406,232 +966,44 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
 
 
 
-MOM_PRIVATE void
+static void
 do_add_predefined_mom (void)
 {
   for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
     {
-      const char *end = NULL;
-      struct mom_item_st *preditm =
-        mom_make_item_from_string (added_predef_mom[ix].predef_name, &end);
-      if (end && *end)
-        MOM_FATAPRINTF ("bad predefined name '%s'",
-                        added_predef_mom[ix].predef_name);
-      assert (preditm && preditm->va_itype == MOMITY_ITEM);
-      mom_item_put_space (preditm, MOMSPA_PREDEF);
+      const char* curname = added_predef_mom[ix].predef_name;
+      if (!mom_valid_name(curname))
+	MOM_FATAPRINTF("invalid predefined name %s", curname);
       const char *comm = added_predef_mom[ix].predef_comment;
+#warning do_add_predefined_mom unimplemented
+      MOM_FATAPRINTF("do_add_predefined_mom unimplemented");
       if (comm && comm[0])
         {
-          pthread_mutex_lock (&preditm->itm_mtx);
-          time (&preditm->itm_mtime);
-          preditm->itm_pattr =  //
-            mom_assovaldata_put (preditm->itm_pattr,
-                                 MOM_PREDEFITM (comment),
-                                 (struct mom_hashedvalue_st *)
-                                 mom_boxstring_make (comm));
-          pthread_mutex_unlock (&preditm->itm_mtx);
           MOM_INFORMPRINTF ("made predefined %s with comment %s",
-                            mom_item_cstring (preditm), comm);
+                            curname, comm);
         }
       else
         {
           MOM_INFORMPRINTF ("made predefined %s without comment",
-                            mom_item_cstring (preditm));
+                            curname);
         }
     }
 }                               /* end of do_add_predefined_mom */
-
-MOM_PRIVATE void
-do_unpredefine_mom (void)
-{
-  for (int ix = 0; ix < count_unpredef_mom; ix++)
-    {
-      const char *unpname = unpredefined_mom[ix];
-      struct mom_item_st *unpitm = mom_find_item_by_string (unpname);
-      if (!unpitm)
-        MOM_FATAPRINTF ("unknown name#%d %s to unpredefine", ix + 1, unpname);
-      if (unpitm->va_ixv != MOMSPA_PREDEF)
-        MOM_WARNPRINTF ("name#%d to unpredefine %s is not predefined",
-                        ix + 1, mom_item_cstring (unpitm));
-      else
-        {
-          mom_item_put_space (unpitm, MOMSPA_GLOBAL);
-          MOM_INFORMPRINTF ("unpredefined item %s",
-                            mom_item_cstring (unpitm));
-        }
-    }
-}                               /* end do_unpredefine_mom */
-
-MOM_PRIVATE void
-do_bootfile_mom (void)
-{
-  for (int ix = 0; ix < count_bootf_mom; ix++)
-    {
-      const char *booname = bootf_mom[ix];
-      mom_boot_file (booname);
-    }
-}                               /* end do_bootfile_mom */
-
-
-void
-momtest_emitc (const char *arg)
-{
-  MOM_INFORMPRINTF ("start momtest_emitc arg=%s", arg);
-  struct mom_item_st *itm = mom_find_item_by_string (arg);
-  if (!itm)
-    MOM_WARNPRINTF ("momtest_emitc no item for arg=%s", arg);
-  else
-    {
-      double starealt = mom_clock_time (CLOCK_REALTIME);
-      double stacput = mom_process_cpu_time ();
-      MOM_INFORMPRINTF ("momtest_emitc before emitting C code for %s",
-                        mom_item_cstring (itm));
-      bool ok = mom_emit_c_code (itm);
-      double endrealt = mom_clock_time (CLOCK_REALTIME);
-      double endcput = mom_process_cpu_time ();
-      if (ok)
-        MOM_INFORMPRINTF
-          ("momtest_emitc succeeded emitting C code for %s in %.3f real %.4f cpu sec",
-           mom_item_cstring (itm), (endrealt - starealt),
-           (endcput - stacput));
-      else
-        MOM_FATAPRINTF ("momtest_emitc failed emitting C code for %s",
-                        mom_item_cstring (itm));
-      if (ok)
-        {
-          char cmdbuf[128];
-          memset (cmdbuf, 0, sizeof (cmdbuf));
-          fflush (NULL);
-          int cst = -1;
-          if (snprintf (cmdbuf, sizeof (cmdbuf),
-                        "make modules/momg_%s.so", mom_item_cstring (itm))
-              < (int) sizeof (cmdbuf) - 1)
-            cst = system (cmdbuf);
-          if (cst == 0)
-            MOM_INFORMPRINTF ("momtest_emitc succeeded: %s", cmdbuf);
-          else
-            MOM_FATAPRINTF ("momtest_emitc failed compiling C code for %s",
-                            mom_item_cstring (itm));
-        }
-    }
-}                               /* end momtest_emitc */
-
-
-void
-momtest_emith (const char *arg)
-{
-  MOM_INFORMPRINTF ("start momtest_emith arg=%s", arg);
-  struct mom_item_st *itm = mom_find_item_by_string (arg);
-  if (!itm)
-    MOM_WARNPRINTF ("momtest_emith no item for arg=%s", arg);
-  else
-    {
-      double starealt = mom_clock_time (CLOCK_REALTIME);
-      double stacput = mom_process_cpu_time ();
-      MOM_INFORMPRINTF ("momtest_emith before emitting header code for %s",
-                        mom_item_cstring (itm));
-      bool ok = mom_emit_header_code (itm);
-      double endrealt = mom_clock_time (CLOCK_REALTIME);
-      double endcput = mom_process_cpu_time ();
-      if (ok)
-        MOM_INFORMPRINTF
-          ("momtest_emith succeeded emitting header code for %s in %.3f real %.4f cpu sec",
-           mom_item_cstring (itm), (endrealt - starealt),
-           (endcput - stacput));
-      else
-        MOM_FATAPRINTF ("momtest_emith failed emitting header code for %s",
-                        mom_item_cstring (itm));
-    }
-}                               /* end momtest_emith */
-
-
-void
-momtest_emitjs (const char *arg)
-{
-  MOM_INFORMPRINTF ("start momtest_emitjs arg=%s", arg);
-  struct mom_item_st *itm = mom_find_item_by_string (arg);
-  if (!itm)
-    MOM_WARNPRINTF ("momtest_emitjs no item for arg=%s", arg);
-  else
-    {
-      MOM_INFORMPRINTF
-        ("momtest_emitjs before emitting JavaScript code for %s",
-         mom_item_cstring (itm));
-      errno = 0;
-      char nambuf[256];
-      memset (nambuf, 0, sizeof (nambuf));
-      snprintf (nambuf, sizeof (nambuf), "webroot/tmp_%s.js",
-                mom_item_cstring (itm));
-      FILE *fil = fopen (nambuf, "w");
-      if (!fil)
-        MOM_FATAPRINTF ("momtest_emitjs failed to open %s", nambuf);
-      fprintf (fil, "// generated file %s -*- JavaScript -*-\n\n", nambuf);
-      bool ok = mom_emit_javascript_code (itm, fil);
-      if (ok)
-        MOM_INFORMPRINTF
-          ("momtest_emitjs succeeded emitting JavaScript code for %s (%ld bytes)",
-           mom_item_cstring (itm), ftell (fil));
-      else
-        MOM_FATAPRINTF
-          ("momtest_emitjs failed emitting JavaScript code for %s",
-           mom_item_cstring (itm));
-      fprintf (fil, "\n// end of generated file %s\n", nambuf);
-      fclose (fil);
-    }
-}                               /* end momtest_emitjs */
-
-
-MOM_PRIVATE void
-do_run_tests_mom (void)
-{
-  MOM_INFORMPRINTF ("should run %d tests.", testcount_mom);
-  assert (testcount_mom <= MAX_TEST_MOM);
-  for (unsigned tix = 0; tix < testcount_mom; tix++)
-    {
-      char tnambuf[80];
-      memset (tnambuf, 0, sizeof (tnambuf));
-      const char *testname = testarr_mom[tix].test_name;
-      const char *testarg = testarr_mom[tix].test_arg;
-      MOM_INFORMPRINTF ("running test#%d %s with %s", tix, testname, testarg);
-      snprintf (tnambuf, sizeof (tnambuf), "momtest_%s", testname);
-      void *ad = dlsym (mom_prog_dlhandle, tnambuf);
-      if (!ad)
-        MOM_FATAPRINTF ("missing test %s - %s", tnambuf, dlerror ());
-      mom_test_sig_t *tfun = (mom_test_sig_t *) ad;
-      (*tfun) (testarg);
-      MOM_INFORMPRINTF ("done test#%d %s with %s\n", tix, testname, testarg);
-    }
-  MOM_INFORMPRINTF ("*all %d tests run successfully*", testcount_mom);
-}                               /* end of do_run_tests_mom */
-
-void
-mom_stop_and_dump (void)
-{
-  should_dump_mom = true;
-  mom_stop ();
-}
 
 int
 main (int argc_main, char **argv_main)
 {
   clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
-  gethostname (hostname_mom, sizeof (hostname_mom) - 1);
   GC_INIT ();
   GC_set_handle_fork (1);
-  GC_register_displacement (offsetof (struct mom_itemradix_tu, itrad_string));
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
   if (!mom_prog_dlhandle)
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
-  if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'D')
-    mom_set_debugging (argv[1] + 2);
-  mom_initialize_items ();
   parse_program_arguments_mom (&argc, &argv);
-  if (!skipmadecheck_mom)
     {
-      MOM_DEBUGPRINTF (run, "before running 'make -q monimelt'");
       fflush (NULL);
       int okmaket = system ("make -q monimelt");
       if (!okmaket)
@@ -1644,133 +1016,8 @@ main (int argc_main, char **argv_main)
              okmaket);
         }
     }
-  if (!load_state_mom && !access (MOM_GLOBAL_STATE, R_OK))
-    {
-      load_state_mom = MOM_GLOBAL_STATE;
-      MOM_INFORMPRINTF ("will load state from default global state %s",
-                        MOM_GLOBAL_STATE);
-    }
-  if (load_state_mom)
-    {
-      char webuf[256];
-      memset (webuf, 0, sizeof (webuf));
-      if (strlen (load_state_mom) >= sizeof (webuf) - 8)
-        MOM_WARNPRINTF ("too long load state %s", load_state_mom);
-      if (web_service_mom)
-        {
-          strncpy (webuf, load_state_mom,
-                   sizeof (webuf) - sizeof (MOM_LOAD_WEBDIR) - 2);
-          char *lastslash = strrchr (webuf, '/');
-          if (lastslash)
-            *lastslash = 0;
-          else
-            strcpy (webuf, ".");
-          strcat (webuf, "/" MOM_LOAD_WEBDIR);
-          MOM_DEBUGPRINTF (web, "implicit webuf=%s", webuf);
-          struct stat webstat = { 0 };
-          if (!stat (webuf, &webstat)
-              && (webstat.st_mode & S_IFMT) == S_IFDIR)
-            {
-              char *rwdirpath = realpath (webuf, NULL);
-              char *rwdirdup = mom_gc_strdup (rwdirpath);
-              free (rwdirpath), rwdirpath = NULL;
-              int wix = -1;
-              for (int ix = 0; ix < MOM_MAX_WEBDIR; ix++)
-                if (!mom_webdir[ix])
-                  {
-                    wix = ix;
-                    break;
-                  };
-              if (wix < 0)
-                MOM_FATAPRINTF ("too many (%d) webdir for %s",
-                                MOM_MAX_WEBDIR, optarg);
-              mom_webdir[wix] = rwdirdup;
-              MOM_DEBUGPRINTF (web, "implicit webdir#%d %s", wix, rwdirdup);
-            }
-        }
-      mom_load_state (load_state_mom);
-    }
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
-  if (count_unpredef_mom > 0)
-    do_unpredefine_mom ();
-  if (count_bootf_mom > 0)
-    do_bootfile_mom ();
-  if (outcont_count_mom > 0)
-    {
-      MOM_INFORMPRINTF ("will output content of %d items", outcont_count_mom);
-      for (unsigned ix = 0; ix < outcont_count_mom; ix++)
-        {
-          const char *outname = outcont_name_mom[ix];
-          struct mom_item_st *outitm = mom_find_item_by_string (outname);
-          if (!outitm)
-            MOM_FATAPRINTF ("cannot find item '%s' to be output", outname);
-          MOM_INFORMPRINTF ("output #%d content of %s ::", ix, outname);
-          mom_output_item_content (stdout, NULL, outitm);
-          fputc ('\n', stdout);
-          fflush (stdout);
-        }
-    }
-  if (testcount_mom > 0)
-    do_run_tests_mom ();
-  if (dir_after_load_mom)
-    {
-      if (chdir (dir_after_load_mom))
-        MOM_FATAPRINTF ("failed to chdir to %s after load : %m",
-                        dir_after_load_mom);
-      else
-        {
-          char cwdbuf[128];
-          memset (cwdbuf, 0, sizeof (cwdbuf));
-          if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
-            strcpy (cwdbuf, "./");
-          MOM_INFORMPRINTF ("changed directory to %s after load, now in %s",
-                            dir_after_load_mom, cwdbuf);
-        }
-    }
-  long nbwaitloop = 0;
-  if (count_bootf_mom == 0 || should_run_mom)
-    {
-      MOM_INFORMPRINTF ("before running");
-      while (atomic_load (&mom_should_run))
-        {
-          usleep ((MOM_IS_DEBUGGING (run) ? 4500 : 200) * 1000);
-          nbwaitloop++;
-          MOM_DEBUGPRINTF (run, "waiting while should run nbwaitloop=%ld",
-                           nbwaitloop);
-        }
-      MOM_INFORMPRINTF ("after running %ld loops", nbwaitloop);
-    }
-  else
-    MOM_INFORMPRINTF ("booted %d files and don't run", count_bootf_mom);
-  usleep (10 * 1000);
-  MOM_INFORMPRINTF ("stop running pid %d", (int) getpid ());
-  if (should_dump_mom)
-    {
-      char cwdbuf[128];
-      memset (cwdbuf, 0, sizeof (cwdbuf));
-      if (!getcwd (cwdbuf, sizeof (cwdbuf) - 1))
-        strcpy (cwdbuf, "./");
-      MOM_INFORMPRINTF ("dumping state in %s", cwdbuf);
-      mom_dump_state ();
-    }
-  if (count_added_predef_mom > 0 && !dir_after_load_mom)
-    {
-      MOM_INFORMPRINTF ("making again after adding %d predefined",
-                        count_added_predef_mom);
-      char cmdbuf[128];
-      memset (cmdbuf, 0, sizeof (cmdbuf));
-      if (snprintf
-          (cmdbuf, sizeof (cmdbuf), "make -j 3 -f %s OPTIMFLAGS='%s'",
-           monimelt_makefile, monimelt_optimflags)
-          >= (int) sizeof (cmdbuf) - 1)
-        MOM_FATAPRINTF ("too small command buffer %s", cmdbuf);
-      int bad = system (cmdbuf);
-      if (bad)
-        MOM_FATAPRINTF ("%s failed (%d)", cmdbuf, bad);
-      MOM_INFORMPRINTF ("made ok ('%s') after adding %d predefined",
-                        cmdbuf, count_added_predef_mom);
-    }
   int nbwarn = atomic_load (&mom_nb_warnings);
   if (nbwarn > 0)
     MOM_INFORMPRINTF

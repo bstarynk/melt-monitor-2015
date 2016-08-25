@@ -29,9 +29,10 @@ CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent
 ASTYLE= astyle
 MD5SUM= md5sum
+SQLITE= sqlite3
 INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
 ASTYLEFLAGS= --style=gnu -s2  --convert-tabs
-PACKAGES= glib-2.0 sqlite3 jansson
+PACKAGES= gtk+-x11-3.0 gtk+-3.0 glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
 PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))
 OPTIMFLAGS= -Og -g3
@@ -50,8 +51,7 @@ CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
 CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*.cc)))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
 RM= rm -fv
-.PHONY: all tags modules plugins clean  predefgc tests \
-        test0 test1 testbty testheader testheader2 testhloadump
+.PHONY: all tags modules plugins clean
 
 all: monimelt
 
@@ -67,7 +67,7 @@ clean:
 
 
 
-_timestamp.c: global.mom Makefile | $(OBJECTS)
+_timestamp.c: Makefile | $(OBJECTS)
 	@date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
 	@(echo -n 'const char monimelt_lastgitcommit[]="' ; \
 	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
@@ -81,10 +81,11 @@ _timestamp.c: global.mom Makefile | $(OBJECTS)
 	@(echo -n 'const char monimelt_checksum[]="'; cat meltmoni.h $(GENERATED_HEADERS) $(SOURCES) | $(MD5SUM) | cut -d' ' -f1 | tr -d '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_directory[]="'; /bin/pwd | tr -d '\n\\"' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_makefile[]="'; echo -n  $(realpath $(lastword $(MAKEFILE_LIST))); echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_sqlite[]="'; echo -n $(SQLITE); echo '";') >> _timestamp.tmp
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS) global.mom  _timestamp.o
+monimelt: $(OBJECTS)  _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
 	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
 
@@ -105,54 +106,5 @@ indent: .indent.pro
 	  $(ASTYLE)  $(ASTYLEFLAGS) $$g ; \
 	done
 
-predefgc: $(OBJECTS)  predefgc.cc
-	rm -f _listpredefs*; touch _listpredefs
-	for f in $(filter-out predefitems.o, $(OBJECTS)) ; do  \
-	   nm -u $$f | awk '/ mompredef_/{print $$2;}' | sed -n -e 's/^mompredef_//p' >> _listpredefs ; \
-	done
-	sort -u _listpredefs > _listpredefs.sorted
-	mv _listpredefs.sorted _listpredefs
-	$(LINK.cc) predefgc.cc -o predefgc.bin
-	./predefgc.bin _listpredefs | tee _listpredefs.useless
-
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
-
-tests: monimelt global.mom test0 test1 testbty testheader testheader2
-
-test0: monimelt global.mom  tests/cmod0c.mb 
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod0c.mb --test-arg tiny_module --test-run emitc
-
-test1: monimelt global.mom  tests/cmod1j.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmod1j.mb --test-arg tiny_jmodule --test-run emitjs
-
-
-testbty: monimelt global.mom  tests/cmodbty.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodbty.mb --test-arg bty_module --test-run emitc
-
-
-testheader: monimelt global.mom  tests/cmodheader.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodheader.mb --test-arg header_module --test-run emith
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-
-
-testheader2: monimelt global.mom  tests/cmodheader2.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodheader2.mb --test-arg header_module --test-run emith
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-	$(INDENT) modules/momg_header_module.h
-
-
-testhloadump: monimelt global.mom  tests/cmodhloadump.mb
-	$(DISABLE_ASLR) ./monimelt -Dgencod -B tests/cmodhloadump.mb --test-arg loadump_module --test-run emith
-	cp  modules/momg_loadump_module.h  modules/momg_loadump_module.h.orig
-	$(INDENT) modules/momg_loadump_module.h
-	$(INDENT) modules/momg_loadump_module.h
-	$(INDENT) modules/momg_loadump_module.h
-	$(INDENT) modules/momg_loadump_module.h
