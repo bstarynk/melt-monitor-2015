@@ -733,7 +733,7 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
   if (btstate != NULL)
     {
       int count = 0;
-      backtrace_full (btstate, 2, mom_bt_callback, mom_bt_err_callback,
+      backtrace_full (btstate, 1, mom_bt_callback, mom_bt_err_callback,
                       (void *) &count);
       if (count > 0)
         fprintf (stderr,
@@ -920,10 +920,29 @@ mom_cstring_hash_len (const char *str, int len)
 }                               /* end mom_cstring_hash_len */
 
 void
-mom_print_sizes (void)
+mom_print_info (void)
 {
+  printf ("MONIMELT info:\n" " timestamp: %s\n", monimelt_timestamp);
+  printf (" lastgitcommit: %s\n", monimelt_lastgitcommit);
+  printf (" lastgittag: %s\n", monimelt_lastgittag);
+  printf (" compilercommand: %s\n", monimelt_compilercommand);
+  printf (" compilerversion: %s\n", monimelt_compilerversion);
+  printf (" compilerflags: %s\n", monimelt_compilerflags);
+  printf (" optimflags: %s\n", monimelt_optimflags);
+  printf (" checksum: %s\n", monimelt_checksum);
+  printf (" directory: %s\n", monimelt_directory);
+  printf (" makefile: %s\n", monimelt_makefile);
+  printf (" sqlite: %s\n", monimelt_sqlite);
+  printf (" libsqlite3version: %s\n", sqlite3_libversion ());
+  printf (" glibversion: major %d minor %d micro %d\n",
+          glib_major_version, glib_minor_version, glib_micro_version);
+  printf (" gtkversion: major %d minor %d micro %d\n",
+          gtk_major_version, gtk_minor_version, gtk_micro_version);
+#if __GLIBC__
+  printf (" glibc: %s\n", gnu_get_libc_version ());
+#endif
 #define PRINT_SIZEOF(T)						\
-  printf("sizeof(" #T ") = %d by = %d wd\n",			\
+  printf("  sizeof(" #T ") = %d byt = %d wd\n",			\
 	 (int)sizeof(T),					\
 	 (int) ((sizeof(T)+sizeof(void*)-1)/sizeof(void*)))
   PRINT_SIZEOF (int);
@@ -932,7 +951,17 @@ mom_print_sizes (void)
   PRINT_SIZEOF (pthread_mutex_t);
   PRINT_SIZEOF (pthread_rwlock_t);
   PRINT_SIZEOF (pthread_cond_t);
-}                               /* end mom_print_sizes */
+  {
+    mo_hid_t hid = 0;
+    mo_loid_t loid = 0;
+    mo_get_some_random_hi_lo_ids (&hid, &loid);
+    char rbuf[MOM_CSTRIDLEN];
+    memset (rbuf, 0, sizeof (rbuf));
+    printf (" randomid: hid=%lx loid=%llx %s\n",
+            (long) hid, (long long) loid,
+            mo_cstring_from_hi_lo_ids (rbuf, hid, loid));
+  }
+}                               /* end mom_print_info */
 
 
 /* Option specification for getopt_long.  */
@@ -1017,7 +1046,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           count_added_predef_mom++;
           break;
         case xtraopt_info:
-          mom_print_sizes ();
+          mom_print_info ();
           break;
         default:
           MOM_FATAPRINTF ("bad option (%c) at %d", isalpha (opt) ? opt : '?',

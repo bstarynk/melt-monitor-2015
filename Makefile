@@ -87,7 +87,7 @@ _timestamp.c: Makefile | $(OBJECTS)
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
 monimelt: $(OBJECTS)  _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
-	$(LINK.cc)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
+	$(LINK.c)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
 
 
 %.i: %.c meltmoni.h $(GENERATED_HEADERS)

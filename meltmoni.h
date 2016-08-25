@@ -87,10 +87,14 @@
 // jansson, a JSON library in C which is Boehm-GC friendly
 // see http://www.digip.org/jansson/
 #include <jansson.h>
+// Glib & GTK3 see http://gtk.org/
 #include <glib.h>
 #include <gtk/gtk.h>
+// Sqlite3 see http://sqlite.org
+#include <sqlite3.h>
 #if __GLIBC__
 #include <execinfo.h>
+#include <gnu/libc-version.h>
 #endif
 // libbacktrace from GCC 6, i.e. libgcc-6-dev package
 #include <backtrace.h>
@@ -127,6 +131,7 @@ extern const char monimelt_lastgitcommit[];
 extern const char monimelt_lastgittag[];
 extern const char monimelt_compilercommand[];
 extern const char monimelt_compilerflags[];
+extern const char monimelt_compilerversion[];
 extern const char monimelt_optimflags[];
 extern const char monimelt_checksum[];
 extern const char monimelt_directory[];
@@ -412,6 +417,10 @@ typedef const void*mo_value_t;
 typedef struct mo_object_st mo_object_ty;
 
 typedef intptr_t mo_int_t;
+
+typedef uint32_t mo_hid_t;
+typedef uint64_t mo_loid_t;
+
 #define MO_INTMAX INTPTR_MAX/2
 #define MO_INTMIN INTPTR_MIN/2
 
@@ -440,6 +449,23 @@ static inline mo_value_t mo_int_to_value(mo_int_t i)
   return (mo_value_t)(((intptr_t)i%2)+1);
 }
 
+#define MOM_CSTRIDLEN 20
+extern const char* // in object.c
+mo_cstring_from_hi_lo_ids (char*buf, mo_hid_t hid, mo_loid_t loid);
+
+/* 10 * 60 * 60 so a 3 extendigit thing starting with 0 to 9 */
+#define MOM_HID_BUCKETMAX 36000
+static inline unsigned mo_hi_id_bucketnum(mo_hid_t hid)
+{
+  if (hid == 0) return 0;
+  unsigned bn = hid >> 16;
+  MOM_ASSERTPRINTF(bn > 0 && bn < MOM_HID_BUCKETMAX,
+                   "mo_hi_id_bucketnum bad hid %lu (bn=%u)",
+                   (unsigned long) hid, bn);
+  return bn;
+}
+
+extern void mo_get_some_random_hi_lo_ids (mo_hid_t* phid, mo_loid_t* ploid);
 
 struct mo_obpayload_t
 {
