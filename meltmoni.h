@@ -395,4 +395,45 @@ bool mom_valid_name(const char*nam); // in object.c
 ////////////////////////////////////////////////////////////////
 
 
+enum mo_valkind_en {
+  mo_NONEK,
+  mo_INTK,
+  mo_STRINGK,
+  mo_TUPLEK,
+  mo_SETK,
+  mo_TRANSIENTK,
+  mo_OBJECTK,
+};
+
+typedef const void*mo_value_t;
+typedef intptr_t mo_int_t;
+#define MO_INTMAX INTPTR_MAX/2
+#define MO_INTMIN INTPTR_MIN/2
+
+static inline bool
+mo_valid_pointer_value(mo_value_t p)
+{
+  return p != NULL && p != MOM_EMPTY_SLOT && ((intptr_t)p % 2 == 0);
+}
+
+static inline bool
+mo_value_is_int(mo_value_t p)
+{
+  return p != NULL && p != MOM_EMPTY_SLOT && ((intptr_t)p % 2 != 0);
+}
+
+static inline mo_int_t
+mo_value_to_int(mo_value_t p, mo_int_t def)
+{
+  return mo_value_is_int(p)?(intptr_t)p/2:def;
+}
+
+static inline mo_value_t mo_int_to_value(mo_int_t i)
+{
+  MOM_ASSERTPRINTF(i >= MO_INTMIN && i <= MO_INTMAX,
+		   "integer %lld out of range", (long long)i);
+  return ((intptr_t)i%2)+1;
+}
+
+
 #endif /*MONIMELT_INCLUDED_ */
