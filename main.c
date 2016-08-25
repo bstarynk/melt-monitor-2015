@@ -653,8 +653,8 @@ mom_bt_callback (void *data, uintptr_t pc, const char *filename, int lineno,
   if (filename == NULL && function == NULL)
     return 0;
 
-  /* Print up to 32 functions.    */
-  if (*pcount >= 32)
+  /* Print up to 40 functions.    */
+  if (*pcount >= 40)
     {
       /* Returning a non-zero value stops the backtrace.  */
       return 1;
@@ -957,9 +957,9 @@ mom_print_info (void)
     mo_get_some_random_hi_lo_ids (&hid, &loid);
     char rbuf[MOM_CSTRIDLEN];
     memset (rbuf, 0, sizeof (rbuf));
-    printf (" randomid: hid=%lx loid=%llx %s\n",
-            (long) hid, (long long) loid,
-            mo_cstring_from_hi_lo_ids (rbuf, hid, loid));
+    mo_cstring_from_hi_lo_ids (rbuf, hid, loid);
+    printf (" randomid: hid=%lx loid=%llx %s (of %d chars)\n",
+            (long) hid, (long long) loid, rbuf, strlen (rbuf));
   }
 }                               /* end mom_print_info */
 

@@ -76,10 +76,10 @@ static_assert (sizeof (ID_DIGITS_MOM) - 1 == ID_BASE_MOM,
 
 
 static inline const char *
-num80_to_char13_mom (mom_uint128_t num, char *buf)
+num80_to_char14_mom (mom_uint128_t num, char *buf)
 {
   mom_uint128_t initnum = num;
-  for (int ix = 12; ix > 0; ix--)
+  for (int ix = 13; ix > 0; ix--)
     {
       unsigned dig = num % ID_BASE_MOM;
       num = num / ID_BASE_MOM;
@@ -94,12 +94,12 @@ num80_to_char13_mom (mom_uint128_t num, char *buf)
 }
 
 static inline mom_uint128_t
-char13_to_num80_mom (const char *buf)
+char14_to_num80_mom (const char *buf)
 {
   mom_uint128_t num = 0;
   if (buf[0] < '0' || buf[0] > '9')
     return 0;
-  for (int ix = 0; ix <= 13; ix++)
+  for (int ix = 0; ix < 14; ix++)
     {
       char c = buf[ix];
       const char *p = strchr (ID_DIGITS_MOM, c);
@@ -136,7 +136,9 @@ mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid)
     ((mom_uint128_t) (hid & 0xffff) << 64) + (mom_uint128_t) loid;
   char s16[16];
   memset (s16, 0, sizeof (s16));
-  num80_to_char13_mom (wn, s16);
+  num80_to_char14_mom (wn, s16);
+  MOM_ASSERTPRINTF (strlen (s16) == 14, "bad s16=%s (l%d)",
+                    s16, (int) strlen (s16));
   char resbuf[MOM_CSTRIDLEN + 4];
   memset (resbuf, 0, sizeof (resbuf));
   snprintf (resbuf, sizeof (resbuf), "_%c%c%c%s", d0, c1, c2, s16);
@@ -170,7 +172,7 @@ mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid)
       uint32_t rl = (uint32_t) momrand_genrand_int32 ();
       if (rl < 16 || rl > UINT32_MAX - 16)
         continue;
-      loid = ((uint64_t) rm << 32) | ((uint64_t) rl << 32);
+      loid = ((uint64_t) rm << 32) | ((uint64_t) rl);
     }
   while (loid == 0);
   *phid = hid;
