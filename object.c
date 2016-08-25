@@ -20,16 +20,45 @@
 
 #include "meltmoni.h"
 
-bool mom_valid_name (const char*nam)
+bool
+mom_valid_name (const char *nam)
 {
-  if (!nam || nam==MOM_EMPTY_SLOT) return false;
-  if (!isalpha(nam[0])) return false;
-  for (const char*p=nam+1; *p; p++) {
-    if (isalnum(*p)) continue;
-    if (*p=='_') {
-      if (p[-1]=='_') return false;
-      if (!isalnum(p[1])) return false;
+  if (!nam || nam == MOM_EMPTY_SLOT)
+    return false;
+  if (!isalpha (nam[0]))
+    return false;
+  for (const char *p = nam + 1; *p; p++)
+    {
+      if (isalnum (*p))
+        continue;
+      if (*p == '_')
+        {
+          if (p[-1] == '_')
+            return false;
+          if (!isalnum (p[1]))
+            return false;
+        }
     }
-  }
   return true;
-} // end mom_valid_name
+}                               // end mom_valid_name
+
+void
+mom_init_objects (void)
+{
+  static bool inited;
+  MOM_ASSERTPRINTF (!inited, "should not initialize objects twice");
+  if (inited)
+    return;
+  inited = true;
+  {
+    _Atomic struct mo_obpayload_t fakepayload;
+    if (!atomic_is_lock_free (&fakepayload))
+      MOM_FATAPRINTF
+        ("struct mo_obpayload_t of size %zd is not atomic lock free",
+         sizeof (fakepayload));
+    if (!__atomic_always_lock_free (sizeof (struct mo_obpayload_t), NULL))
+      MOM_FATAPRINTF
+        ("struct mo_obpayload_t of size %zd is not always atomic lock free",
+         sizeof (fakepayload));
+  }
+}                               /* end mom_init_objects */

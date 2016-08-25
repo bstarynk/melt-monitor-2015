@@ -141,8 +141,8 @@ int64_t mom_prime_above (int64_t n);
 int64_t mom_prime_below (int64_t n);
 
 static_assert (sizeof (intptr_t) == sizeof (double)
-|| 2 * sizeof (intptr_t) == sizeof (double),
-"double-s should be the same size or twice as intptr_t");
+               || 2 * sizeof (intptr_t) == sizeof (double),
+               "double-s should be the same size or twice as intptr_t");
 
 const char *mom_hostname (void);
 
@@ -192,18 +192,18 @@ __attribute__ ((format (printf, 3, 4), noreturn));
   do { if (false && (Cond)) printf(Fmt, ##__VA_ARGS__); } while(0)
 #else
 
-#define MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,...)	\
-  do {if (MOM_UNLIKELY(!(Cond)))			\
-      MOM_FATAPRINTF_AT(Fil,Lin,			\
-	"MOM_ASSERT FAILURE (" #Cond "): " Fmt,		\
-			##__VA_ARGS__); }while(0)
+#define MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,...) \
+  do {if (MOM_UNLIKELY(!(Cond)))      \
+      MOM_FATAPRINTF_AT(Fil,Lin,      \
+  "MOM_ASSERT FAILURE (" #Cond "): " Fmt,   \
+      ##__VA_ARGS__); }while(0)
 
-#define MOM_ASSERTPRINTF_AT_BIS(Fil,Lin,Cond,Fmt,...)	\
-  MOM_FATAPRINTF_AT(Fil,Lin,Cond,Fmt,			\
+#define MOM_ASSERTPRINTF_AT_BIS(Fil,Lin,Cond,Fmt,...) \
+  MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,     \
         ##__VA_ARGS__)
 
-#define MOM_ASSERTPRINTF(Cond,Fmt,...)		\
-  MOM_ASSERTPRINTF_AT_BIS(__FILE__,__LINE__,Cond,Fmt,	\
+#define MOM_ASSERTPRINTF(Cond,Fmt,...)    \
+  MOM_ASSERTPRINTF_AT_BIS(__FILE__,__LINE__,Cond,Fmt, \
       ##__VA_ARGS__)
 
 #endif /*NDEBUG*/
@@ -294,6 +294,8 @@ double momrand_genrand_real3 (void);
 double momrand_genrand_res53 (void);
 
 extern void mom_random_init_genrand (void);
+extern void mom_init_objects(void);
+
 static inline uint32_t
 mom_random_uint32 (void)
 {
@@ -395,17 +397,20 @@ bool mom_valid_name(const char*nam); // in object.c
 ////////////////////////////////////////////////////////////////
 
 
-enum mo_valkind_en {
+enum mo_valkind_en
+{
   mo_NONEK,
   mo_INTK,
   mo_STRINGK,
   mo_TUPLEK,
   mo_SETK,
-  mo_TRANSIENTK,
+  mo_TRANSIENTK,    /* transient tuple */
   mo_OBJECTK,
 };
 
 typedef const void*mo_value_t;
+typedef struct mo_object_st mo_object_ty;
+
 typedef intptr_t mo_int_t;
 #define MO_INTMAX INTPTR_MAX/2
 #define MO_INTMIN INTPTR_MIN/2
@@ -431,9 +436,17 @@ mo_value_to_int(mo_value_t p, mo_int_t def)
 static inline mo_value_t mo_int_to_value(mo_int_t i)
 {
   MOM_ASSERTPRINTF(i >= MO_INTMIN && i <= MO_INTMAX,
-		   "integer %lld out of range", (long long)i);
-  return ((intptr_t)i%2)+1;
+                   "integer %lld out of range", (long long)i);
+  return (mo_value_t)(((intptr_t)i%2)+1);
 }
+
+
+struct mo_obpayload_t
+{
+  mo_object_ty* payl_kindobj;
+  void* payl_data;
+};
+
 
 
 #endif /*MONIMELT_INCLUDED_ */

@@ -1,21 +1,21 @@
 // file main.c - main program and utilities
 
 /**   Copyright (C)  2015 - 2016  Basile Starynkevitch and later the FSF
-    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
-    This file is part of GCC.
+      MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+      This file is part of GCC.
   
-    GCC is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3, or (at your option)
-    any later version.
+      GCC is free software; you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation; either version 3, or (at your option)
+      any later version.
   
-    GCC is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING3.   If not see
-    <http://www.gnu.org/licenses/>.
+      GCC is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+      You should have received a copy of the GNU General Public License
+      along with GCC; see the file COPYING3.   If not see
+      <http://www.gnu.org/licenses/>.
 **/
 
 #include "meltmoni.h"
@@ -38,10 +38,11 @@ const char *
 mom_hostname (void)
 {
   static char hostname_mom[80];
-  if (MOM_UNLIKELY(hostname_mom[0]==(char)0)) {
-    if (gethostname(hostname_mom, sizeof(hostname_mom)-1))
-      MOM_FATAPRINTF("gethostname failed");
-  }
+  if (MOM_UNLIKELY (hostname_mom[0] == (char) 0))
+    {
+      if (gethostname (hostname_mom, sizeof (hostname_mom) - 1))
+        MOM_FATAPRINTF ("gethostname failed");
+    }
   return hostname_mom;
 };
 
@@ -574,12 +575,12 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
           msg = bigbuf;
         }
     }
-    msg = buf;
-    {
-      fprintf (stderr, "MONIMELT INFORM @%s:%d <%s:%d> %s %s\n",
-               fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-      fflush (NULL);
-    }
+  msg = buf;
+  {
+    fprintf (stderr, "MONIMELT INFORM @%s:%d <%s:%d> %s %s\n",
+             fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+    fflush (NULL);
+  }
   if (bigbuf)
     free (bigbuf);
 }
@@ -625,11 +626,11 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
   {
     if (err)
       fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)\n",
-	       nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
-	       msg, strerror (err));
+               nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
+               msg, strerror (err));
     else
       fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s\n",
-	       nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+               nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
     fflush (NULL);
   }
   if (bigbuf)
@@ -638,6 +639,53 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
 
 
 /************************* fatal *************************/
+
+/* A callback function passed to the backtrace_full function.  */
+
+static int
+mom_bt_callback (void *data, uintptr_t pc, const char *filename, int lineno,
+                 const char *function)
+{
+  int *pcount = (int *) data;
+
+  /* If we don't have any useful information, don't print
+     anything.  */
+  if (filename == NULL && function == NULL)
+    return 0;
+
+  /* Print up to 32 functions.    */
+  if (*pcount >= 32)
+    {
+      /* Returning a non-zero value stops the backtrace.  */
+      return 1;
+    }
+  ++*pcount;
+
+
+  fprintf (stderr, "MonimeltB[0x%lx] %s\n\t%s:%d\n",
+           (unsigned long) pc,
+           function == NULL ? "???" : function,
+           filename == NULL ? "???" : filename, lineno);
+
+  return 0;
+}
+
+/* An error callback function passed to the backtrace_full function.  This is
+   called if backtrace_full has an error.  */
+
+static void
+mom_bt_err_callback (void *data MOM_UNUSED, const char *msg, int errnum)
+{
+  if (errnum < 0)
+    {
+      /* This means that no debug info was available.  Just quietly
+         skip printing backtrace info.  */
+      return;
+    }
+  fprintf (stderr, "%s%s%s\n", msg, errnum == 0 ? "" : ": ",
+           errnum == 0 ? "" : strerror (errnum));
+}
+
 void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
 {
@@ -672,25 +720,41 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
     }
   else
     msg = buf;
+
+  if (err)
+    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s (%s)\n",
+             fil, lin, thrname, (int) mom_gettid (), timbuf,
+             msg, strerror (err));
+  else
+    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s\n",
+             fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+  struct backtrace_state *btstate =
+    backtrace_create_state (NULL, 0, mom_bt_err_callback, NULL);
+  if (btstate != NULL)
+    {
+      int count = 0;
+      backtrace_full (btstate, 2, mom_bt_callback, mom_bt_err_callback,
+                      (void *) &count);
+      if (count > 0)
+        fprintf (stderr,
+                 "Please include the complete backtrace of %d levels in error reports\n",
+                 count);
+    }
 #if __GLIBC__
 #define BACKTRACE_MAX_MOM 100
-  void *bbuf[BACKTRACE_MAX_MOM];
-  int blev = 0;
-  memset (bbuf, 0, sizeof (bbuf));
-  blev = backtrace (bbuf, BACKTRACE_MAX_MOM - 1);
-  char **bsym = backtrace_symbols (bbuf, blev);
-  {
-    if (err)
-      fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s (%s)\n",
-	       fil, lin, thrname, (int) mom_gettid (), timbuf,
-	       msg, strerror (err));
-    else
-      fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s\n",
-	       fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-    for (int i = 0; i < blev; i++)
-      fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
-    fflush (NULL);
-  }
+  if (!btstate)
+    {
+      void *bbuf[BACKTRACE_MAX_MOM];
+      int blev = 0;
+      memset (bbuf, 0, sizeof (bbuf));
+      blev = backtrace (bbuf, BACKTRACE_MAX_MOM - 1);
+      char **bsym = backtrace_symbols (bbuf, blev);
+      {
+        for (int i = 0; i < blev; i++)
+          fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
+        fflush (NULL);
+      }
+    }
 #endif
   if (bigbuf)
     free (bigbuf);
@@ -743,7 +807,8 @@ mom_gc_calloc (size_t nmemb, size_t size)
 
 static int randomfd_mom;
 
-void closerandomfile_mom (void)
+void
+closerandomfile_mom (void)
 {
   if (randomfd_mom > 2)
     {
@@ -867,7 +932,7 @@ mom_print_sizes (void)
   PRINT_SIZEOF (pthread_mutex_t);
   PRINT_SIZEOF (pthread_rwlock_t);
   PRINT_SIZEOF (pthread_cond_t);
-} /* end mom_print_sizes */
+}                               /* end mom_print_sizes */
 
 
 /* Option specification for getopt_long.  */
@@ -919,8 +984,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
-  while ((opt = getopt_long (argc, argv, "hV",
-                             mom_long_options, NULL)) >= 0)
+  while ((opt = getopt_long (argc, argv, "hV", mom_long_options, NULL)) >= 0)
     {
       switch (opt)
         {
@@ -971,12 +1035,12 @@ do_add_predefined_mom (void)
 {
   for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
     {
-      const char* curname = added_predef_mom[ix].predef_name;
-      if (!mom_valid_name(curname))
-	MOM_FATAPRINTF("invalid predefined name %s", curname);
+      const char *curname = added_predef_mom[ix].predef_name;
+      if (!mom_valid_name (curname))
+        MOM_FATAPRINTF ("invalid predefined name %s", curname);
       const char *comm = added_predef_mom[ix].predef_comment;
 #warning do_add_predefined_mom unimplemented
-      MOM_FATAPRINTF("do_add_predefined_mom unimplemented");
+      MOM_FATAPRINTF ("do_add_predefined_mom unimplemented");
       if (comm && comm[0])
         {
           MOM_INFORMPRINTF ("made predefined %s with comment %s",
@@ -984,8 +1048,7 @@ do_add_predefined_mom (void)
         }
       else
         {
-          MOM_INFORMPRINTF ("made predefined %s without comment",
-                            curname);
+          MOM_INFORMPRINTF ("made predefined %s without comment", curname);
         }
     }
 }                               /* end of do_add_predefined_mom */
@@ -1002,20 +1065,20 @@ main (int argc_main, char **argv_main)
   if (!mom_prog_dlhandle)
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
+  mom_init_objects ();
   parse_program_arguments_mom (&argc, &argv);
-    {
-      fflush (NULL);
-      int okmaket = system ("make -q monimelt");
-      if (!okmaket)
-        MOM_INFORMPRINTF ("monimelt is made up to date");
-      else
-        {
-          MOM_WARNPRINTF ("pass --skip-made-check to avoid up to date check");
-          MOM_FATAPRINTF
-            ("monimelt is not up to date, 'make -t monimelt' gave %d",
-             okmaket);
-        }
-    }
+  {
+    fflush (NULL);
+    int okmaket = system ("make -q monimelt");
+    if (!okmaket)
+      MOM_INFORMPRINTF ("monimelt is made up to date");
+    else
+      {
+        MOM_WARNPRINTF ("pass --skip-made-check to avoid up to date check");
+        MOM_FATAPRINTF
+          ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
+      }
+  }
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
   int nbwarn = atomic_load (&mom_nb_warnings);
