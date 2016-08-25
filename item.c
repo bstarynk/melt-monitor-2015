@@ -77,6 +77,7 @@ mom_valid_name_radix_len (const char *str, int len)
 // we choose base 60, because with a 0-9 decimal digit then 13 extended
 // digits in base 60 we can express a 80-bit number.  Notice that
 // log(2**80/10)/log(60) is 12.98112
+//...  and capital letters O & Q are missing on purpose
 #define ID_DIGITS_MOM "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNPRSTUVWXYZ"
 #define ID_BASE_MOM 60
 
