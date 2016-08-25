@@ -99,13 +99,14 @@ char14_to_num80_mom (const char *buf)
   mom_uint128_t num = 0;
   if (buf[0] < '0' || buf[0] > '9')
     return 0;
+  const char *idigits = ID_DIGITS_MOM;
   for (int ix = 0; ix < 14; ix++)
     {
       char c = buf[ix];
-      const char *p = strchr (ID_DIGITS_MOM, c);
+      const char *p = strchr (idigits, c);
       if (!p)
         return 0;
-      num = (num * ID_BASE_MOM + (mom_uint128_t) (p - ID_DIGITS_MOM));
+      num = (num * ID_BASE_MOM + (mom_uint128_t) (p - idigits));
     }
   return num;
 }
@@ -137,15 +138,44 @@ mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid)
   char s16[16];
   memset (s16, 0, sizeof (s16));
   num80_to_char14_mom (wn, s16);
-  MOM_ASSERTPRINTF (strlen (s16) == 14, "bad s16=%s (l%d)",
-                    s16, (int) strlen (s16));
   char resbuf[MOM_CSTRIDLEN + 4];
   memset (resbuf, 0, sizeof (resbuf));
   snprintf (resbuf, sizeof (resbuf), "_%c%c%c%s", d0, c1, c2, s16);
+  MOM_ASSERTPRINTF (strlen (resbuf) == MOM_CSTRIDLEN,
+                    "bad result length %d in mo_cstring_from_hi_lo_ids for %s",
+                    (int) strlen (resbuf), resbuf);
   strcpy (buf, resbuf);
   return buf;
 }                               /* end of mo_cstring_from_hi_lo_ids */
 
+bool
+mo_get_hi_lo_ids_from_cstring (mo_hid_t * phid, mo_loid_t * ploid,
+                               const char *buf)
+{
+  if (!buf || buf == MOM_EMPTY_SLOT || buf[0] != '_' || !isdigit (buf[1]))
+    return false;
+  MOM_ASSERTPRINTF (phid != NULL && ploid != NULL,
+                    "bad pointers phid@%p & ploid@%p", phid, ploid);
+  const char *idigits = ID_DIGITS_MOM;
+  for (int i = 2; i < MOM_CSTRIDLEN; i++)
+    if (!strchr (idigits, buf[i]))
+      return false;
+  if (!isdigit (buf[4]))
+    return false;
+  unsigned bn = (buf[1] - '0') * 60 * 60
+    + (strchr (idigits, buf[2]) - idigits) * 60
+    + (strchr (idigits, buf[3]) - idigits);
+  if (bn == 0 || bn >= MOM_HID_BUCKETMAX)
+    return false;
+  mom_uint128_t wn = char14_to_num80_mom (buf + 4);
+  mo_hid_t hid = 0;
+  mo_loid_t loid = 0;
+  hid = (bn << 16) + (mo_hid_t) (wn >> 64);
+  loid = wn & (mom_uint128_t) 0xffffffffffffffffLL;
+  *phid = hid;
+  *ploid = loid;
+  return true;
+}
 
 void
 mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid)

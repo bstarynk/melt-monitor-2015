@@ -959,7 +959,13 @@ mom_print_info (void)
     memset (rbuf, 0, sizeof (rbuf));
     mo_cstring_from_hi_lo_ids (rbuf, hid, loid);
     printf (" randomid: hid=%lx loid=%llx %s (of %d chars)\n",
-            (long) hid, (long long) loid, rbuf, strlen (rbuf));
+            (long) hid, (long long) loid, rbuf, (int) strlen (rbuf));
+    mo_hid_t revhid = 0;
+    mo_loid_t revloid = 0;
+    MOM_ASSERTPRINTF (mo_get_hi_lo_ids_from_cstring (&revhid, &revloid, rbuf)
+                      && revhid == hid && revloid == loid,
+                      "reverse conversion failed revid=%lx revloid=%llx",
+                      (long) revhid, (long long) revloid);
   }
 }                               /* end mom_print_info */
 
