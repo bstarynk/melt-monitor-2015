@@ -124,7 +124,8 @@ typedef FILE *_Atomic mom_atomic_fileptr_t;
 
 
 
-
+// the generated header file
+#define MOM_PREDEF_HEADER "_mom_predef.h"
 // in generated _timestamp.c
 extern const char monimelt_timestamp[];
 extern const char monimelt_lastgitcommit[];
@@ -137,6 +138,7 @@ extern const char monimelt_checksum[];
 extern const char monimelt_directory[];
 extern const char monimelt_makefile[];
 extern const char monimelt_sqlite[];
+extern const char monimelt_perstatebase[];
 
 // increasing array of primes and its size
 extern const int64_t mom_primes_tab[];

@@ -49,11 +49,14 @@ GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
 CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
 CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*.cc)))
-OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES)) 
+OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES))
+# the persistent state base, probably _momstate
+MOM_PERSTATE_BASE=_momstate
+MOM_PERSTATE_SQLITE=$(MOM_PERSTATE_BASE).sqlite
 RM= rm -fv
-.PHONY: all tags modules plugins clean
+.PHONY: all checkgithooks installgithooks tags modules plugins clean dumpstate restorestate
 
-all: monimelt
+all: checkgithooks monimelt
 
 
 clean:
@@ -82,10 +85,11 @@ _timestamp.c: Makefile | $(OBJECTS)
 	@(echo -n 'const char monimelt_directory[]="'; /bin/pwd | tr -d '\n\\"' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_makefile[]="'; echo -n  $(realpath $(lastword $(MAKEFILE_LIST))); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_sqlite[]="'; echo -n $(SQLITE); echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_perstatebase[]="'; echo -n $(MOM_PERSTATE_BASE); echo '";') >> _timestamp.tmp
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
-monimelt: $(OBJECTS)  _timestamp.o
+monimelt: $(OBJECTS) _timestamp.o
 	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
 	$(LINK.c)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
 
@@ -108,3 +112,24 @@ indent: .indent.pro
 
 modules/momg_%.so: modules/momg_%.c $(OBJECTS)
 	$(LINK.c) -fPIC -shared $< -o $@
+
+checkgithooks:
+	@for hf in *-githook.sh ; do \
+	  [ -L .git/hooks/$$(basename $$hf "-githook.sh") ] \
+	    || (echo uninstalled git hook $$hf "(run: make installgithooks)" >&2 ; exit 1) ; \
+	done
+installgithooks:
+	for hf in *-githook.sh ; do \
+	  ln -sv  "../../$$hf" .git/hooks/$$(basename $$hf "-githook.sh") ; \
+	done
+
+dumpstate: $(MOM_PERSTATE_BASE).sqlite | monimelt-dump-state.sh
+	if [ -f $(MOM_PERSTATE_BASE).sql ]; then \
+	  echo backup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sql  $(MOM_PERSTATE_BASE).sql~ ; fi
+	./monimelt-dump-state.sh $<  $(MOM_PERSTATE_BASE).sql
+
+
+restorestate: | $(MOM_PERSTATE_BASE).sql
+	if [ -f $(MOM_PERSTATE_BASE).sqlite ]; then \
+	  echo backup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sqlite~ ; fi
+	$(SQLITE)  $(MOM_PERSTATE_BASE).sqlite < $(MOM_PERSTATE_BASE).sql

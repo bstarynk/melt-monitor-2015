@@ -19,3 +19,8 @@
 **/
 
 #include "meltmoni.h"
+
+
+void mom_load_state(void)
+{
+} /* end mom_load_state */

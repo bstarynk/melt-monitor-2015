@@ -936,6 +936,7 @@ mom_print_info (void)
   printf (" directory: %s\n", monimelt_directory);
   printf (" makefile: %s\n", monimelt_makefile);
   printf (" sqlite: %s\n", monimelt_sqlite);
+  printf (" perstatebase: %s\n", monimelt_perstatebase);
   printf (" libsqlite3version: %s\n", sqlite3_libversion ());
   printf (" glibversion: major %d minor %d micro %d\n",
           glib_major_version, glib_minor_version, glib_micro_version);
@@ -1078,7 +1079,7 @@ do_add_predefined_mom (void)
         MOM_FATAPRINTF ("invalid predefined name %s", curname);
       const char *comm = added_predef_mom[ix].predef_comment;
 #warning do_add_predefined_mom unimplemented
-      MOM_FATAPRINTF ("do_add_predefined_mom unimplemented");
+      MOM_FATAPRINTF ("do_add_predefined_mom unimplemented curname=%s comm=%s", curname, comm);
       if (comm && comm[0])
         {
           MOM_INFORMPRINTF ("made predefined %s with comment %s",
@@ -1112,7 +1113,6 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("monimelt is made up to date");
     else
       {
-        MOM_WARNPRINTF ("pass --skip-made-check to avoid up to date check");
         MOM_FATAPRINTF
           ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
       }

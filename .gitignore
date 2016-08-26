@@ -50,3 +50,6 @@ core*
 ## ignore the HTML version of README.md and other markdown files
 README.html
 CodeGen.html
+
+## ignore the sqlite databases
+*.sqlite
