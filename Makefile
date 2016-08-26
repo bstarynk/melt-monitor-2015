@@ -90,7 +90,7 @@ _timestamp.c: Makefile | $(OBJECTS)
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
 monimelt: $(OBJECTS) _timestamp.o
-	@if [ -f $@ ]; then echo -n backup old executable: ' ' ; mv -v $@ $@~ ; fi
+	@if [ -f $@ ]; then echo -n makebackup old executable: ' ' ; mv -v $@ $@~ ; fi
 	$(LINK.c)  $(LINKFLAGS) $(OPTIMFLAGS) -rdynamic $(OBJECTS)  _timestamp.o $(LIBES) -o $@ 
 
 
@@ -124,12 +124,12 @@ installgithooks:
 	done
 
 dumpstate: $(MOM_PERSTATE_BASE).sqlite | monimelt-dump-state.sh
-	if [ -f $(MOM_PERSTATE_BASE).sql ]; then \
-	  echo backup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sql  $(MOM_PERSTATE_BASE).sql~ ; fi
+	@if [ -f $(MOM_PERSTATE_BASE).sql ]; then \
+	  echo makebackup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sql  $(MOM_PERSTATE_BASE).sql~ ; fi
 	./monimelt-dump-state.sh $<  $(MOM_PERSTATE_BASE).sql
 
 
 restorestate: | $(MOM_PERSTATE_BASE).sql
-	if [ -f $(MOM_PERSTATE_BASE).sqlite ]; then \
-	  echo backup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sqlite~ ; fi
+	@if [ -f $(MOM_PERSTATE_BASE).sqlite ]; then \
+	  echo makebackup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sqlite~ ; fi
 	$(SQLITE)  $(MOM_PERSTATE_BASE).sqlite < $(MOM_PERSTATE_BASE).sql

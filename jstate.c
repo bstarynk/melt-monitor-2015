@@ -20,7 +20,34 @@
 
 #include "meltmoni.h"
 
+/*** IMPORTANT NOTICE: the list of tables created by function
+ * mo_create_tables_for_dump should be kept in sync with the
+ * monimelt-dump-state.sh script (look for lines with ".mode insert"
+ * inside that script)
+ ***/
+
+typedef struct mo_dumper_st mo_dumper_ty;
+typedef struct mo_loader_st mo_loader_ty;
+void mo_create_tables_for_dump(mo_dumper_ty*);
+#define MOM_LOADER_MAGIC  0x179128bd
+struct mo_loader_st {
+  unsigned mo_ld_magic; 		/* always MOM_LOADER_MAGIC */
+  double mo_ld_startelapsedtime;
+  double mo_ld_startcputime;
+  unsigned mo_ld_nbitems;
+};
+
+#define MOM_DUMPER_MAGIC  0x372bb699
+struct mo_dumper_st {
+  unsigned mo_du_magic;		/* always MOM_DUMPER_MAGIC */
+};
+
 
 void mom_load_state(void)
 {
 } /* end mom_load_state */
+
+
+void mom_dump_state(void)
+{
+} /* end mom_dump_state */

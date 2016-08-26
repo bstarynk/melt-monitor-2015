@@ -55,13 +55,17 @@ echo ' --  along with GCC; see the file COPYING3.   If not see' >> $tempdump
 echo ' --  <http://www.gnu.org/licenses/>.' >> $tempdump
 echo >> $tempdump
 
-(echo -n ' --- monimelt lastgitcommit ' ;  git log --format=oneline --abbrev=12 --abbrev-commit -q  \
-     | head -1 | tr -d '\n\r\f\"' ; echo ' ---' ) >> $tempdump
+
+## we probably dont want to put the gitcommit in the dump
+#(echo -n ' --- monimelt lastgitcommit ' ;  git log --format=oneline --abbrev=12 --abbrev-commit -q  \
+#     | head -1 | tr -d '\n\r\f\"' ; echo ' ---' ) >> $tempdump
 
 echo 'BEGIN TRANSACTION;' >> $tempdump
 sqlite3 $dbfile  .schema >> $tempdump || exit 1
 
-echo '-- state-monimelt tables contents' >> $tempdump 
+echo '-- state-monimelt tables contents' >> $tempdump
+### IMPORTANT NOTICE: the list of tables should be kept in sync with
+### the mo_create_tables_for_dump function of file jstate.c
 sqlite3 $dbfile >> $tempdump <<EOF
 .mode insert t_params
   SELECT * FROM t_params ORDER BY par_name;
