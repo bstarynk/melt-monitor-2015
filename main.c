@@ -962,8 +962,11 @@ mom_print_info (void)
     char rbuf[MOM_CSTRIDLEN];
     memset (rbuf, 0, sizeof (rbuf));
     mo_cstring_from_hi_lo_ids (rbuf, hid, loid);
-    printf (" randomid: hid=%lx loid=%llx %s (of %d chars)\n",
-            (long) hid, (long long) loid, rbuf, (int) strlen (rbuf));
+    momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+    printf
+      (" randomid: hid=%lx loid=%llx %s (of %d chars and hash %9u=%#08x)\n",
+       (long) hid, (long long) loid, rbuf, (int) strlen (rbuf), (unsigned) h,
+       (unsigned) h);
     mo_hid_t revhid = 0;
     mo_loid_t revloid = 0;
     MOM_ASSERTPRINTF (mo_get_hi_lo_ids_from_cstring (&revhid, &revloid, rbuf)
@@ -1079,7 +1082,9 @@ do_add_predefined_mom (void)
         MOM_FATAPRINTF ("invalid predefined name %s", curname);
       const char *comm = added_predef_mom[ix].predef_comment;
 #warning do_add_predefined_mom unimplemented
-      MOM_FATAPRINTF ("do_add_predefined_mom unimplemented curname=%s comm=%s", curname, comm);
+      MOM_FATAPRINTF
+        ("do_add_predefined_mom unimplemented curname=%s comm=%s", curname,
+         comm);
       if (comm && comm[0])
         {
           MOM_INFORMPRINTF ("made predefined %s with comment %s",
@@ -1101,7 +1106,7 @@ main (int argc_main, char **argv_main)
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
-  if (!mom_prog_dlhandle)
+  if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
   mom_init_objects ();

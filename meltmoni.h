@@ -471,12 +471,14 @@ static inline unsigned mo_hi_id_bucketnum(mo_hid_t hid)
 }
 
 // converse operation, fill hid & loid from a valid buffer, or else return false
-extern bool
+extern bool // in object.c
 mo_get_hi_lo_ids_from_cstring(mo_hid_t* phid, mo_loid_t* ploid, const char*buf);
 
-extern void mo_get_some_random_hi_lo_ids (mo_hid_t* phid, mo_loid_t* ploid);
+extern void // in object.c
+mo_get_some_random_hi_lo_ids (mo_hid_t* phid, mo_loid_t* ploid);
 
-
+extern momhash_t // in object.c
+mo_hash_from_hi_lo_ids(mo_hid_t hid, mo_loid_t loid);
 /////
 ///// all values have some type & hash
 typedef struct mo_hashedvalue_st mo_hashedvalue_ty;

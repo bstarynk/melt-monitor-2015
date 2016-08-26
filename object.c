@@ -197,4 +197,21 @@ mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid)
   *ploid = loid;
 }                               /* end of mo_get_some_random_hi_lo_ids */
 
+momhash_t
+mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid)
+{
+  if (hid == 0 && loid == 0)
+    return 0;
+  MOM_ASSERTPRINTF (mo_hi_id_bucketnum (hid) > 0,
+                    "mo_hash_from_hi_lo_ids: bad hid %u", (unsigned) hid);
+  momhash_t h = 0;
+  h = (hid % 2500067) ^ ((momhash_t) (loid % 357313124579LL));
+  if (MOM_UNLIKELY (h < 128))
+    h = 17 + (hid % 1500043) + (momhash_t) (loid % 4500049);
+  MOM_ASSERTPRINTF (h > 10,
+                    "mo_hash_from_hi_lo_ids: bad hash from hid=%u loid=%llu",
+                    (unsigned) hid, (unsigned long long) loid);
+  return h;
+}                               /* end mo_hash_from_hi_lo_ids */
+
 // end of file object.c
