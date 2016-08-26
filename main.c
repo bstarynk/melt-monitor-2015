@@ -874,6 +874,9 @@ mom_cstring_hash_len (const char *str, int len)
     return 0;
   if (len < 0)
     len = strlen (str);
+  if (MOM_UNLIKELY (len > MOM_SIZE_MAX))
+    MOM_FATAPRINTF
+      ("too big (%d) string to compute hash, starting with %.60s", len, str);
   int l = len;
   momhash_t h1 = 0, h2 = len, h;
   while (l > 4)

@@ -398,6 +398,8 @@ typedef unsigned __int128 mom_uint128_t;
 bool mom_valid_name(const char*nam); // in object.c
 
 
+momhash_t // in main.c
+mom_cstring_hash_len (const char *str, int len);
 
 ////////////////////////////////////////////////////////////////
 
@@ -472,12 +474,54 @@ mo_get_hi_lo_ids_from_cstring(mo_hid_t* phid, mo_loid_t* ploid, const char*buf);
 
 extern void mo_get_some_random_hi_lo_ids (mo_hid_t* phid, mo_loid_t* ploid);
 
-struct mo_obpayload_t
+
+/////
+///// all values have some type & hash
+typedef struct mo_hashedvalue_st mo_hashedvalue_ty;
+struct mo_hashedvalue_st
 {
-  mo_object_ty* payl_kindobj;
-  void* payl_data;
+  uint16_t mo_va_kind;
+  uint16_t mo_va_index;
+  momhash_t mo_va_hash;
 };
 
+///// sized values have also size
+typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
+struct mo_sizedvalue_st
+{
+  struct mo_hashedvalue_st _mo;
+  uint32_t mo_sva_size;
+};
 
+///// string values
+typedef struct mo_stringvalue_st mo_stringvalue_ty;
+struct mo_stringvalue_st
+{
+  struct mo_sizedvalue_st _mo;
+  char mo_cstr[]; // allocated size is mo_sva_size+1
+};
+mo_value_t mo_make_string_len(const char*buf, int sz);
+static inline mo_value_t mo_make_string_cstr(const char*buf)
+{
+  return mo_make_string_len(buf, -1);
+};
+mo_value_t mo_make_string_sprintf(const char*fmt, ...)
+__attribute__((format(printf,1,2)));
+
+static inline mo_value_t mo_dyncast_string(mo_value_t vs)
+{
+  if (!mo_valid_pointer_value(vs))
+    return NULL;
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_STRINGK)
+    return NULL;
+  return vs;
+}
+
+static inline const char*mo_string_cstr(mo_value_t v)
+{
+  mo_value_t vstr = mo_dyncast_string(v);
+  if (!vstr) return NULL;
+  return ((mo_stringvalue_ty*)vstr)->mo_cstr;
+}
 
 #endif /*MONIMELT_INCLUDED_ */

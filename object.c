@@ -50,18 +50,6 @@ mom_init_objects (void)
   if (inited)
     return;
   inited = true;
-  {
-    _Atomic struct mo_obpayload_t fakepayload
-      __attribute__ ((aligned (2 * sizeof (void *))));
-    if (!atomic_is_lock_free (&fakepayload))
-      MOM_FATAPRINTF
-        ("struct mo_obpayload_t of size %zd is not atomic lock free",
-         sizeof (fakepayload));
-    if (!__atomic_always_lock_free (sizeof (struct mo_obpayload_t), NULL))
-      MOM_WARNPRINTF
-        ("struct mo_obpayload_t of size %zd is not always atomic lock free",
-         sizeof (fakepayload));
-  }
 }                               /* end mom_init_objects */
 
 // we choose base 60, because with a 0-9 decimal digit then 13 extended
