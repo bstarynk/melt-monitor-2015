@@ -408,12 +408,12 @@ mom_cstring_hash_len (const char *str, int len);
 
 enum mo_valkind_en
 {
-  mo_NONEK,
-  mo_INTK,
-  mo_STRINGK,
-  mo_TUPLEK,
-  mo_SETK,
-  mo_OBJECTK,
+  mo_KNONE,
+  mo_KINT,
+  mo_KSTRING,
+  mo_KTUPLE,
+  mo_KSET,
+  mo_KOBJECT,
 };
 
 typedef const void*mo_value_t;
@@ -518,7 +518,7 @@ static inline mo_value_t mo_dyncast_string(mo_value_t vs)
 {
   if (!mo_valid_pointer_value(vs))
     return NULL;
-  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_STRINGK)
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KSTRING)
     return NULL;
   return vs;
 }
@@ -559,8 +559,8 @@ static inline mo_value_t mo_dyncast_sequence(mo_value_t vs)
 {
   if (!mo_valid_pointer_value(vs))
     return NULL;
-  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_TUPLEK
-      && ((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_SETK)
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KTUPLE
+      && ((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KSET)
     return NULL;
   return vs;
 }
@@ -617,4 +617,14 @@ struct mo_objectvalue_st
   mo_objref_t mo_ob_paylkind;
   void* mo_ob_payload;
 };
+
+static inline mo_value_t mo_dyncast_object(mo_value_t vs)
+{
+  if (!mo_valid_pointer_value(vs))
+    return NULL;
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KOBJECT)
+    return NULL;
+  return vs;
+}
+
 #endif /*MONIMELT_INCLUDED_ */

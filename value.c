@@ -32,7 +32,7 @@ mo_make_string_len (const char *buf, int sz)
   momhash_t hs = mom_cstring_hash_len (buf, sz);
   mo_stringvalue_ty *vstr =
     mom_gc_alloc_scalar (sizeof (mo_stringvalue_ty) + sz + 1);
-  ((mo_hashedvalue_ty *) vstr)->mo_va_kind = mo_STRINGK;
+  ((mo_hashedvalue_ty *) vstr)->mo_va_kind = mo_KSTRING;
   ((mo_hashedvalue_ty *) vstr)->mo_va_index = 0;
   ((mo_hashedvalue_ty *) vstr)->mo_va_hash = hs;
   ((mo_sizedvalue_ty *) vstr)->mo_sva_size = sz;
