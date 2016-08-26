@@ -945,16 +945,26 @@ mom_print_info (void)
 #if __GLIBC__
   printf (" glibc: %s\n", gnu_get_libc_version ());
 #endif
-#define PRINT_SIZEOF(T)						\
-  printf("  sizeof(" #T ") = %d byt = %d wd\n",			\
-	 (int)sizeof(T),					\
-	 (int) ((sizeof(T)+sizeof(void*)-1)/sizeof(void*)))
+#define PRINT_SIZEOF(T)							\
+  printf("  sizeof(" #T ") = %d byt = %d wd, alignof(" #T ") = %d\n",	\
+	 (int)sizeof(T),						\
+	 (int) ((sizeof(T)+sizeof(void*)-1)/sizeof(void*)),		\
+	 (int)__alignof__(T))
   PRINT_SIZEOF (int);
   PRINT_SIZEOF (long);
   PRINT_SIZEOF (void *);
   PRINT_SIZEOF (pthread_mutex_t);
   PRINT_SIZEOF (pthread_rwlock_t);
   PRINT_SIZEOF (pthread_cond_t);
+  PRINT_SIZEOF (mo_hashedvalue_ty);
+  PRINT_SIZEOF (mo_sizedvalue_ty);
+  PRINT_SIZEOF (mo_stringvalue_ty);
+  PRINT_SIZEOF (mo_sequencevalue_ty);
+  PRINT_SIZEOF (mo_tuplevalue_ty);
+  PRINT_SIZEOF (mo_setvalue_ty);
+  PRINT_SIZEOF (mo_objectvalue_ty);
+  PRINT_SIZEOF (mom_int128_t);
+  PRINT_SIZEOF (FILE);
   {
     mo_hid_t hid = 0;
     mo_loid_t loid = 0;

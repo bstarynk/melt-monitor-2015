@@ -413,12 +413,12 @@ enum mo_valkind_en
   mo_STRINGK,
   mo_TUPLEK,
   mo_SETK,
-  mo_TRANSIENTK,    /* transient tuple */
   mo_OBJECTK,
 };
 
 typedef const void*mo_value_t;
 typedef struct mo_object_st mo_object_ty;
+typedef mo_object_ty* mo_objref_t;
 
 typedef intptr_t mo_int_t;
 
@@ -479,6 +479,8 @@ mo_get_some_random_hi_lo_ids (mo_hid_t* phid, mo_loid_t* ploid);
 
 extern momhash_t // in object.c
 mo_hash_from_hi_lo_ids(mo_hid_t hid, mo_loid_t loid);
+
+////////////////////////////////////////////////////////////////
 /////
 ///// all values have some type & hash
 typedef struct mo_hashedvalue_st mo_hashedvalue_ty;
@@ -528,4 +530,91 @@ static inline const char*mo_string_cstr(mo_value_t v)
   return ((mo_stringvalue_ty*)vstr)->mo_cstr;
 }
 
+/******************** SEQUENCEs ****************/
+/// They are tuples or sets of (non-nil) objrefs; we might need to add
+/// transient sequences later
+
+#define MOM_UNFILLEDFAKESEQKIND 9990
+typedef struct mo_sequencevalue_st mo_sequencevalue_ty;
+struct mo_sequencevalue_st
+{
+  struct mo_sizedvalue_st _mo;
+  mo_objref_t mo_seqobj[];
+};
+
+/// allocate a sequence which is not a valid object till it is
+/// properly filled
+static inline mo_sequencevalue_ty* mo_sequence_allocate(unsigned sz)
+{
+  if (MOM_UNLIKELY(sz > MOM_SIZE_MAX))
+    MOM_FATAPRINTF("too big size %u for sequence", sz);
+  mo_sequencevalue_ty* seq = mom_gc_alloc(sizeof(mo_sequencevalue_ty)+sz*sizeof(mo_objref_t));
+  // we temporarily put a fake kind
+  ((mo_hashedvalue_ty*)seq)->mo_va_kind =  MOM_UNFILLEDFAKESEQKIND;
+  ((mo_sizedvalue_ty*)seq)->mo_sva_size = sz;
+  return seq;
+}
+
+static inline mo_value_t mo_dyncast_sequence(mo_value_t vs)
+{
+  if (!mo_valid_pointer_value(vs))
+    return NULL;
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_TUPLEK
+      && ((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_SETK)
+    return NULL;
+  return vs;
+}
+
+// put inside a sequence something during the fill
+static inline void mo_sequence_put(mo_sequencevalue_ty*seq, unsigned ix, mo_objref_t oref)
+{
+  MOM_ASSERTPRINTF(seq != NULL, "mo_sequence_put: null sequence");
+  MOM_ASSERTPRINTF(((mo_hashedvalue_ty*)seq)->mo_va_kind == MOM_UNFILLEDFAKESEQKIND,
+                   "mo_sequence_put: non-fake sequence");
+  MOM_ASSERTPRINTF(ix < ((mo_sizedvalue_ty*)seq)->mo_sva_size,
+                   "mo_sequence_put: too big index %u (size %u)",
+                   ix, ((mo_sizedvalue_ty*)seq)->mo_sva_size);
+  seq->mo_seqobj[ix] = oref;
+}
+
+/////// tuples
+typedef struct mo_tuplevalue_st mo_tuplevalue_ty;
+struct mo_tuplevalue_st
+{
+  struct mo_sequencevalue_st _mo;
+};
+/*** creating a tuple with statement expr
+  {( mo_sequencevalue_ty* _sq = mo_sequence_allocate(3);
+     mo_sequence_put(_sq, 0, ob0); // or sq->mo_seqobj[0] = ob0;
+     mo_sequence_put(_sq, 1, ob1);
+     mo_sequence_put(_sq, 2, ob2);
+     mo_make_tuple_closeq(sq);
+   )}
+ ***/
+
+mo_value_t mo_make_tuple_closeq(mo_sequencevalue_ty*seq);
+
+
+////// sets
+typedef struct mo_setvalue_st mo_setvalue_ty;
+struct mo_setvalue_st
+{
+  struct mo_sequencevalue_st _mo;
+};
+
+
+/******************** OBJECTs ****************/
+typedef struct mo_objectvalue_st mo_objectvalue_ty;
+struct mo_objectvalue_st
+{
+  struct mo_hashedvalue_st _mo;
+  pthread_mutex_t mo_ob_mtx;
+  mo_hid_t mo_ob_hid;
+  mo_loid_t mo_ob_loid;
+  mo_objref_t  mo_ob_class;
+  void *_mo_ob__PLACEHOLDER_ATTRIBUTES;
+  void *_mo_ob__PLACEHOLDER_COMPONENTS;
+  mo_objref_t mo_ob_paylkind;
+  void* mo_ob_payload;
+};
 #endif /*MONIMELT_INCLUDED_ */

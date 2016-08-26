@@ -59,3 +59,25 @@ mo_make_string_sprintf (const char *fmt, ...)
   free (mbuf);
   return vres;
 }                               // end mo_make_string_sprintf
+
+
+mo_value_t
+mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
+{
+  MOM_ASSERTPRINTF (seq != NULL && seq != MOM_EMPTY_SLOT,
+                    "mo_make_tuple_closeq invalid seq @%p", seq);
+  MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) seq)->mo_va_kind ==
+                    MOM_UNFILLEDFAKESEQKIND
+                    || ((mo_hashedvalue_ty *) seq)->mo_va_kind == 0,
+                    "mo_make_tuple_closeq: seq of strange kind %u",
+                    (unsigned) (((mo_hashedvalue_ty *) seq)->mo_va_kind));
+  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  MOM_ASSERTPRINTF (sz < MOM_SIZE_MAX,
+                    "mo_make_tuple_closeq: seq of huge size %u", sz);
+  momhash_t h = 5003;
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+    }
+}
+
+/* end of value */
