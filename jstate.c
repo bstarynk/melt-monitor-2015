@@ -42,6 +42,7 @@ struct mo_loader_st
 struct mo_dumper_st
 {
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
+  sqlite3 *mo_du_db;
 };
 
 
@@ -55,3 +56,25 @@ void
 mom_dump_state (void)
 {
 }                               /* end mom_dump_state */
+
+void
+mo_create_tables_for_dump (mo_dumper_ty * du)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC,
+                    "invalid dumper");
+  MOM_ASSERTPRINTF (du->mo_du_db, "bad database");
+  // keep these table names in CREATE TABLE Sqlite statements in sync
+  // with monimelt-dump-state.sh script
+  char *errmsg = NULL;
+  if (sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_params"
+                    " (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  par_value TEXT NOT NULL)", NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to create t_params Sqlite table: %s", errmsg);
+  if (sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_objects"
+                    " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  ob_mtime DATETIME,"
+                    "  ob_jsoncont TEXT NOT NULL)", NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
+}
