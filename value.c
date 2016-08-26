@@ -74,10 +74,48 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
   unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
   MOM_ASSERTPRINTF (sz < MOM_SIZE_MAX,
                     "mo_make_tuple_closeq: seq of huge size %u", sz);
-  momhash_t h = 5003;
+  momhash_t h1 = 5003, h2 = 600073;
   for (unsigned ix = 0; ix < sz; ix++)
     {
+      mo_objref_t curobjr =
+        (mo_objref_t) mo_dyncast_object (seq->mo_seqobj[ix]);
+      if (MOM_UNLIKELY (curobjr == NULL))
+        {
+          unsigned goodcnt = ix;
+          for (unsigned restx = ix + 1; restx < sz; restx++)
+            {
+              mo_objref_t robr =
+                (mo_objref_t) mo_dyncast_object (seq->mo_seqobj[restx]);
+              if (robr == NULL)
+                continue;
+              seq->mo_seqobj[goodcnt++] = robr;
+            }
+          memset (seq->mo_seqobj + goodcnt, 0,
+                  (sz - goodcnt) * sizeof (mo_objref_t));
+          mo_sequencevalue_ty *newseq = mo_sequence_allocate (goodcnt);
+          memcpy (newseq->mo_seqobj, seq->mo_seqobj,
+                  goodcnt * sizeof (mo_objref_t));
+          return mo_make_tuple_closeq (newseq);
+        };
+      momhash_t curh = ((mo_hashedvalue_ty *) curobjr)->mo_va_hash;
+      MOM_ASSERTPRINTF (curh != 0,
+                        "mo_make_tuple_closeq: zero-hashed obj@%p", curobjr);
+      if (ix % 2 != 0)
+        {
+          h1 = (h1 * 15017 + curh) ^ (h2 % 2600057 + ix);
+          h2 = (h2 * 3539 + 3 * ix) ^ (13 * curh);
+        }
+      else
+        {
+          h1 = (h1 % 32600081 + 11 * ix) ^ (3 * curh + 17 * h2);
+          h2 = (11 * h2) ^ curh;
+        }
     }
+  momhash_t h = h1 ^ h2;
+  if (MOM_UNLIKELY (h < 10))
+    h = 11 * (h1 & 0xffff) + 31 * (h2 & 0xffff) + 2;
+  ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
+  return seq;
 }
 
-/* end of value */
+/* end of value.c */
