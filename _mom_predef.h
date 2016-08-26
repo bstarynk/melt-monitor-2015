@@ -1,4 +1,4 @@
-/// *** generated file _mom_predef.h - DO NOT EDIT 
+/// *** not yet generated file _mom_predef.h - DO NOT EDIT
 /// Copyright (C) 2015 - 2016 Free Software Foundation, Inc. 
 /// MONIMELT is a monitor for MELT - see http://gcc-melt.org/ 
 /// This generated file _mom_predef.h is part of MONIMELT, part of GCC 
@@ -29,4 +29,4 @@ MOM_HAS_PREDEFINED(comment,_0uV4mZ4aM2zJdiXGE,2138404002)
 
 
 #undef MOM_HAS_PREDEFINED
-// eof generated _mom_predef.h
+// eof not yet generated _mom_predef.h

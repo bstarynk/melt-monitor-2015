@@ -17,7 +17,6 @@
  --  along with GCC; see the file COPYING3.   If not see
  --  <http://www.gnu.org/licenses/>.
 
- --- monimelt lastgitcommit a0613e2ce3b5 adding pre-commit-githook.sh & an empty _momstate.sql ---
 BEGIN TRANSACTION;
 CREATE TABLE t_params (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE, par_value TEXT NOT NULL);
 CREATE TABLE t_objects (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,
