@@ -417,8 +417,8 @@ enum mo_valkind_en
 };
 
 typedef const void*mo_value_t;
-typedef struct mo_object_st mo_object_ty;
-typedef mo_object_ty* mo_objref_t;
+typedef struct mo_objectvalue_st mo_objectvalue_ty;
+typedef mo_objectvalue_ty* mo_objref_t;
 
 typedef intptr_t mo_int_t;
 
@@ -577,7 +577,7 @@ static inline void mo_sequence_put(mo_sequencevalue_ty*seq, unsigned ix, mo_objr
   seq->mo_seqobj[ix] = oref;
 }
 
-/////// tuples
+/////// tuples of objrefs
 typedef struct mo_tuplevalue_st mo_tuplevalue_ty;
 struct mo_tuplevalue_st
 {
@@ -595,7 +595,7 @@ struct mo_tuplevalue_st
 mo_value_t mo_make_tuple_closeq(mo_sequencevalue_ty*seq);
 
 
-////// sets
+////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
 struct mo_setvalue_st
 {
@@ -603,12 +603,24 @@ struct mo_setvalue_st
 };
 
 
+/*** creating a set with statement expr
+  {( mo_sequencevalue_ty* _sq = mo_sequence_allocate(3);
+     mo_sequence_put(_sq, 0, ob0); // or sq->mo_seqobj[0] = ob0;
+     mo_sequence_put(_sq, 1, ob1);
+     mo_sequence_put(_sq, 2, ob2);
+     mo_make_set_closeq(sq);
+   )}
+ ***/
+
+mo_value_t mo_make_set_closeq(mo_sequencevalue_ty*seq);
+
 /******************** OBJECTs ****************/
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
 {
   struct mo_hashedvalue_st _mo;
   pthread_mutex_t mo_ob_mtx;
+  uint32_t mo_nameix;
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
@@ -626,5 +638,28 @@ static inline mo_value_t mo_dyncast_object(mo_value_t vs)
     return NULL;
   return vs;
 }
+
+static inline mo_objref_t mo_dyncast_objref(mo_value_t v)
+{
+  return (mo_objref_t) mo_dyncast_object(v);
+}
+
+static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
+{
+  obl = mo_dyncast_objref(obl);
+  obr = mo_dyncast_objref(obr);
+  if (obl == obr) return 0;
+  if (MOM_UNLIKELY(obl == NULL)) return -1;
+  if (MOM_UNLIKELY(obr == NULL)) return 1;
+  if (obl->mo_ob_hid < obr->mo_ob_hid) return -1;
+  if (obl->mo_ob_hid > obr->mo_ob_hid) return 1;
+  if (obl->mo_ob_loid < obr->mo_ob_loid) return -1;
+  if (obl->mo_ob_loid > obr->mo_ob_loid) return 1;
+  MOM_FATAPRINTF("corrupted distinct objects @%p & @%p with same ids",
+                 obl, obr);
+}
+
+int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c
+
 
 #endif /*MONIMELT_INCLUDED_ */

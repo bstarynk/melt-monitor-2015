@@ -214,4 +214,12 @@ mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid)
   return h;
 }                               /* end mo_hash_from_hi_lo_ids */
 
+int
+mom_objref_cmp (const void *pl, const void *pr)
+{
+  MOM_ASSERTPRINTF (pl != NULL && pl != MOM_EMPTY_SLOT, "bad pl=%p", pl);
+  MOM_ASSERTPRINTF (pr != NULL && pr != MOM_EMPTY_SLOT, "bad pr=%p", pr);
+  return mo_objref_cmp (*(mo_objref_t *) pl, *(mo_objref_t *) pr);
+}
+
 // end of file object.c

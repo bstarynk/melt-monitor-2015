@@ -118,4 +118,49 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
   return seq;
 }
 
+mo_value_t
+mo_make_set_closeq (mo_sequencevalue_ty * seq)
+{
+  MOM_ASSERTPRINTF (seq != NULL && seq != MOM_EMPTY_SLOT,
+                    "mo_make_set_closeq invalid seq @%p", seq);
+  MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) seq)->mo_va_kind ==
+                    MOM_UNFILLEDFAKESEQKIND
+                    || ((mo_hashedvalue_ty *) seq)->mo_va_kind == 0,
+                    "mo_make_set_closeq: seq of strange kind %u",
+                    (unsigned) (((mo_hashedvalue_ty *) seq)->mo_va_kind));
+  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  if (MOM_LIKELY (sz > 1))
+    qsort (seq->mo_seqobj, sz, sizeof (mo_objref_t), mom_objref_cmp);
+  if (sz > 0 && MOM_UNLIKELY (mo_dyncast_object (seq->mo_seqobj[0]) == NULL))
+    {
+      int zix = 0;
+      while (zix < (int) sz
+             && mo_dyncast_object (seq->mo_seqobj[zix]) == NULL)
+        zix++;
+      MOM_ASSERTPRINTF (zix <= (int) sz
+                        && zix > 0, "bad zix=%u sz=%u", zix, sz);
+      mo_sequencevalue_ty *newseq = mo_sequence_allocate (sz - zix);
+      memcpy (newseq->mo_seqobj,
+              seq->mo_seqobj + zix, (sz - zix) * sizeof (mo_objref_t));
+      return mo_make_set_closeq (newseq);
+    };
+  momhash_t h1 = 1039, h2 = 25153;
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t curobjr =
+        (mo_objref_t) mo_dyncast_object (seq->mo_seqobj[ix]);
+      MOM_ASSERTPRINTF (curobjr != NULL, "corrupted set ix=%u", ix);
+      MOM_ASSERTPRINTF (ix == 0
+                        || mo_objref_cmp (seq->mo_seqobj[ix - 1],
+                                          curobjr) <= 0,
+                        "missorted set ix=%u", ix);
+      if (MOM_UNLIKELY (ix + 1 < sz && seq->mo_seqobj[ix + 1] == curobjr))
+        {
+          // handle the case when several elements are the same
+#warning incomplete mo_make_set_closeq
+        }
+    }
+  MOM_FATAPRINTF ("incomplete mo_make_set_closeq");
+}
+
 /* end of value.c */
