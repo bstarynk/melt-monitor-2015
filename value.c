@@ -244,6 +244,49 @@ mo_make_set_closeq (mo_sequencevalue_ty * seq)
 }
 
 mo_value_t
+mo_make_set_closortedseq (mo_sequencevalue_ty * seq)
+{
+  MOM_ASSERTPRINTF (seq != NULL && seq != MOM_EMPTY_SLOT,
+                    "mo_make_set_closortedseq invalid seq @%p", seq);
+  MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) seq)->mo_va_kind ==
+                    MOM_UNFILLEDFAKESEQKIND
+                    || ((mo_hashedvalue_ty *) seq)->mo_va_kind == 0,
+                    "mo_make_set_closortedseq: seq of strange kind %u",
+                    (unsigned) (((mo_hashedvalue_ty *) seq)->mo_va_kind));
+  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  if (MOM_UNLIKELY (sz == 0))
+    return &mo_empty_set;
+  momhash_t h1 = MOM_SET_H1_INIT, h2 = MOM_SET_H2_INIT;
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t curobr = seq->mo_seqobj[ix];
+      momhash_t curh = ((mo_hashedvalue_ty *) curobr)->mo_va_hash;
+      MOM_ASSERTPRINTF (curh != 0,
+                        "mo_make_set_closortedseq: zero-hashed obj@%p",
+                        curobr);
+      MOM_ASSERTPRINTF (ix == 0
+                        || mo_objref_cmp (seq->mo_seqobj[ix - 1], curobr) < 0,
+                        "mo_make_set_closortedseq: unsorted ix=%u", ix);
+      if (ix % 2 == 0)
+        {
+          h1 = (h1 * 503 + curh * 17) ^ (h2 * 7 + ix);
+          h2 = h2 * 2503 - curh * 31 + (ix * (1 + (curh & 0xf)));
+        }
+      else
+        {
+          h1 = (curh * 157 + ix - 3 * h1) ^ (11 * h2);
+          h2 = (h2 * 163 + curh) ^ (ix + (h2 & 0x1f));
+        }
+    }
+  momhash_t h = h1 ^ h2;
+  if (MOM_UNLIKELY (h < 5))
+    h = 11 * (h1 & 0xffff) + 17 * (h2 & 0xffff) + (sz & 0xff) + 1;
+  ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
+  ((mo_hashedvalue_ty *) seq)->mo_va_kind = mo_KSET;
+  return (mo_value_t) seq;
+}
+
+mo_value_t
 mom_make_set_sized (unsigned siz, /*objref-s */ ...)
 {
   mo_sequencevalue_ty *seq = mo_sequence_allocate (siz);
@@ -275,5 +318,187 @@ mom_make_sentinel_set_ (mo_objref_t ob1, ...)
   va_end (args);
   return mo_make_set_closeq (seq);
 }                               /* end of mom_make_sentinel_set_ */
+
+mo_value_t
+mo_set_union (mo_value_t vset1, mo_value_t vset2)
+{
+  unsigned card1 = 0, card2 = 0;
+  const mo_setvalue_ty *set1 = mo_dyncast_set (vset1);
+  const mo_setvalue_ty *set2 = mo_dyncast_set (vset2);
+  if (set1)
+    card1 = ((mo_sizedvalue_ty *) set1)->mo_sva_size;
+  if (set2)
+    card2 = ((mo_sizedvalue_ty *) set2)->mo_sva_size;
+  if (MOM_UNLIKELY (card1 == 0 && card2 == 0))
+    return &mo_empty_set;
+  if (!card1)
+    return set2;
+  if (!card2)
+    return set1;
+  if (card1 > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big set1@%p of size %u", set1, card1);
+  if (card2 > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("too big set2@%p of size %u", set2, card2);
+  unsigned siz = card1 + card2 + 1;
+  mo_objref_t *arr = mom_gc_alloc (siz * sizeof (mo_objref_t));
+  unsigned i1 = 0, i2 = 0;
+  unsigned nbun = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      mo_objref_t ob1 = ((mo_sequencevalue_ty *) set1)->mo_seqobj[i1];
+      mo_objref_t ob2 = ((mo_sequencevalue_ty *) set2)->mo_seqobj[i2];
+      MOM_ASSERTPRINTF (ob1
+                        && ((mo_hashedvalue_ty *) ob1)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob1@%p", ob1);
+      MOM_ASSERTPRINTF (ob2
+                        && ((mo_hashedvalue_ty *) ob2)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob2@%p", ob2);
+      MOM_ASSERTPRINTF (nbun < siz, "nbun=%u siz=%u", nbun, siz);
+      int cmp = mom_objref_cmp (ob1, ob2);
+      if (cmp < 0)
+        {
+          arr[nbun++] = ob1;
+          i1++;
+        }
+      else if (cmp > 0)
+        {
+          arr[nbun++] = ob2;
+          i2++;
+        }
+      else
+        {
+          MOM_ASSERTPRINTF (ob1 == ob2, "not same ob1@%p ob2@%p", ob1, ob2);
+          arr[nbun++] = ob1;
+          i1++, i2++;
+        }
+    }
+  if (i1 < card1)
+    for (unsigned ix = i1; ix < card1; ix++)
+      {
+        mo_objref_t ob1 = ((mo_sequencevalue_ty *) set1)->mo_seqobj[ix];
+        MOM_ASSERTPRINTF (ob1
+                          && ((mo_hashedvalue_ty *) ob1)->mo_va_kind ==
+                          mo_KOBJECT, "bad ob1@%p", ob1);
+        arr[nbun++] = ob1;
+      }
+  else if (i2 < card2)
+    for (unsigned ix = i2; ix < card2; ix++)
+      {
+        mo_objref_t ob2 = ((mo_sequencevalue_ty *) set2)->mo_seqobj[ix];
+        MOM_ASSERTPRINTF (ob2
+                          && ((mo_hashedvalue_ty *) ob2)->mo_va_kind ==
+                          mo_KOBJECT, "bad ob2@%p", ob2);
+        arr[nbun++] = ob2;
+      }
+  return mo_make_set_closortedseq (mo_sequence_filled_allocate (nbun, arr));
+}                               /* end of mo_set_union */
+
+
+
+mo_value_t
+mo_set_intersection (mo_value_t vset1, mo_value_t vset2)
+{
+  unsigned card1 = 0, card2 = 0;
+  const mo_setvalue_ty *set1 = mo_dyncast_set (vset1);
+  const mo_setvalue_ty *set2 = mo_dyncast_set (vset2);
+  if (set1)
+    card1 = ((mo_sizedvalue_ty *) set1)->mo_sva_size;
+  if (set2)
+    card2 = ((mo_sizedvalue_ty *) set2)->mo_sva_size;
+  if (MOM_UNLIKELY (card1 == 0 || card2 == 0))
+    return &mo_empty_set;
+  unsigned siz = ((card1 < card2) ? card1 : card2) + 1;
+  mo_objref_t *arr = mom_gc_alloc (siz * sizeof (mo_objref_t));
+  unsigned i1 = 0, i2 = 0, nbin = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      mo_objref_t ob1 = ((mo_sequencevalue_ty *) set1)->mo_seqobj[i1];
+      mo_objref_t ob2 = ((mo_sequencevalue_ty *) set2)->mo_seqobj[i2];
+      MOM_ASSERTPRINTF (ob1
+                        && ((mo_hashedvalue_ty *) ob1)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob1@%p", ob1);
+      MOM_ASSERTPRINTF (ob2
+                        && ((mo_hashedvalue_ty *) ob2)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob2@%p", ob2);
+      MOM_ASSERTPRINTF (nbin < siz, "nbin=%u siz=%u", nbin, siz);
+      assert (nbin < siz);
+      if (ob1 == ob2)
+        goto same;
+      int cmp = mom_objref_cmp (ob1, ob2);
+      if (cmp < 0)
+        i1++;
+      else if (cmp > 0)
+        i2++;
+      else
+      same:
+        {
+          MOM_ASSERTPRINTF (ob1 == ob2, "not same ob1@%p ob2@%p", ob1, ob2);
+          arr[nbin++] = ob1;
+          i1++, i2++;
+        }
+    }
+  return mo_make_set_closortedseq (mo_sequence_filled_allocate (nbin, arr));
+}                               /* end of mo_set_intersection */
+
+
+mo_value_t
+mo_set_difference (mo_value_t vset1, mo_value_t vset2)
+{
+  unsigned card1 = 0, card2 = 0;
+  const mo_setvalue_ty *set1 = mo_dyncast_set (vset1);
+  const mo_setvalue_ty *set2 = mo_dyncast_set (vset2);
+  if (set1)
+    card1 = ((mo_sizedvalue_ty *) set1)->mo_sva_size;
+  if (set2)
+    card2 = ((mo_sizedvalue_ty *) set2)->mo_sva_size;
+  if (card1 == 0 || set1 == set2)
+    return &mo_empty_set;
+  if (card2 == 0)
+    return set1;
+  unsigned siz = card1 + 1;
+  mo_objref_t *arr = mom_gc_alloc (sizeof (mo_objref_t) * siz);
+  unsigned i1 = 0, i2 = 0, nbdi = 0;
+  while (i1 < card1 && i2 < card2)
+    {
+      mo_objref_t ob1 = ((mo_sequencevalue_ty *) set1)->mo_seqobj[i1];
+      mo_objref_t ob2 = ((mo_sequencevalue_ty *) set2)->mo_seqobj[i2];
+      MOM_ASSERTPRINTF (ob1
+                        && ((mo_hashedvalue_ty *) ob1)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob1@%p", ob1);
+      MOM_ASSERTPRINTF (ob2
+                        && ((mo_hashedvalue_ty *) ob2)->mo_va_kind ==
+                        mo_KOBJECT, "bad ob2@%p", ob2);
+      assert (nbdi < siz);
+      if (ob1 == ob2)
+        goto same;
+      int cmp = mom_objref_cmp (ob1, ob2);
+      if (cmp < 0)
+        {
+          i1++;
+          arr[nbdi++] = ob1;
+        }
+      else if (cmp > 0)
+        i2++;
+      else
+      same:
+        {
+          MOM_ASSERTPRINTF (ob1 == ob2, "not same ob1@%p ob2@%p", ob1, ob2);
+          i1++, i2++;
+        }
+    }
+  if (i1 < card1)
+    {
+      for (; i1 < card1; i1++)
+        {
+          mo_objref_t ob1 = ((mo_sequencevalue_ty *) set1)->mo_seqobj[i1];
+          MOM_ASSERTPRINTF (ob1
+                            && ((mo_hashedvalue_ty *) ob1)->mo_va_kind ==
+                            mo_KOBJECT, "bad ob1@%p", ob1);
+          assert (nbdi < siz);
+          arr[nbdi++] = ob1;
+        };
+    }
+  return mo_make_set_closortedseq (mo_sequence_filled_allocate (nbdi, arr));
+}                               /* end of mo_set_difference */
 
 /* end of value.c */

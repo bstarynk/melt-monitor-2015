@@ -420,8 +420,17 @@ enum mo_valkind_en
 #define MOM_FIRST_BOXED_KIND mo_KSTRING
 #define MOM_LAST_KIND mo_KOBJECT
 
+enum mo_payloadkind_en
+{
+  mo_PNONE,
+  mo_PASSOVALDATA,
+  mo_PVECTVALDATA,
+};
+
 typedef const void*mo_value_t;
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
+typedef struct mo_assovaldatapayl_st mo_assovalvadapayl_ty;
+typedef struct mo_vectvaldatapayl_st mo_vectvalvadapayl_ty;
 typedef mo_objectvalue_ty* mo_objref_t;
 
 typedef intptr_t mo_int_t;
@@ -637,6 +646,15 @@ mo_value_t mom_make_tuple_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_tuple_(mo_objref_t ob1, ...) __attribute__((sentinel));
 #define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(##__VA_ARGS__,NULL)
 
+static inline mo_value_t mo_dyncast_tuple(mo_value_t vs)
+{
+  if (!mo_valid_pointer_value(vs))
+    return NULL;
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KTUPLE)
+    return NULL;
+  return vs;
+}
+
 ////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
 struct mo_setvalue_st
@@ -655,12 +673,24 @@ struct mo_setvalue_st
  ***/
 
 mo_value_t mo_make_set_closeq(mo_sequencevalue_ty*seq);
-
+mo_value_t mo_make_set_closortedseq(mo_sequencevalue_ty*seq);
 // convenience variadic functions to make a set
 mo_value_t mom_make_set_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_set_(mo_objref_t ob1, ...) __attribute__((sentinel));
 #define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(##__VA_ARGS__,NULL)
 
+static inline mo_value_t mo_dyncast_set(mo_value_t vs)
+{
+  if (!mo_valid_pointer_value(vs))
+    return NULL;
+  if (((mo_hashedvalue_ty*)vs)->mo_va_kind != mo_KSET)
+    return NULL;
+  return vs;
+}
+
+mo_value_t mo_set_union (mo_value_t vset1, mo_value_t vset2);
+mo_value_t mo_set_intersection (mo_value_t vset1, mo_value_t vset2);
+mo_value_t mo_set_difference (mo_value_t vset1, mo_value_t vset2);
 /******************** OBJECTs ****************/
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
@@ -668,11 +698,12 @@ struct mo_objectvalue_st
   struct mo_hashedvalue_st _mo;
   pthread_mutex_t mo_ob_mtx;
   uint32_t mo_nameix;
+  clock_t mo_mtime;
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
-  void *_mo_ob__PLACEHOLDER_ATTRIBUTES;
-  void *_mo_ob__PLACEHOLDER_COMPONENTS;
+  mo_assovalvadapayl_ty *_mo_ob_attrs;
+  mo_vectvalvadapayl_ty *_mo_ob_comps;
   mo_objref_t mo_ob_paylkind;
   void* mo_ob_payload;
 };
@@ -708,6 +739,8 @@ static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
                  obl, obr,
                  (unsigned)obl->mo_ob_hid, (unsigned long long)obl->mo_ob_loid);
 }
+
+int mo_value_cmp(mo_value_t vl, mo_value_t vr);
 
 int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c
 

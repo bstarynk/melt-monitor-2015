@@ -21,7 +21,8 @@ BEGIN TRANSACTION;
 CREATE TABLE t_params (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE, par_value TEXT NOT NULL);
 CREATE TABLE t_objects (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,
        	     	        ob_mtime DATETIME,
-			ob_jsoncont TEXT NOT NULL);
+			ob_classid  VARCHAR(20) NOT NULL,
+			ob_cont TEXT NOT NULL);
 -- state-monimelt tables contents
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016A');
 COMMIT;
