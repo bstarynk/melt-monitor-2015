@@ -607,6 +607,10 @@ struct mo_tuplevalue_st
 
 mo_value_t mo_make_tuple_closeq(mo_sequencevalue_ty*seq);
 
+// convenience variadic functions to make a tuple
+mo_value_t mom_make_tuple_sized(unsigned siz, /*objref-s*/ ...);
+mo_value_t mom_make_sentinel_tuple_(mo_objref_t ob1, ...) __attribute__((sentinel));
+#define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(__VA_ARGS__,NULL)
 
 ////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
@@ -626,6 +630,11 @@ struct mo_setvalue_st
  ***/
 
 mo_value_t mo_make_set_closeq(mo_sequencevalue_ty*seq);
+
+// convenience variadic functions to make a set
+mo_value_t mom_make_set_sized(unsigned siz, /*objref-s*/ ...);
+mo_value_t mom_make_sentinel_set_(mo_objref_t ob1, ...) __attribute__((sentinel));
+#define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(__VA_ARGS__,NULL)
 
 /******************** OBJECTs ****************/
 typedef struct mo_objectvalue_st mo_objectvalue_ty;

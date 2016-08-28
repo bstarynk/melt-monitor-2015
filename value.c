@@ -61,6 +61,16 @@ mo_make_string_sprintf (const char *fmt, ...)
 }                               // end mo_make_string_sprintf
 
 
+#define MOM_TUPLE_H1_INIT 5003
+#define MOM_TUPLE_H2_INIT 600073
+static_assert ((MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT) != 0,
+               "wrong MOM_TUPLE_H1_INIT & MOM_TUPLE_H2_INIT");
+static const mo_sequencevalue_ty mo_empty_tuple = {
+  ._mo = {._mo = {.mo_va_kind = mo_KTUPLE,
+                  .mo_va_index = 0,
+                  .mo_va_hash = (MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT)}}
+};
+
 mo_value_t
 mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
 {
@@ -74,7 +84,9 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
   unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
   MOM_ASSERTPRINTF (sz < MOM_SIZE_MAX,
                     "mo_make_tuple_closeq: seq of huge size %u", sz);
-  momhash_t h1 = 5003, h2 = 600073;
+  if (MOM_UNLIKELY (sz == 0))
+    return &mo_empty_tuple;
+  momhash_t h1 = MOM_TUPLE_H1_INIT, h2 = MOM_TUPLE_H2_INIT;
   for (unsigned ix = 0; ix < sz; ix++)
     {
       mo_objref_t curobjr =
@@ -117,7 +129,56 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
   ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
   ((mo_hashedvalue_ty *) seq)->mo_va_kind = mo_KTUPLE;
   return seq;
-}
+}                               /* end mo_make_tuple_closeq */
+
+
+
+mo_value_t
+mom_make_tuple_sized (unsigned siz, /*objref-s */ ...)
+{
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (siz);
+  va_list args;
+  va_start (args, siz);
+  for (unsigned ix = 0; ix < siz; ix++)
+    seq->mo_seqobj[ix] = va_arg (args, mo_objref_t);
+  va_end (args);
+  return mo_make_tuple_closeq (seq);
+}                               /* end of mom_make_tuple_sized */
+
+
+mo_value_t
+mom_make_sentinel_tuple_ (mo_objref_t ob1, ...)
+{
+  va_list args;
+  unsigned cnt = 0;
+  va_start (args, ob1);
+  while (ob1 != NULL)
+    {
+      cnt++;
+      ob1 = va_arg (args, mo_objref_t);
+    }
+  va_end (args);
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (cnt);
+  va_start (args, ob1);
+  for (unsigned ix = 0; ix < cnt; ix++)
+    seq->mo_seqobj[ix] = va_arg (args, mo_objref_t);
+  va_end (args);
+  return mo_make_tuple_closeq (seq);
+}                               /* end of mom_make_sentinel_tuple_ */
+
+
+
+////////////////////////////////////////////////////////////////
+#define MOM_SET_H1_INIT 123077
+#define MOM_SET_H2_INIT 50236073
+static_assert ((MOM_SET_H1_INIT ^ MOM_SET_H2_INIT) != 0,
+               "wrong MOM_SET_H1_INIT & MOM_SET_H2_INIT");
+static const mo_sequencevalue_ty mo_empty_set = {
+  ._mo = {._mo = {.mo_va_kind = mo_KSET,
+                  .mo_va_index = 0,
+                  .mo_va_hash = (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT)}}
+};
+
 
 mo_value_t
 mo_make_set_closeq (mo_sequencevalue_ty * seq)
@@ -154,7 +215,9 @@ mo_make_set_closeq (mo_sequencevalue_ty * seq)
       seq = newseq;
       sz = ucnt;
     };
-  momhash_t h1 = 123077, h2 = 50236073;
+  if (MOM_UNLIKELY (sz == 0))
+    return &mo_empty_set;
+  momhash_t h1 = MOM_SET_H1_INIT, h2 = MOM_SET_H2_INIT;
   for (unsigned ix = 0; ix < sz; ix++)
     {
       mo_objref_t curobr = seq->mo_seqobj[ix];
@@ -172,12 +235,45 @@ mo_make_set_closeq (mo_sequencevalue_ty * seq)
           h2 = (h2 * 163 + curh) ^ (ix + (h2 & 0x1f));
         }
     }
-  momhash_t h = (3 * h1) + (31 * h2);
+  momhash_t h = h1 ^ h2;
   if (MOM_UNLIKELY (h < 5))
     h = 11 * (h1 & 0xffff) + 17 * (h2 & 0xffff) + (sz & 0xff) + 1;
   ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
   ((mo_hashedvalue_ty *) seq)->mo_va_kind = mo_KSET;
   return (mo_value_t) seq;
 }
+
+mo_value_t
+mom_make_set_sized (unsigned siz, /*objref-s */ ...)
+{
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (siz);
+  va_list args;
+  va_start (args, siz);
+  for (unsigned ix = 0; ix < siz; ix++)
+    seq->mo_seqobj[ix] = va_arg (args, mo_objref_t);
+  va_end (args);
+  return mo_make_set_closeq (seq);
+}                               /* end of mom_make_set_sized */
+
+
+mo_value_t
+mom_make_sentinel_set_ (mo_objref_t ob1, ...)
+{
+  va_list args;
+  unsigned cnt = 0;
+  va_start (args, ob1);
+  while (ob1 != NULL)
+    {
+      cnt++;
+      ob1 = va_arg (args, mo_objref_t);
+    }
+  va_end (args);
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (cnt);
+  va_start (args, ob1);
+  for (unsigned ix = 0; ix < cnt; ix++)
+    seq->mo_seqobj[ix] = va_arg (args, mo_objref_t);
+  va_end (args);
+  return mo_make_set_closeq (seq);
+}                               /* end of mom_make_sentinel_set_ */
 
 /* end of value.c */
