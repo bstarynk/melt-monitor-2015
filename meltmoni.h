@@ -554,6 +554,19 @@ static inline mo_sequencevalue_ty* mo_sequence_allocate(unsigned sz)
   ((mo_sizedvalue_ty*)seq)->mo_sva_size = sz;
   return seq;
 }
+/// allocate a filled sequence
+static inline mo_sequencevalue_ty* mo_sequence_filled_allocate(unsigned sz, mo_objref_t*arr)
+{
+  if (MOM_UNLIKELY(sz > MOM_SIZE_MAX))
+    MOM_FATAPRINTF("too big size %u for sequence", sz);
+  mo_sequencevalue_ty* seq = mom_gc_alloc(sizeof(mo_sequencevalue_ty)+sz*sizeof(mo_objref_t));
+  // we temporarily put a fake kind
+  ((mo_hashedvalue_ty*)seq)->mo_va_kind =  MOM_UNFILLEDFAKESEQKIND;
+  ((mo_sizedvalue_ty*)seq)->mo_sva_size = sz;
+  if (arr && arr != MOM_EMPTY_SLOT)
+    memcpy(seq->mo_seqobj,arr,sz*sizeof(mo_objref_t));
+  return seq;
+}
 
 static inline mo_value_t mo_dyncast_sequence(mo_value_t vs)
 {
@@ -654,9 +667,10 @@ static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
   if (obl->mo_ob_hid < obr->mo_ob_hid) return -1;
   if (obl->mo_ob_hid > obr->mo_ob_hid) return 1;
   if (obl->mo_ob_loid < obr->mo_ob_loid) return -1;
-  if (obl->mo_ob_loid > obr->mo_ob_loid) return 1;
-  MOM_FATAPRINTF("corrupted distinct objects @%p & @%p with same ids",
-                 obl, obr);
+  if (MOM_LIKELY(obl->mo_ob_loid > obr->mo_ob_loid)) return 1;
+  MOM_FATAPRINTF("distinct objects @%p & @%p with same id hid=%u lid=%llu",
+                 obl, obr,
+                 (unsigned)obl->mo_ob_hid, (unsigned long long)obl->mo_ob_loid);
 }
 
 int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c

@@ -103,7 +103,7 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
       if (ix % 2 != 0)
         {
           h1 = (h1 * 15017 + curh) ^ (h2 % 2600057 + ix);
-          h2 = (h2 * 3539 + 3 * ix) ^ (13 * curh);
+          h2 = (3539 * h2 + 3 * ix) ^ (13 * curh);
         }
       else
         {
@@ -115,6 +115,7 @@ mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
   if (MOM_UNLIKELY (h < 10))
     h = 11 * (h1 & 0xffff) + 31 * (h2 & 0xffff) + 2;
   ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
+  ((mo_hashedvalue_ty *) seq)->mo_va_kind = mo_KTUPLE;
   return seq;
 }
 
@@ -131,36 +132,52 @@ mo_make_set_closeq (mo_sequencevalue_ty * seq)
   unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
   if (MOM_LIKELY (sz > 1))
     qsort (seq->mo_seqobj, sz, sizeof (mo_objref_t), mom_objref_cmp);
-  if (sz > 0 && MOM_UNLIKELY (mo_dyncast_object (seq->mo_seqobj[0]) == NULL))
-    {
-      int zix = 0;
-      while (zix < (int) sz
-             && mo_dyncast_object (seq->mo_seqobj[zix]) == NULL)
-        zix++;
-      MOM_ASSERTPRINTF (zix <= (int) sz
-                        && zix > 0, "bad zix=%u sz=%u", zix, sz);
-      mo_sequencevalue_ty *newseq = mo_sequence_allocate (sz - zix);
-      memcpy (newseq->mo_seqobj,
-              seq->mo_seqobj + zix, (sz - zix) * sizeof (mo_objref_t));
-      return mo_make_set_closeq (newseq);
-    };
-  momhash_t h1 = 1039, h2 = 25153;
+  unsigned ucnt = 0;            // count the number of unique non-null objref-s
   for (unsigned ix = 0; ix < sz; ix++)
     {
-      mo_objref_t curobjr =
-        (mo_objref_t) mo_dyncast_object (seq->mo_seqobj[ix]);
-      MOM_ASSERTPRINTF (curobjr != NULL, "corrupted set ix=%u", ix);
-      MOM_ASSERTPRINTF (ix == 0
-                        || mo_objref_cmp (seq->mo_seqobj[ix - 1],
-                                          curobjr) <= 0,
-                        "missorted set ix=%u", ix);
-      if (MOM_UNLIKELY (ix + 1 < sz && seq->mo_seqobj[ix + 1] == curobjr))
+      mo_objref_t curobr = seq->mo_seqobj[ix] =
+        mo_dyncast_objref (seq->mo_seqobj[ix]);
+      if (curobr && (ix == 0 || curobr != seq->mo_seqobj[ix - 1]))
+        ucnt++;
+    }
+  if (MOM_UNLIKELY (ucnt < sz))
+    {
+      mo_sequencevalue_ty *newseq = mo_sequence_allocate (ucnt);
+      unsigned cnt = 0;
+      for (unsigned ix = 0; ix < sz; ix++)
         {
-          // handle the case when several elements are the same
-#warning incomplete mo_make_set_closeq
+          mo_objref_t curobr = seq->mo_seqobj[ix];
+          if (curobr && (ix == 0 || curobr != seq->mo_seqobj[ix - 1]))
+            newseq->mo_seqobj[cnt++] = curobr;
+        };
+      MOM_ASSERTPRINTF (cnt == ucnt, "cnt %u, ucnt %u", cnt, ucnt);
+      seq = newseq;
+      sz = ucnt;
+    };
+  momhash_t h1 = 123077, h2 = 50236073;
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t curobr = seq->mo_seqobj[ix];
+      momhash_t curh = ((mo_hashedvalue_ty *) curobr)->mo_va_hash;
+      MOM_ASSERTPRINTF (curh != 0,
+                        "mo_make_setcloseq: zero-hashed obj@%p", curobr);
+      if (ix % 2 == 0)
+        {
+          h1 = (h1 * 503 + curh * 17) ^ (h2 * 7 + ix);
+          h2 = h2 * 2503 - curh * 31 + (ix * (1 + (curh & 0xf)));
+        }
+      else
+        {
+          h1 = (curh * 157 + ix - 3 * h1) ^ (11 * h2);
+          h2 = (h2 * 163 + curh) ^ (ix + (h2 & 0x1f));
         }
     }
-  MOM_FATAPRINTF ("incomplete mo_make_set_closeq");
+  momhash_t h = (3 * h1) + (31 * h2);
+  if (MOM_UNLIKELY (h < 5))
+    h = 11 * (h1 & 0xffff) + 17 * (h2 & 0xffff) + (sz & 0xff) + 1;
+  ((mo_hashedvalue_ty *) seq)->mo_va_hash = h;
+  ((mo_hashedvalue_ty *) seq)->mo_va_kind = mo_KSET;
+  return (mo_value_t) seq;
 }
 
 /* end of value.c */
