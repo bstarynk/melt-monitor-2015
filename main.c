@@ -1119,6 +1119,7 @@ main (int argc_main, char **argv_main)
   if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   mom_random_init_genrand ();
+  json_object_seed (0);
   mom_init_objects ();
   parse_program_arguments_mom (&argc, &argv);
   {

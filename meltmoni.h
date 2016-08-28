@@ -119,6 +119,7 @@ typedef atomic_bool mom_atomic_bool_t;
 typedef atomic_int mom_atomic_int_t;
 typedef atomic_int_least16_t mom_atomic_int16_t;
 typedef FILE *_Atomic mom_atomic_fileptr_t;
+typedef const json_t* mo_json_t;
 #define thread_local _Thread_local
 
 
@@ -416,6 +417,9 @@ enum mo_valkind_en
   mo_KOBJECT,
 };
 
+#define MOM_FIRST_BOXED_KIND mo_KSTRING
+#define MOM_LAST_KIND mo_KOBJECT
+
 typedef const void*mo_value_t;
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 typedef mo_objectvalue_ty* mo_objref_t;
@@ -439,6 +443,7 @@ mo_value_is_int(mo_value_t p)
 {
   return p != NULL && p != MOM_EMPTY_SLOT && ((intptr_t)p % 2 != 0);
 }
+
 
 static inline mo_int_t
 mo_value_to_int(mo_value_t p, mo_int_t def)
@@ -491,6 +496,18 @@ struct mo_hashedvalue_st
   momhash_t mo_va_hash;
 };
 
+static inline enum mo_valkind_en mo_kind_of_value(mo_value_t v)
+{
+  if (mo_value_is_int(v)) return mo_KINT;
+  else if (!mo_valid_pointer_value(v)) return mo_KNONE;
+  else
+    {
+      unsigned k = ((mo_hashedvalue_ty*)v)->mo_va_kind;
+      MOM_ASSERTPRINTF(k>=MOM_FIRST_BOXED_KIND && k<=MOM_LAST_KIND,
+                       "mo_kind_of_value: bad kind #%u @%p", k, v);
+      return (enum mo_valkind_en)k;
+    }
+}
 ///// sized values have also size
 typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
 struct mo_sizedvalue_st
@@ -498,6 +515,14 @@ struct mo_sizedvalue_st
   struct mo_hashedvalue_st _mo;
   uint32_t mo_sva_size;
 };
+
+static inline uint32_t mo_size_of_value(mo_value_t v)
+{
+  enum mo_valkind_en k = mo_kind_of_value(v);
+  if (k==mo_KSTRING||k==mo_KTUPLE||k==mo_KSET)
+    return (((mo_sizedvalue_ty*)v))->mo_sva_size;
+  return 0;
+}
 
 ///// string values
 typedef struct mo_stringvalue_st mo_stringvalue_ty;
@@ -610,7 +635,7 @@ mo_value_t mo_make_tuple_closeq(mo_sequencevalue_ty*seq);
 // convenience variadic functions to make a tuple
 mo_value_t mom_make_tuple_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_tuple_(mo_objref_t ob1, ...) __attribute__((sentinel));
-#define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(__VA_ARGS__,NULL)
+#define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(##__VA_ARGS__,NULL)
 
 ////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
@@ -634,7 +659,7 @@ mo_value_t mo_make_set_closeq(mo_sequencevalue_ty*seq);
 // convenience variadic functions to make a set
 mo_value_t mom_make_set_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_set_(mo_objref_t ob1, ...) __attribute__((sentinel));
-#define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(__VA_ARGS__,NULL)
+#define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(##__VA_ARGS__,NULL)
 
 /******************** OBJECTs ****************/
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
@@ -666,6 +691,8 @@ static inline mo_objref_t mo_dyncast_objref(mo_value_t v)
   return (mo_objref_t) mo_dyncast_object(v);
 }
 
+mo_objref_t mo_objref_find_hid_loid(mo_hid_t hid, mo_loid_t loid);
+
 static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
 {
   obl = mo_dyncast_objref(obl);
@@ -685,4 +712,13 @@ static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
 int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c
 
 
+///////////////// JSON support
+// get the json for a value
+mo_json_t mo_json_of_value(mo_value_t);
+// get the json for an objref, e.g. an id string or null
+mo_json_t mo_jsonid_of_objref(mo_objref_t);
+// get the value from a json
+mo_value_t mo_value_of_json(mo_json_t);
+// get the existing objref from a json
+mo_objref_t mo_objref_of_jsonid(mo_json_t);
 #endif /*MONIMELT_INCLUDED_ */

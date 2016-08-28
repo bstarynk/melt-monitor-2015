@@ -222,4 +222,15 @@ mom_objref_cmp (const void *pl, const void *pr)
   return mo_objref_cmp (*(mo_objref_t *) pl, *(mo_objref_t *) pr);
 }
 
+mo_objref_t
+mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
+{
+  if (hid == 0 && loid == 0)
+    return NULL;
+  unsigned bn = mo_hi_id_bucketnum (hid);
+  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bd%u", bn);
+#warning mo_objref_find_hid_loid incomplete
+  MOM_FATAPRINTF ("mo_objref_find_hid_loid incomplete");
+}
+
 // end of file object.c

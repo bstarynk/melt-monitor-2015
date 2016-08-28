@@ -63,7 +63,7 @@ mo_make_string_sprintf (const char *fmt, ...)
 
 #define MOM_TUPLE_H1_INIT 5003
 #define MOM_TUPLE_H2_INIT 600073
-static_assert ((MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT) != 0,
+static_assert ((momhash_t) (MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT) != 0,
                "wrong MOM_TUPLE_H1_INIT & MOM_TUPLE_H2_INIT");
 static const mo_sequencevalue_ty mo_empty_tuple = {
   ._mo = {._mo = {.mo_va_kind = mo_KTUPLE,
@@ -171,7 +171,7 @@ mom_make_sentinel_tuple_ (mo_objref_t ob1, ...)
 ////////////////////////////////////////////////////////////////
 #define MOM_SET_H1_INIT 123077
 #define MOM_SET_H2_INIT 50236073
-static_assert ((MOM_SET_H1_INIT ^ MOM_SET_H2_INIT) != 0,
+static_assert ((momhash_t) (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT) != 0,
                "wrong MOM_SET_H1_INIT & MOM_SET_H2_INIT");
 static const mo_sequencevalue_ty mo_empty_set = {
   ._mo = {._mo = {.mo_va_kind = mo_KSET,
