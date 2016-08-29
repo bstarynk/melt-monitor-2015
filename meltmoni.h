@@ -432,7 +432,9 @@ typedef struct mo_objectvalue_st mo_objectvalue_ty;
 typedef struct mo_assovaldatapayl_st mo_assovalvadapayl_ty;
 typedef struct mo_vectvaldatapayl_st mo_vectvalvadapayl_ty;
 typedef mo_objectvalue_ty* mo_objref_t;
-
+static inline int mo_objref_cmp(mo_objref_t, mo_objref_t);
+static inline mo_value_t mo_dyncast_object(mo_value_t);
+static inline mo_objref_t mo_dyncast_objref(mo_value_t);
 typedef intptr_t mo_int_t;
 
 typedef uint32_t mo_hid_t;
@@ -691,12 +693,44 @@ static inline mo_value_t mo_dyncast_set(mo_value_t vs)
 mo_value_t mo_set_union (mo_value_t vset1, mo_value_t vset2);
 mo_value_t mo_set_intersection (mo_value_t vset1, mo_value_t vset2);
 mo_value_t mo_set_difference (mo_value_t vset1, mo_value_t vset2);
+
+static inline bool mo_set_contains(mo_value_t vset, mo_objref_t ob)
+{
+  if (!mo_dyncast_set(vset)) return false;
+  if (!mo_dyncast_object(ob)) return false;
+  unsigned card = ((mo_sizedvalue_ty*)vset)->mo_sva_size;
+  if (!card) return 0;
+  unsigned lo = 0, hi = card - 1;
+  while (lo + 5 < hi)
+    {
+      unsigned md = (lo+hi)/2;
+      mo_objref_t midobr = ((mo_sequencevalue_ty*)vset)->mo_seqobj[md];
+      MOM_ASSERTPRINTF(mo_dyncast_objref(midobr) != NULL,
+                       "corrupted midobr@%p", midobr);
+      if (midobr == ob) return true;
+      int cmp = mo_objref_cmp(ob, midobr);
+      if (cmp<0) lo = md;
+      else if (cmp>0) hi = md;
+      else
+        MOM_FATAPRINTF("corrupted set@%p", vset);
+    }
+  for (unsigned md=lo; md<hi; md++)
+    {
+      mo_objref_t midobr = ((mo_sequencevalue_ty*)vset)->mo_seqobj[md];
+      MOM_ASSERTPRINTF(mo_dyncast_objref(midobr) != NULL,
+                       "corrupted midobr@%p", midobr);
+      if (midobr == ob) return true;
+    }
+  return false;
+}
+
 /******************** OBJECTs ****************/
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
 {
   struct mo_hashedvalue_st _mo;
-  pthread_mutex_t mo_ob_mtx;
+  /// actually, we dont need mutexes before the bootstrap
+  /// pthread_mutex_t mo_ob_mtx;
   uint32_t mo_nameix;
   clock_t mo_mtime;
   mo_hid_t mo_ob_hid;
