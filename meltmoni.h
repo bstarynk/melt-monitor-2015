@@ -614,6 +614,26 @@ static inline mo_value_t mo_dyncast_sequence(mo_value_t vs)
   return vs;
 }
 
+static inline unsigned
+mo_sequence_size(mo_value_t vs)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_sequence(vs);
+  if (!seq) return 0;
+  return ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+}
+
+static inline mo_objref_t
+mo_sequence_nth(mo_value_t vs, int rk)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_sequence(vs);
+  if (!seq) return NULL;
+  unsigned sz = ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+  if (!sz) return NULL;
+  if (rk<0) rk += sz;
+  if (rk<0 || rk>=(int)sz) return NULL;
+  return seq->mo_seqobj[rk];
+}
+
 // put inside a sequence something during the fill
 static inline void mo_sequence_put(mo_sequencevalue_ty*seq, unsigned ix, mo_objref_t oref)
 {
@@ -657,6 +677,27 @@ static inline mo_value_t mo_dyncast_tuple(mo_value_t vs)
   return vs;
 }
 
+
+static inline unsigned
+mo_tuple_size(mo_value_t vs)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_tuple(vs);
+  if (!seq) return 0;
+  return ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+}
+
+static inline mo_objref_t
+mo_tuple_nth(mo_value_t vs, int rk)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_tuple(vs);
+  if (!seq) return NULL;
+  unsigned sz = ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+  if (!sz) return NULL;
+  if (rk<0) rk += sz;
+  if (rk<0 || rk>=(int)sz) return NULL;
+  return seq->mo_seqobj[rk];
+}
+
 ////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
 struct mo_setvalue_st
@@ -693,6 +734,27 @@ static inline mo_value_t mo_dyncast_set(mo_value_t vs)
 mo_value_t mo_set_union (mo_value_t vset1, mo_value_t vset2);
 mo_value_t mo_set_intersection (mo_value_t vset1, mo_value_t vset2);
 mo_value_t mo_set_difference (mo_value_t vset1, mo_value_t vset2);
+
+
+static inline unsigned
+mo_set_size(mo_value_t vs)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_set(vs);
+  if (!seq) return 0;
+  return ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+}
+
+static inline mo_objref_t
+mo_set_nth(mo_value_t vs, int rk)
+{
+  mo_sequencevalue_ty* seq = (mo_sequencevalue_ty*)mo_dyncast_set(vs);
+  if (!seq) return NULL;
+  unsigned sz = ((mo_sizedvalue_ty*)seq)->mo_sva_size;
+  if (!sz) return NULL;
+  if (rk<0) rk += sz;
+  if (rk<0 || rk>=(int)sz) return NULL;
+  return seq->mo_seqobj[rk];
+}
 
 static inline bool mo_set_contains(mo_value_t vset, mo_objref_t ob)
 {
