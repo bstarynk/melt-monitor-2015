@@ -72,6 +72,12 @@ static const mo_sequencevalue_ty mo_empty_tuple = {
 };
 
 mo_value_t
+mo_make_empty_tuple (void)
+{
+  return &mo_empty_tuple;
+}
+
+mo_value_t
 mo_make_tuple_closeq (mo_sequencevalue_ty * seq)
 {
   MOM_ASSERTPRINTF (seq != NULL && seq != MOM_EMPTY_SLOT,
@@ -179,6 +185,12 @@ static const mo_sequencevalue_ty mo_empty_set = {
                   .mo_va_hash = (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT)}}
 };
 
+
+mo_value_t
+mo_make_empty_set (void)
+{
+  return &mo_empty_set;
+}
 
 mo_value_t
 mo_make_set_closeq (mo_sequencevalue_ty * seq)

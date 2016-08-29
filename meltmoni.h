@@ -663,6 +663,7 @@ struct mo_tuplevalue_st
 
 mo_value_t mo_make_tuple_closeq(mo_sequencevalue_ty*seq);
 
+mo_value_t mo_make_empty_tuple(void);
 // convenience variadic functions to make a tuple
 mo_value_t mom_make_tuple_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_tuple_(mo_objref_t ob1, ...) __attribute__((sentinel));
@@ -717,6 +718,7 @@ struct mo_setvalue_st
 
 mo_value_t mo_make_set_closeq(mo_sequencevalue_ty*seq);
 mo_value_t mo_make_set_closortedseq(mo_sequencevalue_ty*seq);
+mo_value_t mo_make_empty_set(void);
 // convenience variadic functions to make a set
 mo_value_t mom_make_set_sized(unsigned siz, /*objref-s*/ ...);
 mo_value_t mom_make_sentinel_set_(mo_objref_t ob1, ...) __attribute__((sentinel));
@@ -873,9 +875,27 @@ mo_dyncastpayl_assoval(const void*p)
   return (mo_assovaldatapayl_ty*)p;
 }
 
-mo_value_t mo_assoval_get(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
-mo_assovaldatapayl_ty* mo_assoval_reserve(mo_assovaldatapayl_ty*asso, unsigned gap);
+static inline unsigned
+mo_assoval_size(mo_assovaldatapayl_ty*asso)
+{
+  asso = mo_dyncastpayl_assoval(asso);
+  if (!asso) return 0;
+  return ((mo_sizedvalue_ty *) asso)->mo_sva_size;
+}
 
+static inline unsigned
+mo_assoval_count(mo_assovaldatapayl_ty*asso)
+{
+  asso = mo_dyncastpayl_assoval(asso);
+  if (!asso) return 0;
+  return((mo_countedpayl_ty *) asso)->mo_cpl_count;
+}
+
+mo_value_t mo_assoval_get(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
+mo_assovaldatapayl_ty* mo_assoval_put(mo_assovaldatapayl_ty*asso, mo_objref_t ob,mo_value_t va);
+mo_assovaldatapayl_ty* mo_assoval_remove(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
+mo_assovaldatapayl_ty* mo_assoval_reserve(mo_assovaldatapayl_ty*asso, unsigned gap);
+mo_value_t mo_assoval_keys_set(mo_assovaldatapayl_ty*asso); // set of keys
 ///////////////// JSON support
 // get the json for a value
 mo_json_t mo_json_of_value(mo_value_t);
