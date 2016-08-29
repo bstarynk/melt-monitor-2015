@@ -896,6 +896,73 @@ mo_assovaldatapayl_ty* mo_assoval_put(mo_assovaldatapayl_ty*asso, mo_objref_t ob
 mo_assovaldatapayl_ty* mo_assoval_remove(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
 mo_assovaldatapayl_ty* mo_assoval_reserve(mo_assovaldatapayl_ty*asso, unsigned gap);
 mo_value_t mo_assoval_keys_set(mo_assovaldatapayl_ty*asso); // set of keys
+
+
+/******************** VECTVALs payload ****************/
+struct mo_vectvaldatapayl_st
+{
+  struct mo_countedpayl_st _mo;
+  mo_value_t mo_seqval[];
+};
+
+static inline mo_vectvaldatapayl_ty*
+mo_dyncastpayl_vectval(const void*p)
+{
+  if (!mo_valid_pointer_value(p)) return NULL;
+  unsigned k = ((mo_hashedvalue_ty*)p)->mo_va_kind;
+  if (k != mo_PVECTVALDATA) return NULL;
+  return (mo_vectvaldatapayl_ty*)p;
+}
+
+static inline unsigned
+mo_vectval_size(mo_vectvaldatapayl_ty*vect)
+{
+  vect = mo_dyncastpayl_vectval(vect);
+  if (!vect) return 0;
+  return ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+}
+
+static inline unsigned
+mo_vectval_count(mo_vectvaldatapayl_ty*vect)
+{
+  vect = mo_dyncastpayl_vectval(vect);
+  if (!vect) return 0;
+  return((mo_countedpayl_ty *) vect)->mo_cpl_count;
+}
+
+static inline mo_value_t
+mo_vectval_nth(mo_vectvaldatapayl_ty*vect, int rk)
+{
+  vect = mo_dyncastpayl_vectval(vect);
+  if (!vect) return NULL;
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF(cnt<=sz, "cnt %u larger than sz %u", cnt, sz);
+  if (rk<0)
+    rk += (int) cnt;
+  if (rk>=0 && rk<(int)cnt)
+    return vect->mo_seqval[rk];
+  return NULL;
+} /* end mo_vectval_nth */
+
+static inline void
+mo_vectval_put_nth(mo_vectvaldatapayl_ty*vect, int rk, mo_value_t newval)
+{
+  vect = mo_dyncastpayl_vectval(vect);
+  if (!vect) return;
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF(cnt<=sz, "cnt %u larger than sz %u", cnt, sz);
+  if (rk<0) rk += (int) cnt;
+  if (rk>=0 && rk<(int)cnt)
+    vect->mo_seqval[rk] = newval;
+} /* end mo_vectval_put_nth */
+
+// the vectval routines are in value.c because they are easy
+mo_vectvaldatapayl_ty* mo_vectval_reserve(mo_vectvaldatapayl_ty*vect, unsigned newcount);
+mo_vectvaldatapayl_ty* mo_vectval_resize(mo_vectvaldatapayl_ty*vect, unsigned newlen);
+mo_vectvaldatapayl_ty* mo_vectval_append(mo_vectvaldatapayl_ty*vect, mo_value_t val);
+
 ///////////////// JSON support
 // get the json for a value
 mo_json_t mo_json_of_value(mo_value_t);

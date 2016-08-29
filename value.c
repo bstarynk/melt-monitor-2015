@@ -513,4 +513,114 @@ mo_set_difference (mo_value_t vset1, mo_value_t vset2)
   return mo_make_set_closortedseq (mo_sequence_filled_allocate (nbdi, arr));
 }                               /* end of mo_set_difference */
 
+
+// the vectval routines are in value.c because they are easy
+mo_vectvaldatapayl_ty *
+mo_vectval_reserve (mo_vectvaldatapayl_ty * vect, unsigned gap)
+{
+  vect = mo_dyncastpayl_vectval (vect);
+  if (!vect)
+    {
+      if (gap > MOM_SIZE_MAX)
+        MOM_FATAPRINTF ("too huge gap %u for nil vector", gap);
+      unsigned sz = (gap < 5) ? 7 : mom_prime_above (gap + gap / 8 + 3);
+      vect =
+        mom_gc_alloc (sizeof (mo_vectvaldatapayl_ty) +
+                      sz * sizeof (mo_value_t));
+      ((mo_hashedvalue_ty *) vect)->mo_va_kind = mo_PASSOVALDATA;
+      ((mo_hashedvalue_ty *) vect)->mo_va_hash =
+        (momrand_genrand_int31 () & 0xfffffff) + 2;
+      ((mo_sizedvalue_ty *) vect)->mo_sva_size = sz;
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = 0;
+      return vect;
+    }
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF (cnt <= sz, "cnt %u should be less than sz %u", cnt, sz);
+  if (cnt + gap < sz)
+    return vect;
+  if (MOM_UNLIKELY (cnt + gap > MOM_SIZE_MAX))
+    MOM_FATAPRINTF
+      ("vectval_reserve wont grow vector with too large gap %u for count %u",
+       gap, cnt);
+  unsigned newsz = mom_prime_above (cnt + gap + cnt / 8 + gap / 8 + 7);
+  if (sz == newsz)
+    return vect;
+  mo_vectvaldatapayl_ty *newvect =
+    mom_gc_alloc (sizeof (mo_vectvaldatapayl_ty) +
+                  newsz * sizeof (mo_value_t));
+  ((mo_hashedvalue_ty *) newvect)->mo_va_kind = mo_PASSOVALDATA;
+  ((mo_hashedvalue_ty *) newvect)->mo_va_hash =
+    (momrand_genrand_int31 () & 0xfffffff) + 2;
+  ((mo_sizedvalue_ty *) newvect)->mo_sva_size = newsz;
+  memcpy (newvect->mo_seqval, vect->mo_seqval, cnt);
+  ((mo_countedpayl_ty *) newvect)->mo_cpl_count = cnt;
+  return newvect;
+}                               /* end of mo_vectval_reserve */
+
+mo_vectvaldatapayl_ty *
+mo_vectval_resize (mo_vectvaldatapayl_ty * vect, unsigned newcnt)
+{
+  vect = mo_dyncastpayl_vectval (vect);
+  if (MOM_UNLIKELY (newcnt > MOM_SIZE_MAX))
+    MOM_FATAPRINTF ("vectval_resize with a huge %u new count", newcnt);
+  if (!vect)
+    {
+      vect = mo_vectval_reserve (NULL, newcnt + newcnt / 8 + newcnt / 16 + 6);
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
+      return vect;
+    }
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  if (cnt == newcnt)
+    return vect;
+  if (newcnt < cnt)
+    {
+      memset (vect->mo_seqval + newcnt, 0,
+              (cnt - newcnt) * sizeof (mo_value_t));
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
+      if (sz > 100 && newcnt < sz / 3)
+        vect = mo_vectval_reserve (vect, 0);
+    }
+  else if (cnt < newcnt && newcnt < sz)
+    {
+      memset (vect->mo_seqval + cnt, 0, (newcnt - cnt) * sizeof (mo_value_t));
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
+    }
+  else
+    {
+      vect =
+        mo_vectval_reserve (vect, 5 * (newcnt - cnt) / 4 + cnt / 16 + 10);
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
+    }
+  return vect;
+}                               /* end mo_vectval_resize */
+
+mo_vectvaldatapayl_ty *
+mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
+{
+  vect = mo_dyncastpayl_vectval (vect);
+  if (!vect)
+    {
+      vect = mo_vectval_reserve (NULL, 4);
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = 1;
+      vect->mo_seqval[0] = val;
+      return vect;
+    };
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  MOM_ASSERTPRINTF (sz > 2, "too small sz %u", sz);
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF (cnt <= sz, "cnt %u not less than sz %u", cnt, sz);
+  if (cnt + 1 <= sz)
+    {
+      vect->mo_seqval[cnt] = val;
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt;
+      return vect;
+    }
+  vect = mo_vectval_reserve (vect, 5 + cnt / 4 + cnt / 32);
+  vect->mo_seqval[cnt] = val;
+  ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt;
+  return vect;
+}
+
 /* end of value.c */
