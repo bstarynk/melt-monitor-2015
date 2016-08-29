@@ -963,6 +963,8 @@ mom_print_info (void)
   PRINT_SIZEOF (mo_tuplevalue_ty);
   PRINT_SIZEOF (mo_setvalue_ty);
   PRINT_SIZEOF (mo_objectvalue_ty);
+  PRINT_SIZEOF (mo_countedpayl_ty);
+  PRINT_SIZEOF (mo_assovaldatapayl_ty);
   PRINT_SIZEOF (mom_int128_t);
   PRINT_SIZEOF (FILE);
   {

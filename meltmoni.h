@@ -429,8 +429,8 @@ enum mo_payloadkind_en
 
 typedef const void*mo_value_t;
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
-typedef struct mo_assovaldatapayl_st mo_assovalvadapayl_ty;
-typedef struct mo_vectvaldatapayl_st mo_vectvalvadapayl_ty;
+typedef struct mo_assovaldatapayl_st mo_assovaldatapayl_ty;
+typedef struct mo_vectvaldatapayl_st mo_vectvaldatapayl_ty;
 typedef mo_objectvalue_ty* mo_objref_t;
 static inline int mo_objref_cmp(mo_objref_t, mo_objref_t);
 static inline mo_value_t mo_dyncast_object(mo_value_t);
@@ -444,7 +444,7 @@ typedef uint64_t mo_loid_t;
 #define MO_INTMIN INTPTR_MIN/2
 
 static inline bool
-mo_valid_pointer_value(mo_value_t p)
+mo_valid_pointer_value(const void* p)
 {
   return p != NULL && p != MOM_EMPTY_SLOT && ((intptr_t)p % 2 == 0);
 }
@@ -798,8 +798,8 @@ struct mo_objectvalue_st
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
-  mo_assovalvadapayl_ty *_mo_ob_attrs;
-  mo_vectvalvadapayl_ty *_mo_ob_comps;
+  mo_assovaldatapayl_ty *_mo_ob_attrs;
+  mo_vectvaldatapayl_ty *_mo_ob_comps;
   mo_objref_t mo_ob_paylkind;
   void* mo_ob_payload;
 };
@@ -836,10 +836,45 @@ static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
                  (unsigned)obl->mo_ob_hid, (unsigned long long)obl->mo_ob_loid);
 }
 
-int mo_value_cmp(mo_value_t vl, mo_value_t vr);
+static inline momhash_t mo_objref_hash(mo_objref_t obr)
+{
+  if (!mo_dyncast_objref(obr)) return 0;
+  return ((mo_hashedvalue_ty*)obr)->mo_va_hash;
+}
 
 int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c
 
+///// counted payloads have also count
+typedef struct mo_countedpayl_st mo_countedpayl_ty;
+struct mo_countedpayl_st
+{
+  struct mo_sizedvalue_st _mo;
+  uint32_t mo_cpl_count;
+};
+
+/******************** ASSOVALs payload ****************/
+struct mo_assoentry_st
+{
+  mo_objref_t mo_asso_obr;
+  mo_value_t mo_asso_val;
+};
+struct mo_assovaldatapayl_st
+{
+  struct mo_countedpayl_st _mo;
+  struct mo_assoentry_st mo_seqent[];
+};
+
+static inline mo_assovaldatapayl_ty*
+mo_dyncastpayl_assoval(const void*p)
+{
+  if (!mo_valid_pointer_value(p)) return NULL;
+  unsigned k = ((mo_hashedvalue_ty*)p)->mo_va_kind;
+  if (k != mo_PASSOVALDATA) return NULL;
+  return (mo_assovaldatapayl_ty*)p;
+}
+
+mo_value_t mo_assoval_get(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
+mo_assovaldatapayl_ty* mo_assoval_reserve(mo_assovaldatapayl_ty*asso, unsigned gap);
 
 ///////////////// JSON support
 // get the json for a value
