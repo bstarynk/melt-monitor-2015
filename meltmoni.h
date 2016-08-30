@@ -163,7 +163,7 @@ const char *mom_hostname (void);
 #define MOM_JOB_MAX 16
 extern __thread int mom_worker_num;
 
-#define MOM_SIZE_MAX (1<<24)
+#define MOM_SIZE_MAX (1<<28)
 
 static inline pid_t
 mom_gettid (void)
@@ -425,6 +425,7 @@ enum mo_payloadkind_en
   mo_PNONE,
   mo_PASSOVALDATA,
   mo_PVECTVALDATA,
+  mo_PHASHSET,
 };
 
 typedef const void*mo_value_t;
@@ -796,7 +797,7 @@ struct mo_objectvalue_st
   /// actually, we dont need mutexes before the bootstrap
   /// pthread_mutex_t mo_ob_mtx;
   uint32_t mo_nameix;
-  clock_t mo_mtime;
+  time_t mo_mtime;
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
@@ -963,6 +964,45 @@ mo_vectvaldatapayl_ty* mo_vectval_reserve(mo_vectvaldatapayl_ty*vect, unsigned n
 mo_vectvaldatapayl_ty* mo_vectval_resize(mo_vectvaldatapayl_ty*vect, unsigned newlen);
 mo_vectvaldatapayl_ty* mo_vectval_append(mo_vectvaldatapayl_ty*vect, mo_value_t val);
 
+/******************** HASHSETs payload ****************/
+typedef struct mo_hashsetpayl_st mo_hashsetpayl_ty;
+struct mo_hashsetpayl_st
+{
+  struct mo_countedpayl_st _mo;
+  mo_objref_t mo_hsetarr[];
+};
+
+static inline mo_hashsetpayl_ty*
+mo_dyncastpayl_hashset(const void*p)
+{
+  if (!mo_valid_pointer_value(p)) return NULL;
+  unsigned k = ((mo_hashedvalue_ty*)p)->mo_va_kind;
+  if (k != mo_PHASHSET) return NULL;
+  return (mo_hashsetpayl_ty*)p;
+}
+
+static inline unsigned
+mo_hashset_size(mo_hashsetpayl_ty*hset)
+{
+  hset = mo_dyncastpayl_hashset(hset);
+  if (!hset) return 0;
+  return ((mo_sizedvalue_ty *) hset)->mo_sva_size;
+}
+
+static inline unsigned
+mo_hashset_count(mo_hashsetpayl_ty*hset)
+{
+  hset = mo_dyncastpayl_hashset(hset);
+  if (!hset) return 0;
+  return((mo_countedpayl_ty *) hset)->mo_cpl_count;
+}
+
+bool
+mo_hashset_contains(mo_hashsetpayl_ty*hset, mo_objref_t obr);
+mo_hashsetpayl_ty* mo_hashset_put(mo_hashsetpayl_ty*hset, mo_objref_t ob);
+mo_hashsetpayl_ty* mo_hashset_remove(mo_hashsetpayl_ty*hset, mo_objref_t ob);
+mo_hashsetpayl_ty* mo_hashset_reserve(mo_hashsetpayl_ty*hset, unsigned gap);
+mo_value_t mo_hashset_elements_set(mo_hashsetpayl_ty*hset); // set of elements
 ///////////////// JSON support
 // get the json for a value
 mo_json_t mo_json_of_value(mo_value_t);

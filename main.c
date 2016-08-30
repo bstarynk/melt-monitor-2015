@@ -945,6 +945,8 @@ mom_print_info (void)
 #if __GLIBC__
   printf (" glibc: %s\n", gnu_get_libc_version ());
 #endif
+  printf (" MOM_SIZE_MAX: %d=%#x=%dM\n",
+          MOM_SIZE_MAX, MOM_SIZE_MAX, MOM_SIZE_MAX >> 20);
 #define PRINT_SIZEOF(T)							\
   printf("  sizeof(" #T ") = %d byt = %d wd, alignof(" #T ") = %d\n",	\
 	 (int)sizeof(T),						\
@@ -953,6 +955,8 @@ mom_print_info (void)
   PRINT_SIZEOF (int);
   PRINT_SIZEOF (long);
   PRINT_SIZEOF (void *);
+  PRINT_SIZEOF (clock_t);
+  PRINT_SIZEOF (time_t);
   PRINT_SIZEOF (pthread_mutex_t);
   PRINT_SIZEOF (pthread_rwlock_t);
   PRINT_SIZEOF (pthread_cond_t);
@@ -965,6 +969,7 @@ mom_print_info (void)
   PRINT_SIZEOF (mo_objectvalue_ty);
   PRINT_SIZEOF (mo_countedpayl_ty);
   PRINT_SIZEOF (mo_assovaldatapayl_ty);
+  PRINT_SIZEOF (mo_hashsetpayl_ty);
   PRINT_SIZEOF (mom_int128_t);
   PRINT_SIZEOF (FILE);
   {
