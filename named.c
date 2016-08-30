@@ -425,16 +425,18 @@ mom_name_node_insert_nameval (mo_stringvalue_ty * vstr)
   struct mom_namednode_st *nz = mom_create_name_node (vstr);
   MOM_ASSERTPRINTF (nz && nz->nn_magic == MOM_NAME_MAGIC, "bad nz@%p", nz);
   if (ny)
-    nz->nn_npar = ~(intptr_t) ny;
+    {
+      nz->nn_npar = ~(intptr_t) ny;
+      if ((cmp = strcmp (vstr->mo_cstr, ny->nn_name->mo_cstr)) < 0)
+        ny->nn_left = nz;
+      else if (cmp > 0)
+        ny->nn_right = nz;
+      else
+        MOM_FATAPRINTF
+          ("mom_name_node_insert_nameval corruption: impossible ny@%p", ny);
+    }
   else
     mom_rootnamenode = nz;
-  if ((cmp = strcmp (vstr->mo_cstr, ny->nn_name->mo_cstr)) < 0)
-    ny->nn_left = nz;
-  else if (cmp > 0)
-    ny->nn_right = nz;
-  else
-    MOM_FATAPRINTF
-      ("mom_name_node_insert_nameval corruption: impossible ny@%p", ny);
   mom_correct_name_node_after_insertion (nz);
   return nz;
 }                               /* end mom_name_node_insert_nameval  */
@@ -465,16 +467,18 @@ mom_name_node_insert_namestr (const char *nams)
     mom_create_name_node ((mo_stringvalue_ty *) mo_make_string_cstr (nams));
   MOM_ASSERTPRINTF (nz && nz->nn_magic == MOM_NAME_MAGIC, "bad nz@%p", nz);
   if (ny)
-    nz->nn_npar = ~(intptr_t) ny;
+    {
+      nz->nn_npar = ~(intptr_t) ny;
+      if ((cmp = strcmp (nams, ny->nn_name->mo_cstr)) < 0)
+        ny->nn_left = nz;
+      else if (cmp > 0)
+        ny->nn_right = nz;
+      else
+        MOM_FATAPRINTF
+          ("mom_name_node_insert_namestr corruption: impossible ny@%p", ny);
+    }
   else
     mom_rootnamenode = nz;
-  if ((cmp = strcmp (nams, ny->nn_name->mo_cstr)) < 0)
-    ny->nn_left = nz;
-  else if (cmp > 0)
-    ny->nn_right = nz;
-  else
-    MOM_FATAPRINTF
-      ("mom_name_node_insert_namestr corruption: impossible ny@%p", ny);
   mom_correct_name_node_after_insertion (nz);
   return nz;
 }                               /* end mom_name_node_insert_namestr  */
