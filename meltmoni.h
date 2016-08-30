@@ -1050,6 +1050,8 @@ bool mo_unregister_name_vals(mo_value_t namv);
 mo_objref_t mo_find_named_cstr(const char*nams);
 mo_objref_t mo_find_named_vals(mo_value_t namv);
 
+// reserve space for additional names
+void mo_reserve_names(unsigned gap);
 // the printable name of an object, perhaps GC-strduped
 static inline const char*
 mo_object_pnamestr(mo_objref_t ob)

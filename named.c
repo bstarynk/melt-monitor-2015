@@ -73,7 +73,7 @@ mom_name_node_parent (struct mom_namednode_st *nd)
 }                               /* end mom_name_node_parent */
 
 struct mom_namednode_st *
-mom_find_name_node (const char *namstr)
+mom_find_name_node_cstr (const char *namstr)
 {
   if (!mom_valid_name (namstr))
     return NULL;
@@ -598,7 +598,8 @@ mo_register_name_string (mo_objref_t obr, mo_value_t namv)
   mo_value_t oldnamv = mo_assoval_get (mom_nameassop, obr);
   if (oldnamv != NULL)
     return false;
-  struct mom_namednode_st *nd = mom_name_node_insert_nameval (namv);
+  struct mom_namednode_st *nd = //
+    mom_name_node_insert_nameval ((mo_stringvalue_ty *) namv);
   MOM_ASSERTPRINTF (nd && nd->nn_magic == MOM_NAME_MAGIC,
                     "bad nd@%p for nam %s", nd, mo_string_cstr (namv));
   MOM_ASSERTPRINTF (nd->nn_objref == NULL, "already used nd@%p", nd);
@@ -630,4 +631,80 @@ mo_unregister_named_object (mo_objref_t obr)
                     "bad name in nd");
   MOM_ASSERTPRINTF (nd->nn_objref == obr, "wrong obj in nd");
   nd->nn_objref = NULL;
+  return true;
 }                               /* end mo_unregister_named_object */
+
+
+bool
+mo_unregister_name_string (const char *nams)
+{
+  if (!mom_valid_name (nams))
+    return false;
+  struct mom_namednode_st *nd = mom_find_name_node_cstr (nams);
+  if (!nd)
+    return false;
+  MOM_ASSERTPRINTF (nd->nn_magic == MOM_NAME_MAGIC, "bad magic nd@%p", nd);
+  MOM_ASSERTPRINTF (mo_dyncast_string (nd->nn_name), "bad name nd@%p", nd);
+  MOM_ASSERTPRINTF (!strcmp (nams, mo_string_cstr (nd->nn_name)),
+                    "wrong name nd@%p", nd);
+  mo_objref_t oldobjv = nd->nn_objref;
+  if (!oldobjv)
+    return false;
+  MOM_ASSERTPRINTF (mo_assoval_get (mom_nameassop, oldobjv) == nd->nn_name,
+                    "strange name nd@%p", nd);
+  mom_nameassop = mo_assoval_remove (mom_nameassop, oldobjv);
+  nd->nn_objref = NULL;
+  return true;
+}                               /* end mo_unregister_name_string */
+
+bool
+mo_unregister_name_vals (mo_value_t namv)
+{
+  if (!mom_valid_name (mo_string_cstr (namv)))
+    return false;
+  struct mom_namednode_st *nd = mom_find_name_node_value (namv);
+  if (!nd)
+    return false;
+  MOM_ASSERTPRINTF (nd->nn_magic == MOM_NAME_MAGIC, "bad magic nd@%p", nd);
+  MOM_ASSERTPRINTF (mo_dyncast_string (nd->nn_name), "bad name nd@%p", nd);
+  mo_objref_t oldobjv = nd->nn_objref;
+  if (!oldobjv)
+    return false;
+  MOM_ASSERTPRINTF (mo_assoval_get (mom_nameassop, oldobjv) == nd->nn_name,
+                    "strange name nd@%p", nd);
+  mom_nameassop = mo_assoval_remove (mom_nameassop, oldobjv);
+  nd->nn_objref = NULL;
+  return true;
+}                               /* end mo_unregister_name_vals */
+
+
+mo_objref_t
+mo_find_named_cstr (const char *nams)
+{
+  if (!mom_valid_name (nams))
+    return NULL;
+  struct mom_namednode_st *nd = mom_find_name_node_cstr (nams);
+  if (!nd)
+    return NULL;
+  return nd->nn_objref;
+}                               /* end mo_find_named_cstr */
+
+mo_objref_t
+mo_find_named_vals (mo_value_t vals)
+{
+  if (!mom_valid_name (mo_string_cstr (vals)))
+    return NULL;
+  struct mom_namednode_st *nd = mom_find_name_node_value (vals);
+  if (!nd)
+    return NULL;
+  return nd->nn_objref;
+}                               /* end mo_find_named_vals */
+
+void
+mo_reserve_names (unsigned gap)
+{
+  mom_nameassop = mo_assoval_reserve (mom_nameassop, gap);
+}                               /* end mo_reserve_names */
+
+
+/* eof named.c */
