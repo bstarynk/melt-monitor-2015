@@ -252,6 +252,12 @@ mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
       mo_predefined_hset = mo_hashset_put (mo_predefined_hset, obr);
     }
   ((mo_hashedvalue_ty *) obr)->mo_va_index = spa;
-}
+}                               /* end mo_objref_put_space */
+
+mo_value_t
+mo_predefined_objects_set (void)
+{
+  return mo_hashset_elements_set (mo_predefined_hset);
+}                               /* end mo_predefined_objects_set */
 
 // end of file object.c

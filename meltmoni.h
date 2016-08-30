@@ -1063,6 +1063,7 @@ mo_object_pnamestr(mo_objref_t ob)
 } /* end mo_object_pnamestr */
 /************* PREDEFINED ***********/
 
+mo_value_t mo_predefined_objects_set(void);
 #define MOM_VARPREDEF(Nam) mompredef_##Nam
 #define MOM_PREDREF(Nam) (mo_objref_t)(&MOM_VARPREDEF(Nam))
 /* declare them as objects */
