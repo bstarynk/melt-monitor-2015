@@ -198,6 +198,103 @@ mom_objref_cmp (const void *pl, const void *pr)
   return mo_objref_cmp (*(mo_objref_t *) pl, *(mo_objref_t *) pr);
 }
 
+static inline int
+mom_obucket_hid_loid_index (momhash_t h, mo_hid_t hid, mo_loid_t loid)
+{
+  unsigned bn = mo_hi_id_bucketnum (hid);
+  unsigned bsz = mom_obuckarr[bn].bu_size;
+  if (bsz == 0)
+    return -1;
+  mo_objref_t *barr = mom_obuckarr[bn].bu_obarr;
+  int pos = -1;
+  unsigned startix = h % bsz;
+  for (unsigned ix = startix; ix < bsz; ix++)
+    {
+      mo_objref_t curobr = barr[ix];
+      if (!curobr)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          return pos;
+        }
+      else if (curobr == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (mo_dyncast_objref (curobr) == NULL)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
+        return (int) ix;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      mo_objref_t curobr = barr[ix];
+      if (!curobr)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          return pos;
+        }
+      else if (curobr == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (mo_dyncast_objref (curobr) == NULL)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
+        return (int) ix;
+    }
+  return pos;
+}                               /* end of mom_obucket_hid_loid_index */
+
+static void
+mom_grow_obucket (unsigned bn, unsigned gap)
+{
+  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
+  unsigned bsz = mom_obuckarr[bn].bu_size;
+  unsigned cnt = mom_obuckarr[bn].bu_count;
+  if (3 * (cnt + gap) + 1 < 2 * bsz)
+    return;
+  unsigned oldbsz = bsz;
+  unsigned newsz =
+    mom_prime_above ((3 * (cnt + gap)) / 2 + (cnt + gap) / 8 + 5);
+  mo_objref_t *oldbarr = mom_obuckarr[bn].bu_obarr;
+  mo_objref_t *newbarr = mom_gc_alloc_scalar (newsz * sizeof (mo_objref_t));
+  mom_obuckarr[bn].bu_obarr = newbarr;
+  mom_obuckarr[bn].bu_size = newsz;
+  mom_obuckarr[bn].bu_count = 0;
+  unsigned newcnt = 0;
+  for (unsigned ix = 0; ix < oldbsz; ix++)
+    {
+      mo_objref_t oldobr = oldbarr[ix];
+      if (!oldobr || oldobr == MOM_EMPTY_SLOT)
+        continue;
+      int pos =
+        mom_obucket_hid_loid_index (((mo_hashedvalue_ty *)
+                                     oldobr)->mo_va_hash,
+                                    oldobr->mo_ob_hid, oldobr->mo_ob_loid);
+      MOM_ASSERTPRINTF (pos > 0 && newbarr[pos] == NULL, "bad pos");
+      newbarr[pos] = oldobr;
+      newcnt++;
+    }
+  if (oldbarr != NULL && oldbsz > 100)
+    GC_FREE (oldbarr);
+  MOM_ASSERTPRINTF (newcnt == cnt, "bad newcnt");
+  mom_obuckarr[bn].bu_count = newcnt;
+}                               /* end mom_grow_obucket */
+
 mo_objref_t
 mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
 {
@@ -205,36 +302,19 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
     return NULL;
   unsigned bn = mo_hi_id_bucketnum (hid);
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
-  momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
   unsigned bsz = mom_obuckarr[bn].bu_size;
   if (bsz == 0)
     return NULL;
-  mo_objref_t *barr = mom_obuckarr[bn].bu_obarr;
-  MOM_ASSERTPRINTF (barr != NULL && bsz > 2, "bad barr");
-  unsigned startix = h % bsz;
-  for (unsigned ix = startix; ix < bsz; ix++)
+  momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+  int pos = mom_obucket_hid_loid_index (h, hid, loid);
+  if (pos >= 0)
     {
-      mo_objref_t curobr = barr[ix];
-      if (!curobr)
-        return NULL;
-      if (curobr == MOM_EMPTY_SLOT)
-        continue;
-      if (mo_dyncast_objref (curobr) == NULL)
-        continue;
-      if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
-        return curobr;
-    }
-  for (unsigned ix = 0; ix < startix; ix++)
-    {
-      mo_objref_t curobr = barr[ix];
-      if (!curobr)
-        return NULL;
-      if (curobr == MOM_EMPTY_SLOT)
-        continue;
-      if (mo_dyncast_objref (curobr) == NULL)
-        continue;
-      if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
-        return curobr;
+      MOM_ASSERTPRINTF (pos < (int) bsz, "bad pos");
+      mo_objref_t *barr = mom_obuckarr[bn].bu_obarr;
+      mo_objref_t obr = barr[pos];
+      if (obr && obr != MOM_EMPTY_SLOT && obr->mo_ob_hid == hid
+          && obr->mo_ob_loid == loid)
+        return obr;
     }
   return NULL;
 }                               /* end mo_objref_find_hid_loid */
@@ -253,16 +333,22 @@ mom_add_predefined (mo_objectvalue_ty * ob)
                     "bad hash");
   unsigned bn = mo_hi_id_bucketnum (hid);
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
-  mom_predefined_hset = mo_hashset_put (mom_predefined_hset, ob);
-  if (mom_obuckarr[bn].bu_obarr == NULL)
+  if (MOM_LIKELY (mom_obuckarr[bn].bu_obarr == NULL))
     {
-      unsigned bsz = 19;
+      unsigned bsz = 7;
       mom_obuckarr[bn].bu_obarr =
         mom_gc_alloc_scalar (bsz * sizeof (mo_objref_t));
       mom_obuckarr[bn].bu_size = bsz;
       mom_obuckarr[bn].bu_count = 0;
     }
-#warning mom_add_predefined very incomplete
+  else
+    mom_grow_obucket (bn, 3);
+  int pos = mom_obucket_hid_loid_index (h, hid, loid);
+  MOM_ASSERTPRINTF (pos >= 0
+                    && mom_obuckarr[bn].bu_obarr[pos] == NULL, "bad pos");
+  mom_obuckarr[bn].bu_obarr[pos] = ob;
+  mom_obuckarr[bn].bu_count++;
+  mom_predefined_hset = mo_hashset_put (mom_predefined_hset, ob);
 }                               /* end mom_add_predefined */
 
 
