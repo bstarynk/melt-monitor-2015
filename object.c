@@ -233,4 +233,43 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
   MOM_FATAPRINTF ("mo_objref_find_hid_loid incomplete");
 }
 
+
+/***************** PREDEFINED ****************/
+/* define each predefined */
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash)	\
+mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
+  ._mo = {.mo_va_kind= mo_KOBJECT,			\
+	  .mo_va_index= mo_SPACE_PREDEF,		\
+	  .mo_va_hash= Hash},				\
+  .mo_mtime= 0,						\
+  .mo_ob_hid= Hid,					\
+  .mo_ob_loid= Loid,					\
+  .mo_ob_class= NULL,					\
+  .mo_ob_attrs= NULL,					\
+  .mo_ob_comps= NULL,					\
+  .mo_ob_paylkind= NULL,	       			\
+  .mo_ob_payload= NULL					\
+};                              /* end predefined */
+
+#include "_mom_predef.h"
+
+static mo_hashsetpayl_ty *mo_predefined_hset;
+
+void
+mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
+{
+  if (!mo_dyncast_objref (obr))
+    return;
+  enum mo_space_en oldspa = mo_objref_space (obr);
+  if (oldspa == spa)
+    return;
+  if (MOM_UNLIKELY (oldspa == mo_SPACE_PREDEF))
+    {
+      MOM_ASSERTPRINTF (mo_hashset_contains (mo_predefined_hset, obr),
+                        "obr was pedefined");
+      mo_predefined_hset = mo_hashset_remove (mo_predefined_hset, obr);
+    }
+  ((mo_hashedvalue_ty *) obr)->mo_va_index = spa;
+}
+
 // end of file object.c

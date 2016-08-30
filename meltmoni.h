@@ -790,19 +790,26 @@ static inline bool mo_set_contains(mo_value_t vset, mo_objref_t ob)
 }
 
 /******************** OBJECTs ****************/
+enum mo_space_en
+{
+  mo_SPACE_NONE,
+  mo_SPACE_PREDEF,
+  mo_SPACE_GLOBAL,
+  mo_SPACE_USER,
+};
+
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
 {
   struct mo_hashedvalue_st _mo;
   /// actually, we dont need mutexes before the bootstrap
   /// pthread_mutex_t mo_ob_mtx;
-  uint32_t mo_nameix;
   time_t mo_mtime;
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
-  mo_assovaldatapayl_ty *_mo_ob_attrs;
-  mo_vectvaldatapayl_ty *_mo_ob_comps;
+  mo_assovaldatapayl_ty *mo_ob_attrs;
+  mo_vectvaldatapayl_ty *mo_ob_comps;
   mo_objref_t mo_ob_paylkind;
   void* mo_ob_payload;
 };
@@ -844,6 +851,14 @@ static inline momhash_t mo_objref_hash(mo_objref_t obr)
   if (!mo_dyncast_objref(obr)) return 0;
   return ((mo_hashedvalue_ty*)obr)->mo_va_hash;
 }
+
+static enum mo_space_en mo_objref_space(mo_objref_t obr)
+{
+  if (!mo_dyncast_objref(obr)) return mo_SPACE_NONE;
+  return (enum mo_space_en)((mo_hashedvalue_ty*)obr)->mo_va_index;
+}
+
+void mo_objref_put_space(mo_objref_t obr, enum mo_space_en spa);
 
 int mom_objref_cmp(const void*,const void*); // suitable for qsort, in object.c
 
@@ -1012,4 +1027,15 @@ mo_json_t mo_jsonid_of_objref(mo_objref_t);
 mo_value_t mo_value_of_json(mo_json_t);
 // get the existing objref from a json
 mo_objref_t mo_objref_of_jsonid(mo_json_t);
+
+/************* PREDEFINED ***********/
+
+#define MOM_VARPREDEF(Nam) mompredef_##Nam
+#define MOM_PREDREF(Nam) (mo_objref_t)(&MOM_VARPREDEF(Nam))
+/* declare them as objects */
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) \
+  extern mo_objectvalue_ty MOM_VARPREDEF(Nam);
+#include "_mom_predef.h"
+
+
 #endif /*MONIMELT_INCLUDED_ */

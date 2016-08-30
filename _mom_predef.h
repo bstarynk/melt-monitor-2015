@@ -24,9 +24,8 @@
 #undef MOM_NB_PREDEFINED
 #define MOM_NB_PREDEFINED 1
 
-// MOM_HAS_PREDEFINED(name,idstr,hash)
-MOM_HAS_PREDEFINED(comment,_0uV4mZ4aM2zJdiXGE,2138404002)
-
+// MOM_HAS_PREDEFINED(name,idstr,hid,loid,hash)
+MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
 
 #undef MOM_HAS_PREDEFINED
 // eof not yet generated _mom_predef.h
