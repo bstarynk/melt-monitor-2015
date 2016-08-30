@@ -20,15 +20,13 @@
 
 #include "meltmoni.h"
 
-void
-mom_init_objects (void)
+// we keep object in bucket
+static struct mom_objbucket_st
 {
-  static bool inited;
-  MOM_ASSERTPRINTF (!inited, "should not initialize objects twice");
-  if (inited)
-    return;
-  inited = true;
-}                               /* end mom_init_objects */
+  uint32_t bu_size;
+  uint32_t bu_count;
+  mo_objref_t *bu_obarr;        /* should be scalar! */
+} mom_obuckarr[MOM_HID_BUCKETMAX];
 
 // we choose base 60, because with a 0-9 decimal digit then 13 extended
 // digits in base 60 we can express a 80-bit number.  Notice that
@@ -207,9 +205,39 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
     return NULL;
   unsigned bn = mo_hi_id_bucketnum (hid);
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bd%u", bn);
-#warning mo_objref_find_hid_loid incomplete
-  MOM_FATAPRINTF ("mo_objref_find_hid_loid incomplete");
-}
+  momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+  unsigned bsz = mom_obuckarr[bn].bu_size;
+  if (bsz == 0)
+    return NULL;
+  mo_objref_t *barr = mom_obuckarr[bn].bu_obarr;
+  MOM_ASSERTPRINTF (barr != NULL && bsz > 2, "bad barr");
+  unsigned startix = h % bsz;
+  for (unsigned ix = startix; ix < bsz; ix++)
+    {
+      mo_objref_t curobr = barr[ix];
+      if (!curobr)
+        return NULL;
+      if (curobr == MOM_EMPTY_SLOT)
+        continue;
+      if (mo_dyncast_objref (curobr) == NULL)
+        continue;
+      if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
+        return curobr;
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      mo_objref_t curobr = barr[ix];
+      if (!curobr)
+        return NULL;
+      if (curobr == MOM_EMPTY_SLOT)
+        continue;
+      if (mo_dyncast_objref (curobr) == NULL)
+        continue;
+      if (curobr->mo_ob_hid == hid && curobr->mo_ob_loid == loid)
+        return curobr;
+    }
+  return NULL;
+}                               /* end mo_objref_find_hid_loid */
 
 
 /***************** PREDEFINED ****************/
@@ -259,5 +287,20 @@ mo_predefined_objects_set (void)
 {
   return mo_hashset_elements_set (mo_predefined_hset);
 }                               /* end mo_predefined_objects_set */
+
+
+
+
+void
+mom_init_objects (void)
+{
+  static bool inited;
+  MOM_ASSERTPRINTF (!inited, "should not initialize objects twice");
+  if (inited)
+    return;
+  inited = true;
+#warning mom_init_objects uncomplete
+}                               /* end mom_init_objects */
+
 
 // end of file object.c
