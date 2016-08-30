@@ -20,28 +20,6 @@
 
 #include "meltmoni.h"
 
-bool
-mom_valid_name (const char *nam)
-{
-  if (!nam || nam == MOM_EMPTY_SLOT)
-    return false;
-  if (!isalpha (nam[0]))
-    return false;
-  for (const char *p = nam + 1; *p; p++)
-    {
-      if (isalnum (*p))
-        continue;
-      if (*p == '_')
-        {
-          if (p[-1] == '_')
-            return false;
-          if (!isalnum (p[1]))
-            return false;
-        }
-    }
-  return true;
-}                               // end mom_valid_name
-
 void
 mom_init_objects (void)
 {
@@ -268,6 +246,10 @@ mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
       MOM_ASSERTPRINTF (mo_hashset_contains (mo_predefined_hset, obr),
                         "obr was pedefined");
       mo_predefined_hset = mo_hashset_remove (mo_predefined_hset, obr);
+    }
+  if (MOM_UNLIKELY (spa == mo_SPACE_PREDEF))
+    {
+      mo_predefined_hset = mo_hashset_put (mo_predefined_hset, obr);
     }
   ((mo_hashedvalue_ty *) obr)->mo_va_index = spa;
 }

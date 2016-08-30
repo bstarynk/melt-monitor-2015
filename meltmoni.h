@@ -395,10 +395,6 @@ typedef uint32_t momhash_t;
 typedef __int128 mom_int128_t;
 typedef unsigned __int128 mom_uint128_t;
 
-// a name is valid if it is like some C identifier or keyword
-// initial and final underscores are not allowed
-// consecutive underscores are not allowed
-bool mom_valid_name(const char*nam); // in object.c
 
 
 momhash_t // in main.c
@@ -852,7 +848,7 @@ static inline momhash_t mo_objref_hash(mo_objref_t obr)
   return ((mo_hashedvalue_ty*)obr)->mo_va_hash;
 }
 
-static enum mo_space_en mo_objref_space(mo_objref_t obr)
+static inline enum mo_space_en mo_objref_space(mo_objref_t obr)
 {
   if (!mo_dyncast_objref(obr)) return mo_SPACE_NONE;
   return (enum mo_space_en)((mo_hashedvalue_ty*)obr)->mo_va_index;
@@ -1018,6 +1014,7 @@ mo_hashsetpayl_ty* mo_hashset_put(mo_hashsetpayl_ty*hset, mo_objref_t ob);
 mo_hashsetpayl_ty* mo_hashset_remove(mo_hashsetpayl_ty*hset, mo_objref_t ob);
 mo_hashsetpayl_ty* mo_hashset_reserve(mo_hashsetpayl_ty*hset, unsigned gap);
 mo_value_t mo_hashset_elements_set(mo_hashsetpayl_ty*hset); // set of elements
+
 ///////////////// JSON support
 // get the json for a value
 mo_json_t mo_json_of_value(mo_value_t);
@@ -1028,6 +1025,40 @@ mo_value_t mo_value_of_json(mo_json_t);
 // get the existing objref from a json
 mo_objref_t mo_objref_of_jsonid(mo_json_t);
 
+/************* NAMES ***********/
+// a name is valid if it is like some C identifier or keyword
+// initial and final underscores are not allowed
+// consecutive underscores are not allowed
+bool mom_valid_name(const char*nam); // in name.c
+
+// get the name of some object, or else nil
+mo_value_t mo_get_namev (mo_objref_t ob);
+
+
+/* currently, the names are never forgotten, old their associated
+   object may be removed. */
+// register a name for an anonymous object, return true if successful
+bool mo_register_named(mo_objref_t obr, const char*nam);
+bool mo_register_name_string(mo_objref_t obr, mo_value_t namv);
+
+// unregister a named object, return true if successful
+bool mo_unregister_named_object(mo_objref_t obr);
+bool mo_unregister_name_string(const char*nams);
+bool mo_unregister_name_vals(mo_value_t namv);
+
+// get an object by its name or else nil
+mo_objref_t mo_find_named_cstr(const char*nams);
+mo_objref_t mo_find_named_vals(mo_value_t namv);
+
+// the printable name of an object, perhaps GC-strduped
+static inline const char*
+mo_object_pnamestr(mo_objref_t ob)
+{
+  if (!mo_dyncast_objref(ob)) return "~";
+  mo_value_t namv = mo_get_namev(ob);
+  if (namv) return mo_string_cstr(namv);
+  return mo_cstring_from_hi_lo_ids(NULL, ob->mo_ob_hid, ob->mo_ob_loid);
+} /* end mo_object_pnamestr */
 /************* PREDEFINED ***********/
 
 #define MOM_VARPREDEF(Nam) mompredef_##Nam

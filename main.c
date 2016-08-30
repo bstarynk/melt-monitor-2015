@@ -981,7 +981,7 @@ mom_print_info (void)
     mo_cstring_from_hi_lo_ids (rbuf, hid, loid);
     momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
     printf
-      (" randomid: hid=%#lx=%ld loid=%#llx=%ld: %s (of %d chars and hash %9u=%#08x)\n",
+      (" randomid: hid=%#lx=%ld loid=%#llx=%lld: %s (of %d chars and hash %9u=%#08x)\n",
        (long) hid, (long) hid, (long long) loid, (long long) loid, rbuf,
        (int) strlen (rbuf), (unsigned) h, (unsigned) h);
     mo_hid_t revhid = 0;
