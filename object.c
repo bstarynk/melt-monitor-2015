@@ -28,6 +28,8 @@ static struct mom_objbucket_st
   mo_objref_t *bu_obarr;        /* should be scalar! */
 } mom_obuckarr[MOM_HID_BUCKETMAX];
 
+static void mom_cleanup_object (void *objad, void *data);
+
 // we choose base 60, because with a 0-9 decimal digit then 13 extended
 // digits in base 60 we can express a 80-bit number.  Notice that
 // log(2**80/10)/log(60) is 12.98112
@@ -319,6 +321,129 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
   return NULL;
 }                               /* end mo_objref_find_hid_loid */
 
+mo_objref_t
+mo_objref_create_hid_loid (mo_hid_t hid, mo_loid_t loid)
+{
+  if (hid == 0 && loid == 0)
+    return NULL;
+  unsigned bn = mo_hi_id_bucketnum (hid);
+  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
+  MOM_ASSERTPRINTF (hid > 0, "bad hid");
+  MOM_ASSERTPRINTF (loid > 0, "bad loid");
+  unsigned bsiz = mom_obuckarr[bn].bu_size;
+  unsigned bcnt = mom_obuckarr[bn].bu_count;
+  if (3 * bcnt + 1 > 2 * bsiz)
+    {
+      mom_grow_obucket (bn, bcnt / 16 + 2);
+      bsiz = mom_obuckarr[bn].bu_size;
+    }
+  momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+  int pos = mom_obucket_hid_loid_index (h, hid, loid);
+  MOM_ASSERTPRINTF (pos >= 0 && pos < (int) bsiz, "bad pos");
+  mo_objref_t obr = mom_obuckarr[bn].bu_obarr[pos];
+  if (obr && obr != MOM_EMPTY_SLOT && obr->mo_ob_hid == hid
+      && obr->mo_ob_loid == loid)
+    return obr;
+  obr = mom_gc_alloc (sizeof (mo_objectvalue_ty));
+  mom_obuckarr[bn].bu_obarr[pos] = obr;
+  mom_obuckarr[bn].bu_count = bcnt + 1;
+  ((mo_hashedvalue_ty *) obr)->mo_va_kind = mo_KOBJECT;
+  ((mo_hashedvalue_ty *) obr)->mo_va_index = 0;
+  ((mo_hashedvalue_ty *) obr)->mo_va_hash = h;
+  obr->mo_ob_hid = hid;
+  obr->mo_ob_loid = loid;
+  obr->mo_ob_mtime = 0;
+  obr->mo_ob_class = NULL;
+  obr->mo_ob_attrs = NULL;
+  obr->mo_ob_comps = NULL;
+  obr->mo_ob_paylkind = NULL;
+  obr->mo_ob_payload = NULL;
+  GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
+                                     NULL);
+  return obr;
+}                               /* end mo_objref_create_hid_loid */
+
+
+
+mo_objref_t
+mo_make_object (void)
+{
+  mo_hid_t hid = 0;
+  mo_loid_t loid = 0;
+  mo_objref_t obr = NULL;
+  do
+    {
+      mo_get_some_random_hi_lo_ids (&hid, &loid);
+      unsigned bn = mo_hi_id_bucketnum (hid);
+      MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
+      MOM_ASSERTPRINTF (hid > 0, "bad hid");
+      MOM_ASSERTPRINTF (loid > 0, "bad loid");
+      unsigned bsiz = mom_obuckarr[bn].bu_size;
+      unsigned bcnt = mom_obuckarr[bn].bu_count;
+      if (bsiz == 0)
+        {
+          bsiz = 7;
+          mom_obuckarr[bn].bu_obarr =
+            mom_gc_alloc_scalar (bsiz * sizeof (mo_objref_t));
+          mom_obuckarr[bn].bu_size = bsiz;
+          mom_obuckarr[bn].bu_count = 0;
+        }
+      else if (3 * bcnt + 1 > 2 * bsiz)
+        {
+          mom_grow_obucket (bn, bcnt / 16 + 2);
+          bsiz = mom_obuckarr[bn].bu_size;
+        }
+      momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+      int pos = mom_obucket_hid_loid_index (h, hid, loid);
+      MOM_ASSERTPRINTF (pos >= 0 && pos < (int) bsiz, "bad pos");
+      mo_objref_t oldobr = mom_obuckarr[bn].bu_obarr[pos];
+      if (oldobr && oldobr != MOM_EMPTY_SLOT
+          && oldobr && oldobr->mo_ob_hid == hid && oldobr->mo_ob_loid == loid)
+        continue;
+      obr = mom_gc_alloc (sizeof (mo_objectvalue_ty));
+      mom_obuckarr[bn].bu_obarr[pos] = obr;
+      mom_obuckarr[bn].bu_count++;
+      ((mo_hashedvalue_ty *) obr)->mo_va_kind = mo_KOBJECT;
+      ((mo_hashedvalue_ty *) obr)->mo_va_index = 0;
+      ((mo_hashedvalue_ty *) obr)->mo_va_hash = h;
+      obr->mo_ob_hid = hid;
+      obr->mo_ob_loid = loid;
+      obr->mo_ob_mtime = 0;
+      obr->mo_ob_class = NULL;
+      obr->mo_ob_attrs = NULL;
+      obr->mo_ob_comps = NULL;
+      obr->mo_ob_paylkind = NULL;
+      obr->mo_ob_payload = NULL;
+      GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
+                                         NULL);
+    }
+  while (MOM_UNLIKELY (obr == NULL));
+  return obr;
+}                               /* end of mo_make_object */
+
+
+
+static void
+mom_cleanup_object (void *objad, void *data MOM_UNUSED)
+{
+  mo_objref_t obr = objad;
+  if (((mo_hashedvalue_ty *) obr)->mo_va_kind != mo_KOBJECT)
+    return;
+  momhash_t h = ((mo_hashedvalue_ty *) obr)->mo_va_hash;
+  mo_hid_t hid = obr->mo_ob_hid;
+  mo_loid_t loid = obr->mo_ob_loid;
+  unsigned bn = mo_hi_id_bucketnum (hid);
+  int pos = mom_obucket_hid_loid_index (h, hid, loid);
+  MOM_ASSERTPRINTF (pos >= 0 && mom_obuckarr[bn].bu_obarr[pos] == obr,
+                    "corrupted bucket#%d pos:%d", bn, pos);
+  mom_obuckarr[bn].bu_obarr[pos] = MOM_EMPTY_SLOT;
+  mom_obuckarr[bn].bu_count--;
+#warning mom_cleanup_object could properly finalize the object itself with its payload
+  memset (obr, 0, sizeof (mo_objectvalue_ty));
+}                               /* end mom_cleanup_object */
+
+
+
 static mo_hashsetpayl_ty *mom_predefined_hset;
 static void
 mom_add_predefined (mo_objectvalue_ty * ob)
@@ -360,7 +485,7 @@ mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
   ._mo = {.mo_va_kind= mo_KOBJECT,			\
 	  .mo_va_index= mo_SPACE_PREDEF,		\
 	  .mo_va_hash= Hash},				\
-  .mo_mtime= 0,						\
+  .mo_ob_mtime= 0,     					\
   .mo_ob_hid= Hid,					\
   .mo_ob_loid= Loid,					\
   .mo_ob_class= NULL,					\
@@ -411,7 +536,22 @@ mom_init_objects (void)
   if (inited)
     return;
   inited = true;
-#warning mom_init_objects uncomplete
+  mom_predefined_hset = mo_hashset_reserve (NULL, 5 + MOM_NB_PREDEFINED);
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash)	\
+  mom_add_predefined(MOM_PREDEF(Nam));
+#include "_mom_predef.h"
+
+  int cnt = 0;
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) do {	\
+    MOM_ASSERTPRINTF(MOM_PREDEF(Nam)->mo_ob_hid == Hid		\
+		     && MOM_PREDEF(Nam)->mo_ob_loid == Loid,	\
+		     "bad predef " #Nam);			\
+    mo_register_named(MOM_PREDEF(Nam),#Nam);			\
+    cnt++;							\
+} while(0);
+#include "_mom_predef.h"
+
+  MOM_INFORMPRINTF ("initialized %d predefined", cnt);
 }                               /* end mom_init_objects */
 
 

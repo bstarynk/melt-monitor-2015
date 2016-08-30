@@ -800,7 +800,7 @@ struct mo_objectvalue_st
   struct mo_hashedvalue_st _mo;
   /// actually, we dont need mutexes before the bootstrap
   /// pthread_mutex_t mo_ob_mtx;
-  time_t mo_mtime;
+  time_t mo_ob_mtime;
   mo_hid_t mo_ob_hid;
   mo_loid_t mo_ob_loid;
   mo_objref_t  mo_ob_class;
@@ -829,6 +829,9 @@ mo_objref_t mo_objref_find_hid_loid(mo_hid_t hid, mo_loid_t loid);
 // create an object of given valid hid & loid; mostly useful at load
 // time
 mo_objref_t mo_objref_create_hid_loid(mo_hid_t hid, mo_loid_t loid);
+
+// make a fresh object of unique hid & loid
+mo_objref_t mo_make_object(void);
 
 static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
 {
@@ -1069,7 +1072,7 @@ mo_object_pnamestr(mo_objref_t ob)
 
 mo_value_t mo_predefined_objects_set(void);
 #define MOM_VARPREDEF(Nam) mompredef_##Nam
-#define MOM_PREDREF(Nam) (mo_objref_t)(&MOM_VARPREDEF(Nam))
+#define MOM_PREDEF(Nam) ((mo_objref_t)(&MOM_VARPREDEF(Nam)))
 /* declare them as objects */
 #define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) \
   extern mo_objectvalue_ty MOM_VARPREDEF(Nam);
