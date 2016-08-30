@@ -826,6 +826,10 @@ static inline mo_objref_t mo_dyncast_objref(mo_value_t v)
 
 mo_objref_t mo_objref_find_hid_loid(mo_hid_t hid, mo_loid_t loid);
 
+// create an object of given valid hid & loid; mostly useful at load
+// time
+mo_objref_t mo_objref_create_hid_loid(mo_hid_t hid, mo_loid_t loid);
+
 static inline int mo_objref_cmp(mo_objref_t obl, mo_objref_t obr)
 {
   obl = mo_dyncast_objref(obl);

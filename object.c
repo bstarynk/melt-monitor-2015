@@ -204,7 +204,7 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
   if (hid == 0 && loid == 0)
     return NULL;
   unsigned bn = mo_hi_id_bucketnum (hid);
-  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bd%u", bn);
+  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
   momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
   unsigned bsz = mom_obuckarr[bn].bu_size;
   if (bsz == 0)
@@ -239,6 +239,33 @@ mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid)
   return NULL;
 }                               /* end mo_objref_find_hid_loid */
 
+static mo_hashsetpayl_ty *mom_predefined_hset;
+static void
+mom_add_predefined (mo_objectvalue_ty * ob)
+{
+  MOM_ASSERTPRINTF (ob
+                    && ((mo_hashedvalue_ty *) ob)->mo_va_kind == mo_KOBJECT,
+                    "bad ob");
+  mo_hid_t hid = ob->mo_ob_hid;
+  mo_loid_t loid = ob->mo_ob_loid;
+  momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
+  MOM_ASSERTPRINTF (h > 0 && h == ((mo_hashedvalue_ty *) ob)->mo_va_hash,
+                    "bad hash");
+  unsigned bn = mo_hi_id_bucketnum (hid);
+  MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
+  mom_predefined_hset = mo_hashset_put (mom_predefined_hset, ob);
+  if (mom_obuckarr[bn].bu_obarr == NULL)
+    {
+      unsigned bsz = 19;
+      mom_obuckarr[bn].bu_obarr =
+        mom_gc_alloc_scalar (bsz * sizeof (mo_objref_t));
+      mom_obuckarr[bn].bu_size = bsz;
+      mom_obuckarr[bn].bu_count = 0;
+    }
+#warning mom_add_predefined very incomplete
+}                               /* end mom_add_predefined */
+
+
 
 /***************** PREDEFINED ****************/
 /* define each predefined */
@@ -259,7 +286,6 @@ mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
 
 #include "_mom_predef.h"
 
-static mo_hashsetpayl_ty *mo_predefined_hset;
 
 void
 mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
@@ -271,13 +297,13 @@ mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
     return;
   if (MOM_UNLIKELY (oldspa == mo_SPACE_PREDEF))
     {
-      MOM_ASSERTPRINTF (mo_hashset_contains (mo_predefined_hset, obr),
+      MOM_ASSERTPRINTF (mo_hashset_contains (mom_predefined_hset, obr),
                         "obr was pedefined");
-      mo_predefined_hset = mo_hashset_remove (mo_predefined_hset, obr);
+      mom_predefined_hset = mo_hashset_remove (mom_predefined_hset, obr);
     }
   if (MOM_UNLIKELY (spa == mo_SPACE_PREDEF))
     {
-      mo_predefined_hset = mo_hashset_put (mo_predefined_hset, obr);
+      mom_predefined_hset = mo_hashset_put (mom_predefined_hset, obr);
     }
   ((mo_hashedvalue_ty *) obr)->mo_va_index = spa;
 }                               /* end mo_objref_put_space */
@@ -285,7 +311,7 @@ mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
 mo_value_t
 mo_predefined_objects_set (void)
 {
-  return mo_hashset_elements_set (mo_predefined_hset);
+  return mo_hashset_elements_set (mom_predefined_hset);
 }                               /* end mo_predefined_objects_set */
 
 
