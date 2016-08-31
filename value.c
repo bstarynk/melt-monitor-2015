@@ -614,7 +614,7 @@ mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
   if (cnt + 1 <= sz)
     {
       vect->mo_seqval[cnt] = val;
-      ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt+1;
+      ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt + 1;
       return vect;
     }
   vect = mo_vectval_reserve (vect, 5 + cnt / 4 + cnt / 32);

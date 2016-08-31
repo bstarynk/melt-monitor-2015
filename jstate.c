@@ -21,14 +21,14 @@
 #include "meltmoni.h"
 
 /*** IMPORTANT NOTICE: the list of tables created by function
- * mo_create_tables_for_dump should be kept in sync with the
+ * mo_dump_initialize_sqlite_database should be kept in sync with the
  * monimelt-dump-state.sh script (look for lines with ".mode insert"
  * inside that script)
  ***/
 
 typedef struct mo_dumper_st mo_dumper_ty;
 typedef struct mo_loader_st mo_loader_ty;
-void mo_create_tables_for_dump (mo_dumper_ty *);
+void mo_dump_initialize_sqlite_database (mo_dumper_ty *);
 
 
 #define MOM_LOADER_MAGIC  0x179128bd
@@ -59,26 +59,78 @@ struct mo_dumper_st             // stack allocated
 
 
 void
-mo_create_tables_for_dump (mo_dumper_ty * du)
+mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
 {
-  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC,
-                    "invalid dumper");
-  MOM_ASSERTPRINTF (du->mo_du_db, "bad database");
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "invalid dumper");
+  du->mo_du_db = NULL;
+  char *errmsg = NULL;
+  /***** open the database *****/
+  mo_value_t sqlpathbufv =      //
+    mo_make_string_sprintf ("%s/%s%s",
+                            mo_string_cstr (du->mo_du_dirv),
+                            monimelt_perstatebase,
+                            mo_string_cstr (du->mo_du_tempsufv));
+  int nok = sqlite3_open (mo_string_cstr (sqlpathbufv), &du->mo_du_db);
+  if (nok != SQLITE_OK || !du->mo_du_db)
+    MOM_FATAPRINTF ("failed to sqlite3_open %s (%s)",
+                    mo_string_cstr (sqlpathbufv), sqlite3_errstr (nok));
+  /***** create tables and indexes *****/
   // keep these table names in CREATE TABLE Sqlite statements in sync
   // with monimelt-dump-state.sh script
-  char *errmsg = NULL;
-  if (sqlite3_exec (du->mo_du_db,
-                    "CREATE TABLE t_params"
-                    " (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,"
-                    "  par_value TEXT NOT NULL)", NULL, NULL, &errmsg))
+  //
+  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
+                                     "CREATE TABLE t_params"
+                                     " (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                                     "  par_value TEXT NOT NULL)", NULL, NULL,
+                                     &errmsg))
     MOM_FATAPRINTF ("Failed to create t_params Sqlite table: %s", errmsg);
-  if (sqlite3_exec (du->mo_du_db,
-                    "CREATE TABLE t_objects"
-                    " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
-                    "  ob_mtime DATETIME,"
-                    "  ob_jsoncont TEXT NOT NULL)", NULL, NULL, &errmsg))
+  //
+  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
+                                     "CREATE TABLE t_objects"
+                                     " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                                     "  ob_mtime DATETIME,"
+                                     "  ob_jsoncont TEXT NOT NULL)", NULL,
+                                     NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
-}                               /* end mo_create_tables_for_dump */
+  //
+  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
+                                     "CREATE TABLE t_names"
+                                     " (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,"
+                                     "  nam_id VARCHAR(20) NOT NULL UNIQUE)",
+                                     NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to create t_names Sqlite table: %s", errmsg);
+  //
+  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
+                                     "CREATE UNIQUE INDEX x_namedid ON t_names (nam_id)",
+                                     NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to create x_namedid Sqlite index: %s", errmsg);
+  /***** prepare statements *****/
+}                               /* end mo_dump_initialize_sqlite_database */
+
+void
+mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  MOM_WARNPRINTF ("unimplemented mo_dump_emit_object_content for %s",
+                  mo_object_pnamestr (obr));
+#warning unimplemented mo_dump_emit_object_content
+}                               /* end of mo_dump_emit_object_content */
+
+void
+mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
+                    du);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+
+  MOM_WARNPRINTF ("unimplemented mo_dump_scan_inside_object for %s",
+                  mo_object_pnamestr (obr));
+#warning unimplemented mo_dump_scan_inside_object
+}                               /* end of mo_dump_scan_inside_object */
 
 FILE *
 mo_dump_fopen (mo_dumper_ty * du, const char *path)
@@ -88,12 +140,11 @@ mo_dump_fopen (mo_dumper_ty * du, const char *path)
                     du);
   MOM_ASSERTPRINTF (path && (isalnum (path[0]) || !strncmp (path, "_mom", 4)),
                     "bad path %s", path);
-  mo_value_t pathbufv = mo_make_string_sprintf ("%s/%s%s",
-                                                mo_string_cstr
-                                                (du->mo_du_dirv),
-                                                path,
-                                                mo_string_cstr
-                                                (du->mo_du_tempsufv));
+  mo_value_t pathbufv =         //
+    mo_make_string_sprintf ("%s/%s%s",
+                            mo_string_cstr (du->mo_du_dirv),
+                            path,
+                            mo_string_cstr (du->mo_du_tempsufv));
   FILE *f = fopen (mo_string_cstr (pathbufv), "wx");
   if (!f)
     MOM_FATAPRINTF ("fopen %s failed (%m)", mo_string_cstr (pathbufv));
@@ -158,28 +209,6 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
 }                               /* end mo_dump_emit_predefined */
 
 void
-mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
-{
-  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
-                    du);
-  MOM_WARNPRINTF ("unimplemented mo_dump_emit_object_content for %s",
-                  mo_object_pnamestr (obr));
-#warning unimplemented mo_dump_emit_object_content
-}                               /* end of mo_dump_emit_object_content */
-
-void
-mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
-{
-  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
-                    du);
-  MOM_WARNPRINTF ("unimplemented mo_dump_scan_inside_object for %s",
-                  mo_object_pnamestr (obr));
-#warning unimplemented mo_dump_scan_inside_object
-}                               /* end of mo_dump_scan_inside_object */
-
-void
 mo_dump_emit_names (mo_dumper_ty * du)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
@@ -193,8 +222,33 @@ void
 mo_dump_rename_emitted_files (mo_dumper_ty * du)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
-                    du);
+                    && du->mo_du_state == MOMDUMP_EMIT
+                    && du->mo_du_db != NULL, "bad dumper du@%p", du);
+  mo_value_t sqltmpathbufv =    //
+    mo_make_string_sprintf ("%s/%s%s",
+                            mo_string_cstr (du->mo_du_dirv),
+                            monimelt_perstatebase,
+                            mo_string_cstr (du->mo_du_tempsufv));
+  mo_value_t sqlfupathbufv =    //
+    mo_make_string_sprintf ("%s/%s",
+                            mo_string_cstr (du->mo_du_dirv),
+                            monimelt_perstatebase);
+  mo_value_t sqlbackuppathbufv =        //
+    mo_make_string_sprintf ("%s/%s%%",
+                            mo_string_cstr (du->mo_du_dirv),
+                            monimelt_perstatebase);
+  int nok = sqlite3_close (du->mo_du_db);
+  if (nok != SQLITE_OK)
+    MOM_FATAPRINTF ("failed to close Sqlite3 database %s (%s)",
+                    mo_string_cstr (sqltmpathbufv), sqlite3_errstr (nok));
+  du->mo_du_db = NULL;
+  if (!access (mo_string_cstr (sqlfupathbufv), F_OK))
+    (void) rename (mo_string_cstr (sqlfupathbufv),
+                   mo_string_cstr (sqlbackuppathbufv));
+  if (rename (mo_string_cstr (sqltmpathbufv), mo_string_cstr (sqlfupathbufv)))
+    MOM_FATAPRINTF ("failed to rename database %s -> %s",
+                    mo_string_cstr (sqltmpathbufv),
+                    mo_string_cstr (sqlfupathbufv));
   unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
   unsigned nbsamefiles = 0;
   for (unsigned ix = 0; ix < nbfil; ix++)
@@ -311,6 +365,7 @@ mom_dump_state (const char *dirname)
     }
   /// the emit loop
   dumper.mo_du_state = MOMDUMP_EMIT;
+  mo_dump_initialize_sqlite_database (&dumper);
   mo_dump_emit_predefined (&dumper, predefset);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);

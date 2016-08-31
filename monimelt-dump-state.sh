@@ -65,12 +65,14 @@ sqlite3 $dbfile  .schema >> $tempdump || exit 1
 
 echo '-- state-monimelt tables contents' >> $tempdump
 ### IMPORTANT NOTICE: the list of tables should be kept in sync with
-### the mo_create_tables_for_dump function of file jstate.c
+### the mo_dump_initialize_sqlite_database function of file jstate.c
 sqlite3 $dbfile >> $tempdump <<EOF
 .mode insert t_params
   SELECT * FROM t_params ORDER BY par_name;
 .mode insert t_objects
   SELECT * FROM t_objects ORDER BY ob_id;
+.mode insert t_names
+  SELECT * FROM t_names ORDER BY nam_str;
 EOF
 echo 'COMMIT;' >> $tempdump
 echo "-- monimelt-dump-state end dump $dbfile" >> $tempdump
