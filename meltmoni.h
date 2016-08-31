@@ -119,7 +119,7 @@ typedef atomic_bool mom_atomic_bool_t;
 typedef atomic_int mom_atomic_int_t;
 typedef atomic_int_least16_t mom_atomic_int16_t;
 typedef FILE *_Atomic mom_atomic_fileptr_t;
-typedef const json_t* mo_json_t;
+typedef json_t* mo_json_t;
 typedef struct mo_dumper_st mo_dumper_ty;
 #define thread_local _Thread_local
 
@@ -918,7 +918,9 @@ mo_assovaldatapayl_ty* mo_assoval_put(mo_assovaldatapayl_ty*asso, mo_objref_t ob
 mo_assovaldatapayl_ty* mo_assoval_remove(mo_assovaldatapayl_ty*asso, mo_objref_t ob);
 mo_assovaldatapayl_ty* mo_assoval_reserve(mo_assovaldatapayl_ty*asso, unsigned gap);
 mo_value_t mo_assoval_keys_set(mo_assovaldatapayl_ty*asso); // set of keys
-
+void mo_dump_scan_assoval(mo_dumper_ty*,mo_assovaldatapayl_ty*);
+mo_json_t mo_dump_json_of_assoval(mo_dumper_ty*,mo_assovaldatapayl_ty*);
+mo_assovaldatapayl_ty* mo_assoval_of_json(mo_json_t);
 
 /******************** VECTVALs payload ****************/
 struct mo_vectvaldatapayl_st
@@ -987,6 +989,9 @@ mo_vectvaldatapayl_ty* mo_vectval_reserve(mo_vectvaldatapayl_ty*vect, unsigned n
 mo_vectvaldatapayl_ty* mo_vectval_resize(mo_vectvaldatapayl_ty*vect, unsigned newlen);
 mo_vectvaldatapayl_ty* mo_vectval_append(mo_vectvaldatapayl_ty*vect, mo_value_t val);
 
+void mo_dump_scan_vectval(mo_dumper_ty*,mo_vectvaldatapayl_ty*);
+mo_json_t mo_dump_json_of_vectval(mo_dumper_ty*,mo_vectvaldatapayl_ty*);
+mo_vectvaldatapayl_ty* mo_vectval_of_json(mo_json_t);
 /******************** HASHSETs payload ****************/
 typedef struct mo_hashsetpayl_st mo_hashsetpayl_ty;
 struct mo_hashsetpayl_st
@@ -1118,18 +1123,35 @@ mo_vectvaldatapayl_ty* mo_list_to_vectvaldata(mo_listpayl_ty*);
 mo_value_t mo_list_to_tuple(mo_listpayl_ty*);
 
 ///////////////// DUMP support .. in jstate.c
-void mo_dump_scan_value(mo_dumper_ty*, mo_value_t);
-void mo_dump_scan_objref(mo_dumper_ty*, mo_objref_t);
+bool mo_dump_scanning(mo_dumper_ty*);
+void mo_dump_really_scan_value(mo_dumper_ty*, mo_value_t);
+static inline void
+mo_dump_scan_value(mo_dumper_ty*du, mo_value_t v)
+{
+  if (mo_valid_pointer_value(v))
+    mo_dump_really_scan_value(du, v);
+} /* end mo_dump_scan_value */
+
+void mo_dump_really_scan_objref(mo_dumper_ty*, mo_objref_t);
+static inline void
+mo_dump_scan_objref(mo_dumper_ty*du, mo_objref_t obr)
+{
+  if (mo_dyncast_objref(obr))
+    mo_dump_really_scan_objref(du,obr);
+} /* end mo_dump_scan_objref */
+
 void mo_dump_scan_inside_object(mo_dumper_ty*, mo_objref_t);
+bool mo_dump_emitting(mo_dumper_ty*);
+bool mo_dump_is_emitted_objref(mo_dumper_ty*, mo_objref_t);
 void mo_dump_emit_object_content(mo_dumper_ty*, mo_objref_t);
 void mo_dump_emit_names(mo_dumper_ty*);
 FILE* mo_dump_fopen(mo_dumper_ty*, const char*);
 void mom_dump_state (const char*dirname);
 ///////////////// JSON support .. in jstate.c
 // get the json for a value
-mo_json_t mo_json_of_value(mo_value_t);
+mo_json_t mo_dump_json_of_value(mo_dumper_ty*,mo_value_t);
 // get the json for an objref, e.g. an id string or null
-mo_json_t mo_jsonid_of_objref(mo_objref_t);
+mo_json_t mo_dump_jsonid_of_objref(mo_dumper_ty*,mo_objref_t);
 // get the value from a json
 mo_value_t mo_value_of_json(mo_json_t);
 // get the existing objref from a json

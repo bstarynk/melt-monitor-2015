@@ -327,4 +327,96 @@ mo_assoval_keys_set (mo_assovaldatapayl_ty * asso)
   return mo_make_set_closeq (sq);
 }
 
+void
+mo_dump_scan_assoval (mo_dumper_ty * du, mo_assovaldatapayl_ty * asso)
+{
+  if (!mo_dyncastpayl_assoval (asso))
+    return;
+  MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
+  unsigned sz = ((mo_sizedvalue_ty *) asso)->mo_sva_size;
+  MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
+  unsigned cnt = ((mo_countedpayl_ty *) asso)->mo_cpl_count;
+  MOM_ASSERTPRINTF (cnt <= sz, "cnt %u above sz %u", cnt, sz);
+  if (cnt == 0)
+    return;
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t obr = asso->mo_seqent[ix].mo_asso_obr;
+      if (!obr || obr == MOM_EMPTY_SLOT)
+        continue;
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL,
+                        "corrupted ix=%u", ix);
+      mo_value_t val = asso->mo_seqent[ix].mo_asso_val;
+      if (!val || val == MOM_EMPTY_SLOT)
+        continue;
+      mo_dump_scan_objref (du, obr);
+      mo_dump_scan_value (du, val);
+    }
+}                               /* end of mo_dump_scan_assoval */
+
+mo_json_t
+mo_dump_json_of_assoval (mo_dumper_ty * du, mo_assovaldatapayl_ty * asso)
+{
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  if (!mo_dyncastpayl_assoval (asso))
+    return json_null ();
+  mo_value_t ksetv = mo_assoval_keys_set (asso);
+  unsigned nbkeys = mo_set_size (ksetv);
+  json_t *jarr = json_array ();
+  for (unsigned ix = 0; ix < nbkeys; ix++)
+    {
+      mo_objref_t keyobr = mo_set_nth (ksetv, ix);
+      if (!mo_dyncast_objref (keyobr)
+          || !mo_dump_is_emitted_objref (du, keyobr))
+        continue;
+      mo_value_t valv = mo_assoval_get (asso, keyobr);
+      mo_objref_t valobr = mo_dyncast_objref (valv);
+      if (valobr && !mo_dump_is_emitted_objref (du, valobr))
+        continue;
+      json_array_append_new (jarr, json_pack ("{soso}",
+                                              "at",
+                                              mo_dump_jsonid_of_objref (du,
+                                                                        keyobr),
+                                              "va", mo_dump_json_of_value (du,
+                                                                           valv)));
+    }
+  return json_pack ("{so}", "assoval", jarr);
+}                               /* end of mo_dump_json_of_assoval */
+
+
+
+mo_assovaldatapayl_ty *
+mo_assoval_of_json (mo_json_t js)
+{
+  json_t *jarr = NULL;
+  if (json_is_object (js) && (jarr = json_object_get (js, "assoval")) != NULL
+      && json_is_array (jarr))
+    {
+      unsigned sz = json_array_size (jarr);
+      mo_assovaldatapayl_ty *asso =
+        mo_assoval_reserve (NULL, sz + sz / 16 + 1);
+      for (unsigned ix = 0; ix < sz; ix++)
+        {
+          json_t *jpair = json_array_get (jarr, ix);
+          if (!json_is_object (jpair))
+            continue;
+          json_t *jat = json_object_get (jpair, "at");
+          if (!jat)
+            continue;
+          json_t *jva = json_object_get (jpair, "va");
+          if (!jva)
+            continue;
+          mo_objref_t atobr = mo_objref_of_jsonid (jat);
+          if (!atobr)
+            continue;
+          mo_value_t valv = mo_value_of_json (jva);
+          if (!valv)
+            continue;
+          asso = mo_assoval_put (asso, atobr, valv);
+        }
+      return asso;
+    }
+  return NULL;
+}                               /* end of mo_assoval_of_json */
+
 /// eof assoval.c

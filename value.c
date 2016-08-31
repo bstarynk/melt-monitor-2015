@@ -621,6 +621,69 @@ mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
   vect->mo_seqval[cnt] = val;
   ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt;
   return vect;
-}
+}                               /* end of mo_vectval_append */
+
+
+void
+mo_dump_scan_vectval (mo_dumper_ty * du, mo_vectvaldatapayl_ty * vect)
+{
+  if (!mo_dyncastpayl_vectval (vect))
+    return;
+  MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  MOM_ASSERTPRINTF (sz > 2, "too small sz %u", sz);
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF (cnt <= sz, "cnt %u not less than sz %u", cnt, sz);
+  for (unsigned ix = 0; ix < cnt; ix++)
+    {
+      mo_value_t valv = vect->mo_seqval[ix];
+      mo_dump_scan_value (du, valv);
+    }
+}                               /* end of mo_dump_scan_vectval */
+
+
+mo_json_t
+mo_dump_json_of_vectval (mo_dumper_ty * du, mo_vectvaldatapayl_ty * vect)
+{
+  if (!mo_dyncastpayl_vectval (vect))
+    return json_null ();
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  MOM_ASSERTPRINTF (sz > 2, "too small sz %u", sz);
+  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  MOM_ASSERTPRINTF (cnt <= sz, "cnt %u not less than sz %u", cnt, sz);
+  json_t *jarr = json_array ();
+  for (unsigned ix = 0; ix < cnt; ix++)
+    {
+      mo_value_t valv = vect->mo_seqval[ix];
+      mo_objref_t valobr = mo_dyncast_objref (valv);
+      if (valobr && !mo_dump_is_emitted_objref (du, valobr))
+        json_array_append_new (jarr, json_null ());
+      else
+        json_array_append_new (jarr, mo_dump_json_of_value (du, valv));
+    }
+  return json_pack ("{so}", "vectval", jarr);
+}                               /* end of mo_dump_json_of_vectval */
+
+
+mo_vectvaldatapayl_ty *
+mo_vectval_of_json (mo_json_t js)
+{
+  json_t *jarr = NULL;
+  if (json_is_object (js) && (jarr = json_object_get (js, "vectval")) != NULL
+      && json_is_array (jarr))
+    {
+      unsigned sz = json_array_size (jarr);
+      mo_vectvaldatapayl_ty *vect =
+        mo_vectval_reserve (NULL, sz + sz / 16 + 1);
+      for (unsigned ix = 0; ix < sz; ix++)
+        {
+          json_t *jcomp = json_array_get (jarr, ix);
+          vect = mo_vectval_append (vect, mo_value_of_json (jcomp));
+        }
+      return vect;
+    }
+  return NULL;
+}                               /* end of mo_vectval_of_json */
 
 /* end of value.c */

@@ -54,10 +54,30 @@ struct mo_dumper_st             // stack allocated
   sqlite3_stmt *mo_du_stmt_param;
   const char *mo_du_dirv;
   mo_value_t mo_du_tempsufv;
-  mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable objects */
+  mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable & emittable objects */
   mo_listpayl_ty *mo_du_scanlist;       /* the todo list for scanning */
   mo_vectvaldatapayl_ty *mo_du_vectfilepath;    /* vector of dumped file paths */
 };
+
+bool
+mo_dump_scanning (mo_dumper_ty * du)
+{
+  if (!du || du == MOM_EMPTY_SLOT)
+    return false;
+  MOM_ASSERTPRINTF (du->mo_du_magic == MOM_DUMPER_MAGIC, "bad dumper du@%p",
+                    du);
+  return du->mo_du_state == MOMDUMP_SCAN;
+}                               /* end mo_dump_scanning */
+
+bool
+mo_dump_emitting (mo_dumper_ty * du)
+{
+  if (!du || du == MOM_EMPTY_SLOT)
+    return false;
+  MOM_ASSERTPRINTF (du->mo_du_magic == MOM_DUMPER_MAGIC, "bad dumper du@%p",
+                    du);
+  return du->mo_du_state == MOMDUMP_EMIT;
+}                               /* end mo_dump_emitting */
 
 
 void
@@ -120,44 +140,59 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
   // keep these table names in CREATE TABLE Sqlite statements in sync
   // with monimelt-dump-state.sh script
   //
-  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
-                                     "CREATE TABLE t_params"
-                                     " (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,"
-                                     "  par_value TEXT NOT NULL)", NULL, NULL,
-                                     &errmsg))
+  if ((errmsg = NULL),          //
+      sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_params"
+                    " (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  par_value TEXT NOT NULL)", NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_params Sqlite table: %s", errmsg);
   //
-  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
-                                     "CREATE TABLE t_objects"
-                                     " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
-                                     "  ob_mtime DATETIME,"
-                                     "  ob_classid VARCHAR(20) NOT NULL,"
-                                     "  ob_paylkid VARCHAR(20) NOT NULL,"
-                                     "  ob_paylcont TEXT NOT NULL,"
-                                     "  ob_jsoncont TEXT NOT NULL)", NULL,
-                                     NULL, &errmsg))
+  if ((errmsg = NULL),          //
+      sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_objects"
+                    " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  ob_mtime DATETIME,"
+                    "  ob_classid VARCHAR(20) NOT NULL,"
+                    "  ob_paylkid VARCHAR(20) NOT NULL,"
+                    "  ob_paylcont TEXT NOT NULL,"
+                    "  ob_jsoncont TEXT NOT NULL)", NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
   //
-  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
-                                     "CREATE TABLE t_names"
-                                     " (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,"
-                                     "  nam_id VARCHAR(20) NOT NULL UNIQUE)",
-                                     NULL, NULL, &errmsg))
+  if ((errmsg = NULL),          //
+      sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_names"
+                    " (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  nam_id VARCHAR(20) NOT NULL UNIQUE)",
+                    NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_names Sqlite table: %s", errmsg);
   //
-  if ((errmsg = NULL), sqlite3_exec (du->mo_du_db,
-                                     "CREATE UNIQUE INDEX x_namedid ON t_names (nam_id)",
-                                     NULL, NULL, &errmsg))
+  if ((errmsg = NULL),          //
+      sqlite3_exec (du->mo_du_db,
+                    "CREATE UNIQUE INDEX x_namedid ON t_names (nam_id)",
+                    NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create x_namedid Sqlite index: %s", errmsg);
   /***** prepare statements *****/
-  if ((errmsg = NULL), sqlite3_prepare_v2 (du->mo_du_db,
-                                           "INSERT INTO t_params (par_name, par_value) VALUES (?, ?)",
-                                           -1, &du->mo_du_stmt_param, NULL))
+  if ((errmsg = NULL),          //
+      sqlite3_prepare_v2 (du->mo_du_db,
+                          "INSERT INTO t_params (par_name, par_value) VALUES (?, ?)",
+                          -1, &du->mo_du_stmt_param, NULL))
     MOM_FATAPRINTF ("Failed to prepare t_params Sqlite insertion: %s",
                     errmsg);
   /**** insert various parameters ****/
   mo_dump_param (du, "monimelt_format_version", MOM_DUMP_VERSIONID);
 }                               /* end mo_dump_initialize_sqlite_database */
+
+bool
+mo_dump_is_emitted_objref (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  if (!mo_dyncast_objref (obr))
+    return false;
+  return mo_hashset_contains (du->mo_du_objset, obr);
+}                               /* end mo_dump_is_emitted_objref */
+
 
 void
 mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
@@ -177,7 +212,10 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
                     && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
                     du);
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
-
+  if (mo_objref_space (obr) == mo_SPACE_NONE)
+    return;
+  mo_dump_scan_objref (du, obr->mo_ob_class);
+  mo_dump_scan_objref (du, obr->mo_ob_paylkind);
   MOM_WARNPRINTF ("unimplemented mo_dump_scan_inside_object for %s",
                   mo_object_pnamestr (obr));
 #warning unimplemented mo_dump_scan_inside_object
@@ -446,7 +484,7 @@ mom_dump_state (const char *dirname)
 
 
 void
-mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
+mo_dump_really_scan_value (mo_dumper_ty * du, mo_value_t v)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
@@ -474,12 +512,14 @@ mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
 }                               /* end mo_dump_scan_value */
 
 void
-mo_dump_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
+mo_dump_really_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
                     du);
   if (mo_dyncast_objref (obr) == NULL)
+    return;
+  if (mo_objref_space (obr) == mo_SPACE_NONE)
     return;
   if (mo_hashset_contains (du->mo_du_objset, obr))
     return;
@@ -497,8 +537,9 @@ mom_load_state (void)
 
 /**************** JSON ****************/
 mo_json_t
-mo_json_of_value (mo_value_t v)
+mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
 {
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
   if (mo_value_is_int (v))
     return json_integer (mo_value_to_int (v, 0));
   else if (!mo_valid_pointer_value (v))
@@ -517,29 +558,39 @@ mo_json_of_value (mo_value_t v)
         json_t *jarr = json_array ();
         unsigned sz = mo_size_of_value (v);
         for (unsigned ix = 0; ix < sz; ix++)
-          json_array_append_new (jarr,
-                                 (json_t *)
-                                 mo_jsonid_of_objref (((mo_sequencevalue_ty *)
-                                                       v)->mo_seqobj[ix]));
+          {
+            mo_objref_t obr = ((mo_sequencevalue_ty *) v)->mo_seqobj[ix];
+            if (!mo_dyncast_objref (obr)
+                || !mo_dump_is_emitted_objref (du, obr))
+              continue;
+            json_array_append_new (jarr,
+                                   (json_t *) mo_dump_jsonid_of_objref (du,
+                                                                        obr));
+          }
         return json_pack ("{so}", (k == mo_KTUPLE) ? "tup" : "set", jarr);
       }
     case mo_KOBJECT:
-      return json_pack ("{so}", "oid", mo_jsonid_of_objref ((mo_objref_t) v));
+      if (!mo_dump_is_emitted_objref (du, (mo_objref_t) v))
+        return json_null ();
+      return json_pack ("{so}", "oid",
+                        mo_dump_jsonid_of_objref (du, (mo_objref_t) v));
     };
   MOM_FATAPRINTF ("impossible value@%p k#%u to json", v, k);
-}                               /* end mo_json_of_value */
+}                               /* end mo_dump_json_of_value */
 
 mo_json_t
-mo_jsonid_of_objref (mo_objref_t obr)
+mo_dump_jsonid_of_objref (mo_dumper_ty * du, mo_objref_t obr)
 {
-  if (!mo_dyncast_objref ((mo_value_t) obr))
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  if (!mo_dyncast_objref ((mo_value_t) obr)
+      || !mo_dump_is_emitted_objref (du, obr))
     return json_null ();
   char idbuf[MOM_CSTRIDLEN + 2];
   memset (idbuf, 0, sizeof (idbuf));
   return
     json_string (mo_cstring_from_hi_lo_ids
                  (idbuf, obr->mo_ob_hid, obr->mo_ob_loid));
-}                               /* end of mo_jsonid_of_objref */
+}                               /* end of mo_dump_jsonid_of_objref */
 
 mo_objref_t
 mo_objref_of_jsonid (mo_json_t js)
