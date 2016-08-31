@@ -34,6 +34,8 @@ static unsigned count_added_predef_mom;
 
 void *mom_prog_dlhandle;
 
+char *mom_dump_dir;
+
 const char *
 mom_hostname (void)
 {
@@ -1007,6 +1009,7 @@ enum extraopt_en
 static const struct option mom_long_options[] = {
   {"help", no_argument, NULL, 'h'},
   {"version", no_argument, NULL, 'V'},
+  {"dump", no_argument, NULL, 'd'},
   {"add-predef", required_argument, NULL, xtraopt_addpredef},
   {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
   {"info", no_argument, NULL, xtraopt_info},
@@ -1021,6 +1024,8 @@ usage_mom (const char *argv0)
   printf ("Usage: %s\n", argv0);
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
+  printf ("\t -d | --dump "
+          " <dirname>\t# Give dump directory, avoid dumping if -.\n");
   printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
   printf ("\t --comment-predefined comment"
           " \t#Set comment of next predefined\n");
@@ -1044,7 +1049,8 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
-  while ((opt = getopt_long (argc, argv, "hV", mom_long_options, NULL)) >= 0)
+  while ((opt =
+          getopt_long (argc, argv, "hVd:", mom_long_options, NULL)) >= 0)
     {
       switch (opt)
         {
@@ -1059,6 +1065,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           print_version_mom (argv[0]);
           exit (EXIT_SUCCESS);
           return;
+        case 'd':
+          mom_dump_dir = optarg;
+          break;
         case xtraopt_commentpredef:
           commentstr = optarg;
           break;
@@ -1143,6 +1152,11 @@ main (int argc_main, char **argv_main)
   }
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
+  if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
+    MOM_INFORMPRINTF
+      ("monimelt explicitly not dumping because of program argument -d- or --dump -");
+  else
+    mom_dump_state (mom_dump_dir);
   int nbwarn = atomic_load (&mom_nb_warnings);
   if (nbwarn > 0)
     MOM_INFORMPRINTF

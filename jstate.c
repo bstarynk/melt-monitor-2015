@@ -153,7 +153,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
            "#define MOM_NB_NAMED_PREDEFINED %d\n", nbnamed);
   fprintf (fp, "\n\n#undef MOM_HAS_PREDEFINED\n");
   fprintf (fp, "// end of generated predefined file %s\n", MOM_PREDEF_HEADER);
-  fflush (fp);
+  fclose (fp);
 }                               /* end mo_dump_emit_predefined */
 
 void
@@ -187,6 +187,73 @@ mo_dump_emit_names (mo_dumper_ty * du)
   MOM_WARNPRINTF ("unimplemented mo_dump_emit_names");
 #warning unimplemented mo_dump_emit_names
 }                               /* end mo_dump_emit_names */
+
+void
+mo_dump_rename_emitted_files (mo_dumper_ty * du)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
+  unsigned nbsamefiles = 0;
+  for (unsigned ix = 0; ix < nbfil; ix++)
+    {
+      mo_value_t curpathv = mo_vectval_nth (du->mo_du_vectfilepath, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_string (curpathv), "bad curpathv");
+      mo_value_t tmpathv =      //
+        mo_make_string_sprintf ("%s%s",
+                                mo_string_cstr (curpathv),
+                                mo_string_cstr (du->mo_du_tempsufv));
+      mo_value_t backupv =
+        mo_make_string_sprintf ("%s%%", mo_string_cstr (curpathv));
+      bool samefilecont = false;
+      struct stat curstat;
+      struct stat tmpstat;
+      memset (&curstat, 0, sizeof (curstat));
+      memset (&tmpstat, 0, sizeof (tmpstat));
+      if (!stat (&curstat, mo_string_cstr (curpathv))
+          && !stat (&tmpstat, mo_string_cstr (tmpathv))
+          && curstat.st_size == tmpstat.st_size)
+        {
+          FILE *curf = fopen (mo_string_cstr (curpathv), "r");
+          FILE *tmpf = fopen (mo_string_cstr (tmpathv), "r");
+          if (curf != NULL && tmpf != NULL)
+            {
+              samefilecont = true;
+              while (samefilecont)
+                {
+                  int curc = fgetc (curf);
+                  int tmpc = fgetc (tmpf);
+                  if (curc != tmpc)
+                    samefilecont = false;
+                  else if (curc == EOF)
+                    break;
+                }
+            }
+          if (curf)
+            fclose (curf);
+          if (tmpf)
+            fclose (tmpf);
+        };
+      if (samefilecont)
+        {
+          if (unlink (mo_string_cstr (tmpathv)))
+            MOM_FATAPRINTF ("failed to unlink %s (%m)",
+                            mo_string_cstr (tmpathv));
+          nbsamefiles++;
+        }
+      else
+        {
+          (void) rename (mo_string_cstr (curpathv), mo_string_cstr (backupv));
+          if (rename (mo_string_cstr (tmpathv), mo_string_cstr (curpathv)))
+            MOM_FATAPRINTF ("failed to rename %s -> %s (%m)",
+                            mo_string_cstr (tmpathv),
+                            mo_string_cstr (curpathv));
+        }
+      MOM_INFORMPRINTF ("dump emitted %u files - with %u same as previously",
+                        nbfil, nbsamefiles);
+    };
+}                               /* end mo_dump_rename_emitted_files */
 
 void
 mom_dump_state (const char *dirname)
@@ -249,22 +316,9 @@ mom_dump_state (const char *dirname)
       mo_dump_emit_object_content (&dumper, obr);
     }
   mo_dump_emit_names (&dumper);
-  /// rename the temporarily emitted files
-  unsigned nbfil = mo_vectval_count (dumper.mo_du_vectfilepath);
-  for (unsigned ix = 0; ix < nbfil; ix++)
-    {
-      mo_value_t curpathv = mo_vectval_nth (dumper.mo_du_vectfilepath, ix);
-      MOM_ASSERTPRINTF (mo_dyncast_string (curpathv), "bad curpathv");
-      mo_value_t tempathv =     //
-        mo_make_string_sprintf ("%s%s",
-                                mo_string_cstr (curpathv),
-                                mo_string_cstr (dumper.mo_du_tempsufv));
-      mo_value_t backupv =
-        mo_make_string_sprintf ("%s%%", mo_string_cstr (curpathv));
-    };
-
+  mo_dump_rename_emitted_files (&dumper);
 #warning mom_dump_state very incomplete
-  MOM_WARNPRINTF ("mom_dump_state very incomplete");
+  MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
 }                               /* end mom_dump_state */
 
 
