@@ -221,7 +221,7 @@ mo_hashset_elements_set (mo_hashsetpayl_ty * hset)
         continue;
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr at ix=%d", ix);
       sq->mo_seqobj[nb++] = obr;
-      MOM_ASSERTPRINTF (nb < cnt, "too big nb=%u for cnt=%u", nb, cnt);
+      MOM_ASSERTPRINTF (nb <= cnt, "too big nb=%u for cnt=%u", nb, cnt);
     }
   MOM_ASSERTPRINTF (nb == cnt, "cnt %u not same as nb %u", cnt, nb);
   return mo_make_set_closeq (sq);
