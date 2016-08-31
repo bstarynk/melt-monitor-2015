@@ -100,6 +100,82 @@ mo_list_prepend (mo_listpayl_ty * lis, mo_value_t v)
   lis->mo_lip_first = el;
 }                               /* end mo_list_prepend */
 
+
+void
+mo_list_pop_head (mo_listpayl_ty * lis)
+{
+  if (!mo_dyncastpayl_list (lis))
+    return;
+  mo_listelem_ty *hd = lis->mo_lip_first;
+  if (!hd)
+    return;
+  int nbhd = 0;
+  mo_value_t keeparr[MOM_LISTCHUNK_LEN];
+  memset (keeparr, 0, sizeof (keeparr));
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
+    if (hd->mo_lie_arr[ix] != NULL)
+      {
+        if (nbhd > 0)
+          keeparr[nbhd - 1] = hd->mo_lie_arr[ix];
+        nbhd++;
+      };
+  MOM_ASSERTPRINTF (nbhd > 0, "zero nbhd");
+  if (nbhd == 1)
+    {
+      if (hd == lis->mo_lip_last)
+        {
+          lis->mo_lip_first = lis->mo_lip_last = NULL;
+        }
+      else
+        {
+          lis->mo_lip_first = hd->mo_lie_next;
+        }
+    }
+  else
+    {
+      memset (hd->mo_lie_arr, 0, sizeof (hd->mo_lie_arr));
+      memcpy (hd->mo_lie_arr, keeparr, (nbhd - 1) * sizeof (mo_objref_t));
+    }
+}                               /* end of mo_list_pop_head */
+
+void
+mo_list_pop_tail (mo_listpayl_ty * lis)
+{
+  if (!mo_dyncastpayl_list (lis))
+    return;
+  mo_listelem_ty *tl = lis->mo_lip_last;
+  if (!tl)
+    return;
+  int nbtl = 0;
+  mo_value_t keeparr[MOM_LISTCHUNK_LEN];
+  memset (keeparr, 0, sizeof (keeparr));
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
+    if (tl->mo_lie_arr[ix] != NULL)
+      {
+        if (nbtl > 0)
+          keeparr[nbtl - 1] = tl->mo_lie_arr[ix];
+        nbtl++;
+      };
+  MOM_ASSERTPRINTF (nbtl > 0, "zero nbtl");
+  if (nbtl == 1)
+    {
+      if (tl == lis->mo_lip_first)
+        {
+          lis->mo_lip_first = lis->mo_lip_last = NULL;
+        }
+      else
+        {
+          lis->mo_lip_last = tl->mo_lie_prev;
+        }
+    }
+  else
+    {
+      memset (tl->mo_lie_arr, 0, sizeof (tl->mo_lie_arr));
+      memcpy (tl->mo_lie_arr, keeparr, (nbtl - 1) * sizeof (mo_objref_t));
+    }
+}                               /* end of mo_list_pop_tail */
+
+
 mo_vectvaldatapayl_ty *
 mo_list_to_vectvaldata (mo_listpayl_ty * lis)
 {
@@ -132,7 +208,7 @@ mo_list_to_tuple (mo_listpayl_ty * lis)
     {
       for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
         {
-          mo_objref_t obr = mo_dyncast_object (el->mo_lie_arr[ix]);
+          mo_objref_t obr = mo_dyncast_objref (el->mo_lie_arr[ix]);
           if (obr != NULL)
             seq->mo_seqobj[cnt++] = obr;
         }
