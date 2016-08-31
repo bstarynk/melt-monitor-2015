@@ -88,8 +88,15 @@ mo_dump_param (mo_dumper_ty * du, const char *pname, const char *pval)
        pval, sqlite3_errstr (rc));
   rc = sqlite3_step (du->mo_du_stmt_param);
   if (rc != SQLITE_DONE)
-    MOM_FATAPRINTF ("failed to run insert Sqlite3 statment for pname %s (%s)",
-                    pname, sqlite3_errstr (rc));
+    MOM_FATAPRINTF
+      ("failed to step insert Sqlite3 statment for pname %s (%s)", pname,
+       sqlite3_errstr (rc));
+  rc = sqlite3_reset (du->mo_du_stmt_param);
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("failed to reset insert Sqlite3 statment for pname %s (%s)", pname,
+       sqlite3_errstr (rc));
+
 }                               /* end of mo_dump_param */
 
 void
@@ -265,6 +272,7 @@ mo_dump_emit_names (mo_dumper_ty * du)
 void
 mo_dump_rename_emitted_files (mo_dumper_ty * du)
 {
+  int rc = 0;
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT
                     && du->mo_du_db != NULL, "bad dumper du@%p", du);
@@ -281,14 +289,22 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
     mo_make_string_sprintf ("%s/%s.sqlite%%",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase);
-  int nok = sqlite3_close (du->mo_du_db);
-  if (nok != SQLITE_OK)
+  /// finalize all the prepared statements
+  rc = sqlite3_finalize (du->mo_du_stmt_param);
+  du->mo_du_stmt_param = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalize t_params Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
+  /// close the database and rename files
+  rc = sqlite3_close (du->mo_du_db);
+  if (rc != SQLITE_OK)
     MOM_FATAPRINTF ("failed to close Sqlite3 database %s (%s)",
-                    mo_string_cstr (sqltmpathbufv), sqlite3_errstr (nok));
+                    mo_string_cstr (sqltmpathbufv), sqlite3_errstr (rc));
   du->mo_du_db = NULL;
   if (!access (mo_string_cstr (sqlfupathbufv), F_OK))
     (void) rename (mo_string_cstr (sqlfupathbufv),
                    mo_string_cstr (sqlbackuppathbufv));
+  errno = 0;
   if (rename (mo_string_cstr (sqltmpathbufv), mo_string_cstr (sqlfupathbufv)))
     MOM_FATAPRINTF ("failed to rename database %s -> %s",
                     mo_string_cstr (sqltmpathbufv),
