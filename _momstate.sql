@@ -23,13 +23,16 @@ CREATE TABLE t_objects (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,  ob_m
 CREATE TABLE t_names (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,  nam_oid VARCHAR(20) NOT NULL UNIQUE);
 CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 -- state-monimelt tables contents
+---- TABLE t_params @@@@
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
+---- TABLE t_names @@@@
+INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+---- TABLE t_objects @@@@
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'','','','
 {
  "attrs": null,
  "comps": null
 }
 ');
-INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 COMMIT;
 -- monimelt-dump-state end dump _momstate.sqlite
