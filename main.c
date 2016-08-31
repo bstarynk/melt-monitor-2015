@@ -937,6 +937,7 @@ mom_print_info (void)
   printf (" makefile: %s\n", monimelt_makefile);
   printf (" sqlite: %s\n", monimelt_sqlite);
   printf (" perstatebase: %s\n", monimelt_perstatebase);
+  printf (" cbasesources: %s\n", monimelt_cbasesources);
   printf (" libsqlite3version: %s\n", sqlite3_libversion ());
   printf (" glibversion: major %d minor %d micro %d\n",
           glib_major_version, glib_minor_version, glib_micro_version);

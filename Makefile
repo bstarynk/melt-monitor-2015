@@ -48,8 +48,8 @@ MODULE_SOURCES= $(sort $(wildcard modules/momg_*.c))
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
 CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
-CXXSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES) predefgc.cc, $(wildcard [a-z]*.cc)))
-OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))  $(patsubst %.cc,%.o,$(CXXSOURCES))
+CBASESOOURCES= $(basename $(CSOURCES))
+OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))
 # the persistent state base, probably _momstate
 MOM_PERSTATE_BASE=_momstate
 MOM_PERSTATE_SQLITE=$(MOM_PERSTATE_BASE).sqlite
@@ -86,6 +86,7 @@ _timestamp.c: Makefile | $(OBJECTS)
 	@(echo -n 'const char monimelt_makefile[]="'; echo -n  $(realpath $(lastword $(MAKEFILE_LIST))); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_sqlite[]="'; echo -n $(SQLITE); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_perstatebase[]="'; echo -n $(MOM_PERSTATE_BASE); echo '";') >> _timestamp.tmp
+	@(echo -n 'const char monimelt_cbasesources[]="'; echo -n $(CBASESOOURCES); echo '";') >> _timestamp.tmp
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)

@@ -140,6 +140,7 @@ extern const char monimelt_directory[];
 extern const char monimelt_makefile[];
 extern const char monimelt_sqlite[];
 extern const char monimelt_perstatebase[];
+extern const char monimelt_cbasesources[];
 
 // increasing array of primes and its size
 extern const int64_t mom_primes_tab[];
@@ -422,6 +423,7 @@ enum mo_payloadkind_en
   mo_PASSOVALDATA,
   mo_PVECTVALDATA,
   mo_PHASHSET,
+  mo_PLIST,
 };
 
 typedef const void*mo_value_t;
@@ -1021,6 +1023,37 @@ mo_hashsetpayl_ty* mo_hashset_put(mo_hashsetpayl_ty*hset, mo_objref_t ob);
 mo_hashsetpayl_ty* mo_hashset_remove(mo_hashsetpayl_ty*hset, mo_objref_t ob);
 mo_hashsetpayl_ty* mo_hashset_reserve(mo_hashsetpayl_ty*hset, unsigned gap);
 mo_value_t mo_hashset_elements_set(mo_hashsetpayl_ty*hset); // set of elements
+
+/******************** LISTs payload ****************/
+typedef struct mo_listpayl_st mo_listpayl_ty;
+typedef struct mo_listelem_st mo_listelem_ty;
+#define MOM_LISTCHUNK_LEN 6
+struct mo_listelem_st
+{
+  mo_listelem_ty *mo_lie_next;
+  mo_listelem_ty *mo_lie_prev;
+  mo_value_t mo_lie_arr[MOM_LISTCHUNK_LEN];
+};
+struct mo_listpayl_st
+{
+  mo_hashedvalue_ty _mo;
+  mo_listelem_ty* mo_lip_first;
+  mo_listelem_ty* mo_lip_last;
+};
+
+static inline mo_listpayl_ty*
+mo_dyncastpayl_list(const void*p)
+{
+  if (!mo_valid_pointer_value(p)) return NULL;
+  unsigned k = ((mo_hashedvalue_ty*)p)->mo_va_kind;
+  if (k != mo_PLIST) return NULL;
+  return (mo_listpayl_ty*)p;
+} /* end mo_dyncastpayl_list*/
+
+mo_listpayl_ty* mo_list_make(void);
+// append and prepend a non-nil value
+void mo_list_append(mo_listpayl_ty*, mo_value_t);
+void mo_list_prepend(mo_listpayl_ty*, mo_value_t);
 
 ///////////////// JSON support
 // get the json for a value
