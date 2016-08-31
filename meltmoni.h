@@ -421,7 +421,7 @@ enum mo_valkind_en
 enum mo_payloadkind_en
 {
   mo_PNONE,
-  mo_PASSOVALDATA,
+  mo_PASSOVALDATA=(int)MOM_LAST_KIND+1,
   mo_PVECTVALDATA,
   mo_PHASHSET,
   mo_PLIST,
