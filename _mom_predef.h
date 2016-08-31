@@ -1,4 +1,4 @@
-/// *** not yet generated file _mom_predef.h - DO NOT EDIT
+/// *** generated file _mom_predef.h - DO NOT EDIT 
 /// Copyright (C) 2015 - 2016 Free Software Foundation, Inc. 
 /// MONIMELT is a monitor for MELT - see http://gcc-melt.org/ 
 /// This generated file _mom_predef.h is part of MONIMELT, part of GCC 
@@ -21,11 +21,20 @@
 #error missing MOM_HAS_PREDEFINED
 #endif
 
+
 #undef MOM_NB_PREDEFINED
 #define MOM_NB_PREDEFINED 1
 
-// MOM_HAS_PREDEFINED(name,idstr,hid,loid,hash)
+
+//// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
 
+#undef MOM_NB_ANONYMOUS_PREDEFINED
+#define MOM_NB_ANONYMOUS_PREDEFINED 0
+
+#undef MOM_NB_NAMED_PREDEFINED
+#define MOM_NB_NAMED_PREDEFINED 1
+
+
 #undef MOM_HAS_PREDEFINED
-// eof not yet generated _mom_predef.h
+// end of generated predefined file _mom_predef.h
