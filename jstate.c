@@ -307,6 +307,13 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
         MOM_FATAPRINTF
           ("failed to empty-bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLCONT, "", -1,
+                           SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to empty-bind ob_paylcont for t_objects insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
     }
   // now construct the JSON object for the content and bind ob_jsoncont
   mo_json_t jattrs = mo_dump_json_of_assoval (du, obr->mo_ob_attrs);
@@ -475,6 +482,11 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
   if (rc != SQLITE_OK)
     MOM_FATAPRINTF ("Failed to finalize t_params Sqlite insertion: %s",
                     sqlite3_errstr (rc));
+  rc = sqlite3_finalize (du->mo_du_stmt_object);
+  du->mo_du_stmt_object = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalize t_objects Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
   /// close the database and rename files
   rc = sqlite3_close (du->mo_du_db);
   if (rc != SQLITE_OK)
@@ -597,6 +609,7 @@ mom_dump_state (const char *dirname)
     mo_dump_scan_objref (&dumper, mo_set_nth (predefset, ix));
   long nbobj = 0;
   /// the scan loop
+  errno = 0;
   while (mo_list_non_empty (dumper.mo_du_scanlist))
     {
       mo_objref_t obr =

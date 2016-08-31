@@ -24,5 +24,10 @@ CREATE TABLE t_names (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,  nam_id VARCHAR(2
 CREATE UNIQUE INDEX x_namedid ON t_names (nam_id);
 -- state-monimelt tables contents
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
+INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',0,'','','','{
+ "attrs": null,
+ "comps": null
+}
+');
 COMMIT;
 -- monimelt-dump-state end dump _momstate.sqlite
