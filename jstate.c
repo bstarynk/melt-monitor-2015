@@ -39,6 +39,8 @@ struct mo_loader_st             // stack allocated
   double mo_ld_startelapsedtime;
   double mo_ld_startcputime;
   unsigned mo_ld_nbitems;
+  mo_value_t mo_ld_hsetitems;
+  sqlite3 *mo_ld_db;
 };
 
 
@@ -757,6 +759,18 @@ mo_dump_really_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 void
 mom_load_state (void)
 {
+  /*** steps to consider:
+    0. Check that _momstate.sql & _momstate.sqlite have a comparable age...
+    1. Open the database, create the statements
+    2. SELECT COUNT(*) FROM t_objects --> nbobjects
+    3. SELECT COUNT(*) FROM t_named   --> nbnamedobjects
+    4. Reserve hashed set hsetitems #nbobjects & reserve names #nbnamedobjects
+    5. SELECT ob_id FROM t_objects  ===> create each object from its id, put it into hsetitems
+    6. SELECT nam_oid, nam_str FROM t_names ===> name each named object
+    7. SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects ===> fill the mtime & content of each object
+    | more steps to fill the class & the payload, 
+    | perhaps SELECT ob_id, ob_classid FROM t_objects WHERE ob_classid != ""
+  ***/
   MOM_WARNPRINTF ("load state unimplemented");
 #warning mom_load_state unimplemented
 }                               /* end mom_load_state */
