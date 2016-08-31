@@ -211,8 +211,8 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
       struct stat tmpstat;
       memset (&curstat, 0, sizeof (curstat));
       memset (&tmpstat, 0, sizeof (tmpstat));
-      if (!stat (&curstat, mo_string_cstr (curpathv))
-          && !stat (&tmpstat, mo_string_cstr (tmpathv))
+      if (!stat (mo_string_cstr (curpathv), &curstat)
+          && !stat (mo_string_cstr (tmpathv), &tmpstat)
           && curstat.st_size == tmpstat.st_size)
         {
           FILE *curf = fopen (mo_string_cstr (curpathv), "r");
