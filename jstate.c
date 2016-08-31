@@ -51,7 +51,13 @@ struct mo_dumper_st             // stack allocated
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
   enum mom_dumpstate_en mo_du_state;
   sqlite3 *mo_du_db;
+  // stmt: INSERT INTO t_params (par_name, par_value)
   sqlite3_stmt *mo_du_stmt_param;
+  /** stmt: INSERT INTO t_object (ob_id, ob_mtime, ob_classid,
+                                  ob_paylkid, ob_paylcont, ob_jsoncont)
+  **/
+  sqlite3_stmt *mo_du_stmt_object;
+  //
   const char *mo_du_dirv;
   mo_value_t mo_du_tempsufv;
   mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable & emittable objects */
@@ -178,6 +184,15 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                           -1, &du->mo_du_stmt_param, NULL))
     MOM_FATAPRINTF ("Failed to prepare t_params Sqlite insertion: %s",
                     errmsg);
+  if ((errmsg = NULL),          //
+      sqlite3_prepare_v2 (du->mo_du_db,
+                          "INSERT INTO t_object"
+                          " (ob_id, ob_mtime, ob_classid,"
+                          "  ob_paylkid, ob_paylcont, ob_jsoncont)"
+                          " VALUES (?, ?, ?, ?, ?, ?)",
+                          -1, &du->mo_du_stmt_object, NULL))
+    MOM_FATAPRINTF ("Failed to prepare t_object Sqlite insertion: %s",
+                    errmsg);
   /**** insert various parameters ****/
   mo_dump_param (du, "monimelt_format_version", MOM_DUMP_VERSIONID);
 }                               /* end mo_dump_initialize_sqlite_database */
@@ -197,13 +212,132 @@ mo_dump_is_emitted_objref (mo_dumper_ty * du, mo_objref_t obr)
 void
 mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
 {
+  int rc = 0;
+  enum paramindex_en
+  { MOMOBJIX__NONE, MOMOBJIX_ID, MOMOBJIX_MTIME, MOMOBJIX_CLASSID,
+    MOMOBJIX_PAYLKID, MOMOBJIX_PAYLCONT, MOMOBJIX_JSONCONT
+  };
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
-                    du);
-  MOM_WARNPRINTF ("unimplemented mo_dump_emit_object_content for %s",
-                  mo_object_pnamestr (obr));
-#warning unimplemented mo_dump_emit_object_content
+                    && du->mo_du_state == MOMDUMP_EMIT
+                    && du->mo_du_stmt_param, "invalid dumper");
+  if (!mo_dyncast_objref (obr) || !mo_dump_is_emitted_objref (du, obr))
+    return;
+  char bufid[MOM_CSTRIDLEN + 6];
+  memset (bufid, 0, sizeof (bufid));
+  mo_cstring_from_hi_lo_ids (bufid, obr->mo_ob_hid, obr->mo_ob_loid);
+  // bind the ob_id
+  rc =
+    sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_ID, bufid, -1,
+                       SQLITE_STATIC);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind ob_id for t_object insert Sqlite3 statment (%s)",
+       sqlite3_errstr (rc));
+  // bind the ob_mtime
+  rc =
+    sqlite3_bind_int64 (du->mo_du_stmt_object, MOMOBJIX_MTIME,
+                        obr->mo_ob_mtime);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind ob_mtime for t_object insert Sqlite3 statment (%s)",
+       sqlite3_errstr (rc));
+  // bind the ob_classid if given & emittable
+  mo_objref_t claobr = obr->mo_ob_class;
+  if (mo_dyncast_objref (claobr) && mo_dump_is_emitted_objref (du, claobr))
+    {
+      char clabufid[MOM_CSTRIDLEN + 6];
+      memset (clabufid, 0, sizeof (clabufid));
+      mo_cstring_from_hi_lo_ids (clabufid, claobr->mo_ob_hid,
+                                 claobr->mo_ob_loid);
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_CLASSID, clabufid,
+                           -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind ob_classid for t_object insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+    }
+  else
+    {
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_CLASSID, "", -1,
+                           SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to empty-bind ob_classid for t_object insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+    }
+  // bind the ob_paylkid if payload kind given & emittable
+  mo_objref_t paylkindobr = obr->mo_ob_paylkind;
+  if (mo_dyncast_objref (paylkindobr)
+      && mo_dump_is_emitted_objref (du, paylkindobr))
+    {
+      char pkbufid[MOM_CSTRIDLEN + 6];
+      memset (pkbufid, 0, sizeof (pkbufid));
+      mo_cstring_from_hi_lo_ids (pkbufid, paylkindobr->mo_ob_hid,
+                                 paylkindobr->mo_ob_loid);
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLKID, pkbufid,
+                           -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind ob_paylkid for t_object insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      void *payload = obr->mo_ob_payload;
+      // we should dump the payload, but how?
+      MOM_WARNPRINTF
+        ("unimplemented mo_dump_emit_object_content payload@%p for %s",
+         payload, mo_object_pnamestr (obr));
+#warning unimplemented mo_dump_emit_object_content payload
+    }
+  else
+    {
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLKID, "", -1,
+                           SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to empty-bind ob_paylkid for t_object insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+    }
+  // now construct the JSON object for the content and bind ob_jsoncont
+  mo_json_t jattrs = mo_dump_json_of_assoval (du, obr->mo_ob_attrs);
+  mo_json_t jcomps = mo_dump_json_of_vectval (du, obr->mo_ob_comps);
+  mo_json_t jcont = json_pack ("{soso}", "attrs", jattrs, "comps", jcomps);
+  char *contbuf = NULL;
+  size_t contsiz = 0;
+  FILE *fmem = open_memstream (&contbuf, &contsiz);
+  if (!fmem)
+    MOM_FATAPRINTF ("failed to open memstream for content of object %s",
+                    mo_object_pnamestr (obr));
+  if (json_dumpf (jcont, fmem, JSON_INDENT (1) | JSON_SORT_KEYS))
+    MOM_FATAPRINTF ("failed to json_dumpf for content of object %s",
+                    mo_object_pnamestr (obr));
+  fputc ('\n', fmem);
+  fflush (fmem);
+  rc =
+    sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_JSONCONT, contbuf,
+                       contsiz, SQLITE_TRANSIENT);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind ob_jsoncont for t_object insert Sqlite3 statment (%s)",
+       sqlite3_errstr (rc));
+  fclose (fmem);
+  free (contbuf), contbuf = NULL;
+  rc = sqlite3_step (du->mo_du_stmt_object);
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF
+      ("failed to step insert Sqlite3 statment for t_object (%s)",
+       sqlite3_errstr (rc));
+  rc = sqlite3_reset (du->mo_du_stmt_object);
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("failed to reset insert Sqlite3 statment for t_object (%s)",
+       sqlite3_errstr (rc));
 }                               /* end of mo_dump_emit_object_content */
+
+
+
 
 void
 mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
@@ -462,6 +596,7 @@ mom_dump_state (const char *dirname)
       MOM_ASSERTPRINTF (obr != NULL, "nil obr");
       mo_list_pop_head (dumper.mo_du_scanlist);
       mo_dump_scan_inside_object (&dumper, obr);
+      nbobj++;
     }
   /// the emit loop
   dumper.mo_du_state = MOMDUMP_EMIT;
@@ -470,6 +605,7 @@ mom_dump_state (const char *dirname)
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
   MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef, "bad elsiz");
+  MOM_ASSERTPRINTF (elsiz <= (unsigned) nbobj, "bad elsiz");
   for (unsigned eix = 0; eix < elsiz; eix++)
     {
       mo_objref_t obr = mo_set_nth (elset, eix);
@@ -532,6 +668,8 @@ mo_dump_really_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 void
 mom_load_state (void)
 {
+  MOM_WARNPRINTF ("load state unimplemented");
+#warning mom_load_state unimplemented
 }                               /* end mom_load_state */
 
 
@@ -577,6 +715,8 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
     };
   MOM_FATAPRINTF ("impossible value@%p k#%u to json", v, k);
 }                               /* end mo_dump_json_of_value */
+
+
 
 mo_json_t
 mo_dump_jsonid_of_objref (mo_dumper_ty * du, mo_objref_t obr)
@@ -641,7 +781,7 @@ mo_value_of_json (mo_json_t js)
                                json_string_length (js));
   else if (json_is_object (js))
     {
-      const json_t *jc = NULL;
+      json_t *jc = NULL;
       if ((jc = json_object_get (js, "oid")) != NULL && json_is_string (jc))
         {
           return mo_objref_of_jsonid (jc);
