@@ -225,16 +225,16 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
                     && du->mo_du_state == MOMDUMP_EMIT
                     && du->mo_du_db != NULL, "bad dumper du@%p", du);
   mo_value_t sqltmpathbufv =    //
-    mo_make_string_sprintf ("%s/%s%s",
+    mo_make_string_sprintf ("%s/%s.sqlite%s",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase,
                             mo_string_cstr (du->mo_du_tempsufv));
   mo_value_t sqlfupathbufv =    //
-    mo_make_string_sprintf ("%s/%s",
+    mo_make_string_sprintf ("%s/%s.sqlite",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase);
   mo_value_t sqlbackuppathbufv =        //
-    mo_make_string_sprintf ("%s/%s%%",
+    mo_make_string_sprintf ("%s/%s.sqlite%%",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase);
   int nok = sqlite3_close (du->mo_du_db);
@@ -248,6 +248,8 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
   if (rename (mo_string_cstr (sqltmpathbufv), mo_string_cstr (sqlfupathbufv)))
     MOM_FATAPRINTF ("failed to rename database %s -> %s",
                     mo_string_cstr (sqltmpathbufv),
+                    mo_string_cstr (sqlfupathbufv));
+  MOM_INFORMPRINTF ("dump closed Sqlite3 database %s",
                     mo_string_cstr (sqlfupathbufv));
   unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
   unsigned nbsamefiles = 0;
