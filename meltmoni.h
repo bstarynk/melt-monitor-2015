@@ -1050,10 +1050,57 @@ mo_dyncastpayl_list(const void*p)
   return (mo_listpayl_ty*)p;
 } /* end mo_dyncastpayl_list*/
 
+static inline unsigned
+mo_list_length (mo_listpayl_ty*lis)
+{
+  if (!mo_dyncastpayl_list(lis)) return 0;
+  unsigned ln = 0;
+  for (mo_listelem_ty* el = lis->mo_lip_first; el != NULL; el = el->mo_lie_next)
+    {
+      if (MOM_UNLIKELY(ln >= MOM_SIZE_MAX))
+        MOM_FATAPRINTF("too long list %u", ln);
+      for (int ix=0; ix<MOM_LISTCHUNK_LEN; ix++)
+        if (el->mo_lie_arr[ix])
+          ln++;
+    }
+  return ln;
+} /* end of mo_list_length */
+
+static inline mo_value_t
+mo_list_head(mo_listpayl_ty*lis)
+{
+  if (!mo_dyncastpayl_list(lis)) return NULL;
+  mo_listelem_ty* hd = lis->mo_lip_first;
+  if (!hd) return NULL;
+  for (int ix=0; ix<MOM_LISTCHUNK_LEN; ix++)
+    if (hd->mo_lie_arr[ix]) return hd->mo_lie_arr[ix];
+  // should not happen
+  MOM_FATAPRINTF("corrupted list with empty head");
+} /* end of mo_list_head */
+
+static inline mo_value_t
+mo_list_tail(mo_listpayl_ty*lis)
+{
+  if (!mo_dyncastpayl_list(lis)) return NULL;
+  mo_listelem_ty* tl = lis->mo_lip_last;
+  if (!tl) return NULL;
+  for (int ix=MOM_LISTCHUNK_LEN-1; ix>0; ix--)
+    if (tl->mo_lie_arr[ix]) return tl->mo_lie_arr[ix];
+  // should not happen
+  MOM_FATAPRINTF("corrupted list with empty tail");
+} /* end of mo_list_tail */
+
 mo_listpayl_ty* mo_list_make(void);
 // append and prepend a non-nil value
 void mo_list_append(mo_listpayl_ty*, mo_value_t);
 void mo_list_prepend(mo_listpayl_ty*, mo_value_t);
+// remove head or tail
+void mo_list_pop_head(mo_listpayl_ty*);
+void mo_list_pop_tail(mo_listpayl_ty*);
+// vector of all values in some list
+mo_vectvaldatapayl_ty* mo_list_to_vectvaldata(mo_listpayl_ty*);
+// tuple of all objects in some list
+mo_value_t mo_list_to_tuple(mo_listpayl_ty*);
 
 ///////////////// JSON support
 // get the json for a value
