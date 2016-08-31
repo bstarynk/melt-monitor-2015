@@ -29,8 +29,10 @@
 typedef struct mo_dumper_st mo_dumper_ty;
 typedef struct mo_loader_st mo_loader_ty;
 void mo_create_tables_for_dump (mo_dumper_ty *);
+
+
 #define MOM_LOADER_MAGIC  0x179128bd
-struct mo_loader_st
+struct mo_loader_st             // stack allocated
 {
   unsigned mo_ld_magic;         /* always MOM_LOADER_MAGIC */
   double mo_ld_startelapsedtime;
@@ -38,11 +40,20 @@ struct mo_loader_st
   unsigned mo_ld_nbitems;
 };
 
+
+
+enum mom_dumpstate_en
+{ MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 #define MOM_DUMPER_MAGIC  0x372bb699
-struct mo_dumper_st
+struct mo_dumper_st             // stack allocated
 {
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
+  enum mom_dumpstate_en mo_du_state;
   sqlite3 *mo_du_db;
+  const char *mo_du_dirpath;
+  const char *mo_du_tempsuffix;
+  mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable objects */
+  mo_listpayl_ty *mo_du_scanlist;       /* the todo list for scanning */
 };
 
 
@@ -75,10 +86,76 @@ mom_load_state (void)
 
 
 void
-mom_dump_state (void)
+mom_dump_state (const char *dirname)
 {
+  if (!dirname || dirname == MOM_EMPTY_SLOT)
+    dirname = ".";
+  mo_dumper_ty dumper;
+  mo_value_t predefset = mo_predefined_objects_set ();
+  int nbpredef = mo_set_size (predefset);
+  if (nbpredef == 0 || nbpredef + 10 < MOM_NB_PREDEFINED / 2)
+    MOM_FATAPRINTF ("too few remaining predef %d (previously %d)",
+                    nbpredef, MOM_NB_PREDEFINED);
+  memset (dumper, 0, sizeof (dumper));
+  dumper.mo_du_magic = MOM_DUMPER_MAGIC;
+  dumper.mo_du_state = MOMDUMP_SCAN;
+  dumper.mo_du_db = NULL;
+  dumper.mo_du_dirpath = GC_STRDUP (dirname);
+  dumper.mo_du_tempsuffix =
+    mo_make_string_sprintf (".tmp_%lx_%lx_p%d%%",
+                            momrand_genrand_int31 (),
+                            momrand_genrand_int31 (), (int) getpid ());
+  dumper.mo_du_objset =
+    mo_hashset_reserve (NULL, 4 * mo_set_size (predefset) + 100);
+  dumper.mo_du_scanlist = mo_list_make ();
+  for (int ix = 0; ix < nbpredef; ix++)
+    mo_dump_scan_objref (&dumper, mo_set_nth (predefset, ix));
+#warning mom_dump_state very incomplete
+  MOM_WARNPRINTF ("mom_dump_state very incomplete");
 }                               /* end mom_dump_state */
 
+
+void
+mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
+                    du);
+  enum mo_valkind_en kd = mo_kind_of_value (v);
+  switch (kd)
+    {
+    case mo_KNONE:
+    case mo_KINT:
+    case mo_KSTRING:
+      return;
+    case mo_KTUPLE:
+    case mo_KSET:
+      {
+        mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) v;
+        unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+        for (unsigned ix = 0; ix < sz; ix++)
+          mo_dump_scan_objref (du, seq->mo_seqobj[ix]);
+        return;
+      }
+    case mo_KOBJECT:
+      mo_dump_scan_objref (du, (mo_objref_t) v);
+      return;
+    }
+}                               /* end mo_dump_scan_value */
+
+void
+mo_dump_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
+                    du);
+  if (mo_dyncast_objref (obr) == NULL)
+    return;
+  if (mo_hashset_contains (du->mo_du_objset, obr))
+    return;
+  du->mo_du_objset = mo_hashset_put (du->mo_du_objset, obr);
+  du->mo_du_scanlist = mo_list_append (du->mo_du_scanlist, obr);
+}                               /* end mo_dump_scan_objref */
 
 
 mo_json_t

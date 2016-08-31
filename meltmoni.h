@@ -120,6 +120,7 @@ typedef atomic_int mom_atomic_int_t;
 typedef atomic_int_least16_t mom_atomic_int16_t;
 typedef FILE *_Atomic mom_atomic_fileptr_t;
 typedef const json_t* mo_json_t;
+typedef struct mo_dumper_st mo_dumper_ty;
 #define thread_local _Thread_local
 
 
@@ -971,6 +972,8 @@ mo_vectval_put_nth(mo_vectvaldatapayl_ty*vect, int rk, mo_value_t newval)
 {
   vect = mo_dyncastpayl_vectval(vect);
   if (!vect) return;
+  if (newval == MOM_EMPTY_SLOT)
+    newval = NULL;
   unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
   unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
   MOM_ASSERTPRINTF(cnt<=sz, "cnt %u larger than sz %u", cnt, sz);
@@ -1050,6 +1053,18 @@ mo_dyncastpayl_list(const void*p)
   return (mo_listpayl_ty*)p;
 } /* end mo_dyncastpayl_list*/
 
+static bool
+mo_list_non_empty(mo_listpayl_ty*lis)
+{
+  if (!mo_dyncastpayl_list(lis)) return false;
+  if (lis->mo_lip_first == NULL)
+    {
+      MOM_ASSERTPRINTF(lis->mo_lip_last == NULL, "corrupted list");
+      return false;
+    }
+  return true;
+} /* end mo_list_non_empty */
+
 static inline unsigned
 mo_list_length (mo_listpayl_ty*lis)
 {
@@ -1102,7 +1117,11 @@ mo_vectvaldatapayl_ty* mo_list_to_vectvaldata(mo_listpayl_ty*);
 // tuple of all objects in some list
 mo_value_t mo_list_to_tuple(mo_listpayl_ty*);
 
-///////////////// JSON support
+///////////////// DUMP support .. in jstate.c
+void mo_dump_scan_value(mo_dumper_ty*, mo_value_t);
+void mo_dump_scan_objref(mo_dumper_ty*, mo_objref_t);
+void mom_dump_state (const char*dirname);
+///////////////// JSON support .. in jstate.c
 // get the json for a value
 mo_json_t mo_json_of_value(mo_value_t);
 // get the json for an objref, e.g. an id string or null
