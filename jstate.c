@@ -569,8 +569,7 @@ void
 mo_dump_rename_emitted_files (mo_dumper_ty * du)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_EMIT
-                    && du->mo_du_db != NULL, "bad dumper du@%p", du);
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p", du);
   unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
   unsigned nbsamefiles = 0;
   for (unsigned ix = 0; ix < nbfil; ix++)
