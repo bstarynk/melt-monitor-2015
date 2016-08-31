@@ -112,7 +112,7 @@ mo_list_pop_head (mo_listpayl_ty * lis)
   int nbhd = 0;
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
-  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
     if (hd->mo_lie_arr[ix] != NULL)
       {
         if (nbhd > 0)
@@ -149,7 +149,7 @@ mo_list_pop_tail (mo_listpayl_ty * lis)
   int nbtl = 0;
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
-  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
     if (tl->mo_lie_arr[ix] != NULL)
       {
         if (nbtl > 0)
