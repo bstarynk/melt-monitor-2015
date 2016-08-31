@@ -108,7 +108,7 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
   char *errmsg = NULL;
   /***** open the database *****/
   mo_value_t sqlpathbufv =      //
-    mo_make_string_sprintf ("%s/%s%s",
+    mo_make_string_sprintf ("%s/%s.sqlite%s",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase,
                             mo_string_cstr (du->mo_du_tempsufv));
