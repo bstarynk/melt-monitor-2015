@@ -64,7 +64,6 @@ struct mo_dumper_st             // stack allocated
   mo_listpayl_ty *mo_du_scanlist;       /* the todo list for scanning */
   mo_vectvaldatapayl_ty *mo_du_vectfilepath;    /* vector of dumped file paths */
 };
-
 bool
 mo_dump_scanning (mo_dumper_ty * du)
 {
@@ -85,6 +84,14 @@ mo_dump_emitting (mo_dumper_ty * du)
   return du->mo_du_state == MOMDUMP_EMIT;
 }                               /* end mo_dump_emitting */
 
+
+
+// for SQLITE_CONFIG_LOG
+void
+mo_dump_errorlog (void *pdata MOM_UNUSED, int errcode, const char *msg)
+{
+  MOM_WARNPRINTF ("Sqlite3 Error: errcode#%d msg=%s", errcode, msg);
+}
 
 void
 mo_dump_param (mo_dumper_ty * du, const char *pname, const char *pval)

@@ -1147,6 +1147,8 @@ void mo_dump_emit_object_content(mo_dumper_ty*, mo_objref_t);
 void mo_dump_emit_names(mo_dumper_ty*);
 FILE* mo_dump_fopen(mo_dumper_ty*, const char*);
 void mom_dump_state (const char*dirname);
+// for SQLITE_CONFIG_LOG
+void mo_dump_errorlog(void*pdata MOM_UNUSED, int errcode, const char*msg);
 ///////////////// JSON support .. in jstate.c
 // get the json for a value
 mo_json_t mo_dump_json_of_value(mo_dumper_ty*,mo_value_t);

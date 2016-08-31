@@ -1136,6 +1136,7 @@ main (int argc_main, char **argv_main)
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
   if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
+  sqlite3_config (SQLITE_CONFIG_LOG, mo_dump_errorlog, NULL);
   mom_random_init_genrand ();
   json_object_seed (0);
   mom_init_objects ();
