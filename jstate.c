@@ -51,12 +51,14 @@ struct mo_dumper_st             // stack allocated
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
   enum mom_dumpstate_en mo_du_state;
   sqlite3 *mo_du_db;
-  // stmt: INSERT INTO t_params (par_name, par_value)
-  sqlite3_stmt *mo_du_stmt_param;
-  /** stmt: INSERT INTO t_object (ob_id, ob_mtime, ob_classid,
+  // SQLstmt: INSERT INTO t_params (par_name, par_value)
+  sqlite3_stmt *mo_du_stmt_params;
+  /** SQLstmt: INSERT INTO t_object (ob_id, ob_mtime, ob_classid,
                                   ob_paylkid, ob_paylcont, ob_jsoncont)
   **/
-  sqlite3_stmt *mo_du_stmt_object;
+  sqlite3_stmt *mo_du_stmt_objects;
+  // SQLstmt: INSERT INTO t_names (nam_str, nam_oid)
+  sqlite3_stmt *mo_du_stmt_names;
   //
   const char *mo_du_dirv;
   mo_value_t mo_du_tempsufv;
@@ -101,30 +103,30 @@ mo_dump_param (mo_dumper_ty * du, const char *pname, const char *pval)
   { MOMPARAMIX__NONE, MOMPARAMIX_NAME, MOMPARAMIX_VAL };
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT
-                    && du->mo_du_stmt_param, "invalid dumper");
+                    && du->mo_du_stmt_params, "invalid dumper");
   MOM_ASSERTPRINTF (pname != NULL && pname != MOM_EMPTY_SLOT
                     && isascii (pname[0]), "bad pname");
   MOM_ASSERTPRINTF (pval != NULL && pval != MOM_EMPTY_SLOT, "bad pval");
   rc =
-    sqlite3_bind_text (du->mo_du_stmt_param, MOMPARAMIX_NAME, pname, -1,
+    sqlite3_bind_text (du->mo_du_stmt_params, MOMPARAMIX_NAME, pname, -1,
                        SQLITE_STATIC);
   if (rc)
     MOM_FATAPRINTF
       ("failed to bind par_name %s to param insert Sqlite3 statment (%s)",
        pname, sqlite3_errstr (rc));
   rc =
-    sqlite3_bind_text (du->mo_du_stmt_param, MOMPARAMIX_VAL, pval, -1,
+    sqlite3_bind_text (du->mo_du_stmt_params, MOMPARAMIX_VAL, pval, -1,
                        SQLITE_STATIC);
   if (rc)
     MOM_FATAPRINTF
       ("failed to bind par_value %s to param insert Sqlite3 statment (%s)",
        pval, sqlite3_errstr (rc));
-  rc = sqlite3_step (du->mo_du_stmt_param);
+  rc = sqlite3_step (du->mo_du_stmt_params);
   if (rc != SQLITE_DONE)
     MOM_FATAPRINTF
       ("failed to step insert Sqlite3 statment for pname %s (%s)", pname,
        sqlite3_errstr (rc));
-  rc = sqlite3_reset (du->mo_du_stmt_param);
+  rc = sqlite3_reset (du->mo_du_stmt_params);
   if (rc != SQLITE_OK)
     MOM_FATAPRINTF
       ("failed to reset insert Sqlite3 statment for pname %s (%s)", pname,
@@ -176,34 +178,40 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
       sqlite3_exec (du->mo_du_db,
                     "CREATE TABLE t_names"
                     " (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,"
-                    "  nam_id VARCHAR(20) NOT NULL UNIQUE)",
+                    "  nam_oid VARCHAR(20) NOT NULL UNIQUE)",
                     NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_names Sqlite table: %s", errmsg);
   //
   if ((errmsg = NULL),          //
       sqlite3_exec (du->mo_du_db,
-                    "CREATE UNIQUE INDEX x_namedid ON t_names (nam_id)",
+                    "CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid)",
                     NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create x_namedid Sqlite index: %s", errmsg);
   /***** prepare statements *****/
   if ((rc = sqlite3_prepare_v2 (du->mo_du_db,
                                 "INSERT INTO t_params (par_name, par_value) VALUES (?, ?)",
-                                -1, &du->mo_du_stmt_param,
+                                -1, &du->mo_du_stmt_params,
                                 NULL)) != SQLITE_OK)
     MOM_FATAPRINTF ("Failed to prepare t_params Sqlite insertion: %s",
                     sqlite3_errstr (rc));
-  if ((rc =
-       sqlite3_prepare_v2 (du->mo_du_db,
-                           "INSERT INTO t_objects"
-                           " (ob_id, ob_mtime, ob_classid,"
-                           "  ob_paylkid, ob_paylcont, ob_jsoncont)"
-                           " VALUES (?, ?, ?, ?, ?, ?)", -1,
-                           &du->mo_du_stmt_object, NULL)) != SQLITE_OK)
+  if ((rc = sqlite3_prepare_v2 (du->mo_du_db,
+                                "INSERT INTO t_objects"
+                                " (ob_id, ob_mtime, ob_classid,"
+                                "  ob_paylkid, ob_paylcont, ob_jsoncont)"
+                                " VALUES (?, ?, ?, ?, ?, ?)", -1,
+                                &du->mo_du_stmt_objects, NULL)) != SQLITE_OK)
     MOM_FATAPRINTF ("Failed to prepare t_objects Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
+  if ((rc = sqlite3_prepare_v2 (du->mo_du_db,
+                                "INSERT INTO t_names (nam_str, nam_oid) VALUES (?, ?)",
+                                -1, &du->mo_du_stmt_names,
+                                NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to prepare t_names Sqlite insertion: %s",
                     sqlite3_errstr (rc));
   /**** insert various parameters ****/
   mo_dump_param (du, "monimelt_format_version", MOM_DUMP_VERSIONID);
 }                               /* end mo_dump_initialize_sqlite_database */
+
 
 bool
 mo_dump_is_emitted_objref (mo_dumper_ty * du, mo_objref_t obr)
@@ -227,7 +235,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   };
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT
-                    && du->mo_du_stmt_param, "invalid dumper");
+                    && du->mo_du_stmt_objects, "invalid dumper");
   if (!mo_dyncast_objref (obr) || !mo_dump_is_emitted_objref (du, obr))
     return;
   char bufid[MOM_CSTRIDLEN + 6];
@@ -235,7 +243,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   mo_cstring_from_hi_lo_ids (bufid, obr->mo_ob_hid, obr->mo_ob_loid);
   // bind the ob_id
   rc =
-    sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_ID, bufid, -1,
+    sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_ID, bufid, -1,
                        SQLITE_STATIC);
   if (rc)
     MOM_FATAPRINTF
@@ -243,7 +251,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
        sqlite3_errstr (rc));
   // bind the ob_mtime
   rc =
-    sqlite3_bind_double (du->mo_du_stmt_object, MOMOBJIX_MTIME,
+    sqlite3_bind_double (du->mo_du_stmt_objects, MOMOBJIX_MTIME,
                          (double) obr->mo_ob_mtime);
   if (rc)
     MOM_FATAPRINTF
@@ -258,7 +266,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
       mo_cstring_from_hi_lo_ids (clabufid, claobr->mo_ob_hid,
                                  claobr->mo_ob_loid);
       rc =
-        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_CLASSID, clabufid,
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_CLASSID, clabufid,
                            -1, SQLITE_STATIC);
       if (rc)
         MOM_FATAPRINTF
@@ -268,7 +276,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   else
     {
       rc =
-        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_CLASSID, "", -1,
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_CLASSID, "", -1,
                            SQLITE_STATIC);
       if (rc)
         MOM_FATAPRINTF
@@ -285,7 +293,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
       mo_cstring_from_hi_lo_ids (pkbufid, paylkindobr->mo_ob_hid,
                                  paylkindobr->mo_ob_loid);
       rc =
-        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLKID, pkbufid,
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLKID, pkbufid,
                            -1, SQLITE_STATIC);
       if (rc)
         MOM_FATAPRINTF
@@ -301,14 +309,14 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   else
     {
       rc =
-        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLKID, "", -1,
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLKID, "", -1,
                            SQLITE_STATIC);
       if (rc)
         MOM_FATAPRINTF
           ("failed to empty-bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
       rc =
-        sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_PAYLCONT, "", -1,
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLCONT, "", -1,
                            SQLITE_STATIC);
       if (rc)
         MOM_FATAPRINTF
@@ -325,13 +333,14 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   if (!fmem)
     MOM_FATAPRINTF ("failed to open memstream for content of object %s",
                     mo_object_pnamestr (obr));
+  fputc ('\n', fmem);
   if (json_dumpf (jcont, fmem, JSON_INDENT (1) | JSON_SORT_KEYS))
     MOM_FATAPRINTF ("failed to json_dumpf for content of object %s",
                     mo_object_pnamestr (obr));
   fputc ('\n', fmem);
   fflush (fmem);
   rc =
-    sqlite3_bind_text (du->mo_du_stmt_object, MOMOBJIX_JSONCONT, contbuf,
+    sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_JSONCONT, contbuf,
                        contsiz, SQLITE_TRANSIENT);
   if (rc)
     MOM_FATAPRINTF
@@ -339,12 +348,12 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
        sqlite3_errstr (rc));
   fclose (fmem);
   free (contbuf), contbuf = NULL;
-  rc = sqlite3_step (du->mo_du_stmt_object);
+  rc = sqlite3_step (du->mo_du_stmt_objects);
   if (rc != SQLITE_DONE)
     MOM_FATAPRINTF
       ("failed to step insert Sqlite3 statment for t_objects (%s)",
        sqlite3_errstr (rc));
-  rc = sqlite3_reset (du->mo_du_stmt_object);
+  rc = sqlite3_reset (du->mo_du_stmt_objects);
   if (rc != SQLITE_OK)
     MOM_FATAPRINTF
       ("failed to reset insert Sqlite3 statment for t_objects (%s)",
@@ -446,23 +455,83 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
   fclose (fp);
 }                               /* end mo_dump_emit_predefined */
 
+
+
 void
 mo_dump_emit_names (mo_dumper_ty * du)
 {
+  int rc = 0;
+  enum nameindex_en
+  { MOMNAMIX__NONE, MOMNAMIX_STR, MOMNAMIX_OID };
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
                     du);
-  MOM_WARNPRINTF ("unimplemented mo_dump_emit_names");
-#warning unimplemented mo_dump_emit_names
+  mo_value_t namobjsetv = mo_named_objects_set ();
+  int nbnamed = mo_set_size (namobjsetv);
+  for (int ix = 0; ix < nbnamed; ix++)
+    {
+      mo_objref_t namobr = mo_set_nth (namobjsetv, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (namobr), "bad namobr ix=%d", ix);
+      mo_value_t strnamv = mo_get_namev (namobr);
+      MOM_ASSERTPRINTF (mo_dyncast_string (strnamv), "bad strnamv ix=%d", ix);
+      char idbuf[MOM_CSTRIDLEN + 6];
+      memset (idbuf, 0, sizeof (idbuf));
+      mo_cstring_from_hi_lo_ids
+        (idbuf, namobr->mo_ob_hid, namobr->mo_ob_loid);
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_names, MOMNAMIX_OID, idbuf, -1,
+                           SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind nam_oid to t_names insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_names, MOMNAMIX_STR,
+                           mo_string_cstr (strnamv), -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind nam_str to t_names insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      rc = sqlite3_step (du->mo_du_stmt_names);
+      if (rc != SQLITE_DONE)
+        MOM_FATAPRINTF
+          ("failed to step insert Sqlite3 statment for t_names (%s)",
+           sqlite3_errstr (rc));
+      rc = sqlite3_reset (du->mo_du_stmt_names);
+      if (rc != SQLITE_OK)
+        MOM_FATAPRINTF
+          ("failed to reset insert Sqlite3 statment for t_names (%s)",
+           sqlite3_errstr (rc));
+    }
+  MOM_INFORMPRINTF ("dumped %d names", nbnamed);
 }                               /* end mo_dump_emit_names */
 
 void
-mo_dump_rename_emitted_files (mo_dumper_ty * du)
+mo_dump_end_database (mo_dumper_ty * du)
 {
-  int rc = 0;
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT
                     && du->mo_du_db != NULL, "bad dumper du@%p", du);
+  /// finalize all the prepared statements
+  int rc = 0;
+  rc = sqlite3_finalize (du->mo_du_stmt_params);
+  du->mo_du_stmt_params = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalize t_params Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
+  //
+  rc = sqlite3_finalize (du->mo_du_stmt_objects);
+  du->mo_du_stmt_objects = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalize t_objects Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
+  //
+  rc = sqlite3_finalize (du->mo_du_stmt_names);
+  du->mo_du_stmt_objects = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalize t_names Sqlite insertion: %s",
+                    sqlite3_errstr (rc));
+  // the various paths
   mo_value_t sqltmpathbufv =    //
     mo_make_string_sprintf ("%s/%s.sqlite%s",
                             mo_string_cstr (du->mo_du_dirv),
@@ -476,17 +545,6 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
     mo_make_string_sprintf ("%s/%s.sqlite%%",
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase);
-  /// finalize all the prepared statements
-  rc = sqlite3_finalize (du->mo_du_stmt_param);
-  du->mo_du_stmt_param = NULL;
-  if (rc != SQLITE_OK)
-    MOM_FATAPRINTF ("Failed to finalize t_params Sqlite insertion: %s",
-                    sqlite3_errstr (rc));
-  rc = sqlite3_finalize (du->mo_du_stmt_object);
-  du->mo_du_stmt_object = NULL;
-  if (rc != SQLITE_OK)
-    MOM_FATAPRINTF ("Failed to finalize t_objects Sqlite insertion: %s",
-                    sqlite3_errstr (rc));
   /// close the database and rename files
   rc = sqlite3_close (du->mo_du_db);
   if (rc != SQLITE_OK)
@@ -503,6 +561,16 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
                     mo_string_cstr (sqlfupathbufv));
   MOM_INFORMPRINTF ("dump closed Sqlite3 database %s",
                     mo_string_cstr (sqlfupathbufv));
+}                               /* end mo_dump_end_database */
+
+
+
+void
+mo_dump_rename_emitted_files (mo_dumper_ty * du)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT
+                    && du->mo_du_db != NULL, "bad dumper du@%p", du);
   unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
   unsigned nbsamefiles = 0;
   for (unsigned ix = 0; ix < nbfil; ix++)
@@ -634,6 +702,7 @@ mom_dump_state (const char *dirname)
       mo_dump_emit_object_content (&dumper, obr);
     }
   mo_dump_emit_names (&dumper);
+  mo_dump_end_database (&dumper);
   mo_dump_rename_emitted_files (&dumper);
 #warning mom_dump_state very incomplete
   MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
@@ -746,7 +815,7 @@ mo_dump_jsonid_of_objref (mo_dumper_ty * du, mo_objref_t obr)
   if (!mo_dyncast_objref ((mo_value_t) obr)
       || !mo_dump_is_emitted_objref (du, obr))
     return json_null ();
-  char idbuf[MOM_CSTRIDLEN + 2];
+  char idbuf[MOM_CSTRIDLEN + 6];
   memset (idbuf, 0, sizeof (idbuf));
   return
     json_string (mo_cstring_from_hi_lo_ids

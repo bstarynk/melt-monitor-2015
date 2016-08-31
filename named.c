@@ -710,5 +710,10 @@ mo_reserve_names (unsigned gap)
   mom_nameassop = mo_assoval_reserve (mom_nameassop, gap);
 }                               /* end mo_reserve_names */
 
+mo_value_t
+mo_named_objects_set (void)
+{
+  return mo_assoval_keys_set (mom_nameassop);
+}                               /* end mo_named_objects_set */
 
 /* eof named.c */

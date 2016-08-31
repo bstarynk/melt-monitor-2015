@@ -1195,6 +1195,9 @@ mo_object_pnamestr(mo_objref_t ob)
   if (namv) return mo_string_cstr(namv);
   return mo_cstring_from_hi_lo_ids(NULL, ob->mo_ob_hid, ob->mo_ob_loid);
 } /* end mo_object_pnamestr */
+
+// retrieve the set of names objects
+mo_value_t mo_named_objects_set(void);
 /************* PREDEFINED ***********/
 
 mo_value_t mo_predefined_objects_set(void);
