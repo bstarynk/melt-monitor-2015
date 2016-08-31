@@ -20,6 +20,7 @@
 
 #include "meltmoni.h"
 
+
 /*** IMPORTANT NOTICE: the list of tables created by function
  * mo_dump_initialize_sqlite_database should be kept in sync with the
  * monimelt-dump-state.sh script (look for lines with ".mode insert"
@@ -50,6 +51,7 @@ struct mo_dumper_st             // stack allocated
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
   enum mom_dumpstate_en mo_du_state;
   sqlite3 *mo_du_db;
+  sqlite3_stmt *mo_du_stmt_param;
   const char *mo_du_dirv;
   mo_value_t mo_du_tempsufv;
   mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable objects */
@@ -57,6 +59,38 @@ struct mo_dumper_st             // stack allocated
   mo_vectvaldatapayl_ty *mo_du_vectfilepath;    /* vector of dumped file paths */
 };
 
+
+void
+mo_dump_param (mo_dumper_ty * du, const char *pname, const char *pval)
+{
+  int rc = 0;
+  enum paramindex_en
+  { MOMPARAMIX__NONE, MOMPARAMIX_NAME, MOMPARAMIX_VAL };
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT
+                    && du->mo_du_stmt_param, "invalid dumper");
+  MOM_ASSERTPRINTF (pname != NULL && pname != MOM_EMPTY_SLOT
+                    && isascii (pname[0]), "bad pname");
+  MOM_ASSERTPRINTF (pval != NULL && pval != MOM_EMPTY_SLOT, "bad pval");
+  rc =
+    sqlite3_bind_text (du->mo_du_stmt_param, MOMPARAMIX_NAME, pname, -1,
+                       SQLITE_STATIC);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind par_name %s to param insert Sqlite3 statment (%s)",
+       pname, sqlite3_errstr (rc));
+  rc =
+    sqlite3_bind_text (du->mo_du_stmt_param, MOMPARAMIX_VAL, pval, -1,
+                       SQLITE_STATIC);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind par_value %s to param insert Sqlite3 statment (%s)",
+       pval, sqlite3_errstr (rc));
+  rc = sqlite3_step (du->mo_du_stmt_param);
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("failed to run insert Sqlite3 statment for pname %s (%s)",
+                    pname, sqlite3_errstr (rc));
+}                               /* end of mo_dump_param */
 
 void
 mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
@@ -90,6 +124,9 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                                      "CREATE TABLE t_objects"
                                      " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
                                      "  ob_mtime DATETIME,"
+                                     "  ob_classid VARCHAR(20) NOT NULL,"
+                                     "  ob_paylkid VARCHAR(20) NOT NULL,"
+                                     "  ob_paylcont TEXT NOT NULL,"
                                      "  ob_jsoncont TEXT NOT NULL)", NULL,
                                      NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
@@ -106,6 +143,13 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                                      NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create x_namedid Sqlite index: %s", errmsg);
   /***** prepare statements *****/
+  if ((errmsg = NULL), sqlite3_prepare_v2 (du->mo_du_db,
+                                           "INSERT INTO t_params (par_name, par_value) VALUES (?, ?)",
+                                           -1, &du->mo_du_stmt_param, NULL))
+    MOM_FATAPRINTF ("Failed to prepare t_params Sqlite insertion: %s",
+                    errmsg);
+  /**** insert various parameters ****/
+  mo_dump_param (du, "monimelt_format_version", MOM_DUMP_VERSIONID);
 }                               /* end mo_dump_initialize_sqlite_database */
 
 void

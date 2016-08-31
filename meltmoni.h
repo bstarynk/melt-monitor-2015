@@ -124,7 +124,7 @@ typedef struct mo_dumper_st mo_dumper_ty;
 #define thread_local _Thread_local
 
 
-
+#define MOM_DUMP_VERSIONID "MoniMelt2016B"
 
 // the generated header file
 #define MOM_PREDEF_HEADER "_mom_predef.h"
