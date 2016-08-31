@@ -236,8 +236,8 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
        sqlite3_errstr (rc));
   // bind the ob_mtime
   rc =
-    sqlite3_bind_int64 (du->mo_du_stmt_object, MOMOBJIX_MTIME,
-                        obr->mo_ob_mtime);
+    sqlite3_bind_double (du->mo_du_stmt_object, MOMOBJIX_MTIME,
+                         (double) obr->mo_ob_mtime);
   if (rc)
     MOM_FATAPRINTF
       ("failed to bind ob_mtime for t_objects insert Sqlite3 statment (%s)",
