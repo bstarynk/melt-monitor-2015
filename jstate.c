@@ -50,10 +50,11 @@ struct mo_dumper_st             // stack allocated
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
   enum mom_dumpstate_en mo_du_state;
   sqlite3 *mo_du_db;
-  const char *mo_du_dirpath;
-  const char *mo_du_tempsuffix;
+  const char *mo_du_dirv;
+  mo_value_t mo_du_tempsufv;
   mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable objects */
   mo_listpayl_ty *mo_du_scanlist;       /* the todo list for scanning */
+  mo_vectvaldatapayl_ty *mo_du_vectfilepath;    /* vector of dumped file paths */
 };
 
 
@@ -77,39 +78,191 @@ mo_create_tables_for_dump (mo_dumper_ty * du)
                     "  ob_mtime DATETIME,"
                     "  ob_jsoncont TEXT NOT NULL)", NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
-}
+}                               /* end mo_create_tables_for_dump */
+
+FILE *
+mo_dump_fopen (mo_dumper_ty * du, const char *path)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  MOM_ASSERTPRINTF (path && isalnum (path[0]), "bad path %s", path);
+  mo_value_t pathbufv = mo_make_string_sprintf ("%s/%s%s",
+                                                mo_string_cstr
+                                                (du->mo_du_dirv),
+                                                path,
+                                                mo_string_cstr
+                                                (du->mo_du_tempsufv));
+  FILE *f = fopen (mo_string_cstr (pathbufv), "wx");
+  if (!f)
+    MOM_FATAPRINTF ("fopen %s failed (%m)", mo_string_cstr (pathbufv));
+  du->mo_du_vectfilepath =
+    mo_vectval_append (du->mo_du_vectfilepath, mo_make_string_cstr (path));
+  return f;
+}                               /* end of mo_dump_fopen */
 
 void
-mom_load_state (void)
+mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
 {
-}                               /* end mom_load_state */
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  int nbpredef = mo_set_size (predset);
+  MOM_ASSERTPRINTF (nbpredef > 0, "empty predset");
+  FILE *fp = mo_dump_fopen (du, MOM_PREDEF_HEADER);
+  mom_output_gplv3_notice (fp, "///", "", MOM_PREDEF_HEADER);
+  fprintf (fp, "\n#ifndef MOM_HAS_PREDEFINED\n"
+           "#error missing MOM_HAS_PREDEFINED\n" "#endif\n\n");
+  fprintf (fp, "\n#undef MOM_NB_PREDEFINED\n"
+           "#define MOM_NB_PREDEFINED %d\n", nbpredef);
+  fprintf (fp, "\n\n//// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)\n");
+  int nbanon = 0;
+  int nbnamed = 0;
+  for (int ix = 0; ix < nbpredef; ix++)
+    {
+      mo_objref_t obp = mo_set_nth (predset, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obp)
+                        && mo_objref_space (obp) == mo_SPACE_PREDEF,
+                        "bad obp");
+      mo_value_t namv = mo_get_namev (obp);
+      char idstr[MOM_CSTRIDLEN + 6];
+      memset (idstr, 0, sizeof (idstr));
+      mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      if (namv != NULL)
+        {
+          nbnamed++;
+          MOM_ASSERTPRINTF (mo_dyncast_string (namv), "bad namv");
+          fprintf (fp, "MOM_HAS_PREDEFINED(%s,%s,%ld,%lld,%u)\n",
+                   mo_string_cstr (namv), idstr,
+                   (long) obp->mo_ob_hid, (long long) obp->mo_ob_loid,
+                   (unsigned) mo_objref_hash (obp));
+        }
+      else
+        {
+          nbanon++;
+          fprintf (fp, "MOM_HAS_PREDEFINED(%s,%s,%ld,%lld,%u)\n",
+                   idstr, idstr,
+                   (long) obp->mo_ob_hid, (long long) obp->mo_ob_loid,
+                   (unsigned) mo_objref_hash (obp));
+        }
+    }
+  MOM_ASSERTPRINTF (nbanon + nbnamed == nbpredef, "bad nbanon");
+  fprintf (fp, "\n#undef MOM_NB_ANONYMOUS_PREDEFINED\n"
+           "#define MOM_NB_ANONYMOUS_PREDEFINED %d\n", nbanon);
+  fprintf (fp, "\n#undef MOM_NB_NAMED_PREDEFINED\n"
+           "#define MOM_NB_NAMED_PREDEFINED %d\n", nbnamed);
+  fprintf (fp, "\n\n#undef MOM_HAS_PREDEFINED\n");
+  fprintf (fp, "// end of generated predefined file %s\n", MOM_PREDEF_HEADER);
+  fflush (fp);
+}                               /* end mo_dump_emit_predefined */
 
+void
+mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  MOM_WARNPRINTF ("unimplemented mo_dump_emit_object_content for %s",
+                  mo_object_pnamestr (obr));
+#warning unimplemented mo_dump_emit_object_content
+}                               /* end of mo_dump_emit_object_content */
+
+void
+mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
+                    du);
+  MOM_WARNPRINTF ("unimplemented mo_dump_scan_inside_object for %s",
+                  mo_object_pnamestr (obr));
+#warning unimplemented mo_dump_scan_inside_object
+}                               /* end of mo_dump_scan_inside_object */
+
+void
+mo_dump_emit_names (mo_dumper_ty * du)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  MOM_WARNPRINTF ("unimplemented mo_dump_emit_names");
+#warning unimplemented mo_dump_emit_names
+}                               /* end mo_dump_emit_names */
 
 void
 mom_dump_state (const char *dirname)
 {
-  if (!dirname || dirname == MOM_EMPTY_SLOT)
+  if (!dirname || dirname == MOM_EMPTY_SLOT || !dirname[0])
     dirname = ".";
+  if (access (dirname, F_OK) && errno == ENOENT)
+    {
+      if (mkdir (dirname, 0750))
+        MOM_FATAPRINTF ("failed to mkdir dump directory %s (%m)", dirname);
+    }
+  {
+    struct stat dirstat;
+    memset (&dirstat, 0, sizeof (dirstat));
+    if (stat (dirname, &dirstat) || !S_ISDIR (dirstat.st_mode)
+        || !(S_IWUSR & dirstat.st_mode))
+      MOM_FATAPRINTF ("bad dump directory %s (non-writable directory)",
+                      dirname);
+  }
   mo_dumper_ty dumper;
   mo_value_t predefset = mo_predefined_objects_set ();
   int nbpredef = mo_set_size (predefset);
   if (nbpredef == 0 || nbpredef + 10 < MOM_NB_PREDEFINED / 2)
     MOM_FATAPRINTF ("too few remaining predef %d (previously %d)",
                     nbpredef, MOM_NB_PREDEFINED);
-  memset (dumper, 0, sizeof (dumper));
+  memset (&dumper, 0, sizeof (dumper));
   dumper.mo_du_magic = MOM_DUMPER_MAGIC;
   dumper.mo_du_state = MOMDUMP_SCAN;
   dumper.mo_du_db = NULL;
-  dumper.mo_du_dirpath = GC_STRDUP (dirname);
-  dumper.mo_du_tempsuffix =
+  dumper.mo_du_dirv = mo_make_string_cstr (dirname);
+  dumper.mo_du_tempsufv =
     mo_make_string_sprintf (".tmp_%lx_%lx_p%d%%",
                             momrand_genrand_int31 (),
                             momrand_genrand_int31 (), (int) getpid ());
-  dumper.mo_du_objset =
-    mo_hashset_reserve (NULL, 4 * mo_set_size (predefset) + 100);
+  dumper.mo_du_objset = mo_hashset_reserve (NULL, 4 * nbpredef + 100);
   dumper.mo_du_scanlist = mo_list_make ();
+  dumper.mo_du_vectfilepath = mo_vectval_reserve (NULL, 10 + nbpredef / 5);
   for (int ix = 0; ix < nbpredef; ix++)
     mo_dump_scan_objref (&dumper, mo_set_nth (predefset, ix));
+  long nbobj = 0;
+  /// the scan loop
+  while (mo_list_non_empty (dumper.mo_du_scanlist))
+    {
+      mo_objref_t obr =
+        mo_dyncast_objref (mo_list_head (dumper.mo_du_scanlist));
+      MOM_ASSERTPRINTF (obr != NULL, "nil obr");
+      mo_list_pop_head (dumper.mo_du_scanlist);
+      mo_dump_scan_inside_object (&dumper, obr);
+    }
+  /// the emit loop
+  dumper.mo_du_state = MOMDUMP_EMIT;
+  mo_dump_emit_predefined (&dumper, predefset);
+  mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
+  unsigned elsiz = mo_set_size (elset);
+  MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef, "bad elsiz");
+  for (unsigned eix = 0; eix < elsiz; eix++)
+    {
+      mo_objref_t obr = mo_set_nth (elset, eix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+      mo_dump_emit_object_content (&dumper, obr);
+    }
+  mo_dump_emit_names (&dumper);
+  /// rename the temporarily emitted files
+  unsigned nbfil = mo_vectval_count (dumper.mo_du_vectfilepath);
+  for (unsigned ix = 0; ix < nbfil; ix++)
+    {
+      mo_value_t curpathv = mo_vectval_nth (dumper.mo_du_vectfilepath, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_string (curpathv), "bad curpathv");
+      mo_value_t tempathv =     //
+        mo_make_string_sprintf ("%s%s",
+                                mo_string_cstr (curpathv),
+                                mo_string_cstr (dumper.mo_du_tempsufv));
+      mo_value_t backupv =
+        mo_make_string_sprintf ("%s%%", mo_string_cstr (curpathv));
+    };
+
 #warning mom_dump_state very incomplete
   MOM_WARNPRINTF ("mom_dump_state very incomplete");
 }                               /* end mom_dump_state */
@@ -154,10 +307,18 @@ mo_dump_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
   if (mo_hashset_contains (du->mo_du_objset, obr))
     return;
   du->mo_du_objset = mo_hashset_put (du->mo_du_objset, obr);
-  du->mo_du_scanlist = mo_list_append (du->mo_du_scanlist, obr);
+  mo_list_append (du->mo_du_scanlist, obr);
 }                               /* end mo_dump_scan_objref */
 
 
+/**************************** LOADER ********************/
+void
+mom_load_state (void)
+{
+}                               /* end mom_load_state */
+
+
+/**************** JSON ****************/
 mo_json_t
 mo_json_of_value (mo_value_t v)
 {

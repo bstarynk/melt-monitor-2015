@@ -1053,7 +1053,7 @@ mo_dyncastpayl_list(const void*p)
   return (mo_listpayl_ty*)p;
 } /* end mo_dyncastpayl_list*/
 
-static bool
+static inline bool
 mo_list_non_empty(mo_listpayl_ty*lis)
 {
   if (!mo_dyncastpayl_list(lis)) return false;
@@ -1120,6 +1120,10 @@ mo_value_t mo_list_to_tuple(mo_listpayl_ty*);
 ///////////////// DUMP support .. in jstate.c
 void mo_dump_scan_value(mo_dumper_ty*, mo_value_t);
 void mo_dump_scan_objref(mo_dumper_ty*, mo_objref_t);
+void mo_dump_scan_inside_object(mo_dumper_ty*, mo_objref_t);
+void mo_dump_emit_object_content(mo_dumper_ty*, mo_objref_t);
+void mo_dump_emit_names(mo_dumper_ty*);
+FILE* mo_dump_fopen(mo_dumper_ty*, const char*);
 void mom_dump_state (const char*dirname);
 ///////////////// JSON support .. in jstate.c
 // get the json for a value
