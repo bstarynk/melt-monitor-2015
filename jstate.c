@@ -86,7 +86,8 @@ mo_dump_fopen (mo_dumper_ty * du, const char *path)
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
                     du);
-  MOM_ASSERTPRINTF (path && isalnum (path[0]), "bad path %s", path);
+  MOM_ASSERTPRINTF (path && (isalnum (path[0]) || !strncmp (path, "_mom", 4)),
+                    "bad path %s", path);
   mo_value_t pathbufv = mo_make_string_sprintf ("%s/%s%s",
                                                 mo_string_cstr
                                                 (du->mo_du_dirv),
@@ -241,6 +242,8 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
             MOM_FATAPRINTF ("failed to unlink %s (%m)",
                             mo_string_cstr (tmpathv));
           nbsamefiles++;
+          MOM_INFORMPRINTF ("same file#%d/%d: %s", nbsamefiles, nbfil,
+                            mo_string_cstr (curpathv));
         }
       else
         {
@@ -249,10 +252,12 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
             MOM_FATAPRINTF ("failed to rename %s -> %s (%m)",
                             mo_string_cstr (tmpathv),
                             mo_string_cstr (curpathv));
+          MOM_INFORMPRINTF ("generated file #%d: %s", nbfil,
+                            mo_string_cstr (curpathv));
         }
-      MOM_INFORMPRINTF ("dump emitted %u files - with %u same as previously",
-                        nbfil, nbsamefiles);
     };
+  MOM_INFORMPRINTF ("dump emitted %u files - with %u same as previously",
+                    nbfil, nbsamefiles);
 }                               /* end mo_dump_rename_emitted_files */
 
 void
@@ -260,7 +265,8 @@ mom_dump_state (const char *dirname)
 {
   if (!dirname || dirname == MOM_EMPTY_SLOT || !dirname[0])
     dirname = ".";
-  if (access (dirname, F_OK) && errno == ENOENT)
+  if ((isalnum (dirname[0]) || dirname[0] == '/')
+      && access (dirname, F_OK) && errno == ENOENT)
     {
       if (mkdir (dirname, 0750))
         MOM_FATAPRINTF ("failed to mkdir dump directory %s (%m)", dirname);
@@ -290,7 +296,7 @@ mom_dump_state (const char *dirname)
                             momrand_genrand_int31 (), (int) getpid ());
   dumper.mo_du_objset = mo_hashset_reserve (NULL, 4 * nbpredef + 100);
   dumper.mo_du_scanlist = mo_list_make ();
-  dumper.mo_du_vectfilepath = mo_vectval_reserve (NULL, 10 + nbpredef / 5);
+  dumper.mo_du_vectfilepath = mo_vectval_reserve (NULL, 20 + nbpredef / 5);
   for (int ix = 0; ix < nbpredef; ix++)
     mo_dump_scan_objref (&dumper, mo_set_nth (predefset, ix));
   long nbobj = 0;

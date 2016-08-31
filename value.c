@@ -527,7 +527,7 @@ mo_vectval_reserve (mo_vectvaldatapayl_ty * vect, unsigned gap)
       vect =
         mom_gc_alloc (sizeof (mo_vectvaldatapayl_ty) +
                       sz * sizeof (mo_value_t));
-      ((mo_hashedvalue_ty *) vect)->mo_va_kind = mo_PASSOVALDATA;
+      ((mo_hashedvalue_ty *) vect)->mo_va_kind = mo_PVECTVALDATA;
       ((mo_hashedvalue_ty *) vect)->mo_va_hash =
         (momrand_genrand_int31 () & 0xfffffff) + 2;
       ((mo_sizedvalue_ty *) vect)->mo_sva_size = sz;
