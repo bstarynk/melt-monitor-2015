@@ -24,7 +24,7 @@ CREATE TABLE t_names (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,  nam_oid VARCHAR(
 CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 -- state-monimelt tables contents
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
-INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',0,'','','','
+INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'','','','
 {
  "attrs": null,
  "comps": null
