@@ -61,7 +61,7 @@ struct mo_dumper_st             // stack allocated
   sqlite3 *mo_du_db;
   // SQLstmt: INSERT INTO t_params (par_name, par_value)
   sqlite3_stmt *mo_du_stmt_params;
-  /** SQLstmt: INSERT INTO t_object (ob_id, ob_mtime, ob_classid,
+  /** SQLstmt: INSERT INTO t_objects (ob_id, ob_mtime, ob_classid,
                                   ob_paylkid, ob_paylcont, ob_jsoncont)
   **/
   sqlite3_stmt *mo_du_stmt_objects;
@@ -189,6 +189,12 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                     "  nam_oid VARCHAR(20) NOT NULL UNIQUE)",
                     NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_names Sqlite table: %s", errmsg);
+  if ((errmsg = NULL),          //
+      sqlite3_exec (du->mo_du_db,
+                    "CREATE TABLE t_modules"
+                    " (mod_oid VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE)",
+                    NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to create t_modules Sqlite table: %s", errmsg);
   //
   if ((errmsg = NULL),          //
       sqlite3_exec (du->mo_du_db,

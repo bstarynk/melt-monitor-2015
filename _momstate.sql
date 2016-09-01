@@ -21,14 +21,15 @@ BEGIN TRANSACTION;
 CREATE TABLE t_params (par_name VARCHAR(35) PRIMARY KEY ASC NOT NULL UNIQUE,  par_value TEXT NOT NULL);
 CREATE TABLE t_objects (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,  ob_mtime DATETIME,  ob_classid VARCHAR(20) NOT NULL,  ob_paylkid VARCHAR(20) NOT NULL,  ob_paylcont TEXT NOT NULL,  ob_jsoncont TEXT NOT NULL);
 CREATE TABLE t_names (nam_str PRIMARY KEY ASC NOT NULL UNIQUE,  nam_oid VARCHAR(20) NOT NULL UNIQUE);
+CREATE TABLE t_modules (mod_oid VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE);
 CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 -- state-monimelt tables contents
----- TABLE t_params @@@@
+---- TABLE t_params @@@@@@
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
----- TABLE t_names @@@@
+---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
----- TABLE t_objects @@@@
+---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'','','','
 {
  "attrs": {
@@ -55,5 +56,6 @@ INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'','','','
  "comps": null
 }
 ');
+---- TABLE t_modules @@@@@@@
 COMMIT;
 -- monimelt-dump-state end dump _momstate.sqlite
