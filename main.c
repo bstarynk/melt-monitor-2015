@@ -36,6 +36,8 @@ void *mom_prog_dlhandle;
 
 char *mom_dump_dir;
 
+bool mom_without_gui;
+
 const char *
 mom_hostname (void)
 {
@@ -1011,6 +1013,7 @@ static const struct option mom_long_options[] = {
   {"help", no_argument, NULL, 'h'},
   {"version", no_argument, NULL, 'V'},
   {"dump", no_argument, NULL, 'd'},
+  {"no-gui", no_argument, NULL, 'N'},
   {"add-predef", required_argument, NULL, xtraopt_addpredef},
   {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
   {"info", no_argument, NULL, xtraopt_info},
@@ -1025,6 +1028,7 @@ usage_mom (const char *argv0)
   printf ("Usage: %s\n", argv0);
   printf ("\t -h | --help " " \t# Give this help.\n");
   printf ("\t -V | --version " " \t# Give version information.\n");
+  printf ("\t -N | --no-gui " " \t# Don't start any GUI window\n");
   printf ("\t -d | --dump "
           " <dirname>\t# Give dump directory, avoid dumping if -.\n");
   printf ("\t --add-predef predefname" " \t#Add a predefined\n");
@@ -1051,7 +1055,7 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   int opt = -1;
   char *commentstr = NULL;
   while ((opt =
-          getopt_long (argc, argv, "hVd:", mom_long_options, NULL)) >= 0)
+          getopt_long (argc, argv, "hVNd:", mom_long_options, NULL)) >= 0)
     {
       switch (opt)
         {
@@ -1062,6 +1066,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           print_version_mom (argv[0]);
           exit (EXIT_FAILURE);
           return;
+        case 'N':              /* --no-gui */
+          mom_without_gui = true;
+          break;
         case 'V':              /* --version */
           print_version_mom (argv[0]);
           exit (EXIT_SUCCESS);
@@ -1090,9 +1097,10 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           mom_print_info ();
           break;
         default:
-          MOM_FATAPRINTF ("bad option (%c) at %d", isalpha (opt) ? opt : '?',
-                          optind);
-          return;
+          if (mom_without_gui)
+            MOM_FATAPRINTF ("bad option (%c) at %d",
+                            isalpha (opt) ? opt : '?', optind);
+          break;
         }
     }
 }                               /* end of parse_program_arguments_mom */
@@ -1167,6 +1175,11 @@ main (int argc_main, char **argv_main)
   mom_load_state ();
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
+  if (mom_without_gui)
+    MOM_INFORMPRINTF
+      ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
+  else
+    mom_run_gtk (&argc, &argv);
   if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
     MOM_INFORMPRINTF
       ("monimelt explicitly not dumping because of program argument -d- or --dump -");

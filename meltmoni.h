@@ -361,6 +361,12 @@ double mom_elapsed_real_time (void);    /* relative to start of program */
 double mom_process_cpu_time (void);
 double mom_thread_cpu_time (void);
 
+////////////////////////////////////////////////////////////////
+/**** Graphical User Interface (above GTK) *****/
+extern bool mom_without_gui;
+void mom_run_gtk (int *pargc, char ***pargv);
+
+////////////////////////////////////////////////////////////////
 // call strftime on ti, but replace .__ with centiseconds for ti
 char *mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
 __attribute__ ((format (strftime, 3, 0)));
