@@ -463,8 +463,10 @@ mom_name_node_insert_namestr (const char *nams)
       else
         nx = nx->nn_right;
     }
-  struct mom_namednode_st *nz = //
-    mom_create_name_node ((mo_stringvalue_ty *) mo_make_string_cstr (nams));
+  mo_stringvalue_ty *nameval =
+    (mo_stringvalue_ty *) mo_make_string_cstr (nams);
+  MOM_ASSERTPRINTF (mo_dyncast_string (nameval), "bad nameval");
+  struct mom_namednode_st *nz = mom_create_name_node (nameval);
   MOM_ASSERTPRINTF (nz && nz->nn_magic == MOM_NAME_MAGIC, "bad nz@%p", nz);
   if (ny)
     {
@@ -585,6 +587,7 @@ mo_register_named (mo_objref_t obr, const char *nam)
   MOM_ASSERTPRINTF (nd && nd->nn_magic == MOM_NAME_MAGIC,
                     "bad nd@%p for nam %s", nd, nam);
   MOM_ASSERTPRINTF (nd->nn_objref == NULL, "already used nd@%p", nd);
+  MOM_ASSERTPRINTF (nd->nn_name != NULL, "unnamed nd@%p", nd);
   MOM_ASSERTPRINTF (!strcmp (mo_string_cstr (nd->nn_name), nam),
                     "wrong name at nd@%p for %s", nd, nam);
   mom_nameassop = mo_assoval_put (mom_nameassop, obr, nd->nn_name);

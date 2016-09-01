@@ -29,7 +29,7 @@
 #define HAVE_PTHREADS 1
 
 
-#include <features.h>   // GNU things
+#include <features.h>           // GNU things
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -357,7 +357,7 @@ mom_timespec (double t)
 }
 
 
-double mom_elapsed_real_time (void);  /* relative to start of program */
+double mom_elapsed_real_time (void);    /* relative to start of program */
 double mom_process_cpu_time (void);
 double mom_thread_cpu_time (void);
 
@@ -404,7 +404,7 @@ typedef unsigned __int128 mom_uint128_t;
 
 
 
-momhash_t     // in main.c
+momhash_t                       // in main.c
 mom_cstring_hash_len (const char *str, int len);
 
 ////////////////////////////////////////////////////////////////
@@ -476,7 +476,7 @@ mo_int_to_value (mo_int_t i)
 }
 
 #define MOM_CSTRIDLEN 18
-extern const char *   // in object.c, the buf is either null -then using
+extern const char *             // in object.c, the buf is either null -then using
 // a GC allocated one- or of size MOM_CSTRIDLEN+1
 mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid);
 
@@ -495,16 +495,16 @@ mo_hi_id_bucketnum (mo_hid_t hid)
 }
 
 // converse operation, fill hid & loid from a valid buffer, or else return false
-extern bool     // in object.c
+extern bool                     // in object.c
 
 
 mo_get_hi_lo_ids_from_cstring (mo_hid_t * phid, mo_loid_t * ploid,
                                const char *buf);
 
-extern void     // in object.c
+extern void                     // in object.c
 mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid);
 
-extern momhash_t    // in object.c
+extern momhash_t                // in object.c
 mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid);
 
 ////////////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ typedef struct mo_stringvalue_st mo_stringvalue_ty;
 struct mo_stringvalue_st
 {
   struct mo_sizedvalue_st _mo;
-  char mo_cstr[];   // allocated size is mo_sva_size+1
+  char mo_cstr[];               // allocated size is mo_sva_size+1
 };
 mo_value_t mo_make_string_len (const char *buf, int sz);
 static inline mo_value_t
@@ -943,7 +943,7 @@ mo_objref_space (mo_objref_t obr)
 
 void mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa);
 
-int mom_objref_cmp (const void *, const void *);  // suitable for qsort, in object.c
+int mom_objref_cmp (const void *, const void *);        // suitable for qsort, in object.c
 
 ///// counted payloads have also count
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
@@ -1056,7 +1056,7 @@ mo_vectval_nth (mo_vectvaldatapayl_ty * vect, int rk)
   if (rk >= 0 && rk < (int) cnt)
     return vect->mo_seqval[rk];
   return NULL;
-}       /* end mo_vectval_nth */
+}                               /* end mo_vectval_nth */
 
 static inline void
 mo_vectval_put_nth (mo_vectvaldatapayl_ty * vect, int rk, mo_value_t newval)
@@ -1073,7 +1073,7 @@ mo_vectval_put_nth (mo_vectvaldatapayl_ty * vect, int rk, mo_value_t newval)
     rk += (int) cnt;
   if (rk >= 0 && rk < (int) cnt)
     vect->mo_seqval[rk] = newval;
-}       /* end mo_vectval_put_nth */
+}                               /* end mo_vectval_put_nth */
 
 // the vectval routines are in value.c because they are easy
 mo_vectvaldatapayl_ty *mo_vectval_reserve (mo_vectvaldatapayl_ty * vect,
@@ -1157,7 +1157,7 @@ mo_dyncastpayl_list (const void *p)
   if (k != mo_PLIST)
     return NULL;
   return (mo_listpayl_ty *) p;
-}       /* end mo_dyncastpayl_list */
+}                               /* end mo_dyncastpayl_list */
 
 static inline bool
 mo_list_non_empty (mo_listpayl_ty * lis)
@@ -1170,7 +1170,7 @@ mo_list_non_empty (mo_listpayl_ty * lis)
       return false;
     }
   return true;
-}       /* end mo_list_non_empty */
+}                               /* end mo_list_non_empty */
 
 static inline unsigned
 mo_list_length (mo_listpayl_ty * lis)
@@ -1188,7 +1188,7 @@ mo_list_length (mo_listpayl_ty * lis)
           ln++;
     }
   return ln;
-}       /* end of mo_list_length */
+}                               /* end of mo_list_length */
 
 static inline mo_value_t
 mo_list_head (mo_listpayl_ty * lis)
@@ -1203,7 +1203,7 @@ mo_list_head (mo_listpayl_ty * lis)
       return hd->mo_lie_arr[ix];
   // should not happen
   MOM_FATAPRINTF ("corrupted list with empty head");
-}       /* end of mo_list_head */
+}                               /* end of mo_list_head */
 
 static inline mo_value_t
 mo_list_tail (mo_listpayl_ty * lis)
@@ -1218,7 +1218,7 @@ mo_list_tail (mo_listpayl_ty * lis)
       return tl->mo_lie_arr[ix];
   // should not happen
   MOM_FATAPRINTF ("corrupted list with empty tail");
-}       /* end of mo_list_tail */
+}                               /* end of mo_list_tail */
 
 mo_listpayl_ty *mo_list_make (void);
 // append and prepend a non-nil value
@@ -1240,7 +1240,7 @@ mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
 {
   if (mo_valid_pointer_value (v))
     mo_dump_really_scan_value (du, v);
-}       /* end mo_dump_scan_value */
+}                               /* end mo_dump_scan_value */
 
 void mo_dump_really_scan_objref (mo_dumper_ty *, mo_objref_t);
 static inline void
@@ -1248,7 +1248,7 @@ mo_dump_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 {
   if (mo_dyncast_objref (obr))
     mo_dump_really_scan_objref (du, obr);
-}       /* end mo_dump_scan_objref */
+}                               /* end mo_dump_scan_objref */
 
 void mo_dump_scan_inside_object (mo_dumper_ty *, mo_objref_t);
 bool mo_dump_emitting (mo_dumper_ty *);
@@ -1307,7 +1307,7 @@ mo_object_pnamestr (mo_objref_t ob)
   if (namv)
     return mo_string_cstr (namv);
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);
-}       /* end mo_object_pnamestr */
+}                               /* end mo_object_pnamestr */
 
 // retrieve the set of names objects
 mo_value_t mo_named_objects_set (void);
@@ -1329,7 +1329,7 @@ mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)
       || !((mo_objectvalue_ty *) ob)->mo_ob_attrs)
     return NULL;
   return mo_assoval_get (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
-}       /* end mo_objref_get_attr */
+}                               /* end mo_objref_get_attr */
 
 static inline void
 mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
@@ -1340,7 +1340,7 @@ mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
   ((mo_objectvalue_ty *) ob)->mo_ob_attrs
     = mo_assoval_remove (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
   time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
-}       /* end mo_objref_remove_attr */
+}                               /* end mo_objref_remove_attr */
 
 static inline void
 mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
@@ -1355,7 +1355,7 @@ mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
   ((mo_objectvalue_ty *) ob)->mo_ob_attrs
     = mo_assoval_put (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat, val);
   time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
-}       /* end mo_objref_put_attr */
+}                               /* end mo_objref_put_attr */
 
 static inline mo_value_t
 mo_objref_set_of_attrs (mo_objref_t ob)
@@ -1363,7 +1363,7 @@ mo_objref_set_of_attrs (mo_objref_t ob)
   if (!mo_dyncast_objref (ob))
     return NULL;
   return mo_assoval_keys_set (((mo_objectvalue_ty *) ob)->mo_ob_attrs);
-}       /* end of mo_objref_set_of_attrs */
+}                               /* end of mo_objref_set_of_attrs */
 
 static inline mo_value_t
 mo_objref_get_comp (mo_objref_t ob, int rk)
@@ -1374,7 +1374,7 @@ mo_objref_get_comp (mo_objref_t ob, int rk)
   if (!vecomp)
     return NULL;
   return mo_vectval_nth (vecomp, rk);
-}       /* end of mo_objref_get_comp */
+}                               /* end of mo_objref_get_comp */
 
 static inline void
 mo_objref_put_comp (mo_objref_t ob, int rk, mo_value_t va)
@@ -1385,7 +1385,7 @@ mo_objref_put_comp (mo_objref_t ob, int rk, mo_value_t va)
   if (!vecomp)
     return;
   mo_vectval_put_nth (vecomp, rk, va);
-}       /* end of mo_objref_put_comp */
+}                               /* end of mo_objref_put_comp */
 
 static inline unsigned
 mo_objref_comp_count (mo_objref_t ob)
@@ -1396,7 +1396,7 @@ mo_objref_comp_count (mo_objref_t ob)
   if (!vecomp)
     return 0;
   return mo_vectval_count (vecomp);
-}       /* end mo_objref_comp_count */
+}                               /* end mo_objref_comp_count */
 
 static inline void
 mo_objref_comp_resize (mo_objref_t ob, unsigned newsiz)
@@ -1405,7 +1405,7 @@ mo_objref_comp_resize (mo_objref_t ob, unsigned newsiz)
     return;
   ((mo_objectvalue_ty *) ob)->mo_ob_comps =
     mo_vectval_resize (((mo_objectvalue_ty *) ob)->mo_ob_comps, newsiz);
-}       /* end of mo_objref_comp_resize */
+}                               /* end of mo_objref_comp_resize */
 
 static inline void
 mo_objref_comp_reserve (mo_objref_t ob, unsigned gap)
@@ -1414,7 +1414,7 @@ mo_objref_comp_reserve (mo_objref_t ob, unsigned gap)
     return;
   ((mo_objectvalue_ty *) ob)->mo_ob_comps =
     mo_vectval_reserve (((mo_objectvalue_ty *) ob)->mo_ob_comps, gap);
-}       /* end of mo_objref_comp_reserve */
+}                               /* end of mo_objref_comp_reserve */
 
 static inline void
 mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
@@ -1423,6 +1423,6 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
     return;
   ((mo_objectvalue_ty *) ob)->mo_ob_comps =
     mo_vectval_append (((mo_objectvalue_ty *) ob)->mo_ob_comps, va);
-}       /* end of mo_objref_comp_append */
+}                               /* end of mo_objref_comp_append */
 
 #endif /*MONIMELT_INCLUDED_ */
