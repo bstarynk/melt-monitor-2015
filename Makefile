@@ -107,6 +107,7 @@ monimelt: $(OBJECTS) _timestamp.o
 	$(COMPILE.cc) -C -E $< -o $@
 indent: .indent.pro
 	cp -v meltmoni.h meltmoni.h%
+	$(INDENT) $(INDENTFLAGS) meltmoni.h
 	$(ASTYLE) $(ASTYLEFLAGS) meltmoni.h
 	for f in $(wildcard [a-z]*.c) ; do \
 	  echo indenting $$f ; cp $$f $$f%; \

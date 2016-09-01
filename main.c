@@ -1027,8 +1027,8 @@ usage_mom (const char *argv0)
   printf ("\t -V | --version " " \t# Give version information.\n");
   printf ("\t -d | --dump "
           " <dirname>\t# Give dump directory, avoid dumping if -.\n");
-  printf ("\t --add-predefined predefname" " \t#Add a predefined\n");
-  printf ("\t --comment-predefined comment"
+  printf ("\t --add-predef predefname" " \t#Add a predefined\n");
+  printf ("\t --comment-predef comment"
           " \t#Set comment of next predefined\n");
   printf ("\t --info" " \t#Give various information\n");
 }
@@ -1132,7 +1132,7 @@ do_add_predefined_mom (void)
       else
         {
           MOM_INFORMPRINTF ("made predefined %s (%s) without comment",
-                            curname);
+                            curname, obidbuf);
         }
     }
 }                               /* end of do_add_predefined_mom */
