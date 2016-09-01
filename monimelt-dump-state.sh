@@ -35,7 +35,7 @@ tempdump=$(basename $(tempfile -d . -p _tmp_ -s .sql))
 trap 'rm -vf $tempdump' EXIT INT QUIT TERM
 export LANG=C LC_ALL=C
 
-date +"-- $sqlfile dump %Y %b %d from $dbfile dumped by $0" > $tempdump
+date -r "$dbfile" +"-- $sqlfile dump %Y %b %d from $dbfile dumped by $0" > $tempdump
 echo >> $tempdump
 date +' --   Copyright (C) %Y Free Software Foundation, Inc.' >> $tempdump
 echo ' --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/' >> $tempdump
