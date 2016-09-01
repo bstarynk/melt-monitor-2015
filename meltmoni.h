@@ -1358,11 +1358,71 @@ mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
 }       /* end mo_objref_put_attr */
 
 static inline mo_value_t
-mo_objref_set_attrs (mo_objref_t ob)
+mo_objref_set_of_attrs (mo_objref_t ob)
 {
   if (!mo_dyncast_objref (ob))
     return NULL;
   return mo_assoval_keys_set (((mo_objectvalue_ty *) ob)->mo_ob_attrs);
-}       /* end of mo_objref_set_attrs */
+}       /* end of mo_objref_set_of_attrs */
+
+static inline mo_value_t
+mo_objref_get_comp (mo_objref_t ob, int rk)
+{
+  if (!mo_dyncast_objref (ob))
+    return NULL;
+  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  if (!vecomp)
+    return NULL;
+  return mo_vectval_nth (vecomp, rk);
+}       /* end of mo_objref_get_comp */
+
+static inline void
+mo_objref_put_comp (mo_objref_t ob, int rk, mo_value_t va)
+{
+  if (!mo_dyncast_objref (ob))
+    return;
+  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  if (!vecomp)
+    return;
+  mo_vectval_put_nth (vecomp, rk, va);
+}       /* end of mo_objref_put_comp */
+
+static inline unsigned
+mo_objref_comp_count (mo_objref_t ob)
+{
+  if (!mo_dyncast_objref (ob))
+    return 0;
+  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  if (!vecomp)
+    return 0;
+  return mo_vectval_count (vecomp);
+}       /* end mo_objref_comp_count */
+
+static inline void
+mo_objref_comp_resize (mo_objref_t ob, unsigned newsiz)
+{
+  if (!mo_dyncast_objref (ob))
+    return;
+  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
+    mo_vectval_resize (((mo_objectvalue_ty *) ob)->mo_ob_comps, newsiz);
+}       /* end of mo_objref_comp_resize */
+
+static inline void
+mo_objref_comp_reserve (mo_objref_t ob, unsigned gap)
+{
+  if (!mo_dyncast_objref (ob))
+    return;
+  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
+    mo_vectval_reserve (((mo_objectvalue_ty *) ob)->mo_ob_comps, gap);
+}       /* end of mo_objref_comp_reserve */
+
+static inline void
+mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
+{
+  if (!mo_dyncast_objref (ob))
+    return;
+  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
+    mo_vectval_append (((mo_objectvalue_ty *) ob)->mo_ob_comps, va);
+}       /* end of mo_objref_comp_append */
 
 #endif /*MONIMELT_INCLUDED_ */
