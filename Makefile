@@ -40,19 +40,21 @@ OPTIMFLAGS= -Og -g3
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
         -lhiredis -lgccjit -lbacktrace -lonion -lpthread -lcrypt -lm -ldl -latomic
 
+# the persistent state base, probably _momstate
+MOM_PERSTATE_BASE=_momstate
+MOM_PERSTATE_SQLITE=$(MOM_PERSTATE_BASE).sqlite
+
 PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c momplug_*.cc))
 PLUGINS=  $(patsubst %.c,%.so,$(PLUGIN_SOURCES))
-# modules are generated inside modules/
-MODULE_SOURCES= $(sort $(wildcard modules/momg_*.c))
+# modules are generated inside code/
+MODULE_NAMES:=$(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) 'SELECT mod_oid FROM t_modules')
+MODULE_SOURCES= $(sort $(patsubst %,code/%.c,$(MODULE_NAMES)))
 # generated headers
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
 CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
 CBASESOOURCES= $(basename $(CSOURCES))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))
-# the persistent state base, probably _momstate
-MOM_PERSTATE_BASE=_momstate
-MOM_PERSTATE_SQLITE=$(MOM_PERSTATE_BASE).sqlite
 RM= rm -fv
 .PHONY: all checkgithooks installgithooks tags modules plugins clean dumpstate restorestate
 
