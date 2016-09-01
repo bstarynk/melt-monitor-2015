@@ -26,7 +26,7 @@ struct mom_namednode_st
 {
   uint16_t nn_magic;            /* always MOM_NAME_MAGIC */
   bool nn_black;
-  intptr_t nn_npar;             // negation of pointer to parent, to be GC-friendly
+  struct mom_namednode_st *nn_par;      // pointer to parent
   struct mom_namednode_st *nn_left;
   struct mom_namednode_st *nn_right;
   mo_stringvalue_ty *nn_name;   /* the name, it is the key */
@@ -66,8 +66,8 @@ mom_name_node_parent (struct mom_namednode_st *nd)
   if (!nd)
     return NULL;
   MOM_ASSERTPRINTF (nd->nn_magic == MOM_NAME_MAGIC, "bad magic nd@%p", nd);
-  if (nd->nn_npar)
-    return (struct mom_namednode_st *) (~(nd->nn_npar));
+  if (nd->nn_par)
+    return (struct mom_namednode_st *) ((nd->nn_par));
   else
     return NULL;
 }                               /* end mom_name_node_parent */
@@ -349,16 +349,16 @@ mom_name_node_left_rotation (struct mom_namednode_st *nx)
   MOM_ASSERTPRINTF (ny && ny->nn_magic == MOM_NAME_MAGIC, "bad ny@%p", ny);
   nx->nn_right = ny->nn_left;
   if (ny->nn_left != NULL)
-    ny->nn_left->nn_npar = ~(intptr_t) nx;
-  ny->nn_npar = nx->nn_npar;
-  if (nx->nn_npar == 0)
+    ny->nn_left->nn_par = nx;
+  ny->nn_par = nx->nn_par;
+  if (nx->nn_par == NULL)
     mom_rootnamenode = ny;
   else if (nx == mom_name_node_parent (nx)->nn_left)
     mom_name_node_parent (nx)->nn_left = ny;
   else
     mom_name_node_parent (nx)->nn_right = ny;
   ny->nn_left = nx;
-  nx->nn_npar = ~(intptr_t) ny;
+  nx->nn_par = ny;
 }                               /* end mom_name_node_left_rotation */
 
 
@@ -370,16 +370,16 @@ mom_name_node_right_rotation (struct mom_namednode_st *nx)
   MOM_ASSERTPRINTF (ny && ny->nn_magic == MOM_NAME_MAGIC, "bad ny@%p", ny);
   nx->nn_left = ny->nn_right;
   if (ny->nn_right != NULL)
-    ny->nn_right->nn_npar = ~(intptr_t) nx;
-  ny->nn_npar = nx->nn_npar;
-  if (nx->nn_npar == 0)
+    ny->nn_right->nn_par = nx;
+  ny->nn_par = nx->nn_par;
+  if (nx->nn_par == 0)
     mom_rootnamenode = ny;
   else if (nx == mom_name_node_parent (nx)->nn_right)
     mom_name_node_parent (nx)->nn_right = ny;
   else
     mom_name_node_parent (nx)->nn_left = ny;
   ny->nn_right = nx;
-  nx->nn_npar = ~(intptr_t) ny;
+  nx->nn_par = ny;
 }                               /* end mom_name_node_right_rotation */
 
 static struct mom_namednode_st *
@@ -387,10 +387,10 @@ mom_create_name_node (mo_stringvalue_ty * vstr)
 {
   MOM_ASSERTPRINTF (mom_valid_name (mo_string_cstr (vstr)), "invalid vstr");
   struct mom_namednode_st *nd = //
-    mom_gc_alloc (sizeof (struct mom_namednode_st *));
+    mom_gc_alloc (sizeof (struct mom_namednode_st));
   nd->nn_magic = MOM_NAME_MAGIC;
   nd->nn_black = false;
-  nd->nn_npar = 0;
+  nd->nn_par = NULL;
   nd->nn_left = NULL;
   nd->nn_right = NULL;
   nd->nn_name = vstr;
@@ -426,7 +426,7 @@ mom_name_node_insert_nameval (mo_stringvalue_ty * vstr)
   MOM_ASSERTPRINTF (nz && nz->nn_magic == MOM_NAME_MAGIC, "bad nz@%p", nz);
   if (ny)
     {
-      nz->nn_npar = ~(intptr_t) ny;
+      nz->nn_par = ny;
       if ((cmp = strcmp (vstr->mo_cstr, ny->nn_name->mo_cstr)) < 0)
         ny->nn_left = nz;
       else if (cmp > 0)
@@ -470,7 +470,7 @@ mom_name_node_insert_namestr (const char *nams)
   MOM_ASSERTPRINTF (nz && nz->nn_magic == MOM_NAME_MAGIC, "bad nz@%p", nz);
   if (ny)
     {
-      nz->nn_npar = ~(intptr_t) ny;
+      nz->nn_par = ny;
       if ((cmp = strcmp (nams, ny->nn_name->mo_cstr)) < 0)
         ny->nn_left = nz;
       else if (cmp > 0)
