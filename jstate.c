@@ -705,12 +705,14 @@ mom_dump_state (const char *dirname)
   mo_dump_emit_predefined (&dumper, predefset);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
-  MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef, "bad elsiz");
-  MOM_ASSERTPRINTF (elsiz <= (unsigned) nbobj, "bad elsiz");
+  MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef,
+                    "bad elsiz %u nbpredef %u", elsie, nbpredef);
+  MOM_ASSERTPRINTF (elsiz <= (unsigned) nbobj,
+                    "bad elsiz %u nbobj %u", elsiz, nbobj);
   for (unsigned eix = 0; eix < elsiz; eix++)
     {
       mo_objref_t obr = mo_set_nth (elset, eix);
-      MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
     }
   mo_dump_emit_names (&dumper);
