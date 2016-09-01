@@ -1055,10 +1055,14 @@ mo_loader_fill_objects_contents (mo_loader_ty * ld)
         MOM_ASSERTPRINTF (sqlite3_data_count (fillstmt) == MOMRESIX__LAST
                           && sqlite3_column_type (fillstmt, MOMRESIX_OID)
                           == SQLITE_TEXT
-                          && sqlite3_column_type (fillstmt, MOMRESIX_MTIME)
-                          == SQLITE_FLOAT
-                          && sqlite3_column_type (fillstmt, MOMRESIX_JSCONT)
-                          == SQLITE_TEXT, "bad objfill step");
+                          && (sqlite3_column_type (fillstmt, MOMRESIX_MTIME)
+                              == SQLITE_INTEGER
+                              || sqlite3_column_type (fillstmt,
+                                                      MOMRESIX_MTIME) ==
+                              SQLITE_FLOAT)
+                          && sqlite3_column_type (fillstmt,
+                                                  MOMRESIX_JSCONT) ==
+                          SQLITE_TEXT, "bad objfill step");
         const char *oidstr =
           (const char *) sqlite3_column_text (fillstmt, MOMRESIX_OID);
         double mtimf = sqlite3_column_double (fillstmt, MOMRESIX_MTIME);
