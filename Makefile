@@ -71,21 +71,27 @@ clean:
 
 
 _timestamp.c: Makefile | $(OBJECTS)
-	@date +'const char monimelt_timestamp[]="%c";' > _timestamp.tmp
+	@echo "/* generated file _timestamp.c - DONT EDIT */" > _timestamp.tmp
+	@date +'const char monimelt_timestamp[]="%c";' >> _timestamp.tmp
 	@(echo -n 'const char monimelt_lastgitcommit[]="' ; \
 	   git log --format=oneline --abbrev=12 --abbrev-commit -q  \
 	     | head -1 | tr -d '\n\r\f\"' ; \
 	   echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_lastgittag[]="'; (git describe --abbrev=0 --all || echo '*notag*') | tr -d '\n\r\f\"'; echo '";') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
 	@(echo 'const char monimelt_compilercommand[]="$(strip $(CC))";') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
 	@(echo -n 'const char monimelt_compilerversion[]="' ; $(CC) -v < /dev/null 2>&1 | grep -i version | tr -d  '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
 	@(echo -n 'const char monimelt_compilerflags[]="' ; echo -n "$(strip $(CFLAGS))" | sed 's:":\\":g' ; echo '";') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
 	@(echo -n 'const char monimelt_optimflags[]="' ; echo -n "$(strip $(OPTIMFLAGS))" | sed 's:":\\":g' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_checksum[]="'; cat meltmoni.h $(GENERATED_HEADERS) $(SOURCES) | $(MD5SUM) | cut -d' ' -f1 | tr -d '\n\r\f\"\\' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_directory[]="'; /bin/pwd | tr -d '\n\\"' ; echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_makefile[]="'; echo -n  $(realpath $(lastword $(MAKEFILE_LIST))); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_sqlite[]="'; echo -n $(SQLITE); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_perstatebase[]="'; echo -n $(MOM_PERSTATE_BASE); echo '";') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
 	@(echo -n 'const char monimelt_cbasesources[]="'; echo -n $(CBASESOOURCES); echo '";') >> _timestamp.tmp
 	@mv _timestamp.tmp _timestamp.c
 

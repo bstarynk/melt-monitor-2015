@@ -84,5 +84,7 @@ if [ -e "$sqlfile" ]; then
     echo -n "backup Monimelt Sqlite3 dump:" 
     mv -v "$sqlfile" "$sqlfile~"
 fi
+## we need that the .sql file has the same date as the .sqlite file
+touch -f "$dbfile" "$sqlfile"
 mv $tempdump "$sqlfile"
 ls -l "$sqlfile"

@@ -1158,7 +1158,8 @@ mo_json_t mo_dump_jsonid_of_objref(mo_dumper_ty*,mo_objref_t);
 mo_value_t mo_value_of_json(mo_json_t);
 // get the existing objref from a json
 mo_objref_t mo_objref_of_jsonid(mo_json_t);
-
+// the loader, called after predefined has been initialized
+void  mom_load_state (void);
 /************* NAMES ***********/
 // a name is valid if it is like some C identifier or keyword
 // initial and final underscores are not allowed

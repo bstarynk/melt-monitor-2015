@@ -1152,6 +1152,7 @@ main (int argc_main, char **argv_main)
           ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
       }
   }
+  mom_load_state ();
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
   if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))

@@ -20,6 +20,7 @@
 
 #include "meltmoni.h"
 
+#define MOM_FORMAT_VERSION_PARAM "monimelt_format_version"
 
 /*** IMPORTANT NOTICE: the list of tables created by function
  * mo_dump_initialize_sqlite_database should be kept in sync with the
@@ -38,9 +39,15 @@ struct mo_loader_st             // stack allocated
   unsigned mo_ld_magic;         /* always MOM_LOADER_MAGIC */
   double mo_ld_startelapsedtime;
   double mo_ld_startcputime;
+  mo_value_t mo_ld_sqlpathv;
+  mo_value_t mo_ld_sqlitepathv;
+  sqlite3 *mo_ld_db;
   unsigned mo_ld_nbitems;
   mo_value_t mo_ld_hsetitems;
-  sqlite3 *mo_ld_db;
+  // SQLstmt: SELECT par_value FROM t_params WHERE par_name = ?;
+  sqlite3_stmt *mo_ld_stmt_params;
+  // SQLstmt: SELECT ob_jsoncont FROM t_objects WHERE ob_id = ?;
+  sqlite3_stmt *mo_ld_stmt_jcontobjects;
 };
 
 
@@ -211,7 +218,7 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
     MOM_FATAPRINTF ("Failed to prepare t_names Sqlite insertion: %s",
                     sqlite3_errstr (rc));
   /**** insert various parameters ****/
-  mo_dump_param (du, "monimelt_format_version", MOM_DUMP_VERSIONID);
+  mo_dump_param (du, MOM_FORMAT_VERSION_PARAM, MOM_DUMP_VERSIONID);
 }                               /* end mo_dump_initialize_sqlite_database */
 
 
@@ -571,7 +578,8 @@ void
 mo_dump_rename_emitted_files (mo_dumper_ty * du)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
-                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p", du);
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
   unsigned nbfil = mo_vectval_count (du->mo_du_vectfilepath);
   unsigned nbsamefiles = 0;
   for (unsigned ix = 0; ix < nbfil; ix++)
@@ -756,6 +764,147 @@ mo_dump_really_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 
 
 /**************************** LOADER ********************/
+
+// retrieve a load parameter as a string value or else NULL
+mo_value_t
+mo_loader_get_param_strv (mo_loader_ty * ld, const char *parname)
+{
+  enum
+  { MOMGETPARAMIX__NONE, MOMGETPARAMIX_PVAL };
+  enum
+  { MOMGETPARAM_RESIX };
+  int rc = 0;
+  char *errmsg = NULL;
+  mo_value_t resv = NULL;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  if (!parname || parname == MOM_EMPTY_SLOT || !isalpha (parname[0]))
+    return NULL;
+  rc =
+    sqlite3_bind_text (ld->mo_ld_stmt_params, MOMGETPARAMIX_PVAL, parname, -1,
+                       SQLITE_STATIC);
+  if (rc)
+    MOM_FATAPRINTF
+      ("failed to bind par_name %s to param select Sqlite3 statment (%s)",
+       parname, sqlite3_errstr (rc));
+  rc = sqlite3_step (ld->mo_ld_stmt_params);
+  if (rc == SQLITE_ROW)
+    {
+      resv =
+        mo_make_string_cstr ((const char *)
+                             sqlite3_column_text (ld->mo_ld_stmt_params,
+                                                  MOMGETPARAM_RESIX));
+    }
+  rc = sqlite3_reset (ld->mo_ld_stmt_params);
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("failed to reset select Sqlite3 statment for pname %s (%s)", parname,
+       sqlite3_errstr (rc));
+  return resv;
+}                               /* end of mo_loader_get_param_strv */
+
+
+void
+mo_loader_begin_database (mo_loader_ty * ld)
+{
+  int rc = 0;
+  char *errmsg = NULL;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  struct stat statsql;
+  memset (&statsql, 0, sizeof (statsql));
+  struct stat statsqlite;
+  memset (&statsqlite, 0, sizeof (statsqlite));
+  MOM_ASSERTPRINTF (mo_dyncast_string (ld->mo_ld_sqlpathv), "bad sqlpathv");
+  MOM_ASSERTPRINTF (mo_dyncast_string (ld->mo_ld_sqlitepathv),
+                    "bad sqlitepathv");
+  if (stat (mo_string_cstr (ld->mo_ld_sqlpathv), &statsql))
+    MOM_FATAPRINTF ("failed to stat SQL file %s",
+                    mo_string_cstr (ld->mo_ld_sqlpathv));
+  if (stat (mo_string_cstr (ld->mo_ld_sqlitepathv), &statsqlite))
+    MOM_FATAPRINTF ("failed to stat Ssqlite base %s",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv));
+  if (!S_ISREG (statsql.st_mode))
+    MOM_FATAPRINTF ("SQL file %s is not a plain file",
+                    mo_string_cstr (ld->mo_ld_sqlpathv));
+  if (!S_ISREG (statsqlite.st_mode))
+    MOM_FATAPRINTF ("Sqlite base %s is not a plain file",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv));
+  if (statsql.st_mtime > statsqlite.st_mtime)
+    MOM_FATAPRINTF ("SQL file %s is younger (by %ld sec) that Sqlite base %s",
+                    mo_string_cstr (ld->mo_ld_sqlpathv),
+                    statsql.st_mtime - statsqlite.st_mtime,
+                    mo_string_cstr (ld->mo_ld_sqlitepathv));
+  rc = sqlite3_open_v2 (mo_string_cstr (ld->mo_ld_sqlitepathv),
+                        &ld->mo_ld_db, SQLITE_OPEN_READONLY, NULL);
+  if (rc != SQLITE_OK || !ld->mo_ld_db)
+    MOM_FATAPRINTF ("failed to open loaded Sqlite base %s (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  /* prepare statements */
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT par_value FROM t_params WHERE par_name = ?",
+                                -1,
+                                &ld->mo_ld_stmt_params, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Failed to prepare t_object Sqlite select ob_jsoncont: %s",
+       sqlite3_errstr (rc));
+  if ((rc =
+       sqlite3_prepare_v2 (ld->mo_ld_db,
+                           "SELECT ob_jsoncont FROM t_objects WHERE ob_id = ?",
+                           -1, &ld->mo_ld_stmt_jcontobjects,
+                           NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Failed to prepare t_object Sqlite select ob_jsoncont: %s",
+       sqlite3_errstr (rc));
+  /* check loader version */
+  mo_value_t ldversv =
+    mo_loader_get_param_strv (ld, MOM_FORMAT_VERSION_PARAM);
+  if (!mo_dyncast_string (ldversv))
+    MOM_FATAPRINTF ("missing %s in Sqlite loader base %s",
+                    MOM_FORMAT_VERSION_PARAM,
+                    mo_string_cstr (ld->mo_ld_sqlitepathv));
+  if (strcmp (mo_string_cstr (ldversv), MOM_DUMP_VERSIONID))
+    MOM_FATAPRINTF
+      ("incompatible format version in Sqlite loader base %s - got %s expecting %s",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), mo_string_cstr (ldversv),
+       MOM_DUMP_VERSIONID);
+}                               /* end mo_loader_begin_database */
+
+
+void
+mo_loader_end_database (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  // finalize ob_jsoncont FROM t_object...
+  rc = sqlite3_finalize (ld->mo_ld_stmt_jcontobjects);
+  ld->mo_ld_stmt_jcontobjects = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Failed to finalise t_object Sqlite select ob_jsoncont: %s",
+       sqlite3_errstr (rc));
+  rc = sqlite3_close (ld->mo_ld_db);
+  // finalize ob_jsoncont FROM t_objects...
+  rc = sqlite3_finalize (ld->mo_ld_stmt_jcontobjects);
+  ld->mo_ld_stmt_jcontobjects = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Failed to finalise t_objects Sqlite select ob_jsoncont: %s",
+       sqlite3_errstr (rc));
+  // finalize par_val FROM t_params...
+  rc = sqlite3_finalize (ld->mo_ld_stmt_params);
+  ld->mo_ld_stmt_params = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("Failed to finalise t_params Sqlite select par_val: %s",
+                    sqlite3_errstr (rc));
+  //
+  rc = sqlite3_close (ld->mo_ld_db);
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF ("failed to close loaded Sqlite3 database %s (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+}                               /* mo_loader_end_database */
+
+
 void
 mom_load_state (void)
 {
@@ -771,6 +920,19 @@ mom_load_state (void)
     | more steps to fill the class & the payload, 
     | perhaps SELECT ob_id, ob_classid FROM t_objects WHERE ob_classid != ""
   ***/
+  //
+  struct mo_loader_st loader;
+  memset (&loader, 0, sizeof (loader));
+  errno = 0;
+  loader.mo_ld_magic = MOM_LOADER_MAGIC;
+  loader.mo_ld_startelapsedtime = mom_elapsed_real_time ();
+  loader.mo_ld_startcputime = mom_process_cpu_time ();
+  loader.mo_ld_sqlpathv =
+    mo_make_string_sprintf ("%s.sql", monimelt_perstatebase);
+  loader.mo_ld_sqlitepathv =
+    mo_make_string_sprintf ("%s.sqlite", monimelt_perstatebase);
+  mo_loader_begin_database (&loader);
+  mo_loader_end_database (&loader);
   MOM_WARNPRINTF ("load state unimplemented");
 #warning mom_load_state unimplemented
 }                               /* end mom_load_state */
