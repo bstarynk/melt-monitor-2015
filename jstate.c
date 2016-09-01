@@ -886,18 +886,20 @@ mo_loader_exec_intreq (mo_loader_ty * ld, const char *reqs)
            mo_string_cstr (ld->mo_ld_sqlitepathv), reqs, nbc);
       retnum = sqlite3_column_int64 (lstmt, 0);
       gotres = true;
+      rc = sqlite3_step (lstmt);
     }
   if (rc != SQLITE_DONE)
     {
       MOM_FATAPRINTF
-        ("Sqlite loader base %s intreq %s gives more than one result",
-         mo_string_cstr (ld->mo_ld_sqlitepathv), reqs);
+        ("Sqlite loader base %s intreq %s gives more than one result (%s)",
+         mo_string_cstr (ld->mo_ld_sqlitepathv), reqs, sqlite3_errstr (rc));
     }
   rc = sqlite3_finalize (lstmt);
   lstmt = NULL;
   if (rc != SQLITE_OK)
-    MOM_FATAPRINTF ("Sqlite loader base %s intreq %s failed to finalize",
-                    mo_string_cstr (ld->mo_ld_sqlitepathv), reqs);
+    MOM_FATAPRINTF ("Sqlite loader base %s intreq %s failed to finalize (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv), reqs,
+                    sqlite3_errstr (rc));
   if (!gotres)
     MOM_WARNPRINTF ("Sqlite loader base %s intreq %s did not give any result",
                     mo_string_cstr (ld->mo_ld_sqlitepathv), reqs);
