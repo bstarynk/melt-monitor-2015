@@ -382,7 +382,11 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     return;
   mo_dump_scan_objref (du, obr->mo_ob_class);
   mo_dump_scan_objref (du, obr->mo_ob_paylkind);
-  MOM_WARNPRINTF ("unimplemented mo_dump_scan_inside_object for %s",
+  if (obr->mo_ob_attrs)
+    mo_dump_scan_assoval(du, obr->mo_ob_attrs);
+  if (obr->mo_ob_comps)
+    mo_dump_scan_vectval(du, obr->mo_ob_comps);
+  MOM_WARNPRINTF ("partially unimplemented mo_dump_scan_inside_object for %s",
                   mo_object_pnamestr (obr));
 #warning unimplemented mo_dump_scan_inside_object
 }                               /* end of mo_dump_scan_inside_object */
