@@ -724,11 +724,11 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
     msg = buf;
 
   if (err)
-    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s (%s)\n",
+    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s\n.. %s (%s)\n",
              fil, lin, thrname, (int) mom_gettid (), timbuf,
              msg, strerror (err));
   else
-    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s %s\n",
+    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s\n.. %s\n",
              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
   fflush (NULL);
   struct backtrace_state *btstate =
