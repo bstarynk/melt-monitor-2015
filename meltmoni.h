@@ -29,7 +29,7 @@
 #define HAVE_PTHREADS 1
 
 
-#include <features.h>		// GNU things
+#include <features.h>   // GNU things
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -151,8 +151,8 @@ int64_t mom_prime_above (int64_t n);
 int64_t mom_prime_below (int64_t n);
 
 static_assert (sizeof (intptr_t) == sizeof (double)
-	       || 2 * sizeof (intptr_t) == sizeof (double),
-	       "double-s should be the same size or twice as intptr_t");
+               || 2 * sizeof (intptr_t) == sizeof (double),
+               "double-s should be the same size or twice as intptr_t");
 
 const char *mom_hostname (void);
 
@@ -175,7 +175,7 @@ mom_gettid (void)
 
 /// generate a GPLv3 notice
 void mom_output_gplv3_notice (FILE *out, const char *prefix,
-			      const char *suffix, const char *filename);
+                              const char *suffix, const char *filename);
 
 void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
@@ -357,13 +357,13 @@ mom_timespec (double t)
 }
 
 
-double mom_elapsed_real_time (void);	/* relative to start of program */
+double mom_elapsed_real_time (void);  /* relative to start of program */
 double mom_process_cpu_time (void);
 double mom_thread_cpu_time (void);
 
 // call strftime on ti, but replace .__ with centiseconds for ti
 char *mom_strftime_centi (char *buf, size_t len, const char *fmt, double ti)
-  __attribute__ ((format (strftime, 3, 0)));
+__attribute__ ((format (strftime, 3, 0)));
 #define mom_now_strftime_centi(Buf,Len,Fmt) mom_strftime_centi((Buf),(Len),(Fmt),mom_clock_time(CLOCK_REALTIME))
 #define mom_now_strftime_bufcenti(Buf,Fmt) mom_now_strftime_centi(Buf,sizeof(Buf),(Fmt))
 
@@ -375,13 +375,13 @@ void mom_output_utf8_encoded (FILE *f, const char *str, int len);
 void mom_output_utf8_html (FILE *f, const char *str, int len, bool nlisbr);
 
 typedef void mom_utf8escape_sig_t (FILE *f, gunichar uc,
-				   const char *cescstr, void *clientdata);
+                                   const char *cescstr, void *clientdata);
 void mom_output_utf8_escaped (FILE *f, const char *str, int len,
-			      mom_utf8escape_sig_t * rout, void *clientdata);
+                              mom_utf8escape_sig_t * rout, void *clientdata);
 
 
 const char *mom_hexdump_data (char *buf, unsigned buflen,
-			      const unsigned char *data, unsigned datalen);
+                              const unsigned char *data, unsigned datalen);
 
 
 const char *mom_double_to_cstr (double x, char *buf, size_t buflen);
@@ -404,8 +404,8 @@ typedef unsigned __int128 mom_uint128_t;
 
 
 
-momhash_t			// in main.c
-  mom_cstring_hash_len (const char *str, int len);
+momhash_t     // in main.c
+mom_cstring_hash_len (const char *str, int len);
 
 ////////////////////////////////////////////////////////////////
 
@@ -471,14 +471,14 @@ static inline mo_value_t
 mo_int_to_value (mo_int_t i)
 {
   MOM_ASSERTPRINTF (i >= MO_INTMIN && i <= MO_INTMAX,
-		    "integer %lld out of range", (long long) i);
+                    "integer %lld out of range", (long long) i);
   return (mo_value_t) (((intptr_t) i % 2) + 1);
 }
 
 #define MOM_CSTRIDLEN 18
-extern const char *		// in object.c, the buf is either null -then using
+extern const char *   // in object.c, the buf is either null -then using
 // a GC allocated one- or of size MOM_CSTRIDLEN+1
-  mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid);
+mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid);
 
 /* 10 * 60 * 60 so a 3 extendigit thing starting with 0 to 9 */
 #define MOM_HID_BUCKETMAX 36000
@@ -489,23 +489,23 @@ mo_hi_id_bucketnum (mo_hid_t hid)
     return 0;
   unsigned bn = hid >> 16;
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX,
-		    "mo_hi_id_bucketnum bad hid %lu (bn=%u)",
-		    (unsigned long) hid, bn);
+                    "mo_hi_id_bucketnum bad hid %lu (bn=%u)",
+                    (unsigned long) hid, bn);
   return bn;
 }
 
 // converse operation, fill hid & loid from a valid buffer, or else return false
-extern bool			// in object.c
+extern bool     // in object.c
 
 
 mo_get_hi_lo_ids_from_cstring (mo_hid_t * phid, mo_loid_t * ploid,
-			       const char *buf);
+                               const char *buf);
 
-extern void			// in object.c
-  mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid);
+extern void     // in object.c
+mo_get_some_random_hi_lo_ids (mo_hid_t * phid, mo_loid_t * ploid);
 
-extern momhash_t		// in object.c
-  mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid);
+extern momhash_t    // in object.c
+mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid);
 
 ////////////////////////////////////////////////////////////////
 /////
@@ -529,7 +529,7 @@ mo_kind_of_value (mo_value_t v)
     {
       unsigned k = ((mo_hashedvalue_ty *) v)->mo_va_kind;
       MOM_ASSERTPRINTF (k >= MOM_FIRST_BOXED_KIND && k <= MOM_LAST_KIND,
-			"mo_kind_of_value: bad kind #%u @%p", k, v);
+                        "mo_kind_of_value: bad kind #%u @%p", k, v);
       return (enum mo_valkind_en) k;
     }
 }
@@ -556,7 +556,7 @@ typedef struct mo_stringvalue_st mo_stringvalue_ty;
 struct mo_stringvalue_st
 {
   struct mo_sizedvalue_st _mo;
-  char mo_cstr[];		// allocated size is mo_sva_size+1
+  char mo_cstr[];   // allocated size is mo_sva_size+1
 };
 mo_value_t mo_make_string_len (const char *buf, int sz);
 static inline mo_value_t
@@ -566,7 +566,7 @@ mo_make_string_cstr (const char *buf)
 };
 
 mo_value_t mo_make_string_sprintf (const char *fmt, ...)
-  __attribute__ ((format (printf, 1, 2)));
+__attribute__ ((format (printf, 1, 2)));
 
 static inline mo_value_t
 mo_dyncast_string (mo_value_t vs)
@@ -672,11 +672,11 @@ mo_sequence_put (mo_sequencevalue_ty * seq, unsigned ix, mo_objref_t oref)
 {
   MOM_ASSERTPRINTF (seq != NULL, "mo_sequence_put: null sequence");
   MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) seq)->mo_va_kind ==
-		    MOM_UNFILLEDFAKESEQKIND,
-		    "mo_sequence_put: non-fake sequence");
+                    MOM_UNFILLEDFAKESEQKIND,
+                    "mo_sequence_put: non-fake sequence");
   MOM_ASSERTPRINTF (ix < ((mo_sizedvalue_ty *) seq)->mo_sva_size,
-		    "mo_sequence_put: too big index %u (size %u)", ix,
-		    ((mo_sizedvalue_ty *) seq)->mo_sva_size);
+                    "mo_sequence_put: too big index %u (size %u)", ix,
+                    ((mo_sizedvalue_ty *) seq)->mo_sva_size);
   seq->mo_seqobj[ix] = oref;
 }
 
@@ -701,7 +701,7 @@ mo_value_t mo_make_empty_tuple (void);
 // convenience variadic functions to make a tuple
 mo_value_t mom_make_tuple_sized (unsigned siz, /*objref-s */ ...);
 mo_value_t mom_make_sentinel_tuple_ (mo_objref_t ob1, ...)
-  __attribute__ ((sentinel));
+__attribute__ ((sentinel));
 #define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(##__VA_ARGS__,NULL)
 
 static inline mo_value_t
@@ -763,7 +763,7 @@ mo_value_t mo_make_empty_set (void);
 // convenience variadic functions to make a set
 mo_value_t mom_make_set_sized (unsigned siz, /*objref-s */ ...);
 mo_value_t mom_make_sentinel_set_ (mo_objref_t ob1, ...)
-  __attribute__ ((sentinel));
+__attribute__ ((sentinel));
 #define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(##__VA_ARGS__,NULL)
 
 static inline mo_value_t
@@ -822,24 +822,24 @@ mo_set_contains (mo_value_t vset, mo_objref_t ob)
       unsigned md = (lo + hi) / 2;
       mo_objref_t midobr = ((mo_sequencevalue_ty *) vset)->mo_seqobj[md];
       MOM_ASSERTPRINTF (mo_dyncast_objref (midobr) != NULL,
-			"corrupted midobr@%p", midobr);
+                        "corrupted midobr@%p", midobr);
       if (midobr == ob)
-	return true;
+        return true;
       int cmp = mo_objref_cmp (ob, midobr);
       if (cmp < 0)
-	lo = md;
+        lo = md;
       else if (cmp > 0)
-	hi = md;
+        hi = md;
       else
-	MOM_FATAPRINTF ("corrupted set@%p", vset);
+        MOM_FATAPRINTF ("corrupted set@%p", vset);
     }
   for (unsigned md = lo; md < hi; md++)
     {
       mo_objref_t midobr = ((mo_sequencevalue_ty *) vset)->mo_seqobj[md];
       MOM_ASSERTPRINTF (mo_dyncast_objref (midobr) != NULL,
-			"corrupted midobr@%p", midobr);
+                        "corrupted midobr@%p", midobr);
       if (midobr == ob)
-	return true;
+        return true;
     }
   return false;
 }
@@ -920,9 +920,9 @@ mo_objref_cmp (mo_objref_t obl, mo_objref_t obr)
   if (MOM_LIKELY (obl->mo_ob_loid > obr->mo_ob_loid))
     return 1;
   MOM_FATAPRINTF ("distinct objects @%p & @%p with same id hid=%u lid=%llu",
-		  obl, obr,
-		  (unsigned) obl->mo_ob_hid,
-		  (unsigned long long) obl->mo_ob_loid);
+                  obl, obr,
+                  (unsigned) obl->mo_ob_hid,
+                  (unsigned long long) obl->mo_ob_loid);
 }
 
 static inline momhash_t
@@ -943,7 +943,7 @@ mo_objref_space (mo_objref_t obr)
 
 void mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa);
 
-int mom_objref_cmp (const void *, const void *);	// suitable for qsort, in object.c
+int mom_objref_cmp (const void *, const void *);  // suitable for qsort, in object.c
 
 ///// counted payloads have also count
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
@@ -996,12 +996,12 @@ mo_assoval_count (mo_assovaldatapayl_ty * asso)
 
 mo_value_t mo_assoval_get (mo_assovaldatapayl_ty * asso, mo_objref_t ob);
 mo_assovaldatapayl_ty *mo_assoval_put (mo_assovaldatapayl_ty * asso,
-				       mo_objref_t ob, mo_value_t va);
+                                       mo_objref_t ob, mo_value_t va);
 mo_assovaldatapayl_ty *mo_assoval_remove (mo_assovaldatapayl_ty * asso,
-					  mo_objref_t ob);
+    mo_objref_t ob);
 mo_assovaldatapayl_ty *mo_assoval_reserve (mo_assovaldatapayl_ty * asso,
-					   unsigned gap);
-mo_value_t mo_assoval_keys_set (mo_assovaldatapayl_ty * asso);	// set of keys
+    unsigned gap);
+mo_value_t mo_assoval_keys_set (mo_assovaldatapayl_ty * asso);  // set of keys
 void mo_dump_scan_assoval (mo_dumper_ty *, mo_assovaldatapayl_ty *);
 mo_json_t mo_dump_json_of_assoval (mo_dumper_ty *, mo_assovaldatapayl_ty *);
 mo_assovaldatapayl_ty *mo_assoval_of_json (mo_json_t);
@@ -1056,7 +1056,7 @@ mo_vectval_nth (mo_vectvaldatapayl_ty * vect, int rk)
   if (rk >= 0 && rk < (int) cnt)
     return vect->mo_seqval[rk];
   return NULL;
-}				/* end mo_vectval_nth */
+}       /* end mo_vectval_nth */
 
 static inline void
 mo_vectval_put_nth (mo_vectvaldatapayl_ty * vect, int rk, mo_value_t newval)
@@ -1073,15 +1073,15 @@ mo_vectval_put_nth (mo_vectvaldatapayl_ty * vect, int rk, mo_value_t newval)
     rk += (int) cnt;
   if (rk >= 0 && rk < (int) cnt)
     vect->mo_seqval[rk] = newval;
-}				/* end mo_vectval_put_nth */
+}       /* end mo_vectval_put_nth */
 
 // the vectval routines are in value.c because they are easy
 mo_vectvaldatapayl_ty *mo_vectval_reserve (mo_vectvaldatapayl_ty * vect,
-					   unsigned newcount);
+    unsigned newcount);
 mo_vectvaldatapayl_ty *mo_vectval_resize (mo_vectvaldatapayl_ty * vect,
-					  unsigned newlen);
+    unsigned newlen);
 mo_vectvaldatapayl_ty *mo_vectval_append (mo_vectvaldatapayl_ty * vect,
-					  mo_value_t val);
+    mo_value_t val);
 
 void mo_dump_scan_vectval (mo_dumper_ty *, mo_vectvaldatapayl_ty *);
 mo_json_t mo_dump_json_of_vectval (mo_dumper_ty *, mo_vectvaldatapayl_ty *);
@@ -1126,10 +1126,10 @@ mo_hashset_count (mo_hashsetpayl_ty * hset)
 bool mo_hashset_contains (mo_hashsetpayl_ty * hset, mo_objref_t obr);
 mo_hashsetpayl_ty *mo_hashset_put (mo_hashsetpayl_ty * hset, mo_objref_t ob);
 mo_hashsetpayl_ty *mo_hashset_remove (mo_hashsetpayl_ty * hset,
-				      mo_objref_t ob);
+                                      mo_objref_t ob);
 mo_hashsetpayl_ty *mo_hashset_reserve (mo_hashsetpayl_ty * hset,
-				       unsigned gap);
-mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);	// set of elements
+                                       unsigned gap);
+mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);  // set of elements
 
 /******************** LISTs payload ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
@@ -1157,7 +1157,7 @@ mo_dyncastpayl_list (const void *p)
   if (k != mo_PLIST)
     return NULL;
   return (mo_listpayl_ty *) p;
-}				/* end mo_dyncastpayl_list */
+}       /* end mo_dyncastpayl_list */
 
 static inline bool
 mo_list_non_empty (mo_listpayl_ty * lis)
@@ -1170,7 +1170,7 @@ mo_list_non_empty (mo_listpayl_ty * lis)
       return false;
     }
   return true;
-}				/* end mo_list_non_empty */
+}       /* end mo_list_non_empty */
 
 static inline unsigned
 mo_list_length (mo_listpayl_ty * lis)
@@ -1182,13 +1182,13 @@ mo_list_length (mo_listpayl_ty * lis)
        el = el->mo_lie_next)
     {
       if (MOM_UNLIKELY (ln >= MOM_SIZE_MAX))
-	MOM_FATAPRINTF ("too long list %u", ln);
+        MOM_FATAPRINTF ("too long list %u", ln);
       for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
-	if (el->mo_lie_arr[ix])
-	  ln++;
+        if (el->mo_lie_arr[ix])
+          ln++;
     }
   return ln;
-}				/* end of mo_list_length */
+}       /* end of mo_list_length */
 
 static inline mo_value_t
 mo_list_head (mo_listpayl_ty * lis)
@@ -1203,7 +1203,7 @@ mo_list_head (mo_listpayl_ty * lis)
       return hd->mo_lie_arr[ix];
   // should not happen
   MOM_FATAPRINTF ("corrupted list with empty head");
-}				/* end of mo_list_head */
+}       /* end of mo_list_head */
 
 static inline mo_value_t
 mo_list_tail (mo_listpayl_ty * lis)
@@ -1218,7 +1218,7 @@ mo_list_tail (mo_listpayl_ty * lis)
       return tl->mo_lie_arr[ix];
   // should not happen
   MOM_FATAPRINTF ("corrupted list with empty tail");
-}				/* end of mo_list_tail */
+}       /* end of mo_list_tail */
 
 mo_listpayl_ty *mo_list_make (void);
 // append and prepend a non-nil value
@@ -1240,7 +1240,7 @@ mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
 {
   if (mo_valid_pointer_value (v))
     mo_dump_really_scan_value (du, v);
-}				/* end mo_dump_scan_value */
+}       /* end mo_dump_scan_value */
 
 void mo_dump_really_scan_objref (mo_dumper_ty *, mo_objref_t);
 static inline void
@@ -1248,7 +1248,7 @@ mo_dump_scan_objref (mo_dumper_ty * du, mo_objref_t obr)
 {
   if (mo_dyncast_objref (obr))
     mo_dump_really_scan_objref (du, obr);
-}				/* end mo_dump_scan_objref */
+}       /* end mo_dump_scan_objref */
 
 void mo_dump_scan_inside_object (mo_dumper_ty *, mo_objref_t);
 bool mo_dump_emitting (mo_dumper_ty *);
@@ -1274,7 +1274,7 @@ void mom_load_state (void);
 // a name is valid if it is like some C identifier or keyword
 // initial and final underscores are not allowed
 // consecutive underscores are not allowed
-bool mom_valid_name (const char *nam);	// in name.c
+bool mom_valid_name (const char *nam);  // in name.c
 
 // get the name of some object, or else nil
 mo_value_t mo_get_namev (mo_objref_t ob);
@@ -1307,7 +1307,7 @@ mo_object_pnamestr (mo_objref_t ob)
   if (namv)
     return mo_string_cstr (namv);
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);
-}				/* end mo_object_pnamestr */
+}       /* end mo_object_pnamestr */
 
 // retrieve the set of names objects
 mo_value_t mo_named_objects_set (void);
@@ -1329,7 +1329,7 @@ mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)
       || !((mo_objectvalue_ty *) ob)->mo_ob_attrs)
     return NULL;
   return mo_assoval_get (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
-}				/* end mo_objref_get_attr */
+}       /* end mo_objref_get_attr */
 
 static inline void
 mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
@@ -1340,7 +1340,7 @@ mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
   ((mo_objectvalue_ty *) ob)->mo_ob_attrs
     = mo_assoval_remove (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
   time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
-}				/* end mo_objref_remove_attr */
+}       /* end mo_objref_remove_attr */
 
 static inline void
 mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
@@ -1355,7 +1355,7 @@ mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
   ((mo_objectvalue_ty *) ob)->mo_ob_attrs
     = mo_assoval_put (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat, val);
   time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
-}				/* end mo_objref_put_attr */
+}       /* end mo_objref_put_attr */
 
 static inline mo_value_t
 mo_objref_set_attrs (mo_objref_t ob)
@@ -1363,6 +1363,6 @@ mo_objref_set_attrs (mo_objref_t ob)
   if (!mo_dyncast_objref (ob))
     return NULL;
   return mo_assoval_keys_set (((mo_objectvalue_ty *) ob)->mo_ob_attrs);
-}				/* end of mo_objref_set_attrs */
+}       /* end of mo_objref_set_attrs */
 
 #endif /*MONIMELT_INCLUDED_ */

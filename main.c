@@ -1105,22 +1105,34 @@ do_add_predefined_mom (void)
 {
   for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
     {
+      mo_objref_t obr = NULL;
       const char *curname = added_predef_mom[ix].predef_name;
+      char obidbuf[MOM_CSTRIDLEN + 6];
+      memset (obidbuf, 0, sizeof (obidbuf));
       if (!mom_valid_name (curname))
-        MOM_FATAPRINTF ("invalid predefined name %s", curname);
+        MOM_FATAPRINTF ("invalid new predefined name %s", curname);
       const char *comm = added_predef_mom[ix].predef_comment;
-#warning do_add_predefined_mom unimplemented
-      MOM_FATAPRINTF
-        ("do_add_predefined_mom unimplemented curname=%s comm=%s", curname,
-         comm);
+      obr = mo_find_named_cstr (curname);
+      if (!obr)
+        {
+          obr = mo_make_object ();
+          mo_register_named (obr, curname);
+        }
+      mo_cstring_from_hi_lo_ids (obidbuf,
+                                 ((mo_objectvalue_ty *) obr)->mo_ob_hid,
+                                 ((mo_objectvalue_ty *) obr)->mo_ob_loid);
+      mo_objref_put_space (obr, mo_SPACE_PREDEF);
       if (comm && comm[0])
         {
-          MOM_INFORMPRINTF ("made predefined %s with comment %s",
-                            curname, comm);
+          mo_value_t commv = mo_make_string_cstr (comm);
+          mo_objref_put_attr (obr, MOM_PREDEF (comment), commv);
+          MOM_INFORMPRINTF ("made predefined %s (%s) with comment %s",
+                            curname, obidbuf, comm);
         }
       else
         {
-          MOM_INFORMPRINTF ("made predefined %s without comment", curname);
+          MOM_INFORMPRINTF ("made predefined %s (%s) without comment",
+                            curname);
         }
     }
 }                               /* end of do_add_predefined_mom */
