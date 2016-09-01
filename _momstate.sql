@@ -31,7 +31,14 @@ INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 ---- TABLE t_objects @@@@
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'','','','
 {
- "attrs": null,
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for comments, often a string"
+   }
+  ]
+ },
  "comps": null
 }
 ');
