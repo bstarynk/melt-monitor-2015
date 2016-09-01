@@ -27,10 +27,24 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 ---- TABLE t_objects @@@@
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'','','','
 {
  "attrs": null,
+ "comps": null
+}
+');
+INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'','','','
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of signatures"
+   }
+  ]
+ },
  "comps": null
 }
 ');

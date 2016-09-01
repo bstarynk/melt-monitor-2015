@@ -706,9 +706,7 @@ mom_dump_state (const char *dirname)
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
   MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef,
-                    "bad elsiz %u nbpredef %u", elsie, nbpredef);
-  MOM_ASSERTPRINTF (elsiz <= (unsigned) nbobj,
-                    "bad elsiz %u nbobj %u", elsiz, nbobj);
+                    "bad elsiz %u nbpredef %u", elsiz, nbpredef);
   for (unsigned eix = 0; eix < elsiz; eix++)
     {
       mo_objref_t obr = mo_set_nth (elset, eix);
