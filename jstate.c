@@ -1032,6 +1032,78 @@ mo_loader_name_objects (mo_loader_ty * ld)
   }                             /* Done: SELECT nam_oid, nam_str FROM t_names */
 }                               /* end mo_loader_name_objects */
 
+
+
+void
+mo_loader_fill_objects_contents (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  /* repeat: SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects */
+  {
+    sqlite3_stmt *fillstmt = NULL;
+    enum
+    { MOMRESIX_OID, MOMRESIX_MTIME, MOMRESIX_JSCONT, MOMRESIX__LAST };
+    if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                  "SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects",
+                                  -1, &fillstmt, NULL)) != SQLITE_OK)
+      MOM_FATAPRINTF
+        ("Sqlite loader base %s failed to prepare objectfill selection (%s)",
+         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+    while ((rc = sqlite3_step (fillstmt)) == SQLITE_ROW)
+      {
+        MOM_ASSERTPRINTF (sqlite3_data_count (fillstmt) == MOMRESIX__LAST
+                          && sqlite3_column_type (fillstmt, MOMRESIX_OID)
+                          == SQLITE_TEXT
+                          && sqlite3_column_type (fillstmt, MOMRESIX_MTIME)
+                          == SQLITE_FLOAT
+                          && sqlite3_column_type (fillstmt, MOMRESIX_JSCONT)
+                          == SQLITE_TEXT, "bad objfill step");
+        const char *oidstr =
+          (const char *) sqlite3_column_text (fillstmt, MOMRESIX_OID);
+        double mtimf = sqlite3_column_double (fillstmt, MOMRESIX_MTIME);
+        const char *jscontstr =
+          (const char *) sqlite3_column_text (fillstmt, MOMRESIX_JSCONT);
+        mo_hid_t hid = 0;
+        mo_loid_t loid = 0;
+        if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, oidstr)
+            || hid == 0 || loid == 0)
+          MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+        mo_objref_t obr = mo_objref_find_hid_loid (hid, loid);
+        if (obr == NULL)
+          MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
+                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+        json_error_t errj;
+        memset (&errj, 0, sizeof (errj));
+        json_t *jcont =
+          json_loads (jscontstr, 0 /*perhaps JSON_REJECT_DUPLICATE */ ,
+                      &errj);
+        if (!jcont || !json_is_object (jcont))
+          MOM_FATAPRINTF
+            ("Sqlite loader base %s bad JSON content for ob_id %s (%s)",
+             mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr, errj.text);
+        json_t *jattrs = json_object_get (jcont, "attrs");
+        json_t *jcomps = json_object_get (jcont, "comps");
+        obr->mo_ob_attrs = mo_assoval_of_json (jattrs);
+        obr->mo_ob_comps = mo_vectval_of_json (jcomps);
+        if (mtimf > 0.0)
+          obr->mo_ob_mtime = (time_t) mtimf;
+      }
+    if (rc != SQLITE_DONE)
+      MOM_FATAPRINTF ("Sqlite loader base %s content selection not done (%s)",
+                      mo_string_cstr (ld->mo_ld_sqlitepathv),
+                      sqlite3_errstr (rc));
+    rc = sqlite3_finalize (fillstmt);
+    fillstmt = NULL;
+    if (rc != SQLITE_OK)
+      MOM_FATAPRINTF
+        ("Sqlite loader base %s objfill selection unfinalized (%s)",
+         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  }
+}                               /* end mo_loader_fill_objects_contents */
+
+
 void
 mo_loader_end_database (mo_loader_ty * ld)
 {
@@ -1056,13 +1128,13 @@ void
 mom_load_state (void)
 {
   /*** steps to consider:
-    0. Check that _momstate.sql & _momstate.sqlite have a comparable age...
-    1. Open the database, create the statements
-    2. SELECT COUNT(*) FROM t_objects --> nbobjects
-    3. SELECT COUNT(*) FROM t_named   --> nbnamedobjects
-    4. Reserve hashed set hsetitems #nbobjects & reserve names #nbnamedobjects
-    5. SELECT ob_id FROM t_objects  ===> create each object from its id, put it into hsetitems
-    6. SELECT nam_oid, nam_str FROM t_names ===> name each named object
+    0+ Check that _momstate.sql & _momstate.sqlite have a comparable age...
+    1+ Open the database, create the statements
+    2+ SELECT COUNT(*) FROM t_objects --> nbobjects
+    3+ SELECT COUNT(*) FROM t_named   --> nbnamedobjects
+    4+ Reserve hashed set hsetitems #nbobjects & reserve names #nbnamedobjects
+    5+ SELECT ob_id FROM t_objects  ===> create each object from its id, put it into hsetitems
+    6+ SELECT nam_oid, nam_str FROM t_names ===> name each named object
     7. SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects ===> fill the mtime & content of each object
     | more steps to fill the class & the payload, 
     | perhaps SELECT ob_id, ob_classid FROM t_objects WHERE ob_classid != ""
@@ -1081,6 +1153,7 @@ mom_load_state (void)
   mo_loader_begin_database (&loader);
   mo_loader_create_objects (&loader);
   mo_loader_name_objects (&loader);
+  mo_loader_fill_objects_contents (&loader);
   mo_loader_end_database (&loader);
   MOM_WARNPRINTF ("load state unimplemented");
 #warning mom_load_state unimplemented
