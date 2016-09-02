@@ -438,6 +438,29 @@ mo_dump_fopen (mo_dumper_ty * du, const char *path)
   return f;
 }                               /* end of mo_dump_fopen */
 
+int
+mom_predefsort_cmp (const void *p1, const void *p2)
+{
+  mo_objref_t ob1 = *(mo_objref_t *) p1;
+  mo_objref_t ob2 = *(mo_objref_t *) p2;
+  MOM_ASSERTPRINTF (mo_objref_space (ob1) == mo_SPACE_PREDEF, "bad ob1");
+  MOM_ASSERTPRINTF (mo_objref_space (ob2) == mo_SPACE_PREDEF, "bad ob2");
+  mo_value_t nam1 = mo_get_namev (ob1);
+  mo_value_t nam2 = mo_get_namev (ob2);
+  if (nam1 && nam2)
+    {
+      MOM_ASSERTPRINTF (mo_dyncast_string (nam1), "bad nam1");
+      MOM_ASSERTPRINTF (mo_dyncast_string (nam2), "bad nam2");
+      return strcmp (mo_string_cstr (nam1), mo_string_cstr (nam2));
+    }
+  else if (nam1)
+    return 1;
+  else if (nam2)
+    return -1;
+  else
+    return mo_objref_cmp (ob1, ob2);
+}                               /* end mom_predefsort_cmp */
+
 void
 mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
 {
@@ -446,6 +469,11 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                     du);
   int nbpredef = mo_set_size (predset);
   MOM_ASSERTPRINTF (nbpredef > 0, "empty predset");
+  mo_objref_t *predarr =
+    mom_gc_alloc (((nbpredef | 0xf) + 1) * sizeof (mo_objref_t));
+  memcpy (predarr, ((mo_sequencevalue_ty *) predset)->mo_seqobj,
+          nbpredef * sizeof (mo_objref_t));
+  qsort (predarr, nbpredef, sizeof (mo_objref_t), mom_predefsort_cmp);
   FILE *fp = mo_dump_fopen (du, MOM_PREDEF_HEADER);
   mom_output_gplv3_notice (fp, "///", "", MOM_PREDEF_HEADER);
   fprintf (fp, "\n#ifndef MOM_HAS_PREDEFINED\n"
@@ -457,7 +485,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
   int nbnamed = 0;
   for (int ix = 0; ix < nbpredef; ix++)
     {
-      mo_objref_t obp = mo_set_nth (predset, ix);
+      mo_objref_t obp = predarr[ix];
       MOM_ASSERTPRINTF (mo_dyncast_objref (obp)
                         && mo_objref_space (obp) == mo_SPACE_PREDEF,
                         "bad obp");
