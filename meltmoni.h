@@ -711,7 +711,7 @@ mo_value_t mo_make_empty_tuple (void);
 mo_value_t mom_make_tuple_sized (unsigned siz, /*objref-s */ ...);
 mo_value_t mom_make_sentinel_tuple_ (mo_objref_t ob1, ...)
 __attribute__ ((sentinel));
-#define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(##__VA_ARGS__,NULL)
+#define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(__VA_ARGS__,NULL)
 
 static inline mo_value_t
 mo_dyncast_tuple (mo_value_t vs)
@@ -773,7 +773,7 @@ mo_value_t mo_make_empty_set (void);
 mo_value_t mom_make_set_sized (unsigned siz, /*objref-s */ ...);
 mo_value_t mom_make_sentinel_set_ (mo_objref_t ob1, ...)
 __attribute__ ((sentinel));
-#define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(##__VA_ARGS__,NULL)
+#define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(__VA_ARGS__,NULL)
 
 static inline mo_value_t
 mo_dyncast_set (mo_value_t vs)
@@ -1339,6 +1339,14 @@ mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)
     return NULL;
   return mo_assoval_get (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
 }                               /* end mo_objref_get_attr */
+
+static inline void
+mo_objref_touch (mo_objref_t ob)
+{
+  if (!mo_dyncast_objref (ob))
+    return;
+  time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
+}                               /* end mo_objref_touch */
 
 static inline void
 mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
