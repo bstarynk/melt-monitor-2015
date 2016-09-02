@@ -105,7 +105,7 @@ monimelt: $(OBJECTS) _timestamp.o
 
 
 %.i: %.c meltmoni.h $(GENERATED_HEADERS)
-	$(COMPILE.c) -C -E $< -o $@
+	$(COMPILE.c) -C -E $< -o - | sed s:^#://#:g > $@
 %.ii: %.cc meltmoni.h $(GENERATED_HEADERS)
 	$(COMPILE.cc) -C -E $< -o $@
 indent: .indent.pro
