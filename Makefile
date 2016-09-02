@@ -40,15 +40,16 @@ OPTIMFLAGS= -Og -g3
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
         -lhiredis -lgccjit -lbacktrace -lonion -lpthread -lcrypt -lm -ldl -latomic
 
+.SUFFIXES= .so
 # the persistent state base, probably _momstate
 MOM_PERSTATE_BASE=_momstate
 MOM_PERSTATE_SQLITE=$(MOM_PERSTATE_BASE).sqlite
 
 PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c momplug_*.cc))
 PLUGINS=  $(patsubst %.c,%.so,$(PLUGIN_SOURCES))
-# modules are generated inside code/
+# modules are generated inside modules.dir/ ; see MOM_MODULES_DIR constant
 MODULE_NAMES:=$(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) 'SELECT mod_oid FROM t_modules')
-MODULE_SOURCES= $(sort $(patsubst %,code/%.c,$(MODULE_NAMES)))
+MODULE_SOURCES= $(sort $(patsubst %,modules.dir/%.c,$(MODULE_NAMES)))
 # generated headers
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
@@ -63,7 +64,7 @@ all: checkgithooks monimelt
 
 clean:
 	$(RM) *~ *% *.o *.so */*.so *.log */*~ */*.orig *.i *.ii *.orig README.html *#
-	$(RM) modules/*.so modules/*~ modules/*%
+	$(RM) modules.dir/*.so modules.dir/*~ modules.dir/*%
 	$(RM) _listpredef*
 	$(RM) *.bin
 	$(RM) _timestamp*
@@ -120,8 +121,14 @@ indent: .indent.pro
 	  $(ASTYLE)  $(ASTYLEFLAGS) $$g ; \
 	done
 
-modules/momg_%.so: modules/momg_%.c $(OBJECTS)
-	$(LINK.c) -fPIC -shared $< -o $@
+modules.dir/%.so: modules.dir/%.c $(OBJECTS)
+	$(LINK.c) -fPIC -shared \
+	  $(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) \
+	          'SELECT mod_cflags FROM t_modules WHERE mod_oid=$(notdir $(basename $@))') \
+	  $< \
+	  $(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) \
+	          'SELECT mod_ldflags FROM t_modules WHERE mod_oid=$(notdir $(basename $@))') \
+	  -o $@
 
 checkgithooks:
 	@for hf in *-githook.sh ; do \

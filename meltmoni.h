@@ -126,6 +126,8 @@ typedef struct mo_dumper_st mo_dumper_ty;
 
 #define MOM_DUMP_VERSIONID "MoniMelt2016B"
 
+// the generated modules directory
+#define MOM_MODULES_DIR "modules.dir"
 // the generated header file
 #define MOM_PREDEF_HEADER "_mom_predef.h"
 // in generated _timestamp.c

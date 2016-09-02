@@ -44,6 +44,10 @@ struct mo_loader_st             // stack allocated
   sqlite3 *mo_ld_db;
   unsigned mo_ld_nbobjects;
   unsigned mo_ld_nbnamed;
+  unsigned mo_ld_nbmodules;
+  void **mo_ld_modynharr;       /* array of module dlopen handles */
+  mo_objref_t *mo_ld_modobjarr; /* array of module objects */
+  mo_assovaldatapayl_ty *mo_ld_modassonum;      /* association moduleobj->modulerank */
   mo_hashsetpayl_ty *mo_ld_hsetobjects;
   // SQLstmt: SELECT par_value FROM t_params WHERE par_name = ?;
   sqlite3_stmt *mo_ld_stmt_params;
@@ -194,7 +198,8 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
   if ((errmsg = NULL),          //
       sqlite3_exec (du->mo_du_db,
                     "CREATE TABLE t_modules"
-                    " (mod_oid VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE)",
+                    " (mod_oid VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
+                    "  mod_cflags TEXT NOT NULL, mod_ldflags TEXT NOT NULL)",
                     NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to create t_modules Sqlite table: %s", errmsg);
   //
@@ -986,6 +991,83 @@ mo_loader_create_objects (mo_loader_ty * ld)
 }                               /* end of mo_loader_create_objects */
 
 void
+mo_loader_link_modules (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  long nbmod = mo_loader_exec_intreq (ld, "SELECT COUNT(*) FROM t_modules");
+  MOM_ASSERTPRINTF (nbmod >= 0
+                    && nbmod < MOM_SIZE_MAX, "bad nbmod %ld", nbmod);
+  ld->mo_ld_nbmodules = nbmod;
+  ld->mo_ld_modynharr = mom_gc_alloc_scalar ((nbmod + 1) * sizeof (void *));
+  ld->mo_ld_modobjarr = mom_gc_alloc ((nbmod + 1) * sizeof (mo_objref_t));
+  ld->mo_ld_modassonum = mo_assoval_reserve (NULL, 4 * nbmod / 3 + 5);
+  /* repeat: SELECT mod_oid FROM t_modules */
+  sqlite3_stmt *modstmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT mod_oid FROM t_modules",
+                                -1, &modstmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare mod_oid selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  long modcnt = 0;
+  while ((rc = sqlite3_step (modstmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (modstmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (modstmt, MOMRESIX_OID)
+                        == SQLITE_TEXT, "bad module step");
+      const char *modidstr =
+        (const char *) sqlite3_column_text (modstmt, MOMRESIX_OID);
+      mo_hid_t hid = 0;
+      mo_loid_t loid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, modidstr)
+          || hid == 0 || loid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad mod_oid %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), modidstr);
+      mo_objref_t modobr = mo_objref_find_hid_loid (hid, loid);
+      if (modobr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s mod_oid %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), modidstr);
+      char modulepathbuf[sizeof (MOM_MODULES_DIR) + MOM_CSTRIDSIZ + 12];
+      memset (modulepathbuf, 0, sizeof (modulepathbuf));
+      snprintf (modulepathbuf, sizeof (modulepathbuf), "%s/%s.so",
+                MOM_MODULES_DIR, modidstr);
+      char makecheckcmd[40 + sizeof (modulepathbuf)];
+      snprintf (makecheckcmd, sizeof (makecheckcmd), "make -q %s",
+                modulepathbuf);
+      fflush (NULL);
+      int mok = system (makecheckcmd);
+      if (mok != 0)
+        MOM_FATAPRINTF ("module '%s' should be remade (%s failed with %d)",
+                        modidstr, makecheckcmd, mok);
+      void *modlh = dlopen (modulepathbuf, RTLD_LAZY | RTLD_GLOBAL);
+      if (!modlh)
+        MOM_FATAPRINTF ("module '%s' failed to dlopen: %s",
+                        modidstr, dlerror ());
+      ld->mo_ld_modynharr[modcnt] = modlh;
+      ld->mo_ld_modobjarr[modcnt] = modobr;
+      ld->mo_ld_modassonum = mo_assoval_put (ld->mo_ld_modassonum, modobr,
+                                             mo_int_to_value (modcnt));
+      modcnt++;
+    }                           /* end while rc... */
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s mod_oid selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (modstmt);
+  modstmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s mod_oid selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  if (modcnt != nbmod)
+    MOM_FATAPRINTF ("Sqlite loader base %s mod_oid counted %ld got %ld...",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv), modcnt, nbmod);
+}                               /* end mo_loader_link_modules */
+
+void
 mo_loader_name_objects (mo_loader_ty * ld)
 {
   int rc = 0;
@@ -996,60 +1078,58 @@ mo_loader_name_objects (mo_loader_ty * ld)
                     "too big nbnamed %ld", nbnamed);
   mo_reserve_names (3 * nbnamed / 2 + MOM_NB_PREDEFINED);
   /* repeat: SELECT nam_oid, nam_str FROM t_names */
-  {
-    sqlite3_stmt *namstmt = NULL;
-    enum
-    { MOMRESIX_OID, MOMRESIX_STR, MOMRESIX__LAST };
-    if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
-                                  "SELECT nam_oid, nam_str FROM t_names",
-                                  -1, &namstmt, NULL)) != SQLITE_OK)
-      MOM_FATAPRINTF
-        ("Sqlite loader base %s failed to prepare nam_oid,nam_str selection (%s)",
-         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
-    long namcnt = 0;
-    while ((rc = sqlite3_step (namstmt)) == SQLITE_ROW)
-      {
-        MOM_ASSERTPRINTF (sqlite3_data_count (namstmt) == MOMRESIX__LAST
-                          && sqlite3_column_type (namstmt, MOMRESIX_OID)
-                          == SQLITE_TEXT
-                          && sqlite3_column_type (namstmt, MOMRESIX_STR)
-                          == SQLITE_TEXT, "bad name step");
-        const char *oidstr =
-          (const char *) sqlite3_column_text (namstmt, MOMRESIX_OID);
-        const char *namstr =
-          (const char *) sqlite3_column_text (namstmt, MOMRESIX_STR);
-        mo_hid_t hid = 0;
-        mo_loid_t loid = 0;
-        if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, oidstr)
-            || hid == 0 || loid == 0)
-          MOM_FATAPRINTF ("Sqlite loader base %s with bad nam_oid %s",
-                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
-        mo_objref_t obr = mo_objref_find_hid_loid (hid, loid);
-        if (obr == NULL)
-          MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s not found",
-                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
-        if (mo_objref_space (obr) != mo_SPACE_PREDEF
-            && !mo_register_name_string (obr, namstr))
-          MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s naming %s failed",
-                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr,
-                          namstr);
-        namcnt++;
-      }                         /* end while rc... */
-    if (rc != SQLITE_DONE)
-      MOM_FATAPRINTF ("Sqlite loader base %s nam_oid selection not done (%s)",
-                      mo_string_cstr (ld->mo_ld_sqlitepathv),
-                      sqlite3_errstr (rc));
-    rc = sqlite3_finalize (namstmt);
-    namstmt = NULL;
-    if (rc != SQLITE_OK)
-      MOM_FATAPRINTF
-        ("Sqlite loader base %s nam_oid selection unfinalized (%s)",
-         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
-    if (namcnt != nbnamed)
-      MOM_FATAPRINTF ("Sqlite loader base %s nam_oid counted %ld got %ld...",
-                      mo_string_cstr (ld->mo_ld_sqlitepathv), namcnt,
-                      nbnamed);
-  }                             /* Done: SELECT nam_oid, nam_str FROM t_names */
+  sqlite3_stmt *namstmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX_STR, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT nam_oid, nam_str FROM t_names",
+                                -1, &namstmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare nam_oid,nam_str selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  long namcnt = 0;
+  while ((rc = sqlite3_step (namstmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (namstmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (namstmt, MOMRESIX_OID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (namstmt, MOMRESIX_STR)
+                        == SQLITE_TEXT, "bad name step");
+      const char *oidstr =
+        (const char *) sqlite3_column_text (namstmt, MOMRESIX_OID);
+      const char *namstr =
+        (const char *) sqlite3_column_text (namstmt, MOMRESIX_STR);
+      mo_hid_t hid = 0;
+      mo_loid_t loid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, oidstr)
+          || hid == 0 || loid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad nam_oid %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      mo_objref_t obr = mo_objref_find_hid_loid (hid, loid);
+      if (obr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      if (mo_objref_space (obr) != mo_SPACE_PREDEF
+          && !mo_register_name_string (obr, namstr))
+        MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s naming %s failed",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr,
+                        namstr);
+      namcnt++;
+    }                           /* end while rc... */
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s nam_oid selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (namstmt);
+  namstmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s nam_oid selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  if (namcnt != nbnamed)
+    MOM_FATAPRINTF ("Sqlite loader base %s nam_oid counted %ld got %ld...",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv), namcnt, nbnamed);
+  /* Done: SELECT nam_oid, nam_str FROM t_names */
 }                               /* end mo_loader_name_objects */
 
 
@@ -1060,71 +1140,69 @@ mo_loader_fill_objects_contents (mo_loader_ty * ld)
   int rc = 0;
   MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
   /* repeat: SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects */
-  {
-    sqlite3_stmt *fillstmt = NULL;
-    enum
-    { MOMRESIX_OID, MOMRESIX_MTIME, MOMRESIX_JSCONT, MOMRESIX__LAST };
-    if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
-                                  "SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects",
-                                  -1, &fillstmt, NULL)) != SQLITE_OK)
-      MOM_FATAPRINTF
-        ("Sqlite loader base %s failed to prepare objectfill selection (%s)",
-         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
-    while ((rc = sqlite3_step (fillstmt)) == SQLITE_ROW)
-      {
-        MOM_ASSERTPRINTF (sqlite3_data_count (fillstmt) == MOMRESIX__LAST
-                          && sqlite3_column_type (fillstmt, MOMRESIX_OID)
-                          == SQLITE_TEXT
-                          && (sqlite3_column_type (fillstmt, MOMRESIX_MTIME)
-                              == SQLITE_INTEGER
-                              || sqlite3_column_type (fillstmt,
-                                                      MOMRESIX_MTIME) ==
-                              SQLITE_FLOAT)
-                          && sqlite3_column_type (fillstmt,
-                                                  MOMRESIX_JSCONT) ==
-                          SQLITE_TEXT, "bad objfill step");
-        const char *oidstr =
-          (const char *) sqlite3_column_text (fillstmt, MOMRESIX_OID);
-        double mtimf = sqlite3_column_double (fillstmt, MOMRESIX_MTIME);
-        const char *jscontstr =
-          (const char *) sqlite3_column_text (fillstmt, MOMRESIX_JSCONT);
-        mo_hid_t hid = 0;
-        mo_loid_t loid = 0;
-        if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, oidstr)
-            || hid == 0 || loid == 0)
-          MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
-                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
-        mo_objref_t obr = mo_objref_find_hid_loid (hid, loid);
-        if (obr == NULL)
-          MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
-                          mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
-        json_error_t errj;
-        memset (&errj, 0, sizeof (errj));
-        json_t *jcont =
-          json_loads (jscontstr, 0 /*perhaps JSON_REJECT_DUPLICATE */ ,
-                      &errj);
-        if (!jcont || !json_is_object (jcont))
-          MOM_FATAPRINTF
-            ("Sqlite loader base %s bad JSON content for ob_id %s (%s)",
-             mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr, errj.text);
-        json_t *jattrs = json_object_get (jcont, "attrs");
-        json_t *jcomps = json_object_get (jcont, "comps");
-        obr->mo_ob_attrs = mo_assoval_of_json (jattrs);
-        obr->mo_ob_comps = mo_vectval_of_json (jcomps);
-        if (mtimf > 0.0)
-          obr->mo_ob_mtime = (time_t) mtimf;
-      }
-    if (rc != SQLITE_DONE)
-      MOM_FATAPRINTF ("Sqlite loader base %s content selection not done (%s)",
-                      mo_string_cstr (ld->mo_ld_sqlitepathv),
-                      sqlite3_errstr (rc));
-    rc = sqlite3_finalize (fillstmt);
-    fillstmt = NULL;
-    if (rc != SQLITE_OK)
-      MOM_FATAPRINTF
-        ("Sqlite loader base %s objfill selection unfinalized (%s)",
-         mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
-  }
+  sqlite3_stmt *fillstmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX_MTIME, MOMRESIX_JSCONT, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects",
+                                -1, &fillstmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare objectfill selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  while ((rc = sqlite3_step (fillstmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (fillstmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (fillstmt, MOMRESIX_OID)
+                        == SQLITE_TEXT
+                        && (sqlite3_column_type (fillstmt, MOMRESIX_MTIME)
+                            == SQLITE_INTEGER
+                            || sqlite3_column_type (fillstmt,
+                                                    MOMRESIX_MTIME) ==
+                            SQLITE_FLOAT)
+                        && sqlite3_column_type (fillstmt,
+                                                MOMRESIX_JSCONT) ==
+                        SQLITE_TEXT, "bad objfill step");
+      const char *oidstr =
+        (const char *) sqlite3_column_text (fillstmt, MOMRESIX_OID);
+      double mtimf = sqlite3_column_double (fillstmt, MOMRESIX_MTIME);
+      const char *jscontstr =
+        (const char *) sqlite3_column_text (fillstmt, MOMRESIX_JSCONT);
+      mo_hid_t hid = 0;
+      mo_loid_t loid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&hid, &loid, oidstr)
+          || hid == 0 || loid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      mo_objref_t obr = mo_objref_find_hid_loid (hid, loid);
+      if (obr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      json_error_t errj;
+      memset (&errj, 0, sizeof (errj));
+      json_t *jcont =
+        json_loads (jscontstr, 0 /*perhaps JSON_REJECT_DUPLICATE */ ,
+                    &errj);
+      if (!jcont || !json_is_object (jcont))
+        MOM_FATAPRINTF
+          ("Sqlite loader base %s bad JSON content for ob_id %s (%s)",
+           mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr, errj.text);
+      json_t *jattrs = json_object_get (jcont, "attrs");
+      json_t *jcomps = json_object_get (jcont, "comps");
+      obr->mo_ob_attrs = mo_assoval_of_json (jattrs);
+      obr->mo_ob_comps = mo_vectval_of_json (jcomps);
+      if (mtimf > 0.0)
+        obr->mo_ob_mtime = (time_t) mtimf;
+    }
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s content selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (fillstmt);
+  fillstmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s objfill selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
 }                               /* end mo_loader_fill_objects_contents */
 
 
@@ -1151,19 +1229,6 @@ mo_loader_end_database (mo_loader_ty * ld)
 void
 mom_load_state (void)
 {
-  /*** steps to consider:
-    0+ Check that _momstate.sql & _momstate.sqlite have a comparable age...
-    1+ Open the database, create the statements
-    2+ SELECT COUNT(*) FROM t_objects --> nbobjects
-    3+ SELECT COUNT(*) FROM t_named   --> nbnamedobjects
-    4+ Reserve hashed set hsetitems #nbobjects & reserve names #nbnamedobjects
-    5+ SELECT ob_id FROM t_objects  ===> create each object from its id, put it into hsetitems
-    6+ SELECT nam_oid, nam_str FROM t_names ===> name each named object
-    7. SELECT ob_id, ob_mtime, ob_jsoncont FROM t_objects ===> fill the mtime & content of each object
-    | more steps to fill the class & the payload, 
-    | perhaps SELECT ob_id, ob_classid FROM t_objects WHERE ob_classid != ""
-  ***/
-  //
   struct mo_loader_st loader;
   memset (&loader, 0, sizeof (loader));
   errno = 0;
@@ -1177,6 +1242,7 @@ mom_load_state (void)
   mo_loader_begin_database (&loader);
   mo_loader_create_objects (&loader);
   mo_loader_name_objects (&loader);
+  mo_loader_link_modules (&loader);
   mo_loader_fill_objects_contents (&loader);
   mo_loader_end_database (&loader);
   MOM_WARNPRINTF ("load state unimplemented");
