@@ -762,10 +762,11 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
       }
     }
 #endif
+  fflush (NULL);
   if (bigbuf)
     free (bigbuf);
   abort ();
-}
+}                               /* end mom_fataprintf_at */
 
 
 
@@ -1158,6 +1159,8 @@ do_add_predefined_mom (void)
 #undef MOM_BENCHMARK_MANY
 #define MOM_BENCHMARK_MANY 2048
 #endif
+
+
 
 void
 mom_run_benchmark_many (int benchcount)

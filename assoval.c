@@ -141,10 +141,12 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   unsigned cnt = ((mo_countedpayl_ty *) asso)->mo_cpl_count;
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u above sz %u", cnt, sz);
-  if (sz < MOM_ASSOVAL_SMALLTHRESHOLD && cnt + 1 <= sz)
+  if (sz < MOM_ASSOVAL_SMALLTHRESHOLD && cnt + 1 < sz)
     {
       int pos = mom_assoval_index (asso, obr);
-      MOM_ASSERTPRINTF (pos >= 0 && pos < (int) sz, "wrong pos %d", pos);
+      MOM_ASSERTPRINTF (pos >= 0
+                        && pos < (int) sz, "wrong pos %d, sz=%u,cnt=%u", pos,
+                        sz, cnt);
       if (asso->mo_seqent[pos].mo_asso_obr == obr)
         asso->mo_seqent[pos].mo_asso_val = va;
       else
@@ -158,7 +160,9 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
   else if (4 * cnt + 1 < 3 * sz)
     {
       int pos = mom_assoval_index (asso, obr);
-      MOM_ASSERTPRINTF (pos >= 0 && pos < (int) sz, "wrong pos %d", pos);
+      MOM_ASSERTPRINTF (pos >= 0
+                        && pos < (int) sz, "wrong pos %d, sz=%u,cnt=%u", pos,
+                        sz, cnt);
       if (asso->mo_seqent[pos].mo_asso_obr == obr)
         asso->mo_seqent[pos].mo_asso_val = va;
       else
@@ -174,12 +178,14 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       unsigned oldcnt = cnt;
       asso = mo_assoval_reserve (asso, 1);
       sz = ((mo_sizedvalue_ty *) asso)->mo_sva_size;
-      MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
+      MOM_ASSERTPRINTF (sz > 2, "too low sz=%u (cnt=%u)", sz, cnt);
       cnt = ((mo_countedpayl_ty *) asso)->mo_cpl_count;
-      MOM_ASSERTPRINTF (cnt <= sz && cnt == oldcnt,
+      MOM_ASSERTPRINTF (cnt < sz && cnt == oldcnt,
                         "cnt %u above sz %u", cnt, sz);
       int pos = mom_assoval_index (asso, obr);
-      MOM_ASSERTPRINTF (pos >= 0 && pos < (int) sz, "wrong pos %d", pos);
+      MOM_ASSERTPRINTF (pos >= 0
+                        && pos < (int) sz, "wrong pos %d, sz=%u, cnt=%u", pos,
+                        sz, cnt);
       if (asso->mo_seqent[pos].mo_asso_obr == obr)
         asso->mo_seqent[pos].mo_asso_val = va;
       else
