@@ -715,8 +715,12 @@ mom_dump_state (const char *dirname)
   dumper.mo_du_scanlist = mo_list_make ();
   dumper.mo_du_vectfilepath = mo_vectval_reserve (NULL, 20 + nbpredef / 5);
   for (int ix = 0; ix < nbpredef; ix++)
-    mo_dump_scan_objref (&dumper, mo_set_nth (predefset, ix));
-  long nbobj = 0;
+    {
+      mo_objref_t predobr = mo_set_nth (predefset, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (predobr), "bad predobr ix=%d", ix);
+      mo_dump_scan_objref (&dumper, predobr);
+    };
+  long nbobj = nbpredef;
   /// the scan loop
   errno = 0;
   while (mo_list_non_empty (dumper.mo_du_scanlist))
@@ -760,15 +764,17 @@ mom_dump_state (const char *dirname)
   MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
-  MOM_INFORMPRINTF ("Dumped in %s directory %ld objects\n"
+  char *realdirname = realpath (dirname, NULL);
+  MOM_INFORMPRINTF ("Dumped in %s directory (real path %s ...) %u objects\n"
                     ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds",
-                    dirname,
+                    dirname, realdirname,
                     elsiz,
                     (endelapsedtime - dumper.mo_du_startelapsedtime),
                     1.0e6 * (endelapsedtime - dumper.mo_du_startelapsedtime)
                     / elsiz,
                     (endcputime - dumper.mo_du_startcputime),
                     1.0e6 * (endcputime - dumper.mo_du_startcputime) / elsiz);
+  free (realdirname);
   memset (&dumper, 0, sizeof (dumper));
 }                               /* end mom_dump_state */
 
@@ -1445,3 +1451,6 @@ mo_value_of_json (mo_json_t js)
   MOM_WARNPRINTF ("wrong json %s", json_dumps (js, JSON_SORT_KEYS));
   return NULL;
 }                               /* end of mo_value_of_json */
+
+
+// end of file jstate.c
