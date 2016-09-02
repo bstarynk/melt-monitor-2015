@@ -75,6 +75,7 @@ struct mo_dumper_st             // stack allocated
   const char *mo_du_dirv;
   mo_value_t mo_du_tempsufv;
   mo_hashsetpayl_ty *mo_du_objset;      /* the set of reachable & emittable objects */
+  mo_hashsetpayl_ty *mo_du_moduleset;   /* the set of modules */
   mo_listpayl_ty *mo_du_scanlist;       /* the todo list for scanning */
   mo_vectvaldatapayl_ty *mo_du_vectfilepath;    /* vector of dumped file paths */
 };
@@ -327,6 +328,8 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
         ("unimplemented mo_dump_emit_object_content payload@%p for %s",
          payload, mo_object_pnamestr (obr));
 #warning unimplemented mo_dump_emit_object_content payload
+      /* if the payload sits in code, we should bind the MOBJIX_PAYLMOD to its module
+         and add the module to be dumped */
     }
   else
     {
@@ -704,6 +707,7 @@ mom_dump_state (const char *dirname)
                             momrand_genrand_int31 (),
                             momrand_genrand_int31 (), (int) getpid ());
   dumper.mo_du_objset = mo_hashset_reserve (NULL, 4 * nbpredef + 100);
+  dumper.mo_du_moduleset = mo_hashset_reserve (NULL, 2 * nbpredef + 20);
   dumper.mo_du_scanlist = mo_list_make ();
   dumper.mo_du_vectfilepath = mo_vectval_reserve (NULL, 20 + nbpredef / 5);
   for (int ix = 0; ix < nbpredef; ix++)
@@ -1244,9 +1248,10 @@ mom_load_state (void)
   mo_loader_name_objects (&loader);
   mo_loader_link_modules (&loader);
   mo_loader_fill_objects_contents (&loader);
+  // we should first load the payload sitting in code, that is having a non-empty ob_paylmod
   mo_loader_end_database (&loader);
-  MOM_WARNPRINTF ("load state unimplemented");
-#warning mom_load_state unimplemented
+  MOM_WARNPRINTF ("load state incomplete");
+#warning mom_load_state incomplete
 }                               /* end mom_load_state */
 
 
