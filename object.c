@@ -93,7 +93,7 @@ mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid)
         return "";
     }
   if (buf == NULL)
-    buf = mom_gc_alloc_scalar (MOM_CSTRIDLEN + 4);
+    buf = mom_gc_alloc_scalar (MOM_CSTRIDSIZ);
   unsigned bn = mo_hi_id_bucketnum (hid);
   char d0 = '0' + bn / (60 * 60);
   bn = bn % (60 * 60);
@@ -104,7 +104,7 @@ mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid)
   char s16[16];
   memset (s16, 0, sizeof (s16));
   num80_to_char14_mom (wn, s16);
-  char resbuf[MOM_CSTRIDLEN + 4];
+  char resbuf[MOM_CSTRIDSIZ];
   memset (resbuf, 0, sizeof (resbuf));
   snprintf (resbuf, sizeof (resbuf), "_%c%c%c%s", d0, c1, c2, s16);
   MOM_ASSERTPRINTF (strlen (resbuf) == MOM_CSTRIDLEN,

@@ -481,9 +481,10 @@ mo_int_to_value (mo_int_t i)
   return (mo_value_t) (((intptr_t) i % 2) + 1);
 }
 
-#define MOM_CSTRIDLEN 18
+#define MOM_CSTRIDLEN 18        // used length
+#define MOM_CSTRIDSIZ ((MOM_CSTRIDLEN|3)+1)
 extern const char *             // in object.c, the buf is either null -then using
-// a GC allocated one- or of size MOM_CSTRIDLEN+1
+// a GC allocated one- or of size MOM_CSTRIDSIZ
 mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid);
 
 /* 10 * 60 * 60 so a 3 extendigit thing starting with 0 to 9 */

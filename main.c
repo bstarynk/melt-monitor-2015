@@ -982,7 +982,7 @@ mom_print_info (void)
     mo_hid_t hid = 0;
     mo_loid_t loid = 0;
     mo_get_some_random_hi_lo_ids (&hid, &loid);
-    char rbuf[MOM_CSTRIDLEN];
+    char rbuf[MOM_CSTRIDSIZ];
     memset (rbuf, 0, sizeof (rbuf));
     mo_cstring_from_hi_lo_ids (rbuf, hid, loid);
     momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
@@ -1115,7 +1115,7 @@ do_add_predefined_mom (void)
     {
       mo_objref_t obr = NULL;
       const char *curname = added_predef_mom[ix].predef_name;
-      char obidbuf[MOM_CSTRIDLEN + 6];
+      char obidbuf[MOM_CSTRIDSIZ];
       memset (obidbuf, 0, sizeof (obidbuf));
       if (!mom_valid_name (curname))
         MOM_FATAPRINTF ("invalid new predefined name %s", curname);

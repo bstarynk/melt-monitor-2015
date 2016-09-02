@@ -61,8 +61,8 @@ struct mo_dumper_st             // stack allocated
   sqlite3 *mo_du_db;
   // SQLstmt: INSERT INTO t_params (par_name, par_value)
   sqlite3_stmt *mo_du_stmt_params;
-  /** SQLstmt: INSERT INTO t_objects (ob_id, ob_mtime, ob_classid,
-                                  ob_paylkid, ob_paylcont, ob_jsoncont)
+  /** SQLstmt: INSERT INTO t_objects (ob_id, ob_mtime, ob_jsoncont, ob_classid,
+                                  ob_paylkid, ob_paylcont, ob_paylmod)
   **/
   sqlite3_stmt *mo_du_stmt_objects;
   // SQLstmt: INSERT INTO t_names (nam_str, nam_oid)
@@ -176,10 +176,12 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                     "CREATE TABLE t_objects"
                     " (ob_id VARCHAR(20) PRIMARY KEY ASC NOT NULL UNIQUE,"
                     "  ob_mtime DATETIME,"
+                    "  ob_jsoncont TEXT NOT NULL,"
                     "  ob_classid VARCHAR(20) NOT NULL,"
                     "  ob_paylkid VARCHAR(20) NOT NULL,"
                     "  ob_paylcont TEXT NOT NULL,"
-                    "  ob_jsoncont TEXT NOT NULL)", NULL, NULL, &errmsg))
+                    "  ob_paylmod VARCHAR(20) NOT NULL)", NULL, NULL,
+                    &errmsg))
     MOM_FATAPRINTF ("Failed to create t_objects Sqlite table: %s", errmsg);
   //
   if ((errmsg = NULL),          //
@@ -210,9 +212,9 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                     sqlite3_errstr (rc));
   if ((rc = sqlite3_prepare_v2 (du->mo_du_db,
                                 "INSERT INTO t_objects"
-                                " (ob_id, ob_mtime, ob_classid,"
-                                "  ob_paylkid, ob_paylcont, ob_jsoncont)"
-                                " VALUES (?, ?, ?, ?, ?, ?)", -1,
+                                " (ob_id, ob_mtime, ob_jsoncont, ob_classid,"
+                                "  ob_paylkid, ob_paylcont, ob_paylmod)"
+                                " VALUES (?, ?, ?, ?, ?, ?, ?)", -1,
                                 &du->mo_du_stmt_objects, NULL)) != SQLITE_OK)
     MOM_FATAPRINTF ("Failed to prepare t_objects Sqlite insertion: %s",
                     sqlite3_errstr (rc));
@@ -244,15 +246,16 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
 {
   int rc = 0;
   enum paramindex_en
-  { MOMOBJIX__NONE, MOMOBJIX_ID, MOMOBJIX_MTIME, MOMOBJIX_CLASSID,
-    MOMOBJIX_PAYLKID, MOMOBJIX_PAYLCONT, MOMOBJIX_JSONCONT
+  { MOMOBJIX__NONE, MOMOBJIX_ID, MOMOBJIX_MTIME, MOMOBJIX_JSONCONT,
+    MOMOBJIX_CLASSID,
+    MOMOBJIX_PAYLKID, MOMOBJIX_PAYLCONT, MOMOBJIX_PAYLMOD
   };
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT
                     && du->mo_du_stmt_objects, "invalid dumper");
   if (!mo_dyncast_objref (obr) || !mo_dump_is_emitted_objref (du, obr))
     return;
-  char bufid[MOM_CSTRIDLEN + 6];
+  char bufid[MOM_CSTRIDSIZ];
   memset (bufid, 0, sizeof (bufid));
   mo_cstring_from_hi_lo_ids (bufid, obr->mo_ob_hid, obr->mo_ob_loid);
   // bind the ob_id
@@ -275,7 +278,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   mo_objref_t claobr = obr->mo_ob_class;
   if (mo_dyncast_objref (claobr) && mo_dump_is_emitted_objref (du, claobr))
     {
-      char clabufid[MOM_CSTRIDLEN + 6];
+      char clabufid[MOM_CSTRIDSIZ];
       memset (clabufid, 0, sizeof (clabufid));
       mo_cstring_from_hi_lo_ids (clabufid, claobr->mo_ob_hid,
                                  claobr->mo_ob_loid);
@@ -302,7 +305,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   if (mo_dyncast_objref (paylkindobr)
       && mo_dump_is_emitted_objref (du, paylkindobr))
     {
-      char pkbufid[MOM_CSTRIDLEN + 6];
+      char pkbufid[MOM_CSTRIDSIZ];
       memset (pkbufid, 0, sizeof (pkbufid));
       mo_cstring_from_hi_lo_ids (pkbufid, paylkindobr->mo_ob_hid,
                                  paylkindobr->mo_ob_loid);
@@ -335,6 +338,13 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
       if (rc)
         MOM_FATAPRINTF
           ("failed to empty-bind ob_paylcont for t_objects insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLMOD, "", -1,
+                           SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to empty-bind ob_paylmod for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
     }
   // now construct the JSON object for the content and bind ob_jsoncont
@@ -442,7 +452,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                         && mo_objref_space (obp) == mo_SPACE_PREDEF,
                         "bad obp");
       mo_value_t namv = mo_get_namev (obp);
-      char idstr[MOM_CSTRIDLEN + 6];
+      char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
       if (namv != NULL)
@@ -492,7 +502,7 @@ mo_dump_emit_names (mo_dumper_ty * du)
       MOM_ASSERTPRINTF (mo_dyncast_objref (namobr), "bad namobr ix=%d", ix);
       mo_value_t strnamv = mo_get_namev (namobr);
       MOM_ASSERTPRINTF (mo_dyncast_string (strnamv), "bad strnamv ix=%d", ix);
-      char idbuf[MOM_CSTRIDLEN + 6];
+      char idbuf[MOM_CSTRIDSIZ];
       memset (idbuf, 0, sizeof (idbuf));
       mo_cstring_from_hi_lo_ids
         (idbuf, namobr->mo_ob_hid, namobr->mo_ob_loid);
@@ -1226,7 +1236,7 @@ mo_dump_jsonid_of_objref (mo_dumper_ty * du, mo_objref_t obr)
   if (!mo_dyncast_objref ((mo_value_t) obr)
       || !mo_dump_is_emitted_objref (du, obr))
     return json_null ();
-  char idbuf[MOM_CSTRIDLEN + 6];
+  char idbuf[MOM_CSTRIDSIZ];
   memset (idbuf, 0, sizeof (idbuf));
   return
     json_string (mo_cstring_from_hi_lo_ids
