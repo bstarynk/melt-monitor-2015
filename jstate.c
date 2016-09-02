@@ -62,6 +62,8 @@ struct mo_dumper_st             // stack allocated
 {
   unsigned mo_du_magic;         /* always MOM_DUMPER_MAGIC */
   enum mom_dumpstate_en mo_du_state;
+  double mo_du_startelapsedtime;
+  double mo_du_startcputime;
   sqlite3 *mo_du_db;
   // SQLstmt: INSERT INTO t_params (par_name, par_value)
   sqlite3_stmt *mo_du_stmt_params;
@@ -700,6 +702,8 @@ mom_dump_state (const char *dirname)
   memset (&dumper, 0, sizeof (dumper));
   dumper.mo_du_magic = MOM_DUMPER_MAGIC;
   dumper.mo_du_state = MOMDUMP_SCAN;
+  dumper.mo_du_startelapsedtime = mom_elapsed_real_time ();
+  dumper.mo_du_startcputime = mom_process_cpu_time ();
   dumper.mo_du_db = NULL;
   dumper.mo_du_dirv = mo_make_string_cstr (dirname);
   dumper.mo_du_tempsufv =
@@ -724,6 +728,17 @@ mom_dump_state (const char *dirname)
       mo_dump_scan_inside_object (&dumper, obr);
       nbobj++;
     }
+  double scanelapsedtime = mom_elapsed_real_time ();
+  double scancputime = mom_process_cpu_time ();
+  MOM_INFORMPRINTF ("dump scanned %ld objects\n"
+                    ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds",
+                    nbobj,
+                    (scanelapsedtime - dumper.mo_du_startelapsedtime),
+                    1.0e6 * (scanelapsedtime -
+                             dumper.mo_du_startelapsedtime) / nbobj,
+                    (scancputime - dumper.mo_du_startcputime),
+                    1.0e6 * (scancputime -
+                             dumper.mo_du_startcputime) / nbobj);
   /// the emit loop
   dumper.mo_du_state = MOMDUMP_EMIT;
   mo_dump_initialize_sqlite_database (&dumper);
@@ -743,6 +758,18 @@ mom_dump_state (const char *dirname)
   mo_dump_rename_emitted_files (&dumper);
 #warning mom_dump_state very incomplete
   MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
+  double endelapsedtime = mom_elapsed_real_time ();
+  double endcputime = mom_process_cpu_time ();
+  MOM_INFORMPRINTF ("Dumped in %s directory %ld objects\n"
+                    ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds",
+                    dirname,
+                    elsiz,
+                    (endelapsedtime - dumper.mo_du_startelapsedtime),
+                    1.0e6 * (endelapsedtime - dumper.mo_du_startelapsedtime)
+                    / elsiz,
+                    (endcputime - dumper.mo_du_startcputime),
+                    1.0e6 * (endcputime - dumper.mo_du_startcputime) / elsiz);
+  memset (&dumper, 0, sizeof (dumper));
 }                               /* end mom_dump_state */
 
 
@@ -1048,8 +1075,11 @@ mo_loader_link_modules (mo_loader_ty * ld)
                         modidstr, makecheckcmd, mok);
       void *modlh = dlopen (modulepathbuf, RTLD_LAZY | RTLD_GLOBAL);
       if (!modlh)
-        MOM_FATAPRINTF ("module '%s' failed to dlopen: %s",
-                        modidstr, dlerror ());
+        {
+          MOM_WARNPRINTF ("Module '%s' failed to dlopen: %s ***@@@",
+                          modidstr, dlerror ());
+          continue;
+        }
       ld->mo_ld_modynharr[modcnt] = modlh;
       ld->mo_ld_modobjarr[modcnt] = modobr;
       ld->mo_ld_modassonum = mo_assoval_put (ld->mo_ld_modassonum, modobr,
@@ -1066,8 +1096,8 @@ mo_loader_link_modules (mo_loader_ty * ld)
     MOM_FATAPRINTF
       ("Sqlite loader base %s mod_oid selection unfinalized (%s)",
        mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
-  if (modcnt != nbmod)
-    MOM_FATAPRINTF ("Sqlite loader base %s mod_oid counted %ld got %ld...",
+  if (modcnt < nbmod)
+    MOM_WARNPRINTF ("Sqlite loader base %s mod_oid counted %ld got %ld...",
                     mo_string_cstr (ld->mo_ld_sqlitepathv), modcnt, nbmod);
 }                               /* end mo_loader_link_modules */
 
@@ -1248,10 +1278,29 @@ mom_load_state (void)
   mo_loader_name_objects (&loader);
   mo_loader_link_modules (&loader);
   mo_loader_fill_objects_contents (&loader);
-  // we should first load the payload sitting in code, that is having a non-empty ob_paylmod
-  mo_loader_end_database (&loader);
+  /// we should first load the payload sitting in code, that is having
+  /// a non-empty ob_paylmod:
+  // mo_loader_load_payload_code(&loader);
+  /// the we should other payload
+  // mo_loader_load_payload_data(&loader);
   MOM_WARNPRINTF ("load state incomplete");
 #warning mom_load_state incomplete
+  mo_loader_end_database (&loader);
+  double endelapsedtime = mom_elapsed_real_time ();
+  double endcputime = mom_process_cpu_time ();
+  MOM_INFORMPRINTF ("loaded %u objects, %u named, %u modules\n"
+                    "... in %.3f elapsed seconds (%.3f µs/obj), %.4f cpu seconds (%.3f µs/obj)",
+                    loader.mo_ld_nbobjects, loader.mo_ld_nbnamed,
+                    loader.mo_ld_nbmodules,
+                    endelapsedtime - loader.mo_ld_startelapsedtime,
+                    1.0e6 * (endelapsedtime -
+                             loader.mo_ld_startelapsedtime) /
+                    loader.mo_ld_nbobjects,
+                    endcputime - loader.mo_ld_startcputime,
+                    1.0e6 * (endcputime -
+                             loader.mo_ld_startcputime) /
+                    loader.mo_ld_nbobjects);
+  memset (&loader, 0, sizeof (loader));
 }                               /* end mom_load_state */
 
 
