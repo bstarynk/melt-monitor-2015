@@ -29,7 +29,21 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 ---- TABLE t_objects @@@@@@@
+INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "describes the entire system"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
 {
  "attrs": {
