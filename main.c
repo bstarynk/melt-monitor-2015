@@ -37,6 +37,7 @@ void *mom_prog_dlhandle;
 char *mom_dump_dir;
 
 bool mom_without_gui;
+int mom_benchcount;
 
 const char *
 mom_hostname (void)
@@ -839,7 +840,7 @@ mom_random_init_genrand (void)
        (((17 * initarr[0]) ^ (211L * getpid ())) + 313 * time (NULL)) % 32 +
        10; i >= 0; i--)
     (void) momrand_genrand_int32 ();
-}
+}                               /* end mom_random_init_genrand */
 
 
 static struct timespec start_realtime_ts_mom;
@@ -1007,6 +1008,7 @@ enum extraopt_en
   xtraopt_info = 1024,
   xtraopt_addpredef,
   xtraopt_commentpredef,
+  xtraopt_bench,
 };
 
 static const struct option mom_long_options[] = {
@@ -1017,6 +1019,7 @@ static const struct option mom_long_options[] = {
   {"add-predef", required_argument, NULL, xtraopt_addpredef},
   {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
   {"info", no_argument, NULL, xtraopt_info},
+  {"bench", required_argument, NULL, xtraopt_bench},
   /* Terminating NULL placeholder.  */
   {NULL, no_argument, NULL, 0},
 };
@@ -1035,6 +1038,7 @@ usage_mom (const char *argv0)
   printf ("\t --comment-predef comment"
           " \t#Set comment of next predefined\n");
   printf ("\t --info" " \t#Give various information\n");
+  printf ("\t --bench" " \t#Run the benchmark\n");
 }
 
 
@@ -1078,6 +1082,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           break;
         case xtraopt_commentpredef:
           commentstr = optarg;
+          break;
+        case xtraopt_bench:
+          mom_benchcount = optarg ? atoi (optarg) : -1;
           break;
         case xtraopt_addpredef:
           if (!optarg)
@@ -1145,6 +1152,197 @@ do_add_predefined_mom (void)
     }
 }                               /* end of do_add_predefined_mom */
 
+
+
+#if MOM_BENCHMARK_MANY < 2048
+#undef MOM_BENCHMARK_MANY
+#define MOM_BENCHMARK_MANY 2048
+#endif
+
+void
+mom_run_benchmark_many (int benchcount)
+{
+#ifndef MOM_BENCHWIDTH
+#define MOM_BENCHWIDTH 256
+#endif /* MOM_BENCHWIDTH */
+  enum mombhop_en
+  {
+    MOMBHOP_NONE,
+    MOMBHOP_PUT_OBR1_OBR2_STRING,
+    MOMBHOP_PUT_OBR3_OBR4_OBR5,
+    MOMBHOP_PUT_OBR1_OBR3_OBR6,
+    MOMBHOP_PUT_OBR3_SET_OBR1_OBR2_OBR3,
+    MOMBHOP_PUT_OBR5_OBR1_INT,
+    MOMBHOP_PUT_OBR6_OBR5_TUPLE,
+    MOMBHOP_PUT_OBR6_OBR2_SET,
+    MOMBHOP_PUT_OBR6_TUPLE_OBR1_OBR2_OBR3_OBR4_OBR5,
+    MOMBHOP_RESIZE_OBR5,
+    MOMBHOP_RESIZE_OBR6,
+    MOMBHOP_APPEND_OBR4_OBR2,
+    MOMBHOP_PUTCOMP_OBR5_OBR1,
+    MOMBHOP_PUTCOMP_OBR5_OBR2,
+    MOMBHOP_PUTCOMP_OBR6_OBR3,
+    MOMBHOP_PUTCOMP_OBR6_TUPLE_OBR1_OBR2,
+    MOMBHOP_CLEAR,
+    MOMBHOP_CLEAROTHER,
+    MOMBHOP__LAST
+  } bhop = 0;
+  if (benchcount < MOM_BENCHMARK_MANY)
+    {
+      benchcount = MOM_BENCHMARK_MANY;
+      MOM_WARNPRINTF ("benchcount set to %d", benchcount);
+    };
+  MOM_INFORMPRINTF ("start of benchmark of count %d", benchcount);
+  double startelapsedtime = mom_elapsed_real_time ();
+  double startcputime = mom_process_cpu_time ();
+  mo_objref_t bencharr[MOM_BENCHWIDTH];
+  memset (bencharr, 0, sizeof (bencharr));
+  for (int lix = 0; lix < benchcount; lix++)
+    {
+      int oix1 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr1 = mo_make_object ();
+      mo_objref_touch (obr1);
+      mo_objref_put_space (obr1, mo_SPACE_GLOBAL);
+      bencharr[oix1] = obr1;
+      int oix2 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr2 = mo_make_object ();
+      mo_objref_touch (obr2);
+      mo_objref_put_space (obr2, mo_SPACE_GLOBAL);
+      bencharr[oix2] = obr2;
+      bhop = momrand_genrand_int31 () % MOMBHOP__LAST;
+      int oix3 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr3 = bencharr[oix3];
+      int oix4 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr4 = bencharr[oix4];
+      int oix5 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr5 = bencharr[oix5];
+      int oix6 = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+      mo_objref_t obr6 = bencharr[oix6];
+      switch (bhop)
+        {
+        case MOMBHOP_NONE:
+          break;
+        case MOMBHOP_PUT_OBR1_OBR2_STRING:
+          mo_objref_put_attr (obr1, obr2,
+                              mo_make_string_sprintf ("loop#%u", lix));
+          break;
+        case MOMBHOP_PUT_OBR3_OBR4_OBR5:
+          mo_objref_put_attr (obr3, obr4, obr5);
+          break;
+        case MOMBHOP_PUT_OBR1_OBR3_OBR6:
+          mo_objref_put_attr (obr1, obr3, obr6);
+          break;
+        case MOMBHOP_PUT_OBR3_SET_OBR1_OBR2_OBR3:
+          mo_objref_put_attr (obr3, obr5, MOM_MAKE_SENSET (obr1, obr2, obr3));
+          break;
+        case MOMBHOP_PUT_OBR5_OBR1_INT:
+          mo_objref_put_attr (obr5, obr1, mo_int_to_value (lix));
+          break;
+        case MOMBHOP_PUT_OBR6_OBR5_TUPLE:
+          {
+            unsigned siz = momrand_genrand_int31 () % (MOM_BENCHWIDTH / 5);
+            mo_sequencevalue_ty *seq = mo_sequence_allocate (siz);
+            unsigned off = momrand_genrand_int31 () % (MOM_BENCHWIDTH / 4);
+            for (int nix = 0; nix < (int) siz; nix++)
+              seq->mo_seqobj[nix] = bencharr[off + nix];
+            mo_value_t tupv = mo_make_tuple_closeq (seq);
+            seq = NULL;
+            mo_objref_put_attr (obr6, obr5, tupv);
+          }
+          break;
+        case MOMBHOP_PUT_OBR6_OBR2_SET:
+          {
+            unsigned siz = momrand_genrand_int31 () % (MOM_BENCHWIDTH / 6);
+            mo_sequencevalue_ty *seq = mo_sequence_allocate (siz);
+            unsigned off = momrand_genrand_int31 () % (MOM_BENCHWIDTH / 4);
+            for (int nix = 0; nix < (int) siz; nix++)
+              seq->mo_seqobj[nix] = bencharr[off + nix];
+            mo_value_t setv = mo_make_set_closeq (seq);
+            seq = NULL;
+            mo_objref_put_attr (obr6, obr2, setv);
+          }
+          break;
+        case MOMBHOP_PUT_OBR6_TUPLE_OBR1_OBR2_OBR3_OBR4_OBR5:
+          mo_objref_put_attr (obr6, obr5,
+                              MOM_MAKE_SENTUPLE (obr1, obr2, obr3, obr4,
+                                                 obr5));
+          break;
+        case MOMBHOP_RESIZE_OBR5:
+          mo_objref_comp_resize (obr5,
+                                 2 +
+                                 momrand_genrand_int31 () % (MOM_BENCHWIDTH /
+                                                             10));
+          break;
+        case MOMBHOP_RESIZE_OBR6:
+          mo_objref_comp_resize (obr6,
+                                 momrand_genrand_int31 () % (MOM_BENCHWIDTH /
+                                                             16));
+          break;
+        case MOMBHOP_APPEND_OBR4_OBR2:
+          mo_objref_comp_append (obr4, obr2);
+          break;
+        case MOMBHOP_CLEAR:
+        case MOMBHOP_CLEAROTHER:
+          {
+            int oixc = momrand_genrand_int31 () % MOM_BENCHWIDTH;
+            bencharr[oixc] = NULL;
+          }
+          break;
+        case MOMBHOP_PUTCOMP_OBR5_OBR1:
+          {
+            unsigned cnt = mo_objref_comp_count (obr5);
+            mo_objref_put_comp (obr5,
+                                (momrand_genrand_int31 () % (cnt + 10)) - 20,
+                                obr1);
+          }
+          break;
+        case MOMBHOP_PUTCOMP_OBR5_OBR2:
+          {
+            unsigned cnt = mo_objref_comp_count (obr5);
+            mo_objref_put_comp (obr5,
+                                (momrand_genrand_int31 () % (cnt + 4)) - 30,
+                                obr2);
+          }
+          break;
+        case MOMBHOP_PUTCOMP_OBR6_OBR3:
+          {
+            unsigned cnt = mo_objref_comp_count (obr6);
+            mo_objref_put_comp (obr3,
+                                (momrand_genrand_int31 () % (cnt + 2)) -
+                                cnt / 3, obr3);
+          }
+          break;
+        case MOMBHOP_PUTCOMP_OBR6_TUPLE_OBR1_OBR2:
+          {
+            unsigned cnt = mo_objref_comp_count (obr6);
+            mo_objref_put_comp (obr6,
+                                (momrand_genrand_int31 () % (cnt + 2)) -
+                                cnt / 3, MOM_MAKE_SENTUPLE (obr1, obr2));
+          }
+          break;
+        case MOMBHOP__LAST:
+          MOM_FATAPRINTF ("cannot happen");
+        }
+    }
+  // we need to put some of the objects in a dumped root, that is the_system
+  unsigned tupsiz = 5 + (momrand_genrand_int31 () % (MOM_BENCHWIDTH / 8));
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (tupsiz);
+  memcpy (seq->mo_seqobj, bencharr, tupsiz * sizeof (mo_objref_t));
+  mo_value_t setv = mo_make_set_closeq (seq);
+  mo_objref_put_attr (MOM_PREDEF (the_system), MOM_PREDEF (the_system), setv);
+  double endelapsedtime = mom_elapsed_real_time ();
+  double endcputime = mom_process_cpu_time ();
+  MOM_INFORMPRINTF ("end of benchmark counted %d loop, final tuple size %u\n"
+                    ".. in %.4f (%.3f µs/loop) elapsed, %.4f (%.3f µs/loop) cpu seconds\n",
+                    benchcount, tupsiz,
+                    endelapsedtime - startelapsedtime,
+                    1.0e6 * (endelapsedtime - startelapsedtime) / benchcount,
+                    endcputime - startcputime,
+                    1.0e6 * (endcputime - startcputime) / benchcount);
+}                               /* end of mom_run_benchmark_many */
+
+
+
 int
 main (int argc_main, char **argv_main)
 {
@@ -1175,6 +1373,8 @@ main (int argc_main, char **argv_main)
   mom_load_state ();
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
+  if (mom_benchcount > 0)
+    mom_run_benchmark_many (mom_benchcount);
   if (mom_without_gui)
     MOM_INFORMPRINTF
       ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
