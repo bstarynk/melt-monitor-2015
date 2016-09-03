@@ -272,7 +272,7 @@ mom_grow_obucket (unsigned bn, unsigned gap)
   unsigned oldbsz = bsz;
   unsigned newsz =
     mom_prime_above ((3 * (cnt + gap)) / 2 + (cnt + gap) / 8 + 5);
-  if (MOM_UNLIKELY(bsz == newsz))
+  if (MOM_UNLIKELY (bsz == newsz))
     return;
   mo_objref_t *oldbarr = mom_obuckarr[bn].bu_obarr;
   mo_objref_t *newbarr = mom_gc_alloc_scalar (newsz * sizeof (mo_objref_t));
@@ -289,7 +289,9 @@ mom_grow_obucket (unsigned bn, unsigned gap)
         mom_obucket_hid_loid_index (((mo_hashedvalue_ty *)
                                      oldobr)->mo_va_hash,
                                     oldobr->mo_ob_hid, oldobr->mo_ob_loid);
-      MOM_ASSERTPRINTF (pos >= 0 && newbarr[pos] == NULL, "bad pos=%d, newsz=%d", pos, newsz);
+      MOM_ASSERTPRINTF (pos >= 0
+                        && newbarr[pos] == NULL, "bad pos=%d, newsz=%d", pos,
+                        newsz);
       newbarr[pos] = oldobr;
       newcnt++;
     }
