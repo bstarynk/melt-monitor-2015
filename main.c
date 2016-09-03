@@ -941,6 +941,11 @@ void
 mom_print_info (void)
 {
   printf ("MONIMELT info:\n" " timestamp: %s\n", monimelt_timestamp);
+#ifdef NDEBUG
+  printf ("*** ASSERT disabled thru NDEBUG\n");
+#else
+  printf ("*** ASSERT enabled without NDEBUG\n");
+#endif
   printf (" lastgitcommit: %s\n", monimelt_lastgitcommit);
   printf (" lastgittag: %s\n", monimelt_lastgittag);
   printf (" compilercommand: %s\n", monimelt_compilercommand);
