@@ -150,3 +150,4 @@ restorestate: | $(MOM_PERSTATE_BASE).sql
 	@if [ -f $(MOM_PERSTATE_BASE).sqlite ]; then \
 	  echo makebackup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sqlite~ ; fi
 	$(SQLITE)  $(MOM_PERSTATE_BASE).sqlite < $(MOM_PERSTATE_BASE).sql
+	touch -r $(MOM_PERSTATE_BASE).sql -c $(MOM_PERSTATE_BASE).sqlite
