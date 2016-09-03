@@ -1149,7 +1149,7 @@ mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);  // set of elemen
 /******************** LISTs payload ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
 typedef struct mo_listelem_st mo_listelem_ty;
-#define MOM_LISTCHUNK_LEN 6
+#define MOM_LISTCHUNK_LEN 14
 struct mo_listelem_st
 {
   mo_listelem_ty *mo_lie_next;
