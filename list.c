@@ -52,12 +52,20 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
   MOM_ASSERTPRINTF (tl->mo_lie_next == NULL,
                     "last has some next lis@%p tl@%p", lis, tl);
   MOM_ASSERTPRINTF (lis->mo_lip_first != NULL, "nil first lis@%p", lis);
+  mo_value_t keeparr[MOM_LISTCHUNK_LEN];
+  memset (keeparr, 0, sizeof (keeparr));
+  int nbel = 0;
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
-    if (!tl->mo_lie_arr[ix])
-      {
-        tl->mo_lie_arr[ix] = v;
-        return;
-      }
+    {
+      if (tl->mo_lie_arr[ix])
+        keeparr[nbel++] = tl->mo_lie_arr[ix];
+    };
+  if (nbel < MOM_LISTCHUNK_LEN)
+    {
+      keeparr[nbel++] = v;
+      memcpy (tl->mo_lie_arr, keeparr, sizeof (keeparr));
+      return;
+    }
   mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
   el->mo_lie_prev = tl;
   tl->mo_lie_next = el;
