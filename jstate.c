@@ -18,6 +18,10 @@
     <http://www.gnu.org/licenses/>.
 **/
 
+
+/// the choice of Jansson is debatable
+/// see https://github.com/miloyip/nativejson-benchmark
+
 #include "meltmoni.h"
 
 #define MOM_FORMAT_VERSION_PARAM "monimelt_format_version"
