@@ -1024,7 +1024,7 @@ enum extraopt_en
 static const struct option mom_long_options[] = {
   {"help", no_argument, NULL, 'h'},
   {"version", no_argument, NULL, 'V'},
-  {"dump", no_argument, NULL, 'd'},
+  {"dump", required_argument, NULL, 'd'},
   {"no-gui", no_argument, NULL, 'N'},
   {"add-predef", required_argument, NULL, xtraopt_addpredef},
   {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
@@ -1480,7 +1480,10 @@ main (int argc_main, char **argv_main)
     MOM_INFORMPRINTF
       ("monimelt explicitly not dumping because of program argument -d- or --dump -");
   else
-    mom_dump_state (mom_dump_dir);
+    {
+      MOM_INFORMPRINTF ("monimelt will dump into %s", mom_dump_dir);
+      mom_dump_state (mom_dump_dir);
+    }
   int nbwarn = atomic_load (&mom_nb_warnings);
   if (nbwarn > 0)
     MOM_INFORMPRINTF
