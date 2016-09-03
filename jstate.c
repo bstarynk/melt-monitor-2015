@@ -747,8 +747,8 @@ mom_dump_state (const char *dirname)
       mo_objref_t predobr = mo_set_nth (predefset, ix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (predobr), "bad predobr ix=%d", ix);
       mo_dump_scan_objref (&dumper, predobr);
-      MOM_ASSERTPRINTF (mo_objref_space(predobr) == mo_SPACE_PREDEF,
-			"non predef ix=%d predobr@%p", ix, predobr);
+      MOM_ASSERTPRINTF (mo_objref_space (predobr) == mo_SPACE_PREDEF,
+                        "non predef ix=%d predobr@%p", ix, predobr);
     };
   long nbobj = nbpredef;
   double lastbelltime = mom_elapsed_real_time ();
@@ -762,12 +762,16 @@ mom_dump_state (const char *dirname)
       mo_list_pop_head (dumper.mo_du_scanlist);
       mo_dump_scan_inside_object (&dumper, obr);
       nbobj++;
-      if (MOM_UNLIKELY(nbobj % 4096 == 0)) {
-	if (mom_elapsed_real_time () > lastbelltime + 3.5) {
-	  MOM_INFORMPRINTF("scanned %ld objects in %.3f sec...", nbobj, mom_elapsed_real_time() - dumper.mo_du_startelapsedtime);
-	  lastbelltime = mom_elapsed_real_time();
-	}
-      };
+      if (MOM_UNLIKELY (nbobj % 4096 == 0))
+        {
+          if (mom_elapsed_real_time () > lastbelltime + 3.5)
+            {
+              MOM_INFORMPRINTF ("scanned %ld objects in %.3f sec...", nbobj,
+                                mom_elapsed_real_time () -
+                                dumper.mo_du_startelapsedtime);
+              lastbelltime = mom_elapsed_real_time ();
+            }
+        };
     }
   double scanelapsedtime = mom_elapsed_real_time ();
   double scancputime = mom_process_cpu_time ();
@@ -794,12 +798,16 @@ mom_dump_state (const char *dirname)
       mo_objref_t obr = mo_set_nth (elset, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
-      if (MOM_UNLIKELY(eix % 4096 == 0)) {
-	if (mom_elapsed_real_time () > lastbelltime + 3.5) {
-	  MOM_INFORMPRINTF("dumped %u objects in %.3f sec...", eix, mom_elapsed_real_time() - dumper.mo_du_startelapsedtime);
-	  lastbelltime = mom_elapsed_real_time();
-	}
-      };
+      if (MOM_UNLIKELY (eix % 4096 == 0))
+        {
+          if (mom_elapsed_real_time () > lastbelltime + 3.5)
+            {
+              MOM_INFORMPRINTF ("dumped %u objects in %.3f sec...", eix,
+                                mom_elapsed_real_time () -
+                                dumper.mo_du_startelapsedtime);
+              lastbelltime = mom_elapsed_real_time ();
+            }
+        };
     }
   mo_dump_emit_names (&dumper);
   mo_dump_end_database (&dumper);
