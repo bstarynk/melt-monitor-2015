@@ -42,10 +42,10 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
   mo_listelem_ty *tl = lis->mo_lip_last;
   if (!tl)
     {
+      MOM_ASSERTPRINTF(lis->mo_lip_first == NULL, "bad lis@%p", lis);
       tl = mom_gc_alloc (sizeof (mo_listelem_ty));
-      tl->mo_lie_prev = NULL;
-      tl->mo_lie_next = NULL;
       tl->mo_lie_arr[0] = v;
+      lis->mo_lip_first = lis->mo_lip_last = tl;
       return;
     };
   MOM_ASSERTPRINTF (tl->mo_lie_next == NULL, "wrong lis@%p", lis);
