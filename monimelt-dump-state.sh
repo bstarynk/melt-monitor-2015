@@ -32,10 +32,11 @@ else
 fi
 
 tempdump=$(basename $(tempfile -d . -p _tmp_ -s .sql))
-trap 'rm -vf $tempdump' EXIT INT QUIT TERM
+trap 'rm -f $tempdump' EXIT INT QUIT TERM
 export LANG=C LC_ALL=C
 
-date -r "$dbfile" +"-- $sqlfile dump %Y %b %d from $dbfile dumped by $0" > $tempdump
+# generate an initial comment, it should be at least 128 bytes
+date -r "$dbfile" +"-- $sqlfile dump %Y %b %d from $dbfile dumped by $0 ....." > $tempdump
 echo >> $tempdump
 date +' --   Copyright (C) %Y Free Software Foundation, Inc.' >> $tempdump
 echo ' --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/' >> $tempdump
@@ -84,6 +85,11 @@ echo 'COMMIT;' >> $tempdump
 echo "-- monimelt-dump-state end dump $dbfile" >> $tempdump
 
 if [ -e "$sqlfile" ]; then
+    # if only the first 128 bytes changed, it is some comment
+    if cmp --quiet --ignore-initial 128 "$sqlfile" $tempdump ; then
+	echo $0: unchanged Monimelt Sqlite3 dump "$sqlfile"
+	exit 0
+    fi
     echo -n "backup Monimelt Sqlite3 dump:" 
     mv -v "$sqlfile" "$sqlfile~"
 fi

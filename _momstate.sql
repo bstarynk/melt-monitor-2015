@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 02 from _momstate.sqlite dumped by ./monimelt-dump-state.sh
+-- _momstate.sql dump 2016 Sep 03 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
