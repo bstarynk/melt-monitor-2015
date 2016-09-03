@@ -54,7 +54,7 @@ MODULE_SOURCES= $(sort $(patsubst %,modules.dir/%.c,$(MODULE_NAMES)))
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))
 CSOURCES= $(sort $(filter-out $(PLUGIN_SOURCES), $(wildcard [a-z]*.c)))
-CBASESOOURCES= $(basename $(CSOURCES))
+SHELLSOURCES= $(sort $(wildcard [a-z]*.sh))
 OBJECTS= $(patsubst %.c,%.o,$(CSOURCES))
 RM= rm -fv
 .PHONY: all checkgithooks installgithooks tags modules plugins clean dumpstate restorestate
@@ -95,7 +95,13 @@ _timestamp.c: Makefile | $(OBJECTS)
 	@(echo -n 'const char monimelt_sqlite[]="'; echo -n $(SQLITE); echo '";') >> _timestamp.tmp
 	@(echo -n 'const char monimelt_perstatebase[]="'; echo -n $(MOM_PERSTATE_BASE); echo '";') >> _timestamp.tmp
 	@echo >> _timestamp.tmp
-	@(echo -n 'const char monimelt_cbasesources[]="'; echo -n $(CBASESOOURCES); echo '";') >> _timestamp.tmp
+	(echo -n 'const char*const monimelt_csources[]={'; for sf in $(CSOURCES) ; do \
+	  echo -n "\"$$sf\", " ; done ; \
+	echo '(const char*)0};') >> _timestamp.tmp
+	@echo >> _timestamp.tmp
+	(echo -n 'const char*const monimelt_shellsources[]={'; for sf in $(SHELLSOURCES) ; do \
+	  echo -n "\"$$sf\", " ; done ; \
+	echo '(const char*)0};') >> _timestamp.tmp
 	@mv _timestamp.tmp _timestamp.c
 
 $(OBJECTS): meltmoni.h $(GENERATED_HEADERS)
@@ -132,7 +138,7 @@ modules.dir/%.so: modules.dir/%.c $(OBJECTS)
 
 checkgithooks:
 	@for hf in *-githook.sh ; do \
-	  [ -L .git/hooks/$$(basename $$hf "-githook.sh") ] \
+	  [ ! -d .git -o -L .git/hooks/$$(basename $$hf "-githook.sh") ] \
 	    || (echo uninstalled git hook $$hf "(run: make installgithooks)" >&2 ; exit 1) ; \
 	done
 installgithooks:
@@ -140,6 +146,8 @@ installgithooks:
 	  ln -sv  "../../$$hf" .git/hooks/$$(basename $$hf "-githook.sh") ; \
 	done
 
+### dont change without care the name of the monimelt-dump-state.sh
+### script since it appears elsewhere, notably in meltmoni.h
 dumpstate: $(MOM_PERSTATE_BASE).sqlite | monimelt-dump-state.sh
 	./monimelt-dump-state.sh  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sql
 

@@ -15,6 +15,10 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with GCC; see the file COPYING3.   If not see
 ##   <http://www.gnu.org/licenses/>.
+
+## Dont change the name monimelt-dump-state.sh of this script without
+## care, it appears elsewhere (in Makefile & in meltmoni.h)
+
 echo start $0 "$@"
 dbfile=$1
 sqlfile=$2

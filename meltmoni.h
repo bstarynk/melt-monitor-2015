@@ -17,8 +17,8 @@
       along with GCC; see the file COPYING3.   If not see
       <http://www.gnu.org/licenses/>.
 **/
-#ifndef MONIMELT_INCLUDED_
-#define MONIMELT_INCLUDED_ 1
+#ifndef MONIMELT_HEADER
+#define MONIMELT_HEADER "meltmoni.h"
 
 
 #ifndef _GNU_SOURCE
@@ -130,6 +130,11 @@ typedef struct mo_dumper_st mo_dumper_ty;
 #define MOM_MODULES_DIR "modules.dir"
 // the generated header file
 #define MOM_PREDEF_HEADER "_mom_predef.h"
+
+// the dump shell script
+#define MOM_DUMP_SCRIPT "monimelt-dump-state.sh"
+
+
 // in generated _timestamp.c
 extern const char monimelt_timestamp[];
 extern const char monimelt_lastgitcommit[];
@@ -143,7 +148,8 @@ extern const char monimelt_directory[];
 extern const char monimelt_makefile[];
 extern const char monimelt_sqlite[];
 extern const char monimelt_perstatebase[];
-extern const char monimelt_cbasesources[];
+extern const char *const monimelt_csources[];
+extern const char *const monimelt_shellsources[];
 
 // increasing array of primes and its size
 extern const int64_t mom_primes_tab[];
@@ -1442,4 +1448,4 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
     mo_vectval_append (((mo_objectvalue_ty *) ob)->mo_ob_comps, va);
 }                               /* end of mo_objref_comp_append */
 
-#endif /*MONIMELT_INCLUDED_ */
+#endif /*MONIMELT_HEADER */

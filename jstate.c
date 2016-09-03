@@ -651,19 +651,19 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
                         && (isalnum (curbastr[0])
                             || curbastr[0] == '_'), "bad curbastr %s",
                         curbastr);
-      mo_value_t curpathv = //
-	mo_make_string_sprintf ("%s/%s",
-				mo_string_cstr   (du->mo_du_dirv),
-				curbastr);
+      mo_value_t curpathv =     //
+        mo_make_string_sprintf ("%s/%s",
+                                mo_string_cstr (du->mo_du_dirv),
+                                curbastr);
       mo_value_t tmpathv =      //
         mo_make_string_sprintf ("%s/%s%s",
                                 mo_string_cstr (du->mo_du_dirv),
                                 curbastr,
                                 mo_string_cstr (du->mo_du_tempsufv));
-      mo_value_t backupv = //
-	mo_make_string_sprintf ("%s/%s~",
-				mo_string_cstr (du->mo_du_dirv),
-				curbastr);
+      mo_value_t backupv =      //
+        mo_make_string_sprintf ("%s/%s~",
+                                mo_string_cstr (du->mo_du_dirv),
+                                curbastr);
       bool samefilecont = false;
       curbastr = NULL;
       struct stat curstat;
@@ -719,6 +719,32 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
 }                               /* end mo_dump_rename_emitted_files */
 
 void
+mo_dump_symlink_needed_file (mo_dumper_ty * du, const char *filnam)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  MOM_ASSERTPRINTF (filnam && isalnum (filnam[0]), "bad filnam %s", filnam);
+  mo_value_t srcpathv =         //
+    mo_make_string_sprintf ("%s/%s",
+                            monimelt_directory, filnam);
+  mo_value_t sympathv =         //
+    mo_make_string_sprintf ("%s/%s",
+                            mo_string_cstr (du->mo_du_dirv), filnam);
+  if (access (mo_string_cstr (sympathv), F_OK) && errno == ENOENT)
+    {
+      errno = 0;
+      if (symlink (mo_string_cstr (srcpathv), mo_string_cstr (sympathv)))
+        MOM_FATAPRINTF ("failed to symlink: %s -> %s",
+                        mo_string_cstr (sympathv), mo_string_cstr (srcpathv));
+      else
+        MOM_INFORMPRINTF ("dump symlinked: %s -> %s",
+                          mo_string_cstr (sympathv),
+                          mo_string_cstr (srcpathv));
+    }
+}                               /* end of mo_dump_symlink_needed_file */
+
+void
 mom_dump_state (const char *dirname)
 {
   if (!dirname || dirname == MOM_EMPTY_SLOT || !dirname[0])
@@ -729,6 +755,10 @@ mom_dump_state (const char *dirname)
       if (mkdir (dirname, 0750))
         MOM_FATAPRINTF ("failed to mkdir dump directory %s (%m)", dirname);
     }
+  for (const char *pc = dirname; *pc; pc++)
+    if (!isprint (*pc) && !isalnum (*pc) && !strchr ("/.+-%,:_", *pc))
+      MOM_FATAPRINTF ("forbidden character %c in dump directory %s", *pc,
+                      dirname);
   {
     struct stat dirstat;
     memset (&dirstat, 0, sizeof (dirstat));
@@ -828,6 +858,47 @@ mom_dump_state (const char *dirname)
   mo_dump_emit_names (&dumper);
   mo_dump_end_database (&dumper);
   mo_dump_rename_emitted_files (&dumper);
+  mo_dump_symlink_needed_file (&dumper, "Makefile");
+  mo_dump_symlink_needed_file (&dumper, MONIMELT_HEADER);
+  for (const char *const *pfilnam = monimelt_csources;
+       pfilnam && *pfilnam; pfilnam++)
+    mo_dump_symlink_needed_file (&dumper, *pfilnam);
+  for (const char *const *pfilnam = monimelt_shellsources;
+       pfilnam && *pfilnam; pfilnam++)
+    mo_dump_symlink_needed_file (&dumper, *pfilnam);
+  if (strcmp (dirname, "."))
+    {
+      mo_value_t sqlpathv =     //
+        mo_make_string_sprintf ("%s/%s.sql",
+                                mo_string_cstr (dumper.mo_du_dirv),
+                                monimelt_perstatebase);
+      errno = 0;
+      if (access (mo_string_cstr (sqlpathv), F_OK) && errno == ENOENT)
+        {
+          mo_value_t sqlitepathv =      //
+            mo_make_string_sprintf ("%s/%s.sqlite",
+                                    mo_string_cstr (dumper.mo_du_dirv),
+                                    monimelt_perstatebase);
+          mo_value_t cmdv =     //
+            mo_make_string_sprintf ("%s/%s %s %s",
+                                    mo_string_cstr (dumper.mo_du_dirv),
+                                    MOM_DUMP_SCRIPT,
+                                    mo_string_cstr (sqlitepathv),
+                                    mo_string_cstr (sqlpathv));
+
+          MOM_INFORMPRINTF
+            ("SQL file %s missing, dumping it...\n ... using: %s",
+             mo_string_cstr (sqlpathv), mo_string_cstr (cmdv));
+          fflush (NULL);
+          int rc = system (mo_string_cstr (cmdv));
+          if (rc)
+            MOM_FATAPRINTF ("dump command %s failed %d",
+                            mo_string_cstr (cmdv), rc);
+          MOM_INFORMPRINTF ("Sqlite base %s dumped into %s",
+                            mo_string_cstr (sqlitepathv),
+                            mo_string_cstr (sqlpathv));
+        }
+    }
 #warning mom_dump_state very incomplete
   MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
   double endelapsedtime = mom_elapsed_real_time ();
