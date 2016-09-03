@@ -400,6 +400,8 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
 void
 mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
 {
+  static long scancnt;
+  scancnt++;
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_SCAN, "bad dumper du@%p",
                     du);
@@ -412,7 +414,8 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
-  MOM_WARNPRINTF ("partially unimplemented mo_dump_scan_inside_object for %s",
+  if (scancnt<10 || scancnt%64==0)
+    MOM_WARNPRINTF ("partially unimplemented mo_dump_scan_inside_object for %s",
                   mo_object_pnamestr (obr));
 #warning unimplemented mo_dump_scan_inside_object
 }                               /* end of mo_dump_scan_inside_object */
