@@ -112,7 +112,10 @@ mo_hashset_reserve (mo_hashsetpayl_ty * hset, unsigned gap)
   unsigned oldsz = sz;
   unsigned oldcnt = cnt;
   mo_hashsetpayl_ty *oldhset = hset;
-  sz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 32 + 4);
+  if (cnt < 200)
+    sz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 32 + 5);
+  else
+    sz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 8 + 16);
   hset =
     mom_gc_alloc (sizeof (mo_hashsetpayl_ty) + sz * sizeof (mo_objref_t));
   ((mo_hashedvalue_ty *) hset)->mo_va_kind = mo_PHASHSET;
