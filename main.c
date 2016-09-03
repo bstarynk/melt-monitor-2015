@@ -1366,11 +1366,11 @@ mom_run_benchmark_many (int benchcount)
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   MOM_INFORMPRINTF ("end of benchmark counted %d loop, final tuple size %u\n"
-                    ".. in %.5f (%.3f µs/loop) elapsed, %.5f (%.3f µs/loop) cpu seconds\n",
+                    ".. in %.4f ms (%.3f µs/loop) elapsed, %.4f ms (%.3f µs/loop) cpu\n",
                     benchcount, tupsiz,
-                    endelapsedtime - startelapsedtime,
+                    1.0e3*(endelapsedtime - startelapsedtime),
                     1.0e6 * (endelapsedtime - startelapsedtime) / benchcount,
-                    endcputime - startcputime,
+                    1.0e3*(endcputime - startcputime),
                     1.0e6 * (endcputime - startcputime) / benchcount);
 }                               /* end of mom_run_benchmark_many */
 
