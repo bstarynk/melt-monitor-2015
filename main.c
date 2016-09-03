@@ -1368,9 +1368,9 @@ mom_run_benchmark_many (int benchcount)
   MOM_INFORMPRINTF ("end of benchmark counted %d loop, final tuple size %u\n"
                     ".. in %.4f ms (%.3f µs/loop) elapsed, %.4f ms (%.3f µs/loop) cpu\n",
                     benchcount, tupsiz,
-                    1.0e3*(endelapsedtime - startelapsedtime),
+                    1.0e3 * (endelapsedtime - startelapsedtime),
                     1.0e6 * (endelapsedtime - startelapsedtime) / benchcount,
-                    1.0e3*(endcputime - startcputime),
+                    1.0e3 * (endcputime - startcputime),
                     1.0e6 * (endcputime - startcputime) / benchcount);
 }                               /* end of mom_run_benchmark_many */
 
