@@ -42,35 +42,34 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
   mo_listelem_ty *tl = lis->mo_lip_last;
   if (!tl)
     {
-      MOM_ASSERTPRINTF (lis->mo_lip_first == NULL, "non-nil first lis@%p",
-                        lis);
-      mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
-      el->mo_lie_arr[0] = v;
-      lis->mo_lip_first = lis->mo_lip_last = el;
+      tl = mom_gc_alloc (sizeof (mo_listelem_ty));
+      tl->mo_lie_prev = NULL;
+      tl->mo_lie_next = NULL;
+      tl->mo_lie_arr[0] = v;
       return;
-    }
-  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL,
-                    "last has some next lis@%p tl@%p", lis, tl);
-  MOM_ASSERTPRINTF (lis->mo_lip_first != NULL, "nil first lis@%p", lis);
+    };
+  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL, "wrong lis@%p", lis);
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
   int nbel = 0;
-  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
     {
-      if (tl->mo_lie_arr[ix])
+      if (tl->mo_lie_arr[ix] != NULL)
         keeparr[nbel++] = tl->mo_lie_arr[ix];
-    };
+    }
+  MOM_ASSERTPRINTF (nbel > 0, "wrong lis@%p", lis);
   if (nbel < MOM_LISTCHUNK_LEN)
     {
       keeparr[nbel++] = v;
       memcpy (tl->mo_lie_arr, keeparr, sizeof (keeparr));
       return;
-    }
-  mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
-  el->mo_lie_prev = tl;
-  tl->mo_lie_next = el;
-  el->mo_lie_arr[0] = v;
-  lis->mo_lip_last = el;
+    };
+  // tl, the last element, is full....
+  mo_listelem_ty *newel = mom_gc_alloc (sizeof (mo_listelem_ty));
+  newel->mo_lie_prev = tl;
+  tl->mo_lie_next = newel;
+  lis->mo_lip_last = newel;
+  newel->mo_lie_arr[0] = v;
 }                               /* end mo_list_append */
 
 
@@ -85,31 +84,34 @@ mo_list_prepend (mo_listpayl_ty * lis, mo_value_t v)
   if (!hd)
     {
       MOM_ASSERTPRINTF (lis->mo_lip_last == NULL, "non-nil last lis@%p", lis);
-      mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
-      el->mo_lie_arr[0] = v;
-      lis->mo_lip_first = lis->mo_lip_last = el;
+      mo_listelem_ty *newel = mom_gc_alloc (sizeof (mo_listelem_ty));
+      newel->mo_lie_arr[0] = v;
+      lis->mo_lip_first = lis->mo_lip_last = newel;
       return;
     }
   MOM_ASSERTPRINTF (hd->mo_lie_prev == NULL, "non-first head lis@%p", lis);
-  int nbhd = 0;
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
-  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
-    if (hd->mo_lie_arr[ix] != NULL)
-      keeparr[nbhd++] = hd->mo_lie_arr[ix];
-  if (nbhd < MOM_LISTCHUNK_LEN)
+  int nbel = 0;
+  for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
     {
-      memset (hd->mo_lie_arr, 0, sizeof (hd->mo_lie_arr));
+      if (hd->mo_lie_arr[ix] != NULL)
+        keeparr[nbel++] = hd->mo_lie_arr[ix];
+    }
+  MOM_ASSERTPRINTF (nbel > 0, "wrong lis@%p", lis);
+  if (nbel < MOM_LISTCHUNK_LEN)
+    {
       hd->mo_lie_arr[0] = v;
-      memcpy (hd->mo_lie_arr + 1, keeparr, nbhd * sizeof (mo_objref_t));
+      memcpy (hd->mo_lie_arr + 1, keeparr,
+              (MOM_LISTCHUNK_LEN - 1) * sizeof (mo_objref_t));
       return;
     }
-  mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
-  el->mo_lie_prev = NULL;
-  el->mo_lie_next = hd;
-  hd->mo_lie_prev = el;
-  el->mo_lie_arr[0] = v;
-  lis->mo_lip_first = el;
+  // hd, the first element,  is full....
+  mo_listelem_ty *newel = mom_gc_alloc (sizeof (mo_listelem_ty));
+  newel->mo_lie_next = hd;
+  hd->mo_lie_prev = newel;
+  lis->mo_lip_first = newel;
+  newel->mo_lie_arr[0] = v;
 }                               /* end mo_list_prepend */
 
 
@@ -121,41 +123,37 @@ mo_list_pop_head (mo_listpayl_ty * lis)
   mo_listelem_ty *hd = lis->mo_lip_first;
   if (!hd)
     return;
-  int nbhd = 0;
+  MOM_ASSERTPRINTF (hd->mo_lie_prev == NULL, "non-first head lis@%p", lis);
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
+  int nbel = 0;
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
-    if (hd->mo_lie_arr[ix] != NULL)
-      {
-        if (nbhd > 0)
-          keeparr[nbhd - 1] = hd->mo_lie_arr[ix];
-        nbhd++;
-      };
-  MOM_ASSERTPRINTF (nbhd > 0, "zero nbhd lis@%p", lis);
-  if (nbhd == 1)
     {
-      if (hd == lis->mo_lip_last)
-        {
-          lis->mo_lip_first = lis->mo_lip_last = NULL;
-        }
-      else
-        {
-          MOM_ASSERTPRINTF (hd->mo_lie_next != NULL, "bad nonlast hd lis@%p",
-                            lis);
-          mo_listelem_ty *nx = hd->mo_lie_next;
-          MOM_ASSERTPRINTF (nx
-                            && nx->mo_lie_prev == hd, "mislinked nx lis@%p",
-                            lis);
-          nx->mo_lie_prev = NULL;
-          lis->mo_lip_first = nx;
-        }
-      memset (hd, 0, sizeof (*hd));
+      if (hd->mo_lie_arr[ix] != NULL)
+        keeparr[nbel++] = hd->mo_lie_arr[ix];
+    }
+  MOM_ASSERTPRINTF (nbel > 0, "wrong lis@%p", lis);
+  if (nbel > 1)
+    {
+      memcpy (hd->mo_lie_arr, keeparr + 1,
+              (MOM_LISTCHUNK_LEN - 1) * sizeof (mo_objref_t));
+      hd->mo_lie_arr[MOM_LISTCHUNK_LEN - 1] = NULL;
+      return;
+    }
+  if (lis->mo_lip_last == hd)
+    {
+      lis->mo_lip_first = NULL;
+      lis->mo_lip_last = NULL;
     }
   else
     {
-      memset (hd->mo_lie_arr, 0, sizeof (hd->mo_lie_arr));
-      memcpy (hd->mo_lie_arr, keeparr, (nbhd - 1) * sizeof (mo_objref_t));
+      mo_listelem_ty *nxhd = hd->mo_lie_next;
+      MOM_ASSERTPRINTF (nxhd != NULL
+                        && nxhd->mo_lie_prev == hd, "bad nxhd lis@%p", lis);
+      lis->mo_lip_first = nxhd;
+      nxhd->mo_lie_prev = NULL;
     }
+  memset (hd, 0, sizeof (*hd)); // to be GC friendly
 }                               /* end of mo_list_pop_head */
 
 
@@ -167,38 +165,36 @@ mo_list_pop_tail (mo_listpayl_ty * lis)
   mo_listelem_ty *tl = lis->mo_lip_last;
   if (!tl)
     return;
-  int nbtl = 0;
+  int nbel = 0;
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
-    if (tl->mo_lie_arr[ix] != NULL)
-      {
-        if (nbtl > 0)
-          keeparr[nbtl - 1] = tl->mo_lie_arr[ix];
-        nbtl++;
-      };
-  MOM_ASSERTPRINTF (nbtl > 0, "zero nbtl lis@%p", lis);
-  if (nbtl == 1)
     {
-      if (tl == lis->mo_lip_first)
-        {
-          lis->mo_lip_first = lis->mo_lip_last = NULL;
-        }
-      else
-        {
-          mo_listelem_ty *pv = tl->mo_lie_prev;
-          MOM_ASSERTPRINTF (pv != NULL
-                            && pv->mo_lie_next == tl, "bad pv lis@%p", lis);
-          pv->mo_lie_next = NULL;
-          lis->mo_lip_last = pv;
-        }
-      memset (tl, 0, sizeof (*tl));
+      if (tl->mo_lie_arr[ix] != NULL)
+        keeparr[nbel++] = tl->mo_lie_arr[ix];
+    }
+  MOM_ASSERTPRINTF (nbel > 0, "wrong lis@%p", lis);
+  if (nbel > 1)
+    {
+      memcpy (tl->mo_lie_arr, keeparr,
+              (MOM_LISTCHUNK_LEN - 1) * sizeof (mo_objref_t));
+      tl->mo_lie_arr[MOM_LISTCHUNK_LEN - 1] = NULL;
+      return;
+    }
+  if (lis->mo_lip_first == tl)
+    {
+      lis->mo_lip_first = NULL;
+      lis->mo_lip_last = NULL;
     }
   else
     {
-      memset (tl->mo_lie_arr, 0, sizeof (tl->mo_lie_arr));
-      memcpy (tl->mo_lie_arr, keeparr, (nbtl - 1) * sizeof (mo_objref_t));
+      mo_listelem_ty *pvtl = tl->mo_lie_prev;
+      MOM_ASSERTPRINTF (pvtl != NULL
+                        && pvtl->mo_lie_next == tl, "bad lis@%p", lis);
+      lis->mo_lip_last = pvtl;
+      pvtl->mo_lie_next = NULL;
     }
+  memset (tl, 0, sizeof (*tl)); // to be GC friendly
 }                               /* end of mo_list_pop_tail */
 
 
