@@ -1360,6 +1360,62 @@ mom_run_benchmark_many (int benchcount)
                     1.0e6 * (endcputime - startcputime) / benchcount);
 }                               /* end of mom_run_benchmark_many */
 
+void
+mom_run_small_benchmark (int cnt)
+{
+  if (cnt < 64)
+    cnt = 64;
+  MOM_INFORMPRINTF ("start of small benchmark of count %d", cnt);
+  double startelapsedtime = mom_elapsed_real_time ();
+  double startcputime = mom_process_cpu_time ();
+  mo_objref_t *objarr = mom_gc_alloc (cnt * sizeof (mo_objref_t));
+  for (int i = 0; i < cnt; i++)
+    {
+      mo_objref_t obr = mo_make_object ();
+      mo_objref_touch (obr);
+      mo_objref_put_space (obr, mo_SPACE_GLOBAL);
+      mo_objref_put_attr (obr, MOM_PREDEF (comment),
+                          mo_make_string_sprintf ("small-obj#%d", i));
+      objarr[i] = obr;
+    };
+  for (int ix = 0; ix < cnt - 6; ix += 2)
+    {
+      mo_objref_put_attr (objarr[ix], objarr[ix + 1], objarr[ix + 2]);
+    };
+  for (int ix = 0; ix < cnt / 2; ix += 3)
+    {
+      if (ix % 2 == 0)
+        mo_objref_put_attr (objarr[ix], objarr[ix + 2],
+                            MOM_MAKE_SENTUPLE (objarr[ix + 1], objarr[ix + 3],
+                                               objarr[ix + 5]));
+      else
+        mo_objref_put_attr (objarr[ix], objarr[ix + 2],
+                            MOM_MAKE_SENSET (objarr[ix + 1], objarr[ix + 3],
+                                             objarr[ix + 5], objarr[ix / 3]));
+      if (ix * ix < cnt)
+        mo_objref_comp_append (objarr[ix / 5], objarr[ix * ix]);
+      mo_objref_comp_append (objarr[ix % 16],
+                             MOM_MAKE_SENSET (objarr[ix + 1], objarr[ix + 2],
+                                              objarr[ix % (3 + cnt / 4)]));
+    }
+  unsigned tupsiz = cnt / 5 + 8;
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (tupsiz);
+  for (int ix = 0; ix < (int) tupsiz && 2 * ix < cnt; ix++)
+    seq->mo_seqobj[ix] = objarr[ix + (int) sqrt ((double) (ix + 1))];
+  mo_value_t tupv = mo_make_tuple_closeq (seq);
+  seq = NULL;
+  objarr = NULL;
+  mo_objref_put_attr (MOM_PREDEF (the_system), MOM_PREDEF (the_system), tupv);
+  double endelapsedtime = mom_elapsed_real_time ();
+  double endcputime = mom_process_cpu_time ();
+  MOM_INFORMPRINTF
+    ("end of small benchmark counted %d loop, final tuple size %u\n"
+     ".. in %.5f (%.3f µs/loop) elapsed, %.5f (%.3f µs/loop) cpu milliseconds\n",
+     cnt, tupsiz, 1.0e3 * (endelapsedtime - startelapsedtime),
+     1.0e6 * (endelapsedtime - startelapsedtime) / cnt,
+     1.0e3 * (endcputime - startcputime),
+     1.0e6 * (endcputime - startcputime) / cnt);
+}                               /* end mom_run_small_benchmark */
 
 
 int
@@ -1408,8 +1464,13 @@ main (int argc_main, char **argv_main)
   mom_load_state ();
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
-  if (mom_benchcount > 0)
-    mom_run_benchmark_many (mom_benchcount);
+  if (mom_benchcount != 0)
+    {
+      if (mom_benchcount > 0)
+        mom_run_benchmark_many (mom_benchcount);
+      else
+        mom_run_small_benchmark (-mom_benchcount);
+    }
   if (mom_without_gui)
     MOM_INFORMPRINTF
       ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
