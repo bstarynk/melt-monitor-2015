@@ -51,6 +51,7 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
     }
   MOM_ASSERTPRINTF (tl->mo_lie_next == NULL,
                     "last has some next lis@%p tl@%p", lis, tl);
+  MOM_ASSERTPRINTF (lis->mo_lip_first != NULL, "nil first lis@%p", lis);
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
     if (!tl->mo_lie_arr[ix])
       {
@@ -64,6 +65,7 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
   lis->mo_lip_last = el;
 }                               /* end mo_list_append */
 
+
 void
 mo_list_prepend (mo_listpayl_ty * lis, mo_value_t v)
 {
@@ -74,13 +76,13 @@ mo_list_prepend (mo_listpayl_ty * lis, mo_value_t v)
   mo_listelem_ty *hd = lis->mo_lip_first;
   if (!hd)
     {
-      MOM_ASSERTPRINTF (lis->mo_lip_last == NULL, "non-nil last");
+      MOM_ASSERTPRINTF (lis->mo_lip_last == NULL, "non-nil last lis@%p", lis);
       mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
       el->mo_lie_arr[0] = v;
       lis->mo_lip_first = lis->mo_lip_last = el;
       return;
     }
-  MOM_ASSERTPRINTF (hd->mo_lie_prev == NULL, "non-first head");
+  MOM_ASSERTPRINTF (hd->mo_lie_prev == NULL, "non-first head lis@%p", lis);
   int nbhd = 0;
   mo_value_t keeparr[MOM_LISTCHUNK_LEN];
   memset (keeparr, 0, sizeof (keeparr));
@@ -132,7 +134,12 @@ mo_list_pop_head (mo_listpayl_ty * lis)
         {
           MOM_ASSERTPRINTF (hd->mo_lie_next != NULL, "bad nonlast hd lis@%p",
                             lis);
-          lis->mo_lip_first = hd->mo_lie_next;
+          mo_listelem_ty *nx = hd->mo_lie_next;
+          MOM_ASSERTPRINTF (nx
+                            && nx->mo_lie_prev == hd, "mislinked nx lis@%p",
+                            lis);
+          nx->mo_lie_prev = NULL;
+          lis->mo_lip_first = nx;
         }
       memset (hd, 0, sizeof (*hd));
     }
@@ -171,7 +178,11 @@ mo_list_pop_tail (mo_listpayl_ty * lis)
         }
       else
         {
-          lis->mo_lip_last = tl->mo_lie_prev;
+          mo_listelem_ty *pv = tl->mo_lie_prev;
+          MOM_ASSERTPRINTF (pv != NULL
+                            && pv->mo_lie_next == tl, "bad pv lis@%p", lis);
+          pv->mo_lie_next = NULL;
+          lis->mo_lip_last = pv;
         }
       memset (tl, 0, sizeof (*tl));
     }
