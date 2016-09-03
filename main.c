@@ -845,7 +845,7 @@ mom_random_init_genrand (void)
         MOM_FATAPRINTF ("failed to open /dev/random %m");
       atexit (closerandomfile_mom);
     }
-  unsigned long initarr[24];
+  uint64_t initarr[32];
   read (randomfd_mom, initarr, sizeof (initarr));
   momrand_init_by_array (initarr, sizeof (initarr) / sizeof (initarr[0]));
   // warmup the PRNG
@@ -1022,6 +1022,7 @@ enum extraopt_en
   xtraopt_addpredef,
   xtraopt_commentpredef,
   xtraopt_bench,
+  xtraopt_initrandom,
 };
 
 static const struct option mom_long_options[] = {
@@ -1033,6 +1034,7 @@ static const struct option mom_long_options[] = {
   {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
   {"info", no_argument, NULL, xtraopt_info},
   {"bench", required_argument, NULL, xtraopt_bench},
+  {"init-random", required_argument, NULL, xtraopt_initrandom},
   /* Terminating NULL placeholder.  */
   {NULL, no_argument, NULL, 0},
 };
@@ -1071,8 +1073,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
   char **argv = *pargv;
   int opt = -1;
   char *commentstr = NULL;
+  int optix = 0;
   while ((opt =
-          getopt_long (argc, argv, "hVNd:", mom_long_options, NULL)) >= 0)
+          getopt_long (argc, argv, "hVNd:", mom_long_options, &optix)) >= 0)
     {
       switch (opt)
         {
@@ -1098,6 +1101,10 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           break;
         case xtraopt_bench:
           mom_benchcount = optarg ? atoi (optarg) : -1;
+          break;
+        case xtraopt_initrandom:
+          if (optind > 2)
+            MOM_WARNPRINTF ("--init-random should be first argument");
           break;
         case xtraopt_addpredef:
           if (!optarg)
@@ -1370,6 +1377,13 @@ main (int argc_main, char **argv_main)
   if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   sqlite3_config (SQLITE_CONFIG_LOG, mo_dump_errorlog, NULL);
+  if (argc_main > 3 && !strcmp (argv_main[1], "--init-random"))
+    {
+      randomfd_mom = open (argv_main[2], O_RDONLY);
+      if (randomfd_mom < 0)
+        MOM_FATAPRINTF ("failed to open random fd for %s : %m", argv_main[2]);
+      MOM_INFORMPRINTF ("using %s as the random file", argv_main[2]);
+    }
   mom_random_init_genrand ();
   json_object_seed (0);
   mom_init_objects ();
