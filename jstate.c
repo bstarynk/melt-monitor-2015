@@ -167,7 +167,10 @@ mo_dump_initialize_sqlite_database (mo_dumper_ty * du)
                             mo_string_cstr (du->mo_du_dirv),
                             monimelt_perstatebase,
                             mo_string_cstr (du->mo_du_tempsufv));
-  int nok = sqlite3_open (mo_string_cstr (sqlpathbufv), &du->mo_du_db);
+  int nok = sqlite3_open_v2 (mo_string_cstr (sqlpathbufv), &du->mo_du_db,
+                             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+                             | SQLITE_OPEN_PRIVATECACHE | SQLITE_OPEN_NOMUTEX,
+                             NULL);
   if (nok != SQLITE_OK || !du->mo_du_db)
     MOM_FATAPRINTF ("failed to sqlite3_open %s (%s)",
                     mo_string_cstr (sqlpathbufv), sqlite3_errstr (nok));
@@ -365,8 +368,10 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   mo_json_t jattrs = mo_dump_json_of_assoval (du, obr->mo_ob_attrs);
   mo_json_t jcomps = mo_dump_json_of_vectval (du, obr->mo_ob_comps);
   mo_json_t jcont = json_pack ("{soso}", "attrs", jattrs, "comps", jcomps);
-  char *contbuf = NULL;
-  size_t contsiz = 0;
+  size_t contsiz = 4096;
+  char *contbuf = calloc (1, contsiz);
+  if (MOM_UNLIKELY (!contbuf))
+    MOM_FATAPRINTF ("failed to allocate memstream buffer of %zd", contsiz);
   FILE *fmem = open_memstream (&contbuf, &contsiz);
   if (!fmem)
     MOM_FATAPRINTF ("failed to open memstream for content of object %s",
@@ -418,7 +423,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
-  if (scancnt < 10 || scancnt % 64 == 0)
+  if (scancnt < 10 || scancnt % 1024 == 0)
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
        scancnt, mo_object_pnamestr (obr));
@@ -816,8 +821,10 @@ mom_dump_state (const char *dirname)
       mo_list_pop_head (dumper.mo_du_scanlist);
       mo_dump_scan_inside_object (&dumper, obr);
       nbobj++;
-      if (MOM_UNLIKELY (nbobj % 4096 == 0))
+      if (MOM_UNLIKELY (nbobj % 1024 == 0))
         {
+          dumper.mo_du_objset =
+            mo_hashset_reserve (dumper.mo_du_objset, nbobj / 3 + 200);
           if (mom_elapsed_real_time () > lastbelltime + 3.5)
             {
               MOM_INFORMPRINTF ("scanned %ld objects in %.3f sec...", nbobj,
@@ -844,6 +851,11 @@ mom_dump_state (const char *dirname)
   mo_dump_emit_predefined (&dumper, predefset);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
+  const char *errmsg = NULL;
+  if ((errmsg = NULL),          //
+      sqlite3_exec (dumper.mo_du_db,
+                    "BEGIN TRANSACTION;", NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to BEGIN Sqlite transaction: %s", errmsg);
   lastbelltime = mom_elapsed_real_time ();
   MOM_ASSERTPRINTF (elsiz >= (unsigned) nbpredef,
                     "bad elsiz %u nbpredef %u", elsiz, nbpredef);
@@ -852,18 +864,30 @@ mom_dump_state (const char *dirname)
       mo_objref_t obr = mo_set_nth (elset, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
-      if (MOM_UNLIKELY (eix % 4096 == 0))
+      if (MOM_UNLIKELY (eix % 8192 == 0))
         {
+          if ((errmsg = NULL),  //
+              sqlite3_exec (dumper.mo_du_db,
+                            "END TRANSACTION;", NULL, NULL, &errmsg))
+            MOM_FATAPRINTF ("Failed to END Sqlite transaction: %s", errmsg);
           if (mom_elapsed_real_time () > lastbelltime + 3.5)
             {
-              MOM_INFORMPRINTF ("dumped %u objects in %.3f sec...", eix,
-                                mom_elapsed_real_time () -
-                                dumper.mo_du_startelapsedtime);
+              MOM_INFORMPRINTF
+                ("dumped %u objects in %.3f real %.3f cpu sec...", eix,
+                 mom_elapsed_real_time () - dumper.mo_du_startelapsedtime,
+                 mom_process_cpu_time () - dumper.mo_du_startcputime);
               lastbelltime = mom_elapsed_real_time ();
             }
+          if ((errmsg = NULL),  //
+              sqlite3_exec (dumper.mo_du_db,
+                            "BEGIN TRANSACTION;", NULL, NULL, &errmsg))
+            MOM_FATAPRINTF ("Failed to BEGIN Sqlite transaction: %s", errmsg);
         };
     }
   mo_dump_emit_names (&dumper);
+  if ((errmsg = NULL),          //
+      sqlite3_exec (dumper.mo_du_db, "END TRANSACTION;", NULL, NULL, &errmsg))
+    MOM_FATAPRINTF ("Failed to END Sqlite transaction: %s", errmsg);
   mo_dump_end_database (&dumper);
   mo_dump_rename_emitted_files (&dumper);
   mo_dump_symlink_needed_file (&dumper, "Makefile");
