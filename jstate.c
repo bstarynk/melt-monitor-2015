@@ -1322,10 +1322,16 @@ mom_load_state (void)
   mo_loader_end_database (&loader);
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
+  char cwdbuf[256];
+  memset (cwdbuf, 0, sizeof (cwdbuf));
+  if (!getcwd (cwdbuf, sizeof (cwdbuf)))
+    strcpy (cwdbuf, "./");
   MOM_INFORMPRINTF ("loaded %u objects, %u named, %u modules\n"
-                    "... in %.3f elapsed seconds (%.3f µs/obj), %.4f cpu seconds (%.3f µs/obj)",
+                    "... (pid %d on %s in %s)\n"
+                    "... in %.3f elapsed seconds (%.3f µs/obj), %.4f cpu seconds (%.3f µs/obj)\n",
                     loader.mo_ld_nbobjects, loader.mo_ld_nbnamed,
                     loader.mo_ld_nbmodules,
+                    (int) getpid (), mom_hostname (), cwdbuf,
                     endelapsedtime - loader.mo_ld_startelapsedtime,
                     1.0e6 * (endelapsedtime -
                              loader.mo_ld_startelapsedtime) /

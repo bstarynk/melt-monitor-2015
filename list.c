@@ -49,8 +49,8 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
       lis->mo_lip_first = lis->mo_lip_last = el;
       return;
     }
-  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL, "last has some next lis@%p",
-                    lis);
+  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL,
+                    "last has some next lis@%p tl@%p", lis, tl);
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
     if (!tl->mo_lie_arr[ix])
       {
@@ -121,7 +121,7 @@ mo_list_pop_head (mo_listpayl_ty * lis)
           keeparr[nbhd - 1] = hd->mo_lie_arr[ix];
         nbhd++;
       };
-  MOM_ASSERTPRINTF (nbhd > 0, "zero nbhd");
+  MOM_ASSERTPRINTF (nbhd > 0, "zero nbhd lis@%p", lis);
   if (nbhd == 1)
     {
       if (hd == lis->mo_lip_last)
@@ -130,8 +130,11 @@ mo_list_pop_head (mo_listpayl_ty * lis)
         }
       else
         {
+          MOM_ASSERTPRINTF (hd->mo_lie_next != NULL, "bad nonlast hd lis@%p",
+                            lis);
           lis->mo_lip_first = hd->mo_lie_next;
         }
+      memset (hd, 0, sizeof (*hd));
     }
   else
     {
@@ -139,6 +142,7 @@ mo_list_pop_head (mo_listpayl_ty * lis)
       memcpy (hd->mo_lie_arr, keeparr, (nbhd - 1) * sizeof (mo_objref_t));
     }
 }                               /* end of mo_list_pop_head */
+
 
 void
 mo_list_pop_tail (mo_listpayl_ty * lis)
@@ -158,7 +162,7 @@ mo_list_pop_tail (mo_listpayl_ty * lis)
           keeparr[nbtl - 1] = tl->mo_lie_arr[ix];
         nbtl++;
       };
-  MOM_ASSERTPRINTF (nbtl > 0, "zero nbtl");
+  MOM_ASSERTPRINTF (nbtl > 0, "zero nbtl lis@%p", lis);
   if (nbtl == 1)
     {
       if (tl == lis->mo_lip_first)
@@ -169,6 +173,7 @@ mo_list_pop_tail (mo_listpayl_ty * lis)
         {
           lis->mo_lip_last = tl->mo_lie_prev;
         }
+      memset (tl, 0, sizeof (*tl));
     }
   else
     {

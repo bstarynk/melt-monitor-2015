@@ -49,7 +49,7 @@ mom_hostname (void)
         MOM_FATAPRINTF ("gethostname failed");
     }
   return hostname_mom;
-};
+}                               /* end mom_hostname */
 
 void
 mom_output_gplv3_notice (FILE *out, const char *prefix, const char *suffix,
@@ -554,7 +554,7 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
 {
   int len = 0;
   char thrname[24];
-  char buf[160];
+  char buf[256];
   char timbuf[64];
   char *bigbuf = NULL;
   char *msg = NULL;
@@ -568,7 +568,7 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
   va_start (alist, fmt);
   len = vsnprintf (buf, sizeof (buf), fmt, alist);
   va_end (alist);
-  if (MOM_UNLIKELY (len >= (int) sizeof (buf) - 1))
+  if (MOM_UNLIKELY (len >= (int) sizeof (buf) - 10))
     {
       bigbuf = malloc (len + 10);
       if (bigbuf)
@@ -580,7 +580,8 @@ mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
           msg = bigbuf;
         }
     }
-  msg = buf;
+  else
+    msg = buf;
   {
     fprintf (stderr, "MONIMELT INFORM @%s:%d <%s:%d> %s %s\n",
              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
@@ -848,11 +849,6 @@ mom_random_init_genrand (void)
   uint64_t initarr[32];
   read (randomfd_mom, initarr, sizeof (initarr));
   momrand_init_by_array (initarr, sizeof (initarr) / sizeof (initarr[0]));
-  // warmup the PRNG
-  for (int i =
-       (((17 * initarr[0]) ^ (211L * getpid ())) + 313 * time (NULL)) % 32 +
-       10; i >= 0; i--)
-    (void) momrand_genrand_int32 ();
 }                               /* end mom_random_init_genrand */
 
 
@@ -1103,8 +1099,9 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
           mom_benchcount = optarg ? atoi (optarg) : -1;
           break;
         case xtraopt_initrandom:
-          if (optind > 2)
-            MOM_WARNPRINTF ("--init-random should be first argument");
+          if (optind > 3)
+            MOM_WARNPRINTF
+              ("--init-random should be first argument optind=%d", optind);
           break;
         case xtraopt_addpredef:
           if (!optarg)
@@ -1173,6 +1170,9 @@ do_add_predefined_mom (void)
 }                               /* end of do_add_predefined_mom */
 
 
+#ifndef MOM_BENCHWIDTH
+#define MOM_BENCHWIDTH 256
+#endif /* MOM_BENCHWIDTH */
 
 #if MOM_BENCHMARK_MANY < 2048
 #undef MOM_BENCHMARK_MANY
@@ -1184,9 +1184,6 @@ do_add_predefined_mom (void)
 void
 mom_run_benchmark_many (int benchcount)
 {
-#ifndef MOM_BENCHWIDTH
-#define MOM_BENCHWIDTH 256
-#endif /* MOM_BENCHWIDTH */
   enum mombhop_en
   {
     MOMBHOP_NONE,
@@ -1209,9 +1206,9 @@ mom_run_benchmark_many (int benchcount)
     MOMBHOP_CLEAROTHER,
     MOMBHOP__LAST
   } bhop = 0;
-  if (benchcount < MOM_BENCHMARK_MANY)
+  if (benchcount < 2 * MOM_BENCHWIDTH)
     {
-      benchcount = MOM_BENCHMARK_MANY;
+      benchcount = 3 * MOM_BENCHWIDTH;
       MOM_WARNPRINTF ("benchcount set to %d", benchcount);
     };
   MOM_INFORMPRINTF ("start of benchmark of count %d", benchcount);
@@ -1355,7 +1352,7 @@ mom_run_benchmark_many (int benchcount)
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   MOM_INFORMPRINTF ("end of benchmark counted %d loop, final tuple size %u\n"
-                    ".. in %.4f (%.3f µs/loop) elapsed, %.4f (%.3f µs/loop) cpu seconds\n",
+                    ".. in %.5f (%.3f µs/loop) elapsed, %.5f (%.3f µs/loop) cpu seconds\n",
                     benchcount, tupsiz,
                     endelapsedtime - startelapsedtime,
                     1.0e6 * (endelapsedtime - startelapsedtime) / benchcount,
@@ -1376,7 +1373,6 @@ main (int argc_main, char **argv_main)
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
   if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
-  sqlite3_config (SQLITE_CONFIG_LOG, mo_dump_errorlog, NULL);
   if (argc_main > 3 && !strcmp (argv_main[1], "--init-random"))
     {
       randomfd_mom = open (argv_main[2], O_RDONLY);
@@ -1385,7 +1381,8 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("using %s as the random file", argv_main[2]);
     }
   mom_random_init_genrand ();
-  json_object_seed (0);
+  sqlite3_config (SQLITE_CONFIG_LOG, mo_dump_errorlog, NULL);
+  json_object_seed (momrand_genrand_int31 ());
   mom_init_objects ();
   parse_program_arguments_mom (&argc, &argv);
   {
@@ -1398,7 +1395,16 @@ main (int argc_main, char **argv_main)
         MOM_FATAPRINTF
           ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
       }
+    char cwdbuf[160];
+    memset (cwdbuf, 0, sizeof (cwdbuf));
+    if (!getcwd (cwdbuf, sizeof (cwdbuf)))
+      strcpy (cwdbuf, "./");
+    MOM_INFORMPRINTF ("starting on %s pid %d in %s, randoms %u %u",
+                      mom_hostname (), (int) getpid (), cwdbuf,
+                      (unsigned) momrand_genrand_int31 (),
+                      (unsigned) momrand_genrand_int31 ());
   }
+
   mom_load_state ();
   if (count_added_predef_mom > 0)
     do_add_predefined_mom ();
