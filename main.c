@@ -694,7 +694,9 @@ mom_bt_err_callback (void *data MOM_UNUSED, const char *msg, int errnum)
 
 
 
-void mom_abort () __attribute__ ((noreturn))
+void mom_abort (void) __attribute__ ((noreturn));
+
+void mom_abort (void)
 {
   fflush (NULL);
   abort ();
