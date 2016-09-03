@@ -42,13 +42,15 @@ mo_list_append (mo_listpayl_ty * lis, mo_value_t v)
   mo_listelem_ty *tl = lis->mo_lip_last;
   if (!tl)
     {
-      MOM_ASSERTPRINTF (lis->mo_lip_first == NULL, "non-nil first");
+      MOM_ASSERTPRINTF (lis->mo_lip_first == NULL, "non-nil first lis@%p",
+                        lis);
       mo_listelem_ty *el = mom_gc_alloc (sizeof (mo_listelem_ty));
       el->mo_lie_arr[0] = v;
       lis->mo_lip_first = lis->mo_lip_last = el;
       return;
     }
-  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL, "last has some next");
+  MOM_ASSERTPRINTF (tl->mo_lie_next == NULL, "last has some next lis@%p",
+                    lis);
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix--)
     if (!tl->mo_lie_arr[ix])
       {

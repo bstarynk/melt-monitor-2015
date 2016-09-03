@@ -143,11 +143,11 @@ installgithooks:
 dumpstate: $(MOM_PERSTATE_BASE).sqlite | monimelt-dump-state.sh
 	@if [ -f $(MOM_PERSTATE_BASE).sql ]; then \
 	  echo makebackup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sql  $(MOM_PERSTATE_BASE).sql~ ; fi
-	./monimelt-dump-state.sh $<  $(MOM_PERSTATE_BASE).sql
+	./monimelt-dump-state.sh  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sql
 
 
 restorestate: | $(MOM_PERSTATE_BASE).sql
-	@if [ -f $(MOM_PERSTATE_BASE).sqlite ]; then \
+	@if [ -f $(MOM_PERSTATE_Blis	ASE).sqlite ]; then \
 	  echo makebackup old: ' ' ; mv -v  $(MOM_PERSTATE_BASE).sqlite  $(MOM_PERSTATE_BASE).sqlite~ ; fi
 	$(SQLITE)  $(MOM_PERSTATE_BASE).sqlite < $(MOM_PERSTATE_BASE).sql
 	touch -r $(MOM_PERSTATE_BASE).sql -c $(MOM_PERSTATE_BASE).sqlite
