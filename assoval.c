@@ -136,7 +136,7 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       asso->mo_seqent[0].mo_asso_obr = obr;
       asso->mo_seqent[0].mo_asso_val = va;
       return asso;
-    }
+    } // end if NULL asso
   unsigned sz = ((mo_sizedvalue_ty *) asso)->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   unsigned cnt = ((mo_countedpayl_ty *) asso)->mo_cpl_count;
@@ -156,9 +156,9 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
           ((mo_countedpayl_ty *) asso)->mo_cpl_count = cnt + 1;
         }
       return asso;
-    }
-  else if (4 * cnt + 1 < 3 * sz)
-    {
+    } // end if small and fits
+  else if (4 * cnt + 3 < 3 * sz)
+    { // 3/4-th full, don't need to grow
       int pos = mom_assoval_index (asso, obr);
       MOM_ASSERTPRINTF (pos >= 0
                         && pos < (int) sz, "wrong pos %d, sz=%u,cnt=%u", pos,
@@ -172,16 +172,21 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
           ((mo_countedpayl_ty *) asso)->mo_cpl_count = cnt + 1;
         }
       return asso;
-    }
+    } // no more than 3/4-th full
   else
-    {
+    { // should grow
       unsigned oldcnt = cnt;
-      asso = mo_assoval_reserve (asso, 1);
+      unsigned oldsz = sz;
+      unsigned gap = 2+cnt/64;
+      asso = mo_assoval_reserve (asso, gap);
       sz = ((mo_sizedvalue_ty *) asso)->mo_sva_size;
+      MOM_ASSERTPRINTF(oldsz < sz,
+		       "oldsz=%u not less than sz=%u oldcnt=%u gap=%u",
+		       oldsz, sz, oldcnt, gap);
       MOM_ASSERTPRINTF (sz > 2, "too low sz=%u (cnt=%u)", sz, cnt);
       cnt = ((mo_countedpayl_ty *) asso)->mo_cpl_count;
       MOM_ASSERTPRINTF (cnt < sz && cnt == oldcnt,
-                        "cnt %u above sz %u", cnt, sz);
+                        "cnt %u above sz %u or not same as oldcnt %u", cnt, sz, oldcnt);
       int pos = mom_assoval_index (asso, obr);
       MOM_ASSERTPRINTF (pos >= 0
                         && pos < (int) sz, "wrong pos %d, sz=%u, cnt=%u", pos,
@@ -197,6 +202,8 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       return asso;
     }
 }                               /* end mo_assoval_put */
+
+
 
 mo_assovaldatapayl_ty *
 mo_assoval_remove (mo_assovaldatapayl_ty * asso, mo_objref_t obr)
@@ -272,11 +279,11 @@ mo_assoval_reserve (mo_assovaldatapayl_ty * asso, unsigned gap)
     return asso;
   mo_assovaldatapayl_ty *newasso =
     mom_gc_alloc (sizeof (mo_assovaldatapayl_ty) +
-                  sz * sizeof (struct mo_assoentry_st));
+                  newsz * sizeof (struct mo_assoentry_st));
   ((mo_hashedvalue_ty *) newasso)->mo_va_kind = mo_PASSOVALDATA;
   ((mo_hashedvalue_ty *) newasso)->mo_va_hash =
     (momrand_genrand_int31 () & 0xfffffff) + 2;
-  ((mo_sizedvalue_ty *) newasso)->mo_sva_size = sz;
+  ((mo_sizedvalue_ty *) newasso)->mo_sva_size = newsz;
   ((mo_countedpayl_ty *) newasso)->mo_cpl_count = 0;
   for (unsigned ix = 0; ix < sz; ix++)
     {
