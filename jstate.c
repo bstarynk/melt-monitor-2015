@@ -417,6 +417,9 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
 #warning unimplemented mo_dump_scan_inside_object
 }                               /* end of mo_dump_scan_inside_object */
 
+
+
+
 FILE *
 mo_dump_fopen (mo_dumper_ty * du, const char *path)
 {
@@ -641,15 +644,28 @@ mo_dump_rename_emitted_files (mo_dumper_ty * du)
   unsigned nbsamefiles = 0;
   for (unsigned ix = 0; ix < nbfil; ix++)
     {
-      mo_value_t curpathv = mo_vectval_nth (du->mo_du_vectfilepath, ix);
-      MOM_ASSERTPRINTF (mo_dyncast_string (curpathv), "bad curpathv");
+      mo_value_t curbasev = mo_vectval_nth (du->mo_du_vectfilepath, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_string (curbasev), "bad curbasev");
+      const char *curbastr = mo_string_cstr (curbasev);
+      MOM_ASSERTPRINTF (curbastr
+                        && (isalnum (curbastr[0])
+                            || curbastr[0] == '_'), "bad curbastr %s",
+                        curbastr);
+      mo_value_t curpathv = //
+	mo_make_string_sprintf ("%s/%s",
+				mo_string_cstr   (du->mo_du_dirv),
+				curbastr);
       mo_value_t tmpathv =      //
-        mo_make_string_sprintf ("%s%s",
-                                mo_string_cstr (curpathv),
+        mo_make_string_sprintf ("%s/%s%s",
+                                mo_string_cstr (du->mo_du_dirv),
+                                curbastr,
                                 mo_string_cstr (du->mo_du_tempsufv));
-      mo_value_t backupv =
-        mo_make_string_sprintf ("%s%%", mo_string_cstr (curpathv));
+      mo_value_t backupv = //
+	mo_make_string_sprintf ("%s/%s~",
+				mo_string_cstr (du->mo_du_dirv),
+				curbastr);
       bool samefilecont = false;
+      curbastr = NULL;
       struct stat curstat;
       struct stat tmpstat;
       memset (&curstat, 0, sizeof (curstat));

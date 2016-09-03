@@ -35,12 +35,14 @@ tempdump=$(basename $(tempfile -d . -p _tmp_ -s .sql))
 trap 'rm -f $tempdump' EXIT INT QUIT TERM
 export LANG=C LC_ALL=C
 
+sqlbase=$(basename "$sqlfile")
+dbbase=$(basename "$dbfile")
 # generate an initial comment, it should be at least 128 bytes
-date -r "$dbfile" +"-- $sqlfile dump %Y %b %d from $dbfile dumped by $0 ....." > $tempdump
+date -r "$dbfile" +"-- $sqlbase dump %Y %b %d from $dbbase dumped by $0 ....." > $tempdump
 echo >> $tempdump
 date +' --   Copyright (C) %Y Free Software Foundation, Inc.' >> $tempdump
 echo ' --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/' >> $tempdump
-echo " --  This sqlite3 dump file $sqlfile is part of GCC." >> $tempdump
+echo " --  This sqlite3 dump file $sqlbase is part of GCC." >> $tempdump
 echo ' --' >> $tempdump
 echo ' --  GCC is free software; you can redistribute it and/or modify' >> $tempdump
 echo ' --  it under the terms of the GNU General Public License as published by' >> $tempdump
@@ -82,7 +84,7 @@ sqlite3 $dbfile >> $tempdump <<EOF
   SELECT * FROM t_modules ORDER BY mod_oid;
 EOF
 echo 'COMMIT;' >> $tempdump
-echo "-- monimelt-dump-state end dump $dbfile" >> $tempdump
+echo "-- monimelt-dump-state end dump $dbbase" >> $tempdump
 
 if [ -e "$sqlfile" ]; then
     # if only the first 128 bytes changed, it is some comment
