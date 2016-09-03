@@ -691,6 +691,15 @@ mom_bt_err_callback (void *data MOM_UNUSED, const char *msg, int errnum)
            errnum == 0 ? "" : strerror (errnum));
 }
 
+
+
+
+void mom_abort () __attribute__ ((noreturn))
+{
+  fflush (NULL);
+  abort ();
+}                               /* end mom_abort */
+
 void
 mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
 {
@@ -765,7 +774,7 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
   fflush (NULL);
   if (bigbuf)
     free (bigbuf);
-  abort ();
+  mom_abort ();
 }                               /* end mom_fataprintf_at */
 
 
