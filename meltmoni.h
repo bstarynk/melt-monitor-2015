@@ -1210,8 +1210,8 @@ mo_list_head (mo_listpayl_ty * lis)
   for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
     if (hd->mo_lie_arr[ix])
       return hd->mo_lie_arr[ix];
-  // should not happen
-  MOM_FATAPRINTF ("corrupted list with empty head");
+  // should never happen
+  MOM_FATAPRINTF ("corrupted list@%p with empty head", lis);
 }                               /* end of mo_list_head */
 
 static inline mo_value_t
@@ -1226,7 +1226,7 @@ mo_list_tail (mo_listpayl_ty * lis)
     if (tl->mo_lie_arr[ix])
       return tl->mo_lie_arr[ix];
   // should not happen
-  MOM_FATAPRINTF ("corrupted list with empty tail");
+  MOM_FATAPRINTF ("corrupted list@%p with empty tail", lis);
 }                               /* end of mo_list_tail */
 
 mo_listpayl_ty *mo_list_make (void);
