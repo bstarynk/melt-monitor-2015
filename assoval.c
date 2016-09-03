@@ -178,6 +178,8 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       unsigned oldcnt = cnt;
       unsigned oldsz = sz;
       unsigned gap = 2 + cnt / 64;
+      if (cnt > 100)
+        gap += cnt / 16 + cnt / 32 + 9;
       asso = mo_assoval_reserve (asso, gap);
       sz = ((mo_sizedvalue_ty *) asso)->mo_sva_size;
       MOM_ASSERTPRINTF (oldsz < sz,
