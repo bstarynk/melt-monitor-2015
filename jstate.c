@@ -423,7 +423,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
-  if (scancnt < 4 || scancnt % 1024 == 0)
+  if (scancnt < 4 || (scancnt % 1024 == 0 && scancnt < 8912))
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
        scancnt, mo_object_pnamestr (obr));
@@ -864,7 +864,7 @@ mom_dump_state (const char *dirname)
       mo_objref_t obr = mo_set_nth (elset, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
-      if (MOM_UNLIKELY (eix % 8192 == 0))
+      if (MOM_UNLIKELY (eix % 16384 == 0))
         {
           if ((errmsg = NULL),  //
               sqlite3_exec (dumper.mo_du_db,
