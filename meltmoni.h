@@ -129,7 +129,8 @@ typedef struct mo_dumper_st mo_dumper_ty;
 // the generated modules directory
 #define MOM_MODULES_DIR "modules.dir"
 // in which a module of id FooId is in modFooId.c & modFooId.so
-#define MOM_MODULE_INFIX "mod"
+#define MOM_MODULE_INFIX "modu"
+#define MOM_MODULE_SUFFIX ".so"
 // the generated header file
 #define MOM_PREDEF_HEADER "_mom_predef.h"
 
@@ -493,6 +494,7 @@ mo_int_to_value (mo_int_t i)
 
 #define MOM_CSTRIDLEN 18        // used length
 #define MOM_CSTRIDSIZ ((MOM_CSTRIDLEN|3)+1)
+#define MOM_CSTRIDSCANF "_%17[A-Za-z0-9]"
 extern const char *             // in object.c, the buf is either null -then using
 // a GC allocated one- or of size MOM_CSTRIDSIZ
 mo_cstring_from_hi_lo_ids (char *buf, mo_hid_t hid, mo_loid_t loid);

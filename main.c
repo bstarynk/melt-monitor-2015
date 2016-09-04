@@ -1007,16 +1007,29 @@ mom_print_info (void)
   {
     Dl_info dif;
     memset (&dif, 0, sizeof (dif));
+    // dladdr on mom_dump_state
     if (dladdr ((const void *) mom_dump_state, &dif)
         && dif.dli_saddr == (const void *) mom_dump_state)
       {
         printf
-          ("dladdr(mom_dump_state): dli_saddr@%p dli_fname=%s dli_sname=%s\n",
+          (" dladdr(mom_dump_state): dli_saddr@%p dli_fname=%s dli_sname=%s\n",
            dif.dli_saddr, dif.dli_fname, dif.dli_sname);
       }
     else
       MOM_WARNPRINTF ("mom_dump_state@%p not found with dladdr",
                       (const void *) mom_dump_state);
+    // dladdr on gtk_application_new
+    memset (&dif, 0, sizeof (dif));
+    if (dladdr ((const void *) gtk_application_new, &dif)
+        && dif.dli_saddr == (const void *) gtk_application_new)
+      {
+        printf
+          (" dladdr(gtk_application_new): dli_saddr@%p dli_fname=%s dli_sname=%s\n",
+           dif.dli_saddr, dif.dli_fname, dif.dli_sname);
+      }
+    else
+      MOM_WARNPRINTF ("gtk_application_new@%p not found with dladdr",
+                      (const void *) gtk_application_new);
   }
   {
     mo_hid_t hid = 0;

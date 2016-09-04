@@ -332,23 +332,82 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
           ("failed to bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
       void *payldata = obr->mo_ob_payldata;
+      // should be statically filled, or garbage collected GC_strdup-ed strings
+      const char *paylcontstr = NULL;
+      const char *paylkindstr = NULL;
+      const char *paylmodustr = NULL;
       if (paylkindobr->mo_ob_class == MOM_PREDEF (signature_class))
         {
           Dl_info dif;
           memset (&dif, 0, sizeof (dif));
-          if (dladdr (payldata, &dif))
+          if (dladdr (payldata, &dif) && payldata == dif.dli_saddr)
             {
+              int snamelen = 0;
+              if (dif.dli_sname
+                  &&
+                  (!strncmp
+                   (dif.dli_sname, MOM_FUNC_PREFIX, strlen (MOM_FUNC_PREFIX))
+                   || !strncmp (dif.dli_sname, MOM_CODE_PREFIX,
+                                strlen (MOM_FUNC_PREFIX)))
+                  && (snamelen = strlen (dif.dli_sname)) > MOM_CSTRIDLEN
+                  && !strcmp (dif.dli_sname + snamelen - MOM_CSTRIDLEN, bufid)
+                  && dif.dli_fname)
+                {
+                  char modulidstr[MOM_CSTRIDSIZ];
+                  mo_objref_t modulobr = NULL;
+                  mo_hid_t modulhid = 0;
+                  mo_loid_t modulloid = 0;
+                  paylcontstr = ".";
+                  paylkindstr = pkbufid;
+                  char *lastslash = strrchr (dif.dli_fname, '/');
+                  int pos = -1;
+                  memset (modulidstr, 0, sizeof (modulidstr));
+                  if (lastslash
+                      && lastslash >
+                      dif.dli_fname + sizeof (MOM_MODULES_DIR) + 1
+                      && strstr (dif.dli_fname, MOM_MODULES_DIR)
+                      && sscanf (lastslash + 1,
+                                 MOM_MODULE_INFIX MOM_CSTRIDSCANF
+                                 MOM_MODULE_SUFFIX "%n", modulidstr, &pos)
+                      && pos > MOM_CSTRIDSCANF
+                      && mo_get_hi_lo_ids_from_cstring (&modulhid, &modulloid,
+                                                        modulidstr)
+                      && (modulobr =
+                          mo_objref_find_hid_loid (&modulhid,
+                                                   &modulloid)) != NULL)
+                    paylmodustr = modulidstr;
+                  else
+                    paylmodustr = ".";
+                  paylcontstr = "!";
+                }
             }
         }
-      // we should dump the payload, but how?
-      MOM_WARNPRINTF
-        ("unimplemented mo_dump_emit_object_content payload@%p for %s",
-         payldata, mo_object_pnamestr (obr));
-#warning unimplemented mo_dump_emit_object_content payload
-      /* if the payload sits in code, we should bind the MOBJIX_PAYLMOD to its module
-         and add the module to be dumped */
+      if (!paylcontstr || !paylkindstr || !paylmodustr)
+        goto nopayload;
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLKID,
+                           paylkindstr, -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLCONT,
+                           paylcontstr, -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind ob_paylcont for t_objects insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
+      rc =
+        sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLMOD,
+                           paylmodustr, -1, SQLITE_STATIC);
+      if (rc)
+        MOM_FATAPRINTF
+          ("failed to bind ob_paylmod for t_objects insert Sqlite3 statment (%s)",
+           sqlite3_errstr (rc));
     }
   else
+  nopayload:
     {
       rc =
         sqlite3_bind_text (du->mo_du_stmt_objects, MOMOBJIX_PAYLKID, "", -1,
