@@ -880,8 +880,9 @@ struct mo_objectvalue_st
   mo_objref_t mo_ob_class;
   mo_assovaldatapayl_ty *mo_ob_attrs;
   mo_vectvaldatapayl_ty *mo_ob_comps;
+  // payload kind & data
   mo_objref_t mo_ob_paylkind;
-  void *mo_ob_payload;
+  void *mo_ob_payldata;
 };
 
 static inline mo_value_t

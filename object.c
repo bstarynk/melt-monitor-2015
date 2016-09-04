@@ -359,7 +359,7 @@ mo_objref_create_hid_loid (mo_hid_t hid, mo_loid_t loid)
   obr->mo_ob_attrs = NULL;
   obr->mo_ob_comps = NULL;
   obr->mo_ob_paylkind = NULL;
-  obr->mo_ob_payload = NULL;
+  obr->mo_ob_payldata = NULL;
   GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
                                      NULL);
   return obr;
@@ -415,7 +415,7 @@ mo_make_object (void)
       obr->mo_ob_attrs = NULL;
       obr->mo_ob_comps = NULL;
       obr->mo_ob_paylkind = NULL;
-      obr->mo_ob_payload = NULL;
+      obr->mo_ob_payldata = NULL;
       GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
                                          NULL);
     }
@@ -494,7 +494,7 @@ mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
   .mo_ob_attrs= NULL,					\
   .mo_ob_comps= NULL,					\
   .mo_ob_paylkind= NULL,	       			\
-  .mo_ob_payload= NULL					\
+  .mo_ob_payldata= NULL					\
 };                              /* end predefined */
 
 #include "_mom_predef.h"

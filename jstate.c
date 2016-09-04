@@ -331,11 +331,11 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
         MOM_FATAPRINTF
           ("failed to bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
-      void *payload = obr->mo_ob_payload;
+      void *payldata = obr->mo_ob_payldata;
       // we should dump the payload, but how?
       MOM_WARNPRINTF
         ("unimplemented mo_dump_emit_object_content payload@%p for %s",
-         payload, mo_object_pnamestr (obr));
+         payldata, mo_object_pnamestr (obr));
 #warning unimplemented mo_dump_emit_object_content payload
       /* if the payload sits in code, we should bind the MOBJIX_PAYLMOD to its module
          and add the module to be dumped */
@@ -437,15 +437,40 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
   if (obr->mo_ob_class == MOM_PREDEF (module_class))
     du->mo_du_moduleset = mo_hashset_put (du->mo_du_moduleset, obr);
   mo_objref_t obrpayk = obr->mo_ob_paylkind;
-  if (obrpayk != NULL) {
-    MOM_ASSERTPRINTF(mo_dyncast_objref(obrpayk),
-		     "bad obrpayk@%p for obr@%p=%s",
-		     obrpayk, obr, mo_object_pnamestr(obr));
-    mo_dump_scan_objref (du, obrpayk);
-    if (obrpayk->mo_ob_class == MOM_PREDEF(signature_class)) {
+  if (obrpayk != NULL)
+    {
+      const void *payldata = obr->mo_ob_payldata;
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obrpayk),
+                        "bad obrpayk@%p for obr@%p=%s",
+                        obrpayk, obr, mo_object_pnamestr (obr));
+      mo_dump_scan_objref (du, obrpayk);
+      if (obrpayk->mo_ob_class == MOM_PREDEF (signature_class))
+        {
+          Dl_info dif;
+          memset (&dif, 0, sizeof (dif));
+          if (dladdr (payldata, &dif))
+            {
+              if (dif.dli_sname && dif.dli_saddr == payldata)
+                {
+                  MOM_WARNPRINTF
+                    ("obr@%p=%s with payldata %p payk %s dli_sname %s dli_fname %s",
+                     obr, mo_object_pnamestr (obr), payldata,
+                     mo_object_pnamestr (obrpayk), dif.dli_sname,
+                     dif.dli_fname);
+                }
+              else
+                MOM_FATAPRINTF ("obr@%p=%s with unamed payldata@%p payk %s",
+                                obr, mo_object_pnamestr (obr), payldata,
+                                mo_object_pnamestr (obrpayk));
+            }
+          else
+            MOM_FATAPRINTF
+              ("dladdr failed for scan inside obr@%p=%s payload@%p/kd.%s",
+               obr, mo_object_pnamestr (obr), payldata,
+               mo_object_pnamestr (obrpayk));
 #warning should do something with signature payloads in dump_scan_inside_object
-    }      
-  }
+        }
+    }
   if (scancnt < 3 || (scancnt % 2048 == 0 && scancnt < 8912))
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
@@ -550,7 +575,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                    (unsigned) mo_objref_hash (obp));
         }
     }
-  fputs("\n\n", fp);
+  fputs ("\n\n", fp);
   for (int ix = 0; ix < nbpredef; ix++)
     {
       mo_objref_t obp = predarr[ix];
@@ -558,18 +583,18 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
-      if (namv != NULL) {
-	const char* namstr = mo_string_cstr(namv);
-	MOM_ASSERTPRINTF(namstr != NULL && isalpha(namstr[0]), "bad namv@%p", namv);
-	fprintf(fp, "\n#undef moid_%s\n"
-		"#define moid_%s %s\n",
-		namstr, namstr, idstr);
-	fprintf(fp, "#undef monam%s\n"
-		"#define monam%s %s\n",
-		idstr, idstr, namstr);
-      }
+      if (namv != NULL)
+        {
+          const char *namstr = mo_string_cstr (namv);
+          MOM_ASSERTPRINTF (namstr != NULL
+                            && isalpha (namstr[0]), "bad namv@%p", namv);
+          fprintf (fp, "\n#undef moid_%s\n" "#define moid_%s %s\n", namstr,
+                   namstr, idstr);
+          fprintf (fp, "#undef monam%s\n" "#define monam%s %s\n", idstr,
+                   idstr, namstr);
+        }
     };
-  fputs("\n\n", fp);
+  fputs ("\n\n", fp);
   MOM_ASSERTPRINTF (nbanon + nbnamed == nbpredef, "bad nbanon");
   fprintf (fp, "\n#undef MOM_NB_ANONYMOUS_PREDEFINED\n"
            "#define MOM_NB_ANONYMOUS_PREDEFINED %d\n", nbanon);
