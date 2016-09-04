@@ -457,6 +457,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
                      obr, mo_object_pnamestr (obr), payldata,
                      mo_object_pnamestr (obrpayk), dif.dli_sname,
                      dif.dli_fname);
+#warning should use dif.dli_fname and check its basename against MOM_MODULE_INFIX
                 }
               else
                 MOM_FATAPRINTF ("obr@%p=%s with unamed payldata@%p payk %s",
@@ -1489,6 +1490,64 @@ mo_loader_fill_objects_contents (mo_loader_ty * ld)
 }                               /* end mo_loader_fill_objects_contents */
 
 
+
+/// load the payload sitting in code, having a non-empty ob_paylmod
+void
+mo_loader_load_payload_code (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  /* repeat: SELECT ob_id, ob_paylkid, ob_paylcont, ob_paylmod FROM t_objects WHERE ob_paylmod IS NOT "" */
+  sqlite3_stmt *omodstmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX_PAYLKINDID, MOMRESIX_PAYLMOD, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT ob_id, ob_paylkid ob_paylmod"
+                                " FROM t_objects"
+                                " WHERE ob_paylmod IS NOT \"\" ",
+                                -1, &omodstmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare objectmod selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  while ((rc = sqlite3_step (omodstmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (omodstmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (omodstmt, MOMRESIX_OID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (omodstmt, MOMRESIX_PAYLKINDID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (omodstmt, MOMRESIX_PAYLMOD)
+                        == SQLITE_TEXT, "bad omodstmt");
+      const char *oidstr =
+        (const char *) sqlite3_column_text (omodstmt, MOMRESIX_OID);
+      mo_hid_t obhid = 0;
+      mo_loid_t obloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&obhid, &obloid, oidstr)
+          || obhid == 0 || obloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      mo_objref_t obr = mo_objref_find_hid_loid (obhid, obloid);
+      if (obr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
+      const char *kindidstr =
+        (const char *) sqlite3_column_text (omodstmt, MOMRESIX_PAYLKINDID);
+      mo_hid_t kindhid = 0;
+      mo_loid_t kindloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&kindhid, &kindloid, kindidstr)
+          || kindhid == 0 || kindloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_paylkid  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), kindidstr);
+      mo_objref_t kindobr = mo_objref_find_hid_loid (kindhid, kindloid);
+      if (kindobr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_paylkid %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), kindidstr);
+      mo_objref_put_signature_payload (obr, kindobr);
+    }
+}                               /* end of mo_loader_load_payload_code */
+
+
+
 void
 mo_loader_end_database (mo_loader_ty * ld)
 {
@@ -1529,7 +1588,7 @@ mom_load_state (void)
   mo_loader_fill_objects_contents (&loader);
   /// we should first load the payload sitting in code, that is having
   /// a non-empty ob_paylmod:
-  // mo_loader_load_payload_code(&loader);
+  mo_loader_load_payload_code (&loader);
   /// the we should other payload
   // mo_loader_load_payload_data(&loader);
   MOM_WARNPRINTF ("load state incomplete");

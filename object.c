@@ -529,6 +529,85 @@ mo_predefined_objects_set (void)
 
 
 
+void
+mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
+{
+  if (!mo_dyncast_objref (obr))
+    return;
+  if (!mo_dyncast_objref (sigobr))
+    return;
+  if (sigobr->mo_ob_class != MOM_PREDEF (signature_class))
+    {
+      MOM_WARNPRINTF
+        ("put_signature_payload: in obr=%s sigobr=%s (of bad class %s)",
+         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr),
+         mo_object_pnamestr (sigobr->mo_ob_class));
+      return;
+    }
+  void *payldata = NULL;
+  void *sigdata = NULL;
+  char bufobrid[MOM_CSTRIDSIZ];
+  memset (bufobrid, 0, sizeof (bufobrid));
+  mo_cstring_from_hi_lo_ids (bufobrid, obr->mo_ob_hid, obr->mo_ob_loid);
+  char bufsigid[MOM_CSTRIDSIZ];
+  memset (bufsigid, 0, sizeof (bufsigid));
+  mo_cstring_from_hi_lo_ids (bufsigid, sigobr->mo_ob_hid, sigobr->mo_ob_loid);
+  char synamebuf[MOM_CSTRIDSIZ + 40];
+  memset (synamebuf, 0, sizeof (synamebuf));
+  snprintf (synamebuf, sizeof (synamebuf), MOM_FUNC_PREFIX "%s", bufobrid);
+  void *syad = dlsym (synamebuf, mom_prog_dlhandle);
+  mo_value_t errmsgv = NULL;
+  if (!syad)
+    {
+      errmsgv =
+        mo_make_string_sprintf ("dlsym'%s' failed: %s", synamebuf,
+                                dlerror ());
+      memset (synamebuf, 0, sizeof (synamebuf));
+      snprintf (synamebuf, sizeof (synamebuf), MOM_CODE_PREFIX "%s",
+                bufobrid);
+      syad = dlsym (synamebuf, mom_prog_dlhandle);
+      if (!syad)
+        errmsgv =
+          mo_make_string_sprintf ("dlsym'%s' failed: %s", synamebuf,
+                                  dlerror ());
+      else
+        errmsgv = NULL;
+      if (errmsgv)
+        {
+          MOM_WARNPRINTF
+            ("put_signature_payload: in obr=%s sigobr=%s failure %s",
+             mo_object_pnamestr (obr), mo_object_pnamestr (sigobr),
+             mo_string_cstr (errmsgv));
+          return;
+        }
+    };
+  MOM_ASSERTPRINTF (syad != NULL,
+                    "put_signature_payload: syad is null obr=%s sigobr=%s",
+                    mo_object_pnamestr (obr), mo_object_pnamestr (sigobr));
+  memset (synamebuf, 0, sizeof (synamebuf));
+  snprintf (synamebuf, sizeof (synamebuf), MOM_SIGNATURE_PREFIX "%s",
+            bufobrid);
+  char *sigstr = dlsym (synamebuf, mom_prog_dlhandle);
+  if (!sigstr)
+    {
+      MOM_WARNPRINTF
+        ("put_signature_payload: in obr=%s sigobr=%s missing signature; dlsym'%s' failed: %s",
+         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr), synamebuf,
+         dlerror ());
+      return;
+    }
+  if (!(isalpha (sigstr[0]) || sigstr[0] == '_') || !(isalnum (sigstr[1]))
+      || !strcmp (sigstr, bufsigid))
+    {
+      MOM_WARNPRINTF
+        ("put_signature_payload: in obr=%s sigobr=%s incompatible signature got %s expecting %s",
+         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr), sigstr,
+         bufsigid);
+      return;
+    }
+  obr->mo_ob_payldata = syad;
+  obr->mo_ob_paylkind = sigobr;
+}                               /* end of mo_objref_put_signature_payload */
 
 void
 mom_init_objects (void)

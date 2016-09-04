@@ -128,6 +128,8 @@ typedef struct mo_dumper_st mo_dumper_ty;
 
 // the generated modules directory
 #define MOM_MODULES_DIR "modules.dir"
+// in which a module of id FooId is in modFooId.c & modFooId.so
+#define MOM_MODULE_INFIX "mod"
 // the generated header file
 #define MOM_PREDEF_HEADER "_mom_predef.h"
 
@@ -1448,5 +1450,14 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
   ((mo_objectvalue_ty *) ob)->mo_ob_comps =
     mo_vectval_append (((mo_objectvalue_ty *) ob)->mo_ob_comps, va);
 }                               /* end of mo_objref_comp_append */
+
+
+// the function of id Id has dlsymed symbol mofunId or moId for the code and
+// mosigId for the signature
+#define MOM_FUNC_PREFIX "mofun_"
+#define MOM_CODE_PREFIX "mo_"
+#define MOM_SIGNATURE_PREFIX "mosig_"
+// put inside an object a [function] payload with a signature, do some checks
+void mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr);     /* in object.c */
 
 #endif /*MONIMELT_HEADER */
