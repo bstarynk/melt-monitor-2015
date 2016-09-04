@@ -423,7 +423,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
-  if (scancnt < 4 || (scancnt % 1024 == 0 && scancnt < 8912))
+  if (scancnt < 3 || (scancnt % 2048 == 0 && scancnt < 8912))
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
        scancnt, mo_object_pnamestr (obr));
@@ -936,10 +936,11 @@ mom_dump_state (const char *dirname)
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   char *realdirname = realpath (dirname, NULL);
-  MOM_INFORMPRINTF ("Dumped in %s directory (real path %s ...) %u objects\n"
-                    ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds",
-                    dirname, realdirname,
+  MOM_INFORMPRINTF ("dumped %u objects in %s directory\n"
+		    ".. (real path %s ...)\n"
+                    ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds\n",
                     elsiz,
+                    dirname, realdirname,
                     (endelapsedtime - dumper.mo_du_startelapsedtime),
                     1.0e6 * (endelapsedtime - dumper.mo_du_startelapsedtime)
                     / elsiz,
