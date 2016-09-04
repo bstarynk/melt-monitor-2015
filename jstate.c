@@ -423,7 +423,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
-  if (scancnt < 10 || scancnt % 1024 == 0)
+  if (scancnt < 4 || scancnt % 1024 == 0)
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
        scancnt, mo_object_pnamestr (obr));
