@@ -430,11 +430,22 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
   if (mo_objref_space (obr) == mo_SPACE_NONE)
     return;
   mo_dump_scan_objref (du, obr->mo_ob_class);
-  mo_dump_scan_objref (du, obr->mo_ob_paylkind);
   if (obr->mo_ob_attrs)
     mo_dump_scan_assoval (du, obr->mo_ob_attrs);
   if (obr->mo_ob_comps)
     mo_dump_scan_vectval (du, obr->mo_ob_comps);
+  if (obr->mo_ob_class == MOM_PREDEF (module_class))
+    du->mo_du_moduleset = mo_hashset_put (du->mo_du_moduleset, obr);
+  mo_objref_t obrpayk = obr->mo_ob_paylkind;
+  if (obrpayk != NULL) {
+    MOM_ASSERTPRINTF(mo_dyncast_objref(obrpayk),
+		     "bad obrpayk@%p for obr@%p=%s",
+		     obrpayk, obr, mo_object_pnamestr(obr));
+    mo_dump_scan_objref (du, obrpayk);
+    if (obrpayk->mo_ob_class == MOM_PREDEF(signature_class)) {
+#warning should do something with signature payloads in dump_scan_inside_object
+    }      
+  }
   if (scancnt < 3 || (scancnt % 2048 == 0 && scancnt < 8912))
     MOM_WARNPRINTF
       ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
@@ -539,6 +550,26 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                    (unsigned) mo_objref_hash (obp));
         }
     }
+  fputs("\n\n", fp);
+  for (int ix = 0; ix < nbpredef; ix++)
+    {
+      mo_objref_t obp = predarr[ix];
+      mo_value_t namv = mo_get_namev (obp);
+      char idstr[MOM_CSTRIDSIZ];
+      memset (idstr, 0, sizeof (idstr));
+      mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      if (namv != NULL) {
+	const char* namstr = mo_string_cstr(namv);
+	MOM_ASSERTPRINTF(namstr != NULL && isalpha(namstr[0]), "bad namv@%p", namv);
+	fprintf("\n#undef moid_%s\n"
+		"#define moid_%s %s\n",
+		namstr, namstr, idstr);
+	fprintf("\n#undef monam_%s\n"
+		"#define monam_%s %s\n",
+		idstr, idstr, namstr);
+      }
+    };
+  fputs("\n\n", fp);
   MOM_ASSERTPRINTF (nbanon + nbnamed == nbpredef, "bad nbanon");
   fprintf (fp, "\n#undef MOM_NB_ANONYMOUS_PREDEFINED\n"
            "#define MOM_NB_ANONYMOUS_PREDEFINED %d\n", nbanon);
@@ -837,6 +868,9 @@ mom_dump_state (const char *dirname)
         {
           dumper.mo_du_objset =
             mo_hashset_reserve (dumper.mo_du_objset, nbobj / 3 + 200);
+          unsigned nbmodu = mo_hashset_count (dumper.mo_du_moduleset);
+          dumper.mo_du_moduleset =
+            mo_hashset_reserve (dumper.mo_du_moduleset, nbmodu / 5 + 20);
           if (mom_elapsed_real_time () > lastbelltime + 3.5)
             {
               MOM_INFORMPRINTF ("scanned %ld objects in %.3f sec...", nbobj,
