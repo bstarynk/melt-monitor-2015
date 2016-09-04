@@ -367,7 +367,19 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   // now construct the JSON object for the content and bind ob_jsoncont
   mo_json_t jattrs = mo_dump_json_of_assoval (du, obr->mo_ob_attrs);
   mo_json_t jcomps = mo_dump_json_of_vectval (du, obr->mo_ob_comps);
-  mo_json_t jcont = json_pack ("{soso}", "attrs", jattrs, "comps", jcomps);
+  mo_json_t jcont = NULL;
+  mo_value_t namev = mo_get_namev (obr);
+  if (namev)
+    {
+      // the @name field is emitted for convenience, in the case
+      // patching manually the SQL dump file is needed
+      jcont = json_pack ("{sssoso}", "@name", mo_string_cstr (namev),
+                         "attrs", jattrs, "comps", jcomps);
+    }
+  else
+    {
+      jcont = json_pack ("{soso}", "attrs", jattrs, "comps", jcomps);
+    }
   size_t contsiz = 4096;
   char *contbuf = calloc (1, contsiz);
   if (MOM_UNLIKELY (!contbuf))
@@ -851,7 +863,7 @@ mom_dump_state (const char *dirname)
   mo_dump_emit_predefined (&dumper, predefset);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
-  const char *errmsg = NULL;
+  char *errmsg = NULL;
   if ((errmsg = NULL),          //
       sqlite3_exec (dumper.mo_du_db,
                     "BEGIN TRANSACTION;", NULL, NULL, &errmsg))
@@ -937,7 +949,7 @@ mom_dump_state (const char *dirname)
   double endcputime = mom_process_cpu_time ();
   char *realdirname = realpath (dirname, NULL);
   MOM_INFORMPRINTF ("dumped %u objects in %s directory\n"
-		    ".. (real path %s ...)\n"
+                    ".. (real path %s ...)\n"
                     ".. in %.4f (%.3f µs/ob) elapsed %.4f (%.3f µs/ob) cpu seconds\n",
                     elsiz,
                     dirname, realdirname,

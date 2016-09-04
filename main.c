@@ -847,9 +847,9 @@ mom_random_init_genrand (void)
       atexit (closerandomfile_mom);
     }
   uint64_t initarr[32];
-  if ((int)read (randomfd_mom, initarr, sizeof (initarr))
-      <(int)sizeof(initarr))
-    MOM_FATAPRINTF("failed to read %zd from randomfile", sizeof(initarr));
+  if ((int) read (randomfd_mom, initarr, sizeof (initarr))
+      < (int) sizeof (initarr))
+    MOM_FATAPRINTF ("failed to read %zd from randomfile", sizeof (initarr));
   momrand_init_by_array (initarr, sizeof (initarr) / sizeof (initarr[0]));
 }                               /* end mom_random_init_genrand */
 
@@ -1229,7 +1229,7 @@ mom_run_benchmark_many (int benchcount)
       MOM_WARNPRINTF ("benchcount set to %d", benchcount);
     }
   else if (benchcount > MOM_SIZE_MAX / 4)
-    MOM_FATAPRINTF("too large benchcount %d", benchcount);
+    MOM_FATAPRINTF ("too large benchcount %d", benchcount);
   MOM_INFORMPRINTF ("start of benchmark of count %d", benchcount);
   double startelapsedtime = mom_elapsed_real_time ();
   double startcputime = mom_process_cpu_time ();
@@ -1384,8 +1384,8 @@ mom_run_small_benchmark (int cnt)
 {
   if (cnt < 64)
     cnt = 64;
-  if (cnt > MOM_SIZE_MAX/4)
-    MOM_FATAPRINTF("too large small benchmark cnt %d", cnt);
+  if (cnt > MOM_SIZE_MAX / 4)
+    MOM_FATAPRINTF ("too large small benchmark cnt %d", cnt);
   MOM_INFORMPRINTF ("start of small benchmark of count %d", cnt);
   double startelapsedtime = mom_elapsed_real_time ();
   double startcputime = mom_process_cpu_time ();
@@ -1399,11 +1399,11 @@ mom_run_small_benchmark (int cnt)
                           mo_make_string_sprintf ("small-obj#%d", i));
       objarr[i] = obr;
     };
-  for (long ix = 0; ix < (long)cnt - 6; ix += 2)
+  for (long ix = 0; ix < (long) cnt - 6; ix += 2)
     {
       mo_objref_put_attr (objarr[ix], objarr[ix + 1], objarr[ix + 2]);
     };
-  for (long ix = 0; ix < (long)cnt / 2; ix += 3)
+  for (long ix = 0; ix < (long) cnt / 2; ix += 3)
     {
       if (ix % 2 == 0)
         mo_objref_put_attr (objarr[ix], objarr[ix + 2],
@@ -1413,10 +1413,11 @@ mom_run_small_benchmark (int cnt)
         mo_objref_put_attr (objarr[ix], objarr[ix + 2],
                             MOM_MAKE_SENSET (objarr[ix + 1], objarr[ix + 3],
                                              objarr[ix + 5], objarr[ix / 3]));
-      if (ix * ix < cnt) {
-	MOM_ASSERTPRINTF(ix < MOM_SIZE_MAX, "bad ix=%ld", ix);
-        mo_objref_comp_append (objarr[ix / 5], objarr[ix * ix]);
-      }
+      if (ix * ix < cnt)
+        {
+          MOM_ASSERTPRINTF (ix < MOM_SIZE_MAX, "bad ix=%ld", ix);
+          mo_objref_comp_append (objarr[ix / 5], objarr[ix * ix]);
+        }
       mo_objref_comp_append (objarr[ix % 16],
                              MOM_MAKE_SENSET (objarr[ix + 1], objarr[ix + 2],
                                               objarr[ix % (3 + cnt / 4)]));

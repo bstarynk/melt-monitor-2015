@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 03 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 04 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -28,11 +28,13 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
+ "@name": "the_system",
  "attrs": {
   "assoval": [
    {
@@ -44,8 +46,23 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
+{
+ "@name": "module_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
 {
+ "@name": "comment",
  "attrs": {
   "assoval": [
    {
@@ -59,6 +76,7 @@ INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
 ','','','','');
 INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
 {
+ "@name": "signature_class",
  "attrs": {
   "assoval": [
    {
