@@ -34,6 +34,26 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 
 
 
+#undef moid_comment
+#define moid_comment _4xS1CSbRUFBW6PJiJ
+#undef monam_4xS1CSbRUFBW6PJiJ
+#define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_module_class
+#define moid_module_class _22z6Be6oa3IH524Jy
+#undef monam_22z6Be6oa3IH524Jy
+#define monam_22z6Be6oa3IH524Jy module_class
+
+#undef moid_signature_class
+#define moid_signature_class _6S30JEAmywph5MZqd
+#undef monam_6S30JEAmywph5MZqd
+#define monam_6S30JEAmywph5MZqd signature_class
+
+#undef moid_the_system
+#define moid_the_system _0BV96V94PJIn9si1K
+#undef monam_0BV96V94PJIn9si1K
+#define monam_0BV96V94PJIn9si1K the_system
+
 
 
 #undef MOM_NB_ANONYMOUS_PREDEFINED

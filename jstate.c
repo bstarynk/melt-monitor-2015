@@ -561,11 +561,11 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
       if (namv != NULL) {
 	const char* namstr = mo_string_cstr(namv);
 	MOM_ASSERTPRINTF(namstr != NULL && isalpha(namstr[0]), "bad namv@%p", namv);
-	fprintf("\n#undef moid_%s\n"
+	fprintf(fp, "\n#undef moid_%s\n"
 		"#define moid_%s %s\n",
 		namstr, namstr, idstr);
-	fprintf("\n#undef monam_%s\n"
-		"#define monam_%s %s\n",
+	fprintf(fp, "#undef monam%s\n"
+		"#define monam%s %s\n",
 		idstr, idstr, namstr);
       }
     };
