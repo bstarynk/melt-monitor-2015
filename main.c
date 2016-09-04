@@ -843,11 +843,13 @@ mom_random_init_genrand (void)
     {
       randomfd_mom = open ("/dev/urandom", O_RDONLY);
       if (!randomfd_mom)
-        MOM_FATAPRINTF ("failed to open /dev/random %m");
+        MOM_FATAPRINTF ("failed to open /dev/urandom %m");
       atexit (closerandomfile_mom);
     }
   uint64_t initarr[32];
-  read (randomfd_mom, initarr, sizeof (initarr));
+  if ((int)read (randomfd_mom, initarr, sizeof (initarr))
+      <(int)sizeof(initarr))
+    MOM_FATAPRINTF("failed to read %zd from randomfile", sizeof(initarr));
   momrand_init_by_array (initarr, sizeof (initarr) / sizeof (initarr[0]));
 }                               /* end mom_random_init_genrand */
 
@@ -1063,7 +1065,8 @@ usage_mom (const char *argv0)
   printf ("\t --comment-predef comment"
           " \t#Set comment of next predefined\n");
   printf ("\t --info" " \t#Give various information\n");
-  printf ("\t --bench" " \t#Run the benchmark\n");
+  printf ("\t --init-random" "<randfile>\t#should be the first argument\n");
+  printf ("\t --bench" "<count> \t#Run the benchmark\n");
 }
 
 
