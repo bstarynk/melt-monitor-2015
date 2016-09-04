@@ -332,6 +332,14 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
           ("failed to bind ob_paylkid for t_objects insert Sqlite3 statment (%s)",
            sqlite3_errstr (rc));
       void *payldata = obr->mo_ob_payldata;
+      if (paylkindobr->mo_ob_class == MOM_PREDEF (signature_class))
+        {
+          Dl_info dif;
+          memset (&dif, 0, sizeof (dif));
+          if (dladdr (payldata, &dif))
+            {
+            }
+        }
       // we should dump the payload, but how?
       MOM_WARNPRINTF
         ("unimplemented mo_dump_emit_object_content payload@%p for %s",
@@ -1502,7 +1510,7 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
   enum
   { MOMRESIX_OID, MOMRESIX_PAYLKINDID, MOMRESIX_PAYLMOD, MOMRESIX__LAST };
   if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
-                                "SELECT ob_id, ob_paylkid ob_paylmod"
+                                "SELECT ob_id, ob_paylkid, ob_paylmod"
                                 " FROM t_objects"
                                 " WHERE ob_paylmod IS NOT \"\" ",
                                 -1, &omodstmt, NULL)) != SQLITE_OK)
@@ -1544,6 +1552,16 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
                         mo_string_cstr (ld->mo_ld_sqlitepathv), kindidstr);
       mo_objref_put_signature_payload (obr, kindobr);
     }
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s objectmod selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (omodstmt);
+  omodstmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s objectmod selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
 }                               /* end of mo_loader_load_payload_code */
 
 

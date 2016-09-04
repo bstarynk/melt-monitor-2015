@@ -1005,6 +1005,20 @@ mom_print_info (void)
   PRINT_SIZEOF (mom_int128_t);
   PRINT_SIZEOF (FILE);
   {
+    Dl_info dif;
+    memset (&dif, 0, sizeof (dif));
+    if (dladdr ((const void *) mom_dump_state, &dif)
+        && dif.dli_saddr == (const void *) mom_dump_state)
+      {
+        printf
+          ("dladdr(mom_dump_state): dli_saddr@%p dli_fname=%s dli_sname=%s\n",
+           dif.dli_saddr, dif.dli_fname, dif.dli_sname);
+      }
+    else
+      MOM_WARNPRINTF ("mom_dump_state@%p not found with dladdr",
+                      (const void *) mom_dump_state);
+  }
+  {
     mo_hid_t hid = 0;
     mo_loid_t loid = 0;
     mo_get_some_random_hi_lo_ids (&hid, &loid);
