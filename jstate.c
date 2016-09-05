@@ -414,7 +414,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
             case CASE_PAYLOAD_MOM (payload_file):
               js = NULL;
               break;
-	      // case CASE_PAYLOAD_MOM (payload_buffer):
+            case CASE_PAYLOAD_MOM (payload_buffer):
               {
                 extern json_t *mo_dump_json_for_buffer_objref (mo_dumper_ty *,
                                                                mo_objref_t);
@@ -684,7 +684,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               break;
             case CASE_PAYLOAD_MOM (payload_file):
               break;
-	      //case CASE_PAYLOAD_MOM (payload_buffer):
+            case CASE_PAYLOAD_MOM (payload_buffer):
               break;
             default:
             defaultpayloadcase:
@@ -1924,7 +1924,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
               }
           }
           break;
-	  //case CASE_PAYLOAD_MOM (payload_buffer):
+        case CASE_PAYLOAD_MOM (payload_buffer):
           {
             extern void
               mo_objref_set_buffer_from_json (mo_objref_t obr, json_t *js);

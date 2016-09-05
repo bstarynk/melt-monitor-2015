@@ -440,30 +440,33 @@ mo_objref_really_clear_payload (mo_objref_t obr)
 	goto labpayl_##Ob; labpayl_##Ob
       switch (hpk % MOM_NBCASE_PAYLOAD)
         {
-	case CASE_PAYLOAD_MOM(payload_file):
-	  if (payldata)
-	    fclose ((FILE*)payldata);
-	  break;
-	  //case CASE_PAYLOAD_MOM(buffer_payload):
-	  {	   
-	    if (payldata) {
-	      mo_bufferpayl_ty*bpy = (mo_bufferpayl_ty*)payldata;
-	      if (bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC)
-		MOM_FATAPRINTF("clean_payload obr=%s corrupted buffer",
-			       mo_object_pnamestr(obr));
-	      if (bpy->mo_buffer_memstream) {
-		fclose(bpy->mo_buffer_memstream);
-		bpy->mo_buffer_memstream = NULL;
-	      };
-	      if (bpy->mo_buffer_zone) {
-		free (bpy->mo_buffer_zone);
-		bpy->mo_buffer_zone = NULL;
-	      }
-	      memset (bpy, 0, sizeof(mo_bufferpayl_ty));
-	      free (bpy);	      
-	    }
-	  } 
-	  break;
+        case CASE_PAYLOAD_MOM (payload_file):
+          if (payldata)
+            fclose ((FILE *) payldata);
+          break;
+          //case CASE_PAYLOAD_MOM(buffer_payload):
+          {
+            if (payldata)
+              {
+                mo_bufferpayl_ty *bpy = (mo_bufferpayl_ty *) payldata;
+                if (bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC)
+                  MOM_FATAPRINTF ("clean_payload obr=%s corrupted buffer",
+                                  mo_object_pnamestr (obr));
+                if (bpy->mo_buffer_memstream)
+                  {
+                    fclose (bpy->mo_buffer_memstream);
+                    bpy->mo_buffer_memstream = NULL;
+                  };
+                if (bpy->mo_buffer_zone)
+                  {
+                    free (bpy->mo_buffer_zone);
+                    bpy->mo_buffer_zone = NULL;
+                  }
+                memset (bpy, 0, sizeof (mo_bufferpayl_ty));
+                free (bpy);
+              }
+          }
+          break;
           ///
         default:
         defaultpayloadcase:

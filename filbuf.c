@@ -74,7 +74,7 @@ mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint)
   ((mo_hashedvalue_ty *) bpy)->mo_va_hash =
     (momrand_genrand_int31 () & 0xfffffff) + 2;
   bpy->mo_buffer_nmagic = MOM_BUFFER_MAGIC;
-  //  obr->mo_ob_paylkind = MOM_PREDEF (payload_buffer);
+  obr->mo_ob_paylkind = MOM_PREDEF (payload_buffer);
   obr->mo_ob_payldata = bpy;
   return true;
 }                               /* end of mo_objref_open_buffer */
@@ -85,13 +85,13 @@ mo_dump_json_for_buffer_objref (mo_dumper_ty * du, mo_objref_t obr)
   MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
   if (!mo_dyncast_objref (obr))
     return NULL;
-  // if (obr->mo_ob_paylkind != MOM_PREDEF (payload_buffer))
-  //   return NULL;
+  if (obr->mo_ob_paylkind != MOM_PREDEF (payload_buffer))
+    return NULL;
   if (!obr->mo_ob_payldata)
     return NULL;
   mo_bufferpayl_ty *bpy = (mo_bufferpayl_ty *) (obr->mo_ob_payldata);
   MOM_ASSERTPRINTF (bpy != MOM_EMPTY_SLOT, "empty bpy for obr %s",
-              mo_object_pnamestr (obr));
+                    mo_object_pnamestr (obr));
   if (MOM_UNLIKELY (bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC))
     MOM_FATAPRINTF ("corrupted buffer @%p for obr %s",
                     bpy, mo_object_pnamestr (obr));
@@ -115,9 +115,8 @@ mo_dump_json_for_buffer_objref (mo_dumper_ty * du, mo_objref_t obr)
       chklen++;
       if ((chklen > 24 && uc == (gunichar) '\n')
           || (chklen > 40 && (g_unichar_iscntrl (uc)
-			      || g_unichar_isspace (uc)))
-	  || chklen > 72
-          || pc + 1 == bend)
+                              || g_unichar_isspace (uc)))
+          || chklen > 72 || pc + 1 == bend)
         {
           json_t *jchk = json_stringn (chkp, pc - chkp);
           json_array_append_new (jarr, jchk);
@@ -167,8 +166,7 @@ mo_objref_file (mo_objref_t obr)
     return NULL;
   if (obr->mo_ob_paylkind == MOM_PREDEF (payload_file))
     return (FILE *) obr->mo_ob_payldata;
-  else
-    // if (obr->mo_ob_paylkind == MOM_PREDEF (payload_buffer))
+  else if (obr->mo_ob_paylkind == MOM_PREDEF (payload_buffer))
     {
       mo_bufferpayl_ty *bupayl = (mo_bufferpayl_ty *) (obr->mo_ob_payldata);
       if (bupayl)
