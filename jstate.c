@@ -1245,8 +1245,6 @@ mom_dump_state (const char *dirname)
                             mo_string_cstr (sqlpathv));
         }
     }
-#warning mom_dump_state very incomplete
-  MOM_WARNPRINTF ("mom_dump_state very incomplete into %s", dirname);
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   char *realdirname = realpath (dirname, NULL);
@@ -1915,7 +1913,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
             if (js)
               {
                 obr->mo_ob_paylkind = MOM_PREDEF (payload_value);
-                obr->mo_ob_payldata = mo_value_of_json (js);
+                obr->mo_ob_payldata = (void*)mo_value_of_json (js);
               }
           }
           break;
@@ -1991,8 +1989,6 @@ mom_load_state (void)
   mo_loader_load_payload_code (&loader);
   /// the we should other payload
   mo_loader_load_payload_data (&loader);
-  MOM_WARNPRINTF ("load state incomplete");
-#warning mom_load_state incomplete
   mo_loader_end_database (&loader);
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();

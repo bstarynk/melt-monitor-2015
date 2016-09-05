@@ -21,6 +21,7 @@
 #include "meltmoni.h"
 
 static GtkApplication *mom_gtkapp;
+static GQuark mom_gquark;
 
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
@@ -35,6 +36,7 @@ void
 mom_run_gtk (int *pargc, char ***pargv)
 {
   int sta = 0;
+  mom_gquark = g_quark_from_static_string("monimelt");
   mom_gtkapp =
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
