@@ -392,32 +392,24 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
           switch (mo_objref_hash (paylkindobr) % MOM_NBCASE_PAYLOAD)
             {
             case CASE_PAYLOAD_MOM (payload_assoval):
-              js =              //
-                json_pack ("{so}", "payload_assoval",
-                           mo_dump_json_of_assoval (du,
-                                                    (mo_assovaldatapayl_ty *)
-                                                    payldata));
+              js = mo_dump_json_of_assoval (du,
+                                            (mo_assovaldatapayl_ty *)
+                                            payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_hashset):
-              js =              //
-                json_pack ("{so}", "payload_hashset",
-                           mo_dump_json_of_hashset (du,
-                                                    (mo_hashsetpayl_ty *)
-                                                    payldata));
+              js = mo_dump_json_of_hashset (du,
+                                            (mo_hashsetpayl_ty *) payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_list):
-              js =              //
-                json_pack ("{so}", "payload_list",
-                           mo_dump_json_of_list (du,
-                                                 (mo_listpayl_ty *)
-                                                 payldata));
+              js = mo_dump_json_of_list (du, (mo_listpayl_ty *) payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_vectval):
-              js =              //
-                json_pack ("{so}", "payload_vectval",
-                           mo_dump_json_of_vectval (du,
-                                                    (mo_vectvaldatapayl_ty *)
-                                                    payldata));
+              js = mo_dump_json_of_vectval (du,
+                                            (mo_vectvaldatapayl_ty *)
+                                            payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_value):
+              js = mo_dump_json_of_value (du, (mo_value_t) payldata);
               break;
             default:
             defaultpayloadcase:
@@ -676,6 +668,9 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               break;
             case CASE_PAYLOAD_MOM (payload_vectval):
               mo_dump_scan_vectval (du, (mo_vectvaldatapayl_ty *) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_value):
+              mo_dump_scan_value (du, (mo_value_t) payldata);
               break;
             default:
             defaultpayloadcase:
