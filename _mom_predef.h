@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 12
+#define MOM_NB_PREDEFINED 13
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -32,6 +32,7 @@ MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134
 MOM_HAS_PREDEFINED(payload_assoval,_5JG8lVw6jwlUT7PLK,1359406941,542326625342310802,2981901912)
 MOM_HAS_PREDEFINED(payload_buffer,_1HW4pIotlYRImRGnL,408713854,5433250410327114099,2757661367)
 MOM_HAS_PREDEFINED(payload_file,_46r6DoRftqviBq5NB,969127964,5917176651991191665,1788242063)
+MOM_HAS_PREDEFINED(payload_gobject,_4wr5hqASKB1b0Dd5D,1071354451,8986293931044087395,4105406188)
 MOM_HAS_PREDEFINED(payload_hashset,_8261sbF1f9ohzu2Iu,1895704743,5460510112359622158,2215747249)
 MOM_HAS_PREDEFINED(payload_json,_8D28gj8akGrJyyzei,2040980679,7834446592962616586,894219604)
 MOM_HAS_PREDEFINED(payload_list,_76f7e2VcL8IJC1hq6,1676134419,5693771700904538862,2149899148)
@@ -66,6 +67,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define moid_payload_file _46r6DoRftqviBq5NB
 #undef monam_46r6DoRftqviBq5NB
 #define monam_46r6DoRftqviBq5NB payload_file
+
+#undef moid_payload_gobject
+#define moid_payload_gobject _4wr5hqASKB1b0Dd5D
+#undef monam_4wr5hqASKB1b0Dd5D
+#define monam_4wr5hqASKB1b0Dd5D payload_gobject
 
 #undef moid_payload_hashset
 #define moid_payload_hashset _8261sbF1f9ohzu2Iu
@@ -111,6 +117,7 @@ enum mom_predefined_hashes_en {
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
   momphash_payload_file=1788242063,
+  momphash_payload_gobject=4105406188,
   momphash_payload_hashset=2215747249,
   momphash_payload_json=894219604,
   momphash_payload_list=2149899148,
@@ -127,7 +134,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 12
+#define MOM_NB_NAMED_PREDEFINED 13
 
 
 #undef MOM_HAS_PREDEFINED

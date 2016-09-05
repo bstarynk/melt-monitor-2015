@@ -414,6 +414,9 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
             case CASE_PAYLOAD_MOM (payload_file):
               js = NULL;
               break;
+            case CASE_PAYLOAD_MOM (payload_gobject):
+              js = NULL;
+              break;
             case CASE_PAYLOAD_MOM (payload_buffer):
               {
                 extern json_t *mo_dump_json_for_buffer_objref (mo_dumper_ty *,
@@ -687,6 +690,8 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               mo_dump_scan_value (du, (mo_value_t) payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_file):
+              break;
+            case CASE_PAYLOAD_MOM (payload_gobject):
               break;
             case CASE_PAYLOAD_MOM (payload_buffer):
               break;

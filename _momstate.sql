@@ -33,6 +33,7 @@ INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
 INSERT INTO t_names VALUES('payload_file','_46r6DoRftqviBq5NB');
 INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
+INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
@@ -187,6 +188,20 @@ INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for hashset payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8D28gj8akGrJyyzei',1473102098,'
+{
+ "@name": "payload_json",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for JSON payload"
    }
   ]
  },
