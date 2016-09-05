@@ -694,11 +694,6 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
 #undef CASE_PAYLOAD_MOM
         }
     }
-  if (scancnt < 3 || (scancnt % 2048 == 0 && scancnt < 8912))
-    MOM_WARNPRINTF
-      ("partially unimplemented mo_dump_scan_inside_object#%ld for %s",
-       scancnt, mo_object_pnamestr (obr));
-#warning unimplemented mo_dump_scan_inside_object
 }                               /* end of mo_dump_scan_inside_object */
 
 
