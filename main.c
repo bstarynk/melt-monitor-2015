@@ -22,22 +22,14 @@
 
 #define BASE_YEAR_MOM 2015
 
+bool mom_without_gui;
 
-#define MAX_ADDED_PREDEF_MOM 16
-struct predefadd_mom_st
-{
-  const char *predef_name;
-  const char *predef_comment;
-};
-static struct predefadd_mom_st added_predef_mom[MAX_ADDED_PREDEF_MOM];
-static unsigned count_added_predef_mom;
 
 void *mom_prog_dlhandle;
 
 char *mom_dump_dir;
 
-bool mom_without_gui;
-int mom_benchcount;
+
 
 const char *
 mom_hostname (void)
@@ -1054,48 +1046,31 @@ mom_print_info (void)
 }                               /* end mom_print_info */
 
 
-/* Option specification for getopt_long.  */
-enum extraopt_en
-{
-  xtraopt__none = 0,
-  xtraopt_info = 1024,
-  xtraopt_addpredef,
-  xtraopt_commentpredef,
-  xtraopt_bench,
-  xtraopt_initrandom,
+
+static gboolean want_version_mom;
+static gboolean no_gui_mom;
+static char *initrand_mom;
+static char **predef_names_mom;
+static char **predef_comments_mom;
+static int bench_count_mom;
+static const GOptionEntry mom_goptions[] = {
+  {"version", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &want_version_mom, "version info", NULL},
+  {"dump", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
+   &mom_dump_dir, "dump into directory D", "D"},
+  {"no-gui", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &no_gui_mom, "without GTK graphical user interface", NULL},
+  {"add-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
+   &predef_names_mom, "add predefined of name N with comment C", "N"},
+  {"comment-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
+   &predef_comments_mom, "comment string C for predefined of name N", "C"},
+  {"bench", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_INT,
+   &bench_count_mom, "benchmark count B", "B"},
+  {"init-random", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
+   &initrand_mom, "initialize random with file F; should be first arg", "F"},
+  {NULL}
 };
 
-static const struct option mom_long_options[] = {
-  {"help", no_argument, NULL, 'h'},
-  {"version", no_argument, NULL, 'V'},
-  {"dump", required_argument, NULL, 'd'},
-  {"no-gui", no_argument, NULL, 'N'},
-  {"add-predef", required_argument, NULL, xtraopt_addpredef},
-  {"comment-predef", required_argument, NULL, xtraopt_commentpredef},
-  {"info", no_argument, NULL, xtraopt_info},
-  {"bench", required_argument, NULL, xtraopt_bench},
-  {"init-random", required_argument, NULL, xtraopt_initrandom},
-  /* Terminating NULL placeholder.  */
-  {NULL, no_argument, NULL, 0},
-};
-
-
-static void
-usage_mom (const char *argv0)
-{
-  printf ("Usage: %s\n", argv0);
-  printf ("\t -h | --help " " \t# Give this help.\n");
-  printf ("\t -V | --version " " \t# Give version information.\n");
-  printf ("\t -N | --no-gui " " \t# Don't start any GUI window\n");
-  printf ("\t -d | --dump "
-          " <dirname>\t# Give dump directory, avoid dumping if -.\n");
-  printf ("\t --add-predef <predefname>" " \t#Add a predefined\n");
-  printf ("\t --comment-predef <comment>"
-          " \t#Set comment of next predefined\n");
-  printf ("\t --info" " \t#Give various information\n");
-  printf ("\t --init-random <randfile>" " \t#should be the first argument\n");
-  printf ("\t --bench <count>" " \t#Run the benchmark\n");
-}
 
 
 
@@ -1104,75 +1079,8 @@ print_version_mom (const char *argv0)
 {
   printf ("%s built on %s gitcommit %s\n", argv0,
           monimelt_timestamp, monimelt_lastgitcommit);
-}
+}                               /* end print_version_mom */
 
-
-static void
-parse_program_arguments_mom (int *pargc, char ***pargv)
-{
-  int argc = *pargc;
-  char **argv = *pargv;
-  int opt = -1;
-  char *commentstr = NULL;
-  int optix = 0;
-  while ((opt =
-          getopt_long (argc, argv, "hVNd:", mom_long_options, &optix)) >= 0)
-    {
-      switch (opt)
-        {
-        case 'h':              /* --help */
-          usage_mom (argv[0]);
-          putchar ('\n');
-          fputs ("\nVersion info:::::\n", stdout);
-          print_version_mom (argv[0]);
-          exit (EXIT_FAILURE);
-          return;
-        case 'N':              /* --no-gui */
-          mom_without_gui = true;
-          break;
-        case 'V':              /* --version */
-          print_version_mom (argv[0]);
-          exit (EXIT_SUCCESS);
-          return;
-        case 'd':
-          mom_dump_dir = optarg;
-          break;
-        case xtraopt_commentpredef:
-          commentstr = optarg;
-          break;
-        case xtraopt_bench:
-          mom_benchcount = optarg ? atoi (optarg) : -1;
-          break;
-        case xtraopt_initrandom:
-          if (optind > 3)
-            MOM_WARNPRINTF
-              ("--init-random should be first argument optind=%d", optind);
-          break;
-        case xtraopt_addpredef:
-          if (!optarg)
-            MOM_FATAPRINTF ("missing predefined name for --add-predefined");
-          if (!isalpha (optarg[0]) || !mom_valid_name (optarg))
-            MOM_FATAPRINTF ("invalid predefined name %s", optarg);
-          if (count_added_predef_mom >= MAX_ADDED_PREDEF_MOM)
-            MOM_FATAPRINTF ("too many %d added predefined",
-                            count_added_predef_mom);
-          added_predef_mom[count_added_predef_mom].predef_name = optarg;
-          added_predef_mom[count_added_predef_mom].predef_comment =
-            commentstr;
-          commentstr = NULL;
-          count_added_predef_mom++;
-          break;
-        case xtraopt_info:
-          mom_print_info ();
-          break;
-        default:
-          if (mom_without_gui)
-            MOM_FATAPRINTF ("bad option (%c) at %d",
-                            isalpha (opt) ? opt : '?', optind);
-          break;
-        }
-    }
-}                               /* end of parse_program_arguments_mom */
 
 
 
@@ -1180,21 +1088,25 @@ parse_program_arguments_mom (int *pargc, char ***pargv)
 static void
 do_add_predefined_mom (void)
 {
-  for (unsigned ix = 0; ix < count_added_predef_mom; ix++)
+  gchar **pname = predef_names_mom;
+  gchar **pcomm = predef_comments_mom;
+  if (!predef_names_mom)
+    return;
+  while (*pname)
     {
       mo_objref_t obr = NULL;
-      const char *curname = added_predef_mom[ix].predef_name;
+      const char *curname = *pname;
+      const char *comm = *pcomm;
       char obidbuf[MOM_CSTRIDSIZ];
       memset (obidbuf, 0, sizeof (obidbuf));
       if (!mom_valid_name (curname))
         MOM_FATAPRINTF ("invalid new predefined name %s", curname);
-      const char *comm = added_predef_mom[ix].predef_comment;
       obr = mo_find_named_cstr (curname);
       if (!obr)
         {
           obr = mo_make_object ();
           mo_register_named (obr, curname);
-        }
+        };
       mo_cstring_from_hi_lo_ids (obidbuf,
                                  ((mo_objectvalue_ty *) obr)->mo_ob_hid,
                                  ((mo_objectvalue_ty *) obr)->mo_ob_loid);
@@ -1211,7 +1123,11 @@ do_add_predefined_mom (void)
           MOM_INFORMPRINTF ("made predefined %s (%s) without comment",
                             curname, obidbuf);
         }
-    }
+      pname++;
+      if (*pcomm)
+        pcomm++;
+    };                          /* end while *pname */
+
 }                               /* end of do_add_predefined_mom */
 
 
@@ -1476,6 +1392,8 @@ main (int argc_main, char **argv_main)
   clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
   GC_INIT ();
   GC_set_handle_fork (1);
+  GError *opterror = NULL;
+  GOptionContext *optcontext = NULL;
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
@@ -1491,8 +1409,17 @@ main (int argc_main, char **argv_main)
   mom_random_init_genrand ();
   sqlite3_config (SQLITE_CONFIG_LOG, mo_dump_errorlog, NULL);
   json_object_seed (momrand_genrand_int31 ());
+  optcontext = g_option_context_new ("- the MELT monitor");
+  g_option_context_add_main_entries (optcontext, mom_goptions,
+                                     MOM_GETTEXT_PACKAGE);
+  g_option_context_add_group (optcontext, gtk_get_option_group (FALSE));
+  if (!g_option_context_parse (optcontext, &argc, &argv, &opterror))
+    MOM_FATAPRINTF ("option parsing failed: %s\n", opterror->message);
+  if (want_version_mom)
+    {
+      print_version_mom (argv[0]);
+    }
   mom_init_objects ();
-  parse_program_arguments_mom (&argc, &argv);
   {
     fflush (NULL);
     int okmaket = system ("make -q monimelt");
@@ -1514,18 +1441,21 @@ main (int argc_main, char **argv_main)
   }
 
   mom_load_state ();
-  if (count_added_predef_mom > 0)
+  if (predef_names_mom)
     do_add_predefined_mom ();
-  if (mom_benchcount != 0)
+  if (bench_count_mom != 0)
     {
-      if (mom_benchcount > 0)
-        mom_run_benchmark_many (mom_benchcount);
+      if (bench_count_mom > 0)
+        mom_run_benchmark_many (bench_count_mom);
       else
-        mom_run_small_benchmark (-mom_benchcount);
+        mom_run_small_benchmark (-bench_count_mom);
     }
-  if (mom_without_gui)
-    MOM_INFORMPRINTF
-      ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
+  if (no_gui_mom)
+    {
+      mom_without_gui = true;
+      MOM_INFORMPRINTF
+        ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
+    }
   else
     mom_run_gtk (&argc, &argv);
   if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))

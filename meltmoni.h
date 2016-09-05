@@ -27,7 +27,7 @@
 
 #define GC_THREADS 1
 #define HAVE_PTHREADS 1
-
+#define MOM_GETTEXT_PACKAGE "monimelt"
 
 #include <features.h>           // GNU things
 #include <assert.h>
@@ -89,6 +89,7 @@
 #include <jansson.h>
 // Glib & GTK3 see http://gtk.org/
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
 // Sqlite3 see http://sqlite.org
 #include <sqlite3.h>
