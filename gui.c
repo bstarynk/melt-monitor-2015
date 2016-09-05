@@ -31,6 +31,13 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_widget_show (widget);
 }                               /* end mom_gtkapp_activate */
 
+/***
+ We might have a `the_GUI` predefined object, with a `ui_build`
+ attribute giving the long string to be passed to
+ gtk_builder_new_from_string then use gtk_builder_connect_signals_full
+***/
+
+
 void
 mom_run_gtk (int *pargc, char ***pargv)
 {
