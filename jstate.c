@@ -1203,8 +1203,8 @@ mom_dump_state (const char *dirname)
       sqlite3_exec (dumper.mo_du_db, "END TRANSACTION;", NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to END Sqlite transaction: %s", errmsg);
 #warning mo_dump_state should emit modules
-  MOM_WARNPRINTF("mo_dump_state should emit the C code of %d modules",
-		 mo_hashset_count(dumper.mo_du_moduleset));
+  MOM_WARNPRINTF ("mo_dump_state should emit the C code of %d modules",
+                  mo_hashset_count (dumper.mo_du_moduleset));
   mo_dump_end_database (&dumper);
   mo_dump_rename_emitted_files (&dumper);
   mo_dump_symlink_needed_file (&dumper, "Makefile");
@@ -1747,7 +1747,8 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
   if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
                                 "SELECT ob_id, ob_paylkid, ob_paylmod"
                                 " FROM t_objects"
-                                " WHERE ob_paylmod IS NOT \"\" ",
+                                " WHERE ob_paylmod IS NOT \"\" "
+                                " AND ob_paylkid IS NOT \"\" ",
                                 -1, &omodstmt, NULL)) != SQLITE_OK)
     MOM_FATAPRINTF
       ("Sqlite loader base %s failed to prepare codpayl selection (%s)",
@@ -1805,14 +1806,18 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
 {
   int rc = 0;
   MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
-  /* repeat: SELECT ob_id, ob_paylkid, ob_paylcont FROM t_objects WHERE ob_paylmod IS "" */
+  /** repeat: 
+      SELECT ob_id, ob_paylkid, ob_paylcont FROM t_objects
+      WHERE ob_paylkid IS NOT "" AND ob_paylmod IS ""
+  **/
   sqlite3_stmt *lpaystmt = NULL;
   enum
   { MOMRESIX_OID, MOMRESIX_PAYLKINDID, MOMRESIX_PAYLCONT, MOMRESIX__LAST };
   if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
                                 "SELECT ob_id, ob_paylkid, ob_paylcont"
-                                " FROM t_objects"
-                                " WHERE ob_paylmod IS \"\" ",
+                                " FROM t_objects WHERE "
+                                " ob_paylkid IS NOT \"\" "
+                                " AND ob_paylmod IS \"\" ",
                                 -1, &lpaystmt, NULL)) != SQLITE_OK)
     MOM_FATAPRINTF
       ("Sqlite loader base %s failed to prepare objectmod selection (%s)",
@@ -1829,7 +1834,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
       const char *obidstr =
         (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_OID);
       const char *pkidstr =
-        (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_OID);
+        (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_PAYLKINDID);
       const char *paylcontstr =
         (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_PAYLCONT);
       mo_hid_t obhid = 0;
@@ -1855,6 +1860,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
       json_t *js = NULL;
       json_error_t jerr;
       memset (&jerr, 0, sizeof (jerr));
+      errno = 0;
 #define MOM_NBCASE_PAYLOAD 307
 #define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
       if (pkobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
@@ -1866,9 +1872,13 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
     Js = json_loads(PaylStr, JSON_DISABLE_EOF_CHECK, &Jerr);	\
   if (!Js)							\
     MOM_WARNPRINTF("Sqlite loader base %s:"			\
-		   " bad payload JSON content for %s (%s)",	\
+		   " bad payload JSON content for %s (%s"	\
+		   ", l#%d, c#%d, p#%d): %.64s...",		\
 		   mo_string_cstr (ld->mo_ld_sqlitepathv),	\
-		   mo_object_pnamestr(obr),Jerr.text);		\
+		   mo_object_pnamestr(obr),Jerr.text,		\
+		   Jerr.line, Jerr.column,			\
+		   Jerr.position,				\
+		   PaylStr);					\
 	      } while (0)
         case CASE_PAYLOAD_MOM (payload_assoval):
           {
@@ -1916,7 +1926,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
             if (js)
               {
                 obr->mo_ob_paylkind = MOM_PREDEF (payload_value);
-                obr->mo_ob_payldata = (void*)mo_value_of_json (js);
+                obr->mo_ob_payldata = (void *) mo_value_of_json (js);
               }
           }
           break;
