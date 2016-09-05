@@ -424,6 +424,33 @@ mo_make_object (void)
 }                               /* end of mo_make_object */
 
 
+void
+mo_objref_really_clear_payload (mo_objref_t obr)
+{
+  if (!mo_dyncast_objref (obr))
+    return;
+  mo_objref_t paylkindobr = obr->mo_ob_paylkind;
+  void *payldata = obr->mo_ob_payldata;
+  momhash_t hpk = mo_objref_hash (paylkindobr);
+  if (hpk)
+    {
+#define MOM_NBCASE_PAYLOAD 307
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
+      if (paylkindobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
+	goto labpayl_##Ob; labpayl_##Ob
+      switch (hpk % MOM_NBCASE_PAYLOAD)
+        {
+          ///
+        default:
+        defaultpayloadcase:
+          break;
+        }
+#undef MOM_NBCASE_PAYLOAD
+#undef CASE_PAYLOAD_MOM
+    }
+  obr->mo_ob_payldata = NULL;
+  obr->mo_ob_paylkind = NULL;
+}                               /* end of mo_objref_really_clear_payload */
 
 static void
 mom_cleanup_object (void *objad, void *data MOM_UNUSED)
@@ -438,9 +465,12 @@ mom_cleanup_object (void *objad, void *data MOM_UNUSED)
   int pos = mom_obucket_hid_loid_index (h, hid, loid);
   MOM_ASSERTPRINTF (pos >= 0 && mom_obuckarr[bn].bu_obarr[pos] == obr,
                     "corrupted bucket#%d pos:%d", bn, pos);
+  MOM_ASSERTPRINTF (mo_objref_find_hid_loid (hid, loid) == obr,
+                    "unfound obr");
+  if (obr->mo_ob_paylkind)
+    mo_objref_really_clear_payload (obr);
   mom_obuckarr[bn].bu_obarr[pos] = MOM_EMPTY_SLOT;
   mom_obuckarr[bn].bu_count--;
-#warning mom_cleanup_object could properly finalize the object itself with its payload
   memset (obr, 0, sizeof (mo_objectvalue_ty));
 }                               /* end mom_cleanup_object */
 
@@ -544,6 +574,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
          mo_object_pnamestr (sigobr->mo_ob_class));
       return;
     }
+  mo_objref_clear_payload (obr);
   void *payldata = NULL;
   void *sigdata = NULL;
   char bufobrid[MOM_CSTRIDSIZ];

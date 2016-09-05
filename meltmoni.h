@@ -974,6 +974,18 @@ mo_make_global_object (void)
 
 int mom_objref_cmp (const void *, const void *);        // suitable for qsort, in object.c
 
+static inline void
+mo_objref_clear_payload (mo_objref_t obr)
+{
+  extern void mo_objref_really_clear_payload (mo_objref_t);
+  if (!mo_dyncast_objref (obr))
+    return;
+  if (obr->mo_ob_paylkind != NULL)
+    mo_objref_really_clear_payload (obr);
+  obr->mo_ob_paylkind = NULL;
+  obr->mo_ob_payldata = NULL;
+}                               /* end of mo_objref_clear_payload */
+
 ///// counted payloads have also count
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
 struct mo_countedpayl_st
