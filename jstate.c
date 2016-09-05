@@ -421,6 +421,10 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
                 js = mo_dump_json_for_buffer_objref (du, obr);
               }
               break;
+            case CASE_PAYLOAD_MOM (payload_json):
+              if (payldata)
+                js = json_pack ("{so}", "json", (json_t *) payldata);
+              break;
             default:
             defaultpayloadcase:
               break;
@@ -685,6 +689,8 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
             case CASE_PAYLOAD_MOM (payload_file):
               break;
             case CASE_PAYLOAD_MOM (payload_buffer):
+              break;
+            case CASE_PAYLOAD_MOM (payload_json):
               break;
             default:
             defaultpayloadcase:
@@ -1939,6 +1945,17 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
               mo_objref_set_buffer_from_json (obr, js);
           }
           break;
+        case CASE_PAYLOAD_MOM (payload_json):
+          {
+            json_t *jcont = NULL;
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js && json_is_object (js)
+                && (jcont = json_object_get (js, "json")))
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_json);
+                obr->mo_ob_payldata = (void *) jcont;
+              }
+          }
         default:
         defaultpayloadcase:
           break;
