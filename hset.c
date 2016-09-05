@@ -281,8 +281,23 @@ mo_dump_json_of_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
 mo_hashsetpayl_ty *
 mo_hashset_of_json (mo_json_t js)
 {
-#warning unimplemented mo_hashset_of_json
-  MOM_FATAPRINTF ("unimplemented mo_hashset_of_json");
+  json_t *jarr = NULL;
+  if (!json_is_object (js) || !(jarr = json_object_get (js, "hashset"))
+      || !json_is_array (jarr))
+    return NULL;
+  unsigned sz = json_array_size (jarr);
+  mo_hashsetpayl_ty *hset = mo_hashset_reserve (NULL, sz + sz / 3 + 4);
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      json_t *jelem = json_array_get (jarr, ix);
+      if (!jelem)
+        continue;
+      mo_objref_t obr = mo_objref_of_jsonid (jelem);
+      if (!obr)
+        continue;
+      hset = mo_hashset_put (hset, obr);
+    }
+  return hset;
 }                               /* end mo_hashset_of_json */
 
 

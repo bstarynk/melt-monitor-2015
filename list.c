@@ -247,8 +247,12 @@ mo_dump_scan_list (mo_dumper_ty * du, mo_listpayl_ty * lis)
   if (!mo_dyncastpayl_list (lis))
     return;
   MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
-#warning unimplemented mo_dump_scan_list
-  MOM_FATAPRINTF ("unimplemented mo_dump_scan_list");
+  for (mo_listelem_ty * el = lis->mo_lip_first; el != NULL;
+       el = el->mo_lie_next)
+    {
+      for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
+        mo_dump_scan_value (du, el->mo_lie_arr[ix]);
+    };
 }                               /* end mo_dump_scan_list */
 
 
@@ -259,16 +263,44 @@ mo_dump_json_of_list (mo_dumper_ty * du, mo_listpayl_ty * lis)
   MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
   if (!mo_dyncastpayl_list (lis))
     return json_null ();
-#warning unimplemented mo_dump_json_of_list
-  MOM_FATAPRINTF ("unimplemented mo_dump_json_of_list");
+  json_t *jarr = json_array ();
+  for (mo_listelem_ty * el = lis->mo_lip_first; el != NULL;
+       el = el->mo_lie_next)
+    {
+      for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
+        {
+          mo_value_t curval = el->mo_lie_arr[ix];
+          if (!curval)
+            continue;
+          json_t *jcomp = mo_dump_json_of_value (du, curval);
+          if (jcomp && !json_is_null (jcomp))
+            json_array_append (jarr, jcomp);
+        }
+    }
+  return json_pack ("{so}", "list", jarr);
 }                               /* end mo_dump_json_of_list */
 
 
 mo_listpayl_ty *
 mo_list_of_json (mo_json_t js)
 {
-#warning unimplemented mo_list_of_json
-  MOM_FATAPRINTF ("unimplemented mo_list_of_json");
+  json_t *jarr = NULL;
+  if (!json_is_object (js) || !(jarr = json_object_get (js, "list"))
+      || !json_is_array (jarr))
+    return NULL;
+  mo_listpayl_ty *list = mo_list_make ();
+  unsigned sz = json_array_size (js);
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      json_t *jcomp = json_array_get (js, ix);
+      if (!jcomp || json_is_null (jcomp))
+        continue;
+      mo_value_t val = mo_value_of_json (jcomp);
+      if (!val)
+        continue;
+      mo_list_append (list, val);
+    };
+  return list;
 }                               /* end mo_list_of_json */
 
 // eof list.c

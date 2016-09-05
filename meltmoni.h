@@ -1163,6 +1163,7 @@ mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);  // set of elemen
 void mo_dump_scan_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_json_t mo_dump_json_of_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_hashsetpayl_ty *mo_hashset_of_json (mo_json_t);
+
 /******************** LISTs payload ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
 typedef struct mo_listelem_st mo_listelem_ty;
@@ -1270,6 +1271,7 @@ mo_listpayl_ty *mo_list_of_json (mo_json_t);
 ///////////////// DUMP support .. in jstate.c
 bool mo_dump_scanning (mo_dumper_ty *);
 void mo_dump_really_scan_value (mo_dumper_ty *, mo_value_t);
+
 static inline void
 mo_dump_scan_value (mo_dumper_ty * du, mo_value_t v)
 {
