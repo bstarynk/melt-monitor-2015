@@ -2065,7 +2065,30 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
     case mo_KINT:
       MOM_FATAPRINTF ("impossible kind of v@%p", v);
     case mo_KSTRING:
-      return json_stringn (mo_string_cstr (v), mo_size_of_value (v));
+      {
+        unsigned sz = mo_size_of_value (v);
+        if (sz < 128)
+          return json_stringn (mo_string_cstr (v), mo_size_of_value (v));
+        else
+          {
+            json_t *jarr = json_array ();
+            const char *cstr = mo_string_cstr (v);
+            const char *ends = cstr + sz;
+            const char *schk = cstr;
+            for (const char *pc = cstr; pc < ends && *pc;
+                 pc = g_utf8_next_char (pc))
+              {
+                if (pc - schk >= 72 || pc + 1 >= ends)
+                  {
+                    json_t *jchk = json_stringn (schk, pc - schk);
+                    schk = pc;
+                    json_array_append_new (jarr, jchk);
+                  }
+              }
+            return json_pack ("{siso}", "ssize", sz, "string", jarr);
+          }
+      }
+      break;
     case mo_KTUPLE:
     case mo_KSET:
       {
@@ -2158,6 +2181,7 @@ mo_value_of_json (mo_json_t js)
   else if (json_is_object (js))
     {
       json_t *jc = NULL;
+      json_t *jl = NULL;
       if ((jc = json_object_get (js, "oid")) != NULL && json_is_string (jc))
         {
           return mo_objref_of_jsonid (jc);
@@ -2185,6 +2209,39 @@ mo_value_of_json (mo_json_t js)
               seq->mo_seqobj[ix] = obr;
             }
           return mo_make_set_closeq (seq);
+        }
+      else if ((jc = json_object_get (js, "string")) != NULL
+               && json_is_array (jc)
+               && (jl = json_object_get (js, "ssize")) != NULL
+               && json_is_integer (jl))
+        {
+          unsigned sz = json_array_size (jc);
+          long ln = json_integer_value (jl);
+          if (ln < 0 || ln > MOM_SIZE_MAX)
+            MOM_FATAPRINTF ("too long obj.string ssize=%ld", ln);
+          char *buf = calloc (1, ln + 1);
+          if (!buf)
+            MOM_FATAPRINTF ("calloc failure of obj.string of ssize=%ld", ln);
+          long pos = 0;
+          for (unsigned ix = 0; ix < sz; ix++)
+            {
+              json_t *je = json_array_get (jc, ix);
+              if (!json_is_string (je))
+                continue;
+              const char *strchk = json_string_value (je);
+              size_t sizchk = json_string_length (je);
+              size_t lenchk = 0;
+              if (pos + (long) sizchk <= ln)
+                lenchk = sizchk;
+              else
+                lenchk = ln - pos;
+              memcpy (buf + pos, strchk, lenchk);
+            }
+          MOM_ASSERTPRINTF (pos <= ln, "bad final pos=%ld ln=%ld", pos,
+                            (long) ln);
+          mo_value_t vstr = mo_make_string_len (buf, ln);
+          free (buf), buf = NULL;
+          return vstr;
         }
     }
   MOM_WARNPRINTF ("wrong json %s", json_dumps (js, JSON_SORT_KEYS));

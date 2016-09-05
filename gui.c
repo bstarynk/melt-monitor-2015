@@ -27,7 +27,6 @@ static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   GtkWidget *widget;
-
   widget = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_widget_show (widget);
 }                               /* end mom_gtkapp_activate */

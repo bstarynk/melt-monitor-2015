@@ -602,8 +602,6 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
       return;
     }
   mo_objref_clear_payload (obr);
-  void *payldata = NULL;
-  void *sigdata = NULL;
   char bufobrid[MOM_CSTRIDSIZ];
   memset (bufobrid, 0, sizeof (bufobrid));
   mo_cstring_from_hi_lo_ids (bufobrid, obr->mo_ob_hid, obr->mo_ob_loid);
