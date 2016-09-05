@@ -241,6 +241,7 @@ mo_dump_scan_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
   unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
   unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
+  MOM_ASSERTPRINTF (cnt <= sz, "too big cnt=%u sz=%u", cnt, sz);
   for (unsigned ix = 0; ix < sz; ix++)
     {
       mo_objref_t obr = hset->mo_hsetarr[ix];

@@ -588,14 +588,63 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
           memset (&dif, 0, sizeof (dif));
           if (dladdr (payldata, &dif))
             {
-              if (dif.dli_sname && dif.dli_saddr == payldata)
+              mo_objref_t modulobr = NULL;
+              mo_hid_t modulhid = 0;
+              mo_loid_t modulloid = 0;
+              char modulidstr[MOM_CSTRIDSIZ];
+              memset (modulidstr, 0, sizeof (modulidstr));
+              char funidstr[MOM_CSTRIDSIZ];
+              memset (funidstr, 0, sizeof (funidstr));
+              char obridstr[MOM_CSTRIDSIZ];
+              memset (obridstr, 0, sizeof (obridstr));
+              mo_cstring_from_hi_lo_ids (obridstr, obr->mo_ob_hid,
+                                         obr->mo_ob_loid);
+              int posmod = -1;
+              int posfun = -1;
+              // dli_sname is the symbol name; dli_fname is the file path
+              if (dif.dli_sname && dif.dli_saddr == payldata && dif.dli_fname)
                 {
                   MOM_WARNPRINTF
                     ("obr@%p=%s with payldata %p payk %s dli_sname %s dli_fname %s",
                      obr, mo_object_pnamestr (obr), payldata,
                      mo_object_pnamestr (obrpayk), dif.dli_sname,
                      dif.dli_fname);
-#warning should use dif.dli_fname and check its basename against MOM_MODULE_INFIX
+                  if (((sscanf
+                        (dif.dli_sname, MOM_CODE_PREFIX MOM_CSTRIDSCANF "%n",
+                         funidstr, &posfun) >= 1 && posfun > 0
+                        && dif.dli_sname[posfun] == '\0')
+                       ||
+                       (sscanf
+                        (dif.dli_sname, MOM_FUNC_PREFIX MOM_CSTRIDSCANF "%n",
+                         funidstr, &posfun) >= 1 && posfun > 0
+                        && dif.dli_sname[posfun] == '\0'))
+                      && !strcmp (funidstr, obridstr))
+                    {
+                      const char *lastslash = strchr (dif.dli_fname, '/');
+                      if (lastslash
+                          && lastslash >
+                          dif.dli_fname + sizeof (MOM_MODULES_DIR)
+                          && !strcmp (lastslash - sizeof (MOM_MODULES_DIR),
+                                      MOM_MODULES_DIR)
+                          && sscanf (lastslash + sizeof (MOM_MODULES_DIR),
+                                     MOM_MODULE_INFIX MOM_CSTRIDSCANF "%n",
+                                     modulidstr, &posmod) >= 1 && posmod > 0
+                          && lastslash[sizeof (MOM_MODULES_DIR) + posmod] ==
+                          (char) 0
+                          && mo_get_hi_lo_ids_from_cstring (&modulhid,
+                                                            &modulloid,
+                                                            modulidstr)
+                          && (modulobr =
+                              mo_objref_find_hid_loid (modulhid,
+                                                       modulloid)) != NULL
+                          && modulobr->mo_ob_class ==
+                          MOM_PREDEF (module_class))
+                        {
+                          mo_dump_scan_objref (du, modulobr);
+                          du->mo_du_moduleset =
+                            mo_hashset_put (du->mo_du_moduleset, modulobr);
+                        }
+                    }
                 }
               else
                 MOM_FATAPRINTF ("obr@%p=%s with unamed payldata@%p payk %s",
@@ -607,11 +656,9 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               ("dladdr failed for scan inside obr@%p=%s payload@%p/kd.%s",
                obr, mo_object_pnamestr (obr), payldata,
                mo_object_pnamestr (obrpayk));
-#warning should do something with signature payloads in dump_scan_inside_object
         }
       else
         {
-
 #define MOM_NBCASE_PAYLOAD 307
 #define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
       if (obrpayk != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
