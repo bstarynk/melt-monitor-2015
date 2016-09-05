@@ -30,6 +30,7 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
+INSERT INTO t_names VALUES('payload_file','_46r6DoRftqviBq5NB');
 INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
@@ -59,6 +60,20 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'
+{
+ "@name": "payload_file",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for FILE* payload"
    }
   ]
  },

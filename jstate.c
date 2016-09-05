@@ -412,7 +412,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
               js = mo_dump_json_of_value (du, (mo_value_t) payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_file):
-              js = json_null ();
+              js = NULL;
               break;
             default:
             defaultpayloadcase:
@@ -1902,6 +1902,16 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
               {
                 obr->mo_ob_paylkind = MOM_PREDEF (payload_list);
                 obr->mo_ob_payldata = mo_list_of_json (js);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_value):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_value);
+                obr->mo_ob_payldata = mo_value_of_json (js);
               }
           }
           break;
