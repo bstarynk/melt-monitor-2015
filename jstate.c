@@ -411,6 +411,9 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
             case CASE_PAYLOAD_MOM (payload_value):
               js = mo_dump_json_of_value (du, (mo_value_t) payldata);
               break;
+            case CASE_PAYLOAD_MOM (payload_file):
+              js = json_null ();
+              break;
             default:
             defaultpayloadcase:
               break;
@@ -671,6 +674,8 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               break;
             case CASE_PAYLOAD_MOM (payload_value):
               mo_dump_scan_value (du, (mo_value_t) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_file):
               break;
             default:
             defaultpayloadcase:
@@ -1740,7 +1745,7 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
                                 " WHERE ob_paylmod IS NOT \"\" ",
                                 -1, &omodstmt, NULL)) != SQLITE_OK)
     MOM_FATAPRINTF
-      ("Sqlite loader base %s failed to prepare objectmod selection (%s)",
+      ("Sqlite loader base %s failed to prepare codpayl selection (%s)",
        mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
   while ((rc = sqlite3_step (omodstmt)) == SQLITE_ROW)
     {
@@ -1790,6 +1795,135 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
 }                               /* end of mo_loader_load_payload_code */
 
 
+void
+mo_loader_load_payload_data (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+  /* repeat: SELECT ob_id, ob_paylkid, ob_paylcont FROM t_objects WHERE ob_paylmod IS "" */
+  sqlite3_stmt *lpaystmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX_PAYLKINDID, MOMRESIX_PAYLCONT, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT ob_id, ob_paylkid, ob_paylcont"
+                                " FROM t_objects"
+                                " WHERE ob_paylmod IS \"\" ",
+                                -1, &lpaystmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare objectmod selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  while ((rc = sqlite3_step (lpaystmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (lpaystmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (lpaystmt, MOMRESIX_OID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (lpaystmt, MOMRESIX_PAYLKINDID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (lpaystmt, MOMRESIX_PAYLCONT)
+                        == SQLITE_TEXT, "bad lpaystmt");
+      const char *obidstr =
+        (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_OID);
+      const char *pkidstr =
+        (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_OID);
+      const char *paylcontstr =
+        (const char *) sqlite3_column_text (lpaystmt, MOMRESIX_PAYLCONT);
+      mo_hid_t obhid = 0;
+      mo_loid_t obloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&obhid, &obloid, obidstr)
+          || obhid == 0 || obloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), obidstr);
+      mo_objref_t obr = mo_objref_find_hid_loid (obhid, obloid);
+      if (obr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), obidstr);
+      mo_hid_t pkhid = 0;
+      mo_loid_t pkloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&pkhid, &pkloid, pkidstr)
+          || pkhid == 0 || pkloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_paylkid  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), pkidstr);
+      mo_objref_t pkobr = mo_objref_find_hid_loid (pkhid, pkloid);
+      if (pkobr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_paylkid %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), pkidstr);
+      json_t *js = NULL;
+      json_error_t jerr;
+      memset (&jerr, 0, sizeof (jerr));
+#define MOM_NBCASE_PAYLOAD 307
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
+      if (pkobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
+	goto labpayl_##Ob; labpayl_##Ob
+      switch (mo_objref_hash (pkobr) % MOM_NBCASE_PAYLOAD)
+        {
+#define LOADJS_MOM(Js,PaylStr,Jerr)  do {			\
+  if (PaylStr)							\
+    Js = json_loads(PaylStr, JSON_DISABLE_EOF_CHECK, &Jerr);	\
+  if (!Js)							\
+    MOM_WARNPRINTF("Sqlite loader base %s:"			\
+		   " bad payload JSON content for %s (%s)",	\
+		   mo_string_cstr (ld->mo_ld_sqlitepathv),	\
+		   mo_object_pnamestr(obr),Jerr.text);		\
+	      } while (0)
+        case CASE_PAYLOAD_MOM (payload_assoval):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_assoval);
+                obr->mo_ob_payldata = mo_assoval_of_json (js);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_vectval):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_vectval);
+                obr->mo_ob_payldata = mo_vectval_of_json (js);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_hashset):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_hashset);
+                obr->mo_ob_payldata = mo_hashset_of_json (js);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_list):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_list);
+                obr->mo_ob_payldata = mo_list_of_json (js);
+              }
+          }
+          break;
+        default:
+        defaultpayloadcase:
+          break;
+        }
+#undef MOM_NBCASE_PAYLOAD
+#undef CASE_PAYLOAD_MOM
+#undef LOADJS_MOM
+    }
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s payldata selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (lpaystmt);
+  lpaystmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s payldata  selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+}                               /* end mo_loader_load_payload_data */
 
 void
 mo_loader_end_database (mo_loader_ty * ld)
@@ -1833,7 +1967,7 @@ mom_load_state (void)
   /// a non-empty ob_paylmod:
   mo_loader_load_payload_code (&loader);
   /// the we should other payload
-  // mo_loader_load_payload_data(&loader);
+  mo_loader_load_payload_data (&loader);
   MOM_WARNPRINTF ("load state incomplete");
 #warning mom_load_state incomplete
   mo_loader_end_database (&loader);
