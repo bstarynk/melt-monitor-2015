@@ -410,7 +410,7 @@ mo_make_object (void)
       ((mo_hashedvalue_ty *) obr)->mo_va_hash = h;
       obr->mo_ob_hid = hid;
       obr->mo_ob_loid = loid;
-      obr->mo_ob_mtime = 0;
+      time (&obr->mo_ob_mtime);
       obr->mo_ob_class = NULL;
       obr->mo_ob_attrs = NULL;
       obr->mo_ob_comps = NULL;

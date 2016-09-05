@@ -917,7 +917,7 @@ mo_objref_t mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid);
 // time
 mo_objref_t mo_objref_create_hid_loid (mo_hid_t hid, mo_loid_t loid);
 
-// make a fresh object of unique hid & loid
+// make a fresh transient object of unique hid & loid
 mo_objref_t mo_make_object (void);
 
 static inline int
@@ -962,6 +962,15 @@ mo_objref_space (mo_objref_t obr)
 }
 
 void mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa);
+
+// make a global object
+static inline mo_objref_t
+mo_make_global_object (void)
+{
+  mo_objref_t obr = mo_make_object ();
+  mo_objref_put_space (obr, mo_SPACE_GLOBAL);
+  return obr;
+}                               /* end mo_make_global_object */
 
 int mom_objref_cmp (const void *, const void *);        // suitable for qsort, in object.c
 
