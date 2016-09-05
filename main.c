@@ -1002,6 +1002,7 @@ mom_print_info (void)
   PRINT_SIZEOF (mo_countedpayl_ty);
   PRINT_SIZEOF (mo_assovaldatapayl_ty);
   PRINT_SIZEOF (mo_hashsetpayl_ty);
+  PRINT_SIZEOF (mo_bufferpayl_ty);
   PRINT_SIZEOF (mom_int128_t);
   PRINT_SIZEOF (FILE);
   {

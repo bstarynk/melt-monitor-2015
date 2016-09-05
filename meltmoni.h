@@ -447,6 +447,7 @@ enum mo_payloadkind_en
   mo_PVECTVALDATA /* payload_vectval */ ,
   mo_PHASHSET /* payload_hashset */ ,
   mo_PLIST /* payload_list */ ,
+  mo_PBUFFER /* payload_buffer */ ,
 };
 
 typedef const void *mo_value_t;
@@ -1280,6 +1281,28 @@ void mo_dump_scan_list (mo_dumper_ty *, mo_listpayl_ty *);
 mo_json_t mo_dump_json_of_list (mo_dumper_ty *, mo_listpayl_ty *);
 mo_listpayl_ty *mo_list_of_json (mo_json_t);
 
+
+////////// FILE & BUFFER-s
+
+/// a file payload has kind payload_file & data the FILE*
+/// a buffer payload has kind payload_buffer & data..
+typedef struct mo_bufferpayl_st mo_bufferpayl_ty;
+#define MOM_BUFFER_MAGIC 0x1af15eb9     /*452026041 */
+struct mo_bufferpayl_st
+{
+  // malloc-ed
+  mo_hashedvalue_ty _mo;
+  unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */
+  char *mo_buffer_zone;
+  size_t mo_buffer_size;
+  FILE *mo_buffer_memstream;
+};
+
+bool mo_objref_open_file (mo_objref_t obr, const char *path,
+                          const char *mods);
+bool mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint);
+FILE *mo_objref_file (mo_objref_t obr);
+
 ///////////////// DUMP support .. in jstate.c
 bool mo_dump_scanning (mo_dumper_ty *);
 void mo_dump_really_scan_value (mo_dumper_ty *, mo_value_t);
@@ -1490,5 +1513,6 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
 #define MOM_SIGNATURE_PREFIX "mosig_"
 // put inside an object a [function] payload with a signature, do some checks
 void mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr);     /* in object.c */
+
 
 #endif /*MONIMELT_HEADER */
