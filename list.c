@@ -239,4 +239,36 @@ mo_list_to_tuple (mo_listpayl_ty * lis)
   return mo_make_tuple_closeq (seq);
 }                               /* end of mo_list_to_tuple */
 
+
+
+void
+mo_dump_scan_list (mo_dumper_ty * du, mo_listpayl_ty * lis)
+{
+  if (!mo_dyncastpayl_list (lis))
+    return;
+  MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
+#warning unimplemented mo_dump_scan_list
+  MOM_FATAPRINTF ("unimplemented mo_dump_scan_list");
+}                               /* end mo_dump_scan_list */
+
+
+
+mo_json_t
+mo_dump_json_of_list (mo_dumper_ty * du, mo_listpayl_ty * lis)
+{
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  if (!mo_dyncastpayl_list (lis))
+    return json_null ();
+#warning unimplemented mo_dump_json_of_list
+  MOM_FATAPRINTF ("unimplemented mo_dump_json_of_list");
+}                               /* end mo_dump_json_of_list */
+
+
+mo_listpayl_ty *
+mo_list_of_json (mo_json_t js)
+{
+#warning unimplemented mo_list_of_json
+  MOM_FATAPRINTF ("unimplemented mo_list_of_json");
+}                               /* end mo_list_of_json */
+
 // eof list.c

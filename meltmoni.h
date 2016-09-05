@@ -443,10 +443,10 @@ enum mo_valkind_en
 enum mo_payloadkind_en
 {
   mo_PNONE,
-  mo_PASSOVALDATA = (int) MOM_LAST_KIND + 1,
-  mo_PVECTVALDATA,
-  mo_PHASHSET,
-  mo_PLIST,
+  mo_PASSOVALDATA = (int) MOM_LAST_KIND + 1 /* payload_assoval */ ,
+  mo_PVECTVALDATA /* payload_vectval */ ,
+  mo_PHASHSET /* payload_hashset */ ,
+  mo_PLIST /* payload_list */ ,
 };
 
 typedef const void *mo_value_t;
@@ -1160,6 +1160,9 @@ mo_hashsetpayl_ty *mo_hashset_reserve (mo_hashsetpayl_ty * hset,
                                        unsigned gap);
 mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);  // set of elements
 
+void mo_dump_scan_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
+mo_json_t mo_dump_json_of_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
+mo_hashsetpayl_ty *mo_hashset_of_json (mo_json_t);
 /******************** LISTs payload ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
 typedef struct mo_listelem_st mo_listelem_ty;
@@ -1260,6 +1263,9 @@ void mo_list_pop_tail (mo_listpayl_ty *);
 mo_vectvaldatapayl_ty *mo_list_to_vectvaldata (mo_listpayl_ty *);
 // tuple of all objects in some list
 mo_value_t mo_list_to_tuple (mo_listpayl_ty *);
+void mo_dump_scan_list (mo_dumper_ty *, mo_listpayl_ty *);
+mo_json_t mo_dump_json_of_list (mo_dumper_ty *, mo_listpayl_ty *);
+mo_listpayl_ty *mo_list_of_json (mo_json_t);
 
 ///////////////// DUMP support .. in jstate.c
 bool mo_dump_scanning (mo_dumper_ty *);

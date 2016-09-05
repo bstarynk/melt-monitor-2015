@@ -230,4 +230,60 @@ mo_hashset_elements_set (mo_hashsetpayl_ty * hset)
   return mo_make_set_closeq (sq);
 }                               /* end mo_hashset_elements_set */
 
+
+void
+mo_dump_scan_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
+{
+  MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
+  hset = mo_dyncastpayl_hashset (hset);
+  if (!hset)
+    return;
+  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
+  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t obr = hset->mo_hsetarr[ix];
+      if (!obr || obr == MOM_EMPTY_SLOT)
+        continue;
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr at ix=%d", ix);
+      mo_dump_scan_objref (du, obr);
+    }
+}                               /* end mo_dump_scan_hashset */
+
+
+
+mo_json_t
+mo_dump_json_of_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
+{
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  hset = mo_dyncastpayl_hashset (hset);
+  if (!hset)
+    return json_null ();
+  mo_setvalue_ty *elemsetv =
+    (mo_setvalue_ty *) mo_hashset_elements_set (hset);
+  MOM_ASSERTPRINTF (mo_dyncast_set (elemsetv), "bad elemsetv");
+  unsigned sz = mo_set_size (elemsetv);
+  json_t *jarr = json_array ();
+  for (unsigned ix = 0; ix < sz; ix++)
+    {
+      mo_objref_t elobr = ((mo_sequencevalue_ty *) elemsetv)->mo_seqobj[ix];
+      if (!mo_dump_is_emitted_objref (du, elobr))
+        continue;
+      json_t *jcomp = mo_dump_jsonid_of_objref (du, elobr);
+      json_array_append_new (jarr, jcomp);
+    }
+  return json_pack ("{so}", "hashset", jarr);
+}                               /* end mo_dump_json_of_hashset */
+
+
+
+mo_hashsetpayl_ty *
+mo_hashset_of_json (mo_json_t js)
+{
+#warning unimplemented mo_hashset_of_json
+  MOM_FATAPRINTF ("unimplemented mo_hashset_of_json");
+}                               /* end mo_hashset_of_json */
+
+
 // eof hset.c

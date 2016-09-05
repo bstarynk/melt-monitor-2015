@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 04 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 05 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -29,6 +29,10 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
+INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
+INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
+INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
+INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 ---- TABLE t_objects @@@@@@@
@@ -74,6 +78,34 @@ INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5Hf0fFKvRVa71ZPM0',1473049889,'
+{
+ "@name": "payload_vectval",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for vectvaldata payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_5JG8lVw6jwlUT7PLK',1473050875,'
+{
+ "@name": "payload_assoval",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for assovaldata payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
 {
  "@name": "signature_class",
@@ -82,6 +114,34 @@ INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class of signatures"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
+{
+ "@name": "payload_list",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for list payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
+{
+ "@name": "payload_hashset",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for hashset payload"
    }
   ]
  },

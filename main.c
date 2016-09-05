@@ -1088,12 +1088,12 @@ usage_mom (const char *argv0)
   printf ("\t -N | --no-gui " " \t# Don't start any GUI window\n");
   printf ("\t -d | --dump "
           " <dirname>\t# Give dump directory, avoid dumping if -.\n");
-  printf ("\t --add-predef predefname" " \t#Add a predefined\n");
-  printf ("\t --comment-predef comment"
+  printf ("\t --add-predef <predefname>" " \t#Add a predefined\n");
+  printf ("\t --comment-predef <comment>"
           " \t#Set comment of next predefined\n");
   printf ("\t --info" " \t#Give various information\n");
-  printf ("\t --init-random" "<randfile>\t#should be the first argument\n");
-  printf ("\t --bench" "<count> \t#Run the benchmark\n");
+  printf ("\t --init-random <randfile>" " \t#should be the first argument\n");
+  printf ("\t --bench <count>" " \t#Run the benchmark\n");
 }
 
 

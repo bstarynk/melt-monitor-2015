@@ -369,17 +369,88 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
                       && sscanf (lastslash + 1,
                                  MOM_MODULE_INFIX MOM_CSTRIDSCANF
                                  MOM_MODULE_SUFFIX "%n", modulidstr, &pos)
-                      && pos > MOM_CSTRIDSCANF
+                      && pos > (int) MOM_CSTRIDLEN
                       && mo_get_hi_lo_ids_from_cstring (&modulhid, &modulloid,
                                                         modulidstr)
                       && (modulobr =
-                          mo_objref_find_hid_loid (&modulhid,
-                                                   &modulloid)) != NULL)
+                          mo_objref_find_hid_loid (modulhid,
+                                                   modulloid)) != NULL)
                     paylmodustr = modulidstr;
                   else
                     paylmodustr = ".";
                   paylcontstr = "!";
                 }
+            }
+        }
+      else
+        {
+          json_t *js = NULL;
+#define MOM_NBCASE_PAYLOAD 307
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
+      if (paylkindobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
+	goto labpayl_##Ob; labpayl_##Ob
+          switch (mo_objref_hash (paylkindobr) % MOM_NBCASE_PAYLOAD)
+            {
+            case CASE_PAYLOAD_MOM (payload_assoval):
+              js =              //
+                json_pack ("{so}", "payload_assoval",
+                           mo_dump_json_of_assoval (du,
+                                                    (mo_assovaldatapayl_ty *)
+                                                    payldata));
+              break;
+            case CASE_PAYLOAD_MOM (payload_hashset):
+              js =              //
+                json_pack ("{so}", "payload_hashset",
+                           mo_dump_json_of_hashset (du,
+                                                    (mo_hashsetpayl_ty *)
+                                                    payldata));
+              break;
+            case CASE_PAYLOAD_MOM (payload_list):
+              js =              //
+                json_pack ("{so}", "payload_list",
+                           mo_dump_json_of_list (du,
+                                                 (mo_listpayl_ty *)
+                                                 payldata));
+              break;
+            case CASE_PAYLOAD_MOM (payload_vectval):
+              js =              //
+                json_pack ("{so}", "payload_vectval",
+                           mo_dump_json_of_vectval (du,
+                                                    (mo_vectvaldatapayl_ty *)
+                                                    payldata));
+              break;
+            default:
+            defaultpayloadcase:
+              break;
+            }
+#undef MOM_NBCASE_PAYLOAD
+#undef CASE_PAYLOAD_MOM
+          if (js != NULL)
+            {
+              size_t jsonsiz = 2048;
+              char *jsonbuf = calloc (jsonsiz, 1);
+              if (!jsonbuf)
+                MOM_FATAPRINTF ("failed to allocate jsonbuf of %zd bytes",
+                                jsonsiz);
+              FILE *jsonfil = open_memstream (&jsonbuf, &jsonsiz);
+              if (!jsonfil)
+                MOM_FATAPRINTF ("failed to open_memstream json");
+              fputc ('\n', jsonfil);
+              if (json_dumpf (js, jsonfil, JSON_INDENT (1) | JSON_SORT_KEYS))
+                MOM_FATAPRINTF
+                  ("failed to json_dumpf for payload of object %s",
+                   mo_object_pnamestr (obr));
+              fputc ('\n', jsonfil);
+              long jsonlen = ftell (jsonfil);
+              fflush (jsonfil);
+              if (jsonlen > 16 * (long) MOM_SIZE_MAX)
+                MOM_FATAPRINTF ("too big json for payload of %s kind %s",
+                                mo_object_pnamestr (obr),
+                                mo_object_pnamestr (paylkindobr));
+              paylcontstr = mom_gc_alloc_scalar (jsonlen + 1);
+              memcpy ((char *) paylcontstr, jsonbuf, jsonlen);
+              fclose (jsonfil);
+              free (jsonbuf), jsonbuf = NULL;
             }
         }
       if (!paylcontstr || !paylkindstr || !paylmodustr)
@@ -538,6 +609,34 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
                mo_object_pnamestr (obrpayk));
 #warning should do something with signature payloads in dump_scan_inside_object
         }
+      else
+        {
+
+#define MOM_NBCASE_PAYLOAD 307
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
+      if (obrpayk != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
+	goto labpayl_##Ob; labpayl_##Ob
+          switch (mo_objref_hash (obrpayk) % MOM_NBCASE_PAYLOAD)
+            {
+            case CASE_PAYLOAD_MOM (payload_assoval):
+              mo_dump_scan_assoval (du, (mo_assovaldatapayl_ty *) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_hashset):
+              mo_dump_scan_hashset (du, (mo_hashsetpayl_ty *) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_list):
+              mo_dump_scan_list (du, (mo_listpayl_ty *) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_vectval):
+              mo_dump_scan_vectval (du, (mo_vectvaldatapayl_ty *) payldata);
+              break;
+            default:
+            defaultpayloadcase:
+              break;
+            }
+#undef MOM_NBCASE_PAYLOAD
+#undef CASE_PAYLOAD_MOM
+        }
     }
   if (scancnt < 3 || (scancnt % 2048 == 0 && scancnt < 8912))
     MOM_WARNPRINTF
@@ -662,6 +761,31 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                    idstr, namstr);
         }
     };
+  fputs ("\n\n", fp);
+  fputs ("#ifndef MOM_PREDEFINED_HASHES\n"
+         "#define MOM_PREDEFINED_HASHES 1\n"
+         "enum mom_predefined_hashes_en {\n", fp);
+  for (int ix = 0; ix < nbpredef; ix++)
+    {
+      mo_objref_t obp = predarr[ix];
+      mo_value_t namv = mo_get_namev (obp);
+      char idstr[MOM_CSTRIDSIZ];
+      memset (idstr, 0, sizeof (idstr));
+      if (namv != NULL)
+        {
+          MOM_ASSERTPRINTF (mo_dyncast_string (namv), "bad namv");
+          fprintf (fp, "  momphash_%s=%u,\n",
+                   mo_string_cstr (namv), (unsigned) mo_objref_hash (obp));
+        }
+      else
+        {
+          mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+          fprintf (fp, "  momphash%s=%u,\n",
+                   idstr, (unsigned) mo_objref_hash (obp));
+        };
+    };
+  fputs ("}; // end mom_predefined_hashes_en\n", fp);
+  fputs ("#endif /*MOM_PREDEFINED_HASHES */\n", fp);
   fputs ("\n\n", fp);
   MOM_ASSERTPRINTF (nbanon + nbnamed == nbpredef, "bad nbanon");
   fprintf (fp, "\n#undef MOM_NB_ANONYMOUS_PREDEFINED\n"
