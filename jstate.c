@@ -1,21 +1,21 @@
 // file jstate.c - persistency support in JSON & Sqlite
 
 /**   Copyright (C) 2016  Basile Starynkevitch and later the FSF
-    MONIMELT is a monitor for MELT - see http://gcc-melt.org/
-    This file is part of GCC.
+      MONIMELT is a monitor for MELT - see http://gcc-melt.org/
+      This file is part of GCC.
   
-    GCC is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3, or (at your option)
-    any later version.
+      GCC is free software; you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation; either version 3, or (at your option)
+      any later version.
   
-    GCC is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING3.   If not see
-    <http://www.gnu.org/licenses/>.
+      GCC is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+      You should have received a copy of the GNU General Public License
+      along with GCC; see the file COPYING3.   If not see
+      <http://www.gnu.org/licenses/>.
 **/
 
 
@@ -60,7 +60,7 @@ struct mo_loader_st             // stack allocated
 
 
 enum mom_dumpstate_en
-{ MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
+  { MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 #define MOM_DUMPER_MAGIC  0x372bb699
 struct mo_dumper_st             // stack allocated
 {
@@ -72,7 +72,7 @@ struct mo_dumper_st             // stack allocated
   // SQLstmt: INSERT INTO t_params (par_name, par_value)
   sqlite3_stmt *mo_du_stmt_params;
   /** SQLstmt: INSERT INTO t_objects (ob_id, ob_mtime, ob_jsoncont, ob_classid,
-                                  ob_paylkid, ob_paylcont, ob_paylmod)
+      ob_paylkid, ob_paylcont, ob_paylmod)
   **/
   sqlite3_stmt *mo_du_stmt_objects;
   // SQLstmt: INSERT INTO t_names (nam_str, nam_oid)
@@ -386,9 +386,9 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
         {
           json_t *js = NULL;
 #define MOM_NBCASE_PAYLOAD 307
-#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
-      if (paylkindobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
-	goto labpayl_##Ob; labpayl_##Ob
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD:	\
+	  if (paylkindobr != MOM_PREDEF(Ob)) goto defaultpayloadcase;	\
+	  goto labpayl_##Ob; labpayl_##Ob
           switch (mo_objref_hash (paylkindobr) % MOM_NBCASE_PAYLOAD)
             {
             case CASE_PAYLOAD_MOM (payload_assoval):
@@ -669,9 +669,9 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
       else
         {
 #define MOM_NBCASE_PAYLOAD 307
-#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
-      if (obrpayk != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
-	goto labpayl_##Ob; labpayl_##Ob
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD:	\
+	  if (obrpayk != MOM_PREDEF(Ob)) goto defaultpayloadcase;	\
+	  goto labpayl_##Ob; labpayl_##Ob
           switch (mo_objref_hash (obrpayk) % MOM_NBCASE_PAYLOAD)
             {
             case CASE_PAYLOAD_MOM (payload_assoval):
@@ -1212,7 +1212,7 @@ mom_dump_state (const char *dirname)
       mo_objref_t obr = mo_set_nth (elset, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
-      if (MOM_UNLIKELY (eix % 16384 == 0))
+      if (MOM_UNLIKELY (eix % 65536 == 0))
         {
           if ((errmsg = NULL),  //
               sqlite3_exec (dumper.mo_du_db,
@@ -1249,39 +1249,33 @@ mom_dump_state (const char *dirname)
   for (const char *const *pfilnam = monimelt_shellsources;
        pfilnam && *pfilnam; pfilnam++)
     mo_dump_symlink_needed_file (&dumper, *pfilnam);
-  if (strcmp (dirname, "."))
-    {
-      mo_value_t sqlpathv =     //
-        mo_make_string_sprintf ("%s/%s.sql",
-                                mo_string_cstr (dumper.mo_du_dirv),
-                                monimelt_perstatebase);
-      errno = 0;
-      if (access (mo_string_cstr (sqlpathv), F_OK) && errno == ENOENT)
-        {
-          mo_value_t sqlitepathv =      //
-            mo_make_string_sprintf ("%s/%s.sqlite",
-                                    mo_string_cstr (dumper.mo_du_dirv),
-                                    monimelt_perstatebase);
-          mo_value_t cmdv =     //
-            mo_make_string_sprintf ("%s/%s %s %s",
-                                    mo_string_cstr (dumper.mo_du_dirv),
-                                    MOM_DUMP_SCRIPT,
-                                    mo_string_cstr (sqlitepathv),
-                                    mo_string_cstr (sqlpathv));
+  mo_value_t sqlpathv =     //
+    mo_make_string_sprintf ("%s/%s.sql",
+			    mo_string_cstr (dumper.mo_du_dirv),
+			    monimelt_perstatebase);
+  errno = 0;
+  mo_value_t sqlitepathv =      //
+    mo_make_string_sprintf ("%s/%s.sqlite",
+			    mo_string_cstr (dumper.mo_du_dirv),
+			    monimelt_perstatebase);
+  mo_value_t cmdv =     //
+    mo_make_string_sprintf ("%s/%s %s %s",
+			    mo_string_cstr (dumper.mo_du_dirv),
+			    MOM_DUMP_SCRIPT,
+			    mo_string_cstr (sqlitepathv),
+			    mo_string_cstr (sqlpathv));
 
-          MOM_INFORMPRINTF
-            ("SQL file %s missing, dumping it...\n ... using: %s",
-             mo_string_cstr (sqlpathv), mo_string_cstr (cmdv));
-          fflush (NULL);
-          int rc = system (mo_string_cstr (cmdv));
-          if (rc)
-            MOM_FATAPRINTF ("dump command %s failed %d",
-                            mo_string_cstr (cmdv), rc);
-          MOM_INFORMPRINTF ("Sqlite base %s dumped into %s",
-                            mo_string_cstr (sqlitepathv),
-                            mo_string_cstr (sqlpathv));
-        }
-    }
+  MOM_INFORMPRINTF
+    ("SQL file %s missing, dumping it...\n ... using: %s",
+     mo_string_cstr (sqlpathv), mo_string_cstr (cmdv));
+  fflush (NULL);
+  int rc = system (mo_string_cstr (cmdv));
+  if (rc)
+    MOM_FATAPRINTF ("dump command %s failed %d",
+		    mo_string_cstr (cmdv), rc);
+  MOM_INFORMPRINTF ("Sqlite base %s dumped into %s",
+		    mo_string_cstr (sqlitepathv),
+		    mo_string_cstr (sqlpathv));
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   char *realdirname = realpath (dirname, NULL);
@@ -1442,8 +1436,8 @@ mo_loader_begin_database (mo_loader_ty * ld)
 }                               /* end mo_loader_begin_database */
 
 /* execute a simple SQL request (such as "SELECT COUNT(*) FROM
- t_objects") which gives a single integer, and return that integer;
- show a warning if no result is obtained */
+   t_objects") which gives a single integer, and return that integer;
+   show a warning if no result is obtained */
 long
 mo_loader_exec_intreq (mo_loader_ty * ld, const char *reqs)
 {
@@ -1896,24 +1890,24 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
       memset (&jerr, 0, sizeof (jerr));
       errno = 0;
 #define MOM_NBCASE_PAYLOAD 307
-#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD: \
-      if (pkobr != MOM_PREDEF(Ob)) goto defaultpayloadcase; \
-	goto labpayl_##Ob; labpayl_##Ob
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD:	\
+      if (pkobr != MOM_PREDEF(Ob)) goto defaultpayloadcase;		\
+      goto labpayl_##Ob; labpayl_##Ob
       switch (mo_objref_hash (pkobr) % MOM_NBCASE_PAYLOAD)
         {
-#define LOADJS_MOM(Js,PaylStr,Jerr)  do {			\
-  if (PaylStr)							\
-    Js = json_loads(PaylStr, JSON_DISABLE_EOF_CHECK, &Jerr);	\
-  if (!Js)							\
-    MOM_WARNPRINTF("Sqlite loader base %s:"			\
-		   " bad payload JSON content for %s (%s"	\
-		   ", l#%d, c#%d, p#%d): %.64s...",		\
-		   mo_string_cstr (ld->mo_ld_sqlitepathv),	\
-		   mo_object_pnamestr(obr),Jerr.text,		\
-		   Jerr.line, Jerr.column,			\
-		   Jerr.position,				\
-		   PaylStr);					\
-	      } while (0)
+#define LOADJS_MOM(Js,PaylStr,Jerr)  do {				\
+	    if (PaylStr)						\
+	      Js = json_loads(PaylStr, JSON_DISABLE_EOF_CHECK, &Jerr);	\
+	    if (!Js)							\
+	      MOM_WARNPRINTF("Sqlite loader base %s:"			\
+			     " bad payload JSON content for %s (%s"	\
+			     ", l#%d, c#%d, p#%d): %.64s...",		\
+			     mo_string_cstr (ld->mo_ld_sqlitepathv),	\
+			     mo_object_pnamestr(obr),Jerr.text,		\
+			     Jerr.line, Jerr.column,			\
+			     Jerr.position,				\
+			     PaylStr);					\
+	  } while (0)
         case CASE_PAYLOAD_MOM (payload_assoval):
           {
             LOADJS_MOM (js, paylcontstr, jerr);

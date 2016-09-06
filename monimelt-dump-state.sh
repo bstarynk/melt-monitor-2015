@@ -97,7 +97,7 @@ if [ -e "$sqlfile" ]; then
 	exit 0
     fi
     echo -n "backup Monimelt Sqlite3 dump:" 
-    mv -v "$sqlfile" "$sqlfile~"
+    mv -v --backup=existing "$sqlfile" "$sqlfile~"
 fi
 ## we need that the .sql file has the same date as the .sqlite file
 touch -f "$dbfile" "$sqlfile"
