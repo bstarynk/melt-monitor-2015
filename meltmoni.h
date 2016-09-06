@@ -589,6 +589,16 @@ mo_make_string_cstr (const char *buf)
 mo_value_t mo_make_string_sprintf (const char *fmt, ...)
 __attribute__ ((format (printf, 1, 2)));
 
+// make a string from the content of some FILE*, skipping some initial
+// lines
+mo_value_t mo_make_string_from_skipped_textual_file (FILE *fil,
+    unsigned skiplines);
+static inline mo_value_t
+mo_make_string_from_textual_file (FILE *fil)
+{
+  return mo_make_string_from_skipped_textual_file (fil, 0);
+}
+
 static inline mo_value_t
 mo_dyncast_string (mo_value_t vs)
 {

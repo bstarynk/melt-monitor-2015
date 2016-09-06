@@ -41,6 +41,66 @@ mo_make_string_len (const char *buf, int sz)
 }                               // end mo_make_string_len
 
 
+mo_value_t
+mo_make_string_from_skipped_textual_file (FILE *fil, unsigned skiplines)
+{
+  if (!fil)
+    return NULL;
+  long offinit = ftell (fil);
+  while (skiplines > 0)
+    {
+      int c = EOF;
+      while ((c = fgetc (fil)) != '\n')
+        if (c == EOF)
+          return NULL;
+      skiplines--;
+    };
+  long offskip = ftell (fil);
+  size_t siz = 512;
+  if (fileno (fil) >= 0)
+    {
+      struct stat st;
+      memset (&st, 0, sizeof (st));
+      if (!fstat (fileno (fil), &st) && st.st_size > 0
+          && offskip > 0 && offinit >= 0 && offskip >= offinit)
+        siz = 1 + ((10 + st.st_size - (offskip - offinit)) | 0x1ff);
+    }
+  if (siz > MOM_SIZE_MAX)
+    MOM_FATAPRINTF ("string-from-textfile: too big size %zd", siz);
+  char *buf = calloc (1, siz);
+  if (!buf)
+    MOM_FATAPRINTF
+      ("string-from-textfile: failed to allocate buffer of %zd bytes", siz);
+  FILE *fmem = open_memstream (&buf, &siz);
+  if (!fmem)
+    MOM_FATAPRINTF
+      ("string-from-textfile: failed to open memstream of %zd bytes", siz);
+  int c = EOF;
+  unsigned cnt = 0;
+  do
+    {
+      c = fgetc (fil);
+      if (c == EOF)
+        break;
+      if (MOM_UNLIKELY (cnt > MOM_SIZE_MAX))
+        MOM_FATAPRINTF ("string-from-textfile: too many %zd bytes", cnt);
+      if (MOM_UNLIKELY (c == 0))
+        MOM_FATAPRINTF ("string-from-textfile: zero byte at offset %ld",
+                        ftell (fil));
+      if (MOM_UNLIKELY (cnt % 2048 == 0))
+        fflush (fmem);
+      if (MOM_UNLIKELY (fputc (c, fmem) == EOF))
+        MOM_FATAPRINTF ("string-from-textfile: fputc failed cnt=%u", cnt);
+      cnt++;
+    }
+  while (!feof (fil));
+  fflush (fmem);
+  MOM_ASSERTPRINTF (cnt == (unsigned) ftell (fmem), "wrong fmem cnt=%d", cnt);
+  mo_value_t vstr = mo_make_string_len (buf, cnt);
+  fclose (fmem);
+  free (buf), buf = NULL;
+  return vstr;
+}                               /* end of mo_make_string_from_skipped_textual_file */
 
 mo_value_t
 mo_make_string_sprintf (const char *fmt, ...)

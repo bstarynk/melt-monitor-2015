@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 13
+#define MOM_NB_PREDEFINED 15
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -64,8 +64,14 @@ MOM_HAS_PREDEFINED(payload_vectval,_5Hf0fFKvRVa71ZPM0,1349715772,396851510433949
 //+ class of signatures
 MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371733,906720652)
 
+//+ object describing the initial GUI
+MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,1276275209)
+
 //+ describes the entire system
 MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1453251062)
+
+//+ attribute giving an XML string for GtkBuilder
+MOM_HAS_PREDEFINED(xml_gtkbuild,_1n72Ycnzrtc7HkBUJ,326849061,295705712356003621,489216849)
 
 
 
@@ -129,10 +135,20 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_6S30JEAmywph5MZqd
 #define monam_6S30JEAmywph5MZqd signature_class
 
+#undef moid_the_GUI
+#define moid_the_GUI _6Pc0DV2SCkMSiNlcf
+#undef monam_6Pc0DV2SCkMSiNlcf
+#define monam_6Pc0DV2SCkMSiNlcf the_GUI
+
 #undef moid_the_system
 #define moid_the_system _0BV96V94PJIn9si1K
 #undef monam_0BV96V94PJIn9si1K
 #define monam_0BV96V94PJIn9si1K the_system
+
+#undef moid_xml_gtkbuild
+#define moid_xml_gtkbuild _1n72Ycnzrtc7HkBUJ
+#undef monam_1n72Ycnzrtc7HkBUJ
+#define monam_1n72Ycnzrtc7HkBUJ xml_gtkbuild
 
 
 #ifndef MOM_PREDEFINED_HASHES
@@ -150,7 +166,9 @@ enum mom_predefined_hashes_en {
   momphash_payload_value=77028432,
   momphash_payload_vectval=2293677932,
   momphash_signature_class=906720652,
+  momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
+  momphash_xml_gtkbuild=489216849,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -160,7 +178,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 13
+#define MOM_NB_NAMED_PREDEFINED 15
 
 
 #undef MOM_HAS_PREDEFINED
