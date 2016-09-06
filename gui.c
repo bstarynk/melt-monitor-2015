@@ -160,8 +160,16 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
   GtkWidget *tview1 = gtk_text_view_new_with_buffer (mom_textbuf);
   GtkWidget *tview2 = gtk_text_view_new_with_buffer (mom_textbuf);
-  gtk_paned_add1 (GTK_PANED (paned), tview1);
-  gtk_paned_add2 (GTK_PANED (paned), tview2);
+  GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (scrotv1), tview1);
+  GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (scrotv2), tview2);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv1),
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv2),
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+  gtk_paned_add1 (GTK_PANED (paned), scrotv1);
+  gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
   gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
