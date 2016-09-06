@@ -126,6 +126,13 @@ dumpexitapp_mom (GSimpleAction * action, GVariant * param, gpointer app)
                     g_variant_get_type_string (param));
 }                               /* end dumpexitapp_mom */
 
+static GActionEntry momapp_actionentries[] =
+{
+  // see http://stackoverflow.com/a/27539131
+  { "$mom.quit", quitapp_mom, NULL, NULL, NULL, {0, 0, 0} },
+  { "$mom.dumpexit", dumpexitapp_mom, NULL, NULL, NULL, {0, 0, 0} }
+};
+
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
@@ -140,11 +147,16 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkBuilder *builder = gtk_builder_new_from_string (mo_string_cstr (bldstrv),
                                                      mo_string_size
                                                      (bldstrv));
-  MOM_INFORMPRINTF ("gtkapp_activate: connected signals...");
+  MOM_INFORMPRINTF ("gtkapp_activate: adding callbacks...");
   gtk_builder_add_callback_symbol (builder, "$mom.quit",
                                    G_CALLBACK (quitapp_mom));
   gtk_builder_add_callback_symbol (builder, "$mom.dumpexit",
                                    G_CALLBACK (dumpexitapp_mom));
+  MOM_INFORMPRINTF ("gtkapp_activate: adding actions...");
+  g_action_map_add_action_entries (G_ACTION_MAP (app),
+                                   momapp_actionentries, G_N_ELEMENTS (momapp_actionentries),
+                                   app);
+  MOM_INFORMPRINTF ("gtkapp_activate: connecting signals...");
   gtk_builder_connect_signals_full (builder, mom_gtkbuilder_connect,
                                     MOM_PREDEF (the_GUI));
   GMenuModel *app_menu =
