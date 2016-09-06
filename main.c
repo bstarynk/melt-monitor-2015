@@ -1052,6 +1052,7 @@ static gboolean no_gui_mom;
 static char *initrand_mom;
 static char **predef_names_mom;
 static char **predef_comments_mom;
+static char **plugins_mom;
 static int bench_count_mom;
 static const GOptionEntry mom_goptions[] = {
   {"version", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
@@ -1066,6 +1067,10 @@ static const GOptionEntry mom_goptions[] = {
    &predef_comments_mom, "comment string C for predefined of name N", "C"},
   {"bench", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_INT,
    &bench_count_mom, "benchmark count B", "B"},
+  {"plugin", 'P', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
+   &plugins_mom,
+   "add plugin specified by P, e.g. foo:bar loading momplug_foo.so with argument bar",
+   "P"},
   {"init-random", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
    &initrand_mom, "initialize random with file F; should be first arg", "F"},
   {NULL}
@@ -1127,8 +1132,124 @@ do_add_predefined_mom (void)
       if (*pcomm)
         pcomm++;
     };                          /* end while *pname */
-
 }                               /* end of do_add_predefined_mom */
+
+static void
+do_load_plugins_mom (void)
+{
+  int nbplugins = 0;
+  int plugincumlen = 0;
+  for (char **pc = plugins_mom; pc && *pc; pc++)
+    {
+      nbplugins++;
+      plugincumlen += strlen (*pc);
+    }
+  int cntplugin = 0;
+  size_t plugcmdsiz = 1 + ((nbplugins * 10 + 4 * plugincumlen + 40) | 0xff);
+  char *plugcmdbuf = calloc (1, plugcmdsiz);
+  if (!plugcmdbuf)
+    MOM_FATAPRINTF ("failed to allocate plugin command buffer of %zd bytes",
+                    plugcmdsiz);
+  FILE *fcmd = open_memstream (&plugcmdbuf, &plugcmdsiz);
+  if (!fcmd)
+    MOM_FATAPRINTF ("open_memstream failed for plugin command buffer");
+  fputs ("make -j 3 ", fcmd);
+  char **pluginamesarr = mom_gc_alloc ((nbplugins + 1) * sizeof (char *));
+  char **pluginargsarr = mom_gc_alloc ((nbplugins + 1) * sizeof (char *));
+  void **plugindlharr =
+    mom_gc_alloc_scalar ((nbplugins + 1) * sizeof (void *));
+  for (char **pc = plugins_mom; pc && *pc; pc++)
+    {
+      char *curplug = *pc;
+      char pluginambuf[60];
+      memset (pluginambuf, 0, sizeof (pluginambuf));
+      int pos = -1;
+      if ((sscanf (curplug, "%70[A-Za-z0-9_]:%n", pluginambuf, &pos) >= 1
+           && pos > 2)
+          || (memset (pluginambuf, 0, sizeof (pluginambuf)),
+              (sscanf (curplug, "%70[A-Za-z0-9_]%n", pluginambuf, &pos) >= 1)
+              && pos > 1))
+        {
+          char *curpluginame =
+            mom_gc_alloc (1 + ((strlen (pluginambuf) + 1) | 7));
+          char *curpluginarg = NULL;
+          strcpy (curpluginame, pluginambuf);
+          char *pluginarg = curplug + pos;
+          if (pos > 1 && curplug[pos] == ':')
+            pos--;
+          if (pluginarg && pluginarg[0])
+            curpluginarg = GC_STRDUP (pluginarg);
+          char pluginsource[sizeof (pluginambuf) + 16];
+          memset (pluginsource, 0, sizeof (pluginsource));
+          snprintf (pluginsource, sizeof (pluginsource),
+                    MOM_PLUGIN_PREFIX "%s.c", curpluginame);
+          if (access (pluginsource, R_OK))
+            MOM_FATAPRINTF ("unreadable plugin#%d source %s",
+                            cntplugin + 1, pluginsource);
+          fprintf (fcmd, " " MOM_PLUGIN_PREFIX "%s" MOM_PLUGIN_SUFFIX,
+                   curpluginame);
+          pluginamesarr[cntplugin] = curpluginame;
+          pluginargsarr[cntplugin] = curpluginarg;
+        }
+      else
+        MOM_FATAPRINTF ("invalid plugin specification#%d %s\n"
+                        " - should be -Pfoo:bar for plugin " MOM_PLUGIN_PREFIX
+                        "foo.c with argument bar", cntplugin + 1, curplug);
+      cntplugin++;
+    }
+  MOM_ASSERTPRINTF (cntplugin == nbplugins, "bad cntplugin=%d", cntplugin);
+  fflush (fcmd);
+  long lencmd = ftell (fcmd);
+  MOM_ASSERTPRINTF (lencmd > 0, "bad lencmd");
+  plugcmdbuf[lencmd] = (char) 0;
+  MOM_INFORMPRINTF ("making shared objects for %d plugins", nbplugins);
+  fflush (NULL);
+  int rc = system (plugcmdbuf);
+  if (rc != 0)
+    MOM_FATAPRINTF ("failed (%d) to make %d plugins: %s",
+                    rc, nbplugins, plugcmdbuf);
+  fflush (NULL);
+  MOM_INFORMPRINTF ("made shared objects for %d plugins", nbplugins);
+  for (int pix = 0; pix < nbplugins; pix++)
+    {
+      const char *curpluginame = pluginamesarr[pix];
+      char curplugpath[96];
+      memset (curplugpath, 0, sizeof (curplugpath));
+      snprintf (curplugpath, sizeof (curplugpath),
+                "./" MOM_PLUGIN_PREFIX "%s" MOM_PLUGIN_SUFFIX, curpluginame);
+      MOM_ASSERTPRINTF (strlen (curplugpath) < sizeof (curplugpath) - 2,
+                        "too long curplugpath %s", curplugpath);
+      void *dlh = dlopen (curplugpath, RTLD_LAZY | RTLD_GLOBAL);
+      if (!dlh)
+        MOM_FATAPRINTF ("failed to dlopen plugin#%d %s (%s)",
+                        pix + 1, curplugpath, dlerror ());
+      plugindlharr[pix] = dlh;
+    }
+  MOM_INFORMPRINTF ("loaded %d plugins", nbplugins);
+  for (int pix = 0; pix < nbplugins; pix++)
+    {
+      const char *curpluginame = pluginamesarr[pix];
+      const char *curpluginarg = pluginargsarr[pix];
+      void *curplugindlh = plugindlharr[pix];
+      momplugin_startup_sigt *curplugstart
+        = dlsym (curplugindlh, MOM_PLUGIN_STARTUP);
+      if (!curplugstart)
+        MOM_FATAPRINTF ("failed to dlsym %s in plugin#%d %s (%s)",
+                        MOM_PLUGIN_STARTUP,
+                        pix + 1, curpluginame, dlerror ());
+      if (curpluginarg)
+        MOM_INFORMPRINTF ("starting plugin#%d : %s with %s",
+                          pix + 1, curpluginame, curpluginarg);
+      else
+        MOM_INFORMPRINTF ("starting plugin#%d : %s without argument",
+                          pix + 1, curpluginame);
+      fflush (NULL);
+      (*curplugstart) (curpluginarg);
+      fflush (NULL);
+    }
+  MOM_INFORMPRINTF ("started %d plugins", nbplugins);
+}                               /* end do_load_plugins_mom */
+
 
 
 #ifndef MOM_BENCHWIDTH
@@ -1443,6 +1564,8 @@ main (int argc_main, char **argv_main)
   mom_load_state ();
   if (predef_names_mom)
     do_add_predefined_mom ();
+  if (plugins_mom)
+    do_load_plugins_mom ();
   if (bench_count_mom != 0)
     {
       if (bench_count_mom > 0)

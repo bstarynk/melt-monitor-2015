@@ -1542,4 +1542,11 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
 }                               /* end mo_objref_get_signed_funad */
 
 
+// the prefix & suffix of plugins
+#define MOM_PLUGIN_PREFIX "momplug_"
+#define MOM_PLUGIN_SUFFIX ".so"
+// the name of the plugin startup routine and its declaration
+#define MOM_PLUGIN_STARTUP "momplugin_startup"
+typedef void momplugin_startup_sigt (const char *);
+extern momplugin_startup_sigt momplugin_startup;
 #endif /*MONIMELT_HEADER */

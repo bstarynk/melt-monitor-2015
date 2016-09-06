@@ -73,6 +73,16 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
   g_object_weak_ref (gobj, gobject_weak_notify_mom, obr);
 }                               /* end of mo_objref_put_gobject_payload */
 
+
+
+
+/***
+ We might have a `the_GUI` predefined object, with a `ui_xml`
+ attribute giving the long string to be passed to
+ gtk_builder_new_from_string then use gtk_builder_connect_signals_full
+ and/or gtk_builder_add_callback_symbol
+***/
+
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
@@ -80,13 +90,6 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   widget = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_widget_show (widget);
 }                               /* end mom_gtkapp_activate */
-
-/***
- We might have a `the_GUI` predefined object, with a `ui_build`
- attribute giving the long string to be passed to
- gtk_builder_new_from_string then use gtk_builder_connect_signals_full
- and/or gtk_builder_add_callback_symbol
-***/
 
 
 void
