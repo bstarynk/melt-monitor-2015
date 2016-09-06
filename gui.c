@@ -24,6 +24,56 @@ static GtkApplication *mom_gtkapp;
 static GQuark mom_gquark;
 
 static void
+gobject_weak_notify_mom (gpointer data, GObject * oldgobj)
+{
+  mo_objref_t obr = data;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+  if (obr->mo_ob_paylkind == NULL)
+    return;
+  if (obr->mo_ob_payldata == NULL)
+    {
+      obr->mo_ob_paylkind = NULL;
+      return;
+    }
+  MOM_ASSERTPRINTF (obr->mo_ob_paylkind == MOM_PREDEF (payload_gobject),
+                    "non gobject obr@%p", obr);
+  MOM_ASSERTPRINTF (obr->mo_ob_payldata == (void *) oldgobj, "bad payldata");
+  obr->mo_ob_payldata = NULL;
+  obr->mo_ob_paylkind = NULL;
+}                               /* end gobject_weak_notify_mom */
+
+// called from mo_objref_really_clear_payload
+void
+mo_objref_cleanup_gobject (mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+  MOM_ASSERTPRINTF (obr->mo_ob_paylkind == MOM_PREDEF (payload_gobject),
+                    "non gobject obr@%p", obr);
+  if (obr->mo_ob_payldata)
+    {
+      GObject *gob = obr->mo_ob_payldata;
+      obr->mo_ob_payldata = NULL;
+      g_object_weak_unref (gob, gobject_weak_notify_mom, obr);
+    }
+}                               /* end mom_object_cleanup_gobject */
+
+void
+mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
+{
+  if (!mo_dyncast_objref (obr))
+    return;
+  mo_objref_clear_payload (obr);
+  if (!gobj)
+    return;
+  MOM_ASSERTPRINTF (G_IS_OBJECT (gobj),
+                    "objref_put_gobject in obr=%s bad gobj@%p",
+                    mo_object_pnamestr (obr), gobj);
+  obr->mo_ob_paylkind = MOM_PREDEF (payload_gobject);
+  obr->mo_ob_payldata = gobj;
+  g_object_weak_ref (gobj, gobject_weak_notify_mom, obr);
+}                               /* end of mo_objref_put_gobject_payload */
+
+static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   GtkWidget *widget;

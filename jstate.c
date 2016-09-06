@@ -782,10 +782,33 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
       MOM_ASSERTPRINTF (mo_dyncast_objref (obp)
                         && mo_objref_space (obp) == mo_SPACE_PREDEF,
                         "bad obp");
+      fputc ('\n', fp);
       mo_value_t namv = mo_get_namev (obp);
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      mo_value_t commv =
+        mo_dyncast_string (mo_objref_get_attr (obp, MOM_PREDEF (comment)));
+      if (commv)
+        {
+          const char *pc = mo_string_cstr (commv);
+          int cnt = 0;
+          fputs ("//+ ", fp);
+          while (cnt < 80 && *pc && *pc != '\n')
+            {
+              const char *npc = g_utf8_next_char (pc);
+              if (!npc)
+                break;
+              fwrite (pc, 1, npc - pc, fp);
+              pc = npc;
+              cnt++;
+            }
+          fputc ('\n', fp);
+        }
+      else
+        {
+          fputs ("//-\n", fp);
+        }
       if (namv != NULL)
         {
           nbnamed++;

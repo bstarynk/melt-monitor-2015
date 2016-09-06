@@ -1515,5 +1515,15 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
 // put inside an object a [function] payload with a signature, do some checks
 void mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr);     /* in object.c */
 
+void mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj);
 
+static inline GObject *
+mo_objref_gobject (mo_objref_t obr)
+{
+  if (!mo_dyncast_objref (obr))
+    return NULL;
+  if (obr->mo_ob_paylkind != MOM_PREDEF (payload_gobject))
+    return NULL;
+  return (GObject *) obr->mo_ob_payldata;
+}                               /* end mo_objref_gobject */
 #endif /*MONIMELT_HEADER */

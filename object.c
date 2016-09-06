@@ -444,7 +444,7 @@ mo_objref_really_clear_payload (mo_objref_t obr)
           if (payldata)
             fclose ((FILE *) payldata);
           break;
-          //case CASE_PAYLOAD_MOM(buffer_payload):
+        case CASE_PAYLOAD_MOM (payload_buffer):
           {
             if (payldata)
               {
@@ -465,6 +465,12 @@ mo_objref_really_clear_payload (mo_objref_t obr)
                 memset (bpy, 0, sizeof (mo_bufferpayl_ty));
                 free (bpy);
               }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_gobject):
+          {
+            extern void mo_objref_cleanup_gobject (mo_objref_t);
+            mo_objref_cleanup_gobject (obr);
           }
           break;
           ///
