@@ -1518,12 +1518,28 @@ void mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr);     
 void mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj);
 
 static inline GObject *
-mo_objref_gobject (mo_objref_t obr)
+mo_objref_get_gobject (mo_objref_t obr)
 {
   if (!mo_dyncast_objref (obr))
     return NULL;
   if (obr->mo_ob_paylkind != MOM_PREDEF (payload_gobject))
     return NULL;
   return (GObject *) obr->mo_ob_payldata;
-}                               /* end mo_objref_gobject */
+}                               /* end mo_objref_get_gobject */
+
+static inline const void *
+mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
+{
+  if (!mo_dyncast_objref (obr))
+    return NULL;
+  if (!mo_dyncast_objref (obrsig))
+    return NULL;
+  if (obrsig->mo_ob_class != MOM_PREDEF (signature_class))
+    return NULL;
+  if (obr->mo_ob_paylkind == obrsig)
+    return obr->mo_ob_payldata;
+  return NULL;
+}                               /* end mo_objref_get_signed_funad */
+
+
 #endif /*MONIMELT_HEADER */
