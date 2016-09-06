@@ -376,6 +376,8 @@ double mom_thread_cpu_time (void);
 ////////////////////////////////////////////////////////////////
 /**** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;
+extern void *mom_prog_dlhandle;
+extern char *mom_dump_dir;
 void mom_run_gtk (int *pargc, char ***pargv);
 
 ////////////////////////////////////////////////////////////////

@@ -81,24 +81,64 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
  gtk_builder_new_from_string is not a very good idea.
 ***/
 
+GtkWidget *mom_appwin;
+static void
+mom_dumpexit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
+    mom_dump_dir = "-";
+  MOM_INFORMPRINTF ("dumpexit_app");
+  g_application_quit (G_APPLICATION (mom_gtkapp));
+}                               /* end of mom_dumpexit_app */
+
+static void
+mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("quit_app");
+  GtkWidget *quitdialog =       //
+    gtk_dialog_new_with_buttons ("Quit Monimelt?",
+                                 GTK_WINDOW (mom_appwin),
+                                 GTK_DIALOG_MODAL |
+                                 GTK_DIALOG_DESTROY_WITH_PARENT,
+                                 "Quit",
+                                 GTK_RESPONSE_CLOSE,
+                                 "Cancel",
+                                 GTK_RESPONSE_CANCEL,
+                                 NULL);
+  gtk_widget_show_all (quitdialog);
+  MOM_INFORMPRINTF ("quitdialog=%p", quitdialog);
+  int res = gtk_dialog_run (GTK_DIALOG (quitdialog));
+  MOM_INFORMPRINTF ("res=%d", res);
+  if (res == GTK_RESPONSE_CLOSE)
+    {
+      mom_dump_dir = "-";
+      g_application_quit (G_APPLICATION (mom_gtkapp));
+    }
+  gtk_widget_destroy (quitdialog);
+  quitdialog = NULL;
+}                               /* end of mom_quit_app */
+
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
-  GtkWidget *appwin = gtk_application_window_new (GTK_APPLICATION (app));
-  gtk_window_set_default_size (GTK_WINDOW (appwin), 500, 400);
+  mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
+  gtk_window_set_default_size (GTK_WINDOW (mom_appwin), 500, 400);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-  gtk_container_add (GTK_CONTAINER (appwin), topvbox);
+  gtk_container_add (GTK_CONTAINER (mom_appwin), topvbox);
   GtkWidget *menubar = gtk_menu_bar_new ();
   GtkWidget *appmenu = gtk_menu_new ();
   GtkWidget *appitem = gtk_menu_item_new_with_label ("App");
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), appitem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (appitem), appmenu);
-  GtkWidget *dumpexititem = gtk_menu_item_new_with_label ("dump & exit");
-  GtkWidget *quititem = gtk_menu_item_new_with_label ("quit");
+  GtkWidget *dumpexititem = gtk_menu_item_new_with_label ("dump & eXit");
+  GtkWidget *quititem = gtk_menu_item_new_with_label ("Quit");
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpexititem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), quititem);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
-  gtk_widget_show_all (appwin);
+  g_signal_connect (dumpexititem, "activate", G_CALLBACK (mom_dumpexit_app),
+                    NULL);
+  g_signal_connect (quititem, "activate", G_CALLBACK (mom_quit_app), NULL);
+  gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
 
 
