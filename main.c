@@ -1223,6 +1223,10 @@ do_load_plugins_mom (void)
       if (!dlh)
         MOM_FATAPRINTF ("failed to dlopen plugin#%d %s (%s)",
                         pix + 1, curplugpath, dlerror ());
+      if (!dlsym (dlh, MOM_PLUGIN_STARTUP))
+        MOM_FATAPRINTF ("failed to dlsym %s in plugin#%d %s (%s)",
+                        MOM_PLUGIN_STARTUP,
+                        pix + 1, curpluginame, dlerror ());
       plugindlharr[pix] = dlh;
     }
   MOM_INFORMPRINTF ("loaded %d plugins", nbplugins);
