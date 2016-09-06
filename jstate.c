@@ -2090,7 +2090,7 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
     case mo_KSTRING:
       {
         unsigned sz = mo_size_of_value (v);
-        if (sz < 128)
+        if (sz < 96)
           return json_stringn (mo_string_cstr (v), mo_size_of_value (v));
         else
           {
@@ -2098,11 +2098,18 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
             const char *cstr = mo_string_cstr (v);
             const char *ends = cstr + sz;
             const char *schk = cstr;
-            for (const char *pc = cstr; pc < ends && *pc;
-                 pc = g_utf8_next_char (pc))
+            const char *npc = NULL;
+            for (const char *pc = cstr; pc < ends && *pc; pc = npc)
               {
-                if (pc - schk >= 72 || pc + 1 >= ends)
+                npc = g_utf8_next_char (pc);
+                if (pc - schk >= 80 || pc + 1 >= ends
+                    || (*pc == '\n' && pc - schk > 24))
                   {
+                    if (*pc == '\n')
+                      {
+                        pc++;
+                        npc = g_utf8_next_char (pc);
+                      }
                     json_t *jchk = json_stringn (schk, pc - schk);
                     schk = pc;
                     json_array_append_new (jarr, jchk);
