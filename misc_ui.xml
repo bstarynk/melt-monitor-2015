@@ -6,13 +6,13 @@
     <section>
       <item>
         <attribute name="label">_Quit</attribute>
-        <attribute name="action">mom.quit</attribute>
+        <attribute name="action">$mom.quit</attribute>
       </item>
     </section>
     <section>
       <item>
         <attribute name="label">_Dump and exit</attribute>
-        <attribute name="action">mom.dumpexit</attribute>
+        <attribute name="action">$mom.dumpexit</attribute>
       </item>
     </section>
   </menu>  

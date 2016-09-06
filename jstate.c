@@ -60,7 +60,7 @@ struct mo_loader_st             // stack allocated
 
 
 enum mom_dumpstate_en
-  { MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
+{ MOMDUMP_NONE, MOMDUMP_SCAN, MOMDUMP_EMIT };
 #define MOM_DUMPER_MAGIC  0x372bb699
 struct mo_dumper_st             // stack allocated
 {
@@ -1249,21 +1249,21 @@ mom_dump_state (const char *dirname)
   for (const char *const *pfilnam = monimelt_shellsources;
        pfilnam && *pfilnam; pfilnam++)
     mo_dump_symlink_needed_file (&dumper, *pfilnam);
-  mo_value_t sqlpathv =     //
+  mo_value_t sqlpathv =         //
     mo_make_string_sprintf ("%s/%s.sql",
-			    mo_string_cstr (dumper.mo_du_dirv),
-			    monimelt_perstatebase);
+                            mo_string_cstr (dumper.mo_du_dirv),
+                            monimelt_perstatebase);
   errno = 0;
   mo_value_t sqlitepathv =      //
     mo_make_string_sprintf ("%s/%s.sqlite",
-			    mo_string_cstr (dumper.mo_du_dirv),
-			    monimelt_perstatebase);
-  mo_value_t cmdv =     //
+                            mo_string_cstr (dumper.mo_du_dirv),
+                            monimelt_perstatebase);
+  mo_value_t cmdv =             //
     mo_make_string_sprintf ("%s/%s %s %s",
-			    mo_string_cstr (dumper.mo_du_dirv),
-			    MOM_DUMP_SCRIPT,
-			    mo_string_cstr (sqlitepathv),
-			    mo_string_cstr (sqlpathv));
+                            mo_string_cstr (dumper.mo_du_dirv),
+                            MOM_DUMP_SCRIPT,
+                            mo_string_cstr (sqlitepathv),
+                            mo_string_cstr (sqlpathv));
 
   MOM_INFORMPRINTF
     ("SQL file %s missing, dumping it...\n ... using: %s",
@@ -1271,11 +1271,9 @@ mom_dump_state (const char *dirname)
   fflush (NULL);
   int rc = system (mo_string_cstr (cmdv));
   if (rc)
-    MOM_FATAPRINTF ("dump command %s failed %d",
-		    mo_string_cstr (cmdv), rc);
+    MOM_FATAPRINTF ("dump command %s failed %d", mo_string_cstr (cmdv), rc);
   MOM_INFORMPRINTF ("Sqlite base %s dumped into %s",
-		    mo_string_cstr (sqlitepathv),
-		    mo_string_cstr (sqlpathv));
+                    mo_string_cstr (sqlitepathv), mo_string_cstr (sqlpathv));
   double endelapsedtime = mom_elapsed_real_time ();
   double endcputime = mom_process_cpu_time ();
   char *realdirname = realpath (dirname, NULL);

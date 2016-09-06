@@ -84,11 +84,47 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
 ***/
 
 static void
+mom_gtkbuilder_connect (GtkBuilder * builder MOM_UNUSED,
+                        GObject * obj,
+                        const gchar * signam,
+                        const gchar * hdlnam,
+                        GObject * connectobj,
+                        GConnectFlags flags, gpointer data)
+{
+  mo_objref_t obr = data;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+  MOM_INFORMPRINTF ("gtkbuilder_connect obr:%s obj@%p(gtyp=%s,gcla=%s),\n"
+                    ".. signam=%s, hdlnam=%s"
+                    " connectobj@%p(gtyp=%s,gcla=%s) flags=%#x\n",
+                    mo_object_pnamestr (obr),
+                    (void *) obj,
+                    G_OBJECT_TYPE_NAME (obj), G_OBJECT_CLASS_NAME (obj),
+                    signam, hdlnam,
+                    (void *) connectobj,
+                    connectobj ? G_OBJECT_TYPE_NAME (connectobj) : "*nil*",
+                    connectobj ? G_OBJECT_CLASS_NAME (connectobj) : "*Nil*",
+                    (unsigned) flags);
+}                               /* end mom_gtkbuilder_connect */
+
+static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
-  GtkWidget *widget;
+  GtkWidget *widget = NULL;
   widget = gtk_application_window_new (GTK_APPLICATION (app));
+  mo_value_t bldstrv =
+    mo_objref_get_attr (MOM_PREDEF (the_GUI), MOM_PREDEF (xml_gtkbuild));
+  if (!mo_dyncast_string (bldstrv))
+    MOM_FATAPRINTF ("gtkapp_activate: bad bldstrv");
+  GtkBuilder *builder = gtk_builder_new_from_string (mo_string_cstr (bldstrv),
+                                                     mo_string_size
+                                                     (bldstrv));
+  gtk_builder_connect_signals_full (builder, mom_gtkbuilder_connect,
+                                    MOM_PREDEF (the_GUI));
+  GMenuModel *app_menu =
+    G_MENU_MODEL (gtk_builder_get_object (builder, "appmenu"));
+  gtk_application_set_app_menu (GTK_APPLICATION (app), app_menu);
   gtk_widget_show (widget);
+  g_object_unref (builder);
 }                               /* end mom_gtkapp_activate */
 
 
