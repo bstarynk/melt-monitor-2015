@@ -115,6 +115,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
     mo_objref_get_attr (MOM_PREDEF (the_GUI), MOM_PREDEF (xml_gtkbuild));
   if (!mo_dyncast_string (bldstrv))
     MOM_FATAPRINTF ("gtkapp_activate: bad bldstrv");
+  MOM_INFORMPRINTF("gtkapp_activate: bldstrv=%s\n",
+		   mo_string_cstr(bldstrv));
   GtkBuilder *builder = gtk_builder_new_from_string (mo_string_cstr (bldstrv),
                                                      mo_string_size
                                                      (bldstrv));
