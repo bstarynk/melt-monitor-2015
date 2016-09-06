@@ -618,6 +618,15 @@ mo_string_cstr (mo_value_t v)
   return ((mo_stringvalue_ty *) vstr)->mo_cstr;
 }
 
+static inline unsigned
+mo_string_size (mo_value_t v)
+{
+  mo_value_t vstr = mo_dyncast_string (v);
+  if (!vstr)
+    return 0;
+  return ((mo_sizedvalue_ty *) vstr)->mo_sva_size;
+}                               /* end of mo_string_size */
+
 /******************** SEQUENCEs ****************/
 /// They are tuples or sets of (non-nil) objrefs; we might need to add
 /// transient sequences later

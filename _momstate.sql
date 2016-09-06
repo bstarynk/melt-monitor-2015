@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 05 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 06 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -39,7 +39,9 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
+INSERT INTO t_names VALUES('xml_gtkbuild','_1n72Ycnzrtc7HkBUJ');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
@@ -63,6 +65,20 @@ INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for buffer payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1n72Ycnzrtc7HkBUJ',1473152122,'
+{
+ "@name": "xml_gtkbuild",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute giving an XML string for GtkBuilder"
    }
   ]
  },
@@ -161,6 +177,20 @@ INSERT INTO t_objects VALUES('_5JG8lVw6jwlUT7PLK',1473050875,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for assovaldata payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473152122,'
+{
+ "@name": "the_GUI",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "object describing the initial GUI"
    }
   ]
  },

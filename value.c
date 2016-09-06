@@ -83,7 +83,7 @@ mo_make_string_from_skipped_textual_file (FILE *fil, unsigned skiplines)
       if (c == EOF)
         break;
       if (MOM_UNLIKELY (cnt > MOM_SIZE_MAX))
-        MOM_FATAPRINTF ("string-from-textfile: too many %zd bytes", cnt);
+        MOM_FATAPRINTF ("string-from-textfile: too many %u bytes", cnt);
       if (MOM_UNLIKELY (c == 0))
         MOM_FATAPRINTF ("string-from-textfile: zero byte at offset %ld",
                         ftell (fil));
