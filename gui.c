@@ -84,12 +84,21 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
-  GtkWidget *widget = NULL;
-  widget = gtk_application_window_new (GTK_APPLICATION (app));
-  // GMenuModel *app_menu =
-  //  G_MENU_MODEL (gtk_builder_get_object (builder, "appmenu"));
-  // gtk_application_set_app_menu (GTK_APPLICATION (app), app_menu);
-  gtk_widget_show (widget);
+  GtkWidget *appwin = gtk_application_window_new (GTK_APPLICATION (app));
+  gtk_window_set_default_size (GTK_WINDOW (appwin), 500, 400);
+  GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+  gtk_container_add (GTK_CONTAINER (appwin), topvbox);
+  GtkWidget *menubar = gtk_menu_bar_new ();
+  GtkWidget *appmenu = gtk_menu_new ();
+  GtkWidget *appitem = gtk_menu_item_new_with_label ("App");
+  gtk_menu_shell_append (GTK_MENU_SHELL (menubar), appitem);
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (appitem), appmenu);
+  GtkWidget *dumpexititem = gtk_menu_item_new_with_label ("dump & exit");
+  GtkWidget *quititem = gtk_menu_item_new_with_label ("quit");
+  gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpexititem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), quititem);
+  gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
+  gtk_widget_show_all (appwin);
 }                               /* end mom_gtkapp_activate */
 
 
