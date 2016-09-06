@@ -1,5 +1,19 @@
 <!-- to be loaded by momplug_setGUIui -->
 <!-- file misc_ui.xml -->
-
 <interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <menu id="appmenu">
+    <section>
+      <item>
+        <attribute name="label">_Quit</attribute>
+        <attribute name="action">mom.quit</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label">_Dump and exit</attribute>
+        <attribute name="action">mom.dumpexit</attribute>
+      </item>
+    </section>
+  </menu>  
 </interface>

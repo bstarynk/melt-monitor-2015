@@ -183,11 +183,30 @@ INSERT INTO t_objects VALUES('_5JG8lVw6jwlUT7PLK',1473050875,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473152122,'
+INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473157999,'
 {
  "@name": "the_GUI",
  "attrs": {
   "assoval": [
+   {
+    "at": "_1n72Ycnzrtc7HkBUJ",
+    "va": {
+     "ssize": 457,
+     "string": [
+      "<!-- file misc_ui.xml -->\n",
+      "<interface>\n  <!-- interface-requires gtk+ 3.0 -->\n",
+      "  <menu id=\"appmenu\">\n    <section>\n",
+      "      <item>\n        <attribute name=\"label\">_Quit</attribute>\n",
+      "        <attribute name=\"action\">mom.quit</attribute>\n",
+      "      </item>\n    </section>\n",
+      "    <section>\n      <item>\n",
+      "        <attribute name=\"label\">_Dump and exit</attribute>\n",
+      "        <attribute name=\"action\">mom.dumpexit</attribute>\n",
+      "      </item>\n    </section>\n",
+      "  </menu>  \n</interface>\n"
+     ]
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "object describing the initial GUI"
