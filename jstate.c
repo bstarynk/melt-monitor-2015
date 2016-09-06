@@ -1628,7 +1628,8 @@ mo_loader_name_objects (mo_loader_ty * ld)
   long nbnamed = mo_loader_exec_intreq (ld, "SELECT COUNT(*) FROM t_names");
   ld->mo_ld_nbnamed = nbnamed;
   MOM_ASSERTPRINTF (nbnamed <= ld->mo_ld_nbobjects,
-                    "too big nbnamed %ld", nbnamed);
+                    "too big nbnamed %ld for nbobjects=%d", nbnamed,
+		     ld->mo_ld_nbobjects);
   mo_reserve_names (3 * nbnamed / 2 + MOM_NB_PREDEFINED);
   /* repeat: SELECT nam_oid, nam_str FROM t_names */
   sqlite3_stmt *namstmt = NULL;

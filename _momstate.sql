@@ -41,7 +41,6 @@ INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
-INSERT INTO t_names VALUES('xml_gtkbuild','_1n72Ycnzrtc7HkBUJ');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
@@ -65,20 +64,6 @@ INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for buffer payload"
-   }
-  ]
- },
- "comps": null
-}
-','','','','');
-INSERT INTO t_objects VALUES('_1n72Ycnzrtc7HkBUJ',1473152122,'
-{
- "@name": "xml_gtkbuild",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "attribute giving an XML string for GtkBuilder"
    }
   ]
  },
@@ -188,25 +173,6 @@ INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473159222,'
  "@name": "the_GUI",
  "attrs": {
   "assoval": [
-   {
-    "at": "_1n72Ycnzrtc7HkBUJ",
-    "va": {
-     "ssize": 459,
-     "string": [
-      "<!-- file misc_ui.xml -->\n",
-      "<interface>\n  <!-- interface-requires gtk+ 3.0 -->\n",
-      "  <menu id=\"appmenu\">\n    <section>\n",
-      "      <item>\n        <attribute name=\"label\">_Quit</attribute>\n",
-      "        <attribute name=\"action\">$mom.quit</attribute>\n",
-      "      </item>\n    </section>\n",
-      "    <section>\n      <item>\n",
-      "        <attribute name=\"label\">_Dump and exit</attribute>\n",
-      "        <attribute name=\"action\">$mom.dumpexit</attribute>\n",
-      "      </item>\n    </section>\n",
-      "  </menu>  \n</interface>\n"
-     ]
-    }
-   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "object describing the initial GUI"

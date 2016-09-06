@@ -8,7 +8,7 @@ momplugin_startup (const char *arg)
 {
   if (!arg)
     MOM_FATAPRINTF ("missing argument to unpredef plugin");
-  mo_objref_t obr = find_named_cstr (arg);
+  mo_objref_t obr = mo_find_named_cstr (arg);
   if (!obr)
     MOM_FATAPRINTF ("unpredef plugin don't find object named %s", arg);
   mo_objref_put_space (obr, mo_SPACE_GLOBAL);

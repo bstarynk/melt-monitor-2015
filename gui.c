@@ -77,93 +77,19 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
 
 
 /***
- We might have a `the_GUI` predefined object, with a `ui_xml`
- attribute giving the long string to be passed to
- gtk_builder_new_from_string then use gtk_builder_connect_signals_full
- and/or gtk_builder_add_callback_symbol
+ We might have a `the_GUI` predefined object; using
+ gtk_builder_new_from_string is not a very good idea.
 ***/
-
-static void
-mom_gtkbuilder_connect (GtkBuilder * builder MOM_UNUSED,
-                        GObject * obj,
-                        const gchar * signam,
-                        const gchar * hdlnam,
-                        GObject * connectobj,
-                        GConnectFlags flags, gpointer data)
-{
-  mo_objref_t obr = data;
-  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
-  MOM_INFORMPRINTF ("gtkbuilder_connect obr:%s obj@%p(gtyp=%s,gcla=%s),\n"
-                    ".. signam=%s, hdlnam=%s"
-                    " connectobj@%p(gtyp=%s,gcla=%s) flags=%#x\n",
-                    mo_object_pnamestr (obr),
-                    (void *) obj,
-                    G_OBJECT_TYPE_NAME (obj), G_OBJECT_CLASS_NAME (obj),
-                    signam, hdlnam,
-                    (void *) connectobj,
-                    connectobj ? G_OBJECT_TYPE_NAME (connectobj) : "*nil*",
-                    connectobj ? G_OBJECT_CLASS_NAME (connectobj) : "*Nil*",
-                    (unsigned) flags);
-}                               /* end mom_gtkbuilder_connect */
-
-static void
-quitapp_mom (GSimpleAction * action, GVariant * param, gpointer app)
-{
-  MOM_INFORMPRINTF ("quitapp action@%p (gtyp=%s,gcla=%s) app@%p",
-                    action, G_OBJECT_TYPE_NAME (action),
-                    G_OBJECT_CLASS_NAME (action), (void *) app);
-  MOM_INFORMPRINTF ("quitapp param@%p vty=%s", param,
-                    g_variant_get_type_string (param));
-}                               /* end quitapp_mom */
-
-static void
-dumpexitapp_mom (GSimpleAction * action, GVariant * param, gpointer app)
-{
-  MOM_INFORMPRINTF ("dumpexitapp action@%p (gtyp=%s,gcla=%s) app@%p",
-                    action, G_OBJECT_TYPE_NAME (action),
-                    G_OBJECT_CLASS_NAME (action), (void *) app);
-  MOM_INFORMPRINTF ("dumpexitapp param@%p vty=%s", param,
-                    g_variant_get_type_string (param));
-}                               /* end dumpexitapp_mom */
-
-static GActionEntry momapp_actionentries[] =
-{
-  // see http://stackoverflow.com/a/27539131
-  { "$mom.quit", quitapp_mom, NULL, NULL, NULL, {0, 0, 0} },
-  { "$mom.dumpexit", dumpexitapp_mom, NULL, NULL, NULL, {0, 0, 0} }
-};
 
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   GtkWidget *widget = NULL;
   widget = gtk_application_window_new (GTK_APPLICATION (app));
-  mo_value_t bldstrv =
-    mo_objref_get_attr (MOM_PREDEF (the_GUI), MOM_PREDEF (xml_gtkbuild));
-  if (!mo_dyncast_string (bldstrv))
-    MOM_FATAPRINTF ("gtkapp_activate: bad bldstrv");
-  MOM_INFORMPRINTF ("gtkapp_activate: bldstrv=%s\n",
-                    mo_string_cstr (bldstrv));
-  GtkBuilder *builder = gtk_builder_new_from_string (mo_string_cstr (bldstrv),
-                                                     mo_string_size
-                                                     (bldstrv));
-  MOM_INFORMPRINTF ("gtkapp_activate: adding callbacks...");
-  gtk_builder_add_callback_symbol (builder, "$mom.quit",
-                                   G_CALLBACK (quitapp_mom));
-  gtk_builder_add_callback_symbol (builder, "$mom.dumpexit",
-                                   G_CALLBACK (dumpexitapp_mom));
-  MOM_INFORMPRINTF ("gtkapp_activate: adding actions...");
-  g_action_map_add_action_entries (G_ACTION_MAP (app),
-                                   momapp_actionentries, G_N_ELEMENTS (momapp_actionentries),
-                                   app);
-  MOM_INFORMPRINTF ("gtkapp_activate: connecting signals...");
-  gtk_builder_connect_signals_full (builder, mom_gtkbuilder_connect,
-                                    MOM_PREDEF (the_GUI));
-  GMenuModel *app_menu =
-    G_MENU_MODEL (gtk_builder_get_object (builder, "appmenu"));
-  gtk_application_set_app_menu (GTK_APPLICATION (app), app_menu);
+  // GMenuModel *app_menu =
+  //  G_MENU_MODEL (gtk_builder_get_object (builder, "appmenu"));
+  // gtk_application_set_app_menu (GTK_APPLICATION (app), app_menu);
   gtk_widget_show (widget);
-  g_object_unref (builder);
 }                               /* end mom_gtkapp_activate */
 
 

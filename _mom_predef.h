@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 15
+#define MOM_NB_PREDEFINED 14
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -69,9 +69,6 @@ MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,127
 
 //+ describes the entire system
 MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1453251062)
-
-//+ attribute giving an XML string for GtkBuilder
-MOM_HAS_PREDEFINED(xml_gtkbuild,_1n72Ycnzrtc7HkBUJ,326849061,295705712356003621,489216849)
 
 
 
@@ -145,11 +142,6 @@ MOM_HAS_PREDEFINED(xml_gtkbuild,_1n72Ycnzrtc7HkBUJ,326849061,295705712356003621,
 #undef monam_0BV96V94PJIn9si1K
 #define monam_0BV96V94PJIn9si1K the_system
 
-#undef moid_xml_gtkbuild
-#define moid_xml_gtkbuild _1n72Ycnzrtc7HkBUJ
-#undef monam_1n72Ycnzrtc7HkBUJ
-#define monam_1n72Ycnzrtc7HkBUJ xml_gtkbuild
-
 
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
@@ -168,7 +160,6 @@ enum mom_predefined_hashes_en {
   momphash_signature_class=906720652,
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
-  momphash_xml_gtkbuild=489216849,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -178,7 +169,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 15
+#define MOM_NB_NAMED_PREDEFINED 14
 
 
 #undef MOM_HAS_PREDEFINED
