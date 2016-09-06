@@ -1202,7 +1202,8 @@ do_load_plugins_mom (void)
   long lencmd = ftell (fcmd);
   MOM_ASSERTPRINTF (lencmd > 0, "bad lencmd");
   plugcmdbuf[lencmd] = (char) 0;
-  MOM_INFORMPRINTF ("making shared objects for %d plugins", nbplugins);
+  MOM_INFORMPRINTF ("making shared objects for %d plugins, with\n\t%s",
+                    nbplugins, plugcmdbuf);
   fflush (NULL);
   int rc = system (plugcmdbuf);
   if (rc != 0)
