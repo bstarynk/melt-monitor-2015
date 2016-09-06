@@ -899,6 +899,8 @@ mo_dump_emit_names (mo_dumper_ty * du)
     {
       mo_objref_t namobr = mo_set_nth (namobjsetv, ix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (namobr), "bad namobr ix=%d", ix);
+      if (!mo_dump_is_emitted_objref (du, namobr))
+        continue;
       mo_value_t strnamv = mo_get_namev (namobr);
       MOM_ASSERTPRINTF (mo_dyncast_string (strnamv), "bad strnamv ix=%d", ix);
       char idbuf[MOM_CSTRIDSIZ];
@@ -1629,7 +1631,7 @@ mo_loader_name_objects (mo_loader_ty * ld)
   ld->mo_ld_nbnamed = nbnamed;
   MOM_ASSERTPRINTF (nbnamed <= ld->mo_ld_nbobjects,
                     "too big nbnamed %ld for nbobjects=%d", nbnamed,
-		     ld->mo_ld_nbobjects);
+                    ld->mo_ld_nbobjects);
   mo_reserve_names (3 * nbnamed / 2 + MOM_NB_PREDEFINED);
   /* repeat: SELECT nam_oid, nam_str FROM t_names */
   sqlite3_stmt *namstmt = NULL;
