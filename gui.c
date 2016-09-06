@@ -107,6 +107,26 @@ mom_gtkbuilder_connect (GtkBuilder * builder MOM_UNUSED,
 }                               /* end mom_gtkbuilder_connect */
 
 static void
+quitapp_mom (GSimpleAction * action, GVariant * param, gpointer app)
+{
+  MOM_INFORMPRINTF ("quitapp action@%p (gtyp=%s,gcla=%s) app@%p",
+                    action, G_OBJECT_TYPE_NAME (action),
+                    G_OBJECT_CLASS_NAME (action), (void *) app);
+  MOM_INFORMPRINTF ("quitapp param@%p vty=%s", param,
+                    g_variant_get_type_string (param));
+}                               /* end quitapp_mom */
+
+static void
+dumpexitapp_mom (GSimpleAction * action, GVariant * param, gpointer app)
+{
+  MOM_INFORMPRINTF ("dumpexitapp action@%p (gtyp=%s,gcla=%s) app@%p",
+                    action, G_OBJECT_TYPE_NAME (action),
+                    G_OBJECT_CLASS_NAME (action), (void *) app);
+  MOM_INFORMPRINTF ("dumpexitapp param@%p vty=%s", param,
+                    g_variant_get_type_string (param));
+}                               /* end dumpexitapp_mom */
+
+static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   GtkWidget *widget = NULL;
@@ -115,11 +135,16 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
     mo_objref_get_attr (MOM_PREDEF (the_GUI), MOM_PREDEF (xml_gtkbuild));
   if (!mo_dyncast_string (bldstrv))
     MOM_FATAPRINTF ("gtkapp_activate: bad bldstrv");
-  MOM_INFORMPRINTF("gtkapp_activate: bldstrv=%s\n",
-		   mo_string_cstr(bldstrv));
+  MOM_INFORMPRINTF ("gtkapp_activate: bldstrv=%s\n",
+                    mo_string_cstr (bldstrv));
   GtkBuilder *builder = gtk_builder_new_from_string (mo_string_cstr (bldstrv),
                                                      mo_string_size
                                                      (bldstrv));
+  MOM_INFORMPRINTF ("gtkapp_activate: connected signals...");
+  gtk_builder_add_callback_symbol (builder, "$mom.quit",
+                                   G_CALLBACK (quitapp_mom));
+  gtk_builder_add_callback_symbol (builder, "$mom.dumpexit",
+                                   G_CALLBACK (dumpexitapp_mom));
   gtk_builder_connect_signals_full (builder, mom_gtkbuilder_connect,
                                     MOM_PREDEF (the_GUI));
   GMenuModel *app_menu =

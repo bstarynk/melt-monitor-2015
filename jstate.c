@@ -2258,7 +2258,7 @@ mo_value_of_json (mo_json_t js)
               else
                 lenchk = ln - pos;
               memcpy (buf + pos, strchk, lenchk);
-	      pos += lenchk;
+              pos += lenchk;
             }
           MOM_ASSERTPRINTF (pos <= ln, "bad final pos=%ld ln=%ld", pos,
                             (long) ln);
