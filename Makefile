@@ -136,6 +136,9 @@ modules.dir/%.so: modules.dir/%.c $(OBJECTS)
 	          'SELECT mod_ldflags FROM t_modules WHERE mod_oid=$(notdir $(basename $@))') \
 	  -o $@
 
+momplug_%.so: momplug_%.c meltmoni.h $(GENERATED_HEADERS)
+	$(LINK.c) -fPIC -shared $(LINKFLAGS) $(OPTIMFLAGS) $< -o $@
+
 checkgithooks:
 	@for hf in *-githook.sh ; do \
 	  [ ! -d .git -o -L .git/hooks/$$(basename $$hf "-githook.sh") ] \
