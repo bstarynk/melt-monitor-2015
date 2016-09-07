@@ -93,6 +93,33 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoboc)
 }                               /* end of mom_destroy_shownobocc */
 
 
+// compare function for displayed objects
+int
+mom_dispobj_cmp (const void *p1, const void *p2)
+{
+  mo_objref_t ob1 = *(mo_objref_t *) p1;
+  mo_objref_t ob2 = *(mo_objref_t *) p2;
+  if (ob1 == ob2)
+    return 0;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (ob1), "ob1 not object");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (ob2), "ob2 not object");
+  mo_value_t nam1 = mo_objref_namev (ob1);
+  mo_value_t nam2 = mo_objref_namev (ob2);
+  if (nam1 && nam2)
+    return strcmp (mo_string_cstr (nam1), mo_string_cstr (nam2));
+  if (nam1)
+    return -1;
+  if (nam2)
+    return 1;
+  enum mo_space_en sp1 = mo_objref_space (ob1);
+  enum mo_space_en sp2 = mo_objref_space (ob2);
+  if (sp1 < sp2)
+    return -1;
+  if (sp1 > sp2)
+    return 1;
+  return mo_objref_cmp (ob1, ob2);
+}                               /* end mom_dispobj_cmp */
+
 // an expensive operation, we regenerate everything. But that might be
 // enough for a while, because computer is fast enough to redisplay
 // several thousand objects...
@@ -101,8 +128,8 @@ mo_gui_generate_object_text_buffer (void)
 {
   mo_value_t dispsetv = mo_hashset_elements_set (momgui_displayed_objhset);
   unsigned nbdispob = mo_set_size (dispsetv);
-  g_hash_table_remove_all (momgui_shown_obocchset);
-  g_hash_table_remove_all (momgui_displayed_objhset);
+  g_hash_table_remove_all (mom_dispobjinfo_hashtable);
+  g_hash_table_remove_all (mom_shownobjocc_hashtable);
   momgui_displayed_objhset = mo_hashset_reserve (NULL,
                                                  2 * nbdispob + nbdispob / 3 +
                                                  20);
@@ -110,7 +137,14 @@ mo_gui_generate_object_text_buffer (void)
     mo_hashset_reserve (NULL, 3 * nbdispob + nbdispob / 2 + 40);
   gtk_text_buffer_set_text (mom_obtextbuf, "", 0);
   // sort the dispsetv in alphabetical order, or else obid order
-  // display a title string
+  mo_objref_t *objarr =
+    mom_gc_alloc (mom_prime_above (nbdispob + 1) * sizeof (mo_objref_t));
+  if (nbdispob > 0)
+    memcpy (objarr, ((mo_sequencevalue_ty *) dispsetv)->mo_seqobj,
+            nbdispob * sizeof (mo_objref_t));
+  if (nbdispob > 1)
+    qsort (objarr, nbdispob, sizeof (mo_objref_t), mom_dispobj_cmp);
+  // display a common title string
   // display each object
 #warning very incomplete mo_gui_generate_object_text_buffer
   MOM_WARNPRINTF ("mo_gui_generate_object_text_buffer incomplete");
@@ -360,6 +394,14 @@ mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 
 //////////////// create the GUI
 static void
+mom_initialize_gtk_tags_for_objects (void)
+{
+  // we should fill the mom_tagtable
+#warning mom_initialize_gtk_tags_for_objects unimplemented
+  MOM_WARNPRINTF ("mom_initialize_gtk_tags_for_objects unimplemented");
+}                               /* end of mom_initialize_gtk_tags_for_objects */
+
+static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
@@ -408,6 +450,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_tagtable = gtk_text_tag_table_new ();
+  mom_initialize_gtk_tags_for_objects ();
   mom_obtextbuf = gtk_text_buffer_new (mom_tagtable);
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
   mom_tview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
