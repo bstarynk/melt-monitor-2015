@@ -28,6 +28,33 @@ static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
 
+// an object is displayed when we are showing its content
+// or it might be simply shown (without showing the content)
+
+// the hashset of displayed objects
+static mo_hashsetpayl_ty *gui_displayed_objhset;
+// the hashset of shown objects
+static mo_hashsetpayl_ty *gui_shown_objhset;
+
+void
+mo_gui_display_object (mo_objref_t ob)
+{
+  if (!mo_dyncast_objref (ob) || !mom_without_gui)
+    return;
+  MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
+                  mo_objref_pnamestr (ob));
+#warning mo_gui_display_object unimplemented
+}                               /* end of mo_gui_display_object */
+
+void
+mo_gui_undisplay_object (mo_objref_t ob)
+{
+  if (!mo_dyncast_objref (ob) || !mom_without_gui)
+    return;
+  MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
+                  mo_objref_pnamestr (ob));
+#warning mo_gui_undisplay_object unimplemented
+}                               /* end of mo_gui_undisplay_object */
 
 static void
 gobject_weak_notify_mom (gpointer data, GObject * oldgobj)
@@ -73,7 +100,7 @@ mo_objref_put_gobject_payload (mo_objref_t obr, GObject * gobj)
     return;
   MOM_ASSERTPRINTF (G_IS_OBJECT (gobj),
                     "objref_put_gobject in obr=%s bad gobj@%p",
-                    mo_object_pnamestr (obr), gobj);
+                    mo_objref_pnamestr (obr), gobj);
   obr->mo_ob_paylkind = MOM_PREDEF (payload_gobject);
   obr->mo_ob_payldata = gobj;
   g_object_weak_ref (gobj, gobject_weak_notify_mom, obr);
@@ -213,7 +240,7 @@ mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
           else
             shownobr = NULL;
           MOM_INFORMPRINTF ("should show shownobr=%s",
-                            mo_object_pnamestr (shownobr));
+                            mo_objref_pnamestr (shownobr));
           // show it
         }
       else
@@ -330,6 +357,8 @@ mom_run_gtk (int *pargc, char ***pargv)
 {
   int sta = 0;
   mom_gquark = g_quark_from_static_string ("monimelt");
+  gui_displayed_objhset = mo_hashset_reserve (NULL, 100);
+  gui_shown_objhset = mo_hashset_reserve (NULL, 1500);
   mom_gtkapp =
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),

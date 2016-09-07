@@ -16,5 +16,5 @@ momplugin_startup (const char *arg)
   memset (bufoid, 0, sizeof (bufoid));
   mo_cstring_from_hi_lo_ids (bufoid, obr->mo_ob_hid, obr->mo_ob_loid);
   MOM_INFORMPRINTF ("unpredef plugin put %s = %s in global space",
-                    mo_object_pnamestr (obr), bufoid);
+                    mo_objref_pnamestr (obr), bufoid);
 }

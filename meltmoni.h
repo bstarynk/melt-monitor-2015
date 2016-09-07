@@ -373,12 +373,8 @@ double mom_elapsed_real_time (void);    /* relative to start of program */
 double mom_process_cpu_time (void);
 double mom_thread_cpu_time (void);
 
-////////////////////////////////////////////////////////////////
-/**** Graphical User Interface (above GTK) *****/
-extern bool mom_without_gui;
 extern void *mom_prog_dlhandle;
 extern char *mom_dump_dir;
-void mom_run_gtk (int *pargc, char ***pargv);
 
 ////////////////////////////////////////////////////////////////
 // call strftime on ti, but replace .__ with centiseconds for ti
@@ -1393,7 +1389,7 @@ mo_objref_t mo_find_named_vals (mo_value_t namv);
 void mo_reserve_names (unsigned gap);
 // the printable name of an object, perhaps GC-strduped
 static inline const char *
-mo_object_pnamestr (mo_objref_t ob)
+mo_objref_pnamestr (mo_objref_t ob)
 {
   if (!mo_dyncast_objref (ob))
     return "~";
@@ -1401,7 +1397,7 @@ mo_object_pnamestr (mo_objref_t ob)
   if (namv)
     return mo_string_cstr (namv);
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);
-}                               /* end mo_object_pnamestr */
+}                               /* end mo_objref_pnamestr */
 
 // get the idstr of an object in some given buffer (or else in GC-ed
 // heap or literal string for nil)
@@ -1582,6 +1578,12 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
   return NULL;
 }                               /* end mo_objref_get_signed_funad */
 
+////////////////////////////////////////////////////////////////
+/**** Graphical User Interface (above GTK) *****/
+extern bool mom_without_gui;
+void mom_run_gtk (int *pargc, char ***pargv);
+void mo_gui_display_object (mo_objref_t ob);
+void mo_gui_undisplay_object (mo_objref_t ob);
 
 // the prefix & suffix of plugins
 #define MOM_PLUGIN_PREFIX "momplug_"

@@ -448,14 +448,14 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
               if (json_dumpf (js, jsonfil, JSON_INDENT (1) | JSON_SORT_KEYS))
                 MOM_FATAPRINTF
                   ("failed to json_dumpf for payload of object %s",
-                   mo_object_pnamestr (obr));
+                   mo_objref_pnamestr (obr));
               fputc ('\n', jsonfil);
               long jsonlen = ftell (jsonfil);
               fflush (jsonfil);
               if (jsonlen > 16 * (long) MOM_SIZE_MAX)
                 MOM_FATAPRINTF ("too big json for payload of %s kind %s",
-                                mo_object_pnamestr (obr),
-                                mo_object_pnamestr (paylkindobr));
+                                mo_objref_pnamestr (obr),
+                                mo_objref_pnamestr (paylkindobr));
               paylcontstr = mom_gc_alloc_scalar (jsonlen + 1);
               memcpy ((char *) paylcontstr, jsonbuf, jsonlen);
               fclose (jsonfil);
@@ -534,11 +534,11 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   FILE *fmem = open_memstream (&contbuf, &contsiz);
   if (!fmem)
     MOM_FATAPRINTF ("failed to open memstream for content of object %s",
-                    mo_object_pnamestr (obr));
+                    mo_objref_pnamestr (obr));
   fputc ('\n', fmem);
   if (json_dumpf (jcont, fmem, JSON_INDENT (1) | JSON_SORT_KEYS))
     MOM_FATAPRINTF ("failed to json_dumpf for content of object %s",
-                    mo_object_pnamestr (obr));
+                    mo_objref_pnamestr (obr));
   fputc ('\n', fmem);
   fflush (fmem);
   rc =
@@ -589,7 +589,7 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
       const void *payldata = obr->mo_ob_payldata;
       MOM_ASSERTPRINTF (mo_dyncast_objref (obrpayk),
                         "bad obrpayk@%p for obr@%p=%s",
-                        obrpayk, obr, mo_object_pnamestr (obr));
+                        obrpayk, obr, mo_objref_pnamestr (obr));
       mo_dump_scan_objref (du, obrpayk);
       if (obrpayk->mo_ob_class == MOM_PREDEF (signature_class))
         {
@@ -615,8 +615,8 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
                 {
                   MOM_WARNPRINTF
                     ("obr@%p=%s with payldata %p payk %s dli_sname %s dli_fname %s",
-                     obr, mo_object_pnamestr (obr), payldata,
-                     mo_object_pnamestr (obrpayk), dif.dli_sname,
+                     obr, mo_objref_pnamestr (obr), payldata,
+                     mo_objref_pnamestr (obrpayk), dif.dli_sname,
                      dif.dli_fname);
                   if (((sscanf
                         (dif.dli_sname, MOM_CODE_PREFIX MOM_CSTRIDSCANF "%n",
@@ -657,14 +657,14 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
                 }
               else
                 MOM_FATAPRINTF ("obr@%p=%s with unamed payldata@%p payk %s",
-                                obr, mo_object_pnamestr (obr), payldata,
-                                mo_object_pnamestr (obrpayk));
+                                obr, mo_objref_pnamestr (obr), payldata,
+                                mo_objref_pnamestr (obrpayk));
             }
           else
             MOM_FATAPRINTF
               ("dladdr failed for scan inside obr@%p=%s payload@%p/kd.%s",
-               obr, mo_object_pnamestr (obr), payldata,
-               mo_object_pnamestr (obrpayk));
+               obr, mo_objref_pnamestr (obr), payldata,
+               mo_objref_pnamestr (obrpayk));
         }
       else
         {
@@ -1904,7 +1904,7 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
 			     " bad payload JSON content for %s (%s"	\
 			     ", l#%d, c#%d, p#%d): %.64s...",		\
 			     mo_string_cstr (ld->mo_ld_sqlitepathv),	\
-			     mo_object_pnamestr(obr),Jerr.text,		\
+			     mo_objref_pnamestr(obr),Jerr.text,		\
 			     Jerr.line, Jerr.column,			\
 			     Jerr.position,				\
 			     PaylStr);					\

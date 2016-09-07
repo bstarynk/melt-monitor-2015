@@ -35,7 +35,7 @@ mo_objref_open_file (mo_objref_t obr, const char *path, const char *mods)
   if (!fil)
     {
       MOM_WARNPRINTF ("open_file obr@%p:%s path=%s mods=%s failed",
-                      obr, mo_object_pnamestr (obr), path, mods);
+                      obr, mo_objref_pnamestr (obr), path, mods);
       return false;
     }
   mo_objref_clear_payload (obr);
@@ -56,19 +56,19 @@ mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint)
   char *zon = calloc (1, sizhint);
   if (MOM_UNLIKELY (zon == NULL))
     MOM_FATAPRINTF ("failed to calloc a buffer zone (%u bytes) for obr %s",
-                    sizhint, mo_object_pnamestr (obr));
+                    sizhint, mo_objref_pnamestr (obr));
   mo_bufferpayl_ty *bpy = calloc (1, sizeof (mo_bufferpayl_ty));
   if (MOM_UNLIKELY (bpy == NULL))
     MOM_FATAPRINTF
       ("failed to calloc a buffer payload (%zd bytes) for obr %s",
-       sizeof (mo_bufferpayl_ty), mo_object_pnamestr (obr));
+       sizeof (mo_bufferpayl_ty), mo_objref_pnamestr (obr));
   bpy->mo_buffer_zone = zon;
   bpy->mo_buffer_size = sizhint;
   if (MOM_UNLIKELY ((bpy->mo_buffer_memstream   //
                      = open_memstream (&bpy->mo_buffer_zone,
                                        &bpy->mo_buffer_size)) == NULL))
     MOM_FATAPRINTF ("failed to open_memstream a buffer payload for obr %s",
-                    mo_object_pnamestr (obr));
+                    mo_objref_pnamestr (obr));
   mo_objref_clear_payload (obr);
   ((mo_hashedvalue_ty *) bpy)->mo_va_kind = mo_PBUFFER;
   ((mo_hashedvalue_ty *) bpy)->mo_va_hash =
@@ -91,17 +91,17 @@ mo_dump_json_for_buffer_objref (mo_dumper_ty * du, mo_objref_t obr)
     return NULL;
   mo_bufferpayl_ty *bpy = (mo_bufferpayl_ty *) (obr->mo_ob_payldata);
   MOM_ASSERTPRINTF (bpy != MOM_EMPTY_SLOT, "empty bpy for obr %s",
-                    mo_object_pnamestr (obr));
+                    mo_objref_pnamestr (obr));
   if (MOM_UNLIKELY (bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC))
     MOM_FATAPRINTF ("corrupted buffer @%p for obr %s",
-                    bpy, mo_object_pnamestr (obr));
+                    bpy, mo_objref_pnamestr (obr));
   if (MOM_UNLIKELY (bpy->mo_buffer_memstream == NULL))
     MOM_FATAPRINTF ("invalid closed buffer @%p for obr %s",
-                    bpy, mo_object_pnamestr (obr));
+                    bpy, mo_objref_pnamestr (obr));
   long cpos = ftell (bpy->mo_buffer_memstream);
   if (cpos < 0)
     MOM_FATAPRINTF ("weird buffer @%p for obr %s",
-                    bpy, mo_object_pnamestr (obr));
+                    bpy, mo_objref_pnamestr (obr));
   fflush (bpy->mo_buffer_memstream);
   json_t *jarr = json_array ();
   const char *zone = bpy->mo_buffer_zone;
@@ -144,11 +144,11 @@ mo_objref_set_buffer_from_json (mo_objref_t obr, json_t *js)
   if (MOM_UNLIKELY (!mo_objref_open_buffer (obr, blen)))
     MOM_FATAPRINTF
       ("set_buffer_from_json obr %s failed to open buffer (blen=%ld)",
-       mo_object_pnamestr (obr), (long) blen);
+       mo_objref_pnamestr (obr), (long) blen);
   FILE *fbu = mo_objref_file (obr);
   MOM_ASSERTPRINTF (fbu != NULL,
                     "set_buffer_from_json obr %s failed to get file",
-                    mo_object_pnamestr (obr));
+                    mo_objref_pnamestr (obr));
   size_t alen = json_array_size (jarr);
   for (size_t ix = 0; ix < alen; ix++)
     {
@@ -173,14 +173,14 @@ mo_objref_file (mo_objref_t obr)
         {
           MOM_ASSERTPRINTF (bupayl != MOM_EMPTY_SLOT,
                             "empty bupayl for buffer object in in obr@%p=%s",
-                            obr, mo_object_pnamestr (obr));
+                            obr, mo_objref_pnamestr (obr));
           MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) bupayl)->mo_va_kind ==
                             mo_PBUFFER,
                             "invalid bupayl for buffer object in in obr@%p=%s",
-                            obr, mo_object_pnamestr (obr));
+                            obr, mo_objref_pnamestr (obr));
           if (MOM_UNLIKELY (bupayl->mo_buffer_nmagic != MOM_BUFFER_MAGIC))
             MOM_FATAPRINTF ("corrupted buffer object in obr@%p=%s",
-                            obr, mo_object_pnamestr (obr));
+                            obr, mo_objref_pnamestr (obr));
           return bupayl->mo_buffer_memstream;
         }
     }

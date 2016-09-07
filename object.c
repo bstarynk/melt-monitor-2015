@@ -451,7 +451,7 @@ mo_objref_really_clear_payload (mo_objref_t obr)
                 mo_bufferpayl_ty *bpy = (mo_bufferpayl_ty *) payldata;
                 if (bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC)
                   MOM_FATAPRINTF ("clean_payload obr=%s corrupted buffer",
-                                  mo_object_pnamestr (obr));
+                                  mo_objref_pnamestr (obr));
                 if (bpy->mo_buffer_memstream)
                   {
                     fclose (bpy->mo_buffer_memstream);
@@ -603,8 +603,8 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
     {
       MOM_WARNPRINTF
         ("put_signature_payload: in obr=%s sigobr=%s (of bad class %s)",
-         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr),
-         mo_object_pnamestr (sigobr->mo_ob_class));
+         mo_objref_pnamestr (obr), mo_objref_pnamestr (sigobr),
+         mo_objref_pnamestr (sigobr->mo_ob_class));
       return;
     }
   mo_objref_clear_payload (obr);
@@ -638,14 +638,14 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
         {
           MOM_WARNPRINTF
             ("put_signature_payload: in obr=%s sigobr=%s failure %s",
-             mo_object_pnamestr (obr), mo_object_pnamestr (sigobr),
+             mo_objref_pnamestr (obr), mo_objref_pnamestr (sigobr),
              mo_string_cstr (errmsgv));
           return;
         }
     };
   MOM_ASSERTPRINTF (syad != NULL,
                     "put_signature_payload: syad is null obr=%s sigobr=%s",
-                    mo_object_pnamestr (obr), mo_object_pnamestr (sigobr));
+                    mo_objref_pnamestr (obr), mo_objref_pnamestr (sigobr));
   memset (synamebuf, 0, sizeof (synamebuf));
   snprintf (synamebuf, sizeof (synamebuf), MOM_SIGNATURE_PREFIX "%s",
             bufobrid);
@@ -654,7 +654,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
     {
       MOM_WARNPRINTF
         ("put_signature_payload: in obr=%s sigobr=%s missing signature; dlsym'%s' failed: %s",
-         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr), synamebuf,
+         mo_objref_pnamestr (obr), mo_objref_pnamestr (sigobr), synamebuf,
          dlerror ());
       return;
     }
@@ -663,7 +663,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
     {
       MOM_WARNPRINTF
         ("put_signature_payload: in obr=%s sigobr=%s incompatible signature got %s expecting %s",
-         mo_object_pnamestr (obr), mo_object_pnamestr (sigobr), sigstr,
+         mo_objref_pnamestr (obr), mo_objref_pnamestr (sigobr), sigstr,
          bufsigid);
       return;
     }
