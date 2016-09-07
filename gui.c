@@ -36,9 +36,9 @@ static GtkWidget *mom_tview2;
  * value references them anymore.
  **/
 // The hashset of displayed objects
-static mo_hashsetpayl_ty *gui_displayed_objhset;
+static mo_hashsetpayl_ty *momgui_displayed_objhset;
 // the hashset of shown object occurrences
-static mo_hashsetpayl_ty *gui_shown_obocchset;
+static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
 // Each displayed object is displayed only once, and we keep the
 // following GTK information about it
@@ -74,8 +74,8 @@ static GHashTable *mom_shownobjocc_hashtable;
 static void
 mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
 {
-  gui_displayed_objhset =       //
-    mo_hashset_remove (gui_displayed_objhset, dispobi->mo_gdo_dispobr);
+  momgui_displayed_objhset =    //
+    mo_hashset_remove (momgui_displayed_objhset, dispobi->mo_gdo_dispobr);
   g_clear_object (&dispobi->mo_gdo_startmark);
   g_clear_object (&dispobi->mo_gdo_endmark);
   memset (dispobi, 0, sizeof (*dispobi));
@@ -85,16 +85,35 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
 static void
 mom_destroy_shownobocc (momgui_shownobocc_ty * shoboc)
 {
-  gui_shown_obocchset =         //
-    mo_hashset_remove (gui_shown_obocchset, shoboc->mo_gso_showobr);
+  momgui_shown_obocchset =      //
+    mo_hashset_remove (momgui_shown_obocchset, shoboc->mo_gso_showobr);
   g_clear_object (&shoboc->mo_gso_txtag);
   memset (shoboc, 0, sizeof (*shoboc));
   free (shoboc);
 }                               /* end of mom_destroy_shownobocc */
 
+
+// an expensive operation, we regenerate everything. But that might be
+// enough for a while, because computer is fast enough to redisplay
+// several thousand objects...
 void
 mo_gui_generate_object_text_buffer (void)
 {
+  mo_value_t dispsetv = mo_hashset_elements_set (momgui_displayed_objhset);
+  unsigned nbdispob = mo_set_size (dispsetv);
+  g_hash_table_remove_all (momgui_shown_obocchset);
+  g_hash_table_remove_all (momgui_displayed_objhset);
+  momgui_displayed_objhset = mo_hashset_reserve (NULL,
+                                                 2 * nbdispob + nbdispob / 3 +
+                                                 20);
+  momgui_shown_obocchset =
+    mo_hashset_reserve (NULL, 3 * nbdispob + nbdispob / 2 + 40);
+  gtk_text_buffer_set_text (mom_obtextbuf, "", 0);
+  // sort the dispsetv in alphabetical order, or else obid order
+  // display a title string
+  // display each object
+#warning very incomplete mo_gui_generate_object_text_buffer
+  MOM_WARNPRINTF ("mo_gui_generate_object_text_buffer incomplete");
 }                               /* end mo_gui_generate_object_text_buffer */
 
 void
@@ -102,7 +121,7 @@ mo_gui_display_object (mo_objref_t ob)
 {
   if (!mo_dyncast_objref (ob) || !mom_without_gui)
     return;
-  if (mo_hashset_contains (gui_displayed_objhset, ob))
+  if (mo_hashset_contains (momgui_displayed_objhset, ob))
     return;
   MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
                   mo_objref_pnamestr (ob));
@@ -422,8 +441,8 @@ mom_run_gtk (int *pargc, char ***pargv)
 {
   int sta = 0;
   mom_gquark = g_quark_from_static_string ("monimelt");
-  gui_displayed_objhset = mo_hashset_reserve (NULL, 100);
-  gui_shown_obocchset = mo_hashset_reserve (NULL, 1500);
+  momgui_displayed_objhset = mo_hashset_reserve (NULL, 100);
+  momgui_shown_obocchset = mo_hashset_reserve (NULL, 1500);
   mom_dispobjinfo_hashtable =   //
     g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
                            NULL, (GDestroyNotify) mom_destroy_dispobjinfo);
