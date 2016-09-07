@@ -22,24 +22,87 @@
 
 static GtkApplication *mom_gtkapp;
 static GQuark mom_gquark;
-static GtkTextBuffer *mom_textbuf;
+static GtkTextBuffer *mom_obtextbuf;
 static GtkTextTagTable *mom_tagtable;
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
 
-// an object is displayed when we are showing its content
-// or it might be simply shown (without showing the content)
+// an object is displayed (once) when we are showing its content or it
+// might be simply shown (without showing the content)
 
-// the hashset of displayed objects
+/** Both hashsets below are mostly to keep Boehm's GC happy, so the
+ * displayed or shown objects are never freed prematurely -even if no
+ * value references them anymore.
+ **/
+// The hashset of displayed objects
 static mo_hashsetpayl_ty *gui_displayed_objhset;
-// the hashset of shown objects
-static mo_hashsetpayl_ty *gui_shown_objhset;
+// the hashset of shown object occurrences
+static mo_hashsetpayl_ty *gui_shown_obocchset;
+
+// Each displayed object is displayed only once, and we keep the
+// following GTK information about it
+typedef struct momgui_dispobjinfo_st momgui_dispobjinfo_ty;
+struct momgui_dispobjinfo_st
+{
+  // the displayed object reference
+  mo_objref_t mo_gdo_dispobr;
+  // the start and end mark of the text buffer slice displaying that object
+  GtkTextMark *mo_gdo_startmark;
+  GtkTextMark *mo_gdo_endmark;
+};
+// The glib hashtable mapping objects to above momgui_dispobjinfo_ty
+static GHashTable *mom_dispobjinfo_hashtable;
+
+
+// Each shown object can be shown in many occurrences. We keep the
+// following GTK information about it
+typedef struct momgui_shownobocc_st momgui_shownobocc_ty;
+struct momgui_shownobocc_st
+{
+  // the shown object reference
+  mo_objref_t mo_gso_showobr;
+  // the particular tag for that object (e.g. we could highlight all
+  // occurrences with that tag)
+  GtkTextTag *mo_gso_txtag;
+};
+// The glib hashtable mapping objects to above
+static GHashTable *mom_shownobjocc_hashtable;
+
+
+// destructor for momgui_dispobjinfo_ty, for g_hash_table_new_full
+static void
+mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
+{
+  gui_displayed_objhset =       //
+    mo_hashset_remove (gui_displayed_objhset, dispobi->mo_gdo_dispobr);
+  g_clear_object (&dispobi->mo_gdo_startmark);
+  g_clear_object (&dispobi->mo_gdo_endmark);
+  memset (dispobi, 0, sizeof (*dispobi));
+  free (dispobi);
+}                               /* end of mom_destroy_dispobjinfo */
+
+static void
+mom_destroy_shownobocc (momgui_shownobocc_ty * shoboc)
+{
+  gui_shown_obocchset =         //
+    mo_hashset_remove (gui_shown_obocchset, shoboc->mo_gso_showobr);
+  g_clear_object (&shoboc->mo_gso_txtag);
+  memset (shoboc, 0, sizeof (*shoboc));
+  free (shoboc);
+}                               /* end of mom_destroy_shownobocc */
+
+void
+mo_gui_generate_object_text_buffer (void)
+{
+}                               /* end mo_gui_generate_object_text_buffer */
 
 void
 mo_gui_display_object (mo_objref_t ob)
 {
   if (!mo_dyncast_objref (ob) || !mom_without_gui)
+    return;
+  if (mo_hashset_contains (gui_displayed_objhset, ob))
     return;
   MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
                   mo_objref_pnamestr (ob));
@@ -275,10 +338,6 @@ mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   MOM_INFORMPRINTF ("cut_edit");
 }                               /* end mom_cut_edit */
 
-static void
-mom_initialize_text_buffer_and_views (void)
-{
-}                               /* end of mom_initialize_text_buffer_and_views */
 
 //////////////// create the GUI
 static void
@@ -330,10 +389,10 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_tagtable = gtk_text_tag_table_new ();
-  mom_textbuf = gtk_text_buffer_new (mom_tagtable);
+  mom_obtextbuf = gtk_text_buffer_new (mom_tagtable);
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
-  mom_tview1 = gtk_text_view_new_with_buffer (mom_textbuf);
-  mom_tview2 = gtk_text_view_new_with_buffer (mom_textbuf);
+  mom_tview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
+  mom_tview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview1), false);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview2), false);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
@@ -347,10 +406,16 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
-  mom_initialize_text_buffer_and_views ();
   gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
 
+static guint
+momgui_objhash (const void *ob)
+{
+  if (ob != NULL)
+    return mo_objref_hash ((mo_objref_t) ob);
+  return 0;
+}                               /* end momgui_objhash */
 
 void
 mom_run_gtk (int *pargc, char ***pargv)
@@ -358,7 +423,13 @@ mom_run_gtk (int *pargc, char ***pargv)
   int sta = 0;
   mom_gquark = g_quark_from_static_string ("monimelt");
   gui_displayed_objhset = mo_hashset_reserve (NULL, 100);
-  gui_shown_objhset = mo_hashset_reserve (NULL, 1500);
+  gui_shown_obocchset = mo_hashset_reserve (NULL, 1500);
+  mom_dispobjinfo_hashtable =   //
+    g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
+                           NULL, (GDestroyNotify) mom_destroy_dispobjinfo);
+  mom_shownobjocc_hashtable =   //
+    g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
+                           NULL, (GDestroyNotify) mom_destroy_shownobocc);
   mom_gtkapp =
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
