@@ -515,7 +515,7 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
   mo_json_t jattrs = mo_dump_json_of_assoval (du, obr->mo_ob_attrs);
   mo_json_t jcomps = mo_dump_json_of_vectval (du, obr->mo_ob_comps);
   mo_json_t jcont = NULL;
-  mo_value_t namev = mo_get_namev (obr);
+  mo_value_t namev = mo_objref_namev (obr);
   if (namev)
     {
       // the @name field is emitted for convenience, in the case
@@ -738,8 +738,8 @@ mom_predefsort_cmp (const void *p1, const void *p2)
   mo_objref_t ob2 = *(mo_objref_t *) p2;
   MOM_ASSERTPRINTF (mo_objref_space (ob1) == mo_SPACE_PREDEF, "bad ob1");
   MOM_ASSERTPRINTF (mo_objref_space (ob2) == mo_SPACE_PREDEF, "bad ob2");
-  mo_value_t nam1 = mo_get_namev (ob1);
-  mo_value_t nam2 = mo_get_namev (ob2);
+  mo_value_t nam1 = mo_objref_namev (ob1);
+  mo_value_t nam2 = mo_objref_namev (ob2);
   if (nam1 && nam2)
     {
       MOM_ASSERTPRINTF (mo_dyncast_string (nam1), "bad nam1");
@@ -783,7 +783,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
                         && mo_objref_space (obp) == mo_SPACE_PREDEF,
                         "bad obp");
       fputc ('\n', fp);
-      mo_value_t namv = mo_get_namev (obp);
+      mo_value_t namv = mo_objref_namev (obp);
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
@@ -831,7 +831,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
   for (int ix = 0; ix < nbpredef; ix++)
     {
       mo_objref_t obp = predarr[ix];
-      mo_value_t namv = mo_get_namev (obp);
+      mo_value_t namv = mo_objref_namev (obp);
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
@@ -853,7 +853,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
   for (int ix = 0; ix < nbpredef; ix++)
     {
       mo_objref_t obp = predarr[ix];
-      mo_value_t namv = mo_get_namev (obp);
+      mo_value_t namv = mo_objref_namev (obp);
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       if (namv != NULL)
@@ -901,7 +901,7 @@ mo_dump_emit_names (mo_dumper_ty * du)
       MOM_ASSERTPRINTF (mo_dyncast_objref (namobr), "bad namobr ix=%d", ix);
       if (!mo_dump_is_emitted_objref (du, namobr))
         continue;
-      mo_value_t strnamv = mo_get_namev (namobr);
+      mo_value_t strnamv = mo_objref_namev (namobr);
       MOM_ASSERTPRINTF (mo_dyncast_string (strnamv), "bad strnamv ix=%d", ix);
       char idbuf[MOM_CSTRIDSIZ];
       memset (idbuf, 0, sizeof (idbuf));

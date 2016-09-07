@@ -1371,7 +1371,7 @@ void mom_load_state (void);
 bool mom_valid_name (const char *nam);  // in name.c
 
 // get the name of some object, or else nil
-mo_value_t mo_get_namev (mo_objref_t ob);
+mo_value_t mo_objref_namev (mo_objref_t ob);
 
 
 /* currently, the names are never forgotten, old their associated
@@ -1397,7 +1397,7 @@ mo_object_pnamestr (mo_objref_t ob)
 {
   if (!mo_dyncast_objref (ob))
     return "~";
-  mo_value_t namv = mo_get_namev (ob);
+  mo_value_t namv = mo_objref_namev (ob);
   if (namv)
     return mo_string_cstr (namv);
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);

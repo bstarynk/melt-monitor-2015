@@ -121,9 +121,7 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
                                  GTK_RESPONSE_CANCEL,
                                  NULL);
   gtk_widget_show_all (quitdialog);
-  MOM_INFORMPRINTF ("quitdialog=%p", quitdialog);
   int res = gtk_dialog_run (GTK_DIALOG (quitdialog));
-  MOM_INFORMPRINTF ("res=%d", res);
   if (res == GTK_RESPONSE_CLOSE)
     {
       mom_dump_dir = "-";
@@ -133,10 +131,73 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   quitdialog = NULL;
 }                               /* end of mom_quit_app */
 
+
+static int
+mom_obname_cmp (const void *p1, const void *p2)
+{
+  const char *s1 = mo_string_cstr (*(mo_value_t *) p1);
+  const char *s2 = mo_string_cstr (*(mo_value_t *) p2);
+  MOM_ASSERTPRINTF (s1 != NULL && s2 != NULL, "s1 or s2 not null");
+  return strcmp (s1, s2);
+}                               /* end mom_obname_cmp */
+
+static GtkWidget *
+mom_objectentry (void)
+{
+  GtkWidget *obent = gtk_combo_box_text_new_with_entry ();
+  gtk_widget_set_size_request (obent, 30, 10);
+  mo_value_t namsetv = mo_named_objects_set ();
+  int nbnam = mo_set_size (namsetv);
+  MOM_ASSERTPRINTF (nbnam > 0, "bad nbnam");
+  mo_value_t *namarr = mom_gc_alloc (nbnam * sizeof (mo_value_t));
+  int cntnam = 0;
+  for (int ix = 0; ix < nbnam; ix++)
+    {
+      mo_objref_t curobr = mo_set_nth (namsetv, ix);
+      mo_value_t curnamv = mo_objref_namev (curobr);
+      if (mo_dyncast_string (curnamv))
+        namarr[cntnam++] = curnamv;
+    }
+  qsort (namarr, cntnam, sizeof (mo_value_t), mom_obname_cmp);
+  for (int ix = 0; ix < cntnam; ix++)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (obent),
+                                    mo_string_cstr (namarr[ix]));
+  GtkWidget *combtextent = gtk_bin_get_child (GTK_BIN (obent));
+  MOM_ASSERTPRINTF (GTK_IS_ENTRY (combtextent), "bad combtextent");
+  return obent;
+}                               /* end mom_objectentry */
+
+
+
 static void
 mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 {
   MOM_INFORMPRINTF ("show_edit");
+  GtkWidget *showdialog =       //
+    gtk_dialog_new_with_buttons ("show:",
+                                 GTK_WINDOW (mom_appwin),
+                                 GTK_DIALOG_MODAL |
+                                 GTK_DIALOG_DESTROY_WITH_PARENT,
+                                 "Show",
+                                 GTK_RESPONSE_OK,
+                                 "Cancel",
+                                 GTK_RESPONSE_CANCEL,
+                                 NULL);
+  GtkWidget *contarea = gtk_dialog_get_content_area (GTK_DIALOG (showdialog));
+  GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 3);
+  gtk_container_add (GTK_CONTAINER (contarea), hbox);
+  gtk_box_pack_start (GTK_BOX (hbox), gtk_label_new ("object:"),
+                      FALSE, FALSE, 1);
+  GtkWidget *obent = mom_objectentry ();
+  gtk_box_pack_end (GTK_BOX (hbox), obent, TRUE, TRUE, 1);
+  gtk_widget_show_all (showdialog);
+  int res = gtk_dialog_run (GTK_DIALOG (showdialog));
+  if (res == GTK_RESPONSE_OK)
+    {
+      // show it
+    };
+  gtk_widget_destroy (showdialog);
+  showdialog = NULL;
 }                               /* end mom_show_edit */
 
 static void

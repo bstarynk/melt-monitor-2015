@@ -563,14 +563,14 @@ mom_correct_name_node_after_insertion (struct mom_namednode_st *nz)
 }                               /* end mom_correct_name_node_after_insertion */
 
 mo_value_t
-mo_get_namev (mo_objref_t obr)
+mo_objref_namev (mo_objref_t obr)
 {
   if (!mo_dyncast_objref (obr))
     return NULL;
   mo_value_t r = mo_assoval_get (mom_nameassop, obr);
   MOM_ASSERTPRINTF (r == NULL || mo_dyncast_string (r), "bad name");
   return r;
-}                               /* end mo_get_namev */
+}                               /* end mo_objref_namev */
 
 // register a name for an anonymous object, return true if successful
 bool
