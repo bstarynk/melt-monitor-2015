@@ -164,6 +164,13 @@ mom_objectentry (void)
                                     mo_string_cstr (namarr[ix]));
   GtkWidget *combtextent = gtk_bin_get_child (GTK_BIN (obent));
   MOM_ASSERTPRINTF (GTK_IS_ENTRY (combtextent), "bad combtextent");
+  MOM_ASSERTPRINTF (gtk_entry_get_completion (GTK_ENTRY (combtextent)) ==
+                    NULL, "got completion in combtextent");
+  // if the entered text starts with a letter, I want it to be
+  // completed with the appended text above if the entered text starts
+  // with an undersore, then a digit, then two alphanum (like _0BV or
+  // _6S3 for example), I want to call a completion function.
+#warning objectentry: what should I code here?
   return obent;
 }                               /* end mom_objectentry */
 
