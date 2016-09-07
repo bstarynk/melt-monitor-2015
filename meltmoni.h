@@ -1403,8 +1403,28 @@ mo_object_pnamestr (mo_objref_t ob)
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);
 }                               /* end mo_object_pnamestr */
 
-// retrieve the set of names objects
+// get the idstr of an object in some given buffer (or else in GC-ed
+// heap or literal string for nil)
+static inline const char *
+mo_object_idstr (char *bufid, mo_objref_t ob)
+{
+  if (mo_dyncast_objref (ob))
+    {
+      return mo_cstring_from_hi_lo_ids (bufid, ob->mo_ob_hid, ob->mo_ob_loid);
+    }
+  else if (bufid && bufid != MOM_EMPTY_SLOT)
+    {
+      strcpy (bufid, "~");
+      return bufid;
+    }
+  else
+    return "~";
+}                               /* end mo_object_idstr */
+
+
+// retrieve the set of named objects
 mo_value_t mo_named_objects_set (void);
+
 /************* PREDEFINED ***********/
 
 mo_value_t mo_predefined_objects_set (void);

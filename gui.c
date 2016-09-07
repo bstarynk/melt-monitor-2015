@@ -198,11 +198,28 @@ mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   GtkWidget *obent = mom_objectentry ();
   gtk_box_pack_end (GTK_BOX (hbox), obent, TRUE, TRUE, 1);
   gtk_widget_show_all (showdialog);
-  int res = gtk_dialog_run (GTK_DIALOG (showdialog));
-  if (res == GTK_RESPONSE_OK)
+  mo_objref_t shownobr = NULL;
+  int res = 0;
+  do
     {
-      // show it
-    };
+      shownobr = NULL;
+      res = gtk_dialog_run (GTK_DIALOG (showdialog));
+      if (res == GTK_RESPONSE_OK)
+        {
+          gchar *nams =
+            gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (obent));
+          if (nams && mom_valid_name (nams))
+            shownobr = mo_find_named_cstr (nams);
+          else
+            shownobr = NULL;
+          MOM_INFORMPRINTF ("should show shownobr=%s",
+                            mo_object_pnamestr (shownobr));
+          // show it
+        }
+      else
+        break;
+    }
+  while (!shownobr);
   gtk_widget_destroy (showdialog);
   showdialog = NULL;
 }                               /* end mom_show_edit */
