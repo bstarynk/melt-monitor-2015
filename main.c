@@ -934,6 +934,8 @@ mom_cstring_hash_len (const char *str, int len)
 void
 mom_print_info (void)
 {
+  MOM_INFORMPRINTF ("various information for monimelt of %s",
+                    monimelt_timestamp);
   printf ("MONIMELT info:\n" " timestamp: %s\n", monimelt_timestamp);
 #ifdef NDEBUG
   printf ("*** ASSERT disabled thru NDEBUG\n");
@@ -955,12 +957,12 @@ mom_print_info (void)
   for (const char *const *pfilnam = monimelt_csources;
        pfilnam && *pfilnam; pfilnam++)
     printf (" %s", *pfilnam);
-  fputs ("}\n", stdout);
+  fputs (" }\n", stdout);
   printf (" shellsources {");
   for (const char *const *pfilnam = monimelt_shellsources;
        pfilnam && *pfilnam; pfilnam++)
     printf (" %s", *pfilnam);
-  fputs ("}\n", stdout);
+  fputs (" }\n", stdout);
   printf (" libsqlite3version: %s\n", sqlite3_libversion ());
   printf (" glibversion: major %d minor %d micro %d\n",
           glib_major_version, glib_minor_version, glib_micro_version);
@@ -1048,6 +1050,7 @@ mom_print_info (void)
 
 
 static gboolean want_version_mom;
+static gboolean want_info_mom;
 static gboolean no_gui_mom;
 static char *initrand_mom;
 static char **predef_names_mom;
@@ -1057,6 +1060,8 @@ static int bench_count_mom;
 static const GOptionEntry mom_goptions[] = {
   {"version", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
    &want_version_mom, "version info", NULL},
+  {"info", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &want_info_mom, "give various information", NULL},
   {"dump", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
    &mom_dump_dir, "dump into directory D", "D"},
   {"no-gui", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
@@ -1542,9 +1547,9 @@ main (int argc_main, char **argv_main)
   if (!g_option_context_parse (optcontext, &argc, &argv, &opterror))
     MOM_FATAPRINTF ("option parsing failed: %s\n", opterror->message);
   if (want_version_mom)
-    {
-      print_version_mom (argv[0]);
-    }
+    print_version_mom (argv[0]);
+  if (want_info_mom)
+    mom_print_info ();
   mom_init_objects ();
   {
     fflush (NULL);
