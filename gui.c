@@ -23,7 +23,10 @@
 static GtkApplication *mom_gtkapp;
 static GQuark mom_gquark;
 static GtkTextBuffer *mom_textbuf;
+static GtkTextTagTable *mom_tagtable;
 static GtkWidget *mom_appwin;
+static GtkWidget *mom_tview1;
+static GtkWidget *mom_tview2;
 
 
 static void
@@ -100,6 +103,7 @@ mom_dump_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
     mom_dump_dir = ".";
   MOM_INFORMPRINTF ("dump_app");
   mom_dump_state (NULL);
+  MOM_INFORMPRINTF ("done dump_app");
 }                               /* end mom_dump_app */
 
 static void
@@ -129,6 +133,29 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   quitdialog = NULL;
 }                               /* end of mom_quit_app */
 
+static void
+mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("show_edit");
+}                               /* end mom_show_edit */
+
+static void
+mom_copy_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("copy_edit");
+}                               /* end mom_copy_edit */
+
+static void
+mom_paste_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("paste_edit");
+}                               /* end mom_paste_edit */
+
+static void
+mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("paste_edit");
+}                               /* end mom_cut_edit */
 
 //////////////// create the GUI
 static void
@@ -138,8 +165,9 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_window_set_default_size (GTK_WINDOW (mom_appwin), 520, 460);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_appwin), topvbox);
-  /// create & fill the menubar
+  /////////// create & fill the menubar
   GtkWidget *menubar = gtk_menu_bar_new ();
+  /// app menu
   GtkWidget *appmenu = gtk_menu_new ();
   GtkWidget *appitem = gtk_menu_item_new_with_label ("App");
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), appitem);
@@ -150,20 +178,40 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpexititem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), quititem);
+  g_signal_connect (dumpitem, "activate", G_CALLBACK (mom_dump_app), NULL);
   g_signal_connect (dumpexititem, "activate", G_CALLBACK (mom_dumpexit_app),
                     NULL);
-  g_signal_connect (dumpitem, "activate", G_CALLBACK (mom_dump_app), NULL);
   g_signal_connect (quititem, "activate", G_CALLBACK (mom_quit_app), NULL);
+  //// editmenu
+  GtkWidget *editmenu = gtk_menu_new ();
+  GtkWidget *edititem = gtk_menu_item_new_with_label ("Edit");
+  gtk_menu_shell_append (GTK_MENU_SHELL (menubar), edititem);
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (edititem), editmenu);
+  GtkWidget *showitem = gtk_menu_item_new_with_label ("Show...");
+  GtkWidget *copyitem = gtk_menu_item_new_with_label ("Copy");
+  GtkWidget *pasteitem = gtk_menu_item_new_with_label ("Paste");
+  GtkWidget *cutitem = gtk_menu_item_new_with_label ("Cut");
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), showitem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
+                         gtk_separator_menu_item_new ());
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), copyitem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), pasteitem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), cutitem);
+  g_signal_connect (showitem, "activate", G_CALLBACK (mom_show_edit), NULL);
+  g_signal_connect (copyitem, "activate", G_CALLBACK (mom_copy_edit), NULL);
+  g_signal_connect (pasteitem, "activate", G_CALLBACK (mom_paste_edit), NULL);
+  g_signal_connect (cutitem, "activate", G_CALLBACK (mom_cut_edit), NULL);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
-  mom_textbuf = gtk_text_buffer_new (NULL);
+  mom_tagtable = gtk_text_tag_table_new ();
+  mom_textbuf = gtk_text_buffer_new (mom_tagtable);
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
-  GtkWidget *tview1 = gtk_text_view_new_with_buffer (mom_textbuf);
-  GtkWidget *tview2 = gtk_text_view_new_with_buffer (mom_textbuf);
+  mom_tview1 = gtk_text_view_new_with_buffer (mom_textbuf);
+  mom_tview2 = gtk_text_view_new_with_buffer (mom_textbuf);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
-  gtk_container_add (GTK_CONTAINER (scrotv1), tview1);
+  gtk_container_add (GTK_CONTAINER (scrotv1), mom_tview1);
   GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
-  gtk_container_add (GTK_CONTAINER (scrotv2), tview2);
+  gtk_container_add (GTK_CONTAINER (scrotv2), mom_tview2);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv1),
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv2),
