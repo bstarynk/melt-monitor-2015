@@ -140,6 +140,12 @@ mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 }                               /* end mom_show_edit */
 
 static void
+mom_newob_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+{
+  MOM_INFORMPRINTF ("newob_edit");
+}                               /* end mom_newob_edit */
+
+static void
 mom_copy_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 {
   MOM_INFORMPRINTF ("copy_edit");
@@ -154,8 +160,13 @@ mom_paste_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 static void
 mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 {
-  MOM_INFORMPRINTF ("paste_edit");
+  MOM_INFORMPRINTF ("cut_edit");
 }                               /* end mom_cut_edit */
+
+static void
+mom_initialize_text_buffer_and_views (void)
+{
+}                               /* end of mom_initialize_text_buffer_and_views */
 
 //////////////// create the GUI
 static void
@@ -188,16 +199,19 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), edititem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (edititem), editmenu);
   GtkWidget *showitem = gtk_menu_item_new_with_label ("Show...");
+  GtkWidget *newobitem = gtk_menu_item_new_with_label ("make New object");
   GtkWidget *copyitem = gtk_menu_item_new_with_label ("Copy");
   GtkWidget *pasteitem = gtk_menu_item_new_with_label ("Paste");
   GtkWidget *cutitem = gtk_menu_item_new_with_label ("Cut");
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), showitem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), newobitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
                          gtk_separator_menu_item_new ());
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), copyitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), pasteitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), cutitem);
   g_signal_connect (showitem, "activate", G_CALLBACK (mom_show_edit), NULL);
+  g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
   g_signal_connect (copyitem, "activate", G_CALLBACK (mom_copy_edit), NULL);
   g_signal_connect (pasteitem, "activate", G_CALLBACK (mom_paste_edit), NULL);
   g_signal_connect (cutitem, "activate", G_CALLBACK (mom_cut_edit), NULL);
@@ -208,6 +222,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
   mom_tview1 = gtk_text_view_new_with_buffer (mom_textbuf);
   mom_tview2 = gtk_text_view_new_with_buffer (mom_textbuf);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview1), false);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview2), false);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrotv1), mom_tview1);
   GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
@@ -219,6 +235,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
+  mom_initialize_text_buffer_and_views ();
   gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
 
