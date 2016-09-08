@@ -24,12 +24,22 @@ static GtkApplication *mom_gtkapp;
 static GQuark mom_gquark;
 static GtkTextBuffer *mom_obtextbuf;
 static GtkTextTagTable *mom_tagtable;
+static GtkTextTag *mom_tag_toptitle;    // tag for top text
+static GtkTextTag *mom_tag_objtitle;    // tag for object title line
+static GtkTextTag *mom_tag_objname;     // tag for object names
+static GtkTextTag *mom_tag_idstart;     // tag for first 6 characters of objids
+static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
+static GtkTextTag *mom_tag_number;      // tag for numbers
+static GtkTextTag *mom_tag_string;      // tag for strings
+static GtkTextTag *mom_tag_time;        // tag for time
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
 
-// an object is displayed (once) when we are showing its content or it
-// might be simply shown (without showing the content)
+// an object is displayed (once) when we are showing its entire
+// content or it might be simply shown (without showing the content).
+// an object can also be sub-displayed (once) inside the display of
+// another object.
 
 /** Both hashsets below are mostly to keep Boehm's GC happy, so the
  * displayed or shown objects are never freed prematurely -even if no
@@ -47,6 +57,8 @@ struct momgui_dispobjinfo_st
 {
   // the displayed object reference
   mo_objref_t mo_gdo_dispobr;
+  // for subdisplayed objects, the reference of the containing display
+  mo_objref_t mo_gdo_inobr;
   // the start and end mark of the text buffer slice displaying that object
   GtkTextMark *mo_gdo_startmark;
   GtkTextMark *mo_gdo_endmark;
@@ -119,6 +131,7 @@ mom_dispobj_cmp (const void *p1, const void *p2)
     return 1;
   return mo_objref_cmp (ob1, ob2);
 }                               /* end mom_dispobj_cmp */
+
 
 // an expensive operation, we regenerate everything. But that might be
 // enough for a while, because computer is fast enough to redisplay
@@ -396,6 +409,58 @@ mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 static void
 mom_initialize_gtk_tags_for_objects (void)
 {
+  MOM_ASSERTPRINTF (GTK_IS_TEXT_BUFFER (mom_obtextbuf), "bad obtextbuf");
+  mom_tag_toptitle =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "toptitle",
+                                "justification", GTK_JUSTIFY_CENTER,
+                                "pixels-above-lines", 2,
+                                "pixels-below-lines", 4,
+                                "foreground", "navy",
+                                "paragraph-background", "lightyellow",
+                                "font", "Helvetica Bold", "scale", 1.5, NULL);
+  mom_tag_objtitle =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "objtitle",
+                                "justification", GTK_JUSTIFY_CENTER,
+                                "pixels-above-lines", 4,
+                                "pixels-below-lines", 2,
+                                "foreground", "brown",
+                                "font", "Sans Bold",
+                                "paragraph-background", "lightcyan",
+                                "scale", 1.3, NULL);
+  mom_tag_objname =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "objname",
+                                "font", "Arial Bold",
+                                "foreground", "sienna", NULL);
+  mom_tag_idstart =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "idstart",
+                                "font", "Courier Bold",
+                                "foreground", "darkgreen", NULL);
+  mom_tag_idrest =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "idrest",
+                                "family", "Courier",
+                                "foreground", "darkolivegreen",
+                                "scale", 0.8, NULL);
+  mom_tag_number =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "number",
+                                "family", "Courier New",
+                                "foreground", "slateblue", NULL);
+  mom_tag_string =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "string",
+                                "font", "DejaVu Sans Mono, Oblique",
+                                "foreground", "saddlebrown", NULL);
+  mom_tag_time =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "time",
+                                "font", "Times, Italic",
+                                "scale", 0.75,
+                                "foreground", "skyblue4", NULL);
   // we should fill the mom_tagtable
 #warning mom_initialize_gtk_tags_for_objects unimplemented
   MOM_WARNPRINTF ("mom_initialize_gtk_tags_for_objects unimplemented");
@@ -450,8 +515,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_tagtable = gtk_text_tag_table_new ();
-  mom_initialize_gtk_tags_for_objects ();
   mom_obtextbuf = gtk_text_buffer_new (mom_tagtable);
+  mom_initialize_gtk_tags_for_objects ();
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
   mom_tview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
   mom_tview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
