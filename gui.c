@@ -291,6 +291,8 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
           (mom_obtextbuf, piter, "\"", 1, valtag, NULL);
         gtk_text_buffer_insert_with_tags
           (mom_obtextbuf, piter, str, siz, mom_tag_string, valtag, NULL);
+        gtk_text_buffer_insert_with_tags
+          (mom_obtextbuf, piter, "\"", 1, valtag, NULL);
         MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, valtag);
       }
       break;
