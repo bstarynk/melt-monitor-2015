@@ -28,6 +28,7 @@ static GtkTextTag *mom_tag_toptitle;    // tag for top text
 static GtkTextTag *mom_tag_objtitle;    // tag for object title line
 static GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
 static GtkTextTag *mom_tag_objname;     // tag for object names
+static GtkTextTag *mom_tag_class;       // tag for class
 static GtkTextTag *mom_tag_attr;        // tag for attributes
 static GtkTextTag *mom_tag_idstart;     // tag for first 6 characters of objids
 static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
@@ -36,6 +37,7 @@ static GtkTextTag *mom_tag_string;      // tag for strings
 static GtkTextTag *mom_tag_sequence;    // tag for sequences (tuples & sets)
 static GtkTextTag *mom_tag_time;        // tag for time
 static GtkTextTag *mom_tag_comment;     // tag for comment
+static GtkTextTag *mom_tag_index;       // tag for comment
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
@@ -168,7 +170,8 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
                         int maxdepth, momgui_dispobjinfo_ty * pardisp);
 
 static void
-mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter)
+mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
+                           GtkTextTag * xobtag)
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
@@ -203,17 +206,18 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter)
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         mo_string_cstr (namv),
                                         mo_string_size (namv),
-                                        objtag, mom_tag_objname, NULL);
+                                        objtag, mom_tag_objname,
+                                        xobtag, NULL);
       return;
     }
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     idbuf,
                                     MOMGUI_IDSTART_LEN,
-                                    objtag, mom_tag_idstart, NULL);
+                                    objtag, mom_tag_idstart, xobtag, NULL);
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     idbuf + MOMGUI_IDSTART_LEN,
                                     MOM_CSTRIDLEN - MOMGUI_IDSTART_LEN,
-                                    objtag, mom_tag_idrest, NULL);
+                                    objtag, mom_tag_idrest, xobtag, NULL);
   mo_value_t commv = NULL;
   if ((commv = mo_objref_get_attr (obr, MOM_PREDEF (comment))) != NULL
       && mo_dyncast_string (commv))
@@ -241,14 +245,15 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter)
             }
         };
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                        ":", -1, objtag, NULL);
+                                        ":", -1, objtag, xobtag, NULL);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         combuf, pb - combuf,
-                                        objtag, mom_tag_comment, NULL);
+                                        objtag, mom_tag_comment, xobtag,
+                                        NULL);
       if (pc && *pc)
         gtk_text_buffer_insert_with_tags        //
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
-           3, objtag, NULL);
+           3, objtag, xobtag, NULL);
     }                           // end if commv is string and anonymous
 }                               /* end mom_insert_objref_textbuf */
 
@@ -340,7 +345,7 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
                   }
                 else
                   {
-                    mom_insert_objref_textbuf (cursubobj, piter);
+                    mom_insert_objref_textbuf (cursubobj, piter, valtag);
                   }
               }
           }
@@ -368,7 +373,7 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
                                     curdisp);
           }
         else
-          mom_insert_objref_textbuf (curobj, piter);
+          mom_insert_objref_textbuf (curobj, piter, valtag);
 
       }
       break;
@@ -509,15 +514,50 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
     strcpy (tibuf, "\342\214\232 ?");
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     tibuf, -1, mom_tag_time, NULL);
-  mo_value_t classobr = obr->mo_ob_class;
+  mo_objref_t classobr = obr->mo_ob_class;
   if (classobr)
     {
-#warning FIXME: should shadow-show the class
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\254\237 ",  // U+2B1F BLACK PENTAGON ⬟
+                                        3, mom_tag_class, NULL);
+      mom_insert_objref_textbuf (classobr, piter, mom_tag_class);
+      MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
     }
-#warning FIXME: should get the set of attributes, properly sort them, and display each attribute
-  mo_value_t attrset = mo_assoval_keys_set (obr->mo_ob_attrs);
-#warning FIXME: should display the components
-  int nbcomp = mo_vectval_count (obr->mo_ob_comps);
+  {
+    mo_value_t attrset = mo_assoval_keys_set (obr->mo_ob_attrs);
+    unsigned nbattrs = mo_set_size (attrset);
+    mo_objref_t *attrarr =
+      mom_gc_alloc (mom_prime_above (nbattrs) * sizeof (mo_objref_t));
+    for (unsigned ix = 0; ix < nbattrs; ix++)
+      attrarr[ix] = mo_set_nth (attrset, ix);
+    qsort (attrarr, nbattrs, sizeof (mo_objref_t), mom_dispobj_cmp);
+    for (unsigned aix = 0; aix < nbattrs; aix++)
+      {
+        mo_objref_t curattrobr = attrarr[aix];
+        mo_value_t curval = mo_objref_get_attr (obr, curattrobr);
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\213\206", // U+22C6 STAR OPERATOR ⋆
+                                          3, mom_tag_attr, NULL);
+        mom_insert_objref_textbuf (curattrobr, piter, mom_tag_attr);
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\207\276 ",        // U+21FE RIGHTWARDS OPEN-HEADED ARROW ⇾
+                                          3, mom_tag_attr, NULL);
+        mom_insert_value_textbuf (curval, piter, depth + 1, maxdepth, NULL);
+        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+      }
+    {
+      int nbcomp = mo_vectval_count (obr->mo_ob_comps);
+      char indexbuf[16];
+      memset (indexbuf, 0, sizeof (indexbuf));
+      for (int cix = 0; cix < nbcomp; cix++)
+        {
+          mo_value_t curcompv = mo_objref_get_comp (obr, cix);
+          snprintf (indexbuf, sizeof (indexbuf), "#%d: ", cix);
+          gtk_text_buffer_insert_with_tags
+            (mom_obtextbuf, piter, indexbuf, -1, mom_tag_index, NULL);
+          mom_insert_value_textbuf (curcompv, piter,
+                                    depth + 1, maxdepth, NULL);
+          MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+        }
+    }
+  }
 #warning FIXME: should display the payload
   MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_display_the_object */
@@ -916,6 +956,12 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "scale", 1.05,
                                 "background", "lavender",
                                 "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
+  mom_tag_class =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "class",
+                                "scale", 1.05,
+                                "background", "bisque1",
+                                "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
   mom_tag_time =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "time",
@@ -924,13 +970,16 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "foreground", "skyblue4", NULL);
   mom_tag_comment =
     gtk_text_buffer_create_tag (mom_obtextbuf,
-                                "time",
+                                "comment",
                                 "font", "Verdana, Italic",
                                 "scale", 0.60,
                                 "foreground", "slategrey", NULL);
-  // we should fill the mom_tagtable
-#warning mom_initialize_gtk_tags_for_objects unimplemented
-  MOM_WARNPRINTF ("mom_initialize_gtk_tags_for_objects unimplemented");
+  mom_tag_index =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "index",
+                                "font", "DejaVu Sans, Condensed",
+                                "scale", 0.85,
+                                "foreground", "palegreen1", "rise", 3, NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 static void
