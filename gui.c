@@ -195,6 +195,7 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
           = gtk_text_buffer_create_tag (mom_obtextbuf, idbuf,
                                         "font", "DejaVu Serif, Book",
                                         "background", "ivory", NULL);
+        g_hash_table_insert (mom_shownobjocc_hashtable, obr, shoc);
       }
     else
       objtag = shoc->mo_gso_txtag;
@@ -514,11 +515,13 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
     strcpy (tibuf, "\342\214\232 ?");
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     tibuf, -1, mom_tag_time, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
   mo_objref_t classobr = obr->mo_ob_class;
   if (classobr)
     {
-      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\254\237 ",  // U+2B1F BLACK PENTAGON ⬟
-                                        3, mom_tag_class, NULL);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\254\237 ", // U+2B1F BLACK PENTAGON ⬟
+         3, mom_tag_class, NULL);
       mom_insert_objref_textbuf (classobr, piter, mom_tag_class);
       MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
     }
