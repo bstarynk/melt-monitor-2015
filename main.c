@@ -999,6 +999,10 @@ mom_print_info (void)
   PRINT_SIZEOF (mo_bufferpayl_ty);
   PRINT_SIZEOF (mom_int128_t);
   PRINT_SIZEOF (FILE);
+  PRINT_SIZEOF (GtkWidget);
+  PRINT_SIZEOF (GtkTextIter);
+  PRINT_SIZEOF (GtkTextTag);
+  PRINT_SIZEOF (GtkTextMark);
   {
     Dl_info dif;
     memset (&dif, 0, sizeof (dif));
