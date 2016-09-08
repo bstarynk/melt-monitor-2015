@@ -26,11 +26,14 @@ static GtkTextBuffer *mom_obtextbuf;
 static GtkTextTagTable *mom_tagtable;
 static GtkTextTag *mom_tag_toptitle;    // tag for top text
 static GtkTextTag *mom_tag_objtitle;    // tag for object title line
+static GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
 static GtkTextTag *mom_tag_objname;     // tag for object names
+static GtkTextTag *mom_tag_attr;        // tag for attributes
 static GtkTextTag *mom_tag_idstart;     // tag for first 6 characters of objids
 static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
 static GtkTextTag *mom_tag_number;      // tag for numbers
 static GtkTextTag *mom_tag_string;      // tag for strings
+static GtkTextTag *mom_tag_sequence;    // tag for sequences (tuples & sets)
 static GtkTextTag *mom_tag_time;        // tag for time
 static GtkTextTag *mom_tag_comment;     // tag for comment
 static GtkWidget *mom_appwin;
@@ -50,6 +53,7 @@ static GtkWidget *mom_tview2;
 // The association of displayed objects to depth
 static mo_assovaldatapayl_ty *momgui_displayed_objasso;
 #define MOMGUI_MAX_DEPTH 8
+#define MOMGUI_INITIAL_DEPTH 1
 // the hashset of shown object occurrences
 static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
@@ -137,6 +141,32 @@ mom_dispobj_cmp (const void *p1, const void *p2)
 
 
 
+#define MOM_DISPLAY_INDENTED_NEWLINE(Piter,Depth,...) do {	\
+  gtk_text_buffer_insert_with_tags				\
+  (mom_obtextbuf, (Piter),					\
+   "                \n"+(16-(Depth)%16), 1+(Depth)%16,		\
+  ##__VA_ARGS__, NULL);						\
+} while(0)
+
+#define MOM_DISPLAY_OPENING(Piter,VarOff,Str,...) do {	\
+    VarOff = gtk_text_iter_get_offset ((Piter));	\
+    gtk_text_buffer_insert_with_tags			\
+      (mom_obtextbuf, (Piter), (Str), strlen((Str)),	\
+       ##__VA_ARGS__, NULL);				\
+  } while(0)
+
+#define MOM_DISPLAY_CLOSING(Piter,VarOff,Str,...) do {	\
+    gtk_text_buffer_insert_with_tags			\
+      (mom_obtextbuf, (Piter), (Str), strlen((Str)),	\
+       ##__VA_ARGS__, NULL);				\
+    VarOff = gtk_text_iter_get_offset ((Piter));	\
+} while(0)
+
+
+static void
+mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
+                        int maxdepth, momgui_dispobjinfo_ty * pardisp);
+
 static void
 mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter)
 {
@@ -222,40 +252,166 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter)
     }                           // end if commv is string and anonymous
 }                               /* end mom_insert_objref_textbuf */
 
+static void
+mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
+                          int depth, int maxdepth, GtkTextTag * valtag)
+{
+  MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
+                    && maxdepth <= MOMGUI_MAX_DEPTH,
+                    "bad depth:%d maxdepth:%d MOMGUI_MAX_DEPTH:%d", depth,
+                    maxdepth, MOMGUI_MAX_DEPTH);
+  enum mo_valkind_en kd = mo_kind_of_value (val);
+  switch (kd)
+    {
+    case mo_KNONE:
+      gtk_text_buffer_insert_with_tags
+        (mom_obtextbuf, piter, "~", 1, valtag, NULL);
+      break;
+    case mo_KINT:
+      {
+        char intbuf[32];
+        memset (intbuf, 0, sizeof (intbuf));
+        snprintf (intbuf, sizeof (intbuf), "%lld",
+                  (long long) mo_value_to_int (val, 0));
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, intbuf, 1,
+                                          mom_tag_number, valtag, NULL);
+      }
+      break;
+    case mo_KSTRING:
+      {
+        const char *str = mo_string_cstr (val);
+        unsigned siz = mo_string_size (val);
+        gtk_text_buffer_insert_with_tags
+          (mom_obtextbuf, piter, "\"", 1, valtag, NULL);
+        gtk_text_buffer_insert_with_tags
+          (mom_obtextbuf, piter, str, siz, mom_tag_string, valtag, NULL);
+        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, valtag);
+      }
+      break;
+    case mo_KSET:
+    case mo_KTUPLE:
+      {
+        bool istuple = kd == mo_KTUPLE;
+        unsigned seqsiz = mo_sequence_size (val);
+        bool showinside = depth < maxdepth;
+        MOM_ASSERTPRINTF (seqsiz <= MOM_SIZE_MAX, "bad seqsiz %u", seqsiz);
+        int startoff = 0;
+        int endoff = 0;
+        if (!istuple && seqsiz == 0 && val == mo_make_empty_set ())
+          {                     // empty set, special case
+            gtk_text_buffer_insert_with_tags
+              (mom_obtextbuf, piter,
+               "\342\210\205" /* U+2205 EMPTY SET ∅ */ , 3,
+               mom_tag_sequence, valtag, NULL);
+            break;
+          };
+        if (istuple)            // tuple
+          MOM_DISPLAY_OPENING (piter, startoff, "[", mom_tag_sequence,
+                               valtag);
+        else                    // set
+          MOM_DISPLAY_OPENING (piter, startoff, "{", mom_tag_sequence,
+                               valtag);
+        if (seqsiz > 0)
+          {
+            for (unsigned ix = 0; ix < seqsiz; ix++)
+              {
+                if (showinside || (ix % 5 == 0 && ix > 0))
+                  {
+                    MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+                                                  mom_tag_sequence, valtag);
+                  }
+                else
+                  gtk_text_buffer_insert_with_tags
+                    (mom_obtextbuf, piter, " ", 1, mom_tag_sequence, valtag,
+                     NULL);
+                mo_objref_t cursubobj = mo_sequence_nth (val, ix);
+                if (!mo_dyncast_objref (cursubobj))
+                  gtk_text_buffer_insert_with_tags
+                    (mom_obtextbuf, piter, "~", 1, mom_tag_sequence, valtag,
+                     NULL);
+                else if (showinside && !mo_objref_namev (cursubobj)
+                         && !mo_assoval_get (momgui_displayed_objasso,
+                                             cursubobj))
+                  {
+                    momgui_dispobjinfo_ty *curdisp = NULL;
+#warning FIXME: should probably make a fresh curdisp
+                    mom_display_the_object (cursubobj, piter, depth + 1,
+                                            maxdepth, curdisp);
+                  }
+                else
+                  {
+                    mom_insert_objref_textbuf (cursubobj, piter);
+                  }
+              }
+          }
+        if (showinside)
+          {
+            MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+                                          mom_tag_sequence, valtag);
+          }
+        if (!istuple)           //set
+          MOM_DISPLAY_CLOSING (piter, endoff, "}", mom_tag_sequence, valtag);
+        else                    // tuple
+          MOM_DISPLAY_CLOSING (piter, endoff, "]", mom_tag_sequence, valtag);
+      }
+      break;
+    case mo_KOBJECT:
+      {
+        mo_objref_t curobj = (mo_objref_t) val;
+        bool showinside = depth < maxdepth && !mo_objref_namev (curobj)
+          && !mo_assoval_get (momgui_displayed_objasso, curobj);
+        if (showinside)
+          {
+            momgui_dispobjinfo_ty *curdisp = NULL;
+#warning FIXME: should probably make a fresh curdisp
+            mom_display_the_object (curobj, piter, depth + 1, maxdepth,
+                                    curdisp);
+          }
+        else
+          mom_insert_objref_textbuf (curobj, piter);
+
+      }
+      break;
+    }
+}                               /* end of mom_insert_value_textbuf */
 
 static void
 mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
-                        momgui_dispobjinfo_ty * pardisp)
+                        int maxdepth, momgui_dispobjinfo_ty * pardisp)
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
-  MOM_ASSERTPRINTF (depth >= 0, "bad depth %d", depth);
+  MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
+                    && maxdepth <= MOMGUI_MAX_DEPTH,
+                    "bad depth %d maxdepth %d MOMGUI_MAX_DEPTH %d", depth,
+                    maxdepth, MOMGUI_MAX_DEPTH);
   MOM_INFORMPRINTF ("display_the_object %s parent %s",
                     mo_objref_pnamestr (obr),
                     pardisp ? mo_objref_pnamestr (pardisp->mo_gdo_dispobr) :
                     "*none*");
+  GtkTextTag *curobjtitletag =
+    (depth == 0) ? mom_tag_objtitle : mom_tag_objsubtitle;
   gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
-  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                    "\n", -1, NULL, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
     case mo_SPACE_NONE:
       gtk_text_buffer_insert_with_tags  //
         (mom_obtextbuf, piter, "\342\227\214",  // U+25CC DOTTED CIRCLE ◌
-         3, mom_tag_objtitle, NULL);
+         3, curobjtitletag, NULL);
       break;
     case mo_SPACE_GLOBAL:
       break;
     case mo_SPACE_PREDEF:
       gtk_text_buffer_insert_with_tags  //
         (mom_obtextbuf, piter, "\342\200\242",  // U+2022 BULLET •
-         3, mom_tag_objtitle, NULL);
+         3, curobjtitletag, NULL);
       break;
     case mo_SPACE_USER:
       gtk_text_buffer_insert_with_tags  //
         (mom_obtextbuf, piter, "\342\200\243",  // U+2023 TRIANGULAR BULLET ‣
-         3, mom_tag_objtitle, NULL);
+         3, curobjtitletag, NULL);
       break;
     default:
       // this should not happen
@@ -264,11 +420,12 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
                         (int) spa, mo_objref_pnamestr (obr));
         char spabuf[32];
         memset (spabuf, 0, sizeof (spabuf));
-        snprintf (spabuf, sizeof (spabuf), "\342\201\205"       // U+2045 LEFT SQUARE BRACKET WITH QUILL ⁅
+        snprintf (spabuf, sizeof (spabuf),      //
+                  "\342\201\205"        // U+2045 LEFT SQUARE BRACKET WITH QUILL ⁅
                   "?%d" "\342\201\206"  // U+2046 RIGHT SQUARE BRACKET WITH QUILL ⁆
                   , (int) spa);
         gtk_text_buffer_insert_with_tags        //
-          (mom_obtextbuf, piter, spabuf, -1, mom_tag_objtitle, NULL);
+          (mom_obtextbuf, piter, spabuf, -1, curobjtitletag, NULL);
       }
       break;
     };
@@ -278,10 +435,10 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         mo_string_cstr (namv),
                                         mo_string_size (namv),
-                                        mom_tag_objtitle,
+                                        curobjtitletag,
                                         mom_tag_objname, NULL);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                        " = ", -1, mom_tag_objtitle, NULL);
+                                        " = ", -1, curobjtitletag, NULL);
     }
   char idbuf[MOM_CSTRIDSIZ];
   memset (idbuf, 0, sizeof (idbuf));
@@ -289,11 +446,11 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     idbuf,
                                     MOMGUI_IDSTART_LEN,
-                                    mom_tag_objtitle, mom_tag_idstart, NULL);
+                                    curobjtitletag, mom_tag_idstart, NULL);
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     idbuf + MOMGUI_IDSTART_LEN,
                                     MOM_CSTRIDLEN - MOMGUI_IDSTART_LEN,
-                                    mom_tag_objtitle, mom_tag_idrest, NULL);
+                                    curobjtitletag, mom_tag_idrest, NULL);
   mo_value_t commv = NULL;
   if (!namv
       && (commv = mo_objref_get_attr (obr, MOM_PREDEF (comment))) != NULL
@@ -322,39 +479,47 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
             }
         };
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                        ":", -1, mom_tag_objtitle, NULL);
+                                        ":", -1, curobjtitletag, NULL);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         combuf, pb - combuf,
-                                        mom_tag_objtitle,
+                                        curobjtitletag,
                                         mom_tag_comment, NULL);
       if (pc && *pc)
         gtk_text_buffer_insert_with_tags        //
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
-           3, mom_tag_objtitle, NULL);
+           3, curobjtitletag, NULL);
     }                           // end if commv is string and anonymous
-  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                    "\n", -1, mom_tag_objtitle, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, curobjtitletag);
   char tibuf[72];
   memset (tibuf, 0, sizeof (tibuf));
   time_t nowt = 0;
   time (&nowt);
   struct tm nowtm = { };
   localtime_r (&nowt, &nowtm);
-  // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45 
+  // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45:12 
   if (obr->mo_ob_mtime > nowt - 64800 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T\n", &nowtm);
-  // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T", &nowtm);
+  // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25:57
   else if (obr->mo_ob_mtime > nowt - 1728000 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T\n", &nowtm);
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T", &nowtm);
   else if (obr->mo_ob_mtime > 0)
-    // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T\n",
-              &nowtm);
+    // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45:01
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T", &nowtm);
   else                          // unset time ⌚ ?
     strcpy (tibuf, "\342\214\232 ?");
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     tibuf, -1, mom_tag_time, NULL);
-
+  mo_value_t classobr = obr->mo_ob_class;
+  if (classobr)
+    {
+#warning FIXME: should shadow-show the class
+    }
+#warning FIXME: should get the set of attributes, properly sort them, and display each attribute
+  mo_value_t attrset = mo_assoval_keys_set (obr->mo_ob_attrs);
+#warning FIXME: should display the components
+  int nbcomp = mo_vectval_count (obr->mo_ob_comps);
+#warning FIXME: should display the payload
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_display_the_object */
 
 
@@ -402,22 +567,34 @@ mo_gui_generate_object_text_buffer (void)
                                       mom_tag_time, NULL);
 
   }
+  // forward-add every displayed object
+  for (int ix = 0; ix < (int) nbdispob; ix++)
+    {
+      mo_objref_t curobj = objarr[ix];
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
+      if (!mo_assoval_get (momgui_displayed_objasso, curobj))
+        momgui_displayed_objasso =
+          mo_assoval_put (momgui_displayed_objasso, curobj,
+                          mo_int_to_value (MOMGUI_INITIAL_DEPTH));
+    };
   // display each object
   for (int ix = 0; ix < (int) nbdispob; ix++)
     {
       GtkTextIter iter = { };
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
       mo_objref_t curobj = objarr[ix];
-      MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj");
-      int depth = mo_value_to_int (mo_assoval_get (oldispasso, curobj), 0);
-      if (depth <= 0)
-        depth = 1;
-      else if (depth > MOMGUI_MAX_DEPTH)
-        depth = MOMGUI_MAX_DEPTH;
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                        "\n", -1, NULL, NULL);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
+      int maxdepth = mo_value_to_int (mo_assoval_get (oldispasso, curobj), 0);
+      if (maxdepth <= 0)
+        maxdepth = 1;
+      else if (maxdepth > MOMGUI_MAX_DEPTH)
+        maxdepth = MOMGUI_MAX_DEPTH;
       momgui_displayed_objasso =
         mo_assoval_put (momgui_displayed_objasso, curobj,
-                        mo_int_to_value (depth));
-      mom_display_the_object (objarr[ix], &iter, depth, NULL);
+                        mo_int_to_value (maxdepth));
+      mom_display_the_object (objarr[ix], &iter, 0, maxdepth, NULL);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
                                         "\n", -1, NULL, NULL);
     }
@@ -692,6 +869,16 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "font", "Sans Bold",
                                 "paragraph-background", "lightcyan",
                                 "scale", 1.3, NULL);
+  mom_tag_objsubtitle =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "objsubtitle",
+                                "justification", GTK_JUSTIFY_CENTER,
+                                "pixels-above-lines", 1,
+                                "pixels-below-lines", 1,
+                                "foreground", "chocolate4",
+                                "font", "Sans Bold",
+                                "paragraph-background", "lightgoldenrod",
+                                "scale", 1.15, NULL);
   mom_tag_objname =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "objname",
@@ -718,6 +905,17 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "string",
                                 "font", "DejaVu Sans Mono, Oblique",
                                 "foreground", "saddlebrown", NULL);
+  mom_tag_sequence =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "sequence",
+                                "font", "Luxi Mono, Bold",
+                                "foreground", "tomato", NULL);
+  mom_tag_attr =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "attr",
+                                "scale", 1.05,
+                                "background", "lavender",
+                                "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
   mom_tag_time =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "time",
