@@ -143,6 +143,38 @@ mom_display_the_object (mo_objref_t obr)
   gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
                                     "\n", -1, NULL, NULL);
+  enum mo_space_en spa = mo_objref_space (obr);
+  switch (spa)
+    {
+    case mo_SPACE_NONE:
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter, "\342\227\214",   // U+25CC DOTTED CIRCLE ◌
+                                        3, mom_tag_objtitle, NULL);
+      break;
+    case mo_SPACE_GLOBAL:
+      break;
+    case mo_SPACE_PREDEF:
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter, "\342\200\242",   // U+2022 BULLET •
+                                        3, mom_tag_objtitle, NULL);
+      break;
+    case mo_SPACE_USER:
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter, "\342\200\243",   // U+2023 TRIANGULAR BULLET ‣
+                                        3, mom_tag_objtitle, NULL);
+      break;
+    default:
+      // this should not happen
+      {
+        MOM_WARNPRINTF ("display_the_object: strange space#%d of object %s",
+                        (int) spa, mo_objref_pnamestr (obr));
+        char spabuf[32];
+        memset (spabuf, 0, sizeof (spabuf));
+        snprintf (spabuf, sizeof (spabuf), "\342\201\205"       // U+2045 LEFT SQUARE BRACKET WITH QUILL ⁅
+                  "?%d" "\342\201\206"  // U+2046 RIGHT SQUARE BRACKET WITH QUILL ⁆
+                  , (int) spa);
+        gtk_text_buffer_insert_with_tags
+          (mom_obtextbuf, &iter, spabuf, -1, mom_tag_objtitle, NULL);
+      }
+      break;
+    };
   mo_value_t namv = mo_objref_namev (obr);
   if (namv)
     {
@@ -205,6 +237,27 @@ mom_display_the_object (mo_objref_t obr)
     }                           // end if commv is string and anonymous
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
                                     "\n", -1, mom_tag_objtitle, NULL);
+  char tibuf[72];
+  memset (tibuf, 0, sizeof (tibuf));
+  time_t nowt = 0;
+  time (&nowt);
+  struct tm nowtm = { };
+  localtime_r (&nowt, &nowtm);
+  // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45 
+  if (obr->mo_ob_mtime > nowt - 64800 && obr->mo_ob_mtime <= nowt)
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T\n", &nowtm);
+  // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25
+  else if (obr->mo_ob_mtime > nowt - 1728000 && obr->mo_ob_mtime <= nowt)
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T\n", &nowtm);
+  else if (obr->mo_ob_mtime > 0)
+    // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T\n",
+              &nowtm);
+  else                          // unset time ⌚ ?
+    strcpy (tibuf, "\342\214\232 ?");
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                    tibuf, -1, mom_tag_time, NULL);
+
 }                               /* end mom_display_the_object */
 
 
@@ -560,7 +613,7 @@ mom_initialize_gtk_tags_for_objects (void)
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "time",
                                 "font", "Times, Italic",
-                                "scale", 0.75,
+                                "scale", 0.85,
                                 "foreground", "skyblue4", NULL);
   mom_tag_comment =
     gtk_text_buffer_create_tag (mom_obtextbuf,
