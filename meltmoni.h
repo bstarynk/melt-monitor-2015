@@ -1402,7 +1402,7 @@ mo_objref_pnamestr (mo_objref_t ob)
 // get the idstr of an object in some given buffer (or else in GC-ed
 // heap or literal string for nil)
 static inline const char *
-mo_object_idstr (char *bufid, mo_objref_t ob)
+mo_objref_idstr (char *bufid, mo_objref_t ob)
 {
   if (mo_dyncast_objref (ob))
     {
@@ -1415,7 +1415,7 @@ mo_object_idstr (char *bufid, mo_objref_t ob)
     }
   else
     return "~";
-}                               /* end mo_object_idstr */
+}                               /* end mo_objref_idstr */
 
 
 // retrieve the set of named objects

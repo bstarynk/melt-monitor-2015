@@ -32,9 +32,11 @@ static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
 static GtkTextTag *mom_tag_number;      // tag for numbers
 static GtkTextTag *mom_tag_string;      // tag for strings
 static GtkTextTag *mom_tag_time;        // tag for time
+static GtkTextTag *mom_tag_comment;     // tag for comment
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
+#define MOMGUI_IDSTART_LEN 6
 
 // an object is displayed (once) when we are showing its entire
 // content or it might be simply shown (without showing the content).
@@ -132,6 +134,79 @@ mom_dispobj_cmp (const void *p1, const void *p2)
   return mo_objref_cmp (ob1, ob2);
 }                               /* end mom_dispobj_cmp */
 
+static void
+mom_display_the_object (mo_objref_t obr)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+  MOM_INFORMPRINTF ("display_the_object %s", mo_objref_pnamestr (obr));
+  GtkTextIter iter = { };
+  gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                    "\n", -1, NULL, NULL);
+  mo_value_t namv = mo_objref_namev (obr);
+  if (namv)
+    {
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                        mo_string_cstr (namv),
+                                        mo_string_size (namv),
+                                        mom_tag_objtitle,
+                                        mom_tag_objname, NULL);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                        " = ", -1, mom_tag_objtitle, NULL);
+    }
+  char idbuf[MOM_CSTRIDSIZ];
+  memset (idbuf, 0, sizeof (idbuf));
+  mo_objref_idstr (idbuf, obr);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                    idbuf,
+                                    MOMGUI_IDSTART_LEN,
+                                    mom_tag_objtitle, mom_tag_idstart, NULL);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                    idbuf + MOMGUI_IDSTART_LEN,
+                                    MOM_CSTRIDLEN - MOMGUI_IDSTART_LEN,
+                                    mom_tag_objtitle, mom_tag_idrest, NULL);
+  mo_value_t commv = NULL;
+  if (!namv
+      && (commv = mo_objref_get_attr (obr, MOM_PREDEF (comment))) != NULL
+      && mo_dyncast_string (commv))
+    {
+      char combuf[72];
+      memset (combuf, 0, sizeof (combuf));
+      const char *pc = NULL;
+      const char *pn = NULL;
+      char *pb = combuf;
+      for (pc = mo_string_cstr (commv);
+           pc && *pc
+           && (((pn = g_utf8_next_char (pc)),
+                pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
+        {
+          if (*pc == '\n')
+            break;
+          if (pb > combuf + 2 * sizeof (combuf) / 3 && isspace (*pc))
+            break;
+          if (pn == pc + 1)
+            *(pb++) = *pc;
+          else
+            {
+              memcpy (pb, pc, pn - pc);
+              pb += pn - pc;
+            }
+        };
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                        ":", -1, mom_tag_objtitle, NULL);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                        combuf, pb - combuf,
+                                        mom_tag_objtitle,
+                                        mom_tag_comment, NULL);
+      if (pc && *pc)
+        gtk_text_buffer_insert_with_tags        //
+          (mom_obtextbuf, &iter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
+           3, mom_tag_objtitle, NULL);
+    }                           // end if commv is string and anonymous
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                    "\n", -1, mom_tag_objtitle, NULL);
+}                               /* end mom_display_the_object */
+
 
 // an expensive operation, we regenerate everything. But that might be
 // enough for a while, because computer is fast enough to redisplay
@@ -158,31 +233,55 @@ mo_gui_generate_object_text_buffer (void)
   if (nbdispob > 1)
     qsort (objarr, nbdispob, sizeof (mo_objref_t), mom_dispobj_cmp);
   // display a common title string
+  {
+    char titlebuf[64];
+    memset (titlebuf, 0, sizeof (titlebuf));
+    snprintf (titlebuf, sizeof (titlebuf), "Display of %d objects \n",
+              nbdispob);
+    GtkTextIter tititer = { };
+    gtk_text_buffer_get_start_iter (mom_obtextbuf, &tititer);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, &tititer,
+                                      titlebuf, -1, mom_tag_toptitle, NULL);
+    gtk_text_iter_backward_cursor_position (&tititer);
+    char datibuf[80];
+    memset (datibuf, 0, sizeof (datibuf));
+    mom_now_strftime_centi (datibuf, sizeof (datibuf),
+                            "(at %Y %b %d, %T.__ %Z)");
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, &tititer, datibuf, -1,
+                                      mom_tag_time, NULL);
+
+  }
   // display each object
-#warning very incomplete mo_gui_generate_object_text_buffer
-  MOM_WARNPRINTF ("mo_gui_generate_object_text_buffer incomplete");
+  for (int ix = 0; ix < (int) nbdispob; ix++)
+    mom_display_the_object (objarr[ix]);
+  {
+    GtkTextIter iter = { };
+    gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
+                                      "\n", -1, NULL, NULL);
+  }
 }                               /* end mo_gui_generate_object_text_buffer */
 
 void
 mo_gui_display_object (mo_objref_t ob)
 {
-  if (!mo_dyncast_objref (ob) || !mom_without_gui)
+  if (!mo_dyncast_objref (ob) || mom_without_gui)
     return;
   if (mo_hashset_contains (momgui_displayed_objhset, ob))
     return;
-  MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
-                  mo_objref_pnamestr (ob));
-#warning mo_gui_display_object unimplemented
+  momgui_displayed_objhset = mo_hashset_put (momgui_displayed_objhset, ob);
+  mo_gui_generate_object_text_buffer ();
 }                               /* end of mo_gui_display_object */
 
 void
 mo_gui_undisplay_object (mo_objref_t ob)
 {
-  if (!mo_dyncast_objref (ob) || !mom_without_gui)
+  if (!mo_dyncast_objref (ob) || mom_without_gui)
     return;
-  MOM_WARNPRINTF ("mo_gui_display_object unimplemented for object %s",
-                  mo_objref_pnamestr (ob));
-#warning mo_gui_undisplay_object unimplemented
+  if (!mo_hashset_contains (momgui_displayed_objhset, ob))
+    return;
+  momgui_displayed_objhset = mo_hashset_remove (momgui_displayed_objhset, ob);
+  mo_gui_generate_object_text_buffer ();
 }                               /* end of mo_gui_undisplay_object */
 
 static void
@@ -333,52 +432,54 @@ mom_objectentry (void)
 
 
 static void
-mom_show_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
+mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 {
-  MOM_INFORMPRINTF ("show_edit");
-  GtkWidget *showdialog =       //
-    gtk_dialog_new_with_buttons ("show:",
+  MOM_INFORMPRINTF ("display_edit");
+  GtkWidget *displaydialog =    //
+    gtk_dialog_new_with_buttons ("display:",
                                  GTK_WINDOW (mom_appwin),
                                  GTK_DIALOG_MODAL |
                                  GTK_DIALOG_DESTROY_WITH_PARENT,
-                                 "Show",
+                                 "Display",
                                  GTK_RESPONSE_OK,
                                  "Cancel",
                                  GTK_RESPONSE_CANCEL,
                                  NULL);
-  GtkWidget *contarea = gtk_dialog_get_content_area (GTK_DIALOG (showdialog));
+  GtkWidget *contarea =
+    gtk_dialog_get_content_area (GTK_DIALOG (displaydialog));
   GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 3);
   gtk_container_add (GTK_CONTAINER (contarea), hbox);
   gtk_box_pack_start (GTK_BOX (hbox), gtk_label_new ("object:"),
                       FALSE, FALSE, 1);
   GtkWidget *obent = mom_objectentry ();
   gtk_box_pack_end (GTK_BOX (hbox), obent, TRUE, TRUE, 1);
-  gtk_widget_show_all (showdialog);
-  mo_objref_t shownobr = NULL;
+  gtk_widget_show_all (displaydialog);
+  mo_objref_t displobr = NULL;
   int res = 0;
   do
     {
-      shownobr = NULL;
-      res = gtk_dialog_run (GTK_DIALOG (showdialog));
+      displobr = NULL;
+      res = gtk_dialog_run (GTK_DIALOG (displaydialog));
       if (res == GTK_RESPONSE_OK)
         {
           gchar *nams =
             gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (obent));
           if (nams && mom_valid_name (nams))
-            shownobr = mo_find_named_cstr (nams);
+            displobr = mo_find_named_cstr (nams);
           else
-            shownobr = NULL;
-          MOM_INFORMPRINTF ("should show shownobr=%s",
-                            mo_objref_pnamestr (shownobr));
-          // show it
+            displobr = NULL;
+          MOM_INFORMPRINTF ("should display displobr=%s",
+                            mo_objref_pnamestr (displobr));
+          // display it
+          mo_gui_display_object (displobr);
         }
       else
         break;
     }
-  while (!shownobr);
-  gtk_widget_destroy (showdialog);
-  showdialog = NULL;
-}                               /* end mom_show_edit */
+  while (!displobr);
+  gtk_widget_destroy (displaydialog);
+  displaydialog = NULL;
+}                               /* end mom_display_edit */
 
 static void
 mom_newob_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
@@ -461,6 +562,12 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "font", "Times, Italic",
                                 "scale", 0.75,
                                 "foreground", "skyblue4", NULL);
+  mom_tag_comment =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "time",
+                                "font", "Verdana, Italic",
+                                "scale", 0.60,
+                                "foreground", "slategrey", NULL);
   // we should fill the mom_tagtable
 #warning mom_initialize_gtk_tags_for_objects unimplemented
   MOM_WARNPRINTF ("mom_initialize_gtk_tags_for_objects unimplemented");
@@ -495,19 +602,20 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *edititem = gtk_menu_item_new_with_label ("Edit");
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), edititem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (edititem), editmenu);
-  GtkWidget *showitem = gtk_menu_item_new_with_label ("Show...");
+  GtkWidget *displayitem = gtk_menu_item_new_with_label ("Display...");
   GtkWidget *newobitem = gtk_menu_item_new_with_label ("make New object");
   GtkWidget *copyitem = gtk_menu_item_new_with_label ("Copy");
   GtkWidget *pasteitem = gtk_menu_item_new_with_label ("Paste");
   GtkWidget *cutitem = gtk_menu_item_new_with_label ("Cut");
-  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), showitem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), displayitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), newobitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
                          gtk_separator_menu_item_new ());
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), copyitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), pasteitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), cutitem);
-  g_signal_connect (showitem, "activate", G_CALLBACK (mom_show_edit), NULL);
+  g_signal_connect (displayitem, "activate", G_CALLBACK (mom_display_edit),
+                    NULL);
   g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
   g_signal_connect (copyitem, "activate", G_CALLBACK (mom_copy_edit), NULL);
   g_signal_connect (pasteitem, "activate", G_CALLBACK (mom_paste_edit), NULL);
@@ -533,6 +641,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
+  mo_gui_generate_object_text_buffer ();
   gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
 
