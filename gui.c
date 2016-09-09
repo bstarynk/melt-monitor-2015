@@ -43,6 +43,9 @@ static GtkTextTag *mom_tag_json;        // tag for JSON
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
+static GtkTextBuffer *mom_cmdtextbuf;
+static GtkWidget *mom_cmdview;
+
 #define MOMGUI_IDSTART_LEN 6
 
 // an object is displayed (once) when we are showing its entire
@@ -1543,6 +1546,16 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
+  GtkWidget *scrocmd = gtk_scrolled_window_new (NULL, NULL);
+  gtk_widget_set_size_request (scrocmd, -1, 66);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrocmd),
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+#warning mom_gtkapp_activate: perhaps cmdview should be in another window?
+  mom_cmdtextbuf = gtk_text_buffer_new (NULL);
+  mom_cmdview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdview), true);
+  gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdview);
+  gtk_box_pack_end (GTK_BOX (topvbox), scrocmd, TRUE, TRUE, 2);
   mo_gui_generate_object_text_buffer ();
   gtk_widget_show_all (mom_appwin);
 }                               /* end mom_gtkapp_activate */
