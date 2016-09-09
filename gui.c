@@ -43,6 +43,7 @@ static GtkTextTag *mom_tag_json;        // tag for JSON
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
+static GtkWidget *mom_checkitemcmd;
 
 
 static GtkWidget *mom_cmdwin;
@@ -171,6 +172,31 @@ mom_dispobj_cmp (const void *p1, const void *p2)
 }                               /* end mom_dispobj_cmp */
 
 
+void
+mom_activate_app_menu (GtkMenuItem * menuitem MOM_UNUSED,
+                       void *data MOM_UNUSED)
+{
+  bool cmdvisible = gtk_widget_get_visible (mom_cmdwin);
+  MOM_INFORMPRINTF ("activateapp cmdvisible %s",
+                    cmdvisible ? "true" : "false");
+  gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (mom_checkitemcmd),
+                                  cmdvisible);
+}                               /* end mom_activate_app_menu */
+
+void
+mom_toggle_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
+{
+  if (gtk_check_menu_item_get_active (chkitm))
+    {
+      MOM_INFORMPRINTF ("toggle_command show");
+      gtk_widget_show_all (mom_cmdwin);
+    }
+  else
+    {
+      MOM_INFORMPRINTF ("toggle_command hide");
+      gtk_widget_hide (mom_cmdwin);
+    }
+}                               /* end mom_toggle_command_shown */
 
 #define MOM_DISPLAY_INDENTED_NEWLINE(Piter,Depth,...) do {	\
   gtk_text_buffer_insert_with_tags				\
@@ -1360,24 +1386,42 @@ mom_copy_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   MOM_INFORMPRINTF ("copy_edit");
 }                               /* end mom_copy_edit */
 
-static void
-mom_paste_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
-{
-  MOM_INFORMPRINTF ("paste_edit");
-}                               /* end mom_paste_edit */
-
-static void
-mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
-{
-  MOM_INFORMPRINTF ("cut_edit");
-}                               /* end mom_cut_edit */
-
 static bool
 mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
              gpointer data MOM_UNUSED)
 {
   MOM_BACKTRACEPRINTF ("stopgui w@%p/%s/%s",
                        w, G_OBJECT_CLASS_NAME (w), G_OBJECT_TYPE_NAME (w));
+  GtkWidget *stopdialog =       //
+    gtk_dialog_new_with_buttons ("Stop Monimelt?",
+                                 GTK_WINDOW (mom_appwin),
+                                 GTK_DIALOG_MODAL |
+                                 GTK_DIALOG_DESTROY_WITH_PARENT,
+                                 "Quit without dumping",
+                                 GTK_RESPONSE_CLOSE,
+                                 //
+                                 "Cancel, so continue",
+                                 GTK_RESPONSE_CANCEL,
+                                 //
+                                 "Dump & exit",
+                                 GTK_RESPONSE_APPLY,
+                                 NULL);
+  gtk_widget_show_all (stopdialog);
+  int res = 0;
+  for (;;)
+    {
+      res = gtk_dialog_run (GTK_DIALOG (stopdialog));
+      MOM_INFORMPRINTF ("stopgui res#%d", res);
+      if (res == GTK_RESPONSE_APPLY)
+        mom_dumpexit_app (NULL, NULL);
+      else if (res == GTK_RESPONSE_CLOSE)
+        mom_quit_app (NULL, NULL);
+      else if (res == GTK_RESPONSE_DELETE_EVENT || res == GTK_RESPONSE_CANCEL)
+        {
+          gtk_widget_destroy (stopdialog);
+          return false;
+        };
+    }
   return true;                  /// dont propagate
 }                               /* end mom_stopgui */
 
@@ -1503,12 +1547,20 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *appitem = gtk_menu_item_new_with_label ("App");
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), appitem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (appitem), appmenu);
+  g_signal_connect (appitem, "activate", G_CALLBACK (mom_activate_app_menu),
+                    NULL);
   GtkWidget *dumpitem = gtk_menu_item_new_with_label ("Dump");
   GtkWidget *dumpexititem = gtk_menu_item_new_with_label ("dump & eXit");
   GtkWidget *quititem = gtk_menu_item_new_with_label ("Quit");
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpexititem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), quititem);
+  gtk_menu_shell_append (GTK_MENU_SHELL (appmenu),
+                         gtk_separator_menu_item_new ());
+  mom_checkitemcmd = gtk_check_menu_item_new_with_label ("show/hide Cmd");
+  gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), mom_checkitemcmd);
+  g_signal_connect (mom_checkitemcmd, "toggle",
+                    G_CALLBACK (mom_toggle_command_shown), NULL);
   g_signal_connect (dumpitem, "activate", G_CALLBACK (mom_dump_app), NULL);
   g_signal_connect (dumpexititem, "activate", G_CALLBACK (mom_dumpexit_app),
                     NULL);
@@ -1521,21 +1573,15 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *displayitem = gtk_menu_item_new_with_label ("Display...");
   GtkWidget *newobitem = gtk_menu_item_new_with_label ("make New object");
   GtkWidget *copyitem = gtk_menu_item_new_with_label ("Copy");
-  GtkWidget *pasteitem = gtk_menu_item_new_with_label ("Paste");
-  GtkWidget *cutitem = gtk_menu_item_new_with_label ("Cut");
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), displayitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), newobitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
                          gtk_separator_menu_item_new ());
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), copyitem);
-  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), pasteitem);
-  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), cutitem);
   g_signal_connect (displayitem, "activate", G_CALLBACK (mom_display_edit),
                     NULL);
   g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
   g_signal_connect (copyitem, "activate", G_CALLBACK (mom_copy_edit), NULL);
-  g_signal_connect (pasteitem, "activate", G_CALLBACK (mom_paste_edit), NULL);
-  g_signal_connect (cutitem, "activate", G_CALLBACK (mom_cut_edit), NULL);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_tagtable = gtk_text_tag_table_new ();
@@ -1565,21 +1611,21 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
-  gtk_window_set_title (mom_cmdwin, "monimelt command");
+  gtk_window_set_title (GTK_WINDOW(mom_cmdwin), "monimelt command");
   gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 560, 260);
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
   gtk_box_pack_end (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
-  g_signal_connect (mom_cmdwin, "destroy-event", G_CALLBACK (mom_stopgui),
-                    NULL);
-  g_signal_connect (mom_appwin, "destroy-event", G_CALLBACK (mom_stopgui),
+  g_signal_connect (mom_cmdwin, "delete-event",
+                    G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+  g_signal_connect (mom_appwin, "delete-event", G_CALLBACK (mom_stopgui),
                     NULL);
   mo_gui_generate_object_text_buffer ();
   MOM_INFORMPRINTF ("cmdwin@%p/%s/%s",
                     mom_cmdwin,
                     G_OBJECT_CLASS_NAME (mom_cmdwin),
                     G_OBJECT_TYPE_NAME (mom_cmdwin));
-  MOM_INFORMPRINTF ("cmdwin@%p/%s/%s", mom_appwin,
+  MOM_INFORMPRINTF ("appwin@%p/%s/%s", mom_appwin,
                     G_OBJECT_CLASS_NAME (mom_appwin),
                     G_OBJECT_TYPE_NAME (mom_appwin));
   gtk_widget_show_all (mom_appwin);
