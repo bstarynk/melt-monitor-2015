@@ -43,8 +43,11 @@ static GtkTextTag *mom_tag_json;        // tag for JSON
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
+
+
+static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
-static GtkWidget *mom_cmdview;
+static GtkWidget *mom_cmdtview;
 
 #define MOMGUI_IDSTART_LEN 6
 
@@ -1369,6 +1372,14 @@ mom_cut_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   MOM_INFORMPRINTF ("cut_edit");
 }                               /* end mom_cut_edit */
 
+static bool
+mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
+             gpointer data MOM_UNUSED)
+{
+  MOM_BACKTRACEPRINTF ("stopgui w@%p/%s/%s",
+                       w, G_OBJECT_CLASS_NAME (w), G_OBJECT_TYPE_NAME (w));
+  return true;                  /// dont propagate
+}                               /* end mom_stopgui */
 
 //////////////// create the GUI
 static void
@@ -1547,17 +1558,32 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
   GtkWidget *scrocmd = gtk_scrolled_window_new (NULL, NULL);
-  gtk_widget_set_size_request (scrocmd, -1, 66);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrocmd),
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-#warning mom_gtkapp_activate: perhaps cmdview should be in another window?
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
-  mom_cmdview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdview), true);
-  gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdview);
-  gtk_box_pack_end (GTK_BOX (topvbox), scrocmd, TRUE, TRUE, 2);
+  mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
+  gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
+  mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
+  gtk_window_set_title (mom_cmdwin, "monimelt command");
+  gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 560, 260);
+  GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+  gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
+  gtk_box_pack_end (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
+  g_signal_connect (mom_cmdwin, "destroy-event", G_CALLBACK (mom_stopgui),
+                    NULL);
+  g_signal_connect (mom_appwin, "destroy-event", G_CALLBACK (mom_stopgui),
+                    NULL);
   mo_gui_generate_object_text_buffer ();
+  MOM_INFORMPRINTF ("cmdwin@%p/%s/%s",
+                    mom_cmdwin,
+                    G_OBJECT_CLASS_NAME (mom_cmdwin),
+                    G_OBJECT_TYPE_NAME (mom_cmdwin));
+  MOM_INFORMPRINTF ("cmdwin@%p/%s/%s", mom_appwin,
+                    G_OBJECT_CLASS_NAME (mom_appwin),
+                    G_OBJECT_TYPE_NAME (mom_appwin));
   gtk_widget_show_all (mom_appwin);
+  gtk_widget_show_all (mom_cmdwin);
 }                               /* end mom_gtkapp_activate */
 
 static guint
