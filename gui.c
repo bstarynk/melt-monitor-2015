@@ -29,6 +29,7 @@ static GtkTextTag *mom_tag_objtitle;    // tag for object title line
 static GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
 static GtkTextTag *mom_tag_objname;     // tag for object names
 static GtkTextTag *mom_tag_class;       // tag for class
+static GtkTextTag *mom_tag_payload;     // tag for payload
 static GtkTextTag *mom_tag_attr;        // tag for attributes
 static GtkTextTag *mom_tag_idstart;     // tag for first 6 characters of objids
 static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
@@ -599,7 +600,16 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
         }
     }
   }
+  if (obr->mo_ob_paylkind != NULL)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\275",  // U+203D INTERROBANG ‽
+         4, mom_tag_payload, NULL);
+      mom_insert_objref_textbuf (classobr, piter, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, ":", 1, mom_tag_payload, NULL);
 #warning FIXME: should display the payload
+    }
   MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_display_the_object */
 
@@ -1016,6 +1026,11 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "class",
                                 "scale", 1.05,
                                 "background", "bisque1",
+                                "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
+  mom_tag_payload =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "payload",
+                                "background", "pink",
                                 "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
   mom_tag_time =
     gtk_text_buffer_create_tag (mom_obtextbuf,
