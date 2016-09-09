@@ -540,16 +540,18 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
   time_t nowt = 0;
   time (&nowt);
   struct tm nowtm = { };
+  struct tm modtm = { };
   localtime_r (&nowt, &nowtm);
+  localtime_r (&obr->mo_ob_mtime, &modtm);
   // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45:12 
   if (obr->mo_ob_mtime > nowt - 64800 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T", &nowtm);
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T", &modtm);
   // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25:57
   else if (obr->mo_ob_mtime > nowt - 1728000 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T", &nowtm);
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T", &modtm);
   else if (obr->mo_ob_mtime > 0)
     // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45:01
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T", &nowtm);
+    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T", &modtm);
   else                          // unset time ⌚ ?
     strcpy (tibuf, "\342\214\232 ?");
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
