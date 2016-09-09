@@ -420,28 +420,150 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
     }
 }                               /* end of mom_insert_value_textbuf */
 
+
 static void
 mom_insert_assoval_textbuf (mo_assovaldatapayl_ty * asso, GtkTextIter * piter,
                             int depth, int maxdepth)
 {
+  asso = mo_dyncastpayl_assoval (asso);
+  if (!asso)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+      return;
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+  mo_value_t ksetv = mo_assoval_keys_set (asso);
+  unsigned siz = mo_set_size (ksetv);
+  mo_objref_t *keyarr =
+    mom_gc_alloc (mom_prime_above (siz + 1) * sizeof (mo_objref_t));
+  memcpy (keyarr, ((mo_sequencevalue_ty *) ksetv)->mo_seqobj,
+          siz * sizeof (mo_objref_t));
+  if (siz > 1)
+    qsort (keyarr, siz, sizeof (mo_objref_t), mom_dispobj_cmp);
+  char sizbuf[32];
+  memset (sizbuf, 0, sizeof (sizbuf));
+  snprintf (sizbuf, sizeof (sizbuf), "[assoval/%d]", siz);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
+                                    mom_tag_payload, mom_tag_index, NULL);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
+                                        "\342\226\252 ", 4,
+                                        mom_tag_payload, NULL);
+      mo_objref_t keyobr = keyarr[ix];
+      mom_insert_objref_textbuf (keyobr, piter, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
+                                        " \342\226\271 ", 5,
+                                        mom_tag_payload, NULL);
+      mo_value_t curval = mo_assoval_get (asso, keyobr);
+      mom_insert_value_textbuf (curval, piter, depth + 1, maxdepth,
+                                mom_tag_payload);
+    }
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_insert_assoval_textbuf  */
 
 static void
 mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
                             int depth, int maxdepth)
 {
+  hset = mo_dyncastpayl_hashset (hset);
+  if (!hset)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+      return;
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+  mo_value_t setv = mo_hashset_elements_set (hset);
+  unsigned siz = mo_set_size (setv);
+  mo_objref_t *elmarr =
+    mom_gc_alloc (mom_prime_above (siz + 1) * sizeof (mo_objref_t));
+  memcpy (elmarr, ((mo_sequencevalue_ty *) setv)->mo_seqobj,
+          siz * sizeof (mo_objref_t));
+  if (siz > 1)
+    qsort (elmarr, siz, sizeof (mo_objref_t), mom_dispobj_cmp);
+  {
+    char sizbuf[32];
+    memset (sizbuf, 0, sizeof (sizbuf));
+    snprintf (sizbuf, sizeof (sizbuf), "[hashset/%d]", siz);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
+                                      mom_tag_payload, mom_tag_index, NULL);
+  }
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, ".{", 2,
+                                    mom_tag_payload, NULL);
+  for (unsigned ix = 0; ix < siz; ix++)
+    {
+      mo_objref_t elemobr = elmarr[ix];
+      if (ix % 5 == 0)
+        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+                                      mom_tag_payload, NULL);
+      else
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " ", 1,
+                                          mom_tag_payload, NULL);
+      mom_insert_objref_textbuf (elemobr, piter, mom_tag_payload);
+    }
+  if (siz > 0)
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " ", 1,
+                                      mom_tag_payload, NULL);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "}.", 2,
+                                    mom_tag_payload, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_insert_hashset_textbuf  */
 
 static void
 mom_insert_list_textbuf (mo_listpayl_ty * list, GtkTextIter * piter,
                          int depth, int maxdepth)
 {
+  list = mo_dyncastpayl_list (list);
+  if (!list)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+      return;
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+#warning mom_insert_list_textbuf unimplemented
 }                               /* end mom_insert_list_textbuf  */
 
 static void
 mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
                             int depth, int maxdepth)
 {
+  vect = mo_dyncastpayl_vectval (vect);
+  if (!vect)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+      return;
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+#warning mom_insert_vectval_textbuf unimplemented
 }                               /* end mom_insert_assoval_textbuf  */
 
 static void
