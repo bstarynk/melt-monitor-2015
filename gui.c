@@ -59,6 +59,19 @@ static mo_assovaldatapayl_ty *momgui_displayed_objasso;
 // the hashset of shown object occurrences
 static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
+
+static inline int
+momgui_gobrefcount (GObject * ob)
+{
+  if (!ob)
+    return -9999;
+  else
+    return (int) (ob->ref_count);
+}
+
+#define MOMGUI_GOBREFCOUNT(Ob) momgui_gobrefcount(G_OBJECT(Ob))
+
+
 // Each displayed object is displayed only once, and we keep the
 // following GTK information about it
 typedef struct momgui_dispobjinfo_st momgui_dispobjinfo_ty;
@@ -111,9 +124,8 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
 {
   MOM_BACKTRACEPRINTF ("destroy_shownobocc shoc@%p txtag@%p#r%d showobr=%s",
                        shoc, shoc->mo_gso_txtag,
-                       (shoc->mo_gso_txtag)
-                       ? ((int) (((GObject *) shoc->mo_gso_txtag)->ref_count))
-                       : -99999, mo_objref_pnamestr (shoc->mo_gso_showobr));
+                       MOMGUI_GOBREFCOUNT (shoc->mo_gso_txtag),
+                       mo_objref_pnamestr (shoc->mo_gso_showobr));
   momgui_shown_obocchset =      //
     mo_hashset_remove (momgui_shown_obocchset, shoc->mo_gso_showobr);
   g_clear_object (&shoc->mo_gso_txtag);
@@ -202,20 +214,25 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
             ("insert_objref_textbuf failed to allocate shownobocc_ty for obr=%s",
              mo_objref_pnamestr (obr));
         shoc->mo_gso_showobr = obr;
-        objtag = shoc->mo_gso_txtag
-          = gtk_text_buffer_create_tag (mom_obtextbuf, idbuf,
-                                        "font", "DejaVu Serif, Book",
-                                        "background", "ivory", NULL);
-        MOM_BACKTRACEPRINTF
-          ("insert_objref_textbuf created objtag@%p for %s (%s) shoc@%p",
-           objtag, mo_objref_pnamestr (obr), idbuf, shoc);
+        shoc->mo_gso_txtag = NULL;
+        MOM_INFORMPRINTF ("insert_objref_textbuf create shoc@%p for obr=%s",
+                          shoc, mo_objref_pnamestr (obr));
+        objtag = gtk_text_tag_table_lookup (mom_tagtable, idbuf);
+        if (objtag)
+          {
+            shoc->mo_gso_txtag = objtag;
+          }
+        else
+          {
+            objtag = shoc->mo_gso_txtag
+              = gtk_text_buffer_create_tag (mom_obtextbuf, idbuf,
+                                            "font", "DejaVu Serif, Book",
+                                            "background", "ivory", NULL);
+          }
         g_hash_table_insert (mom_shownobjocc_hashtable, obr, shoc);
       }
     else
       {
-        MOM_BACKTRACEPRINTF
-          ("insert_objref_textbuf got shoc@%p with gso_txtag=%p",
-           shoc, shoc->mo_gso_txtag);
         objtag = shoc->mo_gso_txtag;
       }
   }
@@ -605,6 +622,9 @@ mo_gui_generate_object_text_buffer (void)
   momgui_shown_obocchset =
     mo_hashset_reserve (NULL, 3 * nbdispob + nbdispob / 2 + 40);
   gtk_text_buffer_set_text (mom_obtextbuf, "", 0);
+  MOM_INFORMPRINTF
+    ("generate_object_text_buffer cleared text of obtextbuf@%p",
+     mom_obtextbuf);
   // sort the dispsetv in alphabetical order, or else obid order
   mo_objref_t *objarr =
     mom_gc_alloc (mom_prime_above (nbdispob + 1) * sizeof (mo_objref_t));
@@ -648,20 +668,21 @@ mo_gui_generate_object_text_buffer (void)
       GtkTextIter iter = { };
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
       mo_objref_t curobj = objarr[ix];
-      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
-                                        "\n", -1, NULL, NULL);
+      gtk_text_buffer_insert (mom_obtextbuf, &iter, "\n", -1);
       MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
       int maxdepth = mo_value_to_int (mo_assoval_get (oldispasso, curobj), 0);
       if (maxdepth <= 0)
         maxdepth = 1;
       else if (maxdepth > MOMGUI_MAX_DEPTH)
         maxdepth = MOMGUI_MAX_DEPTH;
+      MOM_INFORMPRINTF
+        ("generate_object_text_buffer ix#%d curobj=%s maxdepth=%d", ix,
+         mo_objref_pnamestr (curobj), maxdepth);
       momgui_displayed_objasso =
         mo_assoval_put (momgui_displayed_objasso, curobj,
                         mo_int_to_value (maxdepth));
       mom_display_the_object (objarr[ix], &iter, 0, maxdepth, NULL);
-      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
-                                        "\n", -1, NULL, NULL);
+      gtk_text_buffer_insert (mom_obtextbuf, &iter, "\n", -1);
     }
   MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
