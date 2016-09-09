@@ -503,8 +503,8 @@ mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
     gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
                                       mom_tag_payload, mom_tag_index, NULL);
   }
-  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, ".{", 2,
-                                    mom_tag_payload, NULL);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " \342\235\264",      // U+2774 MEDIUM LEFT CURLY BRACKET ORNAMENT ❴
+                                    4, mom_tag_payload, NULL);
   for (unsigned ix = 0; ix < siz; ix++)
     {
       mo_objref_t elemobr = elmarr[ix];
@@ -519,8 +519,8 @@ mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
   if (siz > 0)
     gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " ", 1,
                                       mom_tag_payload, NULL);
-  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "}.", 2,
-                                    mom_tag_payload, NULL);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\235\265",       // U+2775 MEDIUM RIGHT CURLY BRACKET ORNAMENT ❵
+                                    3, mom_tag_payload, NULL);
   MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_insert_hashset_textbuf  */
 
@@ -542,8 +542,35 @@ mom_insert_list_textbuf (mo_listpayl_ty * list, GtkTextIter * piter,
          3, mom_tag_payload, NULL);
       return;
     }
-#warning mom_insert_list_textbuf unimplemented
+  unsigned len = mo_list_length (list);
+  {
+    char sizbuf[32];
+    memset (sizbuf, 0, sizeof (sizbuf));
+    snprintf (sizbuf, sizeof (sizbuf), "[list/%d]", len);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
+                                      mom_tag_payload, mom_tag_index, NULL);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "  \342\235\250",   // U+2768 MEDIUM LEFT PARENTHESIS ORNAMENT ❨
+                                      4, mom_tag_payload, NULL);
+    int cnt = 0;
+    for (mo_listelem_ty * el = list->mo_lip_first; el != NULL;
+         el = el->mo_lie_next)
+      {
+        for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
+          if (el->mo_lie_arr[ix])
+            {
+              MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+                                            mom_tag_payload);
+              mom_insert_value_textbuf (el->mo_lie_arr[ix], piter, depth + 1,
+                                        maxdepth, mom_tag_payload);
+              cnt++;
+            }
+      }
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "  \342\235\250",   // U+2769 MEDIUM RIGHT PARENTHESIS ORNAMENT ❩
+                                      4, mom_tag_payload, NULL);
+  }
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_insert_list_textbuf  */
+
 
 static void
 mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
@@ -563,8 +590,37 @@ mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
          3, mom_tag_payload, NULL);
       return;
     }
-#warning mom_insert_vectval_textbuf unimplemented
-}                               /* end mom_insert_assoval_textbuf  */
+  unsigned cnt = mo_vectval_count (vect);
+  {
+    char sizbuf[32];
+    memset (sizbuf, 0, sizeof (sizbuf));
+    snprintf (sizbuf, sizeof (sizbuf), "[vectval/%d]", cnt);
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
+                                      mom_tag_payload, mom_tag_index, NULL);
+  }
+  gtk_text_buffer_insert_with_tags      //
+    (mom_obtextbuf, piter, " \342\235\256",     // U+276E HEAVY LEFT-POINTING ANGLE QUOTATION MARK ORNAMENT ❮
+     4, mom_tag_payload, NULL);
+  for (int ix = 0; ix < (int) cnt; ix++)
+    {
+      {
+        char indexbuf[32];
+        memset (indexbuf, 0, sizeof (indexbuf));
+        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1, mom_tag_payload);
+        snprintf (indexbuf, sizeof (indexbuf), "[%d] ", ix);
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, indexbuf, -1,
+                                          mom_tag_payload, mom_tag_index,
+                                          NULL);
+      }
+      mom_insert_value_textbuf (mo_vectval_nth (vect, ix), piter, depth + 1,
+                                maxdepth, mom_tag_payload);
+    }
+  gtk_text_buffer_insert_with_tags      //
+    (mom_obtextbuf, piter, " \342\235\257",     // U+276F HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT ❯
+     4, mom_tag_payload, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+}                               /* end mom_insert_vectval_textbuf  */
+
 
 static void
 mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
