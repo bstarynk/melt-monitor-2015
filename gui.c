@@ -38,7 +38,8 @@ static GtkTextTag *mom_tag_string;      // tag for strings
 static GtkTextTag *mom_tag_sequence;    // tag for sequences (tuples & sets)
 static GtkTextTag *mom_tag_time;        // tag for time
 static GtkTextTag *mom_tag_comment;     // tag for comment
-static GtkTextTag *mom_tag_index;       // tag for comment
+static GtkTextTag *mom_tag_index;       // tag for indexes
+static GtkTextTag *mom_tag_json;        // tag for JSON
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
@@ -773,6 +774,61 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
           }
           break;
         case CASE_PAYLOAD_MOM (payload_json):
+          {
+            json_t *js = (json_t *) payldata;
+            if (!js || js == MOM_EMPTY_SLOT)
+              {
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, "_", 1, mom_tag_payload,
+                   mom_tag_json, NULL);
+              }
+            else if (depth >= maxdepth)
+              {
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, "\342\200\246", 3, mom_tag_payload,
+                   mom_tag_json, NULL);
+              }
+            else
+              {
+                size_t siz = 1024;
+                char *buf = calloc (1, siz);
+                if (!buf)
+                  MOM_FATAPRINTF
+                    ("failed to calloc %zd for json payload display", siz);
+                FILE *fmem = open_memstream (&buf, &siz);
+                if (!fmem)
+                  MOM_FATAPRINTF
+                    ("failed to openmemstream %zd for json payload display",
+                     siz);
+                if (json_dumpf (js, fmem, JSON_INDENT (1) | JSON_SORT_KEYS))
+                  MOM_FATAPRINTF
+                    ("failed to json_dumpf for payload of object %s",
+                     mo_objref_pnamestr (obr));
+                fputc ('\n', fmem);
+                fflush (fmem);
+                long len = ftell (fmem);
+                char *pchk = buf;
+                char *pc = buf;
+                while (pc < buf + len)
+                  {
+                    char *eol = strchr (pc, '\n');
+                    if (!eol)
+                      break;
+                    MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                                                  mom_tag_payload,
+                                                  mom_tag_json);
+                    gtk_text_buffer_insert_with_tags (mom_obtextbuf,
+                                                      piter, pchk,
+                                                      eol - pchk - 1,
+                                                      mom_tag_payload,
+                                                      mom_tag_json, NULL);
+
+                    pc = pchk = eol + 1;
+                  }
+                free (buf), buf = NULL;
+                fclose (fmem);
+              }
+          }
 #warning FIXME: mom_insert_objpayload_textbuf display payload JSON
           break;
         default:
@@ -1412,6 +1468,11 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "font", "DejaVu Sans, Condensed",
                                 "scale", 0.85,
                                 "foreground", "palegreen1", "rise", 3, NULL);
+  mom_tag_json =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "index",
+                                "font", "Inconsolata, Medium",
+                                "scale", 0.83, "foreground", "khali1", NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 static void
