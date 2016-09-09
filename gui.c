@@ -827,9 +827,10 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
                   }
                 free (buf), buf = NULL;
                 fclose (fmem);
+                MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                                              mom_tag_payload, mom_tag_json);
               }
           }
-#warning FIXME: mom_insert_objpayload_textbuf display payload JSON
           break;
         default:
         defaultpayloadcase:
@@ -838,7 +839,6 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
 #undef MOM_NBCASE_PAYLOAD
 #undef CASE_PAYLOAD_MOM
     }                           /* end else non-signature payload */
-#warning FIXME: should display the payload
 }                               /* end of mom_insert_objpayload_textbuf */
 
 static void
