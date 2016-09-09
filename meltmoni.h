@@ -116,6 +116,20 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
 __attribute__ ((format (printf, 3, 4)));
 
 
+#define MOM_WARNPRINTF_AT(Fil,Lin,Fmt,...) do { \
+    mom_warnprintf_at (Fil,Lin,Fmt,   \
+           ##__VA_ARGS__);    \
+  } while(0)
+
+#define MOM_WARNPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
+  MOM_WARNPRINTF_AT(Fil,Lin,Fmt,    \
+        ##__VA_ARGS__)
+
+#define MOM_WARNPRINTF(Fmt,...)     \
+  MOM_WARNPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
+      ##__VA_ARGS__)
+
+
 typedef atomic_bool mom_atomic_bool_t;
 typedef atomic_int mom_atomic_int_t;
 typedef atomic_int_least16_t mom_atomic_int16_t;
@@ -288,18 +302,22 @@ __attribute__ ((format (printf, 3, 4)));
         ##__VA_ARGS__)
 
 
-#define MOM_WARNPRINTF_AT(Fil,Lin,Fmt,...) do { \
-    mom_warnprintf_at (Fil,Lin,Fmt,   \
-           ##__VA_ARGS__);    \
+void
+mom_backtraceprintf_at (const char *fil, int lin, const char *fmt, ...)
+__attribute__ ((format (printf, 3, 4)));
+
+#define MOM_BACKTRACEPRINTF_AT(Fil,Lin,Fmt,...) do { \
+    mom_backtraceprintf_at (Fil,Lin,Fmt,     \
+       ##__VA_ARGS__);    \
   } while(0)
 
-#define MOM_WARNPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
-  MOM_WARNPRINTF_AT(Fil,Lin,Fmt,    \
-        ##__VA_ARGS__)
+#define MOM_BACKTRACEPRINTF_AT_BIS(Fil,Lin,Fmt,...)  \
+  MOM_BACKTRACEPRINTF_AT(Fil,Lin,Fmt,      \
+          ##__VA_ARGS__)
 
-#define MOM_WARNPRINTF(Fmt,...)     \
-  MOM_WARNPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
-      ##__VA_ARGS__)
+#define MOM_BACKTRACEPRINTF(Fmt,...)     \
+  MOM_BACKTRACEPRINTF_AT_BIS(__FILE__,__LINE__,Fmt,  \
+        ##__VA_ARGS__)
 
 /// thread local Mersenne Twister pseudo-random number generation see
 /// file mt19937ar.c a tiny adaptation from

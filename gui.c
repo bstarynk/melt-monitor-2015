@@ -106,6 +106,9 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
 static void
 mom_destroy_shownobocc (momgui_shownobocc_ty * shoboc)
 {
+  MOM_BACKTRACEPRINTF ("destroy_shownobocc shoboc@%p txtag@%p showobr=%s",
+                       shoboc, shoboc->mo_gso_txtag,
+                       mo_objref_pnamestr (shoboc->mo_gso_showobr));
   momgui_shown_obocchset =      //
     mo_hashset_remove (momgui_shown_obocchset, shoboc->mo_gso_showobr);
   g_clear_object (&shoboc->mo_gso_txtag);
@@ -175,6 +178,7 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
+  MOM_INFORMPRINTF ("inert_obref_textbuf obr=%s", mo_objref_pnamestr (obr));
   mo_value_t namv = mo_objref_namev (obr);
   GtkTextTag *objtag = NULL;
   char idbuf[MOM_CSTRIDSIZ];
@@ -188,13 +192,17 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
       {
         shoc = calloc (1, sizeof (*shoc));
         if (!shoc)
-          MOM_FATAPRINTF ("failed to allocate shownobocc_ty for obr=%s",
-                          mo_objref_pnamestr (obr));
+          MOM_FATAPRINTF
+            ("insert_objref_textbuf failed to allocate shownobocc_ty for obr=%s",
+             mo_objref_pnamestr (obr));
         shoc->mo_gso_showobr = obr;
         objtag = shoc->mo_gso_txtag
           = gtk_text_buffer_create_tag (mom_obtextbuf, idbuf,
                                         "font", "DejaVu Serif, Book",
                                         "background", "ivory", NULL);
+        MOM_INFORMPRINTF
+          ("insert_objref_textbuf created objtag@%p for %s (%s)", objtag,
+           mo_objref_pnamestr (obr), idbuf);
         g_hash_table_insert (mom_shownobjocc_hashtable, obr, shoc);
       }
     else

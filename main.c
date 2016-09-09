@@ -539,6 +539,122 @@ mom_input_quoted_utf8 (FILE *f)
 
 
 
+/************************* backtrace *************************/
+
+/* A callback function passed to the backtrace_full function.  */
+
+static int
+mom_bt_callback (void *data, uintptr_t pc, const char *filename, int lineno,
+                 const char *function)
+{
+  int *pcount = (int *) data;
+
+  /* If we don't have any useful information, don't print
+     anything.  */
+  if (filename == NULL && function == NULL)
+    return 0;
+
+  /* Print up to 40 functions.    */
+  if (*pcount >= 40)
+    {
+      /* Returning a non-zero value stops the backtrace.  */
+      return 1;
+    }
+  ++*pcount;
+
+
+  fprintf (stderr, "MonimeltB[0x%lx] %s\n\t%s:%d\n",
+           (unsigned long) pc,
+           function == NULL ? "???" : function,
+           filename == NULL ? "???" : filename, lineno);
+
+  return 0;
+}                               /* end mom_bt_callback */
+
+/* An error callback function passed to the backtrace_full function.  This is
+   called if backtrace_full has an error.  */
+
+static void
+mom_bt_err_callback (void *data MOM_UNUSED, const char *msg, int errnum)
+{
+  if (errnum < 0)
+    {
+      /* This means that no debug info was available.  Just quietly
+         skip printing backtrace info.  */
+      return;
+    }
+  fprintf (stderr, "%s%s%s\n", msg, errnum == 0 ? "" : ": ",
+           errnum == 0 ? "" : strerror (errnum));
+}                               /* end mom_bt_err_callback */
+
+
+void
+mom_backtraceprintf_at (const char *fil, int lin, const char *fmt, ...)
+{
+  int len = 0;
+  char thrname[24];
+  char buf[256];
+  char timbuf[64];
+  char *bigbuf = NULL;
+  char *msg = NULL;
+  memset (buf, 0, sizeof (buf));
+  memset (thrname, 0, sizeof (thrname));
+  memset (timbuf, 0, sizeof (timbuf));
+  pthread_getname_np (pthread_self (), thrname, sizeof (thrname) - 1);
+  fflush (NULL);
+  mom_now_strftime_bufcenti (timbuf, "%Y-%b-%d %H:%M:%S.__ %Z");
+  va_list alist;
+  va_start (alist, fmt);
+  len = vsnprintf (buf, sizeof (buf), fmt, alist);
+  va_end (alist);
+  if (MOM_UNLIKELY (len >= (int) sizeof (buf) - 10))
+    {
+      bigbuf = malloc (len + 10);
+      if (bigbuf)
+        {
+          memset (bigbuf, 0, len + 10);
+          va_start (alist, fmt);
+          (void) vsnprintf (bigbuf, len + 1, fmt, alist);
+          va_end (alist);
+          msg = bigbuf;
+        }
+    }
+  else
+    msg = buf;
+  {
+    fprintf (stderr, "MONIMELT BACKTRACE @%s:%d <%s:%d> %s %s\n",
+             fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+    fflush (NULL);
+  }
+  struct backtrace_state *btstate =
+    backtrace_create_state (NULL, 0, mom_bt_err_callback, NULL);
+  if (btstate != NULL)
+    {
+      int count = 0;
+      backtrace_full (btstate, 1, mom_bt_callback, mom_bt_err_callback,
+                      (void *) &count);
+    }
+#if __GLIBC__
+#define BACKTRACE_MAX_MOM 100
+  if (!btstate)
+    {
+      void *bbuf[BACKTRACE_MAX_MOM];
+      int blev = 0;
+      memset (bbuf, 0, sizeof (bbuf));
+      blev = backtrace (bbuf, BACKTRACE_MAX_MOM - 1);
+      char **bsym = backtrace_symbols (bbuf, blev);
+      {
+        for (int i = 0; i < blev; i++)
+          fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
+        fflush (NULL);
+      }
+    }
+#endif
+  fflush (NULL);
+  if (bigbuf)
+    free (bigbuf);
+}                               /* end mom_backtraceprintf_at */
+
 /************************* inform *************************/
 
 void
@@ -638,53 +754,6 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
 
 /************************* fatal *************************/
 
-/* A callback function passed to the backtrace_full function.  */
-
-static int
-mom_bt_callback (void *data, uintptr_t pc, const char *filename, int lineno,
-                 const char *function)
-{
-  int *pcount = (int *) data;
-
-  /* If we don't have any useful information, don't print
-     anything.  */
-  if (filename == NULL && function == NULL)
-    return 0;
-
-  /* Print up to 40 functions.    */
-  if (*pcount >= 40)
-    {
-      /* Returning a non-zero value stops the backtrace.  */
-      return 1;
-    }
-  ++*pcount;
-
-
-  fprintf (stderr, "MonimeltB[0x%lx] %s\n\t%s:%d\n",
-           (unsigned long) pc,
-           function == NULL ? "???" : function,
-           filename == NULL ? "???" : filename, lineno);
-
-  return 0;
-}
-
-/* An error callback function passed to the backtrace_full function.  This is
-   called if backtrace_full has an error.  */
-
-static void
-mom_bt_err_callback (void *data MOM_UNUSED, const char *msg, int errnum)
-{
-  if (errnum < 0)
-    {
-      /* This means that no debug info was available.  Just quietly
-         skip printing backtrace info.  */
-      return;
-    }
-  fprintf (stderr, "%s%s%s\n", msg, errnum == 0 ? "" : ": ",
-           errnum == 0 ? "" : strerror (errnum));
-}
-
-
 
 
 void mom_abort (void) __attribute__ ((noreturn));
@@ -738,35 +807,6 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
   else
     fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s\n.. %s\n",
              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
-  fflush (NULL);
-  struct backtrace_state *btstate =
-    backtrace_create_state (NULL, 0, mom_bt_err_callback, NULL);
-  if (btstate != NULL)
-    {
-      int count = 0;
-      backtrace_full (btstate, 1, mom_bt_callback, mom_bt_err_callback,
-                      (void *) &count);
-      if (count > 0)
-        fprintf (stderr,
-                 "Please include the complete backtrace of %d levels in error reports\n",
-                 count);
-    }
-#if __GLIBC__
-#define BACKTRACE_MAX_MOM 100
-  if (!btstate)
-    {
-      void *bbuf[BACKTRACE_MAX_MOM];
-      int blev = 0;
-      memset (bbuf, 0, sizeof (bbuf));
-      blev = backtrace (bbuf, BACKTRACE_MAX_MOM - 1);
-      char **bsym = backtrace_symbols (bbuf, blev);
-      {
-        for (int i = 0; i < blev; i++)
-          fprintf (stderr, "MONIMELTB[%d]: %s\n", i, bsym[i]);
-        fflush (NULL);
-      }
-    }
-#endif
   fflush (NULL);
   if (bigbuf)
     free (bigbuf);
