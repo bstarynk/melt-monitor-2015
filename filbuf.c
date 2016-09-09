@@ -113,6 +113,7 @@ mo_dump_json_for_buffer_objref (mo_dumper_ty * du, mo_objref_t obr)
        pc = g_utf8_next_char (pc), uc = 0)
     {
       chklen++;
+      uc = g_utf8_get_char (pc);
       if ((chklen > 24 && uc == (gunichar) '\n')
           || (chklen > 40 && (g_unichar_iscntrl (uc)
                               || g_unichar_isspace (uc)))

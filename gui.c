@@ -421,6 +421,193 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
 }                               /* end of mom_insert_value_textbuf */
 
 static void
+mom_insert_assoval_textbuf (mo_assovaldatapayl_ty * asso, GtkTextIter * piter,
+                            int depth, int maxdepth)
+{
+}                               /* end mom_insert_assoval_textbuf  */
+
+static void
+mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
+                            int depth, int maxdepth)
+{
+}                               /* end mom_insert_hashset_textbuf  */
+
+static void
+mom_insert_list_textbuf (mo_listpayl_ty * list, GtkTextIter * piter,
+                         int depth, int maxdepth)
+{
+}                               /* end mom_insert_list_textbuf  */
+
+static void
+mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
+                            int depth, int maxdepth)
+{
+}                               /* end mom_insert_assoval_textbuf  */
+
+static void
+mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
+                               int depth, int maxdepth)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL, "bad obr");
+  mo_objref_t paylkindobr = obr->mo_ob_paylkind;
+  void *payldata = obr->mo_ob_payldata;
+  MOM_ASSERTPRINTF (paylkindobr != NULL, "no payload");
+  gtk_text_buffer_insert_with_tags      //
+    (mom_obtextbuf, piter, "\342\200\275",      // U+203D INTERROBANG ‽
+     4, mom_tag_payload, NULL);
+  mom_insert_objref_textbuf (paylkindobr, piter, mom_tag_payload);
+  gtk_text_buffer_insert_with_tags      //
+    (mom_obtextbuf, piter, ":", 1, mom_tag_payload, NULL);
+  if (paylkindobr->mo_ob_class == MOM_PREDEF (signature_class))
+    {
+      char adbuf[32];
+      memset (adbuf, 0, sizeof (adbuf));
+      Dl_info dif;
+      memset (&dif, 0, sizeof (dif));
+      if (dladdr (payldata, &dif) && payldata == dif.dli_saddr)
+        {
+          gtk_text_buffer_insert_with_tags      //
+            (mom_obtextbuf, piter, "\342\214\226",      // U+2316 POSITION INDICATOR ⌖
+             3, mom_tag_payload, NULL);
+          gtk_text_buffer_insert_with_tags      //
+            (mom_obtextbuf, piter, dif.dli_sname, -1, mom_tag_payload, NULL);
+          snprintf (adbuf, sizeof (adbuf), "@%p°", payldata);
+          gtk_text_buffer_insert_with_tags      //
+            (mom_obtextbuf, piter, adbuf, -1, mom_tag_payload, NULL);
+          gtk_text_buffer_insert_with_tags
+            (mom_obtextbuf, piter, dif.dli_fname, -1, mom_tag_payload, NULL);
+        }
+      else
+        {
+          snprintf (adbuf, sizeof (adbuf), "@@%p", payldata);
+          gtk_text_buffer_insert_with_tags      //
+            (mom_obtextbuf, piter, adbuf, -1, mom_tag_payload, NULL);
+        }
+    }                           // end if signature_class
+  else
+    {
+#define MOM_NBCASE_PAYLOAD 307
+#define CASE_PAYLOAD_MOM(Ob) momphash_##Ob % MOM_NBCASE_PAYLOAD:	\
+	  if (paylkindobr != MOM_PREDEF(Ob)) goto defaultpayloadcase;	\
+	  goto labpayl_##Ob; labpayl_##Ob
+      switch (mo_objref_hash (paylkindobr) % MOM_NBCASE_PAYLOAD)
+        {
+        case CASE_PAYLOAD_MOM (payload_assoval):
+          mom_insert_assoval_textbuf ((mo_assovaldatapayl_ty *) payldata,
+                                      piter, depth + 1, maxdepth);
+          break;
+        case CASE_PAYLOAD_MOM (payload_hashset):
+          mom_insert_hashset_textbuf ((mo_hashsetpayl_ty *) payldata,
+                                      piter, depth + 1, maxdepth);
+          break;
+        case CASE_PAYLOAD_MOM (payload_list):
+          mom_insert_list_textbuf ((mo_listpayl_ty *) payldata,
+                                   piter, depth + 1, maxdepth);
+          break;
+        case CASE_PAYLOAD_MOM (payload_vectval):
+          mom_insert_vectval_textbuf ((mo_vectvaldatapayl_ty *) payldata,
+                                      piter, depth + 1, maxdepth);
+          break;
+        case CASE_PAYLOAD_MOM (payload_value):
+          mom_insert_value_textbuf ((mo_value_t) payldata,
+                                    piter, depth + 1, maxdepth,
+                                    mom_tag_payload);
+          break;
+        case CASE_PAYLOAD_MOM (payload_file):
+          {
+            FILE *fil = (FILE *) payldata;
+            if (!fil)
+              gtk_text_buffer_insert_with_tags  //
+                (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+            else
+              {
+                char fbuf[32];
+                memset (fbuf, 0, sizeof (fbuf));
+                snprintf (fbuf, sizeof (fbuf), "#%d@%p", fileno (fil),
+                          (void *) fil);
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, fbuf, -1, mom_tag_payload, NULL);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_gobject):
+          {
+            GObject *gob = (GObject *) payldata;
+            if (!gob || gob == MOM_EMPTY_SLOT || !G_IS_OBJECT (gob))
+              gtk_text_buffer_insert_with_tags  //
+                (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+            else
+              {
+                char gbuf[128];
+                memset (gbuf, 0, sizeof (gbuf));
+                snprintf (gbuf, sizeof (gbuf), "%.50s/%.50s@%p",
+                          G_OBJECT_CLASS_NAME (gob), G_OBJECT_TYPE_NAME (gob),
+                          (void *) gob);
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, gbuf, -1, mom_tag_payload, NULL);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_buffer):
+          {
+            mo_bufferpayl_ty *bpy = (mo_bufferpayl_ty *) payldata;
+            if (!bpy || bpy == MOM_EMPTY_SLOT
+                || bpy->mo_buffer_nmagic != MOM_BUFFER_MAGIC)
+              gtk_text_buffer_insert_with_tags  //
+                (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+            else
+              {
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, "\342\200\234",        //U+201C LEFT DOUBLE QUOTATION MARK “
+                   3, mom_tag_payload, mom_tag_string, NULL);
+                if (MOM_UNLIKELY (bpy->mo_buffer_memstream == NULL))
+                  MOM_FATAPRINTF ("invalid closed buffer @%p for obr %s",
+                                  bpy, mo_objref_pnamestr (obr));
+                gunichar uc = 0;
+                long cpos = ftell (bpy->mo_buffer_memstream);
+                fflush (bpy->mo_buffer_memstream);
+                const char *zone = bpy->mo_buffer_zone;
+                const char *pchk = NULL;
+                const char *bend = zone + cpos;
+                for (const char *pc = zone; pc < bend && *pc;
+                     pc = g_utf8_next_char (pc), uc = 0)
+                  {
+                    uc = g_utf8_get_char (pc);
+                    if (uc == '\n' || !pchk || pc[1] == '\0')
+                      {
+                        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                                                      mom_tag_payload,
+                                                      mom_tag_string);
+                        if (pchk)
+                          gtk_text_buffer_insert_with_tags (mom_obtextbuf,
+                                                            piter, pchk,
+                                                            pc - pchk - 1,
+                                                            mom_tag_payload,
+                                                            mom_tag_string,
+                                                            NULL);
+                        pchk = (*pc == '\n') ? (pc + 1) : pc;
+                      }
+                  }
+                gtk_text_buffer_insert_with_tags        //
+                  (mom_obtextbuf, piter, "\342\200\235",        //U+201D RIGHT DOUBLE QUOTATION MARK ”
+                   3, mom_tag_payload, mom_tag_string, NULL);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_json):
+#warning FIXME: mom_insert_objpayload_textbuf display payload JSON
+          break;
+        default:
+        defaultpayloadcase:
+          break;
+        }
+#undef MOM_NBCASE_PAYLOAD
+#undef CASE_PAYLOAD_MOM
+    }                           /* end else non-signature payload */
+#warning FIXME: should display the payload
+}                               /* end of mom_insert_objpayload_textbuf */
+
+static void
 mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
                         int maxdepth, momgui_dispobjinfo_ty * pardisp)
 {
@@ -604,13 +791,7 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
   }
   if (obr->mo_ob_paylkind != NULL)
     {
-      gtk_text_buffer_insert_with_tags  //
-        (mom_obtextbuf, piter, "\342\200\275",  // U+203D INTERROBANG ‽
-         4, mom_tag_payload, NULL);
-      mom_insert_objref_textbuf (classobr, piter, mom_tag_payload);
-      gtk_text_buffer_insert_with_tags  //
-        (mom_obtextbuf, piter, ":", 1, mom_tag_payload, NULL);
-#warning FIXME: should display the payload
+      mom_insert_objpayload_textbuf (obr, piter, depth, maxdepth);
     }
   MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
 }                               /* end mom_display_the_object */
@@ -1032,6 +1213,7 @@ mom_initialize_gtk_tags_for_objects (void)
   mom_tag_payload =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "payload",
+                                "scale", 0.95,
                                 "background", "pink",
                                 "weight", PANGO_WEIGHT_SEMIBOLD, NULL);
   mom_tag_time =
