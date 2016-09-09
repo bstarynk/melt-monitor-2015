@@ -95,6 +95,9 @@ static GHashTable *mom_shownobjocc_hashtable;
 static void
 mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
 {
+  MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dispobi@%p dispobr=%s inobr=%s",
+                       dispobi, mo_objref_pnamestr (dispobi->mo_gdo_dispobr),
+                       mo_objref_pnamestr (dispobi->mo_gdo_inobr));
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dispobi->mo_gdo_dispobr);
   g_clear_object (&dispobi->mo_gdo_startmark);
@@ -104,16 +107,19 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
 }                               /* end of mom_destroy_dispobjinfo */
 
 static void
-mom_destroy_shownobocc (momgui_shownobocc_ty * shoboc)
+mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
 {
-  MOM_BACKTRACEPRINTF ("destroy_shownobocc shoboc@%p txtag@%p showobr=%s",
-                       shoboc, shoboc->mo_gso_txtag,
-                       mo_objref_pnamestr (shoboc->mo_gso_showobr));
+  MOM_BACKTRACEPRINTF ("destroy_shownobocc shoc@%p txtag@%p#r%d showobr=%s",
+                       shoc, shoc->mo_gso_txtag,
+                       (shoc->mo_gso_txtag)
+                       ? ((int) (((GObject *) shoc->mo_gso_txtag)->ref_count))
+                       : -99999, mo_objref_pnamestr (shoc->mo_gso_showobr));
   momgui_shown_obocchset =      //
-    mo_hashset_remove (momgui_shown_obocchset, shoboc->mo_gso_showobr);
-  g_clear_object (&shoboc->mo_gso_txtag);
-  memset (shoboc, 0, sizeof (*shoboc));
-  free (shoboc);
+    mo_hashset_remove (momgui_shown_obocchset, shoc->mo_gso_showobr);
+  g_clear_object (&shoc->mo_gso_txtag);
+  memset (shoc, 0, sizeof (*shoc));
+  MOM_INFORMPRINTF ("destroy_shownobocc shoc@%p free", shoc);
+  free (shoc);
 }                               /* end of mom_destroy_shownobocc */
 
 
@@ -200,13 +206,18 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
           = gtk_text_buffer_create_tag (mom_obtextbuf, idbuf,
                                         "font", "DejaVu Serif, Book",
                                         "background", "ivory", NULL);
-        MOM_INFORMPRINTF
-          ("insert_objref_textbuf created objtag@%p for %s (%s)", objtag,
-           mo_objref_pnamestr (obr), idbuf);
+        MOM_BACKTRACEPRINTF
+          ("insert_objref_textbuf created objtag@%p for %s (%s) shoc@%p",
+           objtag, mo_objref_pnamestr (obr), idbuf, shoc);
         g_hash_table_insert (mom_shownobjocc_hashtable, obr, shoc);
       }
     else
-      objtag = shoc->mo_gso_txtag;
+      {
+        MOM_BACKTRACEPRINTF
+          ("insert_objref_textbuf got shoc@%p with gso_txtag=%p",
+           shoc, shoc->mo_gso_txtag);
+        objtag = shoc->mo_gso_txtag;
+      }
   }
   MOM_ASSERTPRINTF (objtag != NULL, "no obtag for %s",
                     mo_objref_pnamestr (obr));
@@ -582,6 +593,7 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
 void
 mo_gui_generate_object_text_buffer (void)
 {
+  MOM_BACKTRACEPRINTF ("generate_object_text_buffer start");
   mo_value_t dispsetv = mo_assoval_keys_set (momgui_displayed_objasso);
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
   unsigned nbdispob = mo_set_size (dispsetv);
@@ -651,18 +663,27 @@ mo_gui_generate_object_text_buffer (void)
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, &iter,
                                         "\n", -1, NULL, NULL);
     }
+  MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
+
 
 void
 mo_gui_display_object (mo_objref_t ob)
 {
+  MOM_INFORMPRINTF ("gui_display_object start ob=%s",
+                    mo_objref_pnamestr (ob));
   if (!mo_dyncast_objref (ob) || mom_without_gui)
     return;
   if (mo_assoval_get (momgui_displayed_objasso, ob))
-    return;
+    {
+      MOM_INFORMPRINTF ("gui_display_object already displayed ob=%s",
+                        mo_objref_pnamestr (ob));
+      return;
+    }
   momgui_displayed_objasso =    //
     mo_assoval_put (momgui_displayed_objasso, ob, mo_int_to_value (1));
   mo_gui_generate_object_text_buffer ();
+  MOM_INFORMPRINTF ("gui_display_object end ob=%s", mo_objref_pnamestr (ob));
 }                               /* end of mo_gui_display_object */
 
 void
@@ -1101,3 +1122,5 @@ mom_run_gtk (int *pargc, char ***pargv)
   MOM_INFORMPRINTF ("Ended GTK graphical interface...");
   return;
 }                               /* end mom_run_gtk */
+
+// end of file gui.c

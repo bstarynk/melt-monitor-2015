@@ -650,6 +650,7 @@ mom_backtraceprintf_at (const char *fil, int lin, const char *fmt, ...)
       }
     }
 #endif
+  fprintf (stderr, "--- end backtrace from %s:%d\n\n", fil, lin);
   fflush (NULL);
   if (bigbuf)
     free (bigbuf);
