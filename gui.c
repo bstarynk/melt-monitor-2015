@@ -184,19 +184,19 @@ mom_activate_app_menu (GtkMenuItem * menuitem MOM_UNUSED,
 }                               /* end mom_activate_app_menu */
 
 void
-mom_toggle_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
+mom_toggled_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
 {
   if (gtk_check_menu_item_get_active (chkitm))
     {
-      MOM_INFORMPRINTF ("toggle_command show");
+      MOM_INFORMPRINTF ("toggled_command show");
       gtk_widget_show_all (mom_cmdwin);
     }
   else
     {
-      MOM_INFORMPRINTF ("toggle_command hide");
+      MOM_INFORMPRINTF ("toggled_command hide");
       gtk_widget_hide (mom_cmdwin);
     }
-}                               /* end mom_toggle_command_shown */
+}                               /* end mom_toggled_command_shown */
 
 #define MOM_DISPLAY_INDENTED_NEWLINE(Piter,Depth,...) do {	\
   gtk_text_buffer_insert_with_tags				\
@@ -1413,11 +1413,22 @@ mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
       res = gtk_dialog_run (GTK_DIALOG (stopdialog));
       MOM_INFORMPRINTF ("stopgui res#%d", res);
       if (res == GTK_RESPONSE_APPLY)
-        mom_dumpexit_app (NULL, NULL);
+        {
+          if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
+            mom_dump_dir = ".";
+          MOM_INFORMPRINTF ("stopgui dump&exit mom_dump_dir=%s",
+                            mom_dump_dir);
+          g_application_quit (G_APPLICATION (mom_gtkapp));
+        }
       else if (res == GTK_RESPONSE_CLOSE)
-        mom_quit_app (NULL, NULL);
+        {
+          MOM_INFORMPRINTF ("stopgui dump&exit quit");
+          mom_dump_dir = "-";
+          g_application_quit (G_APPLICATION (mom_gtkapp));
+        }
       else if (res == GTK_RESPONSE_DELETE_EVENT || res == GTK_RESPONSE_CANCEL)
         {
+          MOM_INFORMPRINTF ("stopgui dump&exit cancel");
           gtk_widget_destroy (stopdialog);
           return false;
         };
@@ -1559,8 +1570,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                          gtk_separator_menu_item_new ());
   mom_checkitemcmd = gtk_check_menu_item_new_with_label ("show/hide Cmd");
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), mom_checkitemcmd);
-  g_signal_connect (mom_checkitemcmd, "toggle",
-                    G_CALLBACK (mom_toggle_command_shown), NULL);
+  g_signal_connect (mom_checkitemcmd, "toggled",
+                    G_CALLBACK (mom_toggled_command_shown), NULL);
   g_signal_connect (dumpitem, "activate", G_CALLBACK (mom_dump_app), NULL);
   g_signal_connect (dumpexititem, "activate", G_CALLBACK (mom_dumpexit_app),
                     NULL);
@@ -1611,9 +1622,18 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
-  gtk_window_set_title (GTK_WINDOW(mom_cmdwin), "monimelt command");
+  gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
   gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 560, 260);
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+  GdkRGBA cmdbgcolor = { 1.0, 1.0, 1.0, 1.0 };  // opaque white
+  gdk_rgba_parse (&cmdbgcolor, "mistyrose");
+  gtk_widget_override_background_color  // deprecated, but useful
+    (mom_cmdtview,
+     GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
+  gtk_widget_override_background_color  // deprecated, but useful
+    (scrocmd, GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
+  gtk_widget_override_background_color  // deprecated, but useful
+    (mom_cmdwin, GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
   gtk_box_pack_end (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
   g_signal_connect (mom_cmdwin, "delete-event",
