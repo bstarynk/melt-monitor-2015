@@ -49,6 +49,7 @@ static GtkWidget *mom_checkitemcmd;
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
 static GtkWidget *mom_cmdtview;
+static GtkWidget *mom_cmdstatusbar;
 
 #define MOMGUI_IDSTART_LEN 6
 
@@ -69,8 +70,11 @@ static mo_assovaldatapayl_ty *momgui_displayed_objasso;
 static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
 
-static inline int
-momgui_gobrefcount (GObject * ob)
+static void
+momgui_cmdstatus_printf (const char *fmt, ...)
+__attribute ((format (printf, 1, 2)));
+
+     static inline int momgui_gobrefcount (GObject * ob)
 {
   if (!ob)
     return -9999;
@@ -1380,12 +1384,6 @@ mom_newob_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   MOM_INFORMPRINTF ("newob_edit");
 }                               /* end mom_newob_edit */
 
-static void
-mom_copy_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
-{
-  MOM_INFORMPRINTF ("copy_edit");
-}                               /* end mom_copy_edit */
-
 static bool
 mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
              gpointer data MOM_UNUSED)
@@ -1488,7 +1486,7 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "idrest",
                                 "family", "Courier",
                                 "foreground", "darkolivegreen",
-                                "scale", 0.8, NULL);
+                                "scale", 0.75, NULL);
   mom_tag_number =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "number",
@@ -1586,16 +1584,13 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (edititem), editmenu);
   GtkWidget *displayitem = gtk_menu_item_new_with_label ("Display...");
   GtkWidget *newobitem = gtk_menu_item_new_with_label ("make New object");
-  GtkWidget *copyitem = gtk_menu_item_new_with_label ("Copy");
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), displayitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), newobitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
                          gtk_separator_menu_item_new ());
-  gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), copyitem);
   g_signal_connect (displayitem, "activate", G_CALLBACK (mom_display_edit),
                     NULL);
   g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
-  g_signal_connect (copyitem, "activate", G_CALLBACK (mom_copy_edit), NULL);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_tagtable = gtk_text_tag_table_new ();
@@ -1628,17 +1623,10 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
   gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 560, 260);
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-  GdkRGBA cmdbgcolor = { 1.0, 1.0, 1.0, 1.0 };  // opaque white
-  gdk_rgba_parse (&cmdbgcolor, "mistyrose");
-  gtk_widget_override_background_color  // deprecated, but useful
-    (mom_cmdtview,
-     GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
-  gtk_widget_override_background_color  // deprecated, but useful
-    (scrocmd, GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
-  gtk_widget_override_background_color  // deprecated, but useful
-    (mom_cmdwin, GTK_STATE_FLAG_NORMAL | GTK_STATE_FLAG_ACTIVE, &cmdbgcolor);
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
-  gtk_box_pack_end (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
+  mom_cmdstatusbar = gtk_statusbar_new ();
+  gtk_box_pack_start (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
+  gtk_box_pack_end (GTK_BOX (cmdtopvbox), mom_cmdstatusbar, FALSE, FALSE, 2);
   g_signal_connect (mom_cmdwin, "delete-event",
                     G_CALLBACK (gtk_widget_hide_on_delete), NULL);
   g_signal_connect (mom_appwin, "delete-event", G_CALLBACK (mom_stopgui),
@@ -1681,6 +1669,8 @@ mom_run_gtk (int *pargc, char ***pargv)
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
+  momgui_cmdstatus_printf ("loaded %u objects & %u modules",
+                           mom_load_nb_objects (), mom_load_nb_modules ());
   sta = g_application_run (G_APPLICATION (mom_gtkapp), *pargc, *pargv);
   if (sta)
     MOM_WARNPRINTF ("Running GTK app gave %d", sta);
@@ -1689,5 +1679,30 @@ mom_run_gtk (int *pargc, char ***pargv)
   MOM_INFORMPRINTF ("Ended GTK graphical interface...");
   return;
 }                               /* end mom_run_gtk */
+
+// print to the command statusbar
+static void
+momgui_cmdstatus_printf (const char *fmt, ...)
+{
+  static guint statctxid;
+  va_list args = { };
+  if (MOM_UNLIKELY (statctxid == 0))
+    {
+      statctxid =
+        gtk_statusbar_get_context_id (GTK_STATUSBAR (mom_cmdstatusbar),
+                                      "MOMCMDSTATUS");
+      MOM_ASSERTPRINTF (statctxid > 0, "bad statctxid %u", statctxid);
+    }
+  gtk_statusbar_remove_all (GTK_STATUSBAR (mom_cmdstatusbar), statctxid);
+  char *buf = NULL;
+  int len = 0;
+  va_start (args, fmt);
+  len = vasprintf (&buf, fmt, args);
+  va_end (args);
+  if (len < 0 || buf == NULL)
+    MOM_FATAPRINTF ("cmdstatus_printf: vasprintf failed fmt=%s", fmt);
+  gtk_statusbar_push (GTK_STATUSBAR (mom_cmdstatusbar), statctxid, buf);
+  free (buf);
+}                               /* end momgui_cmdstatus_printf */
 
 // end of file gui.c

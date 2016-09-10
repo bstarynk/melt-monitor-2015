@@ -56,7 +56,8 @@ struct mo_loader_st             // stack allocated
   // SQLstmt: SELECT par_value FROM t_params WHERE par_name = ?;
   sqlite3_stmt *mo_ld_stmt_params;
 };
-
+static unsigned nb_loaded_objects_mom;
+static unsigned nb_loaded_modules_mom;
 
 
 enum mom_dumpstate_en
@@ -2049,6 +2050,8 @@ mom_load_state (void)
   memset (cwdbuf, 0, sizeof (cwdbuf));
   if (!getcwd (cwdbuf, sizeof (cwdbuf)))
     strcpy (cwdbuf, "./");
+  nb_loaded_objects_mom = loader.mo_ld_nbobjects;
+  nb_loaded_modules_mom = loader.mo_ld_nbmodules;
   MOM_INFORMPRINTF ("loaded %u objects, %u named, %u modules\n"
                     "... (pid %d on %s in %s)\n"
                     "... in %.3f elapsed seconds (%.3f µs/obj), %.4f cpu seconds (%.3f µs/obj)\n",
@@ -2065,6 +2068,20 @@ mom_load_state (void)
                     loader.mo_ld_nbobjects);
   memset (&loader, 0, sizeof (loader));
 }                               /* end mom_load_state */
+
+// constant number of loaded objects
+unsigned
+mom_load_nb_objects (void)
+{
+  return nb_loaded_objects_mom;
+}                               // end mom_load_nb_objects
+
+// constant number of loaded modules
+unsigned
+mom_load_nb_modules (void)
+{
+  return nb_loaded_modules_mom;
+}                               // end mom_load_nb_modules
 
 
 /**************** JSON ****************/

@@ -1378,6 +1378,10 @@ mo_value_t mo_value_of_json (mo_json_t);
 mo_objref_t mo_objref_of_jsonid (mo_json_t);
 // the loader, called after predefined has been initialized
 void mom_load_state (void);
+// constant number of loaded objects
+unsigned mom_load_nb_objects (void);
+// constant number of loaded modules
+unsigned mom_load_nb_modules (void);
 /************* NAMES ***********/
 // a name is valid if it is like some C identifier or keyword
 // initial and final underscores are not allowed
