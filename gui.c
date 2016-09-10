@@ -1419,12 +1419,14 @@ mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
           MOM_INFORMPRINTF ("stopgui dump&exit mom_dump_dir=%s",
                             mom_dump_dir);
           g_application_quit (G_APPLICATION (mom_gtkapp));
+          break;
         }
       else if (res == GTK_RESPONSE_CLOSE)
         {
           MOM_INFORMPRINTF ("stopgui dump&exit quit");
           mom_dump_dir = "-";
           g_application_quit (G_APPLICATION (mom_gtkapp));
+          break;
         }
       else if (res == GTK_RESPONSE_DELETE_EVENT || res == GTK_RESPONSE_CANCEL)
         {
@@ -1433,6 +1435,7 @@ mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
           return false;
         };
     }
+  gtk_widget_destroy (stopdialog);
   return true;                  /// dont propagate
 }                               /* end mom_stopgui */
 
