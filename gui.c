@@ -8,7 +8,7 @@
       it under the terms of the GNU General Public License as published by
       the Free Software Foundation; either version 3, or (at your option)
       any later version.
-  
+
       GCC is distributed in the hope that it will be useful,
       but WITHOUT ANY WARRANTY; without even the implied warranty of
       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -99,6 +99,18 @@ struct momgui_dispobjinfo_st
   GtkTextMark *mo_gdo_startmark;
   GtkTextMark *mo_gdo_endmark;
 };
+typedef struct momgui_dispctxt_st momgui_dispctxt_ty;
+#define MOMGUI_DISPCTXT_MAGIC 0x38a104bdU       /*950076605u */
+struct momgui_dispctxt_st
+{                               // stack allocated 
+  unsigned mo_gdx_nmagic;       // always MOMGUI_DISPCTXT_MAGIC
+  unsigned short mo_gdx_maxdepth;       // maximal depth
+  unsigned short mo_gdx_curdepth;       // current depth of object
+  GtkTextIter mo_gdx_iter;      // current textiter
+  mo_objref_t mo_gdx_obr;       // the containing object reference
+  momgui_dispobjinfo_ty *mo_gdx_dispinfo;       // top display information
+};
+
 // The glib hashtable mapping objects to above momgui_dispobjinfo_ty
 static GHashTable *mom_dispobjinfo_hashtable;
 
@@ -203,39 +215,60 @@ mom_toggled_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
     }
 }                               /* end mom_toggled_command_shown */
 
-#define MOM_DISPLAY_INDENTED_NEWLINE(Piter,Depth,...) do {	\
+#define MOM_DISPLAY_INDENTED_NEWLINE(Pdispx,Depth,...) do {	\
+    momgui_dispctxt_ty*_pdx = (Pdispx);				\
+    int _depth = (Depth);					\
+    MOM_ASSERTPRINTF(_pdx != NULL				\
+		     && _pdx->mo_gdx_nmagic			\
+		     == MOMGUI_DISPCTXT_MAGIC,			\
+		     "bad _pdx");				\
   gtk_text_buffer_insert_with_tags				\
-  (mom_obtextbuf, (Piter),					\
-   "                \n"+(16-(Depth)%16), 1+(Depth)%16,		\
+  (mom_obtextbuf, &_pdx->mo_gdx_iter,				\
+   "                \n"+(16-_depth%16), 1+_depth%16,		\
   ##__VA_ARGS__, NULL);						\
 } while(0)
 
-#define MOM_DISPLAY_OPENING(Piter,VarOff,Str,...) do {	\
-    VarOff = gtk_text_iter_get_offset ((Piter));	\
+#define MOM_DISPLAY_OPENING(Pdispx,VarOff,Str,...) do {	\
+    momgui_dispctxt_ty*_pdx = (Pdispx);			\
+    MOM_ASSERTPRINTF(_pdx != NULL			\
+		     && _pdx->mo_gdx_nmagic		\
+		     == MOMGUI_DISPCTXT_MAGIC,		\
+		     "bad _pdx");			\
+    VarOff =						\
+      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);	\
     gtk_text_buffer_insert_with_tags			\
-      (mom_obtextbuf, (Piter), (Str), strlen((Str)),	\
+      (mom_obtextbuf, &_pdx->mo_gdx_iter,		\
+       (Str), strlen((Str)),				\
        ##__VA_ARGS__, NULL);				\
   } while(0)
 
-#define MOM_DISPLAY_CLOSING(Piter,VarOff,Str,...) do {	\
+#define MOM_DISPLAY_CLOSING(Pdispx,VarOff,Str,...) do {	\
+    momgui_dispctxt_ty*_pdx = (Pdispx);			\
+    MOM_ASSERTPRINTF(_pdx != NULL			\
+		     && _pdx->mo_gdx_nmagic		\
+		     == MOMGUI_DISPCTXT_MAGIC,		\
+		     "bad _pdx");			\
     gtk_text_buffer_insert_with_tags			\
-      (mom_obtextbuf, (Piter), (Str), strlen((Str)),	\
+      (mom_obtextbuf, &_pdx->mo_gdx_iter,		\
+       (Str), strlen((Str)),				\
        ##__VA_ARGS__, NULL);				\
-    VarOff = gtk_text_iter_get_offset ((Piter));	\
+    VarOff =						\
+      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);	\
 } while(0)
 
+// display the object in the display context
+void mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth);
 
 static void
-mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
-                        int maxdepth, momgui_dispobjinfo_ty * pardisp);
-
-static void
-mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
-                           GtkTextTag * xobtag)
+mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
+                    GtkTextTag * xobtag)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
-  MOM_INFORMPRINTF ("insert_obref_textbuf obr=%s", mo_objref_pnamestr (obr));
   mo_value_t namv = mo_objref_namev (obr);
   GtkTextTag *objtag = NULL;
   char idbuf[MOM_CSTRIDSIZ];
@@ -250,11 +283,11 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
         shoc = calloc (1, sizeof (*shoc));
         if (!shoc)
           MOM_FATAPRINTF
-            ("insert_objref_textbuf failed to allocate shownobocc_ty for obr=%s",
+            ("display_objref failed to allocate shownobocc_ty for obr=%s",
              mo_objref_pnamestr (obr));
         shoc->mo_gso_showobr = obr;
         shoc->mo_gso_txtag = NULL;
-        MOM_INFORMPRINTF ("insert_objref_textbuf create shoc@%p for obr=%s",
+        MOM_INFORMPRINTF ("display_objref create shoc@%p for obr=%s",
                           shoc, mo_objref_pnamestr (obr));
         objtag = gtk_text_tag_table_lookup (mom_tagtable, idbuf);
         if (objtag)
@@ -331,12 +364,19 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
            3, objtag, xobtag, NULL);
     }                           // end if commv is string and anonymous
-}                               /* end mom_insert_objref_textbuf */
+}                               /* end mom_display_objref */
+
+
 
 static void
-mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
-                          int depth, int maxdepth, GtkTextTag * valtag)
+mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
+                   int depth, GtkTextTag * valtag)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
   MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
                     && maxdepth <= MOMGUI_MAX_DEPTH,
                     "bad depth:%d maxdepth:%d MOMGUI_MAX_DEPTH:%d", depth,
@@ -368,7 +408,7 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
           (mom_obtextbuf, piter, str, siz, mom_tag_string, valtag, NULL);
         gtk_text_buffer_insert_with_tags
           (mom_obtextbuf, piter, "\"", 1, valtag, NULL);
-        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, valtag);
+        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, valtag);
       }
       break;
     case mo_KSET:
@@ -389,18 +429,16 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
             break;
           };
         if (istuple)            // tuple
-          MOM_DISPLAY_OPENING (piter, startoff, "[", mom_tag_sequence,
-                               valtag);
+          MOM_DISPLAY_OPENING (pdx, startoff, "[", mom_tag_sequence, valtag);
         else                    // set
-          MOM_DISPLAY_OPENING (piter, startoff, "{", mom_tag_sequence,
-                               valtag);
+          MOM_DISPLAY_OPENING (pdx, startoff, "{", mom_tag_sequence, valtag);
         if (seqsiz > 0)
           {
             for (unsigned ix = 0; ix < seqsiz; ix++)
               {
                 if (showinside || (ix % 5 == 0 && ix > 0))
                   {
-                    MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+                    MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1,
                                                   mom_tag_sequence, valtag);
                   }
                 else
@@ -416,26 +454,27 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
                          && !mo_assoval_get (momgui_displayed_objasso,
                                              cursubobj))
                   {
+#warning FIXME: should probably make a fresh curdisp & dispctx
+                    momgui_dispctxt_ty subdispx;
+                    memset (&subdispx, 0, sizeof (subdispx));
                     momgui_dispobjinfo_ty *curdisp = NULL;
-#warning FIXME: should probably make a fresh curdisp
-                    mom_display_the_object (cursubobj, piter, depth + 1,
-                                            maxdepth, curdisp);
+                    mom_display_ctx_object (&subdispx, depth + 1);
                   }
                 else
                   {
-                    mom_insert_objref_textbuf (cursubobj, piter, valtag);
+                    mom_display_objref (cursubobj, pdx, valtag);
                   }
               }
           }
         if (showinside)
           {
-            MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
+            MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1,
                                           mom_tag_sequence, valtag);
           }
         if (!istuple)           //set
-          MOM_DISPLAY_CLOSING (piter, endoff, "}", mom_tag_sequence, valtag);
+          MOM_DISPLAY_CLOSING (pdx, endoff, "}", mom_tag_sequence, valtag);
         else                    // tuple
-          MOM_DISPLAY_CLOSING (piter, endoff, "]", mom_tag_sequence, valtag);
+          MOM_DISPLAY_CLOSING (pdx, endoff, "]", mom_tag_sequence, valtag);
       }
       break;
     case mo_KOBJECT:
@@ -446,23 +485,29 @@ mom_insert_value_textbuf (mo_value_t val, GtkTextIter * piter,
         if (showinside)
           {
             momgui_dispobjinfo_ty *curdisp = NULL;
-#warning FIXME: should probably make a fresh curdisp
-            mom_display_the_object (curobj, piter, depth + 1, maxdepth,
-                                    curdisp);
+            momgui_dispctxt_ty subdispctxt = { };
+            memset (&subdispctxt, 0, sizeof (subdispctxt));
+#warning FIXME: should probably make a fresh curdisp & dispctx
+            mom_display_ctx_object (&subdispctxt, depth + 1);
           }
         else
-          mom_insert_objref_textbuf (curobj, piter, valtag);
+          mom_display_objref (curobj, pdx, valtag);
 
       }
       break;
     }
-}                               /* end of mom_insert_value_textbuf */
+}                               /* end of mom_display_value */
 
 
 static void
-mom_insert_assoval_textbuf (mo_assovaldatapayl_ty * asso, GtkTextIter * piter,
-                            int depth, int maxdepth)
+mom_display_assoval (mo_assovaldatapayl_ty * asso, momgui_dispctxt_ty * pdx,
+                     int depth)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
   asso = mo_dyncastpayl_assoval (asso);
   if (!asso)
     {
@@ -492,26 +537,31 @@ mom_insert_assoval_textbuf (mo_assovaldatapayl_ty * asso, GtkTextIter * piter,
                                     mom_tag_payload, mom_tag_index, NULL);
   for (unsigned ix = 0; ix < siz; ix++)
     {
-      MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1, mom_tag_payload);
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1, mom_tag_payload);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         "\342\226\252 ", 4,
                                         mom_tag_payload, NULL);
       mo_objref_t keyobr = keyarr[ix];
-      mom_insert_objref_textbuf (keyobr, piter, mom_tag_payload);
+      mom_display_objref (keyobr, pdx, mom_tag_payload);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         " \342\226\271 ", 5,
                                         mom_tag_payload, NULL);
       mo_value_t curval = mo_assoval_get (asso, keyobr);
-      mom_insert_value_textbuf (curval, piter, depth + 1, maxdepth,
-                                mom_tag_payload);
+      mom_display_value (curval, pdx, depth + 1, mom_tag_payload);
     }
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
-}                               /* end mom_insert_assoval_textbuf  */
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+}                               /* end mom_display_assoval  */
+
 
 static void
-mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
-                            int depth, int maxdepth)
+mom_display_hashset (mo_hashsetpayl_ty * hset, momgui_dispctxt_ty * pdx,
+                     int depth)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     {
@@ -547,25 +597,28 @@ mom_insert_hashset_textbuf (mo_hashsetpayl_ty * hset, GtkTextIter * piter,
     {
       mo_objref_t elemobr = elmarr[ix];
       if (ix % 5 == 0)
-        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
-                                      mom_tag_payload, NULL);
+        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1, mom_tag_payload, NULL);
       else
         gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " ", 1,
                                           mom_tag_payload, NULL);
-      mom_insert_objref_textbuf (elemobr, piter, mom_tag_payload);
+      mom_display_objref (elemobr, pdx, mom_tag_payload);
     }
   if (siz > 0)
     gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " ", 1,
                                       mom_tag_payload, NULL);
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\235\265",       // U+2775 MEDIUM RIGHT CURLY BRACKET ORNAMENT ❵
                                     3, mom_tag_payload, NULL);
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
-}                               /* end mom_insert_hashset_textbuf  */
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+}                               /* end mom_display_hashset  */
 
 static void
-mom_insert_list_textbuf (mo_listpayl_ty * list, GtkTextIter * piter,
-                         int depth, int maxdepth)
+mom_display_list (mo_listpayl_ty * list, momgui_dispctxt_ty * pdx, int depth)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
   list = mo_dyncastpayl_list (list);
   if (!list)
     {
@@ -596,24 +649,29 @@ mom_insert_list_textbuf (mo_listpayl_ty * list, GtkTextIter * piter,
         for (int ix = 0; ix < MOM_LISTCHUNK_LEN; ix++)
           if (el->mo_lie_arr[ix])
             {
-              MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1,
-                                            mom_tag_payload);
-              mom_insert_value_textbuf (el->mo_lie_arr[ix], piter, depth + 1,
-                                        maxdepth, mom_tag_payload);
+              MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1, mom_tag_payload);
+              mom_display_value (el->mo_lie_arr[ix], pdx, depth + 1,
+                                 mom_tag_payload);
               cnt++;
             }
       }
     gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "  \342\235\250",   // U+2769 MEDIUM RIGHT PARENTHESIS ORNAMENT ❩
                                       4, mom_tag_payload, NULL);
   }
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
-}                               /* end mom_insert_list_textbuf  */
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+}                               /* end mom_display_list  */
 
 
 static void
-mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
-                            int depth, int maxdepth)
+mom_display_vectval (mo_vectvaldatapayl_ty * vect, momgui_dispctxt_ty * pdx,
+                     int depth)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
+
   vect = mo_dyncastpayl_vectval (vect);
   if (!vect)
     {
@@ -644,34 +702,38 @@ mom_insert_vectval_textbuf (mo_vectvaldatapayl_ty * vect, GtkTextIter * piter,
       {
         char indexbuf[32];
         memset (indexbuf, 0, sizeof (indexbuf));
-        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth + 1, mom_tag_payload);
+        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1, mom_tag_payload);
         snprintf (indexbuf, sizeof (indexbuf), "[%d] ", ix);
         gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, indexbuf, -1,
                                           mom_tag_payload, mom_tag_index,
                                           NULL);
       }
-      mom_insert_value_textbuf (mo_vectval_nth (vect, ix), piter, depth + 1,
-                                maxdepth, mom_tag_payload);
+      mom_display_value (mo_vectval_nth (vect, ix), pdx, depth + 1,
+                         mom_tag_payload);
     }
   gtk_text_buffer_insert_with_tags      //
     (mom_obtextbuf, piter, " \342\235\257",     // U+276F HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT ❯
      4, mom_tag_payload, NULL);
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
-}                               /* end mom_insert_vectval_textbuf  */
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+}                               /* end mom_display_vectval  */
 
 
 static void
-mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
-                               int depth, int maxdepth)
+mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL, "bad obr");
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
   mo_objref_t paylkindobr = obr->mo_ob_paylkind;
   void *payldata = obr->mo_ob_payldata;
   MOM_ASSERTPRINTF (paylkindobr != NULL, "no payload");
   gtk_text_buffer_insert_with_tags      //
     (mom_obtextbuf, piter, "\342\200\275",      // U+203D INTERROBANG ‽
      4, mom_tag_payload, NULL);
-  mom_insert_objref_textbuf (paylkindobr, piter, mom_tag_payload);
+  mom_display_objref (paylkindobr, pdx, mom_tag_payload);
   gtk_text_buffer_insert_with_tags      //
     (mom_obtextbuf, piter, ":", 1, mom_tag_payload, NULL);
   if (paylkindobr->mo_ob_class == MOM_PREDEF (signature_class))
@@ -709,25 +771,23 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
       switch (mo_objref_hash (paylkindobr) % MOM_NBCASE_PAYLOAD)
         {
         case CASE_PAYLOAD_MOM (payload_assoval):
-          mom_insert_assoval_textbuf ((mo_assovaldatapayl_ty *) payldata,
-                                      piter, depth + 1, maxdepth);
+          mom_display_assoval ((mo_assovaldatapayl_ty *) payldata,
+                               pdx, depth + 1);
           break;
         case CASE_PAYLOAD_MOM (payload_hashset):
-          mom_insert_hashset_textbuf ((mo_hashsetpayl_ty *) payldata,
-                                      piter, depth + 1, maxdepth);
+          mom_display_hashset ((mo_hashsetpayl_ty *) payldata,
+                               pdx, depth + 1);
           break;
         case CASE_PAYLOAD_MOM (payload_list):
-          mom_insert_list_textbuf ((mo_listpayl_ty *) payldata,
-                                   piter, depth + 1, maxdepth);
+          mom_display_list ((mo_listpayl_ty *) payldata, pdx, depth + 1);
           break;
         case CASE_PAYLOAD_MOM (payload_vectval):
-          mom_insert_vectval_textbuf ((mo_vectvaldatapayl_ty *) payldata,
-                                      piter, depth + 1, maxdepth);
+          mom_display_vectval ((mo_vectvaldatapayl_ty *) payldata,
+                               pdx, depth + 1);
           break;
         case CASE_PAYLOAD_MOM (payload_value):
-          mom_insert_value_textbuf ((mo_value_t) payldata,
-                                    piter, depth + 1, maxdepth,
-                                    mom_tag_payload);
+          mom_display_value ((mo_value_t) payldata, pdx, depth + 1,
+                             mom_tag_payload);
           break;
         case CASE_PAYLOAD_MOM (payload_file):
           {
@@ -791,7 +851,7 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
                     uc = g_utf8_get_char (pc);
                     if (uc == '\n' || !pchk || pc[1] == '\0')
                       {
-                        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth,
                                                       mom_tag_payload,
                                                       mom_tag_string);
                         if (pchk)
@@ -851,7 +911,7 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
                     char *eol = strchr (pc, '\n');
                     if (!eol)
                       break;
-                    MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                    MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth,
                                                   mom_tag_payload,
                                                   mom_tag_json);
                     gtk_text_buffer_insert_with_tags (mom_obtextbuf,
@@ -864,7 +924,7 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
                   }
                 free (buf), buf = NULL;
                 fclose (fmem);
-                MOM_DISPLAY_INDENTED_NEWLINE (piter, depth,
+                MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth,
                                               mom_tag_payload, mom_tag_json);
               }
           }
@@ -878,24 +938,30 @@ mom_insert_objpayload_textbuf (mo_objref_t obr, GtkTextIter * piter,
     }                           /* end else non-signature payload */
 }                               /* end of mom_insert_objpayload_textbuf */
 
-static void
-mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
-                        int maxdepth, momgui_dispobjinfo_ty * pardisp)
+void
+mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 {
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  mo_objref_t obr = pdx->mo_gdx_obr;
+  int maxdepth = pdx->mo_gdx_maxdepth;
+  MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
+                    && maxdepth <= MOMGUI_MAX_DEPTH,
+                    "bad depth:%d maxdepth:%d MOMGUI_MAX_DEPTH:%d", depth,
+                    maxdepth, MOMGUI_MAX_DEPTH);
+  momgui_dispobjinfo_ty *curdisp = NULL;
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
   MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
                     && maxdepth <= MOMGUI_MAX_DEPTH,
                     "bad depth %d maxdepth %d MOMGUI_MAX_DEPTH %d", depth,
                     maxdepth, MOMGUI_MAX_DEPTH);
-  MOM_INFORMPRINTF ("display_the_object %s parent %s",
-                    mo_objref_pnamestr (obr),
-                    pardisp ? mo_objref_pnamestr (pardisp->mo_gdo_dispobr) :
-                    "*none*");
   GtkTextTag *curobjtitletag =
     (depth == 0) ? mom_tag_objtitle : mom_tag_objsubtitle;
   gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
@@ -992,7 +1058,7 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
            3, curobjtitletag, NULL);
     }                           // end if commv is string and anonymous
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, curobjtitletag);
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, curobjtitletag);
   char tibuf[72];
   memset (tibuf, 0, sizeof (tibuf));
   time_t nowt = 0;
@@ -1014,15 +1080,15 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
     strcpy (tibuf, "\342\214\232 ?");
   gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                     tibuf, -1, mom_tag_time, NULL);
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   mo_objref_t classobr = obr->mo_ob_class;
   if (classobr)
     {
       gtk_text_buffer_insert_with_tags  //
         (mom_obtextbuf, piter, "\342\254\237 ", // U+2B1F BLACK PENTAGON ⬟
          3, mom_tag_class, NULL);
-      mom_insert_objref_textbuf (classobr, piter, mom_tag_class);
-      MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+      mom_display_objref (classobr, pdx, mom_tag_class);
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
     }
   {
     mo_value_t attrset = mo_assoval_keys_set (obr->mo_ob_attrs);
@@ -1038,11 +1104,11 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
         mo_value_t curval = mo_objref_get_attr (obr, curattrobr);
         gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\213\206", // U+22C6 STAR OPERATOR ⋆
                                           3, mom_tag_attr, NULL);
-        mom_insert_objref_textbuf (curattrobr, piter, mom_tag_attr);
+        mom_display_objref (curattrobr, pdx, mom_tag_attr);
         gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\342\207\276 ",        // U+21FE RIGHTWARDS OPEN-HEADED ARROW ⇾
                                           3, mom_tag_attr, NULL);
-        mom_insert_value_textbuf (curval, piter, depth + 1, maxdepth, NULL);
-        MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+        mom_display_value (curval, pdx, depth + 1, NULL);
+        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
       }
     {
       int nbcomp = mo_vectval_count (obr->mo_ob_comps);
@@ -1054,17 +1120,16 @@ mom_display_the_object (mo_objref_t obr, GtkTextIter * piter, int depth,
           snprintf (indexbuf, sizeof (indexbuf), "#%d: ", cix);
           gtk_text_buffer_insert_with_tags
             (mom_obtextbuf, piter, indexbuf, -1, mom_tag_index, NULL);
-          mom_insert_value_textbuf (curcompv, piter,
-                                    depth + 1, maxdepth, NULL);
-          MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+          mom_display_value (curcompv, pdx, depth + 1, NULL);
+          MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
         }
     }
   }
   if (obr->mo_ob_paylkind != NULL)
     {
-      mom_insert_objpayload_textbuf (obr, piter, depth, maxdepth);
+      mom_display_objpayload (obr, pdx, depth);
     }
-  MOM_DISPLAY_INDENTED_NEWLINE (piter, depth, NULL);
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
 }                               /* end mom_display_the_object */
 
 
@@ -1129,24 +1194,28 @@ mo_gui_generate_object_text_buffer (void)
   // display each object
   for (int ix = 0; ix < (int) nbdispob; ix++)
     {
-      GtkTextIter iter = { };
-      gtk_text_buffer_get_end_iter (mom_obtextbuf, &iter);
+      momgui_dispctxt_ty dispctx;
+      memset (&dispctx, 0, sizeof (dispctx));
+      dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
+      gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
       mo_objref_t curobj = objarr[ix];
-      gtk_text_buffer_insert (mom_obtextbuf, &iter, "\n", -1);
+      dispctx.mo_gdx_obr = curobj;
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
       MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
       int maxdepth = mo_value_to_int (mo_assoval_get (oldispasso, curobj), 0);
       if (maxdepth <= 0)
         maxdepth = 1;
       else if (maxdepth > MOMGUI_MAX_DEPTH)
         maxdepth = MOMGUI_MAX_DEPTH;
+      dispctx.mo_gdx_maxdepth = maxdepth;
       MOM_INFORMPRINTF
         ("generate_object_text_buffer ix#%d curobj=%s maxdepth=%d", ix,
          mo_objref_pnamestr (curobj), maxdepth);
       momgui_displayed_objasso =
         mo_assoval_put (momgui_displayed_objasso, curobj,
                         mo_int_to_value (maxdepth));
-      mom_display_the_object (objarr[ix], &iter, 0, maxdepth, NULL);
-      gtk_text_buffer_insert (mom_obtextbuf, &iter, "\n", -1);
+      mom_display_ctx_object (&dispctx, 0);
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
     }
   MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
