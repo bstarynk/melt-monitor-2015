@@ -109,7 +109,7 @@ struct momgui_dispctxt_st
   GtkTextIter mo_gdx_iter;      // current textiter
   mo_objref_t mo_gdx_obr;       // the containing object reference
   momgui_dispobjinfo_ty *mo_gdx_dispinfo;       // top display information
-};
+};                              /* end struct momgui_dispctxt_st */
 
 // The glib hashtable mapping objects to above momgui_dispobjinfo_ty
 static GHashTable *mom_dispobjinfo_hashtable;
@@ -1198,9 +1198,12 @@ mo_gui_generate_object_text_buffer (void)
       memset (&dispctx, 0, sizeof (dispctx));
       dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+      GtkTextMark *startobmark =
+        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
+                                     &dispctx.mo_gdx_iter, false);
       mo_objref_t curobj = objarr[ix];
       dispctx.mo_gdx_obr = curobj;
-      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
       MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
       int maxdepth = mo_value_to_int (mo_assoval_get (oldispasso, curobj), 0);
       if (maxdepth <= 0)
@@ -1215,6 +1218,18 @@ mo_gui_generate_object_text_buffer (void)
         mo_assoval_put (momgui_displayed_objasso, curobj,
                         mo_int_to_value (maxdepth));
       mom_display_ctx_object (&dispctx, 0);
+      GtkTextMark *endobmark =
+        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
+                                     &dispctx.mo_gdx_iter, false);
+      momgui_dispobjinfo_ty *di = calloc (1, sizeof (momgui_dispobjinfo_ty));
+      if (!di)
+        MOM_FATAPRINTF ("failed to allocate display info for ix#%d", ix);
+      di->mo_gdo_dispobr = curobj;
+      di->mo_gdo_inobr = NULL;
+      di->mo_gdo_startmark = startobmark;
+      di->mo_gdo_endmark = endobmark;
+      g_hash_table_insert (mom_dispobjinfo_hashtable, curobj, di);
+#warning FIXME: we should have some way to remove one displayed object
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
     }
   MOM_INFORMPRINTF ("generate_object_text_buffer end");
