@@ -1658,6 +1658,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
+  gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
   g_signal_connect (mom_cmdtview, "key-release-event",
                     G_CALLBACK (momgui_cmdtextview_keyrelease), NULL);
   g_signal_connect (mom_cmdtextbuf, "end-user-action",
