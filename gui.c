@@ -72,9 +72,10 @@ static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
 static void
 momgui_cmdstatus_printf (const char *fmt, ...)
-__attribute ((format (printf, 1, 2)));
+__attribute__ ((format (printf, 1, 2)));
 
-     static inline int momgui_gobrefcount (GObject * ob)
+static inline int
+momgui_gobrefcount (GObject * ob)
 {
   if (!ob)
     return -9999;
@@ -234,7 +235,7 @@ mom_insert_objref_textbuf (mo_objref_t obr, GtkTextIter * piter,
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
-  MOM_INFORMPRINTF ("inert_obref_textbuf obr=%s", mo_objref_pnamestr (obr));
+  MOM_INFORMPRINTF ("insert_obref_textbuf obr=%s", mo_objref_pnamestr (obr));
   mo_value_t namv = mo_objref_namev (obr);
   GtkTextTag *objtag = NULL;
   char idbuf[MOM_CSTRIDSIZ];
@@ -1545,6 +1546,45 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "scale", 0.83, "foreground", "khali1", NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
+
+// for "key-release-event" signal to mom_cmdtview
+static bool
+momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
+                               void *data MOM_UNUSED)
+{
+  if (ev && ev->type == GDK_KEY_RELEASE
+      && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
+    {
+      MOM_INFORMPRINTF ("cmdtextview_keyrelease block TAB");
+#warning cmdtextview_keyrelease: TAB blocking dont work
+      return TRUE;              // don't propagate
+    }
+  MOM_INFORMPRINTF ("cmdtextview_keyrelease keyval=%u",
+                    (unsigned) ((GdkEventKey *) ev)->keyval);
+  return FALSE;                 // to propagate the event
+}                               /* end momgui_cmdtextview_keyrelease */
+
+// for "end-user-action" signal to mom_cmdtextbuf
+static void
+momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
+                                 void *data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (tbuf == GTK_TEXT_BUFFER (mom_cmdtextbuf),
+                    "cmdtextbuf_enduseraction bad tbuf");
+  int curspos = 0;
+  g_object_get (G_OBJECT (mom_cmdtextbuf), "cursor-position", &curspos, NULL);
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  gchar *bufcont =
+    gtk_text_buffer_get_text (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend, FALSE);
+  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction curspos=%d bufcont=%s\n",
+                    curspos, bufcont);
+  free (bufcont);
+}                               /* end momgui_cmdtextbuf_enduseraction */
+
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
@@ -1618,6 +1658,10 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
+  g_signal_connect (mom_cmdtview, "key-release-event",
+                    G_CALLBACK (momgui_cmdtextview_keyrelease), NULL);
+  g_signal_connect (mom_cmdtextbuf, "end-user-action",
+                    G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
@@ -1639,6 +1683,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   MOM_INFORMPRINTF ("appwin@%p/%s/%s", mom_appwin,
                     G_OBJECT_CLASS_NAME (mom_appwin),
                     G_OBJECT_TYPE_NAME (mom_appwin));
+  momgui_cmdstatus_printf ("loaded %u objects & %u modules",
+                           mom_load_nb_objects (), mom_load_nb_modules ());
   gtk_widget_show_all (mom_appwin);
   gtk_widget_show_all (mom_cmdwin);
 }                               /* end mom_gtkapp_activate */
@@ -1669,8 +1715,6 @@ mom_run_gtk (int *pargc, char ***pargv)
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
-  momgui_cmdstatus_printf ("loaded %u objects & %u modules",
-                           mom_load_nb_objects (), mom_load_nb_modules ());
   sta = g_application_run (G_APPLICATION (mom_gtkapp), *pargc, *pargv);
   if (sta)
     MOM_WARNPRINTF ("Running GTK app gave %d", sta);
