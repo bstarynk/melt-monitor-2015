@@ -137,6 +137,7 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
   MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dispobi@%p dispobr=%s inobr=%s",
                        dispobi, mo_objref_pnamestr (dispobi->mo_gdo_dispobr),
                        mo_objref_pnamestr (dispobi->mo_gdo_inobr));
+#warning got hit by a bug... about buggy asso
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dispobi->mo_gdo_dispobr);
   g_clear_object (&dispobi->mo_gdo_startmark);
