@@ -1626,7 +1626,7 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "foreground", "palegreen1", "rise", 3, NULL);
   mom_tag_json =
     gtk_text_buffer_create_tag (mom_obtextbuf,
-                                "index",
+                                "json",
                                 "font", "Inconsolata, Medium",
                                 "scale", 0.83, "foreground", "khali1", NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
