@@ -579,7 +579,7 @@ mo_kind_of_value (mo_value_t v)
 typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
 struct mo_sizedvalue_st
 {
-  struct mo_hashedvalue_st MOM_MSEXTEND;
+  mo_hashedvalue_ty MOM_MSEXTEND;
   uint32_t mo_sva_size;
 };
 
@@ -596,7 +596,7 @@ mo_size_of_value (mo_value_t v)
 typedef struct mo_stringvalue_st mo_stringvalue_ty;
 struct mo_stringvalue_st
 {
-  struct mo_sizedvalue_st MOM_MSEXTEND;
+  mo_sizedvalue_ty MOM_MSEXTEND;
   char mo_cstr[];               // allocated size is mo_sva_size+1
 };
 mo_value_t mo_make_string_len (const char *buf, int sz);
@@ -655,7 +655,7 @@ mo_string_size (mo_value_t v)
 typedef struct mo_sequencevalue_st mo_sequencevalue_ty;
 struct mo_sequencevalue_st
 {
-  struct mo_sizedvalue_st MOM_MSEXTEND;
+  mo_sizedvalue_ty MOM_MSEXTEND;
   mo_objref_t mo_seqobj[];
 };
 
@@ -744,7 +744,7 @@ mo_sequence_put (mo_sequencevalue_ty * seq, unsigned ix, mo_objref_t oref)
 typedef struct mo_tuplevalue_st mo_tuplevalue_ty;
 struct mo_tuplevalue_st
 {
-  struct mo_sequencevalue_st MOM_MSEXTEND;
+  mo_sequencevalue_ty MOM_MSEXTEND;
 };
 /*** creating a tuple with statement expr
   {( mo_sequencevalue_ty* _sq = mo_sequence_allocate(3);
@@ -804,7 +804,7 @@ mo_tuple_nth (mo_value_t vs, int rk)
 typedef struct mo_setvalue_st mo_setvalue_ty;
 struct mo_setvalue_st
 {
-  struct mo_sequencevalue_st MOM_MSEXTEND;
+  mo_sequencevalue_ty MOM_MSEXTEND;
 };
 
 
@@ -916,7 +916,7 @@ enum mo_space_en
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
 {
-  struct mo_hashedvalue_st MOM_MSEXTEND;
+  mo_hashedvalue_ty MOM_MSEXTEND;
   /// actually, we dont need mutexes before the bootstrap
   /// pthread_mutex_t mo_ob_mtx;
   time_t mo_ob_mtime;
@@ -1031,7 +1031,7 @@ mo_objref_clear_payload (mo_objref_t obr)
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
 struct mo_countedpayl_st
 {
-  struct mo_sizedvalue_st MOM_MSEXTEND;
+  mo_sizedvalue_ty MOM_MSEXTEND;
   uint32_t mo_cpl_count;
 };
 
@@ -1043,7 +1043,7 @@ struct mo_assoentry_st
 };
 struct mo_assovaldatapayl_st
 {
-  struct mo_countedpayl_st MOM_MSEXTEND;
+  mo_countedpayl_ty MOM_MSEXTEND;
   struct mo_assoentry_st mo_seqent[];
 };
 
@@ -1091,7 +1091,7 @@ mo_assovaldatapayl_ty *mo_assoval_of_json (mo_json_t);
 /******************** VECTVALs payload ****************/
 struct mo_vectvaldatapayl_st
 {
-  struct mo_countedpayl_st MOM_MSEXTEND;
+  mo_countedpayl_ty MOM_MSEXTEND;
   mo_value_t mo_seqval[];
 };
 
@@ -1172,7 +1172,7 @@ mo_vectvaldatapayl_ty *mo_vectval_of_json (mo_json_t);
 typedef struct mo_hashsetpayl_st mo_hashsetpayl_ty;
 struct mo_hashsetpayl_st
 {
-  struct mo_countedpayl_st MOM_MSEXTEND;
+  mo_countedpayl_ty MOM_MSEXTEND;
   mo_objref_t mo_hsetarr[];
 };
 
