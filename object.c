@@ -493,9 +493,9 @@ static void
 mom_cleanup_object (void *objad, void *data MOM_UNUSED)
 {
   mo_objref_t obr = objad;
-  if (((mo_hashedvalue_ty *) obr)->mo_va_kind != mo_KOBJECT)
+  if (obr->mo_va_kind != mo_KOBJECT)
     return;
-  momhash_t h = ((mo_hashedvalue_ty *) obr)->mo_va_hash;
+  momhash_t h = obr->mo_va_hash;
   mo_hid_t hid = obr->mo_ob_hid;
   mo_loid_t loid = obr->mo_ob_loid;
   unsigned bn = mo_hi_id_bucketnum (hid);
@@ -517,14 +517,11 @@ static mo_hashsetpayl_ty *mom_predefined_hset;
 static void
 mom_add_predefined (mo_objectvalue_ty * ob)
 {
-  MOM_ASSERTPRINTF (ob
-                    && ((mo_hashedvalue_ty *) ob)->mo_va_kind == mo_KOBJECT,
-                    "bad ob");
+  MOM_ASSERTPRINTF (ob && ob->mo_va_kind == mo_KOBJECT, "bad ob");
   mo_hid_t hid = ob->mo_ob_hid;
   mo_loid_t loid = ob->mo_ob_loid;
   momhash_t h = mo_hash_from_hi_lo_ids (hid, loid);
-  MOM_ASSERTPRINTF (h > 0 && h == ((mo_hashedvalue_ty *) ob)->mo_va_hash,
-                    "bad hash");
+  MOM_ASSERTPRINTF (h > 0 && h == ob->mo_va_hash, "bad hash");
   unsigned bn = mo_hi_id_bucketnum (hid);
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
   if (MOM_LIKELY (mom_obuckarr[bn].bu_obarr == NULL))
