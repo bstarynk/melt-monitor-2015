@@ -579,7 +579,7 @@ mo_kind_of_value (mo_value_t v)
 typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
 struct mo_sizedvalue_st
 {
-  struct mo_hashedvalue_st;
+  struct mo_hashedvalue_st MOM_MSEXTEND;
   uint32_t mo_sva_size;
 };
 
