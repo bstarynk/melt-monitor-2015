@@ -756,17 +756,18 @@ mom_predefsort_cmp (const void *p1, const void *p2)
 }                               /* end mom_predefsort_cmp */
 
 void
-mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predset)
+mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predsetv)
 {
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
                     du);
+  mo_setvalue_ty *predset = predsetv;
+  MOM_ASSERTPRINTF (mo_dyncast_set (predset), "bad predset");
   int nbpredef = mo_set_size (predset);
   MOM_ASSERTPRINTF (nbpredef > 0, "empty predset");
   mo_objref_t *predarr =
     mom_gc_alloc (((nbpredef | 0xf) + 1) * sizeof (mo_objref_t));
-  memcpy (predarr, ((mo_sequencevalue_ty *) predset)->mo_seqobj,
-          nbpredef * sizeof (mo_objref_t));
+  memcpy (predarr, predset->mo_seqobj, nbpredef * sizeof (mo_objref_t));
   qsort (predarr, nbpredef, sizeof (mo_objref_t), mom_predefsort_cmp);
   FILE *fp = mo_dump_fopen (du, MOM_PREDEF_HEADER);
   mom_output_gplv3_notice (fp, "///", "", MOM_PREDEF_HEADER);

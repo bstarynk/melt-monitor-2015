@@ -27,7 +27,7 @@ mom_hset_index (mo_hashsetpayl_ty * hset, mo_objref_t obr)
   MOM_ASSERTPRINTF (mo_dyncastpayl_hashset (hset) != NULL, "bad hset@%p",
                     hset);
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL, "bad obr@%p", obr);
-  uint32_t sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
+  uint32_t sz = hset->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "bad sz=%u", sz);
   momhash_t h = mo_objref_hash (obr);
   MOM_ASSERTPRINTF (h != 0, "zero h");
@@ -35,7 +35,7 @@ mom_hset_index (mo_hashsetpayl_ty * hset, mo_objref_t obr)
   int pos = -1;
   for (unsigned ix = startix; ix < sz; ix++)
     {
-      mo_objref_t obcur = hset->mo_hsetarr[ix];
+      mo_objref_t obcur = hset->mo_hset_arr[ix];
       if (obcur == obr)
         return (int) ix;
       else if (obcur == MOM_EMPTY_SLOT)
@@ -53,7 +53,7 @@ mom_hset_index (mo_hashsetpayl_ty * hset, mo_objref_t obr)
     }
   for (unsigned ix = 0; ix < startix; ix++)
     {
-      mo_objref_t obcur = hset->mo_hsetarr[ix];
+      mo_objref_t obcur = hset->mo_hset_arr[ix];
       if (obcur == obr)
         return (int) ix;
       else if (obcur == MOM_EMPTY_SLOT)
@@ -84,7 +84,7 @@ mo_hashset_contains (mo_hashsetpayl_ty * hset, mo_objref_t obr)
   int pos = mom_hset_index (hset, obr);
   if (pos < 0)
     return false;
-  return hset->mo_hsetarr[pos] == obr;
+  return hset->mo_hset_arr[pos] == obr;
 }                               /* end mo_hashset_contains */
 
 mo_hashsetpayl_ty *
@@ -98,15 +98,14 @@ mo_hashset_reserve (mo_hashsetpayl_ty * hset, unsigned gap)
       unsigned sz = mom_prime_above (5 * gap / 4 + gap / 32 + 4);
       hset =
         mom_gc_alloc (sizeof (mo_hashsetpayl_ty) + sz * sizeof (mo_objref_t));
-      ((mo_hashedvalue_ty *) hset)->mo_va_kind = mo_PHASHSET;
-      ((mo_hashedvalue_ty *) hset)->mo_va_hash =
-        (momrand_genrand_int31 () & 0xfffffff) + 2;
-      ((mo_sizedvalue_ty *) hset)->mo_sva_size = sz;
-      ((mo_countedpayl_ty *) hset)->mo_cpl_count = 0;
+      hset->mo_va_kind = mo_PHASHSET;
+      hset->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
+      hset->mo_sva_size = sz;
+      hset->mo_cpl_count = 0;
       return hset;
     }
-  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  unsigned sz = hset->mo_sva_size;
+  unsigned cnt = hset->mo_cpl_count;
   if (4 * (cnt + gap) < 3 * sz && (sz < 60 || 3 * (cnt + gap) > sz))
     return hset;
   unsigned oldsz = sz;
@@ -118,29 +117,28 @@ mo_hashset_reserve (mo_hashsetpayl_ty * hset, unsigned gap)
     sz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 8 + 16);
   hset =
     mom_gc_alloc (sizeof (mo_hashsetpayl_ty) + sz * sizeof (mo_objref_t));
-  ((mo_hashedvalue_ty *) hset)->mo_va_kind = mo_PHASHSET;
-  ((mo_hashedvalue_ty *) hset)->mo_va_hash =
-    (momrand_genrand_int31 () & 0xfffffff) + 2;
-  ((mo_sizedvalue_ty *) hset)->mo_sva_size = sz;
-  ((mo_countedpayl_ty *) hset)->mo_cpl_count = 0;
+  hset->mo_va_kind = mo_PHASHSET;
+  hset->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
+  hset->mo_sva_size = sz;
+  hset->mo_cpl_count = 0;
   cnt = 0;
   for (unsigned oldix = 0; oldix < oldsz; oldix++)
     {
-      mo_objref_t oldobr = oldhset->mo_hsetarr[oldix];
+      mo_objref_t oldobr = oldhset->mo_hset_arr[oldix];
       if (!oldobr || oldobr == MOM_EMPTY_SLOT)
         continue;
       MOM_ASSERTPRINTF (mo_dyncast_objref (oldobr),
                         "bad oldobr at oldix=%u", oldix);
       int pos = mom_hset_index (hset, oldobr);
       MOM_ASSERTPRINTF (pos >= 0 && pos < (int) sz
-                        && hset->mo_hsetarr[pos] == NULL,
+                        && hset->mo_hset_arr[pos] == NULL,
                         "corrupted new hset pos=%d", pos);
-      hset->mo_hsetarr[pos] = oldobr;
+      hset->mo_hset_arr[pos] = oldobr;
       cnt++;
     }
   MOM_ASSERTPRINTF (oldcnt == cnt, "oldcnt %u not same as cnt %u", oldcnt,
                     cnt);
-  ((mo_countedpayl_ty *) hset)->mo_cpl_count = cnt;
+  hset->mo_cpl_count = cnt;
   return hset;
 }                               /* end mo_hashset_reserve */
 
@@ -156,25 +154,25 @@ mo_hashset_put (mo_hashsetpayl_ty * hset, mo_objref_t obr)
       hset = mo_hashset_reserve (NULL, 4);
       int pos = mom_hset_index (hset, obr);
       MOM_ASSERTPRINTF (pos >= 0, "bad pos");
-      hset->mo_hsetarr[pos] = obr;
-      ((mo_countedpayl_ty *) hset)->mo_cpl_count = 1;
+      hset->mo_hset_arr[pos] = obr;
+      hset->mo_cpl_count = 1;
       return hset;
     }
-  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  unsigned sz = hset->mo_sva_size;
+  unsigned cnt = hset->mo_cpl_count;
   if (4 * cnt + 6 >= 3 * sz)
     {
       hset = mo_hashset_reserve (hset, cnt / 64 + 3);
-      sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-      MOM_ASSERTPRINTF (cnt == ((mo_countedpayl_ty *) hset)->mo_cpl_count,
+      sz = hset->mo_sva_size;
+      MOM_ASSERTPRINTF (cnt == hset->mo_cpl_count,
                         "count should not change cnt=%u", cnt);
     }
   int pos = mom_hset_index (hset, obr);
   MOM_ASSERTPRINTF (pos >= 0 && pos < (int) sz, "bad pos");
-  if (hset->mo_hsetarr[pos] == obr)
+  if (hset->mo_hset_arr[pos] == obr)
     return hset;
-  hset->mo_hsetarr[pos] = obr;
-  ((mo_countedpayl_ty *) hset)->mo_cpl_count = cnt + 1;
+  hset->mo_hset_arr[pos] = obr;
+  hset->mo_cpl_count = cnt + 1;
   return hset;
 }                               /* end mo_hashset_remove */
 
@@ -187,14 +185,14 @@ mo_hashset_remove (mo_hashsetpayl_ty * hset, mo_objref_t obr)
     return hset;
   if (!hset)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  unsigned sz = hset->mo_sva_size;
+  unsigned cnt = hset->mo_cpl_count;
   int pos = mom_hset_index (hset, obr);
-  if (pos < 0 || hset->mo_hsetarr[pos] != obr)
+  if (pos < 0 || hset->mo_hset_arr[pos] != obr)
     return hset;
   MOM_ASSERTPRINTF (cnt > 0, "zero cnt");
-  hset->mo_hsetarr[pos] = MOM_EMPTY_SLOT;
-  ((mo_countedpayl_ty *) hset)->mo_cpl_count = cnt - 1;
+  hset->mo_hset_arr[pos] = MOM_EMPTY_SLOT;
+  hset->mo_cpl_count = cnt - 1;
   if (sz > 60 && 3 * cnt < sz)
     hset = mo_hashset_reserve (hset, 0);
   return hset;
@@ -207,8 +205,8 @@ mo_hashset_elements_set (mo_hashsetpayl_ty * hset)
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  unsigned sz = hset->mo_sva_size;
+  unsigned cnt = hset->mo_cpl_count;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   unsigned nb = 0;
   MOM_ASSERTPRINTF (cnt <= sz && cnt <= MOM_SIZE_MAX,
@@ -219,7 +217,7 @@ mo_hashset_elements_set (mo_hashsetpayl_ty * hset)
   mo_sequencevalue_ty *sq = mo_sequence_allocate (cnt);
   for (unsigned ix = 0; ix < sz; ix++)
     {
-      mo_objref_t obr = hset->mo_hsetarr[ix];
+      mo_objref_t obr = hset->mo_hset_arr[ix];
       if (!obr || obr == MOM_EMPTY_SLOT)
         continue;
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr at ix=%d", ix);
@@ -238,13 +236,13 @@ mo_dump_scan_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     return;
-  unsigned sz = ((mo_sizedvalue_ty *) hset)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  unsigned sz = hset->mo_sva_size;
+  unsigned cnt = hset->mo_cpl_count;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   MOM_ASSERTPRINTF (cnt <= sz, "too big cnt=%u sz=%u", cnt, sz);
   for (unsigned ix = 0; ix < sz; ix++)
     {
-      mo_objref_t obr = hset->mo_hsetarr[ix];
+      mo_objref_t obr = hset->mo_hset_arr[ix];
       if (!obr || obr == MOM_EMPTY_SLOT)
         continue;
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr at ix=%d", ix);
@@ -261,14 +259,13 @@ mo_dump_json_of_hashset (mo_dumper_ty * du, mo_hashsetpayl_ty * hset)
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     return json_null ();
-  mo_setvalue_ty *elemsetv =
-    (mo_setvalue_ty *) mo_hashset_elements_set (hset);
-  MOM_ASSERTPRINTF (mo_dyncast_set (elemsetv), "bad elemsetv");
-  unsigned sz = mo_set_size (elemsetv);
+  mo_setvalue_ty *elemset = (mo_setvalue_ty *) mo_hashset_elements_set (hset);
+  MOM_ASSERTPRINTF (mo_dyncast_set (elemset), "bad elemsetv");
+  unsigned sz = mo_set_size (elemset);
   json_t *jarr = json_array ();
   for (unsigned ix = 0; ix < sz; ix++)
     {
-      mo_objref_t elobr = ((mo_sequencevalue_ty *) elemsetv)->mo_seqobj[ix];
+      mo_objref_t elobr = elemset->mo_seqobj[ix];
       if (!mo_dump_is_emitted_objref (du, elobr))
         continue;
       json_t *jcomp = mo_dump_jsonid_of_objref (du, elobr);

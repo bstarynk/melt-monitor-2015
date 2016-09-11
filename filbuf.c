@@ -70,9 +70,8 @@ mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint)
     MOM_FATAPRINTF ("failed to open_memstream a buffer payload for obr %s",
                     mo_objref_pnamestr (obr));
   mo_objref_clear_payload (obr);
-  ((mo_hashedvalue_ty *) bpy)->mo_va_kind = mo_PBUFFER;
-  ((mo_hashedvalue_ty *) bpy)->mo_va_hash =
-    (momrand_genrand_int31 () & 0xfffffff) + 2;
+  bpy->mo_va_kind = mo_PBUFFER;
+  bpy->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
   bpy->mo_buffer_nmagic = MOM_BUFFER_MAGIC;
   obr->mo_ob_paylkind = MOM_PREDEF (payload_buffer);
   obr->mo_ob_payldata = bpy;
@@ -175,7 +174,7 @@ mo_objref_file (mo_objref_t obr)
           MOM_ASSERTPRINTF (bupayl != MOM_EMPTY_SLOT,
                             "empty bupayl for buffer object in in obr@%p=%s",
                             obr, mo_objref_pnamestr (obr));
-          MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) bupayl)->mo_va_kind ==
+          MOM_ASSERTPRINTF (bupayl->mo_va_kind ==
                             mo_PBUFFER,
                             "invalid bupayl for buffer object in in obr@%p=%s",
                             obr, mo_objref_pnamestr (obr));

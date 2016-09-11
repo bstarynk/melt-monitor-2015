@@ -24,9 +24,8 @@ mo_listpayl_ty *
 mo_list_make (void)
 {
   mo_listpayl_ty *lis = mom_gc_alloc (sizeof (mo_listpayl_ty));
-  ((mo_hashedvalue_ty *) lis)->mo_va_kind = mo_PLIST;
-  ((mo_hashedvalue_ty *) lis)->mo_va_hash =
-    (momrand_genrand_int31 () & 0xfffffff) + 2;
+  lis->mo_va_kind = mo_PLIST;
+  lis->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
   lis->mo_lip_first = NULL;
   lis->mo_lip_last = NULL;
   return lis;

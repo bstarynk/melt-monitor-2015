@@ -29,9 +29,6 @@
 #define HAVE_PTHREADS 1
 #define MOM_GETTEXT_PACKAGE "monimelt"
 
-// we require the -fms-extensions compiler flag.
-// See https://gcc.gnu.org/onlinedocs/gcc/Unnamed-Fields.html
-#define MOM_MSEXTEND
 
 #include <features.h>           // GNU things
 #include <assert.h>
@@ -232,11 +229,13 @@ __attribute__ ((format (printf, 3, 4), noreturn));
   do { if (false && (Cond)) printf(Fmt, ##__VA_ARGS__); } while(0)
 #else
 
-#define MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,...) \
-  do {if (MOM_UNLIKELY(!(Cond)))      \
-      MOM_FATAPRINTF_AT(Fil,Lin,      \
-  "MOM_ASSERT FAILURE (" #Cond "): " Fmt,   \
-      ##__VA_ARGS__); }while(0)
+#define MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,...) do {  \
+  if (MOM_UNLIKELY(!(Cond)))        \
+    MOM_FATAPRINTF_AT(Fil,Lin,        \
+          "MOM_ASSERT FAIL(" #Cond    \
+          "): \n *@* "      \
+          Fmt "\n",       \
+          ##__VA_ARGS__); }while(0)
 
 #define MOM_ASSERTPRINTF_AT_BIS(Fil,Lin,Cond,Fmt,...) \
   MOM_ASSERTPRINTF_AT(Fil,Lin,Cond,Fmt,     \
@@ -552,12 +551,15 @@ mo_hash_from_hi_lo_ids (mo_hid_t hid, mo_loid_t loid);
 /////
 ///// all values have some type & hash
 typedef struct mo_hashedvalue_st mo_hashedvalue_ty;
+#define MOMFIELDS_hashedvalue     \
+  uint16_t mo_va_kind;           \
+  uint16_t mo_va_index;          \
+  momhash_t mo_va_hash
+
 struct mo_hashedvalue_st
 {
-  uint16_t mo_va_kind;
-  uint16_t mo_va_index;
-  momhash_t mo_va_hash;
-};
+  MOMFIELDS_hashedvalue;
+};                              // end struct mo_hashedvalue_st
 
 static inline enum mo_valkind_en
 mo_kind_of_value (mo_value_t v)
@@ -568,7 +570,8 @@ mo_kind_of_value (mo_value_t v)
     return mo_KNONE;
   else
     {
-      unsigned k = ((mo_hashedvalue_ty *) v)->mo_va_kind;
+      mo_hashedvalue_ty *vh = (mo_hashedvalue_ty *) v;
+      unsigned k = vh->mo_va_kind;
       MOM_ASSERTPRINTF (k >= MOM_FIRST_BOXED_KIND && k <= MOM_LAST_KIND,
                         "mo_kind_of_value: bad kind #%u @%p", k, v);
       return (enum mo_valkind_en) k;
@@ -577,10 +580,12 @@ mo_kind_of_value (mo_value_t v)
 
 ///// sized values have also size
 typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
+#define MOMFIELDS_sizedvalue       \
+  MOMFIELDS_hashedvalue;           \
+  uint32_t mo_sva_size
 struct mo_sizedvalue_st
 {
-  mo_hashedvalue_ty MOM_MSEXTEND;
-  uint32_t mo_sva_size;
+  MOMFIELDS_sizedvalue;
 };
 
 static inline uint32_t
@@ -588,17 +593,22 @@ mo_size_of_value (mo_value_t v)
 {
   enum mo_valkind_en k = mo_kind_of_value (v);
   if (k == mo_KSTRING || k == mo_KTUPLE || k == mo_KSET)
-    return (((mo_sizedvalue_ty *) v))->mo_sva_size;
+    {
+      mo_sizedvalue_ty *vsz = (mo_sizedvalue_ty *) v;
+      return vsz->mo_sva_size;
+    }
   return 0;
-}
+}                               /* end mo_size_of_value */
 
 ///// string values
 typedef struct mo_stringvalue_st mo_stringvalue_ty;
+#define MOMFIELDS_stringvalue \
+  MOMFIELDS_sizedvalue;       \
+  char mo_cstr[]                /* allocated size is mo_sva_size+1 */
 struct mo_stringvalue_st
 {
-  mo_sizedvalue_ty MOM_MSEXTEND;
-  char mo_cstr[];               // allocated size is mo_sva_size+1
-};
+  MOMFIELDS_stringvalue;
+};                              // end struct mo_stringvalue_st
 mo_value_t mo_make_string_len (const char *buf, int sz);
 static inline mo_value_t
 mo_make_string_cstr (const char *buf)
@@ -620,31 +630,32 @@ mo_make_string_from_textual_file (FILE *fil)
 }
 
 static inline mo_value_t
-mo_dyncast_string (mo_value_t vs)
+mo_dyncast_string (mo_value_t v)
 {
-  if (!mo_valid_pointer_value (vs))
+  if (!mo_valid_pointer_value (v))
     return NULL;
-  if (((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KSTRING)
+  mo_stringvalue_ty *vstr = (mo_stringvalue_ty *) v;
+  if (vstr->mo_va_kind != mo_KSTRING)
     return NULL;
-  return vs;
+  return vstr;
 }
 
 static inline const char *
 mo_string_cstr (mo_value_t v)
 {
-  mo_value_t vstr = mo_dyncast_string (v);
+  mo_stringvalue_ty *vstr = (mo_stringvalue_ty *) mo_dyncast_string (v);
   if (!vstr)
     return NULL;
-  return ((mo_stringvalue_ty *) vstr)->mo_cstr;
+  return vstr->mo_cstr;
 }
 
 static inline unsigned
 mo_string_size (mo_value_t v)
 {
-  mo_value_t vstr = mo_dyncast_string (v);
+  mo_stringvalue_ty *vstr = (mo_stringvalue_ty *) mo_dyncast_string (v);
   if (!vstr)
     return 0;
-  return ((mo_sizedvalue_ty *) vstr)->mo_sva_size;
+  return vstr->mo_sva_size;
 }                               /* end of mo_string_size */
 
 /******************** SEQUENCEs ****************/
@@ -653,10 +664,13 @@ mo_string_size (mo_value_t v)
 
 #define MOM_UNFILLEDFAKESEQKIND 9990
 typedef struct mo_sequencevalue_st mo_sequencevalue_ty;
+#define MOMFIELDS_sequencevalue \
+  MOMFIELDS_sizedvalue;         \
+  mo_objref_t mo_seqobj[]       /* size is  mo_sva_size */
+
 struct mo_sequencevalue_st
 {
-  mo_sizedvalue_ty MOM_MSEXTEND;
-  mo_objref_t mo_seqobj[];
+  MOMFIELDS_sequencevalue;
 };
 
 /// allocate a sequence which is not a valid object till it is
@@ -669,8 +683,8 @@ mo_sequence_allocate (unsigned sz)
   mo_sequencevalue_ty *seq =
     mom_gc_alloc (sizeof (mo_sequencevalue_ty) + sz * sizeof (mo_objref_t));
   // we temporarily put a fake kind
-  ((mo_hashedvalue_ty *) seq)->mo_va_kind = MOM_UNFILLEDFAKESEQKIND;
-  ((mo_sizedvalue_ty *) seq)->mo_sva_size = sz;
+  seq->mo_va_kind = MOM_UNFILLEDFAKESEQKIND;
+  seq->mo_sva_size = sz;
   return seq;
 }
 
@@ -683,22 +697,22 @@ mo_sequence_filled_allocate (unsigned sz, mo_objref_t * arr)
   mo_sequencevalue_ty *seq =
     mom_gc_alloc (sizeof (mo_sequencevalue_ty) + sz * sizeof (mo_objref_t));
   // we temporarily put a fake kind
-  ((mo_hashedvalue_ty *) seq)->mo_va_kind = MOM_UNFILLEDFAKESEQKIND;
-  ((mo_sizedvalue_ty *) seq)->mo_sva_size = sz;
+  seq->mo_va_kind = MOM_UNFILLEDFAKESEQKIND;
+  seq->mo_sva_size = sz;
   if (arr && arr != MOM_EMPTY_SLOT)
     memcpy (seq->mo_seqobj, arr, sz * sizeof (mo_objref_t));
   return seq;
 }
 
 static inline mo_value_t
-mo_dyncast_sequence (mo_value_t vs)
+mo_dyncast_sequence (mo_value_t v)
 {
-  if (!mo_valid_pointer_value (vs))
+  if (!mo_valid_pointer_value (v))
     return NULL;
-  if (((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KTUPLE
-      && ((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KSET)
+  mo_sequencevalue_ty *vseq = (mo_sequencevalue_ty *) v;
+  if (vseq->mo_va_kind != mo_KTUPLE && vseq->mo_va_kind != mo_KSET)
     return NULL;
-  return vs;
+  return vseq;
 }
 
 static inline unsigned
@@ -707,7 +721,7 @@ mo_sequence_size (mo_value_t vs)
   mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_sequence (vs);
   if (!seq)
     return 0;
-  return ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  return seq->mo_sva_size;
 }
 
 static inline mo_objref_t
@@ -716,7 +730,7 @@ mo_sequence_nth (mo_value_t vs, int rk)
   mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_sequence (vs);
   if (!seq)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  unsigned sz = seq->mo_sva_size;
   if (!sz)
     return NULL;
   if (rk < 0)
@@ -724,27 +738,28 @@ mo_sequence_nth (mo_value_t vs, int rk)
   if (rk < 0 || rk >= (int) sz)
     return NULL;
   return seq->mo_seqobj[rk];
-}
+}                               /* end mo_sequence_nth */
 
 // put inside a sequence something during the fill
 static inline void
 mo_sequence_put (mo_sequencevalue_ty * seq, unsigned ix, mo_objref_t oref)
 {
   MOM_ASSERTPRINTF (seq != NULL, "mo_sequence_put: null sequence");
-  MOM_ASSERTPRINTF (((mo_hashedvalue_ty *) seq)->mo_va_kind ==
+  MOM_ASSERTPRINTF (seq->mo_va_kind ==
                     MOM_UNFILLEDFAKESEQKIND,
                     "mo_sequence_put: non-fake sequence");
-  MOM_ASSERTPRINTF (ix < ((mo_sizedvalue_ty *) seq)->mo_sva_size,
+  MOM_ASSERTPRINTF (ix < seq->mo_sva_size,
                     "mo_sequence_put: too big index %u (size %u)", ix,
-                    ((mo_sizedvalue_ty *) seq)->mo_sva_size);
+                    seq->mo_sva_size);
   seq->mo_seqobj[ix] = oref;
 }
 
 /////// tuples of objrefs
 typedef struct mo_tuplevalue_st mo_tuplevalue_ty;
+#define MOMFIELDS_tuplevalue MOMFIELDS_sequencevalue
 struct mo_tuplevalue_st
 {
-  mo_sequencevalue_ty MOM_MSEXTEND;
+  MOMFIELDS_tuplevalue;
 };
 /*** creating a tuple with statement expr
   {( mo_sequencevalue_ty* _sq = mo_sequence_allocate(3);
@@ -765,46 +780,48 @@ __attribute__ ((sentinel));
 #define MOM_MAKE_SENTUPLE(...) mom_make_sentinel_tuple_(__VA_ARGS__,NULL)
 
 static inline mo_value_t
-mo_dyncast_tuple (mo_value_t vs)
+mo_dyncast_tuple (mo_value_t v)
 {
-  if (!mo_valid_pointer_value (vs))
+  if (!mo_valid_pointer_value (v))
     return NULL;
-  if (((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KTUPLE)
+  mo_tuplevalue_ty *vtup = (mo_tuplevalue_ty *) v;
+  if (vtup->mo_va_kind != mo_KTUPLE)
     return NULL;
-  return vs;
-}
+  return vtup;
+}                               /* end mo_dyncast_tuple */
 
 
 static inline unsigned
 mo_tuple_size (mo_value_t vs)
 {
-  mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_tuple (vs);
-  if (!seq)
+  mo_tuplevalue_ty *tup = (mo_tuplevalue_ty *) mo_dyncast_tuple (vs);
+  if (!tup)
     return 0;
-  return ((mo_sizedvalue_ty *) seq)->mo_sva_size;
-}
+  return tup->mo_sva_size;
+}                               /* end mo_tuple_size */
 
 static inline mo_objref_t
 mo_tuple_nth (mo_value_t vs, int rk)
 {
-  mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_tuple (vs);
-  if (!seq)
+  mo_tuplevalue_ty *tup = (mo_tuplevalue_ty *) mo_dyncast_tuple (vs);
+  if (!tup)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  unsigned sz = tup->mo_sva_size;
   if (!sz)
     return NULL;
   if (rk < 0)
     rk += sz;
   if (rk < 0 || rk >= (int) sz)
     return NULL;
-  return seq->mo_seqobj[rk];
+  return tup->mo_seqobj[rk];
 }
 
 ////// ordered sets
 typedef struct mo_setvalue_st mo_setvalue_ty;
+#define MOMFIELDS_setvalue MOMFIELDS_sequencevalue
 struct mo_setvalue_st
 {
-  mo_sequencevalue_ty MOM_MSEXTEND;
+  MOMFIELDS_setvalue;
 };
 
 
@@ -827,14 +844,15 @@ __attribute__ ((sentinel));
 #define MOM_MAKE_SENSET(...) mom_make_sentinel_set_(__VA_ARGS__,NULL)
 
 static inline mo_value_t
-mo_dyncast_set (mo_value_t vs)
+mo_dyncast_set (mo_value_t v)
 {
-  if (!mo_valid_pointer_value (vs))
+  if (!mo_valid_pointer_value (v))
     return NULL;
-  if (((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KSET)
+  mo_setvalue_ty *set = (mo_setvalue_ty *) v;
+  if (set->mo_va_kind != mo_KSET)
     return NULL;
-  return vs;
-}
+  return set;
+}                               /* end of mo_dyncast_set */
 
 mo_value_t mo_set_union (mo_value_t vset1, mo_value_t vset2);
 mo_value_t mo_set_intersection (mo_value_t vset1, mo_value_t vset2);
@@ -844,43 +862,44 @@ mo_value_t mo_set_difference (mo_value_t vset1, mo_value_t vset2);
 static inline unsigned
 mo_set_size (mo_value_t vs)
 {
-  mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_set (vs);
-  if (!seq)
+  mo_setvalue_ty *set = (mo_setvalue_ty *) mo_dyncast_set (vs);
+  if (!set)
     return 0;
-  return ((mo_sizedvalue_ty *) seq)->mo_sva_size;
-}
+  return set->mo_sva_size;
+}                               /* end mo_set_size */
 
 static inline mo_objref_t
-mo_set_nth (mo_value_t vs, int rk)
+mo_set_nth (mo_value_t v, int rk)
 {
-  mo_sequencevalue_ty *seq = (mo_sequencevalue_ty *) mo_dyncast_set (vs);
-  if (!seq)
+  mo_setvalue_ty *set = (mo_setvalue_ty *) mo_dyncast_set (v);
+  if (!set)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) seq)->mo_sva_size;
+  unsigned sz = set->mo_sva_size;
   if (!sz)
     return NULL;
   if (rk < 0)
     rk += sz;
   if (rk < 0 || rk >= (int) sz)
     return NULL;
-  return seq->mo_seqobj[rk];
+  return set->mo_seqobj[rk];
 }
 
 static inline bool
-mo_set_contains (mo_value_t vset, mo_objref_t ob)
+mo_set_contains (mo_value_t vs, mo_objref_t ob)
 {
-  if (!mo_dyncast_set (vset))
+  mo_setvalue_ty *set = (mo_setvalue_ty *) mo_dyncast_set (vs);
+  if (!set)
     return false;
   if (!mo_dyncast_object (ob))
     return false;
-  unsigned card = ((mo_sizedvalue_ty *) vset)->mo_sva_size;
+  unsigned card = set->mo_sva_size;
   if (!card)
     return 0;
   unsigned lo = 0, hi = card - 1;
   while (lo + 5 < hi)
     {
       unsigned md = (lo + hi) / 2;
-      mo_objref_t midobr = ((mo_sequencevalue_ty *) vset)->mo_seqobj[md];
+      mo_objref_t midobr = set->mo_seqobj[md];
       MOM_ASSERTPRINTF (mo_dyncast_objref (midobr) != NULL,
                         "corrupted midobr@%p", midobr);
       if (midobr == ob)
@@ -891,11 +910,11 @@ mo_set_contains (mo_value_t vset, mo_objref_t ob)
       else if (cmp > 0)
         hi = md;
       else
-        MOM_FATAPRINTF ("corrupted set@%p", vset);
+        MOM_FATAPRINTF ("corrupted set@%p", set);
     }
   for (unsigned md = lo; md < hi; md++)
     {
-      mo_objref_t midobr = ((mo_sequencevalue_ty *) vset)->mo_seqobj[md];
+      mo_objref_t midobr = set->mo_seqobj[md];
       MOM_ASSERTPRINTF (mo_dyncast_objref (midobr) != NULL,
                         "corrupted midobr@%p", midobr);
       if (midobr == ob)
@@ -914,31 +933,34 @@ enum mo_space_en
 };
 
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
+#define MOMFIELDS_objectvalue     \
+  MOMFIELDS_hashedvalue;      \
+/** don't need mutex before bootstrapping:  \
+ ** pthread_mutex_t mo_ob_mtx; **/    \
+  time_t mo_ob_mtime;       \
+  mo_hid_t mo_ob_hid;       \
+  mo_loid_t mo_ob_loid;       \
+  mo_objref_t mo_ob_class;      \
+  mo_assovaldatapayl_ty *mo_ob_attrs;   \
+  mo_vectvaldatapayl_ty *mo_ob_comps;   \
+  /* payload kind & data */     \
+  mo_objref_t mo_ob_paylkind;     \
+  void *mo_ob_payldata
 struct mo_objectvalue_st
 {
-  mo_hashedvalue_ty MOM_MSEXTEND;
-  /// actually, we dont need mutexes before the bootstrap
-  /// pthread_mutex_t mo_ob_mtx;
-  time_t mo_ob_mtime;
-  mo_hid_t mo_ob_hid;
-  mo_loid_t mo_ob_loid;
-  mo_objref_t mo_ob_class;
-  mo_assovaldatapayl_ty *mo_ob_attrs;
-  mo_vectvaldatapayl_ty *mo_ob_comps;
-  // payload kind & data
-  mo_objref_t mo_ob_paylkind;
-  void *mo_ob_payldata;
-};
+  MOMFIELDS_objectvalue;
+};                              /* end struct mo_objectvalue_st */
 
 static inline mo_value_t
-mo_dyncast_object (mo_value_t vs)
+mo_dyncast_object (mo_value_t v)
 {
-  if (!mo_valid_pointer_value (vs))
+  if (!mo_valid_pointer_value (v))
     return NULL;
-  if (((mo_hashedvalue_ty *) vs)->mo_va_kind != mo_KOBJECT)
+  mo_objectvalue_ty *ob = (mo_objectvalue_ty *) v;
+  if (ob->mo_va_kind != mo_KOBJECT)
     return NULL;
-  return vs;
-}
+  return ob;
+}                               /* end mo_dyncast_object */
 
 static inline mo_objref_t
 mo_dyncast_objref (mo_value_t v)
@@ -987,20 +1009,22 @@ mo_objref_cmp (mo_objref_t obl, mo_objref_t obr)
 }
 
 static inline momhash_t
-mo_objref_hash (mo_objref_t obr)
+mo_objref_hash (mo_objref_t obref)
 {
-  if (!mo_dyncast_objref (obr))
+  mo_objectvalue_ty *ob = (mo_dyncast_objref (obref));
+  if (!ob)
     return 0;
-  return ((mo_hashedvalue_ty *) obr)->mo_va_hash;
-}
+  return ob->mo_va_hash;
+}                               /* end mo_objref_hash */
 
 static inline enum mo_space_en
-mo_objref_space (mo_objref_t obr)
+mo_objref_space (mo_objref_t obref)
 {
-  if (!mo_dyncast_objref (obr))
+  mo_objectvalue_ty *ob = (mo_dyncast_objref (obref));
+  if (!ob)
     return mo_SPACE_NONE;
-  return (enum mo_space_en) ((mo_hashedvalue_ty *) obr)->mo_va_index;
-}
+  return (enum mo_space_en) (ob->mo_va_index);
+}                               /* end mo_objref_space */
 
 void mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa);
 
@@ -1029,34 +1053,42 @@ mo_objref_clear_payload (mo_objref_t obr)
 
 ///// counted payloads have also count
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
+#define MOMFIELDS_countedpayl   \
+  MOMFIELDS_sizedvalue;         \
+  uint32_t mo_cpl_count
 struct mo_countedpayl_st
 {
-  mo_sizedvalue_ty MOM_MSEXTEND;
-  uint32_t mo_cpl_count;
-};
+  MOMFIELDS_countedpayl;
+};                              /* end struct mo_countedpayl_st */
 
 /******************** ASSOVALs payload ****************/
+#define MOMFIELDS_assoentry    \
+  mo_objref_t mo_asso_obr;     \
+  mo_value_t mo_asso_val
 struct mo_assoentry_st
 {
-  mo_objref_t mo_asso_obr;
-  mo_value_t mo_asso_val;
-};
+  MOMFIELDS_assoentry;
+};                              /* end struct mo_assoentry */
+
+#define MOMFIELDS_assovaldatapayl        \
+  MOMFIELDS_countedpayl;                 \
+  struct mo_assoentry_st mo_asso_entarr[]
 struct mo_assovaldatapayl_st
 {
-  mo_countedpayl_ty MOM_MSEXTEND;
-  struct mo_assoentry_st mo_seqent[];
-};
+  MOMFIELDS_assovaldatapayl;
+};                              /* end struct mo_assovaldatapayl_st */
 
 static inline mo_assovaldatapayl_ty *
 mo_dyncastpayl_assoval (const void *p)
 {
   if (!mo_valid_pointer_value (p))
     return NULL;
-  unsigned k = ((mo_hashedvalue_ty *) p)->mo_va_kind;
+  mo_assovaldatapayl_ty *asso = (mo_assovaldatapayl_ty *) p;
+  unsigned k = asso->mo_va_kind;
   if (k != mo_PASSOVALDATA)
     return NULL;
-  return (mo_assovaldatapayl_ty *) p;
-}
+  return asso;
+}                               /* end mo_dyncastpayl_assoval */
 
 static inline unsigned
 mo_assoval_size (mo_assovaldatapayl_ty * asso)
@@ -1064,7 +1096,7 @@ mo_assoval_size (mo_assovaldatapayl_ty * asso)
   asso = mo_dyncastpayl_assoval (asso);
   if (!asso)
     return 0;
-  return ((mo_sizedvalue_ty *) asso)->mo_sva_size;
+  return asso->mo_sva_size;
 }
 
 static inline unsigned
@@ -1073,7 +1105,7 @@ mo_assoval_count (mo_assovaldatapayl_ty * asso)
   asso = mo_dyncastpayl_assoval (asso);
   if (!asso)
     return 0;
-  return ((mo_countedpayl_ty *) asso)->mo_cpl_count;
+  return asso->mo_cpl_count;
 }
 
 mo_value_t mo_assoval_get (mo_assovaldatapayl_ty * asso, mo_objref_t ob);
@@ -1089,21 +1121,24 @@ mo_json_t mo_dump_json_of_assoval (mo_dumper_ty *, mo_assovaldatapayl_ty *);
 mo_assovaldatapayl_ty *mo_assoval_of_json (mo_json_t);
 
 /******************** VECTVALs payload ****************/
+#define MOMFIELDS_vectvaldatapayl \
+  MOMFIELDS_countedpayl;          \
+  mo_value_t mo_vect_arr[]
 struct mo_vectvaldatapayl_st
 {
-  mo_countedpayl_ty MOM_MSEXTEND;
-  mo_value_t mo_seqval[];
-};
+  MOMFIELDS_vectvaldatapayl;
+};                              /* end struct mo_vectvaldatapayl_st */
 
 static inline mo_vectvaldatapayl_ty *
 mo_dyncastpayl_vectval (const void *p)
 {
   if (!mo_valid_pointer_value (p))
     return NULL;
-  unsigned k = ((mo_hashedvalue_ty *) p)->mo_va_kind;
+  mo_vectvaldatapayl_ty *vect = (mo_vectvaldatapayl_ty *) p;
+  unsigned k = vect->mo_va_kind;
   if (k != mo_PVECTVALDATA)
     return NULL;
-  return (mo_vectvaldatapayl_ty *) p;
+  return vect;
 }
 
 static inline unsigned
@@ -1112,7 +1147,7 @@ mo_vectval_size (mo_vectvaldatapayl_ty * vect)
   vect = mo_dyncastpayl_vectval (vect);
   if (!vect)
     return 0;
-  return ((mo_sizedvalue_ty *) vect)->mo_sva_size;
+  return vect->mo_sva_size;
 }
 
 static inline unsigned
@@ -1121,7 +1156,7 @@ mo_vectval_count (mo_vectvaldatapayl_ty * vect)
   vect = mo_dyncastpayl_vectval (vect);
   if (!vect)
     return 0;
-  return ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  return vect->mo_cpl_count;
 }
 
 static inline mo_value_t
@@ -1130,13 +1165,13 @@ mo_vectval_nth (mo_vectvaldatapayl_ty * vect, int rk)
   vect = mo_dyncastpayl_vectval (vect);
   if (!vect)
     return NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  unsigned sz = vect->mo_sva_size;
+  unsigned cnt = vect->mo_cpl_count;
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u larger than sz %u", cnt, sz);
   if (rk < 0)
     rk += (int) cnt;
   if (rk >= 0 && rk < (int) cnt)
-    return vect->mo_seqval[rk];
+    return vect->mo_vect_arr[rk];
   return NULL;
 }                               /* end mo_vectval_nth */
 
@@ -1148,13 +1183,13 @@ mo_vectval_put_nth (mo_vectvaldatapayl_ty * vect, int rk, mo_value_t newval)
     return;
   if (newval == MOM_EMPTY_SLOT)
     newval = NULL;
-  unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
-  unsigned cnt = ((mo_countedpayl_ty *) vect)->mo_cpl_count;
+  unsigned sz = vect->mo_sva_size;
+  unsigned cnt = vect->mo_cpl_count;
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u larger than sz %u", cnt, sz);
   if (rk < 0)
     rk += (int) cnt;
   if (rk >= 0 && rk < (int) cnt)
-    vect->mo_seqval[rk] = newval;
+    vect->mo_vect_arr[rk] = newval;
 }                               /* end mo_vectval_put_nth */
 
 // the vectval routines are in value.c because they are easy
@@ -1170,21 +1205,24 @@ mo_json_t mo_dump_json_of_vectval (mo_dumper_ty *, mo_vectvaldatapayl_ty *);
 mo_vectvaldatapayl_ty *mo_vectval_of_json (mo_json_t);
 /******************** HASHSETs payload ****************/
 typedef struct mo_hashsetpayl_st mo_hashsetpayl_ty;
+#define MOMFIELDS_hashsetpayl \
+  MOMFIELDS_countedpayl;      \
+  mo_objref_t mo_hset_arr[]
 struct mo_hashsetpayl_st
 {
-  mo_countedpayl_ty MOM_MSEXTEND;
-  mo_objref_t mo_hsetarr[];
-};
+  MOMFIELDS_hashsetpayl;
+};                              /* end struct mo_hashsetpayl_st */
 
 static inline mo_hashsetpayl_ty *
 mo_dyncastpayl_hashset (const void *p)
 {
   if (!mo_valid_pointer_value (p))
     return NULL;
-  unsigned k = ((mo_hashedvalue_ty *) p)->mo_va_kind;
+  mo_hashsetpayl_ty *hset = (mo_hashsetpayl_ty *) p;
+  unsigned k = hset->mo_va_kind;
   if (k != mo_PHASHSET)
     return NULL;
-  return (mo_hashsetpayl_ty *) p;
+  return hset;
 }
 
 static inline unsigned
@@ -1193,7 +1231,7 @@ mo_hashset_size (mo_hashsetpayl_ty * hset)
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     return 0;
-  return ((mo_sizedvalue_ty *) hset)->mo_sva_size;
+  return hset->mo_sva_size;
 }
 
 static inline unsigned
@@ -1202,7 +1240,7 @@ mo_hashset_count (mo_hashsetpayl_ty * hset)
   hset = mo_dyncastpayl_hashset (hset);
   if (!hset)
     return 0;
-  return ((mo_countedpayl_ty *) hset)->mo_cpl_count;
+  return hset->mo_cpl_count;
 }
 
 bool mo_hashset_contains (mo_hashsetpayl_ty * hset, mo_objref_t obr);
@@ -1220,29 +1258,37 @@ mo_hashsetpayl_ty *mo_hashset_of_json (mo_json_t);
 /******************** LISTs payload ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
 typedef struct mo_listelem_st mo_listelem_ty;
+
 #define MOM_LISTCHUNK_LEN 14
+#define MOMFIELDS_listelem      \
+  mo_listelem_ty *mo_lie_next;      \
+  mo_listelem_ty *mo_lie_prev;      \
+  mo_value_t mo_lie_arr[MOM_LISTCHUNK_LEN]
 struct mo_listelem_st
 {
-  mo_listelem_ty *mo_lie_next;
-  mo_listelem_ty *mo_lie_prev;
-  mo_value_t mo_lie_arr[MOM_LISTCHUNK_LEN];
-};
+  MOMFIELDS_listelem;
+};                              /* end struct mo_listelem_st */
+
+#define MOMFIELDS_listpayl        \
+  MOMFIELDS_hashedvalue;          \
+  mo_listelem_ty* mo_lip_first;   \
+  mo_listelem_ty* mo_lip_last
+
 struct mo_listpayl_st
 {
-  mo_hashedvalue_ty MOM_MSEXTEND;
-  mo_listelem_ty *mo_lip_first;
-  mo_listelem_ty *mo_lip_last;
-};
+  MOMFIELDS_listpayl;
+};                              /* end struct mo_listpayl_st */
 
 static inline mo_listpayl_ty *
 mo_dyncastpayl_list (const void *p)
 {
   if (!mo_valid_pointer_value (p))
     return NULL;
-  unsigned k = ((mo_hashedvalue_ty *) p)->mo_va_kind;
+  mo_listpayl_ty *lis = (mo_listpayl_ty *) p;
+  unsigned k = lis->mo_va_kind;
   if (k != mo_PLIST)
     return NULL;
-  return (mo_listpayl_ty *) p;
+  return lis;
 }                               /* end mo_dyncastpayl_list */
 
 static inline bool
@@ -1328,14 +1374,16 @@ mo_listpayl_ty *mo_list_of_json (mo_json_t);
 /// a buffer payload has kind payload_buffer & data..
 typedef struct mo_bufferpayl_st mo_bufferpayl_ty;
 #define MOM_BUFFER_MAGIC 0x1af15eb9     /*452026041 */
-struct mo_bufferpayl_st
+#define MOMFIELDS_bufferpayl          \
+  MOMFIELDS_hashedvalue;          \
+  unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */ \
+  char *mo_buffer_zone;           \
+  size_t mo_buffer_size;          \
+  FILE *mo_buffer_memstream
+
+struct mo_bufferpayl_st         /*malloced */
 {
-  // malloc-ed
-  mo_hashedvalue_ty MOM_MSEXTEND;
-  unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */
-  char *mo_buffer_zone;
-  size_t mo_buffer_size;
-  FILE *mo_buffer_memstream;
+  MOMFIELDS_bufferpayl;
 };                              /* end struct mo_bufferpayl_st */
 
 bool mo_objref_open_file (mo_objref_t obr, const char *path,
@@ -1461,29 +1509,29 @@ mo_value_t mo_predefined_objects_set (void);
 static inline mo_value_t
 mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)
 {
-  if (!mo_dyncast_objref (ob) || !mo_dyncast_objref (obat)
-      || !((mo_objectvalue_ty *) ob)->mo_ob_attrs)
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob || !mo_dyncast_objref (obat) || !pob->mo_ob_attrs)
     return NULL;
-  return mo_assoval_get (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
+  return mo_assoval_get (pob->mo_ob_attrs, obat);
 }                               /* end mo_objref_get_attr */
 
 static inline void
 mo_objref_touch (mo_objref_t ob)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return;
-  time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
+  time (&pob->mo_ob_mtime);
 }                               /* end mo_objref_touch */
 
 static inline void
 mo_objref_remove_attr (mo_objref_t ob, mo_objref_t obat)
 {
-  if (!mo_dyncast_objref (ob) || !mo_dyncast_objref (obat)
-      || !((mo_objectvalue_ty *) ob)->mo_ob_attrs)
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob || !mo_dyncast_objref (obat) || !pob->mo_ob_attrs)
     return;
-  ((mo_objectvalue_ty *) ob)->mo_ob_attrs
-    = mo_assoval_remove (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat);
-  time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
+  pob->mo_ob_attrs = mo_assoval_remove (pob->mo_ob_attrs, obat);
+  time (&pob->mo_ob_mtime);
 }                               /* end mo_objref_remove_attr */
 
 static inline void
@@ -1494,27 +1542,29 @@ mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val)
       mo_objref_remove_attr (ob, obat);
       return;
     }
-  if (!mo_dyncast_objref (ob) || !mo_dyncast_objref (obat))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob || !mo_dyncast_objref (obat))
     return;
-  ((mo_objectvalue_ty *) ob)->mo_ob_attrs
-    = mo_assoval_put (((mo_objectvalue_ty *) ob)->mo_ob_attrs, obat, val);
-  time (&((mo_objectvalue_ty *) ob)->mo_ob_mtime);
+  pob->mo_ob_attrs = mo_assoval_put (pob->mo_ob_attrs, obat, val);
+  time (&pob->mo_ob_mtime);
 }                               /* end mo_objref_put_attr */
 
 static inline mo_value_t
 mo_objref_set_of_attrs (mo_objref_t ob)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return NULL;
-  return mo_assoval_keys_set (((mo_objectvalue_ty *) ob)->mo_ob_attrs);
+  return mo_assoval_keys_set (pob->mo_ob_attrs);
 }                               /* end of mo_objref_set_of_attrs */
 
 static inline mo_value_t
 mo_objref_get_comp (mo_objref_t ob, int rk)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return NULL;
-  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  mo_vectvaldatapayl_ty *vecomp = pob->mo_ob_comps;
   if (!vecomp)
     return NULL;
   return mo_vectval_nth (vecomp, rk);
@@ -1523,9 +1573,10 @@ mo_objref_get_comp (mo_objref_t ob, int rk)
 static inline void
 mo_objref_put_comp (mo_objref_t ob, int rk, mo_value_t va)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return;
-  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  mo_vectvaldatapayl_ty *vecomp = pob->mo_ob_comps;
   if (!vecomp)
     return;
   mo_vectval_put_nth (vecomp, rk, va);
@@ -1534,9 +1585,10 @@ mo_objref_put_comp (mo_objref_t ob, int rk, mo_value_t va)
 static inline unsigned
 mo_objref_comp_count (mo_objref_t ob)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return 0;
-  mo_vectvaldatapayl_ty *vecomp = ((mo_objectvalue_ty *) ob)->mo_ob_comps;
+  mo_vectvaldatapayl_ty *vecomp = pob->mo_ob_comps;
   if (!vecomp)
     return 0;
   return mo_vectval_count (vecomp);
@@ -1545,28 +1597,28 @@ mo_objref_comp_count (mo_objref_t ob)
 static inline void
 mo_objref_comp_resize (mo_objref_t ob, unsigned newsiz)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return;
-  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
-    mo_vectval_resize (((mo_objectvalue_ty *) ob)->mo_ob_comps, newsiz);
+  pob->mo_ob_comps = mo_vectval_resize (pob->mo_ob_comps, newsiz);
 }                               /* end of mo_objref_comp_resize */
 
 static inline void
 mo_objref_comp_reserve (mo_objref_t ob, unsigned gap)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return;
-  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
-    mo_vectval_reserve (((mo_objectvalue_ty *) ob)->mo_ob_comps, gap);
+  pob->mo_ob_comps = mo_vectval_reserve (pob->mo_ob_comps, gap);
 }                               /* end of mo_objref_comp_reserve */
 
 static inline void
 mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
 {
-  if (!mo_dyncast_objref (ob))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (ob);
+  if (!pob)
     return;
-  ((mo_objectvalue_ty *) ob)->mo_ob_comps =
-    mo_vectval_append (((mo_objectvalue_ty *) ob)->mo_ob_comps, va);
+  pob->mo_ob_comps = mo_vectval_append (pob->mo_ob_comps, va);
 }                               /* end of mo_objref_comp_append */
 
 

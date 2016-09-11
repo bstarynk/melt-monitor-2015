@@ -328,6 +328,7 @@ mo_objref_create_hid_loid (mo_hid_t hid, mo_loid_t loid)
 {
   if (hid == 0 && loid == 0)
     return NULL;
+  mo_objectvalue_ty *pob = NULL;
   unsigned bn = mo_hi_id_bucketnum (hid);
   MOM_ASSERTPRINTF (bn > 0 && bn < MOM_HID_BUCKETMAX, "bad bn:%u", bn);
   MOM_ASSERTPRINTF (hid > 0, "bad hid");
@@ -346,23 +347,24 @@ mo_objref_create_hid_loid (mo_hid_t hid, mo_loid_t loid)
   if (obr && obr != MOM_EMPTY_SLOT && obr->mo_ob_hid == hid
       && obr->mo_ob_loid == loid)
     return obr;
-  obr = mom_gc_alloc (sizeof (mo_objectvalue_ty));
-  mom_obuckarr[bn].bu_obarr[pos] = obr;
+  pob = mom_gc_alloc (sizeof (mo_objectvalue_ty));
+  obr = pob;
+  mom_obuckarr[bn].bu_obarr[pos] = pob;
   mom_obuckarr[bn].bu_count = bcnt + 1;
-  ((mo_hashedvalue_ty *) obr)->mo_va_kind = mo_KOBJECT;
-  ((mo_hashedvalue_ty *) obr)->mo_va_index = 0;
-  ((mo_hashedvalue_ty *) obr)->mo_va_hash = h;
-  obr->mo_ob_hid = hid;
-  obr->mo_ob_loid = loid;
-  obr->mo_ob_mtime = 0;
-  obr->mo_ob_class = NULL;
-  obr->mo_ob_attrs = NULL;
-  obr->mo_ob_comps = NULL;
-  obr->mo_ob_paylkind = NULL;
-  obr->mo_ob_payldata = NULL;
-  GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
+  pob->mo_va_kind = mo_KOBJECT;
+  pob->mo_va_index = 0;
+  pob->mo_va_hash = h;
+  pob->mo_ob_hid = hid;
+  pob->mo_ob_loid = loid;
+  pob->mo_ob_mtime = 0;
+  pob->mo_ob_class = NULL;
+  pob->mo_ob_attrs = NULL;
+  pob->mo_ob_comps = NULL;
+  pob->mo_ob_paylkind = NULL;
+  pob->mo_ob_payldata = NULL;
+  GC_REGISTER_FINALIZER_IGNORE_SELF (pob, mom_cleanup_object, NULL, NULL,
                                      NULL);
-  return obr;
+  return pob;
 }                               /* end mo_objref_create_hid_loid */
 
 
@@ -402,20 +404,21 @@ mo_make_object (void)
       if (oldobr && oldobr != MOM_EMPTY_SLOT
           && oldobr && oldobr->mo_ob_hid == hid && oldobr->mo_ob_loid == loid)
         continue;
-      obr = mom_gc_alloc (sizeof (mo_objectvalue_ty));
+      mo_objectvalue_ty *pob =
+        obr = mom_gc_alloc (sizeof (mo_objectvalue_ty));
       mom_obuckarr[bn].bu_obarr[pos] = obr;
       mom_obuckarr[bn].bu_count++;
-      ((mo_hashedvalue_ty *) obr)->mo_va_kind = mo_KOBJECT;
-      ((mo_hashedvalue_ty *) obr)->mo_va_index = 0;
-      ((mo_hashedvalue_ty *) obr)->mo_va_hash = h;
-      obr->mo_ob_hid = hid;
-      obr->mo_ob_loid = loid;
-      time (&obr->mo_ob_mtime);
-      obr->mo_ob_class = NULL;
-      obr->mo_ob_attrs = NULL;
-      obr->mo_ob_comps = NULL;
-      obr->mo_ob_paylkind = NULL;
-      obr->mo_ob_payldata = NULL;
+      pob->mo_va_kind = mo_KOBJECT;
+      pob->mo_va_index = 0;
+      pob->mo_va_hash = h;
+      pob->mo_ob_hid = hid;
+      pob->mo_ob_loid = loid;
+      time (&pob->mo_ob_mtime);
+      pob->mo_ob_class = NULL;
+      pob->mo_ob_attrs = NULL;
+      pob->mo_ob_comps = NULL;
+      pob->mo_ob_paylkind = NULL;
+      pob->mo_ob_payldata = NULL;
       GC_REGISTER_FINALIZER_IGNORE_SELF (obr, mom_cleanup_object, NULL, NULL,
                                          NULL);
     }
@@ -427,10 +430,11 @@ mo_make_object (void)
 void
 mo_objref_really_clear_payload (mo_objref_t obr)
 {
-  if (!mo_dyncast_objref (obr))
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (obr);
+  if (!pob)
     return;
-  mo_objref_t paylkindobr = obr->mo_ob_paylkind;
-  void *payldata = obr->mo_ob_payldata;
+  mo_objref_t paylkindobr = pob->mo_ob_paylkind;
+  void *payldata = pob->mo_ob_payldata;
   momhash_t hpk = mo_objref_hash (paylkindobr);
   if (hpk)
     {
@@ -547,9 +551,9 @@ mom_add_predefined (mo_objectvalue_ty * ob)
 /* define each predefined */
 #define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash)	\
 mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
-  {.mo_va_kind= mo_KOBJECT,			        \
-	  .mo_va_index= mo_SPACE_PREDEF,		\
-	  .mo_va_hash= Hash},				\
+  .mo_va_kind= mo_KOBJECT,			        \
+  .mo_va_index= mo_SPACE_PREDEF,			\
+  .mo_va_hash= Hash,					\
   .mo_ob_mtime= 0,     					\
   .mo_ob_hid= Hid,					\
   .mo_ob_loid= Loid,					\
@@ -566,7 +570,8 @@ mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
 void
 mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
 {
-  if (!mo_dyncast_objref (obr))
+  mo_objectvalue_ty *pob = mo_dyncast_objref (obr);
+  if (!pob)
     return;
   enum mo_space_en oldspa = mo_objref_space (obr);
   if (oldspa == spa)
@@ -581,7 +586,7 @@ mo_objref_put_space (mo_objref_t obr, enum mo_space_en spa)
     {
       mom_predefined_hset = mo_hashset_put (mom_predefined_hset, obr);
     }
-  ((mo_hashedvalue_ty *) obr)->mo_va_index = spa;
+  pob->mo_va_index = spa;
 }                               /* end mo_objref_put_space */
 
 mo_value_t

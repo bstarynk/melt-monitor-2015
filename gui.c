@@ -523,12 +523,11 @@ mom_display_assoval (mo_assovaldatapayl_ty * asso, momgui_dispctxt_ty * pdx,
          3, mom_tag_payload, NULL);
       return;
     }
-  mo_value_t ksetv = mo_assoval_keys_set (asso);
-  unsigned siz = mo_set_size (ksetv);
+  mo_setvalue_ty *kset = (mo_setvalue_ty *) mo_assoval_keys_set (asso);
+  unsigned siz = mo_set_size (kset);
   mo_objref_t *keyarr =
     mom_gc_alloc (mom_prime_above (siz + 1) * sizeof (mo_objref_t));
-  memcpy (keyarr, ((mo_sequencevalue_ty *) ksetv)->mo_seqobj,
-          siz * sizeof (mo_objref_t));
+  memcpy (keyarr, kset->mo_seqobj, siz * sizeof (mo_objref_t));
   if (siz > 1)
     qsort (keyarr, siz, sizeof (mo_objref_t), mom_dispobj_cmp);
   char sizbuf[32];
@@ -577,12 +576,11 @@ mom_display_hashset (mo_hashsetpayl_ty * hset, momgui_dispctxt_ty * pdx,
          3, mom_tag_payload, NULL);
       return;
     }
-  mo_value_t setv = mo_hashset_elements_set (hset);
-  unsigned siz = mo_set_size (setv);
+  mo_setvalue_ty *set = (mo_setvalue_ty *) mo_hashset_elements_set (hset);
+  unsigned siz = mo_set_size (set);
   mo_objref_t *elmarr =
     mom_gc_alloc (mom_prime_above (siz + 1) * sizeof (mo_objref_t));
-  memcpy (elmarr, ((mo_sequencevalue_ty *) setv)->mo_seqobj,
-          siz * sizeof (mo_objref_t));
+  memcpy (elmarr, set->mo_seqobj, siz * sizeof (mo_objref_t));
   if (siz > 1)
     qsort (elmarr, siz, sizeof (mo_objref_t), mom_dispobj_cmp);
   {
@@ -1141,9 +1139,10 @@ void
 mo_gui_generate_object_text_buffer (void)
 {
   MOM_INFORMPRINTF ("generate_object_text_buffer start");
-  mo_value_t dispsetv = mo_assoval_keys_set (momgui_displayed_objasso);
+  mo_setvalue_ty *dispset =
+    (mo_setvalue_ty *) mo_assoval_keys_set (momgui_displayed_objasso);
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
-  unsigned nbdispob = mo_set_size (dispsetv);
+  unsigned nbdispob = mo_set_size (dispset);
   g_hash_table_remove_all (mom_dispobjinfo_hashtable);
   g_hash_table_remove_all (mom_shownobjocc_hashtable);
   momgui_displayed_objasso = mo_assoval_reserve (NULL,
@@ -1159,8 +1158,7 @@ mo_gui_generate_object_text_buffer (void)
   mo_objref_t *objarr =
     mom_gc_alloc (mom_prime_above (nbdispob + 1) * sizeof (mo_objref_t));
   if (nbdispob > 0)
-    memcpy (objarr, ((mo_sequencevalue_ty *) dispsetv)->mo_seqobj,
-            nbdispob * sizeof (mo_objref_t));
+    memcpy (objarr, dispset->mo_seqobj, nbdispob * sizeof (mo_objref_t));
   if (nbdispob > 1)
     qsort (objarr, nbdispob, sizeof (mo_objref_t), mom_dispobj_cmp);
   // display a common title string

@@ -126,9 +126,9 @@ mo_make_string_sprintf (const char *fmt, ...)
 static_assert ((momhash_t) (MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT) != 0,
                "wrong MOM_TUPLE_H1_INIT & MOM_TUPLE_H2_INIT");
 static const mo_sequencevalue_ty mo_empty_tuple = {
-  {.mo_va_kind = mo_KTUPLE,
-   .mo_va_index = 0,
-   .mo_va_hash = (MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT)}
+  .mo_va_kind = mo_KTUPLE,
+  .mo_va_index = 0,
+  .mo_va_hash = (MOM_TUPLE_H1_INIT ^ MOM_TUPLE_H2_INIT)
 };
 
 mo_value_t
@@ -240,9 +240,9 @@ mom_make_sentinel_tuple_ (mo_objref_t ob1, ...)
 static_assert ((momhash_t) (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT) != 0,
                "wrong MOM_SET_H1_INIT & MOM_SET_H2_INIT");
 static const mo_sequencevalue_ty mo_empty_set = {
-  {.mo_va_kind = mo_KSET,
-   .mo_va_index = 0,
-   .mo_va_hash = (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT)}
+  .mo_va_kind = mo_KSET,
+  .mo_va_index = 0,
+  .mo_va_hash = (MOM_SET_H1_INIT ^ MOM_SET_H2_INIT)
 };
 
 
@@ -613,7 +613,7 @@ mo_vectval_reserve (mo_vectvaldatapayl_ty * vect, unsigned gap)
   ((mo_hashedvalue_ty *) newvect)->mo_va_hash =
     (momrand_genrand_int31 () & 0xfffffff) + 2;
   ((mo_sizedvalue_ty *) newvect)->mo_sva_size = newsz;
-  memcpy (newvect->mo_seqval, vect->mo_seqval, cnt);
+  memcpy (newvect->mo_vect_arr, vect->mo_vect_arr, cnt);
   ((mo_countedpayl_ty *) newvect)->mo_cpl_count = cnt;
   return newvect;
 }                               /* end of mo_vectval_reserve */
@@ -636,7 +636,7 @@ mo_vectval_resize (mo_vectvaldatapayl_ty * vect, unsigned newcnt)
     return vect;
   if (newcnt < cnt)
     {
-      memset (vect->mo_seqval + newcnt, 0,
+      memset (vect->mo_vect_arr + newcnt, 0,
               (cnt - newcnt) * sizeof (mo_value_t));
       ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
       if (sz > 100 && newcnt < sz / 3)
@@ -644,7 +644,8 @@ mo_vectval_resize (mo_vectvaldatapayl_ty * vect, unsigned newcnt)
     }
   else if (cnt < newcnt && newcnt < sz)
     {
-      memset (vect->mo_seqval + cnt, 0, (newcnt - cnt) * sizeof (mo_value_t));
+      memset (vect->mo_vect_arr + cnt, 0,
+              (newcnt - cnt) * sizeof (mo_value_t));
       ((mo_countedpayl_ty *) vect)->mo_cpl_count = newcnt;
     }
   else
@@ -664,7 +665,7 @@ mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
     {
       vect = mo_vectval_reserve (NULL, 4);
       ((mo_countedpayl_ty *) vect)->mo_cpl_count = 1;
-      vect->mo_seqval[0] = val;
+      vect->mo_vect_arr[0] = val;
       return vect;
     };
   unsigned sz = ((mo_sizedvalue_ty *) vect)->mo_sva_size;
@@ -673,12 +674,12 @@ mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u not less than sz %u", cnt, sz);
   if (cnt + 1 <= sz)
     {
-      vect->mo_seqval[cnt] = val;
+      vect->mo_vect_arr[cnt] = val;
       ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt + 1;
       return vect;
     }
   vect = mo_vectval_reserve (vect, 5 + cnt / 4 + cnt / 32);
-  vect->mo_seqval[cnt] = val;
+  vect->mo_vect_arr[cnt] = val;
   ((mo_countedpayl_ty *) vect)->mo_cpl_count = cnt;
   return vect;
 }                               /* end of mo_vectval_append */
@@ -696,7 +697,7 @@ mo_dump_scan_vectval (mo_dumper_ty * du, mo_vectvaldatapayl_ty * vect)
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u not less than sz %u", cnt, sz);
   for (unsigned ix = 0; ix < cnt; ix++)
     {
-      mo_value_t valv = vect->mo_seqval[ix];
+      mo_value_t valv = vect->mo_vect_arr[ix];
       mo_dump_scan_value (du, valv);
     }
 }                               /* end of mo_dump_scan_vectval */
@@ -715,7 +716,7 @@ mo_dump_json_of_vectval (mo_dumper_ty * du, mo_vectvaldatapayl_ty * vect)
   json_t *jarr = json_array ();
   for (unsigned ix = 0; ix < cnt; ix++)
     {
-      mo_value_t valv = vect->mo_seqval[ix];
+      mo_value_t valv = vect->mo_vect_arr[ix];
       mo_objref_t valobr = mo_dyncast_objref (valv);
       if (valobr && !mo_dump_is_emitted_objref (du, valobr))
         json_array_append_new (jarr, json_null ());
