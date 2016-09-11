@@ -1140,7 +1140,7 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 void
 mo_gui_generate_object_text_buffer (void)
 {
-  MOM_BACKTRACEPRINTF ("generate_object_text_buffer start");
+  MOM_INFORMPRINTF ("generate_object_text_buffer start");
   mo_value_t dispsetv = mo_assoval_keys_set (momgui_displayed_objasso);
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
   unsigned nbdispob = mo_set_size (dispsetv);
@@ -1784,6 +1784,12 @@ momgui_objhash (const void *ob)
 }                               /* end momgui_objhash */
 
 void
+momgui_begin_running (void)
+{
+  MOM_INFORMPRINTF ("momgui_begin_running");
+}                               /* end of momgui_begin_running */
+
+void
 mom_run_gtk (int *pargc, char ***pargv)
 {
   int sta = 0;
@@ -1801,6 +1807,7 @@ mom_run_gtk (int *pargc, char ***pargv)
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
+  momgui_begin_running ();
   sta = g_application_run (G_APPLICATION (mom_gtkapp), *pargc, *pargv);
   if (sta)
     MOM_WARNPRINTF ("Running GTK app gave %d", sta);

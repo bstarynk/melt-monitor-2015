@@ -29,6 +29,10 @@
 #define HAVE_PTHREADS 1
 #define MOM_GETTEXT_PACKAGE "monimelt"
 
+// we require the -fms-extensions compiler flag.
+// See https://gcc.gnu.org/onlinedocs/gcc/Unnamed-Fields.html
+#define MOM_MSEXTEND
+
 #include <features.h>           // GNU things
 #include <assert.h>
 #include <stdio.h>
@@ -575,7 +579,7 @@ mo_kind_of_value (mo_value_t v)
 typedef struct mo_sizedvalue_st mo_sizedvalue_ty;
 struct mo_sizedvalue_st
 {
-  struct mo_hashedvalue_st _mo;
+  struct mo_hashedvalue_st;
   uint32_t mo_sva_size;
 };
 
@@ -592,7 +596,7 @@ mo_size_of_value (mo_value_t v)
 typedef struct mo_stringvalue_st mo_stringvalue_ty;
 struct mo_stringvalue_st
 {
-  struct mo_sizedvalue_st _mo;
+  struct mo_sizedvalue_st MOM_MSEXTEND;
   char mo_cstr[];               // allocated size is mo_sva_size+1
 };
 mo_value_t mo_make_string_len (const char *buf, int sz);
@@ -651,7 +655,7 @@ mo_string_size (mo_value_t v)
 typedef struct mo_sequencevalue_st mo_sequencevalue_ty;
 struct mo_sequencevalue_st
 {
-  struct mo_sizedvalue_st _mo;
+  struct mo_sizedvalue_st MOM_MSEXTEND;
   mo_objref_t mo_seqobj[];
 };
 
@@ -740,7 +744,7 @@ mo_sequence_put (mo_sequencevalue_ty * seq, unsigned ix, mo_objref_t oref)
 typedef struct mo_tuplevalue_st mo_tuplevalue_ty;
 struct mo_tuplevalue_st
 {
-  struct mo_sequencevalue_st _mo;
+  struct mo_sequencevalue_st MOM_MSEXTEND;
 };
 /*** creating a tuple with statement expr
   {( mo_sequencevalue_ty* _sq = mo_sequence_allocate(3);
@@ -800,7 +804,7 @@ mo_tuple_nth (mo_value_t vs, int rk)
 typedef struct mo_setvalue_st mo_setvalue_ty;
 struct mo_setvalue_st
 {
-  struct mo_sequencevalue_st _mo;
+  struct mo_sequencevalue_st MOM_MSEXTEND;
 };
 
 
@@ -912,7 +916,7 @@ enum mo_space_en
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 struct mo_objectvalue_st
 {
-  struct mo_hashedvalue_st _mo;
+  struct mo_hashedvalue_st MOM_MSEXTEND;
   /// actually, we dont need mutexes before the bootstrap
   /// pthread_mutex_t mo_ob_mtx;
   time_t mo_ob_mtime;
@@ -1027,7 +1031,7 @@ mo_objref_clear_payload (mo_objref_t obr)
 typedef struct mo_countedpayl_st mo_countedpayl_ty;
 struct mo_countedpayl_st
 {
-  struct mo_sizedvalue_st _mo;
+  struct mo_sizedvalue_st MOM_MSEXTEND;
   uint32_t mo_cpl_count;
 };
 
@@ -1039,7 +1043,7 @@ struct mo_assoentry_st
 };
 struct mo_assovaldatapayl_st
 {
-  struct mo_countedpayl_st _mo;
+  struct mo_countedpayl_st MOM_MSEXTEND;
   struct mo_assoentry_st mo_seqent[];
 };
 
@@ -1087,7 +1091,7 @@ mo_assovaldatapayl_ty *mo_assoval_of_json (mo_json_t);
 /******************** VECTVALs payload ****************/
 struct mo_vectvaldatapayl_st
 {
-  struct mo_countedpayl_st _mo;
+  struct mo_countedpayl_st MOM_MSEXTEND;
   mo_value_t mo_seqval[];
 };
 
@@ -1168,7 +1172,7 @@ mo_vectvaldatapayl_ty *mo_vectval_of_json (mo_json_t);
 typedef struct mo_hashsetpayl_st mo_hashsetpayl_ty;
 struct mo_hashsetpayl_st
 {
-  struct mo_countedpayl_st _mo;
+  struct mo_countedpayl_st MOM_MSEXTEND;
   mo_objref_t mo_hsetarr[];
 };
 
@@ -1225,7 +1229,7 @@ struct mo_listelem_st
 };
 struct mo_listpayl_st
 {
-  mo_hashedvalue_ty _mo;
+  mo_hashedvalue_ty MOM_MSEXTEND;
   mo_listelem_ty *mo_lip_first;
   mo_listelem_ty *mo_lip_last;
 };
@@ -1327,12 +1331,12 @@ typedef struct mo_bufferpayl_st mo_bufferpayl_ty;
 struct mo_bufferpayl_st
 {
   // malloc-ed
-  mo_hashedvalue_ty _mo;
+  mo_hashedvalue_ty MOM_MSEXTEND;
   unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */
   char *mo_buffer_zone;
   size_t mo_buffer_size;
   FILE *mo_buffer_memstream;
-};
+};                              /* end struct mo_bufferpayl_st */
 
 bool mo_objref_open_file (mo_objref_t obr, const char *path,
                           const char *mods);

@@ -547,7 +547,7 @@ mom_add_predefined (mo_objectvalue_ty * ob)
 /* define each predefined */
 #define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash)	\
 mo_objectvalue_ty MOM_VARPREDEF(Nam) = {		\
-  ._mo = {.mo_va_kind= mo_KOBJECT,			\
+  {.mo_va_kind= mo_KOBJECT,			        \
 	  .mo_va_index= mo_SPACE_PREDEF,		\
 	  .mo_va_hash= Hash},				\
   .mo_ob_mtime= 0,     					\
