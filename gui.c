@@ -162,7 +162,17 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
                        mo_objref_pnamestr (shoc->mo_gso_showobr));
   momgui_shown_obocchset =      //
     mo_hashset_remove (momgui_shown_obocchset, shoc->mo_gso_showobr);
-  g_clear_object (&shoc->mo_gso_txtag);
+  if (shoc->mo_gso_txtag)
+    {
+      GtkTextIter itstart = { };
+      GtkTextIter itend = { };
+      gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                                  &itend);
+      gtk_text_buffer_remove_tag (GTK_TEXT_BUFFER (mom_cmdtextbuf),
+                                  shoc->mo_gso_txtag, &itstart, &itend);
+      gtk_text_tag_table_remove (mom_tagtable, shoc->mo_gso_txtag);
+      shoc->mo_gso_txtag = NULL;
+    }
   memset (shoc, 0, sizeof (*shoc));
   MOM_INFORMPRINTF ("destroy_shownobocc shoc@%p free", shoc);
   free (shoc);
