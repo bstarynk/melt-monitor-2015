@@ -1660,7 +1660,7 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
 ////////////////////////////////////////////////////////////////
 /**** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;
-void mom_run_gtk (int *pargc, char ***pargv);
+void mom_run_gtk (int *pargc, char ***pargv, char **dispobjs);
 void mo_gui_display_object (mo_objref_t ob);
 void mo_gui_undisplay_object (mo_objref_t ob);
 

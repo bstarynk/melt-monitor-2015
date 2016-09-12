@@ -1101,6 +1101,7 @@ static gboolean no_gui_mom;
 static char *initrand_mom;
 static char **predef_names_mom;
 static char **predef_comments_mom;
+static char **displayed_objects_mom;
 static char **plugins_mom;
 static int bench_count_mom;
 static const GOptionEntry mom_goptions[] = {
@@ -1116,6 +1117,9 @@ static const GOptionEntry mom_goptions[] = {
    &predef_names_mom, "add predefined of name N with comment C", "N"},
   {"comment-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
    &predef_comments_mom, "comment string C for predefined of name N", "C"},
+  {"dispobj", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
+   &displayed_objects_mom, "display object O thru the graphical interface",
+   "O"},
   {"bench", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_INT,
    &bench_count_mom, "benchmark count B", "B"},
   {"plugin", 'P', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
@@ -1651,7 +1655,7 @@ main (int argc_main, char **argv_main)
         ("monimelt don't run the GTK graphical interface (-N | --no-gui)");
     }
   else
-    mom_run_gtk (&argc, &argv);
+    mom_run_gtk (&argc, &argv, displayed_objects_mom);
   if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
     MOM_INFORMPRINTF
       ("monimelt explicitly not dumping because of program argument -d- or --dump -");

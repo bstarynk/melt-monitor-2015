@@ -1862,7 +1862,7 @@ momgui_begin_running (void)
 }                               /* end of momgui_begin_running */
 
 void
-mom_run_gtk (int *pargc, char ***pargv)
+mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 {
   int sta = 0;
   mom_gquark = g_quark_from_static_string ("monimelt");
@@ -1878,6 +1878,38 @@ mom_run_gtk (int *pargc, char ***pargv)
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
+  if (dispobjects)
+    {
+      int nbdisp = 0;
+      for (const char **pobn = dispobjects; *pobn; pobn++)
+        nbdisp++;
+      momgui_displayed_objasso =
+        mo_assoval_reserve (momgui_displayed_objasso, 2 * nbdisp + 3);
+      for (const char **pobn = dispobjects; *pobn; pobn++)
+        {
+          char *curdispname = *pobn;
+          mo_hid_t hid = 0;
+          mo_loid_t loid = 0;
+          mo_objref_t dispobr = NULL;
+          if (mom_valid_name (curdispname))
+            {
+              dispobr = mo_find_named_cstr (curdispname);
+            }
+          else if (curdispname[0] == '_'
+                   && mo_get_hi_lo_ids_from_cstring (&hid, &loid,
+                                                     curdispname))
+            {
+              dispobr = mo_objref_find_hid_loid (&hid, &loid);
+            }
+          else
+            MOM_FATAPRINTF ("invalid display name %s", curdispname);
+          if (!dispobr)
+            MOM_FATAPRINTF ("cannot find displayed object %s", curdispname);
+          momgui_displayed_objasso =
+            mo_assoval_put (momgui_displayed_objasso, dispobr,
+                            mo_int_to_value (MOMGUI_INITIAL_DEPTH));
+        }
+    }
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
   momgui_begin_running ();
   sta = g_application_run (G_APPLICATION (mom_gtkapp), *pargc, *pargv);
