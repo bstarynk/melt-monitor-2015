@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 06 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 12 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -39,6 +39,7 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('test_anonobj','_8IG2urKXlX26sabsc');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 ---- TABLE t_objects @@@@@@@
@@ -53,7 +54,13 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    }
   ]
  },
- "comps": null
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_8IG2urKXlX26sabsc"
+   }
+  ]
+ }
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
@@ -70,6 +77,50 @@ INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1aB8A7pK2BZbU0MNe',1473692628,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon2obj for GUI testing"
+   },
+   {
+    "at": "_8IG2urKXlX26sabsc",
+    "va": {
+     "oid": "_3iu094Gzo2p4AcpgP"
+    }
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_3iu094Gzo2p4AcpgP"
+   }
+  ]
+ }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1ue34NuRLMLWV5Tet',1473692628,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon1obj for GUI testing"
+   },
+   {
+    "at": "_8IG2urKXlX26sabsc",
+    "va": {
+     "oid": "_1aB8A7pK2BZbU0MNe"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
 {
  "@name": "module_class",
@@ -78,6 +129,19 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3iu094Gzo2p4AcpgP',1473692628,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon3obj for GUI testing"
    }
   ]
  },
@@ -236,6 +300,26 @@ INSERT INTO t_objects VALUES('_8D28gj8akGrJyyzei',1473102098,'
   ]
  },
  "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8IG2urKXlX26sabsc',1473692628,'
+{
+ "@name": "test_anonobj",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "to test anonymous GUI display"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_1ue34NuRLMLWV5Tet"
+   }
+  ]
+ }
 }
 ','','','','');
 ---- TABLE t_modules @@@@@@@
