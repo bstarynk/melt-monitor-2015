@@ -98,11 +98,11 @@ struct momgui_dispobjinfo_st
   // the start and end mark of the text buffer slice displaying that object
   GtkTextMark *mo_gdo_startmark;
   GtkTextMark *mo_gdo_endmark;
-  // the anchor for the hide minibutton
-  GtkTextChildAnchor *mo_gdo_hideanchor;
-  // the hide minibutton in tview1 & tview2
-  GtkWidget *mo_gdo_hidebutton1;
-  GtkWidget *mo_gdo_hidebutton2;
+  // the anchor for the hidezoom minibutton
+  GtkTextChildAnchor *mo_gdo_hidezoomanchor;
+  // the hidezoom minibutton in tview1 & tview2
+  GtkWidget *mo_gdo_hidezoombutton1;
+  GtkWidget *mo_gdo_hidezoombutton2;
 };
 typedef struct momgui_dispctxt_st momgui_dispctxt_ty;
 #define MOMGUI_DISPCTXT_MAGIC 0x38a104bdU       /*950076605u */
@@ -144,15 +144,15 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
                        mo_objref_pnamestr (dinf->mo_gdo_inobr));
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dinf->mo_gdo_dispobr);
-  if (dinf->mo_gdo_hidebutton1)
+  if (dinf->mo_gdo_hidezoombutton1)
     {
-      gtk_widget_destroy (dinf->mo_gdo_hidebutton1);
-      dinf->mo_gdo_hidebutton1 = NULL;
+      gtk_widget_destroy (dinf->mo_gdo_hidezoombutton1);
+      dinf->mo_gdo_hidezoombutton1 = NULL;
     }
-  if (dinf->mo_gdo_hidebutton2)
+  if (dinf->mo_gdo_hidezoombutton2)
     {
-      gtk_widget_destroy (dinf->mo_gdo_hidebutton2);
-      dinf->mo_gdo_hidebutton2 = NULL;
+      gtk_widget_destroy (dinf->mo_gdo_hidezoombutton2);
+      dinf->mo_gdo_hidezoombutton2 = NULL;
     }
   if (dinf->mo_gdo_startmark && dinf->mo_gdo_endmark
       && !gtk_text_mark_get_deleted (dinf->mo_gdo_startmark)
@@ -1010,10 +1010,10 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, FALSE);
   gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
-  MOM_ASSERTPRINTF (dinf->mo_gdo_hideanchor == NULL,
-                    "dinf got mo_gdo_hideanchor");
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hidezoomanchor == NULL,
+                    "dinf got mo_gdo_hidezoomanchor");
   {
-    dinf->mo_gdo_hideanchor =
+    dinf->mo_gdo_hidezoomanchor =
       gtk_text_buffer_create_child_anchor (mom_obtextbuf, piter);
     GtkTextIter afterhidit = *piter;
     GtkTextIter beforehidit = afterhidit;
@@ -1021,28 +1021,29 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     gtk_text_buffer_apply_tag (mom_obtextbuf, curobjtitletag, &beforehidit,
                                &afterhidit);
   }
-  MOM_ASSERTPRINTF (dinf->mo_gdo_hidebutton1 == NULL,
-                    "dinf got mo_gdo_hidebutton1");
-  MOM_ASSERTPRINTF (dinf->mo_gdo_hidebutton2 == NULL,
-                    "dinf got mo_gdo_hidebutton2");
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hidezoombutton1 == NULL,
+                    "dinf got mo_gdo_hidezoombutton1");
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hidezoombutton2 == NULL,
+                    "dinf got mo_gdo_hidezoombutton2");
   // see https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
   /** On Linux see also icons in /usr/share/icons/ e.g.
       /usr/share/icons/oxygen/base/16x16/actions/gtk-close.png or
       /usr/share/icons/gnome-colors-common/scalable/actions/gtk-close.svg
    **/
   /// perhaps we might embed some SVG icon in the code???
-  dinf->mo_gdo_hidebutton1 =
-    gtk_button_new_from_icon_name ("stock_delete", GTK_ICON_SIZE_BUTTON);
-  dinf->mo_gdo_hidebutton2 =
+  dinf->mo_gdo_hidezoombutton1 = gtk_button_new_with_label ("\360\237\221\211");        //U+1F449 WHITE RIGHT POINTING BACKHAND INDEX 👉
+  // we probably should show a menu about that
+  //gtk_button_new_from_icon_name ("stock_delete", GTK_ICON_SIZE_BUTTON);
+  dinf->mo_gdo_hidezoombutton2 =
     gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
   gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview1),
-                                     dinf->mo_gdo_hidebutton1,
-                                     dinf->mo_gdo_hideanchor);
+                                     dinf->mo_gdo_hidezoombutton1,
+                                     dinf->mo_gdo_hidezoomanchor);
   gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview2),
-                                     dinf->mo_gdo_hidebutton2,
-                                     dinf->mo_gdo_hideanchor);
-  gtk_widget_show (dinf->mo_gdo_hidebutton1);
-  gtk_widget_show (dinf->mo_gdo_hidebutton2);
+                                     dinf->mo_gdo_hidezoombutton2,
+                                     dinf->mo_gdo_hidezoomanchor);
+  gtk_widget_show (dinf->mo_gdo_hidezoombutton1);
+  gtk_widget_show (dinf->mo_gdo_hidezoombutton2);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
