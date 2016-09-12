@@ -1026,8 +1026,13 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
   MOM_ASSERTPRINTF (dinf->mo_gdo_hidebutton2 == NULL,
                     "dinf got mo_gdo_hidebutton2");
   // see https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
+  /** On Linux see also icons in /usr/share/icons/ e.g.
+      /usr/share/icons/oxygen/base/16x16/actions/gtk-close.png or
+      /usr/share/icons/gnome-colors-common/scalable/actions/gtk-close.svg
+   **/
+  /// perhaps we might embed some SVG icon in the code???
   dinf->mo_gdo_hidebutton1 =
-    gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
+    gtk_button_new_from_icon_name ("stock_delete", GTK_ICON_SIZE_BUTTON);
   dinf->mo_gdo_hidebutton2 =
     gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
   gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview1),
