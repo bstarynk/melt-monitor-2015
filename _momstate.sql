@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 06 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 12 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -39,6 +39,7 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 ---- TABLE t_objects @@@@@@@
@@ -53,7 +54,13 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    }
   ]
  },
- "comps": null
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_3J97bCYloYmmXuCR1"
+   }
+  ]
+ }
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
@@ -70,6 +77,31 @@ INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_3J97bCYloYmmXuCR1",
+    "va": {
+     "oid": "_5Xq6uG5cYt456E98W"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon2obj for GUI testing"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_5Xq6uG5cYt456E98W"
+   }
+  ]
+ }
+}
+','','','','');
 INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
 {
  "@name": "module_class",
@@ -82,6 +114,26 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
   ]
  },
  "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3J97bCYloYmmXuCR1',1473701710,'
+{
+ "@name": "test_anonobj",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "to test anonymous GUI display"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_8vY2GjybG9SSjrgKU"
+   }
+  ]
+ }
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'
@@ -168,6 +220,19 @@ INSERT INTO t_objects VALUES('_5JG8lVw6jwlUT7PLK',1473050875,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon3obj for GUI testing"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473159222,'
 {
  "@name": "the_GUI",
@@ -232,6 +297,25 @@ INSERT INTO t_objects VALUES('_8D28gj8akGrJyyzei',1473102098,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for JSON payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8vY2GjybG9SSjrgKU',1473701710,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_3J97bCYloYmmXuCR1",
+    "va": {
+     "oid": "_1Ks2XkEjfBfcFh5WJ"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "our anon1obj for GUI testing"
    }
   ]
  },
