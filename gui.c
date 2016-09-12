@@ -98,6 +98,11 @@ struct momgui_dispobjinfo_st
   // the start and end mark of the text buffer slice displaying that object
   GtkTextMark *mo_gdo_startmark;
   GtkTextMark *mo_gdo_endmark;
+  // the anchor for the hide minibutton
+  GtkTextChildAnchor *mo_gdo_hideanchor;
+  // the hide minibutton in tview1 & tview2
+  GtkWidget *mo_gdo_hidebutton1;
+  GtkWidget *mo_gdo_hidebutton2;
 };
 typedef struct momgui_dispctxt_st momgui_dispctxt_ty;
 #define MOMGUI_DISPCTXT_MAGIC 0x38a104bdU       /*950076605u */
@@ -132,25 +137,47 @@ static GHashTable *mom_shownobjocc_hashtable;
 
 // destructor for momgui_dispobjinfo_ty, for g_hash_table_new_full
 static void
-mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
+mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
 {
-  MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dispobi@%p dispobr=%s inobr=%s",
-                       dispobi, mo_objref_pnamestr (dispobi->mo_gdo_dispobr),
-                       mo_objref_pnamestr (dispobi->mo_gdo_inobr));
+  MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dinf@%p dispobr=%s inobr=%s",
+                       dinf, mo_objref_pnamestr (dinf->mo_gdo_dispobr),
+                       mo_objref_pnamestr (dinf->mo_gdo_inobr));
   momgui_displayed_objasso =    //
-    mo_assoval_remove (momgui_displayed_objasso, dispobi->mo_gdo_dispobr);
-  if (dispobi->mo_gdo_startmark)
+    mo_assoval_remove (momgui_displayed_objasso, dinf->mo_gdo_dispobr);
+  if (dinf->mo_gdo_hidebutton1)
     {
-      gtk_text_buffer_delete_mark (mom_obtextbuf, dispobi->mo_gdo_startmark);
-      dispobi->mo_gdo_startmark = NULL;
+      gtk_widget_destroy (dinf->mo_gdo_hidebutton1);
+      dinf->mo_gdo_hidebutton1 = NULL;
     }
-  if (dispobi->mo_gdo_endmark)
+  if (dinf->mo_gdo_hidebutton2)
     {
-      gtk_text_buffer_delete_mark (mom_obtextbuf, dispobi->mo_gdo_endmark);
-      dispobi->mo_gdo_endmark = NULL;
+      gtk_widget_destroy (dinf->mo_gdo_hidebutton2);
+      dinf->mo_gdo_hidebutton2 = NULL;
+    }
+  if (dinf->mo_gdo_startmark && dinf->mo_gdo_endmark
+      && !gtk_text_mark_get_deleted (dinf->mo_gdo_startmark)
+      && !gtk_text_mark_get_deleted (dinf->mo_gdo_endmark))
+    {
+      GtkTextIter startobit = { };
+      GtkTextIter endobit = { };
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startobit,
+                                        dinf->mo_gdo_startmark);
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &endobit,
+                                        dinf->mo_gdo_endmark);
+      gtk_text_buffer_delete (mom_obtextbuf, &startobit, &endobit);
+    }
+  if (dinf->mo_gdo_startmark)
+    {
+      gtk_text_buffer_delete_mark (mom_obtextbuf, dinf->mo_gdo_startmark);
+      dinf->mo_gdo_startmark = NULL;
+    }
+  if (dinf->mo_gdo_endmark)
+    {
+      gtk_text_buffer_delete_mark (mom_obtextbuf, dinf->mo_gdo_endmark);
+      dinf->mo_gdo_endmark = NULL;
     };
-  memset (dispobi, 0, sizeof (*dispobi));
-  free (dispobi);
+  memset (dinf, 0, sizeof (*dinf));
+  free (dinf);
 }                               /* end of mom_destroy_dispobjinfo */
 
 static void
@@ -967,7 +994,8 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                     && maxdepth <= MOMGUI_MAX_DEPTH,
                     "bad depth:%d maxdepth:%d MOMGUI_MAX_DEPTH:%d", depth,
                     maxdepth, MOMGUI_MAX_DEPTH);
-  momgui_dispobjinfo_ty *curdisp = NULL;
+  momgui_dispobjinfo_ty *dinf = pdx->mo_gdx_dispinfo;
+  MOM_ASSERTPRINTF (dinf != NULL, "bad dinf");
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
   MOM_ASSERTPRINTF (depth >= 0 && depth <= maxdepth
@@ -976,8 +1004,40 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                     maxdepth, MOMGUI_MAX_DEPTH);
   GtkTextTag *curobjtitletag =
     (depth == 0) ? mom_tag_objtitle : mom_tag_objsubtitle;
+  MOM_ASSERTPRINTF (dinf->mo_gdo_startmark == NULL,
+                    "dinf got mo_gdo_startmark");
+  dinf->mo_gdo_startmark =
+    gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, FALSE);
   gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hideanchor == NULL,
+                    "dinf got mo_gdo_hideanchor");
+  {
+    dinf->mo_gdo_hideanchor =
+      gtk_text_buffer_create_child_anchor (mom_obtextbuf, piter);
+    GtkTextIter afterhidit = *piter;
+    GtkTextIter beforehidit = afterhidit;
+    gtk_text_iter_backward_cursor_position (&beforehidit);
+    gtk_text_buffer_apply_tag (mom_obtextbuf, curobjtitletag, &beforehidit,
+                               &afterhidit);
+  }
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hidebutton1 == NULL,
+                    "dinf got mo_gdo_hidebutton1");
+  MOM_ASSERTPRINTF (dinf->mo_gdo_hidebutton2 == NULL,
+                    "dinf got mo_gdo_hidebutton2");
+  // see https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
+  dinf->mo_gdo_hidebutton1 =
+    gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
+  dinf->mo_gdo_hidebutton2 =
+    gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
+  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview1),
+                                     dinf->mo_gdo_hidebutton1,
+                                     dinf->mo_gdo_hideanchor);
+  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview2),
+                                     dinf->mo_gdo_hidebutton2,
+                                     dinf->mo_gdo_hideanchor);
+  gtk_widget_show (dinf->mo_gdo_hidebutton1);
+  gtk_widget_show (dinf->mo_gdo_hidebutton2);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
@@ -1146,6 +1206,9 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
       mom_display_objpayload (obr, pdx, depth);
     }
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+  MOM_ASSERTPRINTF (dinf->mo_gdo_endmark == NULL, "dinf got mo_gdo_endmark");
+  dinf->mo_gdo_endmark =
+    gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, TRUE);
 }                               /* end mom_display_the_object */
 
 
@@ -1215,9 +1278,6 @@ mo_gui_generate_object_text_buffer (void)
       dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
-      GtkTextMark *startobmark =
-        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
-                                     &dispctx.mo_gdx_iter, false);
       mo_objref_t curobj = objarr[ix];
       dispctx.mo_gdx_obr = curobj;
       MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
@@ -1233,18 +1293,14 @@ mo_gui_generate_object_text_buffer (void)
       momgui_displayed_objasso =
         mo_assoval_put (momgui_displayed_objasso, curobj,
                         mo_int_to_value (maxdepth));
-      mom_display_ctx_object (&dispctx, 0);
-      GtkTextMark *endobmark =
-        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
-                                     &dispctx.mo_gdx_iter, false);
       momgui_dispobjinfo_ty *di = calloc (1, sizeof (momgui_dispobjinfo_ty));
       if (!di)
         MOM_FATAPRINTF ("failed to allocate display info for ix#%d", ix);
       di->mo_gdo_dispobr = curobj;
       di->mo_gdo_inobr = NULL;
-      di->mo_gdo_startmark = startobmark;
-      di->mo_gdo_endmark = endobmark;
       g_hash_table_insert (mom_dispobjinfo_hashtable, curobj, di);
+      dispctx.mo_gdx_dispinfo = di;
+      mom_display_ctx_object (&dispctx, 0);
 #warning FIXME: we should have some way to remove one displayed object
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
     }
