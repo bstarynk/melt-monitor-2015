@@ -502,7 +502,8 @@ mo_value_is_int (mo_value_t p)
 static inline mo_int_t
 mo_value_to_int (mo_value_t p, mo_int_t def)
 {
-  return mo_value_is_int (p) ? (intptr_t) p / 2 : def;
+  return mo_value_is_int (p) ? ((((intptr_t) p) & (intptr_t) (~(1ULL))) /
+                                2) : def;
 }
 
 static inline mo_value_t
