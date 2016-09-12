@@ -22,10 +22,6 @@
 
 #define MOM_ASSOVAL_SMALLTHRESHOLD 8    // below that size, seek sequentially
 
-/* in commit 31d058a4f8ffe99d7... we have a bug with
-   asso->mo_seqent[0].mo_asso_val containing (void*)2 */
-#define MOM_BUGGYASSO(Asso) \
-  ("buggyasso" != NULL && (Asso)->mo_asso_entarr[0].mo_asso_val==(mo_value_t)0x2)
 
 static_assert (sizeof (mo_countedpayl_ty) <= sizeof (mo_assovaldatapayl_ty),
                "wrong size countedpayl vs assovaldatapayl");
@@ -106,7 +102,6 @@ mo_assoval_get (mo_assovaldatapayl_ty * asso, mo_objref_t obr)
     return NULL;
   if (mo_dyncast_objref (obr) == NULL)
     return NULL;
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   int pos = mom_assoval_index (asso, obr);
   if (pos < 0)
     return NULL;
@@ -143,12 +138,10 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       asso->mo_cpl_count = 1;
       asso->mo_asso_entarr[0].mo_asso_obr = obr;
       asso->mo_asso_entarr[0].mo_asso_val = va;
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }                           // end if NULL asso
   unsigned sz = asso->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   unsigned cnt = asso->mo_cpl_count;
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u above sz %u", cnt, sz);
   if (sz < MOM_ASSOVAL_SMALLTHRESHOLD && cnt + 1 < sz)
@@ -165,12 +158,10 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
           asso->mo_asso_entarr[pos].mo_asso_val = va;
           asso->mo_cpl_count = cnt + 1;
         }
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }                           // end if small and fits
   else if (4 * cnt + 3 < 3 * sz)
     {                           // 3/4-th full, don't need to grow
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       int pos = mom_assoval_index (asso, obr);
       MOM_ASSERTPRINTF (pos >= 0
                         && pos < (int) sz, "wrong pos %d, sz=%u,cnt=%u", pos,
@@ -183,7 +174,6 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
           asso->mo_asso_entarr[pos].mo_asso_val = va;
           asso->mo_cpl_count = cnt + 1;
         }
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }                           // no more than 3/4-th full
   else
@@ -193,9 +183,7 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
       unsigned gap = 2 + cnt / 64;
       if (cnt > 100)
         gap += cnt / 16 + cnt / 32 + 9;
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       asso = mo_assoval_reserve (asso, gap);
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       sz = asso->mo_sva_size;
       MOM_ASSERTPRINTF (oldsz < sz,
                         "oldsz=%u not less than sz=%u oldcnt=%u gap=%u",
@@ -217,7 +205,6 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
           asso->mo_asso_entarr[pos].mo_asso_val = va;
           asso->mo_cpl_count = cnt + 1;
         }
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }
 }                               /* end mo_assoval_put */
@@ -234,7 +221,6 @@ mo_assoval_remove (mo_assovaldatapayl_ty * asso, mo_objref_t obr)
     return asso;
   unsigned sz = asso->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   int pos = mom_assoval_index (asso, obr);
   if (pos < 0)
     return asso;
@@ -250,9 +236,8 @@ mo_assoval_remove (mo_assovaldatapayl_ty * asso, mo_objref_t obr)
       cnt--;
     };
   if (2 * cnt < sz + 4 && sz > 2 * MOM_ASSOVAL_SMALLTHRESHOLD)
-    asso = mo_assoval_reserve (asso, cnt / 8 
-			       + MOM_ASSOVAL_SMALLTHRESHOLD/4 + 1);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
+    asso = mo_assoval_reserve (asso, cnt / 8
+                               + MOM_ASSOVAL_SMALLTHRESHOLD / 4 + 1);
   return asso;
 }                               /* end mo_assoval_remove */
 
@@ -278,10 +263,8 @@ mo_assoval_reserve (mo_assovaldatapayl_ty * asso, unsigned gap)
       asso->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
       asso->mo_sva_size = sz;
       asso->mo_cpl_count = 0;
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   unsigned sz = asso->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   unsigned cnt = asso->mo_cpl_count;
@@ -329,10 +312,6 @@ mo_assoval_reserve (mo_assovaldatapayl_ty * asso, unsigned gap)
   MOM_ASSERTPRINTF (newcount == cnt,
                     "count corruption newcount=%u cnt=%u", newcount, cnt);
   newasso->mo_cpl_count = newcount;
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (newasso),
-                    "buggy newasso@%p for asso@%p", newasso, asso);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p with newasso@%p",
-                    asso, newasso);
   return newasso;
 }                               /* end of mo_assoval_reserve */
 
@@ -343,7 +322,6 @@ mo_assoval_keys_set (mo_assovaldatapayl_ty * asso)
   asso = mo_dyncastpayl_assoval (asso);
   if (!asso)
     return NULL;
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   unsigned sz = asso->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
   unsigned cnt = asso->mo_cpl_count;
@@ -366,7 +344,6 @@ mo_assoval_keys_set (mo_assovaldatapayl_ty * asso)
       sq->mo_seqobj[nb++] = oldobr;
     }
   MOM_ASSERTPRINTF (nb == cnt, "cnt %u not same as nb %u", cnt, nb);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   return mo_make_set_closeq (sq);
 }
 
@@ -378,7 +355,6 @@ mo_dump_scan_assoval (mo_dumper_ty * du, mo_assovaldatapayl_ty * asso)
   MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
   unsigned sz = asso->mo_sva_size;
   MOM_ASSERTPRINTF (sz > 2, "too low sz=%u", sz);
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   unsigned cnt = asso->mo_cpl_count;
   MOM_ASSERTPRINTF (cnt <= sz, "cnt %u above sz %u", cnt, sz);
   if (cnt == 0)
@@ -396,7 +372,6 @@ mo_dump_scan_assoval (mo_dumper_ty * du, mo_assovaldatapayl_ty * asso)
       mo_dump_scan_objref (du, obr);
       mo_dump_scan_value (du, val);
     }
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
 }                               /* end of mo_dump_scan_assoval */
 
 mo_json_t
@@ -405,7 +380,6 @@ mo_dump_json_of_assoval (mo_dumper_ty * du, mo_assovaldatapayl_ty * asso)
   MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
   if (!mo_dyncastpayl_assoval (asso))
     return json_null ();
-  MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   mo_value_t ksetv = mo_assoval_keys_set (asso);
   unsigned nbkeys = mo_set_size (ksetv);
   json_t *jarr = json_array ();
@@ -460,7 +434,6 @@ mo_assoval_of_json (mo_json_t js)
             continue;
           asso = mo_assoval_put (asso, atobr, valv);
         }
-      MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
       return asso;
     }
   return NULL;

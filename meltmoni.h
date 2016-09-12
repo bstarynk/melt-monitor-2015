@@ -510,7 +510,7 @@ mo_int_to_value (mo_int_t i)
 {
   MOM_ASSERTPRINTF (i >= MO_INTMIN && i <= MO_INTMAX,
                     "integer %lld out of range", (long long) i);
-  return (mo_value_t) (((intptr_t) i % 2) + 1);
+  return (mo_value_t) (((intptr_t) i * 2) + 1);
 }
 
 #define MOM_CSTRIDLEN 18        // used length

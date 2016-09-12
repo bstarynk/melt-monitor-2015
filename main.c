@@ -1598,6 +1598,29 @@ main (int argc_main, char **argv_main)
     mom_print_info ();
   mom_init_objects ();
   {
+    char cwdbuf[160];
+    memset (cwdbuf, 0, sizeof (cwdbuf));
+    if (!getcwd (cwdbuf, sizeof (cwdbuf)))
+      strcpy (cwdbuf, "./");
+    MOM_INFORMPRINTF ("starting on %s pid %d in %s, randoms %u %u",
+                      mom_hostname (), (int) getpid (), cwdbuf,
+                      (unsigned) momrand_genrand_int31 (),
+                      (unsigned) momrand_genrand_int31 ());
+    // check our int <-> value conversion
+#ifndef NDEBUG
+    unsigned r = (unsigned) (momrand_genrand_int31 () & 0xfffff);
+    MOM_ASSERTPRINTF (mo_value_is_int (mo_int_to_value (r)),
+                      "bad boxed int for r=%u", r);
+    MOM_ASSERTPRINTF (mo_value_to_int (mo_int_to_value (r), -99999) == r,
+                      "bad int <-> value conversions for r=%u", r);
+    MOM_ASSERTPRINTF (mo_value_is_int (mo_int_to_value (-(int) r)),
+                      "bad boxed int for -r=%d", -(int) r);
+    MOM_ASSERTPRINTF (mo_value_to_int (mo_int_to_value (-(int) r), 99999) ==
+                      -(int) r, "bad int <-> value conversions for -r=%d",
+                      -(int) r);
+#endif /*NDEBUG*/
+  }
+  {
     fflush (NULL);
     int okmaket = system ("make -q monimelt");
     if (!okmaket)
@@ -1607,14 +1630,6 @@ main (int argc_main, char **argv_main)
         MOM_FATAPRINTF
           ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
       }
-    char cwdbuf[160];
-    memset (cwdbuf, 0, sizeof (cwdbuf));
-    if (!getcwd (cwdbuf, sizeof (cwdbuf)))
-      strcpy (cwdbuf, "./");
-    MOM_INFORMPRINTF ("starting on %s pid %d in %s, randoms %u %u",
-                      mom_hostname (), (int) getpid (), cwdbuf,
-                      (unsigned) momrand_genrand_int31 (),
-                      (unsigned) momrand_genrand_int31 ());
   }
 
   mom_load_state ();

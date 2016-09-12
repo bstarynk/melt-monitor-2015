@@ -31,7 +31,7 @@ static GtkTextTag *mom_tag_objname;     // tag for object names
 static GtkTextTag *mom_tag_class;       // tag for class
 static GtkTextTag *mom_tag_payload;     // tag for payload
 static GtkTextTag *mom_tag_attr;        // tag for attributes
-static GtkTextTag *mom_tag_idstart;     // tag for first 6 characters of objids
+static GtkTextTag *mom_tag_idstart;     // tag for first characters of objids
 static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
 static GtkTextTag *mom_tag_number;      // tag for numbers
 static GtkTextTag *mom_tag_string;      // tag for strings
@@ -51,7 +51,7 @@ static GtkTextBuffer *mom_cmdtextbuf;
 static GtkWidget *mom_cmdtview;
 static GtkWidget *mom_cmdstatusbar;
 
-#define MOMGUI_IDSTART_LEN 6
+#define MOMGUI_IDSTART_LEN 7
 
 // an object is displayed (once) when we are showing its entire
 // content or it might be simply shown (without showing the content).
@@ -1781,6 +1781,7 @@ momgui_objhash (const void *ob)
   return 0;
 }                               /* end momgui_objhash */
 
+extern void momgui_begin_running (void);
 void
 momgui_begin_running (void)
 {
