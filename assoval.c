@@ -249,8 +249,9 @@ mo_assoval_remove (mo_assovaldatapayl_ty * asso, mo_objref_t obr)
       asso->mo_cpl_count = cnt - 1;
       cnt--;
     };
-  if (2 * cnt < sz && sz > MOM_ASSOVAL_SMALLTHRESHOLD)
-    asso = mo_assoval_reserve (asso, 0);
+  if (2 * cnt < sz + 4 && sz > 2 * MOM_ASSOVAL_SMALLTHRESHOLD)
+    asso = mo_assoval_reserve (asso, cnt / 8 
+			       + MOM_ASSOVAL_SMALLTHRESHOLD/4 + 1);
   MOM_ASSERTPRINTF (!MOM_BUGGYASSO (asso), "buggy asso@%p", asso);
   return asso;
 }                               /* end mo_assoval_remove */

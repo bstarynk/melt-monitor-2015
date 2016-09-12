@@ -761,7 +761,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predsetv)
   MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
                     && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
                     du);
-  mo_setvalue_ty *predset = predsetv;
+  const mo_setvalue_ty *predset = predsetv;
   MOM_ASSERTPRINTF (mo_dyncast_set (predset), "bad predset");
   int nbpredef = mo_set_size (predset);
   MOM_ASSERTPRINTF (nbpredef > 0, "empty predset");
