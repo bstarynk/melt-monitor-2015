@@ -137,11 +137,18 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dispobi)
   MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dispobi@%p dispobr=%s inobr=%s",
                        dispobi, mo_objref_pnamestr (dispobi->mo_gdo_dispobr),
                        mo_objref_pnamestr (dispobi->mo_gdo_inobr));
-#warning got hit by a bug... about buggy asso
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dispobi->mo_gdo_dispobr);
-  g_clear_object (&dispobi->mo_gdo_startmark);
-  g_clear_object (&dispobi->mo_gdo_endmark);
+  if (dispobi->mo_gdo_startmark)
+    {
+      gtk_text_buffer_delete_mark (mom_obtextbuf, dispobi->mo_gdo_startmark);
+      dispobi->mo_gdo_startmark = NULL;
+    }
+  if (dispobi->mo_gdo_endmark)
+    {
+      gtk_text_buffer_delete_mark (mom_obtextbuf, dispobi->mo_gdo_endmark);
+      dispobi->mo_gdo_endmark = NULL;
+    };
   memset (dispobi, 0, sizeof (*dispobi));
   free (dispobi);
 }                               /* end of mom_destroy_dispobjinfo */
