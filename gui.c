@@ -399,7 +399,7 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
             }
         };
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                        ":", -1, objtag, xobtag, NULL);
+                                        ": ", -1, objtag, xobtag, NULL);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         combuf, pb - combuf,
                                         objtag, mom_tag_comment, xobtag,
@@ -1693,7 +1693,7 @@ mom_initialize_gtk_tags_for_objects (void)
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "comment",
                                 "font", "Verdana, Italic",
-                                "scale", 0.60,
+                                "scale", 0.70,
                                 "foreground", "slategrey", NULL);
   mom_tag_index =
     gtk_text_buffer_create_tag (mom_obtextbuf,
@@ -1750,8 +1750,10 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
+  const int defwinheight = 400;
+  const int defwinwidth = 650;
   mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
-  gtk_window_set_default_size (GTK_WINDOW (mom_appwin), 520, 460);
+  gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth, defwinheight);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_appwin), topvbox);
   /////////// create & fill the menubar
@@ -1813,6 +1815,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
+  gtk_paned_set_position (GTK_PANED(paned), defwinheight/3);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
   GtkWidget *scrocmd = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrocmd),
