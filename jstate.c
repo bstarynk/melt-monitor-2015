@@ -1667,11 +1667,17 @@ mo_loader_name_objects (mo_loader_ty * ld)
       if (obr == NULL)
         MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s not found",
                         mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr);
-      if (mo_objref_space (obr) != mo_SPACE_PREDEF
-          && !mo_register_name_string (obr, namstr))
-        MOM_FATAPRINTF ("Sqlite loader base %s nam_oid %s naming %s failed",
-                        mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr,
-                        namstr);
+      if (mo_objref_space (obr) != mo_SPACE_PREDEF)
+        {
+          if (!mo_register_named (obr, namstr))
+            MOM_FATAPRINTF
+              ("Sqlite loader base %s nam_oid %s naming %s failed",
+               mo_string_cstr (ld->mo_ld_sqlitepathv), oidstr, namstr);
+        }
+      else
+        MOM_ASSERTPRINTF (mo_find_named_cstr (namstr) == obr,
+                          "predefined %s of id %s should be named %s",
+                          mo_objref_pnamestr (obr), oidstr, namstr);
       namcnt++;
     }                           /* end while rc... */
   if (rc != SQLITE_DONE)
