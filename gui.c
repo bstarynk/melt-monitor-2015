@@ -1905,7 +1905,7 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
                    && mo_get_hi_lo_ids_from_cstring (&hid, &loid,
                                                      curdispname))
             {
-              dispobr = mo_objref_find_hid_loid (&hid, &loid);
+              dispobr = mo_objref_find_hid_loid (hid, loid);
             }
           else
             MOM_FATAPRINTF ("invalid display name %s", curdispname);
