@@ -1997,7 +1997,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
           gtk_menu_popup_at_pointer (GTK_MENU (mom_cmdcomplmenu), NULL);
         }
       else if (mom_cmdcomplwithname && complsiz < MOMGUI_COMPLETION_MANY_NAMES
-               && complsiz > 1)
+               && complsiz >= MOMGUI_COMPLETION_MENU_MAX)
         {
           mo_value_t prevnamv =
             mo_objref_namev (mo_set_nth (mom_cmdcomplset, 0));
@@ -2042,13 +2042,12 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                                    (int) complsiz, wordtxt);
         }
       g_free (wordtxt);
-#warning cmdtextview_keyrelease: TAB blocking dont work
       return TRUE;              // don't propagate
     }
-  MOM_INFORMPRINTF ("cmdtextview_keyrelease keyval=%u",
-                    (unsigned) ((GdkEventKey *) ev)->keyval);
   return FALSE;                 // to propagate the event
 }                               /* end momgui_cmdtextview_keyrelease */
+
+
 
 // for "end-user-action" signal to mom_cmdtextbuf
 static void
