@@ -673,6 +673,65 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
   obr->mo_ob_paylkind = sigobr;
 }                               /* end of mo_objref_put_signature_payload */
 
+
+/// see also e.g. http://stackoverflow.com/q/39366248/841108
+mo_value_t
+mom_set_complete_objectid (const char *prefix)
+{
+  if (!prefix || prefix == MOM_EMPTY_SLOT
+      || prefix[0] != '_'
+      || !isdigit (prefix[1]) || !isalnum (prefix[2]) || !isalnum (prefix[3]))
+    return NULL;
+  unsigned bn = (prefix[1] - '0') * 3600;
+  const char *idigits = ID_DIGITS_MOM;
+  char *pc2 = strchr (idigits, prefix[2]);
+  if (!pc2)
+    return NULL;
+  char *pc3 = strchr (idigits, prefix[3]);
+  if (!pc3)
+    return NULL;
+  bn += 60 * (pc2 - idigits) + (pc3 - idigits);
+  if (bn == 0 || bn >= MOM_HID_BUCKETMAX)
+    return NULL;
+  unsigned busiz = mom_obuckarr[bn].bu_size;
+  unsigned bucnt = mom_obuckarr[bn].bu_count;
+  mo_objref_t *buarr = mom_obuckarr[bn].bu_obarr;
+  if (!busiz || !buarr || !bucnt)
+    return mo_make_empty_set ();
+  unsigned matchsiz = mom_prime_above (bucnt / 2 + 10);
+  mo_objref_t *matcharr = mom_gc_alloc (matchsiz * sizeof (mo_objref_t));
+  unsigned matchcnt = 0;
+  for (unsigned ix = 0; ix < busiz; ix++)
+    {
+      mo_objref_t curobj = buarr[ix];
+      if (!curobj || curobj == MOM_EMPTY_SLOT)
+        continue;
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curobj), "bad curobj ix#%d", ix);
+      char bufid[MOM_CSTRIDSIZ];
+      memset (bufid, 0, sizeof (bufid));
+      mo_objref_idstr (bufid, curobj);
+      if (!strcmp (prefix, bufid))
+        {
+          if (MOM_UNLIKELY (matchcnt + 1 >= matchsiz))
+            {
+              unsigned newsiz = mom_prime_above (3 * matchcnt / 2 + 10);
+              mo_objref_t *newarr =
+                mom_gc_alloc (newsiz * sizeof (mo_objref_t));
+              memcpy (newarr, matcharr, matchcnt * sizeof (mo_objref_t));
+              matchcnt = newarr;
+              matchsiz = newsiz;
+            }
+          MOM_ASSERTPRINTF (matchcnt < bucnt, "buggy matchcnt=%d bucnt=%d",
+                            matchcnt, bucnt);
+          matcharr[matchcnt++] = curobj;
+        }
+    }
+  if (!matchcnt)
+    return mo_make_empty_set ();
+  return
+    mo_make_set_closeq (mo_sequence_filled_allocate (matchcnt, matcharr));
+}                               /* end mom_set_complete_objectid */
+
 void
 mom_init_objects (void)
 {

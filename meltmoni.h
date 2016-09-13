@@ -1494,6 +1494,11 @@ mo_objref_idstr (char *bufid, mo_objref_t ob)
 }                               /* end mo_objref_idstr */
 
 
+/// given a string prefix starting with an underscore and three
+/// alphanum, compute the set of objects whose objid start with that
+/// prefix; in file object.c
+mo_value_t mom_set_complete_objectid (const char *prefix);
+
 // retrieve the set of named objects
 mo_value_t mo_named_objects_set (void);
 
