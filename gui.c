@@ -1762,23 +1762,32 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
       && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
     {
       GtkTextIter itcurs = { };
-      gtk_text_buffer_get_iter_at_mark (mom_cmdtextbuf,
-                                        &itcurs,
-                                        gtk_text_buffer_get_insert
-                                        (mom_cmdtextbuf));
+      gtk_text_buffer_get_iter_at_mark  //
+        (mom_cmdtextbuf,
+         &itcurs, gtk_text_buffer_get_insert (mom_cmdtextbuf));
       GtkTextIter itbword = itcurs;
-      gtk_text_iter_backward_word_start (&itbword);
-      gunichar bwordc = gtk_text_iter_get_char (&itbword);
-      if (bwordc > '0' && bwordc < '9')
+      if (!gtk_text_iter_starts_line (&itbword))
+        gtk_text_iter_backward_char (&itbword);
+      gunichar bwordc = 0;
+      int nbackw = 0;
+      do
         {
-          GtkTextIter itprew = itbword;
-          gtk_text_iter_backward_char (&itprew);
-          if (gtk_text_iter_get_char (&itprew) == '_')
-            {
-              itbword = itprew;
-              bwordc = '_';
-            }
+          bwordc = gtk_text_iter_get_char (&itbword);
+          MOM_INFORMPRINTF ("itbword C%u'%c' line %d offset %d nbackw#%d",
+                            bwordc, (bwordc > ' '
+                                     && bwordc < 127) ? (char) bwordc : '?',
+                            gtk_text_iter_get_line (&itcurs),
+                            gtk_text_iter_get_line_offset (&itcurs), nbackw);
+          if (gtk_text_iter_starts_line (&itbword)
+              || !gtk_text_iter_backward_char (&itbword))
+            break;
+          nbackw++;
+          bwordc = gtk_text_iter_get_char (&itbword);
         }
+      while (bwordc > 0 && bwordc < 127
+             && (isalnum (bwordc) || bwordc == '_'));
+      if (nbackw > 0 && !gtk_text_iter_starts_line (&itbword))
+        gtk_text_iter_forward_char (&itbword);
       char *wordtxt =
         gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, FALSE);
       gunichar cursc = gtk_text_iter_get_char (&itcurs);        // character just after the cursor, so useless
@@ -1789,10 +1798,20 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
          gtk_text_iter_get_line (&itcurs),
          gtk_text_iter_get_line_offset (&itcurs),
          gtk_text_iter_get_line_offset (&itbword), wordtxt);
-      MOM_INFORMPRINTF ("cmdtextview_keyrelease block TAB bwordc#%u'%c'",
-                        (unsigned) bwordc, (bwordc >= (unsigned) ' '
-                                            && bwordc <
-                                            127U) ? (char) bwordc : '?');
+      MOM_INFORMPRINTF
+        ("cmdtextview_keyrelease block TAB bwordc#%u'%c' wordtxt '%s'",
+         (unsigned) bwordc, (bwordc >= (unsigned) ' '
+                             && bwordc < 127U) ? (char) bwordc : '?',
+         wordtxt);
+      if (isalpha (wordtxt[0]))
+        {
+          /// should do a name completion
+        }
+      else if (wordtxt[0] == '_' && isdigit (wordtxt[1])
+               && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
+        {
+          /// should do an objid completion
+        }
       g_free (wordtxt);
 #warning cmdtextview_keyrelease: TAB blocking dont work
       return TRUE;              // don't propagate
@@ -1820,8 +1839,9 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
                               &itend, FALSE);
   MOM_INFORMPRINTF ("cmdtextbuf_enduseraction curspos=%d bufcont=%s\n",
                     curspos, bufcont);
-  free (bufcont);
+  g_free (bufcont);
 }                               /* end momgui_cmdtextbuf_enduseraction */
+
 
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
