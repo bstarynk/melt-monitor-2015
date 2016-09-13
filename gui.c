@@ -1765,12 +1765,12 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
       || ixl >= (intptr_t) mo_set_size (mom_cmdcomplset)
       || mom_cmdcomplstartoff < 0
       || mom_cmdcomplendoff <= mom_cmdcomplstartoff
-      || mom_cmdcomplendoff >=
-      gtk_text_buffer_get_char_count (mom_cmdtextbuf))
+      || mom_cmdcomplendoff > gtk_text_buffer_get_char_count (mom_cmdtextbuf))
     {
       MOM_WARNPRINTF
-        ("completion index ixl=%ld out of bound, or bad start %d & end %d offsets",
-         (long) ixl, (int) mom_cmdcomplstartoff, (int) mom_cmdcomplendoff);
+        ("completion index ixl=%ld out of bound, or bad start %d & end %d offsets with compl.set size %d",
+         (long) ixl, (int) mom_cmdcomplstartoff, (int) mom_cmdcomplendoff,
+         mo_set_size (mom_cmdcomplset));
       mom_cmdcomplset = NULL;
       mom_cmdcomplstartoff = 0;
       mom_cmdcomplendoff = 0;
