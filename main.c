@@ -29,7 +29,7 @@ void *mom_prog_dlhandle;
 
 char *mom_dump_dir;
 
-
+char *mom_gtk_style_path = MONIMELT_GTK_STYLE;
 
 const char *
 mom_hostname (void)
@@ -1128,6 +1128,9 @@ static const GOptionEntry mom_goptions[] = {
    "P"},
   {"init-random", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
    &initrand_mom, "initialize random with file F; should be first arg", "F"},
+  {"gtk-style", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
+   &mom_gtk_style_path,
+   "use F as Gtk3 CSS style sheet, default is " MONIMELT_GTK_STYLE, "F"},
   {NULL}
 };
 

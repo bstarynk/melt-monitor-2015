@@ -21,6 +21,7 @@
 #include "meltmoni.h"
 
 static GtkApplication *mom_gtkapp;
+static GtkCssProvider *mom_gtkcssprov;
 static GQuark mom_gquark;
 static GtkTextBuffer *mom_obtextbuf;
 static GtkTextTagTable *mom_tagtable;
@@ -1912,6 +1913,26 @@ momgui_begin_running (void)
   MOM_INFORMPRINTF ("momgui_begin_running");
 }                               /* end of momgui_begin_running */
 
+static void
+momgui_cssparsingerror (GtkCssProvider * gtkprov MOM_UNUSED,
+                        GtkCssSection * sect,
+                        GError * err, void *data MOM_UNUSED)
+{
+  GFile *gfil = sect ? gtk_css_section_get_file (sect) : NULL;
+  char *path = gfil ? g_file_get_path (gfil) : "*";
+  MOM_WARNPRINTF ("GTK CSS parsing error (file %s, lines %d-%d): (%s#%d)\n"
+                  "@!?!@ %s",
+                  path,
+                  gfil ? gtk_css_section_get_start_line (sect) : 0,
+                  gfil ? gtk_css_section_get_end_line (sect) : 0,
+                  err ? g_quark_to_string (err->domain) : "-",
+                  err ? err->code : 0, err ? err->message : "?");
+  MOM_BACKTRACEPRINTF ("GTK CSS parsing error - %s", err ? err->message : 0);
+  if (path)
+    g_free (path), path = NULL;
+}                               /* end momgui_cssparsingerror */
+
+
 void
 mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 {
@@ -1927,6 +1948,16 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
                            NULL, (GDestroyNotify) mom_destroy_shownobocc);
   mom_gtkapp =
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
+  mom_gtkcssprov = gtk_css_provider_get_default ();
+  if (!mom_gtk_style_path || !isalpha (mom_gtk_style_path[0])
+      || strchr (mom_gtk_style_path, '/'))
+    MOM_FATAPRINTF ("GTK style path (given by --gtk-style %s ...) is invalid",
+                    mom_gtk_style_path);
+  if (access (mom_gtk_style_path, R_OK))
+    MOM_FATAPRINTF ("GTK style % is not readable", mom_gtk_style_path);
+  g_signal_connect (mom_gtkcssprov, "parsing-error",
+                    G_CALLBACK (momgui_cssparsingerror), NULL);
+  gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path, NULL);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
   if (dispobjects)

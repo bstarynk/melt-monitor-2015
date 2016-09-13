@@ -19,7 +19,7 @@
 **/
 #ifndef MONIMELT_HEADER
 #define MONIMELT_HEADER "meltmoni.h"
-
+#define MONIMELT_GTK_STYLE "gtk-monimelt.css"
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
@@ -396,6 +396,7 @@ double mom_thread_cpu_time (void);
 
 extern void *mom_prog_dlhandle;
 extern char *mom_dump_dir;
+extern char *mom_gtk_style_path;
 
 ////////////////////////////////////////////////////////////////
 // call strftime on ti, but replace .__ with centiseconds for ti

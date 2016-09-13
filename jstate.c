@@ -1247,6 +1247,7 @@ mom_dump_state (const char *dirname)
   mo_dump_rename_emitted_files (&dumper);
   mo_dump_symlink_needed_file (&dumper, "Makefile");
   mo_dump_symlink_needed_file (&dumper, MONIMELT_HEADER);
+  mo_dump_symlink_needed_file (&dumper, MONIMELT_GTK_STYLE);
   for (const char *const *pfilnam = monimelt_csources;
        pfilnam && *pfilnam; pfilnam++)
     mo_dump_symlink_needed_file (&dumper, *pfilnam);
