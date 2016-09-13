@@ -751,7 +751,7 @@ mo_named_set_of_prefix (const char *prefix)
         };
       MOM_ASSERTPRINTF (mo_dyncast_string (nod->nn_name),
                         "bad name in nod@%p", nod);
-      if (!strcmp (prefix, nod->nn_name->mo_cstr))
+      if (!strncmp (prefix, nod->nn_name->mo_cstr, ln))
         {
           if (mo_dyncast_objref (curobj))
             seq->mo_seqobj[cnt++] = curobj;
