@@ -719,4 +719,56 @@ mo_named_objects_set (void)
   return mo_assoval_keys_set (mom_nameassop);
 }                               /* end mo_named_objects_set */
 
+mo_value_t
+mo_named_set_of_prefix (const char *prefix)
+{
+  if (!prefix || prefix == MOM_EMPTY_SLOT)
+    return NULL;
+  if (!isalpha (prefix[0]))
+    return NULL;
+  int ln = 0;
+  for (const char *pc = prefix + 1; *pc; pc++)
+    {
+      if (!isalnum (*pc) && *pc != '_')
+        return NULL;
+      ln++;
+    };
+  mo_sequencevalue_ty *seq = mo_sequence_allocate ((ln > 2) ? 20 : 60);
+  struct mom_namednode_st *nod = mom_find_after_equal_name_node (prefix);
+  unsigned cnt = 0;
+  while (nod != NULL)
+    {
+      MOM_ASSERTPRINTF (nod->nn_magic == MOM_NAME_MAGIC,
+                        "bad magic nod@%p", nod);
+      mo_objref_t curobj = nod->nn_objref;
+      if (MOM_UNLIKELY (cnt + 1 >= seq->mo_sva_size))
+        {
+          unsigned newsiz = mom_prime_above (3 * cnt / 2 + 40);
+          mo_sequencevalue_ty *newseq = mo_sequence_allocate (newsiz);
+          memcpy (newseq->mo_seqobj, seq->mo_seqobj,
+                  cnt * sizeof (mo_objref_t));
+          seq = newseq;
+        };
+      MOM_ASSERTPRINTF (mo_dyncast_string (nod->nn_name),
+                        "bad name in nod@%p", nod);
+      if (!strcmp (prefix, nod->nn_name->mo_cstr))
+        {
+          if (mo_dyncast_objref (curobj))
+            seq->mo_seqobj[cnt++] = curobj;
+        }
+      else
+        break;
+      nod = mom_find_after_name_node (nod->nn_name->mo_cstr);
+    }
+  if (cnt == 0)
+    return mo_make_empty_set ();
+  {
+    mo_sequencevalue_ty *newseq = mo_sequence_allocate (cnt);
+    memcpy (newseq->mo_seqobj, seq->mo_seqobj, cnt * sizeof (mo_objref_t));
+    seq = newseq;
+    return mo_make_set_closeq (newseq);
+  }
+  return NULL;
+}                               /* end of mo_named_set_of_prefix */
+
 /* eof named.c */

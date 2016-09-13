@@ -1497,6 +1497,10 @@ mo_objref_idstr (char *bufid, mo_objref_t ob)
 // retrieve the set of named objects
 mo_value_t mo_named_objects_set (void);
 
+// given a string prefix starting with a letter and made of alphanum
+// or underscores, compute the set of objects whose name start with
+// that prefix
+mo_value_t mo_named_set_of_prefix (const char *prefix);
 /************* PREDEFINED ***********/
 
 mo_value_t mo_predefined_objects_set (void);
