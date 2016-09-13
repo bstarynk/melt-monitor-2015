@@ -1,1 +1,12 @@
 /* file gtk-monimelt.css */
+
+#cmdtview {
+    background-color: lightgoldenrod;
+}
+
+#cmdstatusbar {
+    font-family: Arial;
+    font-size: 9pt;
+    color: firebrick;
+    /*background-color: azure;*/
+}

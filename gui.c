@@ -1477,6 +1477,7 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
                                  "Cancel",
                                  GTK_RESPONSE_CANCEL,
                                  NULL);
+  gtk_window_set_default_size (GTK_WINDOW (quitdialog), 400, 250);
   gtk_widget_show_all (quitdialog);
   int res = gtk_dialog_run (GTK_DIALOG (quitdialog));
   if (res == GTK_RESPONSE_CLOSE)
@@ -1547,6 +1548,7 @@ mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
                                  "Cancel",
                                  GTK_RESPONSE_CANCEL,
                                  NULL);
+  gtk_window_set_default_size (GTK_WINDOW (displaydialog), 450, -1);
   GtkWidget *contarea =
     gtk_dialog_get_content_area (GTK_DIALOG (displaydialog));
   GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 3);
@@ -1759,7 +1761,39 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
   if (ev && ev->type == GDK_KEY_RELEASE
       && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
     {
-      MOM_INFORMPRINTF ("cmdtextview_keyrelease block TAB");
+      GtkTextIter itcurs = { };
+      gtk_text_buffer_get_iter_at_mark (mom_cmdtextbuf,
+                                        &itcurs,
+                                        gtk_text_buffer_get_insert
+                                        (mom_cmdtextbuf));
+      GtkTextIter itbword = itcurs;
+      gtk_text_iter_backward_word_start (&itbword);
+      gunichar bwordc = gtk_text_iter_get_char (&itbword);
+      if (bwordc > '0' && bwordc < '9')
+        {
+          GtkTextIter itprew = itbword;
+          gtk_text_iter_backward_char (&itprew);
+          if (gtk_text_iter_get_char (&itprew) == '_')
+            {
+              itbword = itprew;
+              bwordc = '_';
+            }
+        }
+      char *wordtxt =
+        gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, FALSE);
+      gunichar cursc = gtk_text_iter_get_char (&itcurs);        // character just after the cursor, so useless
+      MOM_INFORMPRINTF
+        ("cmdtextview_keyrelease block TAB, curschar#%u'%c', line %d offset %d bword %d wordtxt '%s'",
+         (unsigned) cursc, (cursc >= (unsigned) ' '
+                            && cursc < 127U) ? (char) cursc : '?',
+         gtk_text_iter_get_line (&itcurs),
+         gtk_text_iter_get_line_offset (&itcurs),
+         gtk_text_iter_get_line_offset (&itbword), wordtxt);
+      MOM_INFORMPRINTF ("cmdtextview_keyrelease block TAB bwordc#%u'%c'",
+                        (unsigned) bwordc, (bwordc >= (unsigned) ' '
+                                            && bwordc <
+                                            127U) ? (char) bwordc : '?');
+      g_free (wordtxt);
 #warning cmdtextview_keyrelease: TAB blocking dont work
       return TRUE;              // don't propagate
     }
@@ -1794,6 +1828,12 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
   const int defwinheight = 400;
   const int defwinwidth = 650;
+  GdkScreen *screen = gdk_screen_get_default ();
+  MOM_ASSERTPRINTF (GDK_IS_SCREEN (screen), "bad screen @%p", screen);
+  gtk_style_context_add_provider_for_screen (GDK_SCREEN (screen),
+                                             GTK_STYLE_PROVIDER
+                                             (mom_gtkcssprov),
+                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth,
                                defwinheight);
@@ -1865,6 +1905,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
+  gtk_widget_set_name (mom_cmdtview, "cmdtview");
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
   g_signal_connect (mom_cmdtview, "key-release-event",
@@ -1880,6 +1921,13 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_cmdstatusbar = gtk_statusbar_new ();
   gtk_box_pack_start (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
   gtk_box_pack_end (GTK_BOX (cmdtopvbox), mom_cmdstatusbar, FALSE, FALSE, 2);
+  gtk_widget_set_name (mom_cmdstatusbar, "cmdstatusbar");
+  gtk_style_context_add_provider (gtk_widget_get_style_context (mom_cmdwin),
+                                  GTK_STYLE_PROVIDER (mom_gtkcssprov),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  gtk_style_context_add_provider (gtk_widget_get_style_context (mom_appwin),
+                                  GTK_STYLE_PROVIDER (mom_gtkcssprov),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   g_signal_connect (mom_cmdwin, "delete-event",
                     G_CALLBACK (gtk_widget_hide_on_delete), NULL);
   g_signal_connect (mom_appwin, "delete-event", G_CALLBACK (mom_stopgui),
@@ -1954,10 +2002,11 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
     MOM_FATAPRINTF ("GTK style path (given by --gtk-style %s ...) is invalid",
                     mom_gtk_style_path);
   if (access (mom_gtk_style_path, R_OK))
-    MOM_FATAPRINTF ("GTK style % is not readable", mom_gtk_style_path);
+    MOM_FATAPRINTF ("GTK style %s is not readable", mom_gtk_style_path);
   g_signal_connect (mom_gtkcssprov, "parsing-error",
                     G_CALLBACK (momgui_cssparsingerror), NULL);
   gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path, NULL);
+  MOM_INFORMPRINTF ("after loading GTK style %s", mom_gtk_style_path);
   g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
                     NULL);
   if (dispobjects)
@@ -2009,6 +2058,8 @@ momgui_cmdstatus_printf (const char *fmt, ...)
 {
   static guint statctxid;
   va_list args = { };
+  MOM_INFORMPRINTF ("cmdstatus_printf fmt=%s name=%s", fmt,
+                    gtk_widget_get_name (mom_cmdstatusbar));
   if (MOM_UNLIKELY (statctxid == 0))
     {
       statctxid =
