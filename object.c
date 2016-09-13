@@ -682,6 +682,9 @@ mom_set_complete_objectid (const char *prefix)
       || prefix[0] != '_'
       || !isdigit (prefix[1]) || !isalnum (prefix[2]) || !isalnum (prefix[3]))
     return NULL;
+  size_t preflen = strlen (prefix);
+  if (preflen > MOM_CSTRIDLEN)
+    return NULL;
   unsigned bn = (prefix[1] - '0') * 3600;
   const char *idigits = ID_DIGITS_MOM;
   char *pc2 = strchr (idigits, prefix[2]);
@@ -710,7 +713,7 @@ mom_set_complete_objectid (const char *prefix)
       char bufid[MOM_CSTRIDSIZ];
       memset (bufid, 0, sizeof (bufid));
       mo_objref_idstr (bufid, curobj);
-      if (!strcmp (prefix, bufid))
+      if (!strncmp (prefix, bufid, preflen))
         {
           if (MOM_UNLIKELY (matchcnt + 1 >= matchsiz))
             {
