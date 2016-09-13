@@ -65,7 +65,7 @@ static GtkWidget *mom_cmdstatusbar;
 // The association of displayed objects to depth
 static mo_assovaldatapayl_ty *momgui_displayed_objasso;
 #define MOMGUI_MAX_DEPTH 8
-#define MOMGUI_INITIAL_DEPTH 1
+#define MOMGUI_INITIAL_DEPTH 3
 // the hashset of shown object occurrences
 static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
@@ -412,6 +412,35 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
 }                               /* end mom_display_objref */
 
 
+static void
+mom_display_full_subobject (mo_objref_t subobr, momgui_dispctxt_ty * pdx,
+                            int depth)
+{
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (subobr),
+                    "display_full_subobject: bad subobr");
+  momgui_dispctxt_ty subdispx;
+  memset (&subdispx, 0, sizeof (subdispx));
+  momgui_dispobjinfo_ty *subdinf = calloc (1, sizeof (momgui_dispobjinfo_ty));
+  if (!subdinf)
+    MOM_FATAPRINTF
+      ("failed to allocate display info for subobject %s in %s depth %d",
+       mo_objref_pnamestr (subobr), mo_objref_pnamestr (pdx->mo_gdx_obr),
+       depth + 1);
+  subdinf->mo_gdo_dispobr = subobr;
+  subdinf->mo_gdo_inobr = pdx->mo_gdx_obr;
+  g_hash_table_insert (mom_dispobjinfo_hashtable, subobr, subdinf);
+  subdispx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
+  subdispx.mo_gdx_maxdepth = pdx->mo_gdx_maxdepth;
+  subdispx.mo_gdx_curdepth = depth;
+  subdispx.mo_gdx_iter = pdx->mo_gdx_iter;
+  subdispx.mo_gdx_obr = subobr;
+  subdispx.mo_gdx_dispinfo = subdinf;
+  mom_display_ctx_object (&subdispx, depth);
+  pdx->mo_gdx_iter = subdispx.mo_gdx_iter;
+}                               /* end mom_display_full_subobject */
 
 static void
 mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
@@ -499,11 +528,7 @@ mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
                          && !mo_assoval_get (momgui_displayed_objasso,
                                              cursubobj))
                   {
-#warning FIXME: should probably make a fresh curdisp & dispctx
-                    momgui_dispctxt_ty subdispx;
-                    memset (&subdispx, 0, sizeof (subdispx));
-                    momgui_dispobjinfo_ty *curdisp = NULL;
-                    mom_display_ctx_object (&subdispx, depth + 1);
+                    mom_display_full_subobject (cursubobj, pdx, depth + 1);
                   }
                 else
                   {
@@ -528,13 +553,7 @@ mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
         bool showinside = depth < maxdepth && !mo_objref_namev (curobj)
           && !mo_assoval_get (momgui_displayed_objasso, curobj);
         if (showinside)
-          {
-            momgui_dispobjinfo_ty *curdisp = NULL;
-            momgui_dispctxt_ty subdispctxt = { };
-            memset (&subdispctxt, 0, sizeof (subdispctxt));
-#warning FIXME: should probably make a fresh curdisp & dispctx
-            mom_display_ctx_object (&subdispctxt, depth + 1);
-          }
+          mom_display_full_subobject (curobj, pdx, depth + 1);
         else
           mom_display_objref (curobj, pdx, valtag);
 
@@ -981,6 +1000,9 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
     }                           /* end else non-signature payload */
 }                               /* end of mom_insert_objpayload_textbuf */
 
+
+
+////////////////
 void
 mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 {
@@ -1002,6 +1024,7 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                     && maxdepth <= MOMGUI_MAX_DEPTH,
                     "bad depth %d maxdepth %d MOMGUI_MAX_DEPTH %d", depth,
                     maxdepth, MOMGUI_MAX_DEPTH);
+  /// display the title bar
   GtkTextTag *curobjtitletag =
     (depth == 0) ? mom_tag_objtitle : mom_tag_objsubtitle;
   MOM_ASSERTPRINTF (dinf->mo_gdo_startmark == NULL,
@@ -1141,28 +1164,33 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
            3, curobjtitletag, NULL);
     }                           // end if commv is string and anonymous
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, curobjtitletag);
-  char tibuf[72];
-  memset (tibuf, 0, sizeof (tibuf));
-  time_t nowt = 0;
-  time (&nowt);
-  struct tm nowtm = { };
-  struct tm modtm = { };
-  localtime_r (&nowt, &nowtm);
-  localtime_r (&obr->mo_ob_mtime, &modtm);
-  // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45:12 
-  if (obr->mo_ob_mtime > nowt - 64800 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T", &modtm);
-  // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25:57
-  else if (obr->mo_ob_mtime > nowt - 1728000 && obr->mo_ob_mtime <= nowt)
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T", &modtm);
-  else if (obr->mo_ob_mtime > 0)
-    // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45:01
-    strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T", &modtm);
-  else                          // unset time ⌚ ?
-    strcpy (tibuf, "\342\214\232 ?");
-  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
-                                    tibuf, -1, mom_tag_time, NULL);
+  //// display the mtime
+  {
+    char tibuf[72];
+    memset (tibuf, 0, sizeof (tibuf));
+    time_t nowt = 0;
+    time (&nowt);
+    struct tm nowtm = { };
+    struct tm modtm = { };
+    localtime_r (&nowt, &nowtm);
+    localtime_r (&obr->mo_ob_mtime, &modtm);
+    // 64800 seconds is 18 hours, so show mtime as e.g. ⌚ 13:45:12 
+    if (obr->mo_ob_mtime > nowt - 64800 && obr->mo_ob_mtime <= nowt)
+      strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%T", &modtm);
+    // 1728000 seconds is 20 days, so show mtime as e.g. ⌚ Aug 13, 14:25:57
+    else if (obr->mo_ob_mtime > nowt - 1728000 && obr->mo_ob_mtime <= nowt)
+      strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%b %d, %T", &modtm);
+    else if (obr->mo_ob_mtime > 0)
+      // otherwise -long ago or in the future- show as ⌚ 2016 Aug 17, 09:45:01
+      strftime (tibuf, sizeof (tibuf), "\342\214\232 " "%Y %b %d, %T",
+                &modtm);
+    else                        // unset time ⌚ ?
+      strcpy (tibuf, "\342\214\232 ?");
+    gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
+                                      tibuf, -1, mom_tag_time, NULL);
+  }
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+  /// display class
   mo_objref_t classobr = obr->mo_ob_class;
   if (classobr)
     {
@@ -1172,6 +1200,7 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
       mom_display_objref (classobr, pdx, mom_tag_class);
       MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
     }
+  /// display attributes
   {
     mo_value_t attrset = mo_assoval_keys_set (obr->mo_ob_attrs);
     unsigned nbattrs = mo_set_size (attrset);
@@ -1192,25 +1221,28 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
         mom_display_value (curval, pdx, depth + 1, NULL);
         MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
       }
-    {
-      int nbcomp = mo_vectval_count (obr->mo_ob_comps);
-      char indexbuf[16];
-      memset (indexbuf, 0, sizeof (indexbuf));
-      for (int cix = 0; cix < nbcomp; cix++)
-        {
-          mo_value_t curcompv = mo_objref_get_comp (obr, cix);
-          snprintf (indexbuf, sizeof (indexbuf), "#%d: ", cix);
-          gtk_text_buffer_insert_with_tags
-            (mom_obtextbuf, piter, indexbuf, -1, mom_tag_index, NULL);
-          mom_display_value (curcompv, pdx, depth + 1, NULL);
-          MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
-        }
-    }
   }
+  /// display components
+  {
+    int nbcomp = mo_vectval_count (obr->mo_ob_comps);
+    char indexbuf[16];
+    memset (indexbuf, 0, sizeof (indexbuf));
+    for (int cix = 0; cix < nbcomp; cix++)
+      {
+        mo_value_t curcompv = mo_objref_get_comp (obr, cix);
+        snprintf (indexbuf, sizeof (indexbuf), "#%d: ", cix);
+        gtk_text_buffer_insert_with_tags
+          (mom_obtextbuf, piter, indexbuf, -1, mom_tag_index, NULL);
+        mom_display_value (curcompv, pdx, depth + 1, NULL);
+        MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+      }
+  }
+  /// display payload
   if (obr->mo_ob_paylkind != NULL)
     {
       mom_display_objpayload (obr, pdx, depth);
     }
+  /// end mark
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   MOM_ASSERTPRINTF (dinf->mo_gdo_endmark == NULL, "dinf got mo_gdo_endmark");
   dinf->mo_gdo_endmark =
@@ -1700,12 +1732,12 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "index",
                                 "font", "DejaVu Sans, Condensed",
                                 "scale", 0.85,
-                                "foreground", "palegreen1", "rise", 3, NULL);
+                                "foreground", "mediumturquoise", "rise", 3,
+                                NULL);
   mom_tag_json =
-    gtk_text_buffer_create_tag (mom_obtextbuf,
-                                "json",
-                                "font", "Inconsolata, Medium",
-                                "scale", 0.83, "foreground", "khaki1", NULL);
+    gtk_text_buffer_create_tag (mom_obtextbuf, "json", "font",
+                                "Inconsolata, Medium", "scale", 0.83,
+                                "foreground", "khaki1", NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 
@@ -1753,7 +1785,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   const int defwinheight = 400;
   const int defwinwidth = 650;
   mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
-  gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth, defwinheight);
+  gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth,
+                               defwinheight);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_appwin), topvbox);
   /////////// create & fill the menubar
@@ -1815,7 +1848,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
-  gtk_paned_set_position (GTK_PANED(paned), defwinheight/3);
+  gtk_paned_set_position (GTK_PANED (paned), defwinheight / 3);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
   GtkWidget *scrocmd = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrocmd),
@@ -1890,13 +1923,13 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
   if (dispobjects)
     {
       int nbdisp = 0;
-      for (const char **pobn = dispobjects; *pobn; pobn++)
+      for (const char **pobn = (const char **)dispobjects; *pobn; pobn++)
         nbdisp++;
       momgui_displayed_objasso =
         mo_assoval_reserve (momgui_displayed_objasso, 2 * nbdisp + 3);
-      for (const char **pobn = dispobjects; *pobn; pobn++)
+      for (const char **pobn = (const char **)dispobjects; *pobn; pobn++)
         {
-          char *curdispname = *pobn;
+          const char *curdispname = *pobn;
           mo_hid_t hid = 0;
           mo_loid_t loid = 0;
           mo_objref_t dispobr = NULL;
