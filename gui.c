@@ -1803,14 +1803,36 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
          (unsigned) bwordc, (bwordc >= (unsigned) ' '
                              && bwordc < 127U) ? (char) bwordc : '?',
          wordtxt);
+      mo_value_t complsetv = NULL;
       if (isalpha (wordtxt[0]))
         {
           /// should do a name completion
+          complsetv = mo_named_set_of_prefix (wordtxt);
         }
       else if (wordtxt[0] == '_' && isdigit (wordtxt[1])
                && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
         {
           /// should do an objid completion
+          complsetv = mom_set_complete_objectid (wordtxt);
+        }
+      if (!mo_dyncast_set (complsetv))
+        momgui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
+      else if (mo_set_size (complsetv) == 1)
+        {
+          gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+          if (isalpha (wordtxt[0]))
+            gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                    mo_objref_pnamestr (mo_set_nth
+                                                        (complsetv, 0)), -1);
+          else
+            {
+              char bufid[MOM_CSTRIDSIZ];
+              memset (bufid, 0, sizeof (bufid));
+              mo_objref_idstr (bufid, mo_set_nth (complsetv, 0));
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs, bufid,
+                                      MOM_CSTRIDLEN);
+            };
+          gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
         }
       g_free (wordtxt);
 #warning cmdtextview_keyrelease: TAB blocking dont work
