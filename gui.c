@@ -1756,7 +1756,10 @@ mom_initialize_gtk_tags_for_objects (void)
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 
+/* below ten completions, we offer a menu */
 #define MOMGUI_COMPLETION_MENU_MAX 10
+/* below a thousand completions for a name, we try to insert a common prefix */
+#define MOMGUI_COMPLETION_MANY_NAMES 1000
 static void
 momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
 {
@@ -1963,7 +1966,6 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         {
           char complbufid[MOM_CSTRIDSIZ];
           memset (complbufid, 0, sizeof (complbufid));
-          mom_cmdcomplwithname = (wordtxt[0] != '_');
           if (MOM_UNLIKELY (mom_cmdcomplmenu))
             {
               gtk_widget_destroy (mom_cmdcomplmenu);
@@ -1994,10 +1996,50 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
           gtk_widget_show_all (mom_cmdcomplmenu);
           gtk_menu_popup_at_pointer (GTK_MENU (mom_cmdcomplmenu), NULL);
         }
+      else if (mom_cmdcomplwithname && complsiz < MOMGUI_COMPLETION_MANY_NAMES
+               && complsiz > 1)
+        {
+          mo_value_t prevnamv =
+            mo_objref_namev (mo_set_nth (mom_cmdcomplset, 0));
+          MOM_ASSERTPRINTF (mo_dyncast_string (prevnamv), "bad prevnamv");
+          int commonlen = (prevnamv ? strlen (mo_string_cstr (prevnamv)) : 0);
+          for (int ix = 1; ix < complsiz && commonlen > 0; ix++)
+            {
+              mo_objref_t curobjv = mo_set_nth (mom_cmdcomplset, ix);
+              mo_value_t curnamv = mo_objref_namev (curobjv);
+              MOM_ASSERTPRINTF (mo_dyncast_string (curnamv),
+                                "bad curnamv for ix#%d", ix);
+              const char *prevpc = mo_string_cstr (prevnamv);
+              const char *curpc = mo_string_cstr (curnamv);
+              int samelen = 0;
+              while ((*prevpc) != (char) 0 && (*curpc) != (char) 0
+                     && *prevpc == *curpc)
+                samelen++;
+              if (commonlen > samelen)
+                commonlen = samelen;
+              prevnamv = curnamv;
+            }
+          if (commonlen > 1)
+            {
+              char *commonprefix = mom_gc_alloc_scalar (commonlen + 2);
+              memcpy (commonprefix, mo_string_cstr (prevnamv), commonlen);
+              gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                      commonprefix, commonlen);
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+            }
+          momgui_cmdstatus_printf
+            ("%d completions for %s :: %s ... %s",
+             complsiz, wordtxt,
+             mo_string_cstr (mo_objref_namev
+                             (mo_set_nth (mom_cmdcomplset, 0))),
+             mo_string_cstr (mo_objref_namev
+                             (mo_set_nth (mom_cmdcomplset, complsiz - 1))));
+        }
       else
         {
-          MOM_WARNPRINTF ("unimplemented completion of %u for %s", complsiz,
-                          wordtxt);
+          momgui_cmdstatus_printf ("too many %d completions for: %s",
+                                   (int) complsiz, wordtxt);
         }
       g_free (wordtxt);
 #warning cmdtextview_keyrelease: TAB blocking dont work
