@@ -45,8 +45,11 @@ static GtkWidget *mom_appwin;
 static GtkWidget *mom_tview1;
 static GtkWidget *mom_tview2;
 static GtkWidget *mom_checkitemcmd;
-
-
+static bool mom_cmdcomplwithname;
+static GtkWidget *mom_cmdcomplmenu;     // the (temporary) command completion menu
+static gint mom_cmdcomplstartoff;       // start offset of word to be completed
+static gint mom_cmdcomplendoff; // end offset of word to be completed
+static mo_value_t mom_cmdcomplset;      // the set containing the current completion
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
 static GtkWidget *mom_cmdtview;
@@ -1753,6 +1756,80 @@ mom_initialize_gtk_tags_for_objects (void)
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 
+#define MOMGUI_COMPLETION_MENU_MAX 10
+static void
+momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
+{
+  intptr_t ixl = (intptr_t) ixad;
+  if (ixl < 0 || ixl > 2 * MOMGUI_COMPLETION_MENU_MAX
+      || ixl >= (intptr_t) mo_set_size (mom_cmdcomplset)
+      || mom_cmdcomplstartoff < 0
+      || mom_cmdcomplendoff <= mom_cmdcomplstartoff
+      || mom_cmdcomplendoff >=
+      gtk_text_buffer_get_char_count (mom_cmdtextbuf))
+    {
+      MOM_WARNPRINTF
+        ("completion index ixl=%ld out of bound, or bad start %d & end %d offsets",
+         (long) ixl, (int) mom_cmdcomplstartoff, (int) mom_cmdcomplendoff);
+      mom_cmdcomplset = NULL;
+      mom_cmdcomplstartoff = 0;
+      mom_cmdcomplendoff = 0;
+      return;
+    }
+  mo_objref_t complobj = mo_set_nth (mom_cmdcomplset, (int) ixl);
+  GtkTextIter startwit = { };
+  GtkTextIter endwit = { };
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &startwit,
+                                      mom_cmdcomplstartoff);
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &endwit,
+                                      mom_cmdcomplendoff);
+  gtk_text_buffer_delete (mom_cmdtextbuf, &startwit, &endwit);
+  if (mom_cmdcomplwithname)
+    {
+      gtk_text_buffer_insert (mom_cmdtextbuf, &endwit,
+                              mo_objref_pnamestr (complobj), -1);
+    }
+  else
+    {
+      char bufid[MOM_CSTRIDSIZ];
+      mo_value_t commv = NULL;
+      memset (bufid, 0, sizeof (bufid));
+      mo_objref_idstr (bufid, complobj);
+      gtk_text_buffer_insert (mom_cmdtextbuf, &endwit, bufid, MOM_CSTRIDLEN);
+      if ((commv =
+           mo_objref_get_attr (complobj,
+                               MOM_PREDEF (comment))) != NULL
+          && mo_dyncast_string (commv))
+        {
+          char combuf[72];
+          memset (combuf, 0, sizeof (combuf));
+          const char *pc = NULL;
+          const char *pn = NULL;
+          char *pb = combuf;
+          for (pc = mo_string_cstr (commv);
+               pc && *pc
+               && (((pn = g_utf8_next_char (pc)),
+                    pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
+            {
+              if (*pc == '\n')
+                break;
+              if (pb > combuf + 2 * sizeof (combuf) / 3 && isspace (*pc))
+                break;
+              if (pn == pc + 1)
+                *(pb++) = *pc;
+              else
+                {
+                  memcpy (pb, pc, pn - pc);
+                  pb += pn - pc;
+                }
+            };
+          momgui_cmdstatus_printf ("completion %s: %s", bufid, combuf);
+        };
+    }
+  gtk_text_buffer_place_cursor (mom_cmdtextbuf, &endwit);
+}                               /* end of momgui_completecmdix */
+
+
 // for "key-release-event" signal to mom_cmdtview
 static bool
 momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
@@ -1761,6 +1838,14 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
   if (ev && ev->type == GDK_KEY_RELEASE
       && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
     {
+      if (MOM_UNLIKELY (mom_cmdcomplmenu))
+        {
+          gtk_widget_destroy (mom_cmdcomplmenu);
+          mom_cmdcomplmenu = NULL;
+          mom_cmdcomplstartoff = 0;
+          mom_cmdcomplendoff = 0;
+          mom_cmdcomplwithname = false;
+        }
       GtkTextIter itcurs = { };
       gtk_text_buffer_get_iter_at_mark  //
         (mom_cmdtextbuf,
@@ -1803,36 +1888,116 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
          (unsigned) bwordc, (bwordc >= (unsigned) ' '
                              && bwordc < 127U) ? (char) bwordc : '?',
          wordtxt);
-      mo_value_t complsetv = NULL;
+      unsigned complsiz = 0;
       if (isalpha (wordtxt[0]))
         {
           /// should do a name completion
-          complsetv = mo_named_set_of_prefix (wordtxt);
+          mom_cmdcomplwithname = true;
+          mom_cmdcomplset = (mo_value_t) mo_named_set_of_prefix (wordtxt);
         }
       else if (wordtxt[0] == '_' && isdigit (wordtxt[1])
                && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
         {
           /// should do an objid completion
-          complsetv = mom_set_complete_objectid (wordtxt);
+          mom_cmdcomplwithname = false;
+          mom_cmdcomplset = (mo_value_t) mom_set_complete_objectid (wordtxt);
         }
-      if (!mo_dyncast_set (complsetv))
+      if (!mo_dyncast_set (mom_cmdcomplset))
         momgui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
-      else if (mo_set_size (complsetv) == 1)
+      else if ((complsiz = mo_set_size (mom_cmdcomplset)) == 1)
         {
+          mo_objref_t compl1obj = mo_set_nth (mom_cmdcomplset, 0);
+          MOM_ASSERTPRINTF (mo_dyncast_objref (compl1obj), "bad compl1obj");
           gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
           if (isalpha (wordtxt[0]))
             gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
-                                    mo_objref_pnamestr (mo_set_nth
-                                                        (complsetv, 0)), -1);
+                                    mo_objref_pnamestr (compl1obj), -1);
           else
             {
               char bufid[MOM_CSTRIDSIZ];
+              mo_value_t commv = NULL;
               memset (bufid, 0, sizeof (bufid));
-              mo_objref_idstr (bufid, mo_set_nth (complsetv, 0));
+              mo_objref_idstr (bufid, compl1obj);
               gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs, bufid,
                                       MOM_CSTRIDLEN);
-            };
-          gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+              if ((commv =
+                   mo_objref_get_attr (compl1obj,
+                                       MOM_PREDEF (comment))) != NULL
+                  && mo_dyncast_string (commv))
+                {
+                  char combuf[72];
+                  memset (combuf, 0, sizeof (combuf));
+                  const char *pc = NULL;
+                  const char *pn = NULL;
+                  char *pb = combuf;
+                  for (pc = mo_string_cstr (commv);
+                       pc && *pc
+                       && (((pn = g_utf8_next_char (pc)),
+                            pb - combuf < (int) sizeof (combuf) - 10));
+                       pc = pn)
+                    {
+                      if (*pc == '\n')
+                        break;
+                      if (pb > combuf + 2 * sizeof (combuf) / 3
+                          && isspace (*pc))
+                        break;
+                      if (pn == pc + 1)
+                        *(pb++) = *pc;
+                      else
+                        {
+                          memcpy (pb, pc, pn - pc);
+                          pb += pn - pc;
+                        }
+                    };
+                  momgui_cmdstatus_printf ("completion %s: %s", bufid,
+                                           combuf);
+                };
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+            }
+        }
+      else if (complsiz == 0)
+        {
+          momgui_cmdstatus_printf ("no completion for: %s", wordtxt);
+        }
+      else if (complsiz < MOMGUI_COMPLETION_MENU_MAX)
+        {
+          char complbufid[MOM_CSTRIDSIZ];
+          memset (complbufid, 0, sizeof (complbufid));
+          mom_cmdcomplwithname = (wordtxt[0] != '_');
+          if (MOM_UNLIKELY (mom_cmdcomplmenu))
+            {
+              gtk_widget_destroy (mom_cmdcomplmenu);
+              mom_cmdcomplmenu = NULL;
+              mom_cmdcomplstartoff = 0;
+              mom_cmdcomplendoff = 0;
+            }
+          mom_cmdcomplmenu = gtk_menu_new ();
+          mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
+          mom_cmdcomplendoff = gtk_text_iter_get_offset (&itcurs);
+          for (int ix = 0; ix < (int) complsiz; ix++)
+            {
+              mo_objref_t curcomplobj = mo_set_nth (mom_cmdcomplset, ix);
+              GtkWidget *curcomplitem =
+                gtk_menu_item_new_with_label
+                (mom_cmdcomplwithname
+                 ? mo_objref_pnamestr (curcomplobj)
+                 : mo_objref_idstr (complbufid, curcomplobj));
+              gtk_menu_shell_append (GTK_MENU_SHELL (mom_cmdcomplmenu),
+                                     curcomplitem);
+              g_signal_connect (curcomplitem, "activate",
+                                G_CALLBACK (momgui_completecmdix),
+                                (void *) ((intptr_t) ix));
+            }
+          g_signal_connect (mom_cmdcomplmenu, "deactivate",
+                            G_CALLBACK (gtk_widget_destroyed),
+                            &mom_cmdcomplmenu);
+          gtk_widget_show_all (mom_cmdcomplmenu);
+          gtk_menu_popup_at_pointer (GTK_MENU (mom_cmdcomplmenu), NULL);
+        }
+      else
+        {
+          MOM_WARNPRINTF ("unimplemented completion of %u for %s", complsiz,
+                          wordtxt);
         }
       g_free (wordtxt);
 #warning cmdtextview_keyrelease: TAB blocking dont work
@@ -2041,16 +2206,17 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
   mom_gtkcssprov = gtk_css_provider_get_default ();
   if (!mom_gtk_style_path || !isalpha (mom_gtk_style_path[0])
       || strchr (mom_gtk_style_path, '/'))
-    MOM_FATAPRINTF ("GTK style path (given by --gtk-style %s ...) is invalid",
-                    mom_gtk_style_path);
+    MOM_FATAPRINTF
+      ("GTK style path (given by --gtk-style %s ...) is invalid",
+       mom_gtk_style_path);
   if (access (mom_gtk_style_path, R_OK))
     MOM_FATAPRINTF ("GTK style %s is not readable", mom_gtk_style_path);
   g_signal_connect (mom_gtkcssprov, "parsing-error",
                     G_CALLBACK (momgui_cssparsingerror), NULL);
   gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path, NULL);
   MOM_INFORMPRINTF ("after loading GTK style %s", mom_gtk_style_path);
-  g_signal_connect (mom_gtkapp, "activate", G_CALLBACK (mom_gtkapp_activate),
-                    NULL);
+  g_signal_connect (mom_gtkapp, "activate",
+                    G_CALLBACK (mom_gtkapp_activate), NULL);
   if (dispobjects)
     {
       int nbdisp = 0;
