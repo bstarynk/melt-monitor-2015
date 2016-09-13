@@ -1243,6 +1243,15 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
       mom_display_objpayload (obr, pdx, depth);
     }
   /// end mark
+  if (depth > 0)
+    {                           // ending para
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, " \342\201\226"   //U+2056 THREE DOT PUNCTUATION ⁖
+                                        " end ", -1, mom_tag_objsubtitle,
+                                        NULL);
+      mom_display_objref (obr, pdx, mom_tag_objsubtitle);
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_objsubtitle);
+    }
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   MOM_ASSERTPRINTF (dinf->mo_gdo_endmark == NULL, "dinf got mo_gdo_endmark");
   dinf->mo_gdo_endmark =
