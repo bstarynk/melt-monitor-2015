@@ -721,7 +721,7 @@ mom_set_complete_objectid (const char *prefix)
               mo_objref_t *newarr =
                 mom_gc_alloc (newsiz * sizeof (mo_objref_t));
               memcpy (newarr, matcharr, matchcnt * sizeof (mo_objref_t));
-              matchcnt = newarr;
+              matcharr = newarr;
               matchsiz = newsiz;
             }
           MOM_ASSERTPRINTF (matchcnt < bucnt, "buggy matchcnt=%d bucnt=%d",
