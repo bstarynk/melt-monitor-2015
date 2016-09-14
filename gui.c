@@ -1625,6 +1625,7 @@ mom_objectcombo (void)
                                         GTK_SENSITIVITY_ON);
   g_signal_connect (combobox, "popup", G_CALLBACK (mom_obcombo_populator),
                     NULL);
+  MOM_INFORMPRINTF("objectcombo combobox@%p", combobox);
   return combobox;
 }                               /* end mom_objectcombo */
 
