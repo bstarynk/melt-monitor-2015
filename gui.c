@@ -1551,7 +1551,8 @@ mom_obname_cmp (const void *p1, const void *p2)
 static void
 mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
 {
-
+  MOM_INFORMPRINTF ("obcombo_populator combobox@%p start", combobox);
+  MOM_ASSERTPRINTF (GTK_IS_COMBO_BOX (combobox), "bad combobox@%p", combobox);
   GtkListStore *combolist =     //
     GTK_LIST_STORE (gtk_combo_box_get_model (combobox));
   GtkWidget *entry = gtk_bin_get_child (GTK_BIN (combobox));
@@ -1564,7 +1565,8 @@ mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
   gtk_tree_model_get_iter_first (GTK_TREE_MODEL (combolist), &trit);
   if (preflen == 0 || isalpha (prefix[0]))
     {
-      mo_value_t namsetv = (preflen == 0)
+      mo_value_t namsetv =
+        (preflen == 0)
         ? mo_named_objects_set () : mo_named_set_of_prefix (prefix);
       int nbnam = mo_set_size (namsetv);
       mo_value_t *namarr = mom_gc_alloc ((1 + nbnam) * sizeof (mo_value_t));
@@ -1577,11 +1579,14 @@ mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
             namarr[cntnam++] = curnamv;
         }
       qsort (namarr, cntnam, sizeof (mo_value_t), mom_obname_cmp);
+      MOM_INFORMPRINTF ("obcombo_populator cntnam=%d", cntnam);
       for (int ix = 0; ix < cntnam; ix++)
         {
           gtk_list_store_append (combolist, &trit);
           gtk_list_store_set (combolist, &trit, 0,
                               mo_string_cstr (namarr[ix]), -1);
+          MOM_INFORMPRINTF ("obcombo_populator ix#%d name '%s'",
+                            ix, mo_string_cstr (namarr[ix]));
         }
     }
   else if (prefix[0] == '_' && isdigit (prefix[1])
@@ -1589,6 +1594,8 @@ mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
     {
       mo_value_t anonsetv = mom_set_complete_objectid (prefix);
       int nbanon = mo_set_size (anonsetv);
+      MOM_INFORMPRINTF ("obcombo_populator nbanon=%d for prefix'%s'", nbanon,
+                        prefix);
       for (int ix = 0; ix < nbanon; ix++)
         {
           char bufid[MOM_CSTRIDSIZ];
@@ -1598,9 +1605,11 @@ mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
             {
               gtk_list_store_append (combolist, &trit);
               gtk_list_store_set (combolist, &trit, 0, bufid, MOM_CSTRIDLEN);
+              MOM_INFORMPRINTF ("obcombo_populator ix#%d id %s", ix, bufid);
             }
         }
     }
+  gtk_widget_show_all (combobox);
 }                               /* end mom_obcombo_populator */
 
 static GtkWidget *
@@ -1624,7 +1633,7 @@ mom_objectcombo (void)
 static void
 mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
 {
-  MOM_INFORMPRINTF ("display_edit");
+  MOM_INFORMPRINTF ("display_edit menuitm@%p", menuitm);
   GtkWidget *displaydialog =    //
     gtk_dialog_new_with_buttons ("display:",
                                  GTK_WINDOW (mom_appwin),
@@ -1643,9 +1652,10 @@ mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   gtk_box_pack_start (GTK_BOX (hbox), gtk_label_new ("object:"),
                       FALSE, FALSE, 1);
   GtkWidget *obcombo = mom_objectcombo ();
+  MOM_INFORMPRINTF ("display_edit obcombo@%p", obcombo);
   GtkWidget *obentry = gtk_bin_get_child (GTK_BIN (obcombo));
   MOM_ASSERTPRINTF (GTK_IS_ENTRY (obentry), "bad obentry");
-  gtk_box_pack_end (GTK_BOX (hbox), obentry, TRUE, TRUE, 1);
+  gtk_box_pack_end (GTK_BOX (hbox), obcombo, TRUE, TRUE, 1);
   gtk_widget_show_all (displaydialog);
   mo_objref_t displobr = NULL;
   int res = 0;
