@@ -145,8 +145,7 @@ static GHashTable *mom_shownobjocc_hashtable;
 struct momgui_cmdparse_st
 {
   unsigned mo_gcp_nmagic;       // always MOMGUI_CMDPARSE_MAGIC
-  unsigned mo_gcp_parspos;      // current parse position
-  const char *mo_gcp_bufcont;   // malloc-ed text buffer
+  GtkTextIter mo_gcp_curiter;
   mo_value_t mo_gcp_errstrv;    // error string value
   jmp_buf mo_gcp_failjb;        // for escaping on error
 };                              /* end of momgui_cmdparse_st */
@@ -2086,32 +2085,26 @@ momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
                     "bad cpars@%p", cpars);
-  GtkTextIter itcur = { };
-  GtkTextIter itbeg = { };
-  GtkTextIter itstart = { };
-  GtkTextIter itend = { };
-  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-                              &itend);
-  unsigned bcnt = gtk_text_buffer_get_char_count (mom_cmdtextbuf);
-  unsigned pos = cpars->mo_gcp_parspos;
-  if (pos > bcnt)
-    pos = bcnt;
-  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &itcur, pos);
-  itbeg = itcur;
   gunichar uc = 0;
   int nbspaces = 0;
-  while ((uc = gtk_text_iter_get_char (&itcur)) != 0)
+  GtkTextIter itbeg = cpars->mo_gcp_curiter;
+  while ((uc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter)) != 0)
     {
       if (!g_unichar_isspace (uc))
         break;
-      if (!gtk_text_iter_forward_char (&itcur))
+      if (!gtk_text_iter_forward_char (&cpars->mo_gcp_curiter))
         break;
       nbspaces++;
     }
   if (nbspaces > 0)
-    gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itbeg, &itcur);
-  cpars->mo_gcp_parspos = gtk_text_iter_get_offset (&itcur);
-  return gtk_text_iter_is_end (&itcur);
+    {
+      gint curoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+      gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itbeg,
+                                       &cpars->mo_gcp_curiter);
+      gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
+                                          &cpars->mo_gcp_curiter, curoff);
+    }
+  return gtk_text_iter_is_end (&cpars->mo_gcp_curiter);
 }                               /* end momgui_cmdparse_skipspaces */
 
 static void
@@ -2122,23 +2115,24 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
   MOM_ASSERTPRINTF (lineno > 0, "bad lineno=%d", lineno);
   MOM_ASSERTPRINTF (mo_dyncast_string (cpars->mo_gcp_errstrv),
                     "bad errstrv in cpars@%p", cpars);
+  gint curoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
   MOM_WARNPRINTF_AT (__FILE__, lineno, "command parse failure (pos#%d): %s",
-                     cpars->mo_gcp_parspos,
-                     mo_string_cstr (cpars->mo_gcp_errstrv));
+                     curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
   GtkTextIter itstart = { };
   GtkTextIter itend = { };
-  GtkTextIter iterrp = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
                               &itend);
   gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
-  unsigned bcnt = gtk_text_buffer_get_char_count (mom_cmdtextbuf);
-  unsigned epos = cpars->mo_gcp_parspos;
-  if (epos > bcnt)
-    epos = bcnt;
-  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &iterrp, epos);
-  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_fail, &iterrp,
-                             &itend);
-  momgui_cmdstatus_printf ("parse failure#%d: %s", lineno,
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
+                                      &cpars->mo_gcp_curiter, curoff);
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_fail,
+                             &cpars->mo_gcp_curiter, &itend);
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
+                                      &cpars->mo_gcp_curiter, curoff);
+  momgui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
+                           (unsigned) curoff,
                            mo_string_cstr (cpars->mo_gcp_errstrv));
 }                               /* end momgui_cmdparsefailure */
 
@@ -2156,24 +2150,19 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   GtkTextIter itend = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
                               &itend);
-  gchar *bufcont =
-    gtk_text_buffer_get_text (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-                              &itend, FALSE);
-  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction curspos=%d bufcont=%s\n",
-                    curspos, bufcont);
   struct momgui_cmdparse_st cmdparse = { };
   memset (&cmdparse, 0, sizeof (cmdparse));
   cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
-  cmdparse.mo_gcp_bufcont = bufcont;
+  cmdparse.mo_gcp_curiter = itstart;
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
+#warning should parse something in cmdtextbuf_enduseraction
     }
   else                          /* failerr != 0 */
     {
       MOM_WARNPRINTF ("parsing of command failed, failerr=%d", failerr);
     };
-  g_free (bufcont);
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
 
