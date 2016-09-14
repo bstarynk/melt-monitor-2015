@@ -2289,7 +2289,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
     }                           // end decimal or signed number
-  else if (curc < 127 && (isalpha (curc) || curc == '_'))
+  else if (curc < 127 && (isalpha (curc) || curc == '_'))       // parse objects
     return momgui_cmdparse_object (cpars, msg);
   else if (curc == '~')
     {                           // ~ is for NIL
@@ -2322,6 +2322,99 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
           g_free (strtxt), strtxt = NULL;
           return vstr;
         }
+    }
+  else if (curc == '{')
+    {                           // parse sets of objects
+      mo_vectvaldatapayl_ty *vectobj = NULL;
+      unsigned leftbraceoff =
+        gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+      unsigned rightbraceoff = 0;
+      GtkTextIter bracit = cpars->mo_gcp_curiter;
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                 &bracit, &cpars->mo_gcp_curiter);
+      while (!momgui_cmdparse_skipspaces (cpars))
+        {
+          gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+          if (curc == '}')
+            {
+              rightbraceoff =
+                gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+              GtkTextIter bracit = cpars->mo_gcp_curiter;
+              gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                         &bracit, &cpars->mo_gcp_curiter);
+              momgui_cmdparse_delimoffsetpairs (cpars, leftbraceoff,
+                                                rightbraceoff);
+              break;
+            }
+          mo_objref_t elemob = momgui_cmdparse_object (cpars, "set-elem");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              if (!elemob)
+                MOMGUI_CMDPARSEFAIL (cpars, "nil object as set element (%s)",
+                                     msg);
+              vectobj = mo_vectval_append (vectobj, elemob);
+            }
+        };
+      if (!cpars->mo_gcp_onlyparse)
+        {
+          unsigned cnt = mo_vectval_count (vectobj);
+          if (!cnt)
+            return mo_make_empty_set ();
+          return mo_make_set_closeq
+            (mo_sequence_filled_allocate (cnt, vectobj->mo_vect_arr));
+        }
+      return NULL;
+    }
+  else if (curc == 0x2205 /* U+2205 EMPTY SET ∅ */ )
+    {
+      GtkTextIter delit = cpars->mo_gcp_curiter;
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                 &delit, &cpars->mo_gcp_curiter);
+      return mo_make_empty_set ();
+    }
+  else if (curc == '[')
+    {                           // parse tuples of objects
+      mo_vectvaldatapayl_ty *vectobj = NULL;
+      unsigned leftbrackoff =
+        gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+      unsigned rightbrackoff = 0;
+      GtkTextIter brackit = cpars->mo_gcp_curiter;
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                 &brackit, &cpars->mo_gcp_curiter);
+      while (!momgui_cmdparse_skipspaces (cpars))
+        {
+          gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+          if (curc == ']')
+            {
+              rightbrackoff =
+                gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+              GtkTextIter bracit = cpars->mo_gcp_curiter;
+              gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                         &bracit, &cpars->mo_gcp_curiter);
+              momgui_cmdparse_delimoffsetpairs (cpars, leftbrackoff,
+                                                rightbrackoff);
+              break;
+            }
+          mo_objref_t elemob = momgui_cmdparse_object (cpars, "tuple-comp");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              vectobj = mo_vectval_append (vectobj, elemob);
+            }
+        };
+      if (!cpars->mo_gcp_onlyparse)
+        {
+          unsigned cnt = mo_vectval_count (vectobj);
+          if (!cnt)
+            return mo_make_empty_tuple ();
+          return mo_make_tuple_closeq
+            (mo_sequence_filled_allocate (cnt, vectobj->mo_vect_arr));
+        }
+      return NULL;
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
 }                               /* end momgui_cmdparse_value */
@@ -2577,7 +2670,8 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
               if (!valat)
                 MOMGUI_CMDPARSEFAIL (cpars,
                                      "missing value for adding attribute %s in %s (%s)",
-                                     msg);
+                                     mo_objref_pnamestr (obattr),
+                                     mo_objref_pnamestr (obr), msg);
               mo_objref_put_attr (obr, obattr, valat);
             };
         }
