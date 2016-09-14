@@ -2500,6 +2500,9 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
           gtk_text_iter_forward_chars (&endunit, nlen);
           gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
                                      &startunit, &endunit);
+          MOM_WARNPRINTF ("unknown object '%s' (%s) nlen=%d pos#%d",
+                          nambuf, msg, nlen,
+                          gtk_text_iter_get_offset (&startunit));
           cpars->mo_gcp_curiter = endunit;
           if (!cpars->mo_gcp_onlyparse)
             MOMGUI_CMDPARSEFAIL (cpars, "unknown object %s (%s)",
@@ -2915,7 +2918,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "number",
                                 "family", "Courier New",
-                                "foreground", "slateblue", NULL);
+                                "foreground", "darkgoldenrod", NULL);
   mom_cmdtag_string =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "string",
@@ -2924,13 +2927,14 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_cmdtag_delim =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "delim",
-                                "family", "Courier New",
+                                "scale", 1.07,
+                                "family", "FreeMono, Bold",
                                 "foreground", "steelblue", NULL);
   mom_cmdtag_name =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "name",
-                                "family", "Courier New",
-                                "foreground", "sienna", NULL);
+                                "family", "DejaVu Sans Mono, Bold",
+                                "foreground", "mediumpurple", NULL);
   mom_cmdtag_anon =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "anon",
@@ -2939,8 +2943,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_cmdtag_unknown =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "unknown",
-                                "family", "Courier New, Oblique",
-                                "foreground", "indianred", NULL);
+                                "family", "Courier New, Bold Italic",
+                                "foreground", "darkred", NULL);
   mom_cmdtag_newglob =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "newglob",
