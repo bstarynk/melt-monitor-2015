@@ -294,7 +294,8 @@ mom_gc_strdup (const char *s)
   if (MOM_UNLIKELY (slen > MOM_BIGALLOC_THRESHOLD))
     mom_gc_warn_big_alloc (slen);
   unsigned sz = mom_prime_above ((1 + (slen + 1) / 4)) * 4;
-  MOM_ASSERTPRINTF (sz > slen + 1, "bad sz %zd for slen %zd", sz, slen);
+  MOM_ASSERTPRINTF ((size_t) sz > slen + 1,
+                    "bad sz %u for slen %zd", sz, slen);
   char *p = GC_MALLOC_ATOMIC (sz);
   memcpy (p, s, slen + 1);
   if (MOM_UNLIKELY (p == NULL))

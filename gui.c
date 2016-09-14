@@ -2364,7 +2364,9 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
           if (!cnt)
             return mo_make_empty_set ();
           return mo_make_set_closeq
-            (mo_sequence_filled_allocate (cnt, vectobj->mo_vect_arr));
+            (mo_sequence_filled_allocate (cnt,
+                                          (mo_objref_t
+                                           *) (vectobj->mo_vect_arr)));
         }
       return NULL;
     }
@@ -2413,7 +2415,9 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
           if (!cnt)
             return mo_make_empty_tuple ();
           return mo_make_tuple_closeq
-            (mo_sequence_filled_allocate (cnt, vectobj->mo_vect_arr));
+            (mo_sequence_filled_allocate (cnt,
+                                          (mo_objref_t
+                                           *) (vectobj->mo_vect_arr)));
         }
       return NULL;
     }
