@@ -728,7 +728,7 @@ mo_named_set_of_prefix (const char *prefix)
     return NULL;
   if (!isalpha (prefix[0]))
     return NULL;
-  int ln = 0;
+  int ln = 1;
   for (const char *pc = prefix + 1; *pc; pc++)
     {
       if (!isalnum (*pc) && *pc != '_')
