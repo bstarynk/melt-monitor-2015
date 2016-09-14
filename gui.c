@@ -1829,6 +1829,7 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
                                       mom_cmdcomplstartoff);
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &endwit,
                                       mom_cmdcomplendoff);
+  gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
   gtk_text_buffer_delete (mom_cmdtextbuf, &startwit, &endwit);
   if (mom_cmdcomplwithname)
     {
@@ -1873,6 +1874,15 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
         };
     }
   gtk_text_buffer_place_cursor (mom_cmdtextbuf, &endwit);
+  gtk_text_buffer_end_user_action (mom_cmdtextbuf);
+  if (mom_cmdcomplmenu)
+    {
+      gtk_widget_destroy (mom_cmdcomplmenu);
+      mom_cmdcomplmenu = NULL;
+    }
+  mom_cmdcomplset = NULL;
+  mom_cmdcomplstartoff = 0;
+  mom_cmdcomplendoff = 0;
 }                               /* end of momgui_completecmdix */
 
 
@@ -1952,8 +1962,10 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         momgui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
       else if ((complsiz = mo_set_size (mom_cmdcomplset)) == 1)
         {
+          /// single completion
           mo_objref_t compl1obj = mo_set_nth (mom_cmdcomplset, 0);
           MOM_ASSERTPRINTF (mo_dyncast_objref (compl1obj), "bad compl1obj");
+          gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
           gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
           if (isalpha (wordtxt[0]))
             gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
@@ -2000,6 +2012,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                 };
               gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
             }
+          gtk_text_buffer_end_user_action (mom_cmdtextbuf);
         }
       else if (complsiz == 0)
         {
@@ -2744,7 +2757,8 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
   GtkTextIter itend = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
                               &itend);
-  gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
+  gtk_text_buffer_remove_all_tags (mom_cmdtextbuf,
+                                   &cpars->mo_gcp_curiter, &itend);
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
                                       &cpars->mo_gcp_curiter, curoff);
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
@@ -2782,6 +2796,7 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
       snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
       momgui_cmdparse_value (cpars, cntbuf);
     }
+  MOM_BACKTRACEPRINTF ("cmdparse_full_bffer cnt=%d", cnt);
   if (cpars->mo_gcp_statusupdate)
     {
       momgui_cmdstatus_printf ("parsed %d values and %u chars",
@@ -2923,6 +2938,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "string",
                                 "family", "Courier New, Italics",
+                                "background", "cornsilk2",
                                 "foreground", "darkviolet", NULL);
   mom_cmdtag_delim =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
