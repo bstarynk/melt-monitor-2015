@@ -2263,8 +2263,53 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
     }                           // end decimal or signed number
+  else if (curc < 127 && (isalpha (curc) || curc == '_'))
+    return momgui_cmdparse_object (cpars, msg);
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
 }                               /* end momgui_cmdparse_value */
+
+static mo_objref_t
+momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
+{
+  mo_objref_t objp = NULL;
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  MOM_ASSERTPRINTF (msg != NULL, "missing msg");
+  if (momgui_cmdparse_skipspaces (cpars))
+    MOMGUI_CMDPARSEFAIL (cpars,
+                         "reached end of buffer, expecting object (%s)", msg);
+  gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+  gunichar nextc = momgui_cmdparse_peekchar (cpars, 1);
+  if (curc > 0 && curc < 127
+      && (isalpha ((char) curc)
+          || (curc == '_' && nextc >= '0' && nextc <= '9')))
+    {
+      gunichar namc = 0;
+      int nlen = 0;
+      char smallnambuf[40];
+      memset (smallnambuf, 0, sizeof (smallnambuf));
+      for (nlen = 0; nlen <= MOM_NAME_MAXLEN + 2
+           && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
+           && (namc < 127 && (isalnum ((char) namc) || namc == '_')); nlen++);
+      if (nlen >= MOM_NAME_MAXLEN)
+        MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
+                             nlen, msg);
+      char *nambuf =
+        (nlen < sizeof (smallnambuf) - 2)
+        ? smallnambuf
+        : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
+      for (int ix = 0; ix < nlen; ix++)
+        nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
+      if (isalpha (nambuf[0]))
+        {
+          objp = mo_find_named_cstr (nambuf);
+          if (!objp)
+            MOMGUI_CMDPARSEFAIL (cpars, "unknown object name %s (%s)",
+                                 nambuf, msg);
+        }
+#warning momgui_cmdparse_object very incomplete
+    }
+}                               /* end momgui_cmdparse_object */
 
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
