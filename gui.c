@@ -52,6 +52,7 @@ static gint mom_cmdcomplendoff; // end offset of word to be completed
 static mo_value_t mom_cmdcomplset;      // the set containing the current completion
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
+static GtkTextTag *mom_cmdtag_fail;     // tag for failure rest in command
 static GtkWidget *mom_cmdtview;
 static GtkWidget *mom_cmdstatusbar;
 
@@ -138,6 +139,35 @@ struct momgui_shownobocc_st
 // The glib hashtable mapping objects to above
 static GHashTable *mom_shownobjocc_hashtable;
 
+
+// stack-allocated struct for parsing & decorating the command buffer
+#define MOMGUI_CMDPARSE_MAGIC 0x3201f56b        /* 838989163 */
+struct momgui_cmdparse_st
+{
+  unsigned mo_gcp_nmagic;       // always MOMGUI_CMDPARSE_MAGIC
+  unsigned mo_gcp_parspos;      // current parse position
+  const char *mo_gcp_bufcont;   // malloc-ed text buffer
+  mo_value_t mo_gcp_errstrv;    // error string value
+  jmp_buf mo_gcp_failjb;        // for escaping on error
+};                              /* end of momgui_cmdparse_st */
+static void
+momgui_cmdparsefailure (struct momgui_cmdparse_st *cpar, int lineno);
+#define MOMGUI_CMDPARSEFAIL_AT(Lin,Cpars,Fmt,...) do {	\
+  struct momgui_cmdparse_st* cpars_##Lin = (Cpars);	\
+  MOM_ASSERTPRINTF(cpars_##Lin				\
+		   && cpars_##Lin->mo_gcp_nmagic	\
+		      == MOMGUI_CMDPARSE_MAGIC,		\
+		   "bad cpars " #Cpars " @%p",		\
+		   cpars_##Lin);			\
+  cpars_##Lin->mo_gcp_errstrv =				\
+    mo_make_string_sprintf(Fmt,##__VA_ARGS__);		\
+  momgui_cmdparsefailure(cpars_##Lin, Lin);		\
+  longjmp(cpars_##Lin->mo_gcp_failjb, Lin);		\
+ } while(0)
+#define MOMGUI_CMDPARSEFAIL_AT_BIS(Lin,Cpars,Fmt,...) \
+  MOMGUI_CMDPARSEFAIL_AT(Lin,Cpars,Fmt,##__VA_ARGS__)
+#define MOMGUI_CMDPARSEFAIL(Cpars,Fmt,...) \
+  MOMGUI_CMDPARSEFAIL_AT_BIS(__LINE__,Cpars,Fmt,##__VA_ARGS__)
 
 // destructor for momgui_dispobjinfo_ty, for g_hash_table_new_full
 static void
@@ -1833,7 +1863,7 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
 }                               /* end of momgui_completecmdix */
 
 
-// for "key-release-event" signal to mom_cmdtview
+// for "key-release-event" signal to mom_cmdtview, handle completion with TAB key
 static bool
 momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                                void *data MOM_UNUSED)
@@ -2003,7 +2033,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
             mo_objref_namev (mo_set_nth (mom_cmdcomplset, 0));
           MOM_ASSERTPRINTF (mo_dyncast_string (prevnamv), "bad prevnamv");
           int commonlen = (prevnamv ? strlen (mo_string_cstr (prevnamv)) : 0);
-          for (int ix = 1; ix < complsiz && commonlen > 0; ix++)
+          for (int ix = 1; ix < (int) complsiz && commonlen > 0; ix++)
             {
               mo_objref_t curobjv = mo_set_nth (mom_cmdcomplset, ix);
               mo_value_t curnamv = mo_objref_namev (curobjv);
@@ -2048,7 +2078,71 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
 }                               /* end momgui_cmdtextview_keyrelease */
 
 
+static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *);
+static mo_value_t momgui_cmdparse_value (struct momgui_cmdparse_st *);
+// skip spaces, return true if end-of-buffer reached
+static bool
+momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
+{
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  GtkTextIter itcur = { };
+  GtkTextIter itbeg = { };
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  unsigned bcnt = gtk_text_buffer_get_char_count (mom_cmdtextbuf);
+  unsigned pos = cpars->mo_gcp_parspos;
+  if (pos > bcnt)
+    pos = bcnt;
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &itcur, pos);
+  itbeg = itcur;
+  gunichar uc = 0;
+  int nbspaces = 0;
+  while ((uc = gtk_text_iter_get_char (&itcur)) != 0)
+    {
+      if (!g_unichar_isspace (uc))
+        break;
+      if (!gtk_text_iter_forward_char (&itcur))
+        break;
+      nbspaces++;
+    }
+  if (nbspaces > 0)
+    gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itbeg, &itcur);
+  cpars->mo_gcp_parspos = gtk_text_iter_get_offset (&itcur);
+  return gtk_text_iter_is_end (&itcur);
+}                               /* end momgui_cmdparse_skipspaces */
 
+static void
+momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
+{
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  MOM_ASSERTPRINTF (lineno > 0, "bad lineno=%d", lineno);
+  MOM_ASSERTPRINTF (mo_dyncast_string (cpars->mo_gcp_errstrv),
+                    "bad errstrv in cpars@%p", cpars);
+  MOM_WARNPRINTF_AT (__FILE__, lineno, "command parse failure (pos#%d): %s",
+                     cpars->mo_gcp_parspos,
+                     mo_string_cstr (cpars->mo_gcp_errstrv));
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  GtkTextIter iterrp = { };
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
+  unsigned bcnt = gtk_text_buffer_get_char_count (mom_cmdtextbuf);
+  unsigned epos = cpars->mo_gcp_parspos;
+  if (epos > bcnt)
+    epos = bcnt;
+  gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &iterrp, epos);
+  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_fail, &iterrp,
+                             &itend);
+  momgui_cmdstatus_printf ("parse failure#%d: %s", lineno,
+                           mo_string_cstr (cpars->mo_gcp_errstrv));
+}                               /* end momgui_cmdparsefailure */
+
+#warning FIXME: missing momgui_cmdparse_object & momgui_cmdparse_value
 // for "end-user-action" signal to mom_cmdtextbuf
 static void
 momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
@@ -2067,6 +2161,18 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
                               &itend, FALSE);
   MOM_INFORMPRINTF ("cmdtextbuf_enduseraction curspos=%d bufcont=%s\n",
                     curspos, bufcont);
+  struct momgui_cmdparse_st cmdparse = { };
+  memset (&cmdparse, 0, sizeof (cmdparse));
+  cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
+  cmdparse.mo_gcp_bufcont = bufcont;
+  int failerr = setjmp (cmdparse.mo_gcp_failjb);
+  if (failerr == 0)
+    {
+    }
+  else                          /* failerr != 0 */
+    {
+      MOM_WARNPRINTF ("parsing of command failed, failerr=%d", failerr);
+    };
   g_free (bufcont);
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
@@ -2153,6 +2259,12 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
+  mom_cmdtag_fail =
+    gtk_text_buffer_create_tag (mom_cmdtextbuf,
+                                "fail",
+                                "foreground", "darkred",
+                                "background", "lightyellow",
+                                "weight", PANGO_WEIGHT_BOLD, NULL);
   gtk_widget_set_name (mom_cmdtview, "cmdtview");
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
@@ -2307,8 +2419,6 @@ momgui_cmdstatus_printf (const char *fmt, ...)
 {
   static guint statctxid;
   va_list args = { };
-  MOM_INFORMPRINTF ("cmdstatus_printf fmt=%s name=%s", fmt,
-                    gtk_widget_get_name (mom_cmdstatusbar));
   if (MOM_UNLIKELY (statctxid == 0))
     {
       statctxid =
