@@ -976,6 +976,7 @@ mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat);
 static inline void
 mo_objref_put_attr (mo_objref_t ob, mo_objref_t obat, mo_value_t val);
 
+// find the object of given hid & loid
 mo_objref_t mo_objref_find_hid_loid (mo_hid_t hid, mo_loid_t loid);
 
 // create an object of given valid hid & loid; mostly useful at load
