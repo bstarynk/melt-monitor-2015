@@ -1098,6 +1098,7 @@ mom_print_info (void)
 static gboolean want_version_mom;
 static gboolean want_info_mom;
 static gboolean no_gui_mom;
+static gboolean silent_big_alloc_mom;
 static char *initrand_mom;
 static char **predef_names_mom;
 static char **predef_comments_mom;
@@ -1113,6 +1114,8 @@ static const GOptionEntry mom_goptions[] = {
    &mom_dump_dir, "dump into directory D", "D"},
   {"no-gui", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
    &no_gui_mom, "without GTK graphical user interface", NULL},
+  {"silent-big-alloc", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &silent_big_alloc_mom, "don't warn for large allocation", NULL},
   {"add-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
    &predef_names_mom, "add predefined of name N with comment C", "N"},
   {"comment-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
@@ -1134,6 +1137,13 @@ static const GOptionEntry mom_goptions[] = {
   {NULL}
 };
 
+void
+mom_gc_warn_big_alloc (size_t sz)
+{
+  if (silent_big_alloc_mom)
+    return;
+  MOM_BACKTRACEPRINTF ("BIG ALLOCATION of %zd bytes", sz);
+}                               /* end mom_gc_warn_big_alloc */
 
 
 

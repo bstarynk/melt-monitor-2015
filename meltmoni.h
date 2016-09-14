@@ -246,9 +246,14 @@ __attribute__ ((format (printf, 3, 4), noreturn));
       ##__VA_ARGS__)
 
 #endif /*NDEBUG*/
+void mom_gc_warn_big_alloc (size_t sz);
+
+#define MOM_BIGALLOC_THRESHOLD (sizeof(void*)<<20)
 static inline void *
 mom_gc_alloc (size_t sz)
 {
+  if (MOM_UNLIKELY (sz > MOM_BIGALLOC_THRESHOLD))
+    mom_gc_warn_big_alloc (sz);
   void *p = GC_MALLOC (sz);
   if (MOM_UNLIKELY (p == NULL))
     MOM_FATAPRINTF ("failed to allocate %zd bytes", sz);
@@ -259,6 +264,8 @@ mom_gc_alloc (size_t sz)
 static inline void *
 mom_gc_alloc_scalar (size_t sz)
 {
+  if (MOM_UNLIKELY (sz > MOM_BIGALLOC_THRESHOLD))
+    mom_gc_warn_big_alloc (sz);
   void *p = GC_MALLOC_ATOMIC (sz);
   if (MOM_UNLIKELY (p == NULL))
     MOM_FATAPRINTF ("failed to allocate %zd scalar bytes", sz);
@@ -269,6 +276,8 @@ mom_gc_alloc_scalar (size_t sz)
 static inline void *
 mom_gc_alloc_uncollectable (size_t sz)
 {
+  if (MOM_UNLIKELY (sz > MOM_BIGALLOC_THRESHOLD))
+    mom_gc_warn_big_alloc (sz);
   void *p = GC_MALLOC_UNCOLLECTABLE (sz);
   if (MOM_UNLIKELY (p == NULL))
     MOM_FATAPRINTF ("failed to allocate %zd uncollectable bytes", sz);
@@ -281,11 +290,17 @@ mom_gc_strdup (const char *s)
 {
   if (!s || s == MOM_EMPTY_SLOT)
     return NULL;
-  char *p = GC_STRDUP (s);
+  size_t slen = strlen (s);
+  if (MOM_UNLIKELY (slen > MOM_BIGALLOC_THRESHOLD))
+    mom_gc_warn_big_alloc (slen);
+  unsigned sz = mom_prime_above ((1 + (slen + 1) / 4)) * 4;
+  MOM_ASSERTPRINTF (sz > slen + 1, "bad sz %zd for slen %zd", sz, slen);
+  char *p = GC_MALLOC_ATOMIC (sz);
+  memcpy (p, s, slen + 1);
   if (MOM_UNLIKELY (p == NULL))
     MOM_FATAPRINTF ("failed to gc strdup %s", s);
   return p;
-}
+}                               /* end of mom_gc_strdup */
 
 void
 mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
