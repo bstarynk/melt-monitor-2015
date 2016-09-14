@@ -53,6 +53,7 @@ static mo_value_t mom_cmdcomplset;      // the set containing the current comple
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
 static GtkTextTag *mom_cmdtag_fail;     // tag for failure rest in command
+static GtkTextTag *mom_cmdtag_number;   // tag for number
 static GtkWidget *mom_cmdtview;
 static GtkWidget *mom_cmdstatusbar;
 
@@ -147,6 +148,8 @@ struct momgui_cmdparse_st
   unsigned mo_gcp_nmagic;       // always MOMGUI_CMDPARSE_MAGIC
   GtkTextIter mo_gcp_curiter;
   mo_value_t mo_gcp_errstrv;    // error string value
+  mo_hashsetpayl_ty *mo_gcp_setparsed;  /* hashset of parsed objects */
+  mo_hashsetpayl_ty *mo_gcp_setcreated; /* hashset of created objects */
   jmp_buf mo_gcp_failjb;        // for escaping on error
 };                              /* end of momgui_cmdparse_st */
 static void
@@ -2077,8 +2080,10 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
 }                               /* end momgui_cmdtextview_keyrelease */
 
 
-static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *);
-static mo_value_t momgui_cmdparse_value (struct momgui_cmdparse_st *);
+static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *,
+                                           const char *);
+static mo_value_t momgui_cmdparse_value (struct momgui_cmdparse_st *,
+                                         const char *);
 // skip spaces, return true if end-of-buffer reached
 static bool
 momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
@@ -2106,6 +2111,160 @@ momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
     }
   return gtk_text_iter_is_end (&cpars->mo_gcp_curiter);
 }                               /* end momgui_cmdparse_skipspaces */
+
+static inline gunichar
+momgui_cmdparse_peekchar (struct momgui_cmdparse_st *cpars, int delta)
+{
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  if (delta == 0)
+    return gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
+  GtkTextIter it = cpars->mo_gcp_curiter;
+  if (delta > 0)
+    {
+      if (!gtk_text_iter_forward_chars (&it, delta))
+        return 0;
+      return gtk_text_iter_get_char (&it);
+    }
+  else if (delta < 0)
+    {
+      if (!gtk_text_iter_backward_chars (&it, delta))
+        return 0;
+      return gtk_text_iter_get_char (&it);
+    }
+  return 0;
+}                               /* end of momgui_cmdparse_peekchar */
+
+static inline int
+momgui_cmdparse_curline_bytesize (struct momgui_cmdparse_st *cpars)
+{
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  GtkTextIter it = cpars->mo_gcp_curiter;
+  gtk_text_iter_forward_line (&it);
+  return gtk_text_iter_get_line_index (&it) -
+    gtk_text_iter_get_line_index (&cpars->mo_gcp_curiter);
+}                               /* end of momgui_cmdparse_curline_bytesize */
+
+
+static mo_value_t
+momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
+{
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  MOM_ASSERTPRINTF (msg != NULL, "missing msg");
+  if (momgui_cmdparse_skipspaces (cpars))
+    MOMGUI_CMDPARSEFAIL (cpars, "reached end of buffer, expecting value (%s)",
+                         msg);
+  gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+  gunichar nextc = momgui_cmdparse_peekchar (cpars, 1);
+  gunichar digc = 0;
+  char sbuf[72];
+  memset (sbuf, 0, sizeof (sbuf));
+  if (curc == '0' && (nextc == 'x' || nextc == 'X'))
+    {
+      // parse an hex number
+      int ix;
+      char *endp = NULL;
+      sbuf[0] = curc;
+      sbuf[1] = nextc;
+      for (ix = 2; ix < sizeof (sbuf) - 2
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc < 127 && isxdigit (digc); ix++)
+        sbuf[ix] = (char) digc;
+      if (ix >= sizeof (sbuf) - 4)
+        MOMGUI_CMDPARSEFAIL (cpars, "too long hex number %s (%s)", sbuf, msg);
+      long long ll = strtoll (sbuf, &endp, 16);
+      if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
+        MOMGUI_CMDPARSEFAIL (cpars, "bad hex number %s (%s)", sbuf, msg);
+      int numlen = endp - sbuf;
+      GtkTextIter startnumit = cpars->mo_gcp_curiter;
+      GtkTextIter endnumit = startnumit;
+      gtk_text_iter_forward_chars (&endnumit, numlen);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
+                                 &startnumit, &endnumit);
+      cpars->mo_gcp_curiter = endnumit;
+      return mo_int_to_value (ll);
+    }                           // end hex number
+  else if (curc == '0' && (nextc == 'o' || nextc == 'O'))
+    {
+      // parse an octal number
+      int ix;
+      char *endp = NULL;
+      sbuf[0] = curc;
+      sbuf[1] = nextc;
+      for (ix = 2; ix < sizeof (sbuf) - 2
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc < 127 && digc >= '0' && digc <= '7'; ix++)
+        sbuf[ix] = (char) digc;
+      if (ix >= sizeof (sbuf) - 4)
+        MOMGUI_CMDPARSEFAIL (cpars, "too long octal number %s (%s)", sbuf,
+                             msg);
+      long long ll = strtoll (sbuf + 2, &endp, 8);
+      if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
+        MOMGUI_CMDPARSEFAIL (cpars, "bad octal number %s (%s)", sbuf, msg);
+      int numlen = endp - sbuf;
+      GtkTextIter startnumit = cpars->mo_gcp_curiter;
+      GtkTextIter endnumit = startnumit;
+      gtk_text_iter_forward_chars (&endnumit, numlen);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
+                                 &startnumit, &endnumit);
+      cpars->mo_gcp_curiter = endnumit;
+      return mo_int_to_value (ll);
+    }                           // end octal number
+  else if (curc == '0' && (nextc == 'b' || nextc == 'B'))
+    {
+      // parse a binary number
+      int ix;
+      char *endp = NULL;
+      sbuf[0] = curc;
+      sbuf[1] = nextc;
+      for (ix = 2; ix < sizeof (sbuf) - 2
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && (digc == '0' || digc == '1'); ix++)
+        sbuf[ix] = (char) digc;
+      if (ix >= sizeof (sbuf) - 4)
+        MOMGUI_CMDPARSEFAIL (cpars, "too long binary number %s (%s)", sbuf,
+                             msg);
+      long long ll = strtoll (sbuf + 2, &endp, 8);
+      if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
+        MOMGUI_CMDPARSEFAIL (cpars, "bad binary number %s (%s)", sbuf, msg);
+      int numlen = endp - sbuf;
+      GtkTextIter startnumit = cpars->mo_gcp_curiter;
+      GtkTextIter endnumit = startnumit;
+      gtk_text_iter_forward_chars (&endnumit, numlen);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
+                                 &startnumit, &endnumit);
+      cpars->mo_gcp_curiter = endnumit;
+      return mo_int_to_value (ll);
+    }                           // end binary number
+  else if ((curc >= '0' && curc <= '9')
+           || ((curc == '+' || curc == '-') && nextc >= '0' && nextc <= '9'))
+    {                           /* signed decimal number */
+      int ix;
+      char *endp = NULL;
+      sbuf[0] = curc;
+      sbuf[1] = nextc;
+      for (ix = 1; ix < sizeof (sbuf) - 2
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc >= '0' && digc <= '9'; ix++)
+        sbuf[ix] = (char) digc;
+      if (ix >= sizeof (sbuf) - 4)
+        MOMGUI_CMDPARSEFAIL (cpars, "too long number %s (%s)", sbuf, msg);
+      long long ll = strtoll (sbuf, &endp, 0);
+      if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
+        MOMGUI_CMDPARSEFAIL (cpars, "bad number %s (%s)", sbuf, msg);
+      int numlen = endp - sbuf;
+      GtkTextIter startnumit = cpars->mo_gcp_curiter;
+      GtkTextIter endnumit = startnumit;
+      gtk_text_iter_forward_chars (&endnumit, numlen);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
+                                 &startnumit, &endnumit);
+      cpars->mo_gcp_curiter = endnumit;
+      return mo_int_to_value (ll);
+    }                           // end decimal or signed number
+  MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
+}                               /* end momgui_cmdparse_value */
 
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
@@ -2254,6 +2413,11 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                 "foreground", "darkred",
                                 "background", "lightyellow",
                                 "weight", PANGO_WEIGHT_BOLD, NULL);
+  mom_cmdtag_number =
+    gtk_text_buffer_create_tag (mom_cmdtextbuf,
+                                "number",
+                                "family", "Courier New",
+                                "foreground", "slateblue", NULL);
   gtk_widget_set_name (mom_cmdtview, "cmdtview");
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
