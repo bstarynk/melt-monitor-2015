@@ -553,9 +553,7 @@ mo_hi_id_bucketnum (mo_hid_t hid)
 }
 
 // converse operation, fill hid & loid from a valid buffer, or else return false
-extern bool                     // in object.c
-
-
+extern bool
 mo_get_hi_lo_ids_from_cstring (mo_hid_t * phid, mo_loid_t * ploid,
                                const char *buf);
 

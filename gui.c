@@ -720,6 +720,8 @@ mom_display_hashset (mo_hashsetpayl_ty * hset, momgui_dispctxt_ty * pdx,
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
 }                               /* end mom_display_hashset  */
 
+
+
 static void
 mom_display_list (mo_listpayl_ty * list, momgui_dispctxt_ty * pdx, int depth)
 {
@@ -1545,38 +1547,77 @@ mom_obname_cmp (const void *p1, const void *p2)
   return strcmp (s1, s2);
 }                               /* end mom_obname_cmp */
 
-static GtkWidget *
-mom_objectentry (void)
+/// see http://stackoverflow.com/a/39420466/841108
+static void
+mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
 {
-  GtkWidget *obent = gtk_combo_box_text_new_with_entry ();
-  gtk_widget_set_size_request (obent, 30, 10);
-  mo_value_t namsetv = mo_named_objects_set ();
-  int nbnam = mo_set_size (namsetv);
-  MOM_ASSERTPRINTF (nbnam > 0, "bad nbnam");
-  mo_value_t *namarr = mom_gc_alloc (nbnam * sizeof (mo_value_t));
-  int cntnam = 0;
-  for (int ix = 0; ix < nbnam; ix++)
+
+  GtkListStore *combolist =     //
+    GTK_LIST_STORE (gtk_combo_box_get_model (combobox));
+  GtkWidget *entry = gtk_bin_get_child (GTK_BIN (combobox));
+  const char *prefix = gtk_entry_get_text (GTK_ENTRY (entry));
+  MOM_INFORMPRINTF ("obcombo_populator combobox@%p prefix='%s'",
+                    combobox, prefix);
+  const size_t preflen = prefix ? strlen (prefix) : 0;
+  GtkTreeIter trit = { };
+  gtk_list_store_clear (combolist);
+  gtk_tree_model_get_iter_first (GTK_TREE_MODEL (combolist), &trit);
+  if (preflen == 0 || isalpha (prefix[0]))
     {
-      mo_objref_t curobr = mo_set_nth (namsetv, ix);
-      mo_value_t curnamv = mo_objref_namev (curobr);
-      if (mo_dyncast_string (curnamv))
-        namarr[cntnam++] = curnamv;
+      mo_value_t namsetv = (preflen == 0)
+        ? mo_named_objects_set () : mo_named_set_of_prefix (prefix);
+      int nbnam = mo_set_size (namsetv);
+      mo_value_t *namarr = mom_gc_alloc ((1 + nbnam) * sizeof (mo_value_t));
+      int cntnam = 0;
+      for (int ix = 0; ix < nbnam; ix++)
+        {
+          mo_objref_t curobr = mo_set_nth (namsetv, ix);
+          mo_value_t curnamv = mo_objref_namev (curobr);
+          if (mo_dyncast_string (curnamv))
+            namarr[cntnam++] = curnamv;
+        }
+      qsort (namarr, cntnam, sizeof (mo_value_t), mom_obname_cmp);
+      for (int ix = 0; ix < cntnam; ix++)
+        {
+          gtk_list_store_append (combolist, &trit);
+          gtk_list_store_set (combolist, &trit, 0,
+                              mo_string_cstr (namarr[ix]), -1);
+        }
     }
-  qsort (namarr, cntnam, sizeof (mo_value_t), mom_obname_cmp);
-  for (int ix = 0; ix < cntnam; ix++)
-    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (obent),
-                                    mo_string_cstr (namarr[ix]));
-  GtkWidget *combtextent = gtk_bin_get_child (GTK_BIN (obent));
-  MOM_ASSERTPRINTF (GTK_IS_ENTRY (combtextent), "bad combtextent");
-  MOM_ASSERTPRINTF (gtk_entry_get_completion (GTK_ENTRY (combtextent)) ==
-                    NULL, "got completion in combtextent");
-  // if the entered text starts with a letter, I want it to be
-  // completed with the appended text above if the entered text starts
-  // with an undersore, then a digit, then two alphanum (like _0BV or
-  // _6S3 for example), I want to call a completion function.
-#warning objectentry: what should I code here?
-  return obent;
-}                               /* end mom_objectentry */
+  else if (prefix[0] == '_' && isdigit (prefix[1])
+           && isalnum (prefix[2]) && isalnum (prefix[3]))
+    {
+      mo_value_t anonsetv = mom_set_complete_objectid (prefix);
+      int nbanon = mo_set_size (anonsetv);
+      for (int ix = 0; ix < nbanon; ix++)
+        {
+          char bufid[MOM_CSTRIDSIZ];
+          memset (bufid, 0, sizeof (bufid));
+          mo_objref_idstr (bufid, mo_set_nth (anonsetv, ix));
+          if (bufid[0])
+            {
+              gtk_list_store_append (combolist, &trit);
+              gtk_list_store_set (combolist, &trit, 0, bufid, MOM_CSTRIDLEN);
+            }
+        }
+    }
+}                               /* end mom_obcombo_populator */
+
+static GtkWidget *
+mom_objectcombo (void)
+{
+  GtkListStore *comblis = gtk_list_store_new (1, G_TYPE_STRING);
+  GtkWidget *combobox =
+    gtk_combo_box_new_with_model_and_entry (GTK_TREE_MODEL (comblis));
+  gtk_widget_set_size_request (combobox, 40, 10);
+  gtk_combo_box_set_id_column (GTK_COMBO_BOX (combobox), 0);
+  gtk_combo_box_set_entry_text_column (GTK_COMBO_BOX (combobox), 0);
+  gtk_combo_box_set_button_sensitivity (GTK_COMBO_BOX (combobox),
+                                        GTK_SENSITIVITY_ON);
+  g_signal_connect (combobox, "popup", G_CALLBACK (mom_obcombo_populator),
+                    NULL);
+  return combobox;
+}                               /* end mom_objectcombo */
 
 
 
@@ -1601,8 +1642,10 @@ mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   gtk_container_add (GTK_CONTAINER (contarea), hbox);
   gtk_box_pack_start (GTK_BOX (hbox), gtk_label_new ("object:"),
                       FALSE, FALSE, 1);
-  GtkWidget *obent = mom_objectentry ();
-  gtk_box_pack_end (GTK_BOX (hbox), obent, TRUE, TRUE, 1);
+  GtkWidget *obcombo = mom_objectcombo ();
+  GtkWidget *obentry = gtk_bin_get_child (GTK_BIN (obcombo));
+  MOM_ASSERTPRINTF (GTK_IS_ENTRY (obentry), "bad obentry");
+  gtk_box_pack_end (GTK_BOX (hbox), obentry, TRUE, TRUE, 1);
   gtk_widget_show_all (displaydialog);
   mo_objref_t displobr = NULL;
   int res = 0;
@@ -1612,10 +1655,13 @@ mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
       res = gtk_dialog_run (GTK_DIALOG (displaydialog));
       if (res == GTK_RESPONSE_OK)
         {
-          gchar *nams =
-            gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (obent));
+          mo_hid_t hid = 0;
+          mo_loid_t loid = 0;
+          gchar *nams = gtk_entry_get_text (obentry);
           if (nams && mom_valid_name (nams))
             displobr = mo_find_named_cstr (nams);
+          else if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nams))
+            displobr = mo_objref_find_hid_loid (hid, loid);
           else
             displobr = NULL;
           MOM_INFORMPRINTF ("should display displobr=%s",
