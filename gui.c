@@ -156,6 +156,7 @@ struct momgui_cmdparse_st
 {
   unsigned mo_gcp_nmagic;       // always MOMGUI_CMDPARSE_MAGIC
   bool mo_gcp_onlyparse;        /* only do the parsing, don't create objects */
+  bool mo_gcp_statusupdate;     // update the message in the cmdstatus bar
   GtkTextIter mo_gcp_curiter;
   mo_value_t mo_gcp_errstrv;    // error string value
   mo_hashsetpayl_ty *mo_gcp_setparsed;  /* hashset of parsed objects */
@@ -2745,10 +2746,44 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
                              &cpars->mo_gcp_curiter, &itend);
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
                                       &cpars->mo_gcp_curiter, curoff);
-  momgui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
-                           (unsigned) curoff,
-                           mo_string_cstr (cpars->mo_gcp_errstrv));
+  if (cpars->mo_gcp_statusupdate)
+    momgui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
+                             (unsigned) curoff,
+                             mo_string_cstr (cpars->mo_gcp_errstrv));
 }                               /* end momgui_cmdparsefailure */
+
+static void
+momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
+{
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  cpars->mo_gcp_curiter = itstart;
+  int cnt = 0;
+#warning this is temporary, we really should do something more fancy
+  while (!momgui_cmdparse_skipspaces (cpars))
+    {
+      char cntbuf[32];
+      memset (cntbuf, 0, sizeof (cntbuf));
+      cnt++;
+      snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
+      momgui_cmdparse_value (cpars, cntbuf);
+    }
+  if (cpars->mo_gcp_statusupdate)
+    {
+      momgui_cmdstatus_printf ("parsed %d values and %u chars",
+                               cnt,
+                               gtk_text_buffer_get_char_count
+                               (mom_cmdtextbuf));
+
+    }
+}                               /* end of momgui_cmdparse_full_buffer */
 
 // for "end-user-action" signal to mom_cmdtextbuf
 static void
@@ -2767,9 +2802,14 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   memset (&cmdparse, 0, sizeof (cmdparse));
   cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
   cmdparse.mo_gcp_curiter = itstart;
+  cmdparse.mo_gcp_onlyparse = true;
+  cmdparse.mo_gcp_statusupdate = true;  /* probably should not be always true */
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
+      // temporary, always parse... I'm not sure it is a good idea,
+      // since we'll get parsing failures on most keystrokes.
+      momgui_cmdparse_full_buffer (&cmdparse);
 #warning should parse something in cmdtextbuf_enduseraction
     }
   else                          /* failerr != 0 */
