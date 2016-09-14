@@ -46,6 +46,8 @@ mom_valid_name (const char *nam)
     return false;
   for (const char *p = nam + 1; *p; p++)
     {
+      if (p > nam + MOM_NAME_MAXLEN)
+        return false;
       if (isalnum (*p))
         continue;
       if (*p == '_')

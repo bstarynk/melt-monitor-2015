@@ -1437,6 +1437,8 @@ unsigned mom_load_nb_objects (void);
 // constant number of loaded modules
 unsigned mom_load_nb_modules (void);
 /************* NAMES ***********/
+// the maximal name length is big enough for practical purposes
+#define MOM_NAME_MAXLEN 1024
 // a name is valid if it is like some C identifier or keyword
 // initial and final underscores are not allowed
 // consecutive underscores are not allowed
