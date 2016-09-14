@@ -1142,7 +1142,8 @@ mom_gc_warn_big_alloc (size_t sz)
 {
   if (silent_big_alloc_mom)
     return;
-  MOM_BACKTRACEPRINTF ("BIG ALLOCATION of %zd bytes", sz);
+  MOM_BACKTRACEPRINTF ("BIG ALLOCATION of %d megabytes, %zd bytes",
+                       (int) (sz >> 20), sz);
 }                               /* end mom_gc_warn_big_alloc */
 
 
