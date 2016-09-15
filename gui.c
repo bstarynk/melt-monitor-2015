@@ -1876,16 +1876,26 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
       || mom_cmdcomplendoff > gtk_text_buffer_get_char_count (mom_cmdtextbuf))
     {
       MOM_WARNPRINTF
-        ("completion index ixl=%ld out of bound, or bad start %d & end %d offsets with compl.set size %d",
+        ("completion index ixl=%ld out of bound, or bad start %d & end %d offsets with compl.set size %d = %s",
          (long) ixl, (int) mom_cmdcomplstartoff, (int) mom_cmdcomplendoff,
-         mo_set_size (mom_cmdcomplset));
+         mo_set_size (mom_cmdcomplset), mo_value_pnamestr (mom_cmdcomplset));
       mom_cmdcomplset = NULL;
       mom_cmdcomplprefix = NULL;
       mom_cmdcomplstartoff = 0;
       mom_cmdcomplendoff = 0;
+      if (mom_cmdcomplmenu)
+        {
+          gtk_widget_destroy (mom_cmdcomplmenu);
+          mom_cmdcomplmenu = NULL;
+        }
       return;
     }
   mo_objref_t complobj = mo_set_nth (mom_cmdcomplset, (int) ixl);
+  MOM_INFORMPRINTF
+    ("completecmdix with %s ixl=%d complset=%s complprefix='%s' complobj=%s",
+     mom_cmdcomplwithname ? "name" : "ids", (int) ixl,
+     mo_value_pnamestr (mom_cmdcomplset), mom_cmdcomplprefix,
+     mo_objref_pnamestr (complobj));
   GtkTextIter startwit = { };
   GtkTextIter endwit = { };
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &startwit,
@@ -1947,6 +1957,7 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
   mom_cmdcomplprefix = NULL;
   mom_cmdcomplstartoff = 0;
   mom_cmdcomplendoff = 0;
+  MOM_INFORMPRINTF ("completecmdix end ixl=%d", (int) ixl);
 }                               /* end of momgui_completecmdix */
 
 
@@ -2099,12 +2110,14 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         {
           char complbufid[MOM_CSTRIDSIZ];
           memset (complbufid, 0, sizeof (complbufid));
-          if (MOM_UNLIKELY (mom_cmdcomplmenu))
+          if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
             {
-              gtk_widget_destroy (mom_cmdcomplmenu);
-              mom_cmdcomplmenu = NULL;
-              mom_cmdcomplstartoff = 0;
-              mom_cmdcomplendoff = 0;
+              gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
+              gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                      mom_cmdcomplprefix, -1);
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+              gtk_text_buffer_end_user_action (mom_cmdtextbuf);
             }
           mom_cmdcomplmenu = gtk_menu_new ();
           mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
@@ -2132,34 +2145,14 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
       else if (mom_cmdcomplwithname && complsiz < MOMGUI_COMPLETION_MANY_NAMES
                && complsiz >= MOMGUI_COMPLETION_MENU_MAX)
         {
-          mo_value_t prevnamv =
-            mo_objref_namev (mo_set_nth (mom_cmdcomplset, 0));
-          MOM_ASSERTPRINTF (mo_dyncast_string (prevnamv), "bad prevnamv");
-          int commonlen = (prevnamv ? strlen (mo_string_cstr (prevnamv)) : 0);
-          for (int ix = 1; ix < (int) complsiz && commonlen > 0; ix++)
+          if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
             {
-              mo_objref_t curobjv = mo_set_nth (mom_cmdcomplset, ix);
-              mo_value_t curnamv = mo_objref_namev (curobjv);
-              MOM_ASSERTPRINTF (mo_dyncast_string (curnamv),
-                                "bad curnamv for ix#%d", ix);
-              const char *prevpc = mo_string_cstr (prevnamv);
-              const char *curpc = mo_string_cstr (curnamv);
-              int samelen = 0;
-              while ((*prevpc) != (char) 0 && (*curpc) != (char) 0
-                     && *prevpc == *curpc)
-                samelen++;
-              if (commonlen > samelen)
-                commonlen = samelen;
-              prevnamv = curnamv;
-            }
-          if (commonlen > 1)
-            {
-              char *commonprefix = mom_gc_alloc_scalar (commonlen + 2);
-              memcpy (commonprefix, mo_string_cstr (prevnamv), commonlen);
+              gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
               gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
               gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
-                                      commonprefix, commonlen);
+                                      mom_cmdcomplprefix, -1);
               gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+              gtk_text_buffer_end_user_action (mom_cmdtextbuf);
             }
           momgui_cmdstatus_printf
             ("%d completions for %s :: %s ... %s",
