@@ -2034,11 +2034,15 @@ momgui_cmdtextview_populatepopup (GtkTextView * tview MOM_UNUSED,
   if (GTK_IS_MENU (popup))
     {
       GtkWidget *parseitem = gtk_menu_item_new_with_label ("parse [Ctrl-F1]");
+      gtk_menu_shell_append (GTK_MENU_SHELL (popup),
+                             gtk_separator_menu_item_new ());
       gtk_menu_shell_append (GTK_MENU_SHELL (popup), parseitem);
       g_signal_connect (parseitem, "activate",
                         G_CALLBACK (momgui_parse_cmdtext), NULL);
       if (gtk_text_view_get_editable (GTK_TEXT_VIEW (mom_cmdtview)))
         {
+          gtk_menu_shell_append (GTK_MENU_SHELL (popup),
+                                 gtk_separator_menu_item_new ());
           GtkWidget *runitem = gtk_menu_item_new_with_label ("run [ESC]");
           g_signal_connect (runitem, "activate",
                             G_CALLBACK (momgui_run_cmdtext), NULL);
@@ -2049,6 +2053,7 @@ momgui_cmdtextview_populatepopup (GtkTextView * tview MOM_UNUSED,
                             G_CALLBACK (momgui_runclear_cmdtext), NULL);
           gtk_menu_shell_append (GTK_MENU_SHELL (popup), runclearitem);
         }
+      gtk_widget_show_all (popup);
     }
   else
     MOM_BACKTRACEPRINTF ("non-menu cmdtextview popup");
@@ -2492,7 +2497,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
     }                           // end decimal or signed number
-  else if (curc < 127 && (isalpha (curc) || curc == '_'))       // parse objects
+  else if (curc < 127 && (isalpha (curc) || curc == '_' || curc == '?'))        // parse objects
     return momgui_cmdparse_object (cpars, msg);
   else if (curc == '~')
     {                           // ~ is for NIL
