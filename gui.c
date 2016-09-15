@@ -1952,6 +1952,31 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
   MOM_INFORMPRINTF ("completecmdix end ixl=%d", (int) ixl);
 }                               /* end of momgui_completecmdix */
 
+static void momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars);
+
+static void
+momgui_run_cmdtext (void)
+{
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  struct momgui_cmdparse_st cmdparse = { };
+  memset (&cmdparse, 0, sizeof (cmdparse));
+  cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
+  cmdparse.mo_gcp_curiter = itstart;
+  cmdparse.mo_gcp_onlyparse = false;
+  cmdparse.mo_gcp_statusupdate = true;
+  int failerr = setjmp (cmdparse.mo_gcp_failjb);
+  if (failerr == 0)
+    {
+      momgui_cmdparse_full_buffer (&cmdparse);
+    }
+  else                          /* failerr != 0 */
+    {
+      MOM_WARNPRINTF ("running of command failed, failerr=%d", failerr);
+    };
+}                               /* end momgui_run_cmdtext */
 
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
@@ -2161,8 +2186,20 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         }
       g_free (wordtxt);
       return TRUE;              // don't propagate
-    }
-  return FALSE;                 // to propagate the event
+    }                           /* end if tab */
+  ///
+  else if (ev && ev->type == GDK_KEY_RELEASE
+           && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
+               || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
+               || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return
+                   && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK)))
+    {                           /* F1, Escape or Ctrl-Return are evaluating the buffer */
+      momgui_run_cmdtext ();
+      return TRUE;              /* don't propagate */
+    }                           /* end if F1, Escape, or Ctrl-Return */
+
+  else
+    return FALSE;               // to propagate the event
 }                               /* end momgui_cmdtextview_keyrelease */
 
 
@@ -2421,12 +2458,12 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       GtkTextIter endit = cpars->mo_gcp_curiter;
       gtk_text_iter_backward_char (&endit);
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-      const char *encbuf =      //
+      char *encbuf =            //
         gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endit, false);
       size_t bufsiz =
         gtk_text_iter_get_line_index (&endit)
         - gtk_text_iter_get_line_index (&begit);
-      FILE *fmem = fmemopen (encbuf, bufsiz, "r");
+      FILE *fmem = fmemopen ((void *) encbuf, bufsiz, "r");
       if (!fmem)
         MOM_FATAPRINTF ("fmemopen failure for C-encoded string of %zd bytes",
                         bufsiz);
@@ -3009,7 +3046,10 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
       memset (cntbuf, 0, sizeof (cntbuf));
       cnt++;
       snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
-      momgui_cmdparse_value (cpars, cntbuf);
+      mo_value_t v = momgui_cmdparse_value (cpars, cntbuf);
+      if (cnt < 10)
+        MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d\n\t v:%s",
+                          cnt, mo_value_pnamestr (v));
     }
   MOM_BACKTRACEPRINTF ("cmdparse_full_bffer cnt=%d", cnt);
   if (cpars->mo_gcp_statusupdate)
