@@ -2087,22 +2087,22 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         gtk_text_iter_backward_char (&itbword);
       gunichar bwordc = 0;
       int nbackw = 0;
-      do
+      while(true)
         {
           bwordc = gtk_text_iter_get_char (&itbword);
           MOM_INFORMPRINTF ("itbword C%u'%c' line %d offset %d nbackw#%d",
                             bwordc, (bwordc > ' '
-                                     && bwordc < 127) ? (char) bwordc : '?',
+                                     && bwordc < 127) ? (char) bwordc : ' ',
                             gtk_text_iter_get_line (&itcurs),
                             gtk_text_iter_get_line_offset (&itcurs), nbackw);
+	  if (bwordc >= 127 || isspace(bwordc) || bwordc == 0
+	      || iscntrl(bwordc) || (!isalnum(bwordc) && bwordc != '_'))
+	    break;
           if (gtk_text_iter_starts_line (&itbword)
               || !gtk_text_iter_backward_char (&itbword))
             break;
           nbackw++;
-          bwordc = gtk_text_iter_get_char (&itbword);
-        }
-      while (bwordc > 0 && bwordc < 127
-             && (isalnum (bwordc) || bwordc == '_'));
+        };
       if (nbackw > 0 && !gtk_text_iter_starts_line (&itbword))
         gtk_text_iter_forward_char (&itbword);
       char *wordtxt =
@@ -2814,6 +2814,7 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       gunichar namc = 0;
       int nlen = 0;
       char smallnambuf[40];
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       memset (smallnambuf, 0, sizeof (smallnambuf));
       for (nlen = 0; nlen <= MOM_NAME_MAXLEN + 2
            && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
@@ -2827,6 +2828,7 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
         : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
       for (int ix = 0; ix < nlen; ix++)
         nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
+      MOM_INFORMPRINTF ("parseobj? nambuf='%s'", nambuf);
       if (!mom_valid_name (nambuf))
         {                       // invalid name, e.g. terminated by _
           GtkTextIter startunit = cpars->mo_gcp_curiter;
@@ -2938,6 +2940,17 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
             mo_hashset_put (cpars->mo_gcp_setcreated, objp);
         }
       cpars->mo_gcp_curiter = endlinit;
+    }
+  // ?_'foo is creating and display an anonymous global object
+  else if (curc == '?' && nextc == '_')
+    {
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      objp = momgui_cmdparse_object (cpars, "disp-anon");
+      if (!cpars->mo_gcp_onlyparse && objp)
+        {
+          /// add objp to the set of displayed objects
+          mo_gui_display_object (objp);
+        }
     }
   /*** ~ represents the nil object ****/
   else if (curc == '~')
