@@ -2110,6 +2110,8 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         {
           char complbufid[MOM_CSTRIDSIZ];
           memset (complbufid, 0, sizeof (complbufid));
+          mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
+          mom_cmdcomplendoff = gtk_text_iter_get_offset (&itcurs);
           if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
             {
               gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
@@ -2120,8 +2122,6 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
               gtk_text_buffer_end_user_action (mom_cmdtextbuf);
             }
           mom_cmdcomplmenu = gtk_menu_new ();
-          mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
-          mom_cmdcomplendoff = gtk_text_iter_get_offset (&itcurs);
           for (int ix = 0; ix < (int) complsiz; ix++)
             {
               mo_objref_t curcomplobj = mo_set_nth (mom_cmdcomplset, ix);
