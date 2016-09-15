@@ -509,6 +509,10 @@ mo_valid_pointer_value (const void *p)
   return p != NULL && p != MOM_EMPTY_SLOT && ((intptr_t) p % 2 == 0);
 }
 
+// the printable string of an object, perhaps GC-strduped; mostly for
+// debugging
+const char *mo_value_pnamestr (mo_value_t);
+
 static inline bool
 mo_value_is_int (mo_value_t p)
 {

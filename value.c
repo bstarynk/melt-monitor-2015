@@ -737,4 +737,89 @@ mo_vectval_of_json (mo_json_t js)
   return NULL;
 }                               /* end of mo_vectval_of_json */
 
-/* end of value.c */
+
+// the printable, often GC-strduped, string for a value; for debugging
+// purposes mostly
+const char *
+mo_value_pnamestr (mo_value_t v)
+{
+  switch (mo_kind_of_value (v))
+    {
+    case mo_KINT:
+      {
+        char buf[64];
+        memset (buf, 0, sizeof (buf));
+        snprintf (buf, sizeof (buf), "%ld", (long) mo_value_to_int (v, 0));
+        return mom_gc_strdup (buf);
+      }
+    case mo_KNONE:
+      return "~";
+    case mo_KSTRING:
+      {
+        const char *res = NULL;
+        const char *str = mo_string_cstr (v);
+        unsigned len = mo_string_size (v);
+        if (len == 0)
+          return "\"\"";
+        size_t siz = 4 * mom_prime_above (len / 4 + 2);
+        MOM_ASSERTPRINTF (siz > len, "bad siz %zd for len %u", siz, len);
+        char *buf = calloc (1, siz);
+        if (!buf)
+          MOM_FATAPRINTF ("failed to calloc siz %zd", siz);
+        FILE *fmem = open_memstream (&buf, &siz);
+        if (!fmem)
+          MOM_FATAPRINTF ("failed to open_memstream siz %zd", siz);
+        fputc ('"', fmem);
+        mom_output_utf8_encoded (fmem, str, len);
+        fputc ('"', fmem);
+        long ln = ftell (fmem);
+        fflush (fmem);
+        MOM_ASSERTPRINTF (ln >= 0 && ln < (long) siz, "bad ln=%ld", ln);
+        buf[ln] = 0;
+        res = mom_gc_strdup (buf);
+        fclose (fmem), fmem = NULL;
+        free (buf), buf = NULL;
+        return res;
+      }
+      break;
+    case mo_KOBJECT:
+      return mo_objref_pnamestr ((mo_objref_t) v);
+    case mo_KTUPLE:
+    case mo_KSET:
+      {
+        char *res = NULL;
+        bool istuple = mo_dyncast_tuple (v) != NULL;
+        unsigned seqsiz = mo_sequence_size (v);
+        if (seqsiz == 0)
+          return istuple ? "[]" : "{}";
+        size_t siz = 8 * mom_prime_above (seqsiz + 3);
+        char *buf = calloc (1, siz);
+        if (!buf)
+          MOM_FATAPRINTF ("failed to calloc siz %zd", siz);
+        FILE *fmem = open_memstream (&buf, &siz);
+        if (!fmem)
+          MOM_FATAPRINTF ("failed to open_memstream siz %zd", siz);
+        fputc (istuple ? '[' : '{', fmem);
+        for (unsigned ix = 0; ix < seqsiz; ix++)
+          {
+            mo_objref_t curobj = mo_sequence_nth (v, ix);
+            if (ix > 0)
+              fputc (' ', fmem);
+            fputs (mo_objref_pnamestr (curobj), fmem);
+          }
+        fputc (istuple ? ']' : '}', fmem);
+        long ln = ftell (fmem);
+        fflush (fmem);
+        MOM_ASSERTPRINTF (ln >= 0 && ln < (long) siz, "bad ln=%ld", ln);
+        buf[ln] = 0;
+        res = mom_gc_strdup (buf);
+        fclose (fmem), fmem = NULL;
+        free (buf), buf = NULL;
+        return res;
+      }
+      break;
+    }
+  return NULL;
+}                               /* end mo_value_pnamestr */
+
+/* end of file value.c */
