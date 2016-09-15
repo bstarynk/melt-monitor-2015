@@ -1700,8 +1700,11 @@ main (int argc_main, char **argv_main)
   if (!no_custom_gliblog_mom)
     {
       g_log_set_default_handler (mom_g_log_handler, NULL);
+      g_log_set_handler ("Gtk", G_LOG_LEVEL_CRITICAL | G_LOG_FLAG_FATAL
+                         | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_WARNING
+                         | G_LOG_FLAG_RECURSION, mom_g_log_handler, NULL);
       MOM_INFORMPRINTF
-        ("added mom_g_log_handler as Glib/Gtk default log handler");
+        ("added mom_g_log_handler as Glib default log handler & Gtk log");
     }
   else
     MOM_INFORMPRINTF
