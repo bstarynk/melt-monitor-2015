@@ -1978,6 +1978,82 @@ momgui_run_cmdtext (void)
     };
 }                               /* end momgui_run_cmdtext */
 
+static gboolean
+momgui_postponed_clear_cmdtview (gpointer data MOM_UNUSED)
+{
+  gtk_text_buffer_set_text (mom_cmdtextbuf, "", 0);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
+  return G_SOURCE_REMOVE;
+}                               /* end of momgui_postponed_clear_cmdtview */
+
+#define MOMGUI_DELAY_CLEAR_MILLISEC 500 /*half a second */
+static void
+momgui_delayed_clearcmd (void)
+{
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), false);
+  g_timeout_add (MOMGUI_DELAY_CLEAR_MILLISEC, momgui_postponed_clear_cmdtview,
+                 NULL);
+}                               /* end of momgui_delayed_clearcmd */
+
+static void
+momgui_parse_cmdtext (void)
+{
+  GtkTextIter itstart = { };
+  GtkTextIter itend = { };
+  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+                              &itend);
+  struct momgui_cmdparse_st cmdparse = { };
+  memset (&cmdparse, 0, sizeof (cmdparse));
+  cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
+  cmdparse.mo_gcp_curiter = itstart;
+  cmdparse.mo_gcp_onlyparse = true;
+  cmdparse.mo_gcp_statusupdate = true;
+  int failerr = setjmp (cmdparse.mo_gcp_failjb);
+  if (failerr == 0)
+    {
+      momgui_cmdparse_full_buffer (&cmdparse);
+    }
+  else                          /* failerr != 0 */
+    {
+      MOM_WARNPRINTF ("parsing of command failed, failerr=%d", failerr);
+    };
+}                               /* end momgui_parse_cmdtext */
+
+void
+momgui_runclear_cmdtext (void)
+{
+  momgui_run_cmdtext ();
+  momgui_delayed_clearcmd ();
+}                               /* end momgui_runclear_cmdtext */
+
+// for "populate-popup" signal to mom_cmdtview
+static void
+momgui_cmdtextview_populatepopup (GtkTextView * tview MOM_UNUSED,
+                                  GtkWidget * popup, gpointer data MOM_UNUSED)
+{
+  if (GTK_IS_MENU (popup))
+    {
+      GtkWidget *parseitem = gtk_menu_item_new_with_label ("parse [Ctrl-F1]");
+      gtk_menu_shell_append (GTK_MENU_SHELL (popup), parseitem);
+      g_signal_connect (parseitem, "activate",
+                        G_CALLBACK (momgui_parse_cmdtext), NULL);
+      if (gtk_text_view_get_editable (GTK_TEXT_VIEW (mom_cmdtview)))
+        {
+          GtkWidget *runitem = gtk_menu_item_new_with_label ("run [ESC]");
+          g_signal_connect (runitem, "activate",
+                            G_CALLBACK (momgui_run_cmdtext), NULL);
+          gtk_menu_shell_append (GTK_MENU_SHELL (popup), runitem);
+          GtkWidget *runclearitem =
+            gtk_menu_item_new_with_label ("run&clear [Ctrl-Return]");
+          g_signal_connect (runclearitem, "activate",
+                            G_CALLBACK (momgui_runclear_cmdtext), NULL);
+          gtk_menu_shell_append (GTK_MENU_SHELL (popup), runclearitem);
+        }
+    }
+  else
+    MOM_BACKTRACEPRINTF ("non-menu cmdtextview popup");
+}                               /* end momgui_cmdtextview_populatepopup */
+
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
 static bool
@@ -2188,6 +2264,16 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
       return TRUE;              // don't propagate
     }                           /* end if tab */
   ///
+
+  else if (ev && ev->type == GDK_KEY_PRESS
+           && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK
+           && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
+               || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
+               || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)))
+    {
+      momgui_parse_cmdtext ();
+      return TRUE;              /* don't propagate */
+    }
   else if (ev && ev->type == GDK_KEY_RELEASE
            && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
                || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
@@ -2195,6 +2281,10 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                    && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK)))
     {                           /* F1, Escape or Ctrl-Return are evaluating the buffer */
       momgui_run_cmdtext ();
+      if (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)
+        {
+          momgui_delayed_clearcmd ();
+        }
       return TRUE;              /* don't propagate */
     }                           /* end if F1, Escape, or Ctrl-Return */
 
@@ -3048,17 +3138,21 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
       snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
       mo_value_t v = momgui_cmdparse_value (cpars, cntbuf);
       if (cnt < 10)
-        MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d\n\t v:%s",
+        MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
                           cnt, mo_value_pnamestr (v));
     }
-  MOM_BACKTRACEPRINTF ("cmdparse_full_bffer cnt=%d", cnt);
   if (cpars->mo_gcp_statusupdate)
     {
-      momgui_cmdstatus_printf ("parsed %d values and %u chars",
-                               cnt,
-                               gtk_text_buffer_get_char_count
-                               (mom_cmdtextbuf));
-
+      if (cpars->mo_gcp_onlyparse)
+        momgui_cmdstatus_printf ("parsed %d values and %u chars",
+                                 cnt,
+                                 gtk_text_buffer_get_char_count
+                                 (mom_cmdtextbuf));
+      else
+        momgui_cmdstatus_printf ("evaluated %d values in %u chars",
+                                 cnt,
+                                 gtk_text_buffer_get_char_count
+                                 (mom_cmdtextbuf));
     }
 }                               /* end of momgui_cmdparse_full_buffer */
 
@@ -3080,18 +3174,17 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
   cmdparse.mo_gcp_curiter = itstart;
   cmdparse.mo_gcp_onlyparse = true;
-  cmdparse.mo_gcp_statusupdate = true;  /* probably should not be always true */
+  cmdparse.mo_gcp_statusupdate = false;
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
-      // temporary, always parse... I'm not sure it is a good idea,
-      // since we'll get parsing failures on most keystrokes.
       momgui_cmdparse_full_buffer (&cmdparse);
-#warning should parse something in cmdtextbuf_enduseraction
     }
   else                          /* failerr != 0 */
     {
-      MOM_WARNPRINTF ("parsing of command failed, failerr=%d", failerr);
+      if (cmdparse.mo_gcp_statusupdate)
+        MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
+                        failerr);
     };
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
@@ -3244,6 +3337,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
   g_signal_connect (mom_cmdtview, "key-release-event",
                     G_CALLBACK (momgui_cmdtextview_keyrelease), NULL);
+  g_signal_connect (mom_cmdtview, "populate-popup",
+                    G_CALLBACK (momgui_cmdtextview_populatepopup), NULL);
   g_signal_connect (mom_cmdtextbuf, "end-user-action",
                     G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
