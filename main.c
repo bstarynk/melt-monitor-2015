@@ -1098,6 +1098,7 @@ mom_print_info (void)
 static gboolean want_version_mom;
 static gboolean want_info_mom;
 static gboolean no_gui_mom;
+static gboolean no_custom_gliblog_mom;
 static gboolean silent_big_alloc_mom;
 static char *initrand_mom;
 static char **predef_names_mom;
@@ -1116,6 +1117,8 @@ static const GOptionEntry mom_goptions[] = {
    &no_gui_mom, "without GTK graphical user interface", NULL},
   {"silent-big-alloc", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
    &silent_big_alloc_mom, "don't warn for large allocation", NULL},
+  {"no-custom-glib-log", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &no_custom_gliblog_mom, "don't install our Glib/Gtk log handler", NULL},
   {"add-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
    &predef_names_mom, "add predefined of name N with comment C", "N"},
   {"comment-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
@@ -1581,6 +1584,51 @@ mom_run_small_benchmark (int cnt)
 }                               /* end mom_run_small_benchmark */
 
 
+extern void mom_g_log_serious (void);
+// put a breakpoint in GDB for
+void
+mom_g_log_serious (void)
+{
+  fflush (NULL);
+}                               /* end mom_g_log_serious */
+
+static void
+mom_g_log_handler (const gchar * logdomain,
+                   GLogLevelFlags loglevel,
+                   const gchar * message, gpointer userdata MOM_UNUSED)
+{
+  bool serious = false;
+  if (loglevel & G_LOG_LEVEL_DEBUG)
+    {
+      MOM_INFORMPRINTF ("Gtk/Glib DEBUG %s : %s", logdomain, message);
+    }
+  else if (loglevel & G_LOG_LEVEL_INFO)
+    {
+      MOM_INFORMPRINTF ("Gtk/Glib INFO %s : %s", logdomain, message);
+    }
+  else if (loglevel & G_LOG_LEVEL_MESSAGE)
+    {
+      MOM_INFORMPRINTF ("Gtk/Glib MESSAGE %s : %s", logdomain, message);
+    }
+  else if (loglevel & G_LOG_LEVEL_WARNING)
+    {
+      serious = true;
+      MOM_BACKTRACEPRINTF ("Gtk/Glib WARNING %s *:* %s", logdomain, message);
+    }
+  else if (loglevel & G_LOG_LEVEL_CRITICAL)
+    {
+      serious = true;
+      MOM_FATAPRINTF ("Gtk/Glib CRITICAL %s *:* %s", logdomain, message);
+    }
+  else if (loglevel & G_LOG_LEVEL_ERROR)
+    {
+      serious = true;
+      MOM_FATAPRINTF ("Gtk/Glib ERROR %s *:* %s", logdomain, message);
+    }
+  if (serious)
+    mom_g_log_serious ();
+}                               /* end of mom_g_log_handler */
+
 int
 main (int argc_main, char **argv_main)
 {
@@ -1649,7 +1697,11 @@ main (int argc_main, char **argv_main)
           ("monimelt is not up to date, 'make -t monimelt' gave %d", okmaket);
       }
   }
-
+  if (!no_custom_gliblog_mom)
+    g_log_set_default_handler (mom_g_log_handler, NULL);
+  else
+    MOM_INFORMPRINTF
+      ("no custom Glib/Gtk default log handler, since --no-custom-glib-log");
   mom_load_state ();
   if (predef_names_mom)
     do_add_predefined_mom ();
