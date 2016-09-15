@@ -51,10 +51,9 @@ static gint mom_cmdcomplstartoff;       // start offset of word to be completed
 static gint mom_cmdcomplendoff; // end offset of word to be completed
 /* sometimes, all the possible completions starts with a common prefix; we then
    insert that prefix, so the completion menu should skip some
-   characters */
-static int mom_cmdcomplskip;    // number of characters to skip in the
-                                // completion word
+   characters from a common completion prefix */
 static mo_value_t mom_cmdcomplset;      // the set containing the current completion
+static const char *mom_cmdcomplprefix;  /* the common prefix of that set */
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
 static GtkTextTag *mom_cmdtag_fail;     // tag for failure rest in command
@@ -1881,9 +1880,9 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
          (long) ixl, (int) mom_cmdcomplstartoff, (int) mom_cmdcomplendoff,
          mo_set_size (mom_cmdcomplset));
       mom_cmdcomplset = NULL;
+      mom_cmdcomplprefix = NULL;
       mom_cmdcomplstartoff = 0;
       mom_cmdcomplendoff = 0;
-      mom_cmdcomplskip = 0;
       return;
     }
   mo_objref_t complobj = mo_set_nth (mom_cmdcomplset, (int) ixl);
@@ -1945,9 +1944,9 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
       mom_cmdcomplmenu = NULL;
     }
   mom_cmdcomplset = NULL;
+  mom_cmdcomplprefix = NULL;
   mom_cmdcomplstartoff = 0;
   mom_cmdcomplendoff = 0;
-  mom_cmdcomplskip = 0;
 }                               /* end of momgui_completecmdix */
 
 
@@ -1960,14 +1959,15 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
   if (ev && ev->type == GDK_KEY_RELEASE
       && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
     {
+      mom_cmdcomplstartoff = 0;
+      mom_cmdcomplendoff = 0;
+      mom_cmdcomplwithname = false;
+      mom_cmdcomplprefix = NULL;
+      mom_cmdcomplset = NULL;
       if (MOM_UNLIKELY (mom_cmdcomplmenu))
         {
           gtk_widget_destroy (mom_cmdcomplmenu);
           mom_cmdcomplmenu = NULL;
-          mom_cmdcomplstartoff = 0;
-          mom_cmdcomplendoff = 0;
-          mom_cmdcomplwithname = false;
-          mom_cmdcomplskip = 0;
         }
       GtkTextIter itcurs = { };
       gtk_text_buffer_get_iter_at_mark  //
@@ -2017,6 +2017,11 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
           /// should do a name completion
           mom_cmdcomplwithname = true;
           mom_cmdcomplset = (mo_value_t) mo_named_set_of_prefix (wordtxt);
+          mom_cmdcomplprefix = mo_set_common_prefix (mom_cmdcomplset, false);
+          MOM_INFORMPRINTF
+            ("cmdtextview_keyrelease name word '%s' complset %s common prefix '%s'",
+             wordtxt, mo_value_pnamestr (mom_cmdcomplset),
+             mom_cmdcomplprefix);
         }
       else if (wordtxt[0] == '_' && isdigit (wordtxt[1])
                && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
@@ -2024,6 +2029,11 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
           /// should do an objid completion
           mom_cmdcomplwithname = false;
           mom_cmdcomplset = (mo_value_t) mom_set_complete_objectid (wordtxt);
+          mom_cmdcomplprefix = mo_set_common_prefix (mom_cmdcomplset, true);
+          MOM_INFORMPRINTF
+            ("cmdtextview_keyrelease id word '%s' complset %s common prefix '%s'",
+             wordtxt, mo_value_pnamestr (mom_cmdcomplset),
+             mom_cmdcomplprefix);
         }
       if (!mo_dyncast_set (mom_cmdcomplset))
         momgui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
