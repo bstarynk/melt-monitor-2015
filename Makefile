@@ -67,6 +67,7 @@ clean:
 	$(RM) modules.dir/*.so modules.dir/*~ modules.dir/*%
 	$(RM) _listpredef*
 	$(RM) *.bin
+	$(RM) ./monimelt
 	$(RM) _timestamp*
 	$(RM) core*
 	$(RM) *memo*
