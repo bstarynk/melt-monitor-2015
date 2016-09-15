@@ -2399,6 +2399,43 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
           return vstr;
         }
     }
+  else if (curc == '"')
+    {                           // " is for C-encoded strings terminated by a "
+      GtkTextIter strit = cpars->mo_gcp_curiter;
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      GtkTextIter begit = cpars->mo_gcp_curiter;
+      gunichar sc = 0;
+      do
+        {
+          sc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
+          if (sc == '\n' || sc == 0)
+            {
+              cpars->mo_gcp_curiter = strit;
+              MOMGUI_CMDPARSEFAIL (cpars, "unterminated encoded string (%s)",
+                                   msg);
+            }
+          if (sc == '\\')
+            sc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
+        }
+      while (sc != '"');
+      GtkTextIter endit = cpars->mo_gcp_curiter;
+      gtk_text_iter_backward_char (&endit);
+      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+      const char *encbuf =      //
+        gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endit, false);
+      size_t bufsiz =
+        gtk_text_iter_get_line_index (&endit)
+        - gtk_text_iter_get_line_index (&begit);
+      FILE *fmem = fmemopen (encbuf, bufsiz, "r");
+      if (!fmem)
+        MOM_FATAPRINTF ("fmemopen failure for C-encoded string of %zd bytes",
+                        bufsiz);
+      struct mom_string_and_size_st ss = mom_input_quoted_utf8 (fmem);
+      mo_value_t val = mo_make_string_len (ss.ss_str, ss.ss_len);
+      fclose (fmem);
+      g_free (encbuf), encbuf = NULL;
+      return val;
+    }
   else if (curc == '{')
     {                           // parse sets of objects
       mo_vectvaldatapayl_ty *vectobj = NULL;
