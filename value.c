@@ -810,7 +810,8 @@ mo_value_pnamestr (mo_value_t v)
         fputc (istuple ? ']' : '}', fmem);
         long ln = ftell (fmem);
         fflush (fmem);
-        MOM_ASSERTPRINTF (ln >= 0 && ln < (long) siz, "bad ln=%ld", ln);
+        MOM_ASSERTPRINTF (ln >= 0 && ln <= (long) siz,
+                          "bad ln=%ld siz=%zd", ln, siz);
         buf[ln] = 0;
         res = mom_gc_strdup (buf);
         fclose (fmem), fmem = NULL;
