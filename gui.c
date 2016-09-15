@@ -63,6 +63,7 @@ static GtkTextTag *mom_cmdtag_delim;    // tag for delimiters
 static GtkTextTag *mom_cmdtag_name;     // tag for existing named object
 static GtkTextTag *mom_cmdtag_anon;     // tag for existing anonymous object
 static GtkTextTag *mom_cmdtag_unknown;  // tag for unknown object
+static GtkTextTag *mom_cmdtag_newname;  // tag for new named global object
 static GtkTextTag *mom_cmdtag_newglob;  // tag for new anonymous global object
 static GtkTextTag *mom_cmdtag_newtrans; // tag for new anonymous transient object
 static GtkTextTag *mom_cmdtag_newcomm;  // tag for new comment
@@ -1318,22 +1319,17 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 void
 mo_gui_generate_object_text_buffer (void)
 {
-  MOM_INFORMPRINTF ("generate_object_text_buffer start");
   mo_setvalue_ty *dispset =
     (mo_setvalue_ty *) mo_assoval_keys_set (momgui_displayed_objasso);
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
   unsigned nbdispob = mo_set_size (dispset);
   g_hash_table_remove_all (mom_dispobjinfo_hashtable);
   g_hash_table_remove_all (mom_shownobjocc_hashtable);
-  momgui_displayed_objasso = mo_assoval_reserve (NULL,
-                                                 2 * nbdispob + nbdispob / 3 +
-                                                 20);
+  momgui_displayed_objasso =    //
+    mo_assoval_reserve (NULL, 2 * nbdispob + nbdispob / 3 + 20);
   momgui_shown_obocchset =
     mo_hashset_reserve (NULL, 3 * nbdispob + nbdispob / 2 + 40);
   gtk_text_buffer_set_text (mom_obtextbuf, "", 0);
-  MOM_INFORMPRINTF
-    ("generate_object_text_buffer cleared text of obtextbuf@%p",
-     mom_obtextbuf);
   // sort the dispsetv in alphabetical order, or else obid order
   mo_objref_t *objarr =
     mom_gc_alloc (mom_prime_above (nbdispob + 1) * sizeof (mo_objref_t));
@@ -1387,9 +1383,6 @@ mo_gui_generate_object_text_buffer (void)
       else if (maxdepth > MOMGUI_MAX_DEPTH)
         maxdepth = MOMGUI_MAX_DEPTH;
       dispctx.mo_gdx_maxdepth = maxdepth;
-      MOM_INFORMPRINTF
-        ("generate_object_text_buffer ix#%d curobj=%s maxdepth=%d", ix,
-         mo_objref_pnamestr (curobj), maxdepth);
       momgui_displayed_objasso =
         mo_assoval_put (momgui_displayed_objasso, curobj,
                         mo_int_to_value (maxdepth));
@@ -1404,7 +1397,6 @@ mo_gui_generate_object_text_buffer (void)
 #warning FIXME: we should have some way to remove one displayed object
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
     }
-  MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
 
 
@@ -1529,7 +1521,7 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
                                  "Cancel",
                                  GTK_RESPONSE_CANCEL,
                                  NULL);
-  gtk_window_set_default_size (GTK_WINDOW (quitdialog), 400, 250);
+  gtk_window_set_default_size (GTK_WINDOW (quitdialog), 250, 150);
   gtk_widget_show_all (quitdialog);
   int res = gtk_dialog_run (GTK_DIALOG (quitdialog));
   if (res == GTK_RESPONSE_CLOSE)
@@ -1613,7 +1605,7 @@ mom_obcombo_populator (GtkComboBox * combobox, gpointer ptr MOM_UNUSED)
             }
         }
     }
-  gtk_widget_show_all (combobox);
+  gtk_widget_show_all (GTK_WIDGET (combobox));
 }                               /* end mom_obcombo_populator */
 
 static GtkWidget *
@@ -1672,7 +1664,7 @@ mom_display_edit (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
         {
           mo_hid_t hid = 0;
           mo_loid_t loid = 0;
-          gchar *nams = gtk_entry_get_text (obentry);
+          const gchar *nams = gtk_entry_get_text (GTK_ENTRY (obentry));
           if (nams && mom_valid_name (nams))
             displobr = mo_find_named_cstr (nams);
           else if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nams))
@@ -2511,6 +2503,56 @@ static void
 momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
                             const char *msg);
 static mo_objref_t
+momgui_cmdparse_new_named_object (struct momgui_cmdparse_st *cpars,
+                                  const char *namebuf, const char *msg)
+{
+  mo_objref_t newobr = NULL;
+  MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
+                    "bad cpars@%p", cpars);
+  MOM_ASSERTPRINTF (msg != NULL, "missing msg");
+  if (!mom_valid_name (namebuf))
+    return NULL;
+  mo_value_t markupv =
+    mo_make_string_sprintf
+    ("<b>Create</b> <i>new</i> named object <tt>%s</tt> ?",
+     namebuf);
+  GtkWidget *createdialog =
+    gtk_message_dialog_new_with_markup (GTK_WINDOW (mom_cmdwin),
+                                        GTK_DIALOG_MODAL |
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_QUESTION,
+                                        GTK_BUTTONS_OK_CANCEL,
+                                        mo_string_cstr (markupv));
+  gtk_message_dialog_format_secondary_markup
+    (GTK_MESSAGE_DIALOG (createdialog),
+     "(create a <i>global</i> named object <small>(%s)</small> with its <tt>comment</tt>)",
+     msg);
+  gtk_window_set_title (GTK_WINDOW (createdialog), "monimelt new named");
+  GtkWidget *labcomment = gtk_label_new (NULL);
+  gtk_label_set_markup (GTK_LABEL (labcomment), "<tt>comment</tt>: ");
+  GtkWidget *contareabox =
+    gtk_dialog_get_content_area (GTK_DIALOG (createdialog));
+  gtk_box_pack_start (GTK_BOX (contareabox), labcomment, false, false, 1);
+  GtkWidget *entcomment = gtk_entry_new ();
+  gtk_entry_set_width_chars (GTK_ENTRY (entcomment), 40);
+  gtk_box_pack_end (GTK_BOX (contareabox), entcomment, true, true, 3);
+  gtk_widget_show_all (createdialog);
+  int rc = gtk_dialog_run (GTK_DIALOG (createdialog));
+  if (rc == GTK_RESPONSE_OK)
+    {
+      newobr = mo_make_global_object ();
+      if (!mo_register_named (newobr, namebuf))
+        newobr = NULL;
+      const char *commstr = gtk_entry_get_text (GTK_ENTRY (entcomment));
+      if (commstr && commstr[0] && newobr)
+        mo_objref_put_attr (newobr, MOM_PREDEF (comment),
+                            mo_make_string_cstr (commstr));
+    }
+  gtk_widget_destroy (createdialog);
+  return newobr;
+}                               /* end momgui_cmdparse_new_named_object */
+
+static mo_objref_t
 momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
 {
   mo_objref_t objp = NULL;
@@ -2595,6 +2637,72 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       else
         cpars->mo_gcp_setparsed =
           mo_hashset_put (cpars->mo_gcp_setparsed, objp);
+    }
+  /** ?foo will possibly create, and always display, an object named foo 
+   **/
+  else if (curc == '?' && nextc < 127 && isalpha (nextc))
+    {
+      gunichar namc = 0;
+      int nlen = 0;
+      char smallnambuf[40];
+      memset (smallnambuf, 0, sizeof (smallnambuf));
+      for (nlen = 0; nlen <= MOM_NAME_MAXLEN + 2
+           && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
+           && (namc < 127 && (isalnum ((char) namc) || namc == '_')); nlen++);
+      if (nlen >= MOM_NAME_MAXLEN)
+        MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
+                             nlen, msg);
+      char *nambuf =
+        (nlen < (int) sizeof (smallnambuf) - 2)
+        ? smallnambuf
+        : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
+      for (int ix = 0; ix < nlen; ix++)
+        nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
+      if (!mom_valid_name (nambuf))
+        {                       // invalid name, e.g. terminated by _
+          GtkTextIter startunit = cpars->mo_gcp_curiter;
+          GtkTextIter endunit = startunit;
+          gtk_text_iter_forward_chars (&endunit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
+                                     &startunit, &endunit);
+          if (!cpars->mo_gcp_onlyparse)
+            MOMGUI_CMDPARSEFAIL (cpars, "invalid new name %s (%s)",
+                                 nambuf, msg);
+          cpars->mo_gcp_curiter = endunit;
+        }
+      else if (!(objp = mo_find_named_cstr (nambuf)))
+        {                       // new name
+          GtkTextIter startnamit = cpars->mo_gcp_curiter;
+          GtkTextIter endnamit = startnamit;
+          gtk_text_iter_forward_chars (&endnamit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newname,
+                                     &startnamit, &endnamit);
+          cpars->mo_gcp_curiter = endnamit;
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              objp = momgui_cmdparse_new_named_object (cpars, nambuf, msg);
+              if (!objp)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "did not create new named object %s  (%s)",
+                                     nambuf, msg);
+              cpars->mo_gcp_setcreated =
+                mo_hashset_put (cpars->mo_gcp_setcreated, objp);
+            }
+        }
+      else
+        {                       // existing name
+          GtkTextIter startnamit = cpars->mo_gcp_curiter;
+          GtkTextIter endnamit = startnamit;
+          gtk_text_iter_forward_chars (&endnamit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_name,
+                                     &startnamit, &endnamit);
+          cpars->mo_gcp_curiter = endnamit;
+        }
+      if (!cpars->mo_gcp_onlyparse && objp)
+        {
+          /// add objp to the set of displayed objects
+          mo_gui_display_object (objp);
+        }
     }
   /** something like
     _'some comment till eol
@@ -3036,6 +3144,12 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                 "newglob",
                                 "family", "Liberation Mono, Bold",
                                 "foreground", "darkolivegreen",
+                                "background", "lavender", NULL);
+  mom_cmdtag_newname =
+    gtk_text_buffer_create_tag (mom_cmdtextbuf,
+                                "newname",
+                                "family", "Liberation Mono, Bold",
+                                "foreground", "darkgreen",
                                 "background", "lavender", NULL);
   mom_cmdtag_newtrans =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
