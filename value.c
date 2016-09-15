@@ -822,4 +822,55 @@ mo_value_pnamestr (mo_value_t v)
   return NULL;
 }                               /* end mo_value_pnamestr */
 
+const char *
+mo_set_common_prefix (mo_value_t setv, bool byid)
+{
+  if (!mo_dyncast_set (setv))
+    return NULL;
+  unsigned siz = mo_set_size (setv);
+  if (siz == 0)
+    return "";
+  mo_objref_t objfirst = mo_set_nth (setv, 0);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (objfirst), "bad objfirst");
+  char *prevcoms = NULL;
+  if (byid)
+    {
+      char idbuf[MOM_CSTRIDSIZ];
+      memset (idbuf, 0, sizeof (idbuf));
+      prevcoms = mom_gc_strdup (mo_objref_idstr (idbuf, objfirst));
+    }
+  else
+    prevcoms = mom_gc_strdup (mo_objref_pnamestr (objfirst));
+  if (siz == 1)
+    return prevcoms;
+  char curidbuf[MOM_CSTRIDSIZ];
+  memset (curidbuf, 0, sizeof (curidbuf));
+  for (unsigned ix = 1; ix < siz; ix++)
+    {
+      mo_objref_t objcur = ((mo_sequencevalue_ty *) setv)->mo_seqobj[ix];
+      MOM_ASSERTPRINTF (mo_dyncast_objref (objcur), "bad objcur");
+      const char *curstr = NULL;
+      if (byid)
+        {
+          memset (curidbuf, 0, sizeof (curidbuf));
+          curstr = mo_objref_idstr (curidbuf, objcur);
+        }
+      else
+        curstr = mo_objref_pnamestr (objcur);
+      MOM_ASSERTPRINTF (prevcoms != NULL && curstr != NULL,
+                        "bad prevcoms or curstr");
+      unsigned comix = 0;
+      for (comix = 0; prevcoms[comix] != 0 && curstr[comix] != 0
+           && prevcoms[comix] == curstr[comix]; comix++) /*nop */ ;
+      if (comix == 0)
+        return NULL;
+      if (prevcoms[comix])
+        {
+          prevcoms[comix] = 0;
+          prevcoms = mom_gc_strdup (prevcoms);
+        }
+    }
+  return prevcoms;
+}                               /* end mo_set_common_prefix */
+
 /* end of file value.c */

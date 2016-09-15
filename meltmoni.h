@@ -943,6 +943,10 @@ mo_set_contains (mo_value_t vs, mo_objref_t ob)
   return false;
 }
 
+// given a set, such as an auto-complete set, compute a GC-strduped
+// common prefix of them, either using their id or their name
+const char *mo_set_common_prefix (mo_value_t setv, bool byid);
+
 /******************** OBJECTs ****************/
 enum mo_space_en
 {

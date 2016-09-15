@@ -1950,59 +1950,6 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
   mom_cmdcomplskip = 0;
 }                               /* end of momgui_completecmdix */
 
-// given a completion set, compute a GC-strduped common prefix of
-// them, either using their id or their name
-static const char *
-momgui_completion_common_prefix (mo_value_t complsetv, bool byid)
-{
-  if (!mo_dyncast_set (complsetv))
-    return NULL;
-  unsigned siz = mo_set_size (complsetv);
-  if (siz == 0)
-    return NULL;
-  mo_objref_t objfirst = mo_set_nth (complsetv, 0);
-  MOM_ASSERTPRINTF (mo_dyncast_objref (objfirst), "bad objfirst");
-  char *prevcoms = NULL;
-  if (byid)
-    {
-      char idbuf[MOM_CSTRIDSIZ];
-      memset (idbuf, 0, sizeof (idbuf));
-      prevcoms = mom_gc_strdup (mo_objref_idstr (idbuf, objfirst));
-    }
-  else
-    prevcoms = mom_gc_strdup (mo_objref_pnamestr (objfirst));
-  if (siz == 1)
-    return prevcoms;
-  char curidbuf[MOM_CSTRIDSIZ];
-  memset (curidbuf, 0, sizeof (curidbuf));
-  for (unsigned ix = 1; ix < siz; ix++)
-    {
-      mo_objref_t objcur = mo_set_nth (complsetv, ix);
-      MOM_ASSERTPRINTF (mo_dyncast_objref (objcur), "bad objcur");
-      const char *curstr = NULL;
-      if (byid)
-        {
-          memset (curidbuf, 0, sizeof (curidbuf));
-          curstr = mo_objref_idstr (curidbuf, objcur);
-        }
-      else
-        curstr = mo_objref_pnamestr (objcur);
-      MOM_ASSERTPRINTF (prevcoms != NULL && curstr != NULL,
-                        "bad prevcoms or curstr");
-      unsigned comix = 0;
-      for (comix = 0; prevcoms[comix] != 0 && curstr[comix] != 0
-           && prevcoms[comix] == curstr[comix]; comix++) /*nop */ ;
-      if (comix == 0)
-        return NULL;
-      if (prevcoms[comix])
-        {
-          prevcoms[comix] = 0;
-          prevcoms = mom_gc_strdup (prevcoms);
-        }
-    }
-  return prevcoms;
-}                               /* end momgui_completion_common_prefix */
-
 
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
