@@ -49,6 +49,11 @@ static bool mom_cmdcomplwithname;
 static GtkWidget *mom_cmdcomplmenu;     // the (temporary) command completion menu
 static gint mom_cmdcomplstartoff;       // start offset of word to be completed
 static gint mom_cmdcomplendoff; // end offset of word to be completed
+/* sometimes, all the possible completions starts with a common prefix; we then
+   insert that prefix, so the completion menu should skip some
+   characters */
+static int mom_cmdcomplskip;    // number of characters to skip in the
+                                // completion word
 static mo_value_t mom_cmdcomplset;      // the set containing the current completion
 static GtkWidget *mom_cmdwin;
 static GtkTextBuffer *mom_cmdtextbuf;
@@ -1625,7 +1630,7 @@ mom_objectcombo (void)
                                         GTK_SENSITIVITY_ON);
   g_signal_connect (combobox, "popup", G_CALLBACK (mom_obcombo_populator),
                     NULL);
-  MOM_INFORMPRINTF("objectcombo combobox@%p", combobox);
+  MOM_INFORMPRINTF ("objectcombo combobox@%p", combobox);
   return combobox;
 }                               /* end mom_objectcombo */
 
@@ -1856,7 +1861,8 @@ mom_initialize_gtk_tags_for_objects (void)
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 
-/* below ten completions, we offer a menu */
+/* For auto-completion with TAB in the command menu; below ten
+   completions, we offer a menu */
 #define MOMGUI_COMPLETION_MENU_MAX 10
 /* below a thousand completions for a name, we try to insert a common prefix */
 #define MOMGUI_COMPLETION_MANY_NAMES 1000
@@ -1877,6 +1883,7 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
       mom_cmdcomplset = NULL;
       mom_cmdcomplstartoff = 0;
       mom_cmdcomplendoff = 0;
+      mom_cmdcomplskip = 0;
       return;
     }
   mo_objref_t complobj = mo_set_nth (mom_cmdcomplset, (int) ixl);
@@ -1940,10 +1947,65 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
   mom_cmdcomplset = NULL;
   mom_cmdcomplstartoff = 0;
   mom_cmdcomplendoff = 0;
+  mom_cmdcomplskip = 0;
 }                               /* end of momgui_completecmdix */
 
+// given a completion set, compute a GC-strduped common prefix of
+// them, either using their id or their name
+static const char *
+momgui_completion_common_prefix (mo_value_t complsetv, bool byid)
+{
+  if (!mo_dyncast_set (complsetv))
+    return NULL;
+  unsigned siz = mo_set_size (complsetv);
+  if (siz == 0)
+    return NULL;
+  mo_objref_t objfirst = mo_set_nth (complsetv, 0);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (objfirst), "bad objfirst");
+  char *prevcoms = NULL;
+  if (byid)
+    {
+      char idbuf[MOM_CSTRIDSIZ];
+      memset (idbuf, 0, sizeof (idbuf));
+      prevcoms = mom_gc_strdup (mo_objref_idstr (idbuf, objfirst));
+    }
+  else
+    prevcoms = mom_gc_strdup (mo_objref_pnamestr (objfirst));
+  if (siz == 1)
+    return prevcoms;
+  char curidbuf[MOM_CSTRIDSIZ];
+  memset (curidbuf, 0, sizeof (curidbuf));
+  for (unsigned ix = 1; ix < siz; ix++)
+    {
+      mo_objref_t objcur = mo_set_nth (complsetv, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (objcur), "bad objcur");
+      const char *curstr = NULL;
+      if (byid)
+        {
+          memset (curidbuf, 0, sizeof (curidbuf));
+          curstr = mo_objref_idstr (curidbuf, objcur);
+        }
+      else
+        curstr = mo_objref_pnamestr (objcur);
+      MOM_ASSERTPRINTF (prevcoms != NULL && curstr != NULL,
+                        "bad prevcoms or curstr");
+      unsigned comix = 0;
+      for (comix = 0; prevcoms[comix] != 0 && curstr[comix] != 0
+           && prevcoms[comix] == curstr[comix]; comix++) /*nop */ ;
+      if (comix == 0)
+        return NULL;
+      if (prevcoms[comix])
+        {
+          prevcoms[comix] = 0;
+          prevcoms = mom_gc_strdup (prevcoms);
+        }
+    }
+  return prevcoms;
+}                               /* end momgui_completion_common_prefix */
 
-// for "key-release-event" signal to mom_cmdtview, handle completion with TAB key
+
+// for "key-release-event" signal to mom_cmdtview, handle
+// auto-completion with TAB key
 static bool
 momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                                void *data MOM_UNUSED)
@@ -1958,6 +2020,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
           mom_cmdcomplstartoff = 0;
           mom_cmdcomplendoff = 0;
           mom_cmdcomplwithname = false;
+          mom_cmdcomplskip = 0;
         }
       GtkTextIter itcurs = { };
       gtk_text_buffer_get_iter_at_mark  //
