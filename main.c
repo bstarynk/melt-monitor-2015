@@ -1698,7 +1698,11 @@ main (int argc_main, char **argv_main)
       }
   }
   if (!no_custom_gliblog_mom)
-    g_log_set_default_handler (mom_g_log_handler, NULL);
+    {
+      g_log_set_default_handler (mom_g_log_handler, NULL);
+      MOM_INFORMPRINTF
+        ("added mom_g_log_handler as Glib/Gtk default log handler");
+    }
   else
     MOM_INFORMPRINTF
       ("no custom Glib/Gtk default log handler, since --no-custom-glib-log");
