@@ -60,6 +60,7 @@ static GtkTextTag *mom_cmdtag_fail;     // tag for failure rest in command
 static GtkTextTag *mom_cmdtag_number;   // tag for number
 static GtkTextTag *mom_cmdtag_string;   // tag for strings
 static GtkTextTag *mom_cmdtag_delim;    // tag for delimiters
+static GtkTextTag *mom_cmdtag_oper;     // tag for operator
 static GtkTextTag *mom_cmdtag_name;     // tag for existing named object
 static GtkTextTag *mom_cmdtag_anon;     // tag for existing anonymous object
 static GtkTextTag *mom_cmdtag_unknown;  // tag for unknown object
@@ -3170,14 +3171,63 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
 #warning this is temporary, we really should do something more fancy
   while (!momgui_cmdparse_skipspaces (cpars))
     {
+      mo_value_t v = NULL;
+      gunichar uc = 0;
       char cntbuf[32];
       memset (cntbuf, 0, sizeof (cntbuf));
       cnt++;
       snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
-      mo_value_t v = momgui_cmdparse_value (cpars, cntbuf);
-      if (cnt < 10)
-        MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
-                          cnt, mo_value_pnamestr (v));
+      if (momgui_cmdparse_peekchar (cpars, 0) == '$'
+          && (uc = momgui_cmdparse_peekchar (cpars, 1)) > 0
+          && uc < 127 && (isalpha (uc) || uc == '_'))
+        {
+          mo_objref_t operatorobr = NULL;
+          GtkTextIter begopit = cpars->mo_gcp_curiter;
+          GtkTextIter endopit = begopit;
+          gtk_text_iter_forward_char (&endopit);
+          GtkTextIter namopit = endopit;
+          char operbuf[32];
+          memset (operbuf, 0, sizeof (operbuf));
+          while ((uc = gtk_text_iter_get_char (&endopit)) > 0
+                 && uc < 127 && (isalnum (uc) || uc == '_'))
+            gtk_text_iter_forward_char (&endopit);
+          char *opertxt =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &begopit, &endopit,
+                                      false);
+          if (isalpha (opertxt[0]))
+            operatorobr = mo_find_named_cstr (opertxt);
+          else if (opertxt[0] == '_')
+            {
+              mo_hid_t ophid = 0;
+              mo_loid_t oploid = 0;
+              if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
+                operatorobr = mo_objref_find_hid_loid (ophid, oploid);
+            }
+          strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
+          g_free (opertxt);
+#warning should check that operatorobr has the good signature
+          if (!operatorobr)
+            MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
+                                     &begopit, &endopit);
+          cpars->mo_gcp_curiter = endopit;
+          mo_objref_t operationobr = mo_make_object ();
+          mo_objref_comp_append (operationobr, operatorobr);
+          if (!momgui_cmdparse_skipspaces (cpars)
+              && momgui_cmdparse_peekchar (cpars, 0) == '(')
+            momgui_cmdparse_complement (cpars, operationobr, "operation");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+#warning should apply the operator to the operation
+            }
+        }
+      else
+        {
+          v = momgui_cmdparse_value (cpars, cntbuf);
+          if (cnt < 10)
+            MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
+                              cnt, mo_value_pnamestr (v));
+        }
     }
   if (cpars->mo_gcp_statusupdate)
     {
@@ -3339,6 +3389,11 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                 "name",
                                 "family", "DejaVu Sans Mono, Bold",
                                 "foreground", "mediumpurple", NULL);
+  mom_cmdtag_oper =
+    gtk_text_buffer_create_tag (mom_cmdtextbuf,
+                                "name",
+                                "family", "DejaVu Sans Mono, Bold",
+                                "foreground", "darkred", NULL);
   mom_cmdtag_anon =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "anon",
