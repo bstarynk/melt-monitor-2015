@@ -245,15 +245,16 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
     {
 #ifndef NDEBUG
       char idbuf[MOM_CSTRIDSIZ];
-      memset (idbuf, 0, sizeof(idbuf));
-      char*nameprop = NULL;
-      MOM_ASSERTPRINTF(!strcmp(mo_objref_idstr(idbuf, shoc->mo_gso_showobr),
-			       (g_object_get(shoc->mo_gso_txtag, "name",
-					     &nameprop, NULL), nameprop)),
-		       "bad tag@%p name for %s", shoc->mo_gso_txtag, idbuf);
-      MOM_ASSERTPRINTF(gtk_text_tag_table_lookup(mom_obtagtable, idbuf)
-		       == shoc->mo_gso_txtag,
-		       "missing tag %s", idbuf);
+      memset (idbuf, 0, sizeof (idbuf));
+      char *nameprop = NULL;
+      MOM_ASSERTPRINTF (!strcmp
+                        (mo_objref_idstr (idbuf, shoc->mo_gso_showobr),
+                         (g_object_get
+                          (shoc->mo_gso_txtag, "name", &nameprop, NULL),
+                          nameprop)), "bad tag@%p name for %s",
+                        shoc->mo_gso_txtag, idbuf);
+      MOM_ASSERTPRINTF (gtk_text_tag_table_lookup (mom_obtagtable, idbuf) ==
+                        shoc->mo_gso_txtag, "missing tag %s", idbuf);
 #endif
       GtkTextIter itstart = { };
       GtkTextIter itend = { };
@@ -1067,6 +1068,13 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
 }                               /* end of mom_insert_objpayload_textbuf */
 
 
+static void
+momgui_hideobj (GtkButton * but MOM_UNUSED, void *data)
+{
+  mo_objref_t obr = data;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
+  mo_gui_undisplay_object (obr);
+}                               /* end momgui_hideobj */
 
 ////////////////
 void
@@ -1131,6 +1139,10 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
   gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview2),
                                      dinf->mo_gdo_hidezoombutton2,
                                      dinf->mo_gdo_hidezoomanchor);
+  g_signal_connect (dinf->mo_gdo_hidezoombutton1, "clicked",
+                    momgui_hideobj, obr);
+  g_signal_connect (dinf->mo_gdo_hidezoombutton2, "clicked",
+                    momgui_hideobj, obr);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton1);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton2);
   enum mo_space_en spa = mo_objref_space (obr);
@@ -2099,18 +2111,19 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         gtk_text_iter_backward_char (&itbword);
       gunichar bwordc = 0;
       int nbackw = 0;
-      while(true)
+      while (true)
         {
           bwordc = gtk_text_iter_get_char (&itbword);
-	  if (bwordc >= 127 || isspace(bwordc) || bwordc == 0
-	      || iscntrl(bwordc) || (!isalnum(bwordc) && bwordc != '_'))
-	    break;
+          if (bwordc >= 127 || isspace (bwordc) || bwordc == 0
+              || iscntrl (bwordc) || (!isalnum (bwordc) && bwordc != '_'))
+            break;
           if (gtk_text_iter_starts_line (&itbword)
               || !gtk_text_iter_backward_char (&itbword))
             break;
           nbackw++;
         };
-      if (nbackw > 0 && !gtk_text_iter_ends_line (&itbword))
+      if (bwordc > 0 && bwordc < 127 && !(isalnum (bwordc) || bwordc == '_')
+          && nbackw > 0 && !gtk_text_iter_ends_line (&itbword))
         gtk_text_iter_forward_char (&itbword);
       char *wordtxt =
         gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, false);
@@ -3296,6 +3309,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
+  gtk_widget_set_tooltip_markup
+    (mom_cmdtview, "<b>command window tooltip</b>\n" "");
   mom_cmdtag_fail =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "fail",
