@@ -24,7 +24,7 @@ static GtkApplication *mom_gtkapp;
 static GtkCssProvider *mom_gtkcssprov;
 static GQuark mom_gquark;
 static GtkTextBuffer *mom_obtextbuf;
-static GtkTextTagTable *mom_tagtable;
+static GtkTextTagTable *mom_obtagtable;
 static GtkTextTag *mom_tag_toptitle;    // tag for top text
 static GtkTextTag *mom_tag_objtitle;    // tag for object title line
 static GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
@@ -243,13 +243,25 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
     mo_hashset_remove (momgui_shown_obocchset, shoc->mo_gso_showobr);
   if (shoc->mo_gso_txtag)
     {
+#ifndef NDEBUG
+      char idbuf[MOM_CSTRIDSIZ];
+      memset (idbuf, 0, sizeof(idbuf));
+      char*nameprop = NULL;
+      MOM_ASSERTPRINTF(!strcmp(mo_objref_idstr(idbuf, shoc->mo_gso_showobr),
+			       (g_object_get(shoc->mo_gso_txtag, "name",
+					     &nameprop, NULL), nameprop)),
+		       "bad tag@%p name for %s", shoc->mo_gso_txtag, idbuf);
+      MOM_ASSERTPRINTF(gtk_text_tag_table_lookup(mom_obtagtable, idbuf)
+		       == shoc->mo_gso_txtag,
+		       "missing tag %s", idbuf);
+#endif
       GtkTextIter itstart = { };
       GtkTextIter itend = { };
-      gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
+      gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_obtextbuf), &itstart,
                                   &itend);
-      gtk_text_buffer_remove_tag (GTK_TEXT_BUFFER (mom_cmdtextbuf),
+      gtk_text_buffer_remove_tag (GTK_TEXT_BUFFER (mom_obtextbuf),
                                   shoc->mo_gso_txtag, &itstart, &itend);
-      gtk_text_tag_table_remove (mom_tagtable, shoc->mo_gso_txtag);
+      gtk_text_tag_table_remove (mom_obtagtable, shoc->mo_gso_txtag);
       shoc->mo_gso_txtag = NULL;
     }
   memset (shoc, 0, sizeof (*shoc));
@@ -386,7 +398,7 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
         shoc->mo_gso_txtag = NULL;
         MOM_INFORMPRINTF ("display_objref create shoc@%p for obr=%s",
                           shoc, mo_objref_pnamestr (obr));
-        objtag = gtk_text_tag_table_lookup (mom_tagtable, idbuf);
+        objtag = gtk_text_tag_table_lookup (mom_obtagtable, idbuf);
         if (objtag)
           {
             shoc->mo_gso_txtag = objtag;
@@ -2090,11 +2102,6 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
       while(true)
         {
           bwordc = gtk_text_iter_get_char (&itbword);
-          MOM_INFORMPRINTF ("itbword C%u'%c' line %d offset %d nbackw#%d",
-                            bwordc, (bwordc > ' '
-                                     && bwordc < 127) ? (char) bwordc : ' ',
-                            gtk_text_iter_get_line (&itcurs),
-                            gtk_text_iter_get_line_offset (&itcurs), nbackw);
 	  if (bwordc >= 127 || isspace(bwordc) || bwordc == 0
 	      || iscntrl(bwordc) || (!isalnum(bwordc) && bwordc != '_'))
 	    break;
@@ -2103,7 +2110,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
             break;
           nbackw++;
         };
-      if (nbackw > 0 && !gtk_text_iter_starts_line (&itbword))
+      if (nbackw > 0 && !gtk_text_iter_ends_line (&itbword))
         gtk_text_iter_forward_char (&itbword);
       char *wordtxt =
         gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, false);
@@ -3264,8 +3271,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
-  mom_tagtable = gtk_text_tag_table_new ();
-  mom_obtextbuf = gtk_text_buffer_new (mom_tagtable);
+  mom_obtagtable = gtk_text_tag_table_new ();
+  mom_obtextbuf = gtk_text_buffer_new (mom_obtagtable);
   mom_initialize_gtk_tags_for_objects ();
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
   mom_tview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
