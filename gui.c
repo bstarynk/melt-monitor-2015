@@ -3205,9 +3205,14 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
             }
           strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
           g_free (opertxt);
-#warning should check that operatorobr has the good signature
-          if (!operatorobr)
+          if (!mo_dyncast_objref (operatorobr))
             MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
+          if (operatorobr->mo_ob_paylkind !=
+              MOM_PREDEF (signature_object_to_value)
+              || !operatorobr->mo_ob_payldata)
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "wrong operator $%s (invalid payload)...",
+                                 operbuf);
           gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
                                      &begopit, &endopit);
           cpars->mo_gcp_curiter = endopit;
@@ -3218,7 +3223,10 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
             momgui_cmdparse_complement (cpars, operationobr, "operation");
           if (!cpars->mo_gcp_onlyparse)
             {
-#warning should apply the operator to the operation
+              mo_signature_object_to_value_sigt *operatorfun =
+                operatorobr->mo_ob_payldata;
+              mo_value_t operationres = (*operatorfun) (operationobr);
+              v = operationres;
             }
         }
       else

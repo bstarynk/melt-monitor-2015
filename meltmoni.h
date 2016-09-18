@@ -1692,6 +1692,9 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
   return NULL;
 }                               /* end mo_objref_get_signed_funad */
 
+/// signature corresponding to signature_object_to_value
+typedef mo_value_t mo_signature_object_to_value_sigt (mo_objref_t);
+
 ////////////////////////////////////////////////////////////////
 /**** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;
