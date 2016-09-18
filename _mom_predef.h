@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 14
+#define MOM_NB_PREDEFINED 15
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -63,6 +63,9 @@ MOM_HAS_PREDEFINED(payload_vectval,_5Hf0fFKvRVa71ZPM0,1349715772,396851510433949
 
 //+ class of signatures
 MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371733,906720652)
+
+//+ signature: object -> value
+MOM_HAS_PREDEFINED(signature_object_to_value,_8DT8VbN0FaiS0K6uf,2044327603,3139888012720850935,2424030428)
 
 //+ object describing the initial GUI
 MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,1276275209)
@@ -132,6 +135,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_6S30JEAmywph5MZqd
 #define monam_6S30JEAmywph5MZqd signature_class
 
+#undef moid_signature_object_to_value
+#define moid_signature_object_to_value _8DT8VbN0FaiS0K6uf
+#undef monam_8DT8VbN0FaiS0K6uf
+#define monam_8DT8VbN0FaiS0K6uf signature_object_to_value
+
 #undef moid_the_GUI
 #define moid_the_GUI _6Pc0DV2SCkMSiNlcf
 #undef monam_6Pc0DV2SCkMSiNlcf
@@ -158,6 +166,7 @@ enum mom_predefined_hashes_en {
   momphash_payload_value=77028432,
   momphash_payload_vectval=2293677932,
   momphash_signature_class=906720652,
+  momphash_signature_object_to_value=2424030428,
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
 }; // end mom_predefined_hashes_en
@@ -169,7 +178,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 14
+#define MOM_NB_NAMED_PREDEFINED 15
 
 
 #undef MOM_HAS_PREDEFINED

@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 12 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 18 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -39,6 +39,7 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -297,6 +298,20 @@ INSERT INTO t_objects VALUES('_8D28gj8akGrJyyzei',1473102098,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for JSON payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
+{
+ "@name": "signature_object_to_value",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature: object -> value"
    }
   ]
  },
