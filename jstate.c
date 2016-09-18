@@ -1839,6 +1839,8 @@ mo_loader_load_payload_code (mo_loader_ty * ld)
 }                               /* end of mo_loader_load_payload_code */
 
 
+
+
 void
 mo_loader_load_payload_data (mo_loader_ty * ld)
 {
@@ -2008,6 +2010,78 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
        mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
 }                               /* end mo_loader_load_payload_data */
 
+
+
+void
+mo_loader_load_class (mo_loader_ty * ld)
+{
+  int rc = 0;
+
+  /** repeat: 
+      SELECT ob_id, ob_classid  FROM t_objects
+      WHERE ob_classid IS NOT "" 
+  **/
+  sqlite3_stmt *lclastmt = NULL;
+  enum
+  { MOMRESIX_OID, MOMRESIX_CLASSID, MOMRESIX__LAST };
+  if ((rc = sqlite3_prepare_v2 (ld->mo_ld_db,
+                                "SELECT ob_id, ob_classid"
+                                " FROM t_objects WHERE "
+                                " ob_classid IS NOT \"\" ",
+                                -1, &lclastmt, NULL)) != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s failed to prepare classload selection (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  while ((rc = sqlite3_step (lclastmt)) == SQLITE_ROW)
+    {
+      MOM_ASSERTPRINTF (sqlite3_data_count (lclastmt) == MOMRESIX__LAST
+                        && sqlite3_column_type (lclastmt, MOMRESIX_OID)
+                        == SQLITE_TEXT
+                        && sqlite3_column_type (lclastmt, MOMRESIX_CLASSID)
+                        == SQLITE_TEXT, "bad lclastmt");
+      /// get the object
+      const char *obidstr =
+        (const char *) sqlite3_column_text (lclastmt, MOMRESIX_OID);
+      mo_hid_t obhid = 0;
+      mo_loid_t obloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&obhid, &obloid, obidstr)
+          || obhid == 0 || obloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), obidstr);
+      mo_objref_t obr = mo_objref_find_hid_loid (obhid, obloid);
+      if (obr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_id %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), obidstr);
+      /// get the class
+      const char *classidstr =
+        (const char *) sqlite3_column_text (lclastmt, MOMRESIX_CLASSID);
+      mo_hid_t clahid = 0;
+      mo_loid_t claloid = 0;
+      if (!mo_get_hi_lo_ids_from_cstring (&clahid, &claloid, classidstr)
+          || clahid == 0 || claloid == 0)
+        MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_id  %s",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), obidstr);
+      mo_objref_t classobr = mo_objref_find_hid_loid (clahid, claloid);
+      if (classobr == NULL)
+        MOM_FATAPRINTF ("Sqlite loader base %s ob_classid %s not found",
+                        mo_string_cstr (ld->mo_ld_sqlitepathv), classidstr);
+      // set the object's class
+      obr->mo_ob_class = classobr;
+    };                          /* end while sqlite3_step classload */
+  if (rc != SQLITE_DONE)
+    MOM_FATAPRINTF ("Sqlite loader base %s classload selection not done (%s)",
+                    mo_string_cstr (ld->mo_ld_sqlitepathv),
+                    sqlite3_errstr (rc));
+  rc = sqlite3_finalize (lclastmt);
+  lclastmt = NULL;
+  if (rc != SQLITE_OK)
+    MOM_FATAPRINTF
+      ("Sqlite loader base %s classload selection unfinalized (%s)",
+       mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+}                               /* end mo_loader_load_class */
+
+
+
 void
 mo_loader_end_database (mo_loader_ty * ld)
 {
@@ -2046,6 +2120,7 @@ mom_load_state (void)
   mo_loader_name_objects (&loader);
   mo_loader_link_modules (&loader);
   mo_loader_fill_objects_contents (&loader);
+  mo_loader_load_class (&loader);
   /// we should first load the payload sitting in code, that is having
   /// a non-empty ob_paylmod:
   mo_loader_load_payload_code (&loader);
