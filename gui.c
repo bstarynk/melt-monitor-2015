@@ -3391,7 +3391,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                 "foreground", "mediumpurple", NULL);
   mom_cmdtag_oper =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-                                "name",
+                                "oper",
                                 "family", "DejaVu Sans Mono, Bold",
                                 "foreground", "darkred", NULL);
   mom_cmdtag_anon =
