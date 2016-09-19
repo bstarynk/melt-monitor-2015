@@ -1059,6 +1059,14 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
               }
           }
           break;
+        case CASE_PAYLOAD_MOM (payload_c_emit):
+          {
+            const char *detstr = mo_objref_cemit_detailstr (obr);
+            if (detstr)
+              gtk_text_buffer_insert_with_tags  //
+                (mom_obtextbuf, piter, detstr, -1, mom_tag_payload, NULL);
+          }
+          break;
         default:
         defaultpayloadcase:
           break;
@@ -1141,9 +1149,9 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                                      dinf->mo_gdo_hidezoombutton2,
                                      dinf->mo_gdo_hidezoomanchor);
   g_signal_connect (dinf->mo_gdo_hidezoombutton1, "clicked",
-                    momgui_hideobj, obr);
+                    G_CALLBACK(momgui_hideobj), obr);
   g_signal_connect (dinf->mo_gdo_hidezoombutton2, "clicked",
-                    momgui_hideobj, obr);
+                    G_CALLBACK(momgui_hideobj), obr);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton1);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton2);
   enum mo_space_en spa = mo_objref_space (obr);
@@ -3186,7 +3194,6 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
           GtkTextIter begopit = cpars->mo_gcp_curiter;
           GtkTextIter endopit = begopit;
           gtk_text_iter_forward_char (&endopit);
-          GtkTextIter namopit = endopit;
           char operbuf[32];
           memset (operbuf, 0, sizeof (operbuf));
           while ((uc = gtk_text_iter_get_char (&endopit)) > 0
@@ -3213,7 +3220,7 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
             operfunobr = operatorobr;
           else
             operfunobr =
-              mo_objref_get_attr (operatorobr, MOM_PREDEF (GUI_operation));
+              mo_dyncast_objref(mo_objref_get_attr (operatorobr, MOM_PREDEF (GUI_operation)));
           if (!mo_dyncast_objref (operfunobr)
               || operfunobr->mo_ob_paylkind !=
               MOM_PREDEF (signature_object_to_value)

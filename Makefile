@@ -49,7 +49,8 @@ PLUGIN_SOURCES= $(sort $(wildcard momplug_*.c momplug_*.cc))
 PLUGINS=  $(patsubst %.c,%.so,$(PLUGIN_SOURCES))
 # modules are generated inside modules.dir/ ; see MOM_MODULES_DIR constant
 MODULE_NAMES:=$(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) 'SELECT mod_oid FROM t_modules')
-MODULE_SOURCES= $(sort $(patsubst %,modules.dir/%.c,$(MODULE_NAMES)))
+# keep in sync with MOM_MODULES_DIR &  MOM_MODULE_INFIX in meltmoni.h
+MODULE_SOURCES= $(sort $(patsubst %,modules.dir/modu%.c,$(MODULE_NAMES)))
 # generated headers
 GENERATED_HEADERS= $(sort $(wildcard _mom*.h))
 MODULES=  $(patsubst %.c,%.so,$(MODULE_SOURCES))

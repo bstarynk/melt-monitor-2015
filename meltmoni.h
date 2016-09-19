@@ -142,9 +142,9 @@ typedef struct mo_dumper_st mo_dumper_ty;
 
 #define MOM_DUMP_VERSIONID "MoniMelt2016B"
 
-// the generated modules directory
+// the generated modules directory; known to the Makefile
 #define MOM_MODULES_DIR "modules.dir"
-// in which a module of id FooId is in modFooId.c & modFooId.so
+// in which a module of id FooId is in moduFooId.c & moduFooId.so
 #define MOM_MODULE_INFIX "modu"
 #define MOM_MODULE_SUFFIX ".so"
 // the generated header file
@@ -485,6 +485,7 @@ enum mo_payloadkind_en
   mo_PHASHSET /* payload_hashset */ ,
   mo_PLIST /* payload_list */ ,
   mo_PBUFFER /* payload_buffer */ ,
+  mo_PCEMIT /* payload_c_emit */ ,
 };
 
 typedef const void *mo_value_t;
@@ -957,18 +958,18 @@ enum mo_space_en
 };
 
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
-#define MOMFIELDS_objectvalue     \
-  MOMFIELDS_hashedvalue;      \
-/** don't need mutex before bootstrapping:  \
- ** pthread_mutex_t mo_ob_mtx; **/    \
-  time_t mo_ob_mtime;       \
-  mo_hid_t mo_ob_hid;       \
-  mo_loid_t mo_ob_loid;       \
-  mo_objref_t mo_ob_class;      \
-  mo_assovaldatapayl_ty *mo_ob_attrs;   \
-  mo_vectvaldatapayl_ty *mo_ob_comps;   \
-  /* payload kind & data */     \
-  mo_objref_t mo_ob_paylkind;     \
+#define MOMFIELDS_objectvalue                   \
+  MOMFIELDS_hashedvalue;                        \
+/** don't need mutex before bootstrapping:      \
+ ** pthread_mutex_t mo_ob_mtx; **/              \
+  time_t mo_ob_mtime;                           \
+  mo_hid_t mo_ob_hid;                           \
+  mo_loid_t mo_ob_loid;                         \
+  mo_objref_t mo_ob_class;                      \
+  mo_assovaldatapayl_ty *mo_ob_attrs;           \
+  mo_vectvaldatapayl_ty *mo_ob_comps;           \
+  /* payload kind & data */                     \
+  mo_objref_t mo_ob_paylkind;                   \
   void *mo_ob_payldata
 struct mo_objectvalue_st
 {
@@ -1398,12 +1399,12 @@ mo_listpayl_ty *mo_list_of_json (mo_json_t);
 /// a file payload has kind payload_file & data the FILE*
 /// a buffer payload has kind payload_buffer & data..
 typedef struct mo_bufferpayl_st mo_bufferpayl_ty;
-#define MOM_BUFFER_MAGIC 0x1af15eb9     /*452026041 */
-#define MOMFIELDS_bufferpayl          \
-  MOMFIELDS_hashedvalue;          \
-  unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */ \
-  char *mo_buffer_zone;           \
-  size_t mo_buffer_size;          \
+#define MOM_BUFFER_MAGIC 0x1af15eb9     /*452026041 buffer_magic */
+#define MOMFIELDS_bufferpayl                                    \
+  MOMFIELDS_hashedvalue;                                        \
+  unsigned mo_buffer_nmagic;    /* always MOM_BUFFER_MAGIC */   \
+  char *mo_buffer_zone;                                         \
+  size_t mo_buffer_size;                                        \
   FILE *mo_buffer_memstream
 
 struct mo_bufferpayl_st         /*malloced */
@@ -1696,7 +1697,7 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
 typedef mo_value_t mo_signature_object_to_value_sigt (mo_objref_t);
 
 ////////////////////////////////////////////////////////////////
-/**** Graphical User Interface (above GTK) *****/
+/***************** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;
 void mom_run_gtk (int *pargc, char ***pargv, char **dispobjs);
 void mo_gui_display_object (mo_objref_t ob);
@@ -1709,4 +1710,21 @@ void mo_gui_undisplay_object (mo_objref_t ob);
 #define MOM_PLUGIN_STARTUP "momplugin_startup"
 typedef void momplugin_startup_sigt (const char *);
 extern momplugin_startup_sigt momplugin_startup;
+
+
+
+////////////////////////////////////////////////////////////////
+/***************** C code emission *****/
+/// in file cemit.c
+typedef struct mo_cemitpayl_st mo_cemitpayl_ty; // a private struct
+void mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul);
+
+// check if an object has a valid c_emit_paylaod
+bool mo_objref_has_valid_cemit_payload (mo_objref_t obr);
+// check if an object has an opened c_emit
+bool mo_objref_has_opened_cemit_payload (mo_objref_t obr);
+// dyncast some cemit payload
+mo_cemitpayl_ty *mo_dyncastpayl_cemit (const void *p);
+// return a GC-strduped string containing some details about a cemit object
+const char *mo_objref_cemit_detailstr (mo_objref_t obr);
 #endif /*MONIMELT_HEADER */
