@@ -1717,14 +1717,28 @@ extern momplugin_startup_sigt momplugin_startup;
 /***************** C code emission *****/
 /// in file cemit.c
 typedef struct mo_cemitpayl_st mo_cemitpayl_ty; // a private struct
+
+/// initialize a cemit payload for some given module
 void mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul);
 
-// check if an object has a valid c_emit_paylaod
+/// set the suffix in a closed cemit object
+void mo_objref_cemit_set_suffix (mo_objref_t obrcem, const char *suffix);
+/// set the prefix in a closed cemit object
+void mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *suffix);
+// open a cemit object
+void mo_objref_cemit_open (mo_objref_t obrcem);
+// close a cemit object
+void mo_objref_cemit_close (mo_objref_t obrcem);
+// check if an object has a valid c_emit_payload
 bool mo_objref_has_valid_cemit_payload (mo_objref_t obr);
+// get the cemit payload of an object
+mo_cemitpayl_ty *mo_objref_get_cemit (mo_objref_t obr);
+
 // check if an object has an opened c_emit
 bool mo_objref_has_opened_cemit_payload (mo_objref_t obr);
 // dyncast some cemit payload
 mo_cemitpayl_ty *mo_dyncastpayl_cemit (const void *p);
 // return a GC-strduped string containing some details about a cemit object
 const char *mo_objref_cemit_detailstr (mo_objref_t obr);
+
 #endif /*MONIMELT_HEADER */

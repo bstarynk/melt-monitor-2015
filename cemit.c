@@ -30,7 +30,9 @@
    something like '+r0abcd_ef09_p324' */			\
   char mo_cemit_tempsuff[40];					\
 /* the prefix could be 'modules.dir/momg_' */			\
-  char mo_cemit_prefix[32];					\
+  char mo_cemit_prefix[30];					\
+  /* the indentation */						\
+  uint8_t mo_cemit_indent;					\
 /* the generated temporary file handle */			\
   FILE* mo_cemit_fil;						\
 /* the source module */						\
@@ -119,6 +121,17 @@ mo_objref_has_valid_cemit_payload (mo_objref_t obr)
   return true;
 }                               /* end of mo_objref_has_valid_cemit_payload */
 
+mo_cemitpayl_ty *
+mo_objref_get_cemit (mo_objref_t obr)
+{
+  if (!mo_dyncast_objref (obr))
+    return NULL;
+  if (obr->mo_ob_paylkind != MOM_PREDEF (payload_c_emit))
+    return NULL;
+  mo_cemitpayl_ty *cemp = mo_dyncastpayl_cemit (obr->mo_ob_payldata);
+  return cemp;
+}                               /* end mo_objref_get_cemit */
+
 bool
 mo_objref_has_opened_cemit_payload (mo_objref_t obr)
 {
@@ -161,5 +174,135 @@ mo_objref_cemit_detailstr (mo_objref_t obr)
     }
   return res;
 }                               /* end of mo_objref_cemit_detailstr */
+
+
+void
+mo_objref_cemit_set_suffix (mo_objref_t obrcem, const char *suffix)
+{
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
+  if (!cemp)
+    return;
+  if (!suffix || suffix == MOM_EMPTY_SLOT)
+    return;
+  if (cemp->mo_cemit_fil)
+    {
+      MOM_WARNPRINTF
+        ("for cemit object %s cannot set suffix %s since opened %s",
+         mo_objref_pnamestr (obrcem), suffix,
+         mo_objref_cemit_detailstr (obrcem));
+      return;
+    }
+  strncpy (cemp->mo_cemit_suffix, suffix, sizeof (cemp->mo_cemit_suffix) - 1);
+}                               /* end of mo_objref_cemit_set_suffix */
+
+
+void
+mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *prefix)
+{
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
+  if (!cemp)
+    return;
+  if (!prefix || prefix == MOM_EMPTY_SLOT)
+    return;
+  bool goodprefix = false;
+  for (const char *pc = prefix; *pc && goodprefix; pc++)
+    {
+      if (pc >= prefix + sizeof (cemp->mo_cemit_prefix) - 1)
+        goodprefix = false;
+      if (*pc == '.' && pc > prefix && pc[-1] == '.')
+        goodprefix = false;
+      if (*pc == '/' && pc > prefix && pc[-1] == '/')
+        goodprefix = false;
+      if (!isalnum (*pc) && *pc != '+' && *pc != '-' && *pc != '.'
+          && *pc != '_' && *pc != '/')
+        goodprefix = false;
+    }
+  if (!goodprefix)
+    {
+      MOM_WARNPRINTF ("for cemit object %s bad prefix '%s'",
+                      mo_objref_pnamestr (obrcem), prefix);
+      return;
+    }
+  if (cemp->mo_cemit_fil)
+    {
+      MOM_WARNPRINTF
+        ("for cemit object %s cannot set suffix %s since opened %s",
+         mo_objref_pnamestr (obrcem), prefix,
+         mo_objref_cemit_detailstr (obrcem));
+      return;
+    }
+  strncpy (cemp->mo_cemit_prefix, prefix, sizeof (cemp->mo_cemit_prefix) - 1);
+}                               /* end mo_objref_cemit_set_prefix */
+
+void
+mo_objref_cemit_open (mo_objref_t obrcem)
+{
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
+  if (!cemp)
+    return;
+  if (cemp->mo_cemit_fil != NULL)
+    {
+      MOM_WARNPRINTF
+        ("cemit object %s is already opened %s",
+         mo_objref_pnamestr (obrcem), mo_objref_cemit_detailstr (obrcem));
+      return;
+    }
+  char obmid[MOM_CSTRIDSIZ];
+  memset (obmid, 0, sizeof (obmid));
+  mo_objref_idstr (obmid, cemp->mo_cemit_modobj);
+  char *pathbuf = NULL;
+  asprintf (&pathbuf, "%s%s%s%s",
+            cemp->mo_cemit_prefix,
+            obmid, cemp->mo_cemit_suffix, cemp->mo_cemit_tempsuff);
+  if (!pathbuf)
+    MOM_FATAPRINTF ("cemit_open: asprintf failed for obrcem %s", obmid);
+  /* GNU extensions: e==Open the file with the O_CLOEXEC flag; 
+     x==Open the file exclusively (like the O_EXCL flag of open(2)) */
+  cemp->mo_cemit_fil = fopen (pathbuf, "wex");
+  if (!cemp->mo_cemit_fil)
+    MOM_FATAPRINTF ("cemit_open: fopen %s failed", pathbuf);
+  char smallpath[128];
+  memset (smallpath, 0, sizeof (smallpath));
+  snprintf (smallpath, sizeof (smallpath), "%.30s%s%s",
+            cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
+  fprintf (cemp->mo_cemit_fil,
+           "//// emitted C code file %s%s%s - DONT EDIT\n",
+           cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
+  mom_output_gplv3_notice (cemp->mo_cemit_fil, "//! ", "", smallpath);
+  if (!strcmp (cemp->mo_cemit_suffix, ".h"))
+    fprintf (cemp->mo_cemit_fil, "#ifndef MOMHEADER%s\n"
+             "#define MOMHEADER%s\n", obmid, obmid);
+}                               /* end of mo_objref_cemit_open */
+
+void
+mo_objref_cemit_close (mo_objref_t obrcem)
+{
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
+  if (!cemp)
+    return;
+  if (cemp->mo_cemit_fil == NULL)
+    {
+      MOM_WARNPRINTF
+        ("cemit object %s is mot opened %s",
+         mo_objref_pnamestr (obrcem), mo_objref_cemit_detailstr (obrcem));
+      return;
+    }
+  char obmid[MOM_CSTRIDSIZ];
+  memset (obmid, 0, sizeof (obmid));
+  mo_objref_idstr (obmid, cemp->mo_cemit_modobj);
+  if (!strcmp (cemp->mo_cemit_suffix, ".h"))
+    fprintf (cemp->mo_cemit_fil, "\n#endif /*MOMHEADER%s*/\n", obmid);
+  fprintf (cemp->mo_cemit_fil, "/* end of generated C code file %s%s%s */\n",
+           cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
+  if (fclose (cemp->mo_cemit_fil))
+    MOM_FATAPRINTF ("failed to fclose file %s%s%s%s", cemp->mo_cemit_prefix,
+                    obmid, cemp->mo_cemit_suffix, cemp->mo_cemit_tempsuff);
+  cemp->mo_cemit_fil = NULL;
+#warning mo_objref_cemit_close very incomplete
+  /* we should rename the temporary file to the definitive one if
+     their contents are different, and we should add a symlink for
+     named modules objects */
+  MOM_WARNPRINTF ("cemit_close incomplete for %s", obmid);
+}                               /* end of mo_objref_cemit_close */
 
 /*** end of file cemit.c ***/

@@ -1149,9 +1149,9 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                                      dinf->mo_gdo_hidezoombutton2,
                                      dinf->mo_gdo_hidezoomanchor);
   g_signal_connect (dinf->mo_gdo_hidezoombutton1, "clicked",
-                    G_CALLBACK(momgui_hideobj), obr);
+                    G_CALLBACK (momgui_hideobj), obr);
   g_signal_connect (dinf->mo_gdo_hidezoombutton2, "clicked",
-                    G_CALLBACK(momgui_hideobj), obr);
+                    G_CALLBACK (momgui_hideobj), obr);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton1);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton2);
   enum mo_space_en spa = mo_objref_space (obr);
@@ -3220,7 +3220,8 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
             operfunobr = operatorobr;
           else
             operfunobr =
-              mo_dyncast_objref(mo_objref_get_attr (operatorobr, MOM_PREDEF (GUI_operation)));
+              mo_dyncast_objref (mo_objref_get_attr
+                                 (operatorobr, MOM_PREDEF (GUI_operation)));
           if (!mo_dyncast_objref (operfunobr)
               || operfunobr->mo_ob_paylkind !=
               MOM_PREDEF (signature_object_to_value)
