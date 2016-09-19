@@ -3182,6 +3182,7 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
           && uc < 127 && (isalpha (uc) || uc == '_'))
         {
           mo_objref_t operatorobr = NULL;
+          mo_objref_t operfunobr = NULL;
           GtkTextIter begopit = cpars->mo_gcp_curiter;
           GtkTextIter endopit = begopit;
           gtk_text_iter_forward_char (&endopit);
@@ -3207,12 +3208,16 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
           g_free (opertxt);
           if (!mo_dyncast_objref (operatorobr))
             MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
-          if (operatorobr->mo_ob_paylkind !=
+          if (operatorobr->mo_ob_paylkind ==
+              MOM_PREDEF (signature_object_to_value))
+            operfunobr = operatorobr;
+          if (!mo_dyncast_objref (operfunobr)
+              || operfunobr->mo_ob_paylkind !=
               MOM_PREDEF (signature_object_to_value)
-              || !operatorobr->mo_ob_payldata)
+              || !operfunobr->mo_ob_payldata)
             MOMGUI_CMDPARSEFAIL (cpars,
-                                 "wrong operator $%s (invalid payload)...",
-                                 operbuf);
+                                 "wrong operator $%s (invalid payload in operator function %s)...",
+                                 operbuf, mo_objref_pnamestr (operfunobr));
           gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
                                      &begopit, &endopit);
           cpars->mo_gcp_curiter = endopit;
@@ -3223,9 +3228,16 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
             momgui_cmdparse_complement (cpars, operationobr, "operation");
           if (!cpars->mo_gcp_onlyparse)
             {
-              mo_signature_object_to_value_sigt *operatorfun =
-                operatorobr->mo_ob_payldata;
-              mo_value_t operationres = (*operatorfun) (operationobr);
+              MOM_ASSERTPRINTF (operfunobr != NULL
+                                && operfunobr != MOM_EMPTY_SLOT
+                                && operfunobr->mo_ob_paylkind ==
+                                MOM_PREDEF (signature_object_to_value)
+                                && operfunobr->mo_ob_payldata != NULL,
+                                "bad operfunobr %s",
+                                mo_objref_pnamestr (operfunobr));
+              mo_signature_object_to_value_sigt *operfun =
+                operfunobr->mo_ob_payldata;
+              mo_value_t operationres = (*operfun) (operationobr);
               v = operationres;
             }
         }

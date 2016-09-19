@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 18 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 19 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -27,6 +27,7 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 ---- TABLE t_params @@@@@@
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
+INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
@@ -173,6 +174,20 @@ INSERT INTO t_objects VALUES('_4wr5hqASKB1b0Dd5D',1473102723,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for GTK & Gobject payloads"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4x85ZXWJ9HDCurqHP',1474269607,'
+{
+ "@name": "GUI_operation",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute giving the GUI operation for $oper"
    }
   ]
  },

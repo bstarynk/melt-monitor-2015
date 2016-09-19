@@ -23,10 +23,13 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 15
+#define MOM_NB_PREDEFINED 16
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
+
+//+ attribute giving the GUI operation for $oper
+MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,4770012995783535398,3665661719)
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
@@ -74,6 +77,11 @@ MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,127
 MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1453251062)
 
 
+
+#undef moid_GUI_operation
+#define moid_GUI_operation _4x85ZXWJ9HDCurqHP
+#undef monam_4x85ZXWJ9HDCurqHP
+#define monam_4x85ZXWJ9HDCurqHP GUI_operation
 
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
@@ -154,6 +162,7 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
+  momphash_GUI_operation=3665661719,
   momphash_comment=2072874222,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
@@ -178,7 +187,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 15
+#define MOM_NB_NAMED_PREDEFINED 16
 
 
 #undef MOM_HAS_PREDEFINED
