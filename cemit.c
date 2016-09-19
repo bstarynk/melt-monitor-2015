@@ -399,11 +399,12 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_close: bad payl@%p in csta@%p", cemp, csta);
+  fputs ("\n\n", csta->mo_cemsta_fil);
   if (!strcmp (cemp->mo_cemit_suffix, ".h"))
     fprintf (csta->mo_cemsta_fil, "#endif /*MOMHEADER%s*/\n",
              csta->mo_cemsta_modid);
   fprintf (csta->mo_cemsta_fil,
-           "\n\n /*** end of emitted C file %s%s%s ***/\n",
+           "\n/*** end of emitted C file %s%s%s ***/\n",
            cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
            cemp->mo_cemit_suffix);
   if (fclose (csta->mo_cemsta_fil))
@@ -477,6 +478,34 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
         MOM_FATAPRINTF ("cemit_close: new rename %s -> %s failed", newpathbuf,
                         oldpathbuf);
     };
+  /// add a symbolic link for named modules
+  mo_value_t namodv = mo_objref_namev (cemp->mo_cemit_modobj);
+  if (namodv != NULL)
+    {
+      MOM_ASSERTPRINTF (mo_dyncast_string (namodv), "bad namodv for %s",
+                        mo_objref_pnamestr (cemp->mo_cemit_modobj));
+      char *oldbase = basename (oldpathbuf);
+      MOM_ASSERTPRINTF (oldbase != NULL
+                        && oldbase >= oldpathbuf, "bad oldbase");
+      char *oldbidp = strstr (oldbase, csta->mo_cemsta_modid);
+      MOM_ASSERTPRINTF (oldbidp != NULL
+                        && strlen (oldbidp) >= MOM_CSTRIDLEN, "bad oldbidp");
+      char *symlpathbuf = NULL;
+      asprintf (&symlpathbuf, "%*s%s%s", (int) (oldbidp - oldpathbuf),
+                oldpathbuf, mo_string_cstr (namodv), oldbidp + MOM_CSTRIDLEN);
+      if (MOM_UNLIKELY (symlpathbuf == NULL))
+        MOM_FATAPRINTF ("cemit_close: asprintf symlpathbuf failed for %s",
+                        mo_objref_pnamestr (cemp->mo_cemit_modobj));
+      errno = 0;
+      if (access (symlpathbuf, R_OK) && errno == ENOENT)
+        {
+          if (symlink (oldbase, symlpathbuf))
+            MOM_FATAPRINTF
+              ("failed to symlink: %s -> %s for named module %s (%s)",
+               symlpathbuf, oldbase, mo_string_cstr (namodv),
+               csta->mo_cemsta_modid);
+        }
+    }
 }                               /* end of mom_cemit_close */
 
 
@@ -521,10 +550,14 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
     };
   cemp->mo_cemit_locstate = &cemitstate;
   mom_cemit_open (&cemitstate);
-  mom_cemit_close (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
   MOM_WARNPRINTF ("cemit_close incomplete for %s",
                   cemitstate.mo_cemsta_modid);
+  mom_cemit_close (&cemitstate);
+  cemp->mo_cemit_locstate = NULL;
+  MOM_INFORMPRINTF ("C code generated for module %s",
+                    mo_objref_pnamestr (cemp->mo_cemit_modobj));
+  return NULL;
 }                               /* end of mo_objref_cemit_generate */
 
 /*** end of file cemit.c ***/
