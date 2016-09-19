@@ -28,6 +28,7 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
+INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
@@ -45,6 +46,7 @@ INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
+INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -226,6 +228,20 @@ INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_53F6MjNKRJ8dutl09',1474308434,'
+{
+ "@name": "struct_pointer_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of pointers to struct ctypes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5Hf0fFKvRVa71ZPM0',1473049889,'
 {
  "@name": "payload_vectval",
@@ -317,6 +333,20 @@ INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for list payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7zd6NdDtMbPp0s5HT',1474308434,'
+{
+ "@name": "basic_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of basic C types like int"
    }
   ]
  },

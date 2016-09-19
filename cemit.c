@@ -568,6 +568,22 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                     csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_declare_ctype: bad typobr");
+  
+#define MOM_NBCASE_CTYPE 331
+#define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+  if (typobr->mo_ob_class != MOM_PREDEF(Ob))			\
+    goto defaultctypecase;					\
+  goto labctype_##Ob;						\
+  labctype_##Ob
+  switch (mo_objref_hash(typobr->mo_ob_class) % MOM_NBCASE_CTYPE) {
+    //  case CASE_CTYPE_MOM():
+    break;
+  default:
+  defaultctypecase:
+    break;
+  }
+#undef MOM_NBCASE_CTYPE
+#undef CASE_CTYPE_MOM
 }                               /* end mom_cemit_declare_ctype */
 
 void

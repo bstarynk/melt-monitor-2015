@@ -23,13 +23,16 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 20
+#define MOM_NB_PREDEFINED 22
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
 
 //+ attribute giving the GUI operation for $oper
 MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,4770012995783535398,3665661719)
+
+//+ class of basic C types like int
+MOM_HAS_PREDEFINED(basic_ctype_class,_7zd6NdDtMbPp0s5HT,1790033058,6222434491758531993,4082589218)
 
 //+ gives the includes in a module
 MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,3450423424)
@@ -82,6 +85,9 @@ MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371
 //+ signature: object -> value
 MOM_HAS_PREDEFINED(signature_object_to_value,_8DT8VbN0FaiS0K6uf,2044327603,3139888012720850935,2424030428)
 
+//+ class of pointers to struct ctypes
+MOM_HAS_PREDEFINED(struct_pointer_ctype_class,_53F6MjNKRJ8dutl09,1194179640,8691739431516874265,799041071)
+
 //+ object describing the initial GUI
 MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,1276275209)
 
@@ -94,6 +100,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define moid_GUI_operation _4x85ZXWJ9HDCurqHP
 #undef monam_4x85ZXWJ9HDCurqHP
 #define monam_4x85ZXWJ9HDCurqHP GUI_operation
+
+#undef moid_basic_ctype_class
+#define moid_basic_ctype_class _7zd6NdDtMbPp0s5HT
+#undef monam_7zd6NdDtMbPp0s5HT
+#define monam_7zd6NdDtMbPp0s5HT basic_ctype_class
 
 #undef moid_c_include
 #define moid_c_include _0hA5FCeEWGc6gpfnU
@@ -180,6 +191,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_8DT8VbN0FaiS0K6uf
 #define monam_8DT8VbN0FaiS0K6uf signature_object_to_value
 
+#undef moid_struct_pointer_ctype_class
+#define moid_struct_pointer_ctype_class _53F6MjNKRJ8dutl09
+#undef monam_53F6MjNKRJ8dutl09
+#define monam_53F6MjNKRJ8dutl09 struct_pointer_ctype_class
+
 #undef moid_the_GUI
 #define moid_the_GUI _6Pc0DV2SCkMSiNlcf
 #undef monam_6Pc0DV2SCkMSiNlcf
@@ -195,6 +211,7 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
+  momphash_basic_ctype_class=4082589218,
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
   momphash_comment=2072874222,
@@ -212,6 +229,7 @@ enum mom_predefined_hashes_en {
   momphash_payload_vectval=2293677932,
   momphash_signature_class=906720652,
   momphash_signature_object_to_value=2424030428,
+  momphash_struct_pointer_ctype_class=799041071,
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
 }; // end mom_predefined_hashes_en
@@ -223,7 +241,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 20
+#define MOM_NB_NAMED_PREDEFINED 22
 
 
 #undef MOM_HAS_PREDEFINED
