@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 17
+#define MOM_NB_PREDEFINED 19
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -31,8 +31,14 @@
 //+ attribute giving the GUI operation for $oper
 MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,4770012995783535398,3665661719)
 
+//+ gives the includes in a module
+MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,3450423424)
+
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ give some file path, e.g. for c-includes
+MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2269269987)
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
@@ -86,10 +92,20 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_4x85ZXWJ9HDCurqHP
 #define monam_4x85ZXWJ9HDCurqHP GUI_operation
 
+#undef moid_c_include
+#define moid_c_include _0hA5FCeEWGc6gpfnU
+#undef monam_0hA5FCeEWGc6gpfnU
+#define monam_0hA5FCeEWGc6gpfnU c_include
+
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_file_path
+#define moid_file_path _6F98Bo2ChKhNVEZgt
+#undef monam_6F98Bo2ChKhNVEZgt
+#define monam_6F98Bo2ChKhNVEZgt file_path
 
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
@@ -171,7 +187,9 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
+  momphash_c_include=3450423424,
   momphash_comment=2072874222,
+  momphash_file_path=2269269987,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
@@ -196,7 +214,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 17
+#define MOM_NB_NAMED_PREDEFINED 19
 
 
 #undef MOM_HAS_PREDEFINED

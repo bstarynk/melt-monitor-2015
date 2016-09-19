@@ -28,7 +28,9 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
+INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
@@ -64,6 +66,20 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
+{
+ "@name": "c_include",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the includes in a module"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
@@ -244,6 +260,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "our anon3obj for GUI testing"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6F98Bo2ChKhNVEZgt',1474292777,'
+{
+ "@name": "file_path",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give some file path, e.g. for c-includes"
    }
   ]
  },

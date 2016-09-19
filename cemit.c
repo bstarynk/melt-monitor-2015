@@ -145,17 +145,16 @@ mo_objref_get_cemit (mo_objref_t obr)
 }                               /* end mo_objref_get_cemit */
 
 #define MOM_CEMITFAILURE_AT(Lin,Csta,Fmt,...) do {	\
-    struct mom_cemitlocalstate_st*_csta_#Lin = (Csta);	\
+    struct mom_cemitlocalstate_st*_csta_##Lin = (Csta);	\
     MOM_ASSERTPRINTF_AT					\
       (__FILE__,Lin,					\
-       _csta_#Lin->mo_cemsta_nmagic			\
+       _csta_##Lin->mo_cemsta_nmagic			\
        == MOM_CEMITSTATE_MAGIC,				\
        "bad csta@%p for failure %s",			\
-       _csta_#Lin, (Fmt));				\
-    _csta_#Lin->mo_cemsta_errstr			\
-      = mo_make_string_sprintf(Fmt, ##__VA_ARGS__,	\
-			       NULL);			\
-    longjmp(_csta_#Lin->mo_cemsta_jmpbuf, Lin);		\
+       _csta_##Lin, (Fmt));				\
+    _csta_##Lin->mo_cemsta_errstr			\
+      = mo_make_string_sprintf(Fmt, ##__VA_ARGS__);	\
+    longjmp(_csta_##Lin->mo_cemsta_jmpbuf, Lin);	\
 } while(0)
 #define MOM_CEMITFAILURE_AT_BIS(Lin,Csta,Fmt,...) \
   MOM_CEMITFAILURE_AT(Lin,Csta,Fmt,##__VA_ARGS__)
@@ -509,6 +508,51 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
 }                               /* end of mom_cemit_close */
 
 
+void
+mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_includes: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_includes: bad payl@%p in csta@%p", cemp, csta);
+  mo_value_t cinclv =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (c_include));
+  if (!cinclv)
+    {
+      fprintf (csta->mo_cemsta_fil, "\n// no includes\n");
+      return;
+    }
+  if (!mo_dyncast_tuple (cinclv))
+    MOM_CEMITFAILURE (csta, "bad c_include %s", mo_value_pnamestr (cinclv));
+  unsigned nbincl = mo_tuple_size (cinclv);
+  fprintf (csta->mo_cemsta_fil, "\n// %u included headers:\n", nbincl);
+  for (unsigned ix = 0; ix < nbincl; ix++)
+    {
+      mo_objref_t curinclob = mo_tuple_nth (cinclv, ix);
+      if (!mo_dyncast_objref (curinclob))
+        MOM_CEMITFAILURE (csta, "bad %d-th c_include %s", ix + 1,
+                          mo_value_pnamestr (cinclv));
+      mo_value_t inclstrv =
+        mo_dyncast_string (mo_objref_get_attr
+                           (curinclob, MOM_PREDEF (file_path)));
+      const char *inclcstr = mo_string_cstr (inclstrv);
+      if (!inclstrv || !inclcstr)
+        MOM_CEMITFAILURE (csta, "included %s with bad `file_path`",
+                          mo_objref_pnamestr (curinclob));
+      for (const char *pi = inclcstr; *pi; pi++)
+        if (!isalnum (*pi) || *pi == '/' || *pi == '_' || *pi == '+'
+            || *pi == '-' || *pi == '.')
+          MOM_CEMITFAILURE (csta, "included %s with invalid `file_path` %s",
+                            mo_objref_pnamestr (curinclob), inclcstr);
+      fprintf (csta->mo_cemsta_fil, "#include \"%s\"\n", inclcstr);
+    }
+  fputs ("\n\n", csta->mo_cemsta_fil);
+  fflush (csta->mo_cemsta_fil);
+}                               /* end mom_cemit_includes */
+
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
 {
@@ -550,6 +594,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
     };
   cemp->mo_cemit_locstate = &cemitstate;
   mom_cemit_open (&cemitstate);
+  mom_cemit_includes (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
   MOM_WARNPRINTF ("cemit_close incomplete for %s",
                   cemitstate.mo_cemsta_modid);
