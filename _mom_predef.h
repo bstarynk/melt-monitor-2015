@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 19
+#define MOM_NB_PREDEFINED 20
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -33,6 +33,9 @@ MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,47700129957835353
 
 //+ gives the includes in a module
 MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,3450423424)
+
+//+ gives the C types in a module
+MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,583145630)
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
@@ -96,6 +99,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define moid_c_include _0hA5FCeEWGc6gpfnU
 #undef monam_0hA5FCeEWGc6gpfnU
 #define monam_0hA5FCeEWGc6gpfnU c_include
+
+#undef moid_c_type
+#define moid_c_type _8TY6UsXJ3Djt71By3
+#undef monam_8TY6UsXJ3Djt71By3
+#define monam_8TY6UsXJ3Djt71By3 c_type
 
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
@@ -188,6 +196,7 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
   momphash_c_include=3450423424,
+  momphash_c_type=583145630,
   momphash_comment=2072874222,
   momphash_file_path=2269269987,
   momphash_module_class=3193995711,
@@ -214,7 +223,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 19
+#define MOM_NB_NAMED_PREDEFINED 20
 
 
 #undef MOM_HAS_PREDEFINED

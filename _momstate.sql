@@ -29,6 +29,7 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
+INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
@@ -364,6 +365,20 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_8TY6UsXJ3Djt71By3',1474294464,'
+{
+ "@name": "c_type",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the C types in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_8hg5YXTgfHBnV4W8q',1474270315,'
 {
  "@name": "payload_c_emit",

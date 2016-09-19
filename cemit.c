@@ -553,6 +553,39 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
   fflush (csta->mo_cemsta_fil);
 }                               /* end mom_cemit_includes */
 
+void
+mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_ctypes: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_ctypes: bad payl@%p in csta@%p", cemp, csta);
+  mo_value_t ctypv =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (c_type));
+  if (!ctypv)
+    {
+      fprintf (csta->mo_cemsta_fil, "\n// no types\n");
+      return;
+    }
+  if (!mo_dyncast_tuple (ctypv))
+    MOM_CEMITFAILURE (csta, "bad c_type %s", mo_value_pnamestr (ctypv));
+  unsigned nbctyp = mo_tuple_size (ctypv);
+  fprintf (csta->mo_cemsta_fil, "\n// %d types definitions\n", nbctyp);
+  // first loop to emit typedefs
+  for (unsigned tix = 0; tix < nbctyp; tix++)
+    {
+      mo_objref_t ctypob = mo_tuple_nth (ctypv, tix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
+    }
+  MOM_WARNPRINTF ("unimplemented cemit_ctype ctypv=%s",
+                  mo_value_pnamestr (ctypv));
+#warning unimplemented cemit_ctypes
+}                               /* end of mom_cemit_ctypes */
+
+
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
 {
@@ -595,6 +628,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   cemp->mo_cemit_locstate = &cemitstate;
   mom_cemit_open (&cemitstate);
   mom_cemit_includes (&cemitstate);
+  mom_cemit_ctypes (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
   MOM_WARNPRINTF ("cemit_close incomplete for %s",
                   cemitstate.mo_cemsta_modid);
