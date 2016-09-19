@@ -26,21 +26,31 @@
   uint32_t mo_cemit_nmagic; /* always MOM_CEMIT_MAGIC */	\
   /* the suffix is often '.c' */				\
   char mo_cemit_suffix[4];					\
-/* the temporary suffix is often				\
-   something like '+r0abcd_ef09_p324' */			\
-  char mo_cemit_tempsuff[40];					\
 /* the prefix could be 'modules.dir/momg_' */			\
-  char mo_cemit_prefix[30];					\
-  /* the indentation */						\
-  uint8_t mo_cemit_indent;					\
-/* the generated temporary file handle */			\
-  FILE* mo_cemit_fil;						\
+  char mo_cemit_prefix[32];					\
+  /* a pointer to a local struct during emission */		\
+  struct mom_cemitlocalstate_st* mo_cemit_locstate;      	\
 /* the source module */						\
   mo_objref_t mo_cemit_modobj
 
 struct mo_cemitpayl_st
 {
   MOMFIELDS_cemitpayl;
+};
+
+// an internal stack-allocated structure
+#define MOM_CEMITSTATE_MAGIC 0x2fd11731 /* 802232113 cemitstate_magic */
+struct mom_cemitlocalstate_st
+{
+  uint32_t mo_cemsta_nmagic;    /* always MOM_CEMITSTATE_MAGIC */
+  char mo_cemsta_tempsuffix[46];        /* a temporary suffix */
+  uint8_t mo_cemsta_indentation;
+  mo_objref_t mo_cemsta_objcemit;       /* the objref with the cemit payload  */
+  char mo_cemsta_modid[MOM_CSTRIDSIZ];
+  FILE *mo_cemsta_fil;          /* the emitted FILE handle */
+  mo_cemitpayl_ty *mo_cemsta_payl;
+  mo_value_t mo_cemsta_errstr;  /* the error string */
+  jmp_buf mo_cemsta_jmpbuf;     /* for errors */
 };
 
 void
@@ -53,8 +63,15 @@ mo_objref_cleanup_cemit (mo_objref_t obr)
   mo_cemitpayl_ty *cemp = obr->mo_ob_payldata;
   MOM_ASSERTPRINTF (cemp != NULL && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC,
                     "bad cemp@%p", cemp);
-  if (cemp->mo_cemit_fil)
-    fclose (cemp->mo_cemit_fil), cemp->mo_cemit_fil = NULL;
+  struct mom_cemitlocalstate_st *csta = cemp->mo_cemit_locstate;
+  if (csta)
+    {
+      MOM_ASSERTPRINTF (csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                        && csta->mo_cemsta_objcemit == obr,
+                        "bad csta@%p for obr %s", csta,
+                        mo_objref_pnamestr (obr));
+
+    }
 }                               /* end of mo_objref_cleanup_cemit */
 
 void
@@ -82,12 +99,7 @@ mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul)
   cemp->mo_cemit_suffix[sizeof (cemp->mo_cemit_suffix) - 1] = 0;
   strcpy (cemp->mo_cemit_prefix, MOM_MODULES_DIR "/" MOM_MODULE_INFIX);
   cemp->mo_cemit_prefix[sizeof (cemp->mo_cemit_prefix) - 1] = 0;
-  snprintf (cemp->mo_cemit_tempsuff, sizeof (cemp->mo_cemit_tempsuff),
-            "+r%x_%x_p%d",
-            (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
-            (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
-            (int) getpid ());
-  cemp->mo_cemit_fil = NULL;
+  cemp->mo_cemit_locstate = NULL;
   cemp->mo_cemit_modobj = NULL;
   MOM_FATAPRINTF ("put_cemit_payload uncomplete cemp@%p", cemp);
   mo_objref_clear_payload (obr);
@@ -132,8 +144,26 @@ mo_objref_get_cemit (mo_objref_t obr)
   return cemp;
 }                               /* end mo_objref_get_cemit */
 
+#define MOM_CEMITFAILURE_AT(Lin,Csta,Fmt,...) do {	\
+    struct mom_cemitlocalstate_st*_csta_#Lin = (Csta);	\
+    MOM_ASSERTPRINTF_AT					\
+      (__FILE__,Lin,					\
+       _csta_#Lin->mo_cemsta_nmagic			\
+       == MOM_CEMITSTATE_MAGIC,				\
+       "bad csta@%p for failure %s",			\
+       _csta_#Lin, (Fmt));				\
+    _csta_#Lin->mo_cemsta_errstr			\
+      = mo_make_string_sprintf(Fmt, ##__VA_ARGS__,	\
+			       NULL);			\
+    longjmp(_csta_#Lin->mo_cemsta_jmpbuf, Lin);		\
+} while(0)
+#define MOM_CEMITFAILURE_AT_BIS(Lin,Csta,Fmt,...) \
+  MOM_CEMITFAILURE_AT(Lin,Csta,Fmt,##__VA_ARGS__)
+#define MOM_CEMITFAILURE(Csta,Fmt,...) \
+  MOM_CEMITFAILURE_AT_BIS(__LINE__,Csta,Fmt,##__VA_ARGS__)
+
 bool
-mo_objref_has_opened_cemit_payload (mo_objref_t obr)
+mo_objref_active_cemit_payload (mo_objref_t obr)
 {
   if (!mo_dyncast_objref (obr))
     return false;
@@ -142,8 +172,25 @@ mo_objref_has_opened_cemit_payload (mo_objref_t obr)
   mo_cemitpayl_ty *cemp = mo_dyncastpayl_cemit (obr->mo_ob_payldata);
   if (!cemp)
     return false;
-  return cemp->mo_cemit_fil != NULL;
-}                               /* end of mo_objref_has_opened_cemit_payload */
+  MOM_ASSERTPRINTF (cemp->mo_cemit_locstate == NULL
+                    || cemp->mo_cemit_locstate->mo_cemsta_nmagic ==
+                    MOM_CEMITSTATE_MAGIC, "bad locstate in cemp@%p", cemp);
+  return cemp->mo_cemit_locstate != NULL;
+}                               /* end of mo_objref_active_cemit_payload */
+
+
+static inline struct mom_cemitlocalstate_st *
+mom_cemit_locstate (mo_objref_t obr)
+{
+  if (!mo_dyncast_objref (obr))
+    return NULL;
+  if (obr->mo_ob_paylkind != MOM_PREDEF (payload_c_emit))
+    return NULL;
+  mo_cemitpayl_ty *cemp = mo_dyncastpayl_cemit (obr->mo_ob_payldata);
+  if (!cemp)
+    return NULL;
+  return cemp->mo_cemit_locstate;
+}                               /* end of mom_cemit_locstate */
 
 const char *
 mo_objref_cemit_detailstr (mo_objref_t obr)
@@ -152,10 +199,13 @@ mo_objref_cemit_detailstr (mo_objref_t obr)
   if (!mo_objref_has_valid_cemit_payload (obr))
     return NULL;
   mo_cemitpayl_ty *cemp = mo_dyncastpayl_cemit (obr->mo_ob_payldata);
-  if (cemp->mo_cemit_fil)
+  if (cemp->mo_cemit_locstate)
     {
+      struct mom_cemitlocalstate_st *csta = cemp->mo_cemit_locstate;
+      MOM_ASSERTPRINTF (csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC,
+                        "bad csta@%p in cemp@%p", csta, cemp);
       char *buf = NULL;
-      asprintf (&buf, "cemit#%d: %s%s%s", fileno (cemp->mo_cemit_fil),
+      asprintf (&buf, "active cemit#%d: %s%s%s", fileno (csta->mo_cemsta_fil),
                 cemp->mo_cemit_prefix,
                 mo_objref_pnamestr (cemp->mo_cemit_modobj),
                 cemp->mo_cemit_suffix);
@@ -184,10 +234,10 @@ mo_objref_cemit_set_suffix (mo_objref_t obrcem, const char *suffix)
     return;
   if (!suffix || suffix == MOM_EMPTY_SLOT)
     return;
-  if (cemp->mo_cemit_fil)
+  if (cemp->mo_cemit_locstate)
     {
       MOM_WARNPRINTF
-        ("for cemit object %s cannot set suffix %s since opened %s",
+        ("for cemit object %s cannot set suffix %s since active %s",
          mo_objref_pnamestr (obrcem), suffix,
          mo_objref_cemit_detailstr (obrcem));
       return;
@@ -223,10 +273,10 @@ mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *prefix)
                       mo_objref_pnamestr (obrcem), prefix);
       return;
     }
-  if (cemp->mo_cemit_fil)
+  if (cemp->mo_cemit_locstate)
     {
       MOM_WARNPRINTF
-        ("for cemit object %s cannot set suffix %s since opened %s",
+        ("for cemit object %s cannot set suffix %s since active %s",
          mo_objref_pnamestr (obrcem), prefix,
          mo_objref_cemit_detailstr (obrcem));
       return;
@@ -234,75 +284,247 @@ mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *prefix)
   strncpy (cemp->mo_cemit_prefix, prefix, sizeof (cemp->mo_cemit_prefix) - 1);
 }                               /* end mo_objref_cemit_set_prefix */
 
+
+
+void mom_cemit_printf (struct mom_cemitlocalstate_st *csta, const char *fmt,
+                       ...) __attribute__ ((format (printf, 2, 3)));
 void
-mo_objref_cemit_open (mo_objref_t obrcem)
+mom_cemit_printf (struct mom_cemitlocalstate_st *csta, const char *fmt, ...)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_printf: bad csta@%p for fmt:%s", csta, fmt);
+  FILE *fil = csta->mo_cemsta_fil;
+  va_list args;
+  va_start (args, fmt);
+  vfprintf (fil, fmt, args);
+  va_end (args);
+}                               /* end mom_cemit_printf */
+
+void
+mom_cemit_vprintf (struct mom_cemitlocalstate_st *csta, const char *fmt,
+                   va_list args)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_vprintf: bad csta@%p for fmt:%s", csta, fmt);
+  FILE *fil = csta->mo_cemsta_fil;
+  vfprintf (fil, fmt, args);
+}                               /* end mom_cemit_printf */
+
+void
+mom_objref_cemit_printf (mo_objref_t obrcem, const char *fmt, ...)
 {
   mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
-  if (!cemp)
+  if (!cemp || !cemp->mo_cemit_locstate)
     return;
-  if (cemp->mo_cemit_fil != NULL)
-    {
-      MOM_WARNPRINTF
-        ("cemit object %s is already opened %s",
-         mo_objref_pnamestr (obrcem), mo_objref_cemit_detailstr (obrcem));
-      return;
-    }
-  char obmid[MOM_CSTRIDSIZ];
-  memset (obmid, 0, sizeof (obmid));
-  mo_objref_idstr (obmid, cemp->mo_cemit_modobj);
+  va_list args;
+  va_start (args, fmt);
+  mom_cemit_vprintf (cemp->mo_cemit_locstate, fmt, args);
+  va_end (args);
+}                               /* end of mom_objref_cemit_printf */
+
+void
+mom_cemit_newline (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_newline: bad csta@%p", csta);
+  fputc ('\n', csta->mo_cemsta_fil);
+  for (int ix = (int)(csta->mo_cemsta_indentation % 16); ix > 0; ix--)
+    fputc (' ', csta->mo_cemsta_fil);
+}                               /* end of mom_cemit_newline */
+
+void
+mom_objref_cemit_newline (mo_objref_t obrcem)
+{
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
+  if (!cemp || !cemp->mo_cemit_locstate)
+    return;
+  mom_cemit_newline (cemp->mo_cemit_locstate);
+}                               /* end of mom_objref_cemit_newline */
+
+void
+mom_cemit_open (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil == NULL, "cemit_open: bad csta@%p",
+                    csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_open: bad payl@%p in csta@%p", cemp, csta);
+  snprintf (csta->mo_cemsta_tempsuffix, sizeof (csta->mo_cemsta_tempsuffix),
+            "+r%x_%x_p%d", (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
+            (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
+            (int) getpid ());
   char *pathbuf = NULL;
   asprintf (&pathbuf, "%s%s%s%s",
             cemp->mo_cemit_prefix,
-            obmid, cemp->mo_cemit_suffix, cemp->mo_cemit_tempsuff);
+            csta->mo_cemsta_modid, cemp->mo_cemit_suffix,
+            csta->mo_cemsta_tempsuffix);
   if (!pathbuf)
-    MOM_FATAPRINTF ("cemit_open: asprintf failed for obrcem %s", obmid);
+    MOM_FATAPRINTF ("cemit_open: asprintf failed for module %s",
+                    csta->mo_cemsta_modid);
   /* GNU extensions: e==Open the file with the O_CLOEXEC flag; 
      x==Open the file exclusively (like the O_EXCL flag of open(2)) */
-  cemp->mo_cemit_fil = fopen (pathbuf, "wex");
-  if (!cemp->mo_cemit_fil)
+  csta->mo_cemsta_fil = fopen (pathbuf, "wex");
+  if (!csta->mo_cemsta_fil)
     MOM_FATAPRINTF ("cemit_open: fopen %s failed", pathbuf);
+  free (pathbuf), pathbuf = NULL;
   char smallpath[128];
   memset (smallpath, 0, sizeof (smallpath));
   snprintf (smallpath, sizeof (smallpath), "%.30s%s%s",
-            cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
-  fprintf (cemp->mo_cemit_fil,
+            cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
+            cemp->mo_cemit_suffix);
+  fprintf (csta->mo_cemsta_fil,
            "//// emitted C code file %s%s%s - DONT EDIT\n",
-           cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
-  mom_output_gplv3_notice (cemp->mo_cemit_fil, "//! ", "", smallpath);
+           cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
+           cemp->mo_cemit_suffix);
+  mom_output_gplv3_notice (csta->mo_cemsta_fil, "//! ", "", smallpath);
   if (!strcmp (cemp->mo_cemit_suffix, ".h"))
-    fprintf (cemp->mo_cemit_fil, "#ifndef MOMHEADER%s\n"
-             "#define MOMHEADER%s\n", obmid, obmid);
-}                               /* end of mo_objref_cemit_open */
+    fprintf (csta->mo_cemsta_fil, "#ifndef MOMHEADER%s\n"
+             "#define MOMHEADER%s\n", csta->mo_cemsta_modid,
+             csta->mo_cemsta_modid);
+}                               /* end mom_cemit_open */
+
 
 void
-mo_objref_cemit_close (mo_objref_t obrcem)
+mom_cemit_close (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_close: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_close: bad payl@%p in csta@%p", cemp, csta);
+  if (!strcmp (cemp->mo_cemit_suffix, ".h"))
+    fprintf (csta->mo_cemsta_fil, "#endif /*MOMHEADER%s*/\n",
+             csta->mo_cemsta_modid);
+  fprintf (csta->mo_cemsta_fil,
+           "\n\n /*** end of emitted C file %s%s%s ***/\n",
+           cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
+           cemp->mo_cemit_suffix);
+  if (fclose (csta->mo_cemsta_fil))
+    MOM_FATAPRINTF ("cemit_close: fclose failure for %s%s%s%s",
+                    cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
+                    cemp->mo_cemit_suffix, csta->mo_cemsta_tempsuffix);
+  csta->mo_cemsta_fil = NULL;
+  char *newpathbuf = NULL;
+  asprintf (&newpathbuf, "%s%s%s%s",
+            cemp->mo_cemit_prefix,
+            csta->mo_cemsta_modid, cemp->mo_cemit_suffix,
+            csta->mo_cemsta_tempsuffix);
+  if (MOM_UNLIKELY (!newpathbuf))
+    MOM_FATAPRINTF ("cemit_close: asprintf newpathbuf failed for module %s",
+                    csta->mo_cemsta_modid);
+  char *oldpathbuf = NULL;
+  asprintf (&oldpathbuf, "%s%s%s",
+            cemp->mo_cemit_prefix,
+            csta->mo_cemsta_modid, cemp->mo_cemit_suffix);
+  if (!oldpathbuf)
+    MOM_FATAPRINTF ("cemit_close: asprintf oldpathbuf failed for module %s",
+                    csta->mo_cemsta_modid);
+  char *backuppathbuf = NULL;
+  asprintf (&oldpathbuf, "%s%s%s%%",
+            cemp->mo_cemit_prefix,
+            csta->mo_cemsta_modid, cemp->mo_cemit_suffix);
+  if (MOM_UNLIKELY (!backuppathbuf))
+    MOM_FATAPRINTF
+      ("cemit_close: asprintf backuppathbuf failed for module %s",
+       csta->mo_cemsta_modid);
+  FILE *newfil = fopen (newpathbuf, "r");
+  if (MOM_UNLIKELY (!newfil))
+    MOM_FATAPRINTF ("cemit_close: fopen %s read failed", newpathbuf);
+  FILE *oldfil = fopen (oldpathbuf, "r");
+  if (MOM_UNLIKELY (!oldfil))
+    {
+      if (rename (oldpathbuf, newpathbuf))
+        MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", oldpathbuf,
+                        newpathbuf);
+      fclose (newfil);
+      return;
+    }
+  struct stat newstat = { };
+  struct stat oldstat = { };
+  if (fstat (fileno (oldfil), &oldstat))
+    MOM_FATAPRINTF ("cemit_close: fstat old #%d %s failed", fileno (oldfil),
+                    oldpathbuf);
+  if (fstat (fileno (newfil), &newstat))
+    MOM_FATAPRINTF ("cemit_close: fstat new #%d %s failed", fileno (newfil),
+                    newpathbuf);
+  bool samefilecontent = newstat.st_size == oldstat.st_size;
+  while (samefilecontent)
+    {
+      int oldc = fgetc (oldfil);
+      int newc = fgetc (newfil);
+      if (oldc != newc)
+        samefilecontent = false;
+      else if (oldc == EOF)
+        break;
+    };
+  fclose (oldfil), oldfil = NULL;
+  fclose (newfil), newfil = NULL;
+  if (samefilecontent)
+    unlink (newpathbuf);
+  else
+    {
+      if (MOM_UNLIKELY (rename (oldpathbuf, backuppathbuf)))
+        MOM_FATAPRINTF ("cemit_close: backup rename %s -> %s failed",
+                        oldpathbuf, backuppathbuf);
+      if (MOM_UNLIKELY (rename (newpathbuf, oldpathbuf)))
+        MOM_FATAPRINTF ("cemit_close: new rename %s -> %s failed", newpathbuf,
+                        oldpathbuf);
+    };
+}                               /* end of mom_cemit_close */
+
+
+mo_value_t
+mo_objref_cemit_generate (mo_objref_t obrcem)
 {
   mo_cemitpayl_ty *cemp = mo_objref_get_cemit (obrcem);
   if (!cemp)
-    return;
-  if (cemp->mo_cemit_fil == NULL)
+    return mo_make_string_sprintf ("bad cemit object %s",
+                                   mo_objref_pnamestr (obrcem));
+  if (cemp->mo_cemit_locstate != NULL)
     {
       MOM_WARNPRINTF
-        ("cemit object %s is mot opened %s",
-         mo_objref_pnamestr (obrcem), mo_objref_cemit_detailstr (obrcem));
-      return;
+        ("cemit object %s is already active for module %s",
+         mo_objref_pnamestr (obrcem),
+         mo_objref_cemit_detailstr (cemp->mo_cemit_modobj));
+      return
+        mo_make_string_sprintf
+        ("cemit object %s already active for module %s",
+         mo_objref_pnamestr (obrcem),
+         mo_objref_cemit_detailstr (cemp->mo_cemit_modobj));
     }
-  char obmid[MOM_CSTRIDSIZ];
-  memset (obmid, 0, sizeof (obmid));
-  mo_objref_idstr (obmid, cemp->mo_cemit_modobj);
-  if (!strcmp (cemp->mo_cemit_suffix, ".h"))
-    fprintf (cemp->mo_cemit_fil, "\n#endif /*MOMHEADER%s*/\n", obmid);
-  fprintf (cemp->mo_cemit_fil, "/* end of generated C code file %s%s%s */\n",
-           cemp->mo_cemit_prefix, obmid, cemp->mo_cemit_suffix);
-  if (fclose (cemp->mo_cemit_fil))
-    MOM_FATAPRINTF ("failed to fclose file %s%s%s%s", cemp->mo_cemit_prefix,
-                    obmid, cemp->mo_cemit_suffix, cemp->mo_cemit_tempsuff);
-  cemp->mo_cemit_fil = NULL;
-#warning mo_objref_cemit_close very incomplete
-  /* we should rename the temporary file to the definitive one if
-     their contents are different, and we should add a symlink for
-     named modules objects */
-  MOM_WARNPRINTF ("cemit_close incomplete for %s", obmid);
-}                               /* end of mo_objref_cemit_close */
+  struct mom_cemitlocalstate_st cemitstate = { };
+  memset (&cemitstate, 0, sizeof (cemitstate));
+  cemitstate.mo_cemsta_nmagic = MOM_CEMITSTATE_MAGIC;
+  cemitstate.mo_cemsta_objcemit = obrcem;
+  cemitstate.mo_cemsta_payl = cemp;
+  mo_objref_idstr (cemitstate.mo_cemsta_modid, cemp->mo_cemit_modobj);
+  int errlin = setjmp (cemitstate.mo_cemsta_jmpbuf);
+  if (errlin)
+    {
+      MOM_ASSERTPRINTF (mo_dyncast_string (cemitstate.mo_cemsta_errstr),
+                        "bad errstr in cemitstate@%p", &cemitstate);
+      MOM_WARNPRINTF_AT (__FILE__, errlin,
+                         "cemit_generate failure: %s (module %s, emitter %s)",
+                         mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                         mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                         mo_objref_pnamestr (obrcem));
+      if (cemitstate.mo_cemsta_fil)
+        fclose (cemitstate.mo_cemsta_fil), cemitstate.mo_cemsta_fil = NULL;
+      return cemitstate.mo_cemsta_errstr;
+    };
+  cemp->mo_cemit_locstate = &cemitstate;
+  mom_cemit_open (&cemitstate);
+  mom_cemit_close (&cemitstate);
+#warning mo_objref_cemit_generate very incomplete
+  MOM_WARNPRINTF ("cemit_close incomplete for %s",
+                  cemitstate.mo_cemsta_modid);
+}                               /* end of mo_objref_cemit_generate */
 
 /*** end of file cemit.c ***/
