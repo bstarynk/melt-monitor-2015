@@ -32,6 +32,7 @@ INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
+INSERT INTO t_names VALUES('payload_c_emit','_8hg5YXTgfHBnV4W8q');
 INSERT INTO t_names VALUES('payload_file','_46r6DoRftqviBq5NB');
 INSERT INTO t_names VALUES('payload_gobject','_4wr5hqASKB1b0Dd5D');
 INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
@@ -333,6 +334,20 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_8hg5YXTgfHBnV4W8q',1474270315,'
+{
+ "@name": "payload_c_emit",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "transient payload for emission of C code"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_8vY2GjybG9SSjrgKU',1473701710,'
 {
  "attrs": {

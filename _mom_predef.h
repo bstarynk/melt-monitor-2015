@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 16
+#define MOM_NB_PREDEFINED 17
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -42,6 +42,9 @@ MOM_HAS_PREDEFINED(payload_assoval,_5JG8lVw6jwlUT7PLK,1359406941,542326625342310
 
 //+ for buffer payload
 MOM_HAS_PREDEFINED(payload_buffer,_1HW4pIotlYRImRGnL,408713854,5433250410327114099,2757661367)
+
+//+ transient payload for emission of C code
+MOM_HAS_PREDEFINED(payload_c_emit,_8hg5YXTgfHBnV4W8q,1955374455,2598246894453763962,386861103)
 
 //+ for FILE* payload
 MOM_HAS_PREDEFINED(payload_file,_46r6DoRftqviBq5NB,969127964,5917176651991191665,1788242063)
@@ -102,6 +105,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define moid_payload_buffer _1HW4pIotlYRImRGnL
 #undef monam_1HW4pIotlYRImRGnL
 #define monam_1HW4pIotlYRImRGnL payload_buffer
+
+#undef moid_payload_c_emit
+#define moid_payload_c_emit _8hg5YXTgfHBnV4W8q
+#undef monam_8hg5YXTgfHBnV4W8q
+#define monam_8hg5YXTgfHBnV4W8q payload_c_emit
 
 #undef moid_payload_file
 #define moid_payload_file _46r6DoRftqviBq5NB
@@ -167,6 +175,7 @@ enum mom_predefined_hashes_en {
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
+  momphash_payload_c_emit=386861103,
   momphash_payload_file=1788242063,
   momphash_payload_gobject=4105406188,
   momphash_payload_hashset=2215747249,
@@ -187,7 +196,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 16
+#define MOM_NB_NAMED_PREDEFINED 17
 
 
 #undef MOM_HAS_PREDEFINED
