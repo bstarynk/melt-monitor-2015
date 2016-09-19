@@ -3211,12 +3211,15 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
           if (operatorobr->mo_ob_paylkind ==
               MOM_PREDEF (signature_object_to_value))
             operfunobr = operatorobr;
+          else
+            operfunobr =
+              mo_objref_get_attr (operatorobr, MOM_PREDEF (GUI_operation));
           if (!mo_dyncast_objref (operfunobr)
               || operfunobr->mo_ob_paylkind !=
               MOM_PREDEF (signature_object_to_value)
               || !operfunobr->mo_ob_payldata)
             MOMGUI_CMDPARSEFAIL (cpars,
-                                 "wrong operator $%s (invalid payload in operator function %s)...",
+                                 "wrong operator $%s... (invalid payload in operator function %s)...",
                                  operbuf, mo_objref_pnamestr (operfunobr));
           gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
                                      &begopit, &endopit);
