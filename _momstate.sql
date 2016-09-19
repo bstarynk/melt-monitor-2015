@@ -29,6 +29,7 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
+INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
@@ -277,6 +278,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "our anon3obj for GUI testing"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_64d2GXNLEBKFBzxqP',1474311988,'
+{
+ "@name": "c_code",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the c code expansion or string"
    }
   ]
  },

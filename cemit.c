@@ -568,22 +568,52 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                     csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_declare_ctype: bad typobr");
-  
+  if (mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
+    MOM_CEMITFAILURE (csta, "declare_ctype: typobr %s already declared",
+                      mo_objref_pnamestr (typobr));
+  char typobid[MOM_CSTRIDSIZ];
+  memset (typobid, 0, sizeof (typobid));
+  mo_objref_idstr (typobid, typobr);
 #define MOM_NBCASE_CTYPE 331
 #define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr->mo_ob_class != MOM_PREDEF(Ob))			\
     goto defaultctypecase;					\
   goto labctype_##Ob;						\
   labctype_##Ob
-  switch (mo_objref_hash(typobr->mo_ob_class) % MOM_NBCASE_CTYPE) {
-    //  case CASE_CTYPE_MOM():
-    break;
-  default:
-  defaultctypecase:
-    break;
-  }
+  switch (mo_objref_hash (typobr->mo_ob_class) % MOM_NBCASE_CTYPE)
+    {
+    case CASE_CTYPE_MOM (basic_ctype_class):
+      {
+        mo_value_t ccodv = mo_objref_get_attr (typobr, MOM_PREDEF (c_code));
+        if (!mo_dyncast_string (ccodv))
+          MOM_CEMITFAILURE (csta,
+                            "declare_ctype: bad c_code %s in basic ctype %s (%s)",
+                            mo_value_pnamestr (ccodv),
+                            mo_objref_pnamestr (typobr), typobid);
+        fprintf (csta->mo_cemsta_fil, "typedef %s m_%s_ty;\n",
+                 mo_string_cstr (ccodv), typobid);
+      }
+      break;
+    case CASE_CTYPE_MOM (struct_pointer_ctype_class):
+      fprintf (csta->mo_cemsta_fil, "typedef struct mo_%s_ptrst* mo_%s_ty;\n",
+               typobid, typobid);
+      break;
+    default:
+    defaultctypecase:
+      MOM_CEMITFAILURE (csta, "declare_ctype: typobr %s has bad class %s",
+                        mo_objref_pnamestr (typobr),
+                        mo_objref_pnamestr (typobr->mo_ob_class));
+
+      break;
+    }
 #undef MOM_NBCASE_CTYPE
 #undef CASE_CTYPE_MOM
+  mo_value_t typobnamv = mo_objref_namev (typobr);
+  if (typobnamv)
+    fprintf (csta->mo_cemsta_fil, "#define mo_%s_ty mo_%s_ty\n",
+             mo_string_cstr (typobnamv), typobid);
+  csta->mo_cemsta_hsetctypes =
+    mo_hashset_put (csta->mo_cemsta_hsetctypes, typobr);
 }                               /* end mom_cemit_declare_ctype */
 
 void
