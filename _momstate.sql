@@ -33,6 +33,7 @@ INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
@@ -47,10 +48,12 @@ INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
+INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
+INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
@@ -125,6 +128,20 @@ INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
  }
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1xh0H6A2nNw5upcPh',1474312783,'
+{
+ "@name": "enum_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for enum ctypes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
 {
  "@name": "module_class",
@@ -133,6 +150,20 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3CM77K3hIhblwvxg3',1474312729,'
+{
+ "@name": "struct_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for struct ctypes"
    }
   ]
  },
@@ -157,6 +188,20 @@ INSERT INTO t_objects VALUES('_3J97bCYloYmmXuCR1',1473701710,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
+{
+ "@name": "union_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for union ctypes"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'

@@ -598,6 +598,18 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
       fprintf (csta->mo_cemsta_fil, "typedef struct mo_%s_ptrst* mo_%s_ty;\n",
                typobid, typobid);
       break;
+    case CASE_CTYPE_MOM (struct_ctype_class):
+      fprintf (csta->mo_cemsta_fil, "typedef struct mo_%s_st mo_%s_ty;\n",
+               typobid, typobid);
+      break;
+    case CASE_CTYPE_MOM (union_ctype_class):
+      fprintf (csta->mo_cemsta_fil, "typedef struct mo_%s_st mo_%s_ty;\n",
+               typobid, typobid);
+      break;
+    case CASE_CTYPE_MOM (enum_ctype_class):
+      fprintf (csta->mo_cemsta_fil, "typedef enum mo_%s_en mo_%s_ty;\n",
+               typobid, typobid);
+      break;
     default:
     defaultctypecase:
       MOM_CEMITFAILURE (csta, "declare_ctype: typobr %s has bad class %s",

@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 23
+#define MOM_NB_PREDEFINED 26
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -45,6 +45,9 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ class for enum ctypes
+MOM_HAS_PREDEFINED(enum_ctype_class,_1xh0H6A2nNw5upcPh,366810079,2523559174225175625,452162142)
 
 //+ give some file path, e.g. for c-includes
 MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2269269987)
@@ -88,6 +91,9 @@ MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371
 //+ signature: object -> value
 MOM_HAS_PREDEFINED(signature_object_to_value,_8DT8VbN0FaiS0K6uf,2044327603,3139888012720850935,2424030428)
 
+//+ class for struct ctypes
+MOM_HAS_PREDEFINED(struct_ctype_class,_3CM77K3hIhblwvxg3,860407086,2169321430740663315,367899874)
+
 //+ class of pointers to struct ctypes
 MOM_HAS_PREDEFINED(struct_pointer_ctype_class,_53F6MjNKRJ8dutl09,1194179640,8691739431516874265,799041071)
 
@@ -96,6 +102,9 @@ MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,127
 
 //+ describes the entire system
 MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1453251062)
+
+//+ class for union ctypes
+MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,3892346464482352748,3893134561)
 
 
 
@@ -128,6 +137,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_enum_ctype_class
+#define moid_enum_ctype_class _1xh0H6A2nNw5upcPh
+#undef monam_1xh0H6A2nNw5upcPh
+#define monam_1xh0H6A2nNw5upcPh enum_ctype_class
 
 #undef moid_file_path
 #define moid_file_path _6F98Bo2ChKhNVEZgt
@@ -199,6 +213,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_8DT8VbN0FaiS0K6uf
 #define monam_8DT8VbN0FaiS0K6uf signature_object_to_value
 
+#undef moid_struct_ctype_class
+#define moid_struct_ctype_class _3CM77K3hIhblwvxg3
+#undef monam_3CM77K3hIhblwvxg3
+#define monam_3CM77K3hIhblwvxg3 struct_ctype_class
+
 #undef moid_struct_pointer_ctype_class
 #define moid_struct_pointer_ctype_class _53F6MjNKRJ8dutl09
 #undef monam_53F6MjNKRJ8dutl09
@@ -214,6 +233,11 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 #undef monam_0BV96V94PJIn9si1K
 #define monam_0BV96V94PJIn9si1K the_system
 
+#undef moid_union_ctype_class
+#define moid_union_ctype_class _3P48jR3hSzSCgv48c
+#undef monam_3P48jR3hSzSCgv48c
+#define monam_3P48jR3hSzSCgv48c union_ctype_class
+
 
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
@@ -224,6 +248,7 @@ enum mom_predefined_hashes_en {
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
   momphash_comment=2072874222,
+  momphash_enum_ctype_class=452162142,
   momphash_file_path=2269269987,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
@@ -238,9 +263,11 @@ enum mom_predefined_hashes_en {
   momphash_payload_vectval=2293677932,
   momphash_signature_class=906720652,
   momphash_signature_object_to_value=2424030428,
+  momphash_struct_ctype_class=367899874,
   momphash_struct_pointer_ctype_class=799041071,
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
+  momphash_union_ctype_class=3893134561,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -250,7 +277,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 23
+#define MOM_NB_NAMED_PREDEFINED 26
 
 
 #undef MOM_HAS_PREDEFINED
