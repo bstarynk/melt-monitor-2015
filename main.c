@@ -713,7 +713,7 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
   char *bigbuf = NULL;
   char *msg = NULL;
   int err = errno;
-  int nbwarn = 1 + atomic_fetch_add (&mom_nb_warnings, 1);
+  int nbwarn = 1 + atomic_fetch_add ((int *) &mom_nb_warnings, 1);
   memset (buf, 0, sizeof (buf));
   memset (thrname, 0, sizeof (thrname));
   memset (timbuf, 0, sizeof (timbuf));
@@ -1737,7 +1737,7 @@ main (int argc_main, char **argv_main)
       MOM_INFORMPRINTF ("monimelt will dump into %s", mom_dump_dir);
       mom_dump_state (mom_dump_dir);
     }
-  int nbwarn = atomic_load (&mom_nb_warnings);
+  int nbwarn = atomic_load ((int *) &mom_nb_warnings);
   if (nbwarn > 0)
     MOM_INFORMPRINTF
       ("end %s pid %d (elapsed real %.3f, cpu %.3f seconds, %d warnings)\n",

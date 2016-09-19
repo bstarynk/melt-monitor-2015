@@ -48,7 +48,8 @@ struct mom_cemitlocalstate_st
   mo_objref_t mo_cemsta_objcemit;       /* the objref with the cemit payload  */
   char mo_cemsta_modid[MOM_CSTRIDSIZ];
   FILE *mo_cemsta_fil;          /* the emitted FILE handle */
-  mo_cemitpayl_ty *mo_cemsta_payl;
+  mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
+  mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of tpyes */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
 };
@@ -552,6 +553,22 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
   fputs ("\n\n", csta->mo_cemsta_fil);
   fflush (csta->mo_cemsta_fil);
 }                               /* end mom_cemit_includes */
+
+void
+mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
+                         mo_objref_t typobr)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_declare_ctype: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_declare_ctype: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
+                    "cemit_declare_ctype: bad typobr");
+}                               /* end mom_cemit_declare_ctype */
 
 void
 mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)

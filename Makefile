@@ -21,6 +21,7 @@
 ## Boehm GC is from http://www.hboehm.info/gc/
 CC=gcc
 CXX=g++
+GCC=gcc
 ## see http://stackoverflow.com/a/14868153/841108
 DISABLE_ASLR= setarch $(shell uname -m) -R
 WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
@@ -34,11 +35,12 @@ INDENTFLAGS= --gnu-style --no-tabs --honour-newlines
 ASTYLEFLAGS= --style=gnu -s2  --convert-tabs
 PACKAGES= gtk+-x11-3.0 gtk+-3.0 glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
-PREPROFLAGS= -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES))
+CCINCLUDEDIR:= $(shell $(CC) -print-file-name=include/)
+PREPROFLAGS= -I $(CCINCLUDEDIR) -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES)) -I $(shell $(GCC) -print-file-name=include/)
 OPTIMFLAGS= -Og -g3
 
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
-        -lhiredis -lgccjit -lbacktrace -lonion -lpthread -lcrypt -lm -ldl -latomic
+        -lhiredis -lgccjit  -lonion $(shell $(GCC) -print-file-name=libbacktrace.a) -lpthread -lcrypt -lm -ldl -latomic
 
 .SUFFIXES= .so
 # the persistent state base, probably _momstate

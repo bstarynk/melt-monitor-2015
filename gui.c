@@ -335,7 +335,7 @@ mom_toggled_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
 		     "bad _pdx");				\
   gtk_text_buffer_insert_with_tags				\
   (mom_obtextbuf, &_pdx->mo_gdx_iter,				\
-   "                \n"+(16-_depth%16), 1+_depth%16,		\
+   &("                \n"[16-_depth%16]), 1+_depth%16,		\
   ##__VA_ARGS__, NULL);						\
 } while(0)
 
