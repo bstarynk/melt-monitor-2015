@@ -2576,7 +2576,8 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
                                    msg);
             }
           if (sc == '\\')
-            sc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
+            gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
         }
       while (sc != '"');
       GtkTextIter endit = cpars->mo_gcp_curiter;
