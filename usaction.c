@@ -58,7 +58,8 @@ mofun_class_useract (mo_objref_t obuact)
     mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_CLASS));
   if (mo_objref_comp_count (obuact) != MOMIX__LAST)
     mom_gui_fail_user_action
-      ("class_useract: wants two user arguments, got %d in %s",
+      ("class_useract for $%s: wants two user arguments, got %d in %s",
+       mo_objref_pnamestr(operobr),
        mo_objref_comp_count (obuact) - 1, mo_objref_pnamestr (obuact));
   // temporary, for debugging
   MOM_BACKTRACEPRINTF
