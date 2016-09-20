@@ -168,9 +168,12 @@ struct momgui_cmdparse_st
 };                              /* end of momgui_cmdparse_st */
 
 
+static long momgui_nbcmdfailure;
+
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpar, int lineno);
 #define MOMGUI_CMDPARSEFAIL_AT(Lin,Cpars,Fmt,...) do {	\
+  momgui_nbcmdfailure++;				\
   struct momgui_cmdparse_st* cpars_##Lin = (Cpars);	\
   MOM_ASSERTPRINTF(cpars_##Lin				\
 		   && cpars_##Lin->mo_gcp_nmagic	\
@@ -2080,8 +2083,14 @@ momgui_parse_cmdtext (void)
 void
 momgui_runclear_cmdtext (void)
 {
+  long oldnbf = momgui_nbcmdfailure;
   momgui_run_cmdtext ();
-  momgui_delayed_clearcmd ();
+  long newnbf = momgui_nbcmdfailure;
+  if (newnbf > oldnbf)
+    MOM_BACKTRACEPRINTF ("cmd failure count raising from %ld to %ld", oldnbf,
+                         newnbf);
+  else
+    momgui_delayed_clearcmd ();
 }                               /* end momgui_runclear_cmdtext */
 
 // for "populate-popup" signal to mom_cmdtview
