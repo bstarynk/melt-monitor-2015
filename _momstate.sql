@@ -41,6 +41,7 @@ INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
+INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
@@ -325,6 +326,20 @@ INSERT INTO t_objects VALUES('_47n6FfKTuPHyjab71',1473065027,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for value payloads"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
+{
+ "@name": "enumerators",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for enumerators in enum ctypes"
    }
   ]
  },
