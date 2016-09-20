@@ -103,7 +103,7 @@ INSERT INTO t_objects VALUES('_0Sp1Lg7ctajS7oX5i',1474366358,'
  },
  "comps": null
 }
-','Œ','','','');
+','','','','');
 INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
 {
  "@name": "c_include",
@@ -693,7 +693,7 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  },
  "comps": null
 }
-','¯','','','');
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_8TY6UsXJ3Djt71By3',1474294464,'
 {
  "@name": "c_type",
