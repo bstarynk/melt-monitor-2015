@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 19 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 20 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -35,6 +35,7 @@ INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
+INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
@@ -46,6 +47,7 @@ INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
+INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
@@ -399,6 +401,20 @@ INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7vy5VxtVon8EhIF5D',1474354808,'
+{
+ "@name": "result_ctype",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the result ctype in a signature"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7zd6NdDtMbPp0s5HT',1474308434,'
 {
  "@name": "basic_ctype_class",
@@ -421,6 +437,20 @@ INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for hashset payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8Bq9eNWZ0eUS6BGq8',1474354808,'
+{
+ "@name": "formals_ctypes",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the formals ctypes in a signature"
    }
   ]
  },

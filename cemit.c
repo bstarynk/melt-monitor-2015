@@ -637,7 +637,51 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                typobid, typobid);
       break;
     case CASE_CTYPE_MOM (signature_class):
-#warning should get the argument types and result types of the signature
+      {
+        mo_value_t formtytup =
+          mo_dyncast_tuple (mo_objref_get_attr
+                            (typobr, MOM_PREDEF (formals_ctypes)));
+        if (!formtytup)
+          MOM_CEMITFAILURE (csta,
+                            "declare_ctype: bad formals_ctypes in signature type %s",
+                            mo_objref_pnamestr (typobr));
+        mo_objref_t restypobr =
+          mo_dyncast_objref (mo_objref_get_attr
+                             (typobr, MOM_PREDEF (result_ctype)));
+        if (!restypobr)
+          MOM_CEMITFAILURE (csta,
+                            "declare_ctype: bad result_ctype in signature type %s",
+                            mo_objref_pnamestr (typobr));
+        if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, restypobr))
+          MOM_CEMITFAILURE (csta,
+                            "declare_ctype: result_ctype %s unknown in signature type %s",
+                            mo_objref_pnamestr (restypobr),
+                            mo_objref_pnamestr (typobr));
+        unsigned nbformals = mo_tuple_size (formtytup);
+        for (unsigned foix = 0; foix < nbformals; foix++)
+          {
+            mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
+            if (!mo_dyncast_objref (curformobr)
+                || !mo_hashset_contains (csta->mo_cemsta_hsetctypes,
+                                         curformobr))
+              MOM_CEMITFAILURE (csta,
+                                "declare_ctype: formal#%d ctype %s unknown in signature type %s",
+                                foix, mo_objref_pnamestr (curformobr),
+                                mo_objref_pnamestr (typobr));
+          };
+        fprintf (csta->mo_cemsta_fil, "typedef ");
+        mom_cemit_write_ctype (csta, restypobr);
+        fprintf (csta->mo_cemsta_fil, " mo%s_ty (", typobid);
+        for (unsigned foix = 0; foix < nbformals; foix++)
+          {
+            if (foix > 0)
+              fputs (", ", csta->mo_cemsta_fil);
+            mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
+            mom_cemit_write_ctype (csta, curformobr);
+          };
+        fprintf (csta->mo_cemsta_fil, ");\n");
+      }
+      break;
     default:
     defaultctypecase:
       MOM_CEMITFAILURE (csta, "declare_ctype: typobr %s has bad class %s",
