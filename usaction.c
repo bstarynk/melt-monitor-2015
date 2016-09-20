@@ -20,8 +20,9 @@
 
 #include "meltmoni.h"
 
-/// the $class (object class) user action is setting the mo_ob_class of object to class
-extern const char mosig_class_usact[] = "signature_object_to_value";
+/// the $class (object class) GUI user action is setting the
+/// mo_ob_class of object to class
+const char mosig_class_usact[] = "signature_object_to_value";
 extern mo_signature_object_to_value_sigt mofun_class_useract;
 
 mo_value_t
@@ -30,6 +31,10 @@ mofun_class_useract (mo_objref_t obuact)
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "class_useract: bad obuact");
   mo_objref_t obr = mo_dyncast_objref (mo_objref_get_comp (obuact, 0));
   mo_objref_t classobr = mo_dyncast_objref (mo_objref_get_comp (obuact, 1));
+  if (mo_objref_comp_count (obuact) != 2)
+    mom_gui_fail_user_action
+      ("class_useract: wants two arguments, got %d in %s",
+       mo_objref_comp_count (obuact), mo_objref_pnamestr (obuact));
   // temporary, for debugging
   MOM_BACKTRACEPRINTF ("class_useract: obuact=%s obr=%s classobr=%s",
                        mo_objref_pnamestr (obuact),
@@ -60,7 +65,7 @@ mofun_class_useract (mo_objref_t obuact)
   mom_gui_cmdstatus_printf ("class_useract: class of %s becomes %s",
                             mo_objref_pnamestr (obr),
                             mo_objref_pnamestr (classobr));
-  return NULL;
+  return obr;
 }                               /* end of mofun_class_useract */
 
 
