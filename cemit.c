@@ -54,6 +54,8 @@ struct mom_cemitlocalstate_st
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
 };
 
+/// maximal size of emitted C file
+#define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 void
 mo_objref_cleanup_cemit (mo_objref_t obr)
 {                               // called only from mo_objref_really_clear_payload
@@ -299,6 +301,10 @@ mom_cemit_printf (struct mom_cemitlocalstate_st *csta, const char *fmt, ...)
   va_start (args, fmt);
   vfprintf (fil, fmt, args);
   va_end (args);
+  if (ftell (fil) > MOM_CEMIT_MAX_FSIZE)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_printf: too big emission (%ld megabytes, %ld bytes)",
+                      ftell (fil) >> 20, ftell (fil));
 }                               /* end mom_cemit_printf */
 
 void
@@ -330,6 +336,11 @@ mom_cemit_newline (struct mom_cemitlocalstate_st *csta)
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
                     "cemit_newline: bad csta@%p", csta);
+  if (ftell (csta->mo_cemsta_fil) > MOM_CEMIT_MAX_FSIZE)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_printf: too big emission (%ld megabytes, %ld bytes)",
+                      ftell (csta->mo_cemsta_fil) >> 20,
+                      ftell (csta->mo_cemsta_fil));
   fputc ('\n', csta->mo_cemsta_fil);
   for (int ix = (int)(csta->mo_cemsta_indentation % 16); ix > 0; ix--)
     fputc (' ', csta->mo_cemsta_fil);
@@ -381,11 +392,22 @@ mom_cemit_open (struct mom_cemitlocalstate_st *csta)
            "//// emitted C code file %s%s%s - DONT EDIT\n",
            cemp->mo_cemit_prefix, csta->mo_cemsta_modid,
            cemp->mo_cemit_suffix);
+  mo_value_t modnamv = mo_objref_namev (cemp->mo_cemit_modobj);
+  if (modnamv)
+    fprintf (csta->mo_cemsta_fil, "/// for module %s (%s)\n",
+             mo_string_cstr (modnamv), csta->mo_cemsta_modid);
+  else
+    fprintf (csta->mo_cemsta_fil, "/// for module %s\n",
+             csta->mo_cemsta_modid);
   mom_output_gplv3_notice (csta->mo_cemsta_fil, "//! ", "", smallpath);
   if (!strcmp (cemp->mo_cemit_suffix, ".h"))
     fprintf (csta->mo_cemsta_fil, "#ifndef MOMHEADER%s\n"
              "#define MOMHEADER%s\n", csta->mo_cemsta_modid,
              csta->mo_cemsta_modid);
+  fprintf (csta->mo_cemsta_fil,
+           "\n#ifndef _GNU_SOURCE\n"
+           "#define _GNU_SOURCE 1\n"
+           "#endif /*_GNU_SOURCE for %s*/\n", csta->mo_cemsta_modid);
 }                               /* end mom_cemit_open */
 
 
@@ -523,13 +545,13 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
     mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (c_include));
   if (!cinclv)
     {
-      fprintf (csta->mo_cemsta_fil, "\n// no includes\n");
+      mom_cemit_printf (csta, "\n// no includes\n");
       return;
     }
   if (!mo_dyncast_tuple (cinclv))
     MOM_CEMITFAILURE (csta, "bad c_include %s", mo_value_pnamestr (cinclv));
   unsigned nbincl = mo_tuple_size (cinclv);
-  fprintf (csta->mo_cemsta_fil, "\n// %u included headers:\n", nbincl);
+  mom_cemit_printf (csta, "\n// %u included headers:\n", nbincl);
   for (unsigned ix = 0; ix < nbincl; ix++)
     {
       mo_objref_t curinclob = mo_tuple_nth (cinclv, ix);
@@ -548,7 +570,7 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
             || *pi == '-' || *pi == '.')
           MOM_CEMITFAILURE (csta, "included %s with invalid `file_path` %s",
                             mo_objref_pnamestr (curinclob), inclcstr);
-      fprintf (csta->mo_cemsta_fil, "#include \"%s\"\n", inclcstr);
+      mom_cemit_printf (csta, "#include \"%s\"\n", inclcstr);
     }
   fputs ("\n\n", csta->mo_cemsta_fil);
   fflush (csta->mo_cemsta_fil);
@@ -575,10 +597,12 @@ mom_cemit_write_ctype (struct mom_cemitlocalstate_st *csta,
   mo_objref_idstr (typobid, typobr);
   mo_value_t typobnamv = mo_objref_namev (typobr);
   if (typobnamv)
-    fprintf (csta->mo_cemsta_fil, "mo_%s_ty ", mo_string_cstr (typobnamv));
+    mom_cemit_printf (csta, "mo_%s_ty ", mo_string_cstr (typobnamv));
   else
-    fprintf (csta->mo_cemsta_fil, "mo%s_ty ", typobid);
+    mom_cemit_printf (csta, "mo%s_ty ", typobid);
 }                               /* end mom_cemit_write_ctype */
+
+
 
 void
 mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
@@ -616,25 +640,25 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                             "declare_ctype: bad c_code %s in basic ctype %s (%s)",
                             mo_value_pnamestr (ccodv),
                             mo_objref_pnamestr (typobr), typobid);
-        fprintf (csta->mo_cemsta_fil, "typedef %s mo%s_ty;\n",
-                 mo_string_cstr (ccodv), typobid);
+        mom_cemit_printf (csta, "typedef %s mo%s_ty;\n",
+                          mo_string_cstr (ccodv), typobid);
       }
       break;
     case CASE_CTYPE_MOM (struct_pointer_ctype_class):
-      fprintf (csta->mo_cemsta_fil, "typedef struct mo%s_ptrst* mo%s_ty;\n",
-               typobid, typobid);
+      mom_cemit_printf (csta, "typedef struct mo%s_ptrst* mo%s_ty;\n",
+                        typobid, typobid);
       break;
     case CASE_CTYPE_MOM (struct_ctype_class):
-      fprintf (csta->mo_cemsta_fil, "typedef struct mo%s_st mo%s_ty;\n",
-               typobid, typobid);
+      mom_cemit_printf (csta, "typedef struct mo%s_st mo%s_ty;\n",
+                        typobid, typobid);
       break;
     case CASE_CTYPE_MOM (union_ctype_class):
-      fprintf (csta->mo_cemsta_fil, "typedef struct mo%s_st mo_%s_ty;\n",
-               typobid, typobid);
+      mom_cemit_printf (csta, "typedef union mo%s_un mo_%s_ty;\n",
+                        typobid, typobid);
       break;
     case CASE_CTYPE_MOM (enum_ctype_class):
-      fprintf (csta->mo_cemsta_fil, "typedef enum mo%s_en mo_%s_ty;\n",
-               typobid, typobid);
+      mom_cemit_printf (csta, "typedef enum mo%s_en mo_%s_ty;\n",
+                        typobid, typobid);
       break;
     case CASE_CTYPE_MOM (signature_class):
       {
@@ -643,18 +667,18 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                             (typobr, MOM_PREDEF (formals_ctypes)));
         if (!formtytup)
           MOM_CEMITFAILURE (csta,
-                            "declare_ctype: bad formals_ctypes in signature type %s",
+                            "cemit_declare_ctype: bad formals_ctypes in signature type %s",
                             mo_objref_pnamestr (typobr));
         mo_objref_t restypobr =
           mo_dyncast_objref (mo_objref_get_attr
                              (typobr, MOM_PREDEF (result_ctype)));
         if (!restypobr)
           MOM_CEMITFAILURE (csta,
-                            "declare_ctype: bad result_ctype in signature type %s",
+                            "cemit_declare_ctype: bad result_ctype in signature type %s",
                             mo_objref_pnamestr (typobr));
         if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, restypobr))
           MOM_CEMITFAILURE (csta,
-                            "declare_ctype: result_ctype %s unknown in signature type %s",
+                            "cemit_declare_ctype: result_ctype %s unknown in signature type %s",
                             mo_objref_pnamestr (restypobr),
                             mo_objref_pnamestr (typobr));
         unsigned nbformals = mo_tuple_size (formtytup);
@@ -665,13 +689,13 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                 || !mo_hashset_contains (csta->mo_cemsta_hsetctypes,
                                          curformobr))
               MOM_CEMITFAILURE (csta,
-                                "declare_ctype: formal#%d ctype %s unknown in signature type %s",
+                                "cemit_declare_ctype: formal#%d ctype %s unknown in signature type %s",
                                 foix, mo_objref_pnamestr (curformobr),
                                 mo_objref_pnamestr (typobr));
           };
-        fprintf (csta->mo_cemsta_fil, "typedef ");
+        mom_cemit_printf (csta, "typedef ");
         mom_cemit_write_ctype (csta, restypobr);
-        fprintf (csta->mo_cemsta_fil, " mo%s_ty (", typobid);
+        mom_cemit_printf (csta, " mo%s_ty (", typobid);
         for (unsigned foix = 0; foix < nbformals; foix++)
           {
             if (foix > 0)
@@ -679,12 +703,13 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
             mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
             mom_cemit_write_ctype (csta, curformobr);
           };
-        fprintf (csta->mo_cemsta_fil, ");\n");
+        mom_cemit_printf (csta, ");\n");
       }
       break;
     default:
     defaultctypecase:
-      MOM_CEMITFAILURE (csta, "declare_ctype: typobr %s has bad class %s",
+      MOM_CEMITFAILURE (csta,
+                        "cemit_declare_ctype: typobr %s has bad class %s",
                         mo_objref_pnamestr (typobr),
                         mo_objref_pnamestr (typobr->mo_ob_class));
 
@@ -694,11 +719,107 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
 #undef CASE_CTYPE_MOM
   mo_value_t typobnamv = mo_objref_namev (typobr);
   if (typobnamv)
-    fprintf (csta->mo_cemsta_fil, "typedef mo%s_ty mo_%s_ty\n",
-             typobid, mo_string_cstr (typobnamv));
+    mom_cemit_printf (csta, "typedef mo%s_ty mo_%s_ty\n",
+                      typobid, mo_string_cstr (typobnamv));
   csta->mo_cemsta_hsetctypes =
     mo_hashset_put (csta->mo_cemsta_hsetctypes, typobr);
 }                               /* end mom_cemit_declare_ctype */
+
+
+void
+mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
+                         mo_objref_t typobr, bool isunion)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_define_fields: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_define_fields: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
+                    "cemit_define_fields: bad typobr");
+}                               /* end mom_cemit_define_fields */
+
+void
+mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
+                        mo_objref_t typobr)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_define_ctype: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_define_ctype: bad payl@%p in csta@%p", cemp, csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
+                    "cemit_define_ctype: bad typobr");
+  MOM_ASSERTPRINTF (mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr),
+                    "cemit_define_ctype: unknown typobr %s",
+                    mo_objref_pnamestr (typobr));
+  char typobid[MOM_CSTRIDSIZ];
+  memset (typobid, 0, sizeof (typobid));
+  mo_objref_idstr (typobid, typobr);
+  mo_value_t typnamv = mo_objref_namev (typobr);
+#define MOM_NBCASE_CTYPE 331
+#define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+  if (typobr->mo_ob_class != MOM_PREDEF(Ob))			\
+    goto defaultctypecase;					\
+  goto labctype_##Ob;						\
+  labctype_##Ob
+  switch (mo_objref_hash (typobr->mo_ob_class) % MOM_NBCASE_CTYPE)
+    {
+    case CASE_CTYPE_MOM (basic_ctype_class):
+      break;
+    case CASE_CTYPE_MOM (struct_pointer_ctype_class):
+      mom_cemit_printf (csta, "struct mo%s_ptrst {", typobid);
+      if (typnamv)
+        mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
+      else
+        fputc ('\n', csta->mo_cemsta_fil);
+      mom_cemit_define_fields (csta, typobr, false);
+      mom_cemit_printf (csta, "}; // end struct mo%s_ptrst\n", typobid);
+      break;
+    case CASE_CTYPE_MOM (struct_ctype_class):
+      mom_cemit_printf (csta, "struct mo%s_st mo%s_ty {", typobid);
+      if (typnamv)
+        mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
+      else
+        fputc ('\n', csta->mo_cemsta_fil);
+      mom_cemit_define_fields (csta, typobr, false);
+      mom_cemit_printf (csta, "}; // end struct mo%s_st\n", typobid);
+      break;
+    case CASE_CTYPE_MOM (union_ctype_class):
+      mom_cemit_printf (csta, "union mo%s_un {", typobid);
+      if (typnamv)
+        mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
+      else
+        fputc ('\n', csta->mo_cemsta_fil);
+      mom_cemit_define_fields (csta, typobr, true);
+      mom_cemit_printf (csta, "}; // end union mo%s_un\n", typobid);
+      break;
+    case CASE_CTYPE_MOM (enum_ctype_class):
+      mom_cemit_printf (csta, "enum mo%s_en {", typobid);
+      if (typnamv)
+        mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
+      else
+        fputc ('\n', csta->mo_cemsta_fil);
+      mom_cemit_printf (csta, "}; // end enum mo%s_en\n", typobid);
+      break;
+    case CASE_CTYPE_MOM (signature_class):
+      break;
+    default:
+    defaultctypecase:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_define_ctype: typobr %s has bad class %s",
+                        mo_objref_pnamestr (typobr),
+                        mo_objref_pnamestr (typobr->mo_ob_class));
+      break;
+    }
+#undef MOM_NBCASE_CTYPE
+#undef CASE_CTYPE_MOM
+}                               /* end mom_cemit_define_ctype */
 
 
 void
@@ -715,13 +836,13 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
     mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (c_type));
   if (!ctypv)
     {
-      fprintf (csta->mo_cemsta_fil, "\n// no types\n");
+      mom_cemit_printf (csta, "\n// no types\n");
       return;
     }
   if (!mo_dyncast_tuple (ctypv))
     MOM_CEMITFAILURE (csta, "bad c_type %s", mo_value_pnamestr (ctypv));
   unsigned nbctyp = mo_tuple_size (ctypv);
-  fprintf (csta->mo_cemsta_fil, "\n// %d types definitions\n", nbctyp);
+  mom_cemit_printf (csta, "\n// %d types definitions\n", nbctyp);
   // first loop to emit typedefs
   for (unsigned tix = 0; tix < nbctyp; tix++)
     {
@@ -729,6 +850,14 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
       mom_cemit_declare_ctype (csta, ctypob);
     }
+  // second loop to emit enum, struct, union-s.... i.e. aggregate type definitions
+  for (unsigned tix = 0; tix < nbctyp; tix++)
+    {
+      mo_objref_t ctypob = mo_tuple_nth (ctypv, tix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
+      mom_cemit_define_ctype (csta, ctypob);
+    }
+
   MOM_WARNPRINTF ("unimplemented cemit_ctype ctypv=%s",
                   mo_value_pnamestr (ctypv));
 #warning unimplemented cemit_ctypes
@@ -779,7 +908,11 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
                    mo_string_cstr (cemitstate.mo_cemsta_errstr),
                    mo_objref_pnamestr (cemp->mo_cemit_modobj),
                    mo_objref_pnamestr (obrcem));
-          fclose (cemitstate.mo_cemsta_fil), cemitstate.mo_cemsta_fil = NULL;
+          if (fclose (cemitstate.mo_cemsta_fil))
+            MOM_FATAPRINTF
+              ("cemit_generate: failed to close emitted file for module %s on error",
+               mo_objref_pnamestr (cemp->mo_cemit_modobj));
+          cemitstate.mo_cemsta_fil = NULL;
         }
       return cemitstate.mo_cemsta_errstr;
     };
