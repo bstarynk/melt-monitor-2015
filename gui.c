@@ -905,7 +905,7 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
   void *payldata = obr->mo_ob_payldata;
   MOM_ASSERTPRINTF (paylkindobr != NULL, "no payload");
   gtk_text_buffer_insert_with_tags      //
-    (mom_obtextbuf, piter, "\342\200\275",      // U+203D INTERROBANG ‽
+    (mom_obtextbuf, piter, " \342\200\275",     // U+203D INTERROBANG ‽
      4, mom_tag_payload, NULL);
   mom_display_objref (paylkindobr, pdx, mom_tag_payload);
   gtk_text_buffer_insert_with_tags      //
