@@ -1747,4 +1747,12 @@ void
 mom_objref_cemit_printf (mo_objref_t obrcem, const char *fmt, ...)
 __attribute ((format (printf, 2, 3)));
 void mom_objref_cemit_newline (mo_objref_t obrcem);
+
+
+/// dirty trick to reference something by its id
+/// assume we have #define moid_the_system _0BV96V94PJIn9si1K
+/// then we want MOM_PREFIXID(mofun_,the_system) to be expanded to mofun__0BV96V94PJIn9si1K
+#define MOM_PREFIXID_ADD(Prefix,Id) Prefix##Id
+#define MOM_PREFIXID_ADD_AGAIN(Prefix,Id) MOM_PREFIXID_ADD(Prefix,Id)
+#define MOM_PREFIXID(Prefix,Name) MOM_PREFIXID_ADD_AGAIN(Prefix,moid_##Name)
 #endif /*MONIMELT_HEADER */
