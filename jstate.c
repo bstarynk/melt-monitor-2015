@@ -440,11 +440,8 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
 #undef CASE_PAYLOAD_MOM
           if (js != NULL)
             {
-              size_t jsonsiz = 2048;
-              char *jsonbuf = calloc (jsonsiz, 1);
-              if (!jsonbuf)
-                MOM_FATAPRINTF ("failed to allocate jsonbuf of %zd bytes",
-                                jsonsiz);
+              size_t jsonsiz = 0;
+              char *jsonbuf = NULL;
               FILE *jsonfil = open_memstream (&jsonbuf, &jsonsiz);
               if (!jsonfil)
                 MOM_FATAPRINTF ("failed to open_memstream json");
@@ -531,10 +528,8 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
     {
       jcont = json_pack ("{soso}", "attrs", jattrs, "comps", jcomps);
     }
-  size_t contsiz = 4096;
-  char *contbuf = calloc (1, contsiz);
-  if (MOM_UNLIKELY (!contbuf))
-    MOM_FATAPRINTF ("failed to allocate memstream buffer of %zd", contsiz);
+  size_t contsiz = 0;
+  char *contbuf = NULL;
   FILE *fmem = open_memstream (&contbuf, &contsiz);
   if (!fmem)
     MOM_FATAPRINTF ("failed to open memstream for content of object %s",

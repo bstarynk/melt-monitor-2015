@@ -780,36 +780,41 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
     MOM_CEMITFAILURE (csta, "cemit_define_fields: %s too deep %d",
                       mo_objref_pnamestr (typobr), depth);
   mo_objref_t extendobr =
-    mo_dyncast_objref(mo_objref_get_attr(typobr, MOM_PREDEF(extend)));
-  if (extendobr) {
-    if (!mo_hashset_contains(csta->mo_cemsta_hsetctypes, extendobr))
-      MOM_CEMITFAILURE (csta, "cemit_define_fields: %s extended by unknown type %s",
-			mo_objref_pnamestr (typobr),
-			mo_objref_pnamestr (extendobr));    
-    mom_cemit_printf (csta, " // type %s extended by %s\n", 
-		      mo_objref_pnamestr (typobr),
-		      mo_objref_pnamestr (extendobr));    
-    mom_cemit_define_fields(csta, extendobr, isunion, depth+1);
-  }
+    mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (extend)));
+  if (extendobr)
+    {
+      if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, extendobr))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_fields: %s extended by unknown type %s",
+                          mo_objref_pnamestr (typobr),
+                          mo_objref_pnamestr (extendobr));
+      mom_cemit_printf (csta, " // type %s extended by %s\n",
+                        mo_objref_pnamestr (typobr),
+                        mo_objref_pnamestr (extendobr));
+      mom_cemit_define_fields (csta, extendobr, isunion, depth + 1);
+    }
   mo_value_t fieldtup =
-    mo_dyncast_tuple(mo_objref_get_attr(typobr, MOM_PREDEF(fields)));
+    mo_dyncast_tuple (mo_objref_get_attr (typobr, MOM_PREDEF (fields)));
   if (!fieldtup)
-    MOM_CEMITFAILURE (csta, "cemit_define_fields: %s has bad fields", 
-		      mo_objref_pnamestr (typobr));
-  unsigned nbfields = mo_tuple_size(fieldtup);   
+    MOM_CEMITFAILURE (csta, "cemit_define_fields: %s has bad fields",
+                      mo_objref_pnamestr (typobr));
+  unsigned nbfields = mo_tuple_size (fieldtup);
   mom_cemit_printf (csta, " // %d fields in %s\n",
-		    nbfields, mo_objref_pnamestr (typobr));
-  for (unsigned flix=0; flix<nbfields; flix++) {
-    mo_objref_t fieldobr = mo_tuple_nth(fieldtup, flix);
-    if (!mo_dyncast_objref(fieldobr))
-      MOM_CEMITFAILURE (csta, "cemit_define_fields: %s has no field#%d",
-			mo_objref_pnamestr (typobr), flix);
-    if (fieldobr->mo_ob_class != MOM_PREDEF(c_field_class))
-      MOM_CEMITFAILURE (csta, "cemit_define_fields: in %s field#%d %s is not of c_field_class but %s",
-			mo_objref_pnamestr (typobr), flix,
-			mo_objref_pnamestr(fieldobr), mo_objref_pnamestr(fieldobr->mo_ob_class));
-      
-  }
+                    nbfields, mo_objref_pnamestr (typobr));
+  for (unsigned flix = 0; flix < nbfields; flix++)
+    {
+      mo_objref_t fieldobr = mo_tuple_nth (fieldtup, flix);
+      if (!mo_dyncast_objref (fieldobr))
+        MOM_CEMITFAILURE (csta, "cemit_define_fields: %s has no field#%d",
+                          mo_objref_pnamestr (typobr), flix);
+      if (fieldobr->mo_ob_class != MOM_PREDEF (c_field_class))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_fields: in %s field#%d %s is not of c_field_class but %s",
+                          mo_objref_pnamestr (typobr), flix,
+                          mo_objref_pnamestr (fieldobr),
+                          mo_objref_pnamestr (fieldobr->mo_ob_class));
+
+    }
 }                               /* end mom_cemit_define_fields */
 
 

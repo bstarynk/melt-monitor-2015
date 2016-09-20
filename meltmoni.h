@@ -1414,7 +1414,7 @@ struct mo_bufferpayl_st         /*malloced */
 
 bool mo_objref_open_file (mo_objref_t obr, const char *path,
                           const char *mods);
-bool mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint);
+bool mo_objref_open_buffer (mo_objref_t obr);
 FILE *mo_objref_file (mo_objref_t obr);
 
 ///////////////// DUMP support .. in jstate.c

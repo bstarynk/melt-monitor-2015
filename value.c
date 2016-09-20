@@ -67,14 +67,11 @@ mo_make_string_from_skipped_textual_file (FILE *fil, unsigned skiplines)
     }
   if (siz > MOM_SIZE_MAX)
     MOM_FATAPRINTF ("string-from-textfile: too big size %zd", siz);
-  char *buf = calloc (1, siz);
-  if (!buf)
-    MOM_FATAPRINTF
-      ("string-from-textfile: failed to allocate buffer of %zd bytes", siz);
+  siz = 0;
+  char *buf = NULL;
   FILE *fmem = open_memstream (&buf, &siz);
   if (!fmem)
-    MOM_FATAPRINTF
-      ("string-from-textfile: failed to open memstream of %zd bytes", siz);
+    MOM_FATAPRINTF ("string-from-textfile: failed to open memstream");
   int c = EOF;
   unsigned cnt = 0;
   do
@@ -761,11 +758,8 @@ mo_value_pnamestr (mo_value_t v)
         unsigned len = mo_string_size (v);
         if (len == 0)
           return "\"\"";
-        size_t siz = 4 * mom_prime_above (len / 4 + 2);
-        MOM_ASSERTPRINTF (siz > len, "bad siz %zd for len %u", siz, len);
-        char *buf = calloc (1, siz);
-        if (!buf)
-          MOM_FATAPRINTF ("failed to calloc siz %zd", siz);
+        size_t siz = 0;
+        char *buf = NULL;
         FILE *fmem = open_memstream (&buf, &siz);
         if (!fmem)
           MOM_FATAPRINTF ("failed to open_memstream siz %zd", siz);
@@ -775,7 +769,7 @@ mo_value_pnamestr (mo_value_t v)
         long fln = ftell (fmem);
         fflush (fmem);
         MOM_ASSERTPRINTF (fln >= 0 && fln < (long) siz && fln >= len,
-			  "bad fln=%ld, siz=%zd, len=%d", fln, siz, len);
+                          "bad fln=%ld, siz=%zd, len=%d", fln, siz, len);
         buf[fln] = 0;
         res = mom_gc_strdup (buf);
         fclose (fmem), fmem = NULL;
@@ -793,10 +787,8 @@ mo_value_pnamestr (mo_value_t v)
         unsigned seqsiz = mo_sequence_size (v);
         if (seqsiz == 0)
           return istuple ? "[]" : "{}";
-        size_t siz = 8 * mom_prime_above (seqsiz + 3);
-        char *buf = calloc (1, siz);
-        if (!buf)
-          MOM_FATAPRINTF ("failed to calloc siz %zd", siz);
+        size_t siz = 0;
+        char *buf = NULL;
         FILE *fmem = open_memstream (&buf, &siz);
         if (!fmem)
           MOM_FATAPRINTF ("failed to open_memstream siz %zd", siz);

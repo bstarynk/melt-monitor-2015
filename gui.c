@@ -1017,11 +1017,8 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
               }
             else
               {
-                size_t siz = 1024;
-                char *buf = calloc (1, siz);
-                if (!buf)
-                  MOM_FATAPRINTF
-                    ("failed to calloc %zd for json payload display", siz);
+                size_t siz = 0;
+                char *buf = NULL;
                 FILE *fmem = open_memstream (&buf, &siz);
                 if (!fmem)
                   MOM_FATAPRINTF
@@ -2577,7 +2574,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
             }
           if (sc == '\\')
             gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+          gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
         }
       while (sc != '"');
       GtkTextIter endit = cpars->mo_gcp_curiter;

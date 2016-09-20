@@ -46,24 +46,17 @@ mo_objref_open_file (mo_objref_t obr, const char *path, const char *mods)
 
 #define MOM_MIN_BUFSIZ 1024     /* a power of two */
 bool
-mo_objref_open_buffer (mo_objref_t obr, unsigned sizhint)
+mo_objref_open_buffer (mo_objref_t obr)
 {
   if (!mo_dyncast_objref (obr))
     return false;
-  sizhint = (sizhint | (MOM_MIN_BUFSIZ - 1)) + 1;
-  if (sizhint > MOM_SIZE_MAX / 16)
-    sizhint = MOM_SIZE_MAX / 16;
-  char *zon = calloc (1, sizhint);
-  if (MOM_UNLIKELY (zon == NULL))
-    MOM_FATAPRINTF ("failed to calloc a buffer zone (%u bytes) for obr %s",
-                    sizhint, mo_objref_pnamestr (obr));
   mo_bufferpayl_ty *bpy = calloc (1, sizeof (mo_bufferpayl_ty));
   if (MOM_UNLIKELY (bpy == NULL))
     MOM_FATAPRINTF
       ("failed to calloc a buffer payload (%zd bytes) for obr %s",
        sizeof (mo_bufferpayl_ty), mo_objref_pnamestr (obr));
-  bpy->mo_buffer_zone = zon;
-  bpy->mo_buffer_size = sizhint;
+  bpy->mo_buffer_zone = NULL;
+  bpy->mo_buffer_size = 0;
   if (MOM_UNLIKELY ((bpy->mo_buffer_memstream   //
                      = open_memstream (&bpy->mo_buffer_zone,
                                        &bpy->mo_buffer_size)) == NULL))
@@ -141,7 +134,7 @@ mo_objref_set_buffer_from_json (mo_objref_t obr, json_t *js)
   json_t *jlen = json_object_get (js, "buflen");
   if (jlen && json_is_integer (jlen))
     blen = json_integer_value (jlen);
-  if (MOM_UNLIKELY (!mo_objref_open_buffer (obr, blen)))
+  if (MOM_UNLIKELY (!mo_objref_open_buffer (obr)))
     MOM_FATAPRINTF
       ("set_buffer_from_json obr %s failed to open buffer (blen=%ld)",
        mo_objref_pnamestr (obr), (long) blen);

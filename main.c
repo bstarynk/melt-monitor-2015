@@ -1217,11 +1217,8 @@ do_load_plugins_mom (void)
       plugincumlen += strlen (*pc);
     }
   int cntplugin = 0;
-  size_t plugcmdsiz = 1 + ((nbplugins * 10 + 4 * plugincumlen + 40) | 0xff);
-  char *plugcmdbuf = calloc (1, plugcmdsiz);
-  if (!plugcmdbuf)
-    MOM_FATAPRINTF ("failed to allocate plugin command buffer of %zd bytes",
-                    plugcmdsiz);
+  size_t plugcmdsiz = 0;
+  char *plugcmdbuf = NULL;
   FILE *fcmd = open_memstream (&plugcmdbuf, &plugcmdsiz);
   if (!fcmd)
     MOM_FATAPRINTF ("open_memstream failed for plugin command buffer");
