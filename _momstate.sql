@@ -37,6 +37,7 @@ INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
+INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
@@ -533,6 +534,20 @@ INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
+{
+ "@name": "class_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "user action for $class (object class)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",
@@ -547,11 +562,17 @@ INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474373623,'
+INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474374401,'
 {
  "@name": "class",
  "attrs": {
   "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_7831xB7d1ulmsaCYS"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "anything related to class, also a user action $class (object class)"
