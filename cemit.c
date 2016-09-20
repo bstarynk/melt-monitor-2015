@@ -771,7 +771,16 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
                          mo_objref_pnamestr (cemp->mo_cemit_modobj),
                          mo_objref_pnamestr (obrcem));
       if (cemitstate.mo_cemsta_fil)
-        fclose (cemitstate.mo_cemsta_fil), cemitstate.mo_cemsta_fil = NULL;
+        {
+          fprintf (cemitstate.mo_cemsta_fil,
+                   "\n\n\n/////@@@@@@@!!!!!! \n"
+                   "#error @%d: %s (module %s, emitter %s)\n",
+                   errlin,
+                   mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                   mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                   mo_objref_pnamestr (obrcem));
+          fclose (cemitstate.mo_cemsta_fil), cemitstate.mo_cemsta_fil = NULL;
+        }
       return cemitstate.mo_cemsta_errstr;
     };
   cemp->mo_cemit_locstate = &cemitstate;
