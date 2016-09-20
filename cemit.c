@@ -56,6 +56,8 @@ struct mom_cemitlocalstate_st
 
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
+/// maximal recursion depth
+#define MOM_CEMIT_MAX_DEPTH 100
 void
 mo_objref_cleanup_cemit (mo_objref_t obr)
 {                               // called only from mo_objref_really_clear_payload
@@ -157,6 +159,10 @@ mo_objref_get_cemit (mo_objref_t obr)
        _csta_##Lin, (Fmt));				\
     _csta_##Lin->mo_cemsta_errstr			\
       = mo_make_string_sprintf(Fmt, ##__VA_ARGS__);	\
+    MOM_BACKTRACEPRINTF_AT				\
+    (__FILE__,Lin,					\
+     "cemit failure: %s",				\
+     mo_string_cstr(_csta_##Lin->mo_cemsta_errstr));	\
     longjmp(_csta_##Lin->mo_cemsta_jmpbuf, Lin);	\
 } while(0)
 #define MOM_CEMITFAILURE_AT_BIS(Lin,Csta,Fmt,...) \
@@ -305,6 +311,19 @@ mom_cemit_printf (struct mom_cemitlocalstate_st *csta, const char *fmt, ...)
     MOM_CEMITFAILURE (csta,
                       "cemit_printf: too big emission (%ld megabytes, %ld bytes)",
                       ftell (fil) >> 20, ftell (fil));
+#ifndef NDEBUG
+  if (ftell (fil) > MOM_CEMIT_MAX_FSIZE / 3)
+    {
+      static bool warned;
+      if (!warned)
+        {
+          MOM_BACKTRACEPRINTF
+            ("cemit_printf: very big emission (%ld megabytes, %ld bytes)",
+             ftell (fil) >> 20, ftell (fil));
+          warned = true;
+        }
+    }
+#endif /*NDEBUG*/
 }                               /* end mom_cemit_printf */
 
 void
@@ -336,13 +355,26 @@ mom_cemit_newline (struct mom_cemitlocalstate_st *csta)
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
                     "cemit_newline: bad csta@%p", csta);
+  fputc ('\n', csta->mo_cemsta_fil);
   if (ftell (csta->mo_cemsta_fil) > MOM_CEMIT_MAX_FSIZE)
     MOM_CEMITFAILURE (csta,
-                      "cemit_printf: too big emission (%ld megabytes, %ld bytes)",
+                      "cemit_newline: too big emission (%ld megabytes, %ld bytes)",
                       ftell (csta->mo_cemsta_fil) >> 20,
                       ftell (csta->mo_cemsta_fil));
-  fputc ('\n', csta->mo_cemsta_fil);
-  for (int ix = (int)(csta->mo_cemsta_indentation % 16); ix > 0; ix--)
+#ifndef NDEBUG
+  if (ftell (csta->mo_cemsta_fil) > MOM_CEMIT_MAX_FSIZE / 3)
+    {
+      static bool warned;
+      if (!warned)
+        {
+          MOM_BACKTRACEPRINTF
+            ("cemit_newline: very big emission (%ld megabytes, %ld bytes)",
+             ftell (csta->mo_cemsta_fil) >> 20, ftell (csta->mo_cemsta_fil));
+          warned = true;
+        }
+    }
+#endif /*NDEBUG*/
+    for (int ix = (int)(csta->mo_cemsta_indentation % 16); ix > 0; ix--)
     fputc (' ', csta->mo_cemsta_fil);
 }                               /* end of mom_cemit_newline */
 
@@ -728,7 +760,7 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
 
 void
 mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
-                         mo_objref_t typobr, bool isunion)
+                         mo_objref_t typobr, bool isunion, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
@@ -740,6 +772,15 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
                     csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_define_fields: bad typobr");
+  if (isunion && typobr->mo_ob_class != MOM_PREDEF (union_ctype_class))
+    MOM_CEMITFAILURE (csta, "cemit_define_fields: %s is not a union but %s",
+                      mo_objref_pnamestr (typobr),
+                      mo_objref_pnamestr (typobr->mo_ob_class));
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta, "cemit_define_fields: %s too deep %d",
+                      mo_objref_pnamestr (typobr), depth);
+
+
 }                               /* end mom_cemit_define_fields */
 
 void
@@ -778,7 +819,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
       else
         fputc ('\n', csta->mo_cemsta_fil);
-      mom_cemit_define_fields (csta, typobr, false);
+      mom_cemit_define_fields (csta, typobr, false, 0);
       mom_cemit_printf (csta, "}; // end struct mo%s_ptrst\n", typobid);
       break;
     case CASE_CTYPE_MOM (struct_ctype_class):
@@ -787,7 +828,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
       else
         fputc ('\n', csta->mo_cemsta_fil);
-      mom_cemit_define_fields (csta, typobr, false);
+      mom_cemit_define_fields (csta, typobr, false, 0);
       mom_cemit_printf (csta, "}; // end struct mo%s_st\n", typobid);
       break;
     case CASE_CTYPE_MOM (union_ctype_class):
@@ -796,7 +837,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
       else
         fputc ('\n', csta->mo_cemsta_fil);
-      mom_cemit_define_fields (csta, typobr, true);
+      mom_cemit_define_fields (csta, typobr, true, 0);
       mom_cemit_printf (csta, "}; // end union mo%s_un\n", typobid);
       break;
     case CASE_CTYPE_MOM (enum_ctype_class):
