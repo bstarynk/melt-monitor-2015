@@ -30,6 +30,7 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
+INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
@@ -369,6 +370,20 @@ INSERT INTO t_objects VALUES('_6F98Bo2ChKhNVEZgt',1474292777,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give some file path, e.g. for c-includes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6Lu6DXoGivCCHMwzV',1474362254,'
+{
+ "@name": "c_field_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for C fields"
    }
   ]
  },

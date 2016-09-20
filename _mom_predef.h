@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 30
+#define MOM_NB_PREDEFINED 31
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -36,6 +36,9 @@ MOM_HAS_PREDEFINED(basic_ctype_class,_7zd6NdDtMbPp0s5HT,1790033058,6222434491758
 
 //+ give the c code expansion or string
 MOM_HAS_PREDEFINED(c_code,_64d2GXNLEBKFBzxqP,1432177438,5902015936187224730,253100277)
+
+//+ class for C fields
+MOM_HAS_PREDEFINED(c_field_class,_6Lu6DXoGivCCHMwzV,1602402396,6500237768006496619,2179155423)
 
 //+ gives the includes in a module
 MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,3450423424)
@@ -134,6 +137,11 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #define moid_c_code _64d2GXNLEBKFBzxqP
 #undef monam_64d2GXNLEBKFBzxqP
 #define monam_64d2GXNLEBKFBzxqP c_code
+
+#undef moid_c_field_class
+#define moid_c_field_class _6Lu6DXoGivCCHMwzV
+#undef monam_6Lu6DXoGivCCHMwzV
+#define monam_6Lu6DXoGivCCHMwzV c_field_class
 
 #undef moid_c_include
 #define moid_c_include _0hA5FCeEWGc6gpfnU
@@ -277,6 +285,7 @@ enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
   momphash_basic_ctype_class=4082589218,
   momphash_c_code=253100277,
+  momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
   momphash_comment=2072874222,
@@ -313,7 +322,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 30
+#define MOM_NB_NAMED_PREDEFINED 31
 
 
 #undef MOM_HAS_PREDEFINED

@@ -803,7 +803,12 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
     mo_objref_t fieldobr = mo_tuple_nth(fieldtup, flix);
     if (!mo_dyncast_objref(fieldobr))
       MOM_CEMITFAILURE (csta, "cemit_define_fields: %s has no field#%d",
-			mo_objref_pnamestr (typobr), flix);      
+			mo_objref_pnamestr (typobr), flix);
+    if (fieldobr->mo_ob_class != MOM_PREDEF(c_field_class))
+      MOM_CEMITFAILURE (csta, "cemit_define_fields: in %s field#%d %s is not of c_field_class but %s",
+			mo_objref_pnamestr (typobr), flix,
+			mo_objref_pnamestr(fieldobr), mo_objref_pnamestr(fieldobr->mo_ob_class));
+      
   }
 }                               /* end mom_cemit_define_fields */
 
