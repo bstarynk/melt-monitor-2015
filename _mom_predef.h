@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 31
+#define MOM_NB_PREDEFINED 37
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -33,6 +33,9 @@ MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,47700129957835353
 
 //+ class of basic C types like int
 MOM_HAS_PREDEFINED(basic_ctype_class,_7zd6NdDtMbPp0s5HT,1790033058,6222434491758531993,4082589218)
+
+//+ the boolean ctype
+MOM_HAS_PREDEFINED(bool,_3K62tYRL1azRF0cP2,889079074,5625971388704506234,1367612090)
 
 //+ give the c code expansion or string
 MOM_HAS_PREDEFINED(c_code,_64d2GXNLEBKFBzxqP,1432177438,5902015936187224730,253100277)
@@ -46,8 +49,14 @@ MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,345
 //+ gives the C types in a module
 MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,583145630)
 
+//+ the char ctype
+MOM_HAS_PREDEFINED(char,_2Sj1dLJSbvyN3kMgI,677585412,3745052711434301676,2350112261)
+
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ the double ctype
+MOM_HAS_PREDEFINED(double,_8BM91hTnefUPcYXzf,2036136323,2502319301662783315,3623603139)
 
 //+ class for enum ctypes
 MOM_HAS_PREDEFINED(enum_ctype_class,_1xh0H6A2nNw5upcPh,366810079,2523559174225175625,452162142)
@@ -63,6 +72,12 @@ MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2
 
 //+ gives the formals ctypes in a signature
 MOM_HAS_PREDEFINED(formals_ctypes,_8Bq9eNWZ0eUS6BGq8,2034696128,4347408863221702016,102498809)
+
+//+ the int ctype
+MOM_HAS_PREDEFINED(int,_0Sp1Lg7ctajS7oX5i,206123378,1657221063490954190,2737754805)
+
+//+ the long ctype
+MOM_HAS_PREDEFINED(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
@@ -121,6 +136,9 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 //+ class for union ctypes
 MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,3892346464482352748,3893134561)
 
+//+ the void ctype
+MOM_HAS_PREDEFINED(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
+
 
 
 #undef moid_GUI_operation
@@ -132,6 +150,11 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #define moid_basic_ctype_class _7zd6NdDtMbPp0s5HT
 #undef monam_7zd6NdDtMbPp0s5HT
 #define monam_7zd6NdDtMbPp0s5HT basic_ctype_class
+
+#undef moid_bool
+#define moid_bool _3K62tYRL1azRF0cP2
+#undef monam_3K62tYRL1azRF0cP2
+#define monam_3K62tYRL1azRF0cP2 bool
 
 #undef moid_c_code
 #define moid_c_code _64d2GXNLEBKFBzxqP
@@ -153,10 +176,20 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #undef monam_8TY6UsXJ3Djt71By3
 #define monam_8TY6UsXJ3Djt71By3 c_type
 
+#undef moid_char
+#define moid_char _2Sj1dLJSbvyN3kMgI
+#undef monam_2Sj1dLJSbvyN3kMgI
+#define monam_2Sj1dLJSbvyN3kMgI char
+
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_double
+#define moid_double _8BM91hTnefUPcYXzf
+#undef monam_8BM91hTnefUPcYXzf
+#define monam_8BM91hTnefUPcYXzf double
 
 #undef moid_enum_ctype_class
 #define moid_enum_ctype_class _1xh0H6A2nNw5upcPh
@@ -182,6 +215,16 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #define moid_formals_ctypes _8Bq9eNWZ0eUS6BGq8
 #undef monam_8Bq9eNWZ0eUS6BGq8
 #define monam_8Bq9eNWZ0eUS6BGq8 formals_ctypes
+
+#undef moid_int
+#define moid_int _0Sp1Lg7ctajS7oX5i
+#undef monam_0Sp1Lg7ctajS7oX5i
+#define monam_0Sp1Lg7ctajS7oX5i int
+
+#undef moid_long
+#define moid_long _20B54zdX0j8vYUdsf
+#undef monam_20B54zdX0j8vYUdsf
+#define monam_20B54zdX0j8vYUdsf long
 
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
@@ -278,22 +321,32 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #undef monam_3P48jR3hSzSCgv48c
 #define monam_3P48jR3hSzSCgv48c union_ctype_class
 
+#undef moid_void
+#define moid_void _1WX2mf4xwC5TU5ml7
+#undef monam_1WX2mf4xwC5TU5ml7
+#define monam_1WX2mf4xwC5TU5ml7 void
+
 
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
   momphash_basic_ctype_class=4082589218,
+  momphash_bool=1367612090,
   momphash_c_code=253100277,
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
+  momphash_char=2350112261,
   momphash_comment=2072874222,
+  momphash_double=3623603139,
   momphash_enum_ctype_class=452162142,
   momphash_extend=3740695059,
   momphash_fields=3535425907,
   momphash_file_path=2269269987,
   momphash_formals_ctypes=102498809,
+  momphash_int=2737754805,
+  momphash_long=314494134,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
@@ -313,6 +366,7 @@ enum mom_predefined_hashes_en {
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
   momphash_union_ctype_class=3893134561,
+  momphash_void=478990535,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -322,7 +376,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 31
+#define MOM_NB_NAMED_PREDEFINED 37
 
 
 #undef MOM_HAS_PREDEFINED

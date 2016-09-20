@@ -29,16 +29,21 @@ INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
+INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
+INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
+INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
+INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
@@ -59,6 +64,7 @@ INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
+INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
@@ -78,6 +84,20 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0Sp1Lg7ctajS7oX5i',1474366358,'
+{
+ "@name": "int",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the int ctype"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
@@ -147,6 +167,20 @@ INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
  }
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1WX2mf4xwC5TU5ml7',1474366358,'
+{
+ "@name": "void",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the void ctype"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1xh0H6A2nNw5upcPh',1474312783,'
 {
  "@name": "enum_ctype_class",
@@ -161,6 +195,20 @@ INSERT INTO t_objects VALUES('_1xh0H6A2nNw5upcPh',1474312783,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_20B54zdX0j8vYUdsf',1474366358,'
+{
+ "@name": "long",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the long ctype"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
 {
  "@name": "module_class",
@@ -169,6 +217,20 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
+{
+ "@name": "char",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the char ctype"
    }
   ]
  },
@@ -207,6 +269,20 @@ INSERT INTO t_objects VALUES('_3J97bCYloYmmXuCR1',1473701710,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3K62tYRL1azRF0cP2',1474366358,'
+{
+ "@name": "bool",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the boolean ctype"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
@@ -482,6 +558,20 @@ INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for hashset payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8BM91hTnefUPcYXzf',1474366358,'
+{
+ "@name": "double",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the double ctype"
    }
   ]
  },

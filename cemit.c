@@ -621,6 +621,40 @@ mom_cemit_write_ctype (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_ctype: bad payl@%p in csta@%p", cemp, csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_write_ctype: bad typobr");
+  if (mo_objref_space(typobr) == mo_SPACE_PREDEF) {
+#define MOM_NBCASE_CTYPE 59
+#define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+  if (typobr != MOM_PREDEF(Ob))					\
+    goto defaultctypecase;					\
+  goto labctype_##Ob;						\
+  labctype_##Ob
+  switch (mo_objref_hash (typobr) % MOM_NBCASE_CTYPE)
+    {
+    case CASE_CTYPE_MOM (int):
+      mom_cemit_printf (csta, "int ");
+      return;
+    case CASE_CTYPE_MOM (void):
+      mom_cemit_printf (csta, "void ");
+      return;
+    case CASE_CTYPE_MOM (bool):
+      mom_cemit_printf (csta, "bool ");
+      return;
+    case CASE_CTYPE_MOM (char):
+      mom_cemit_printf (csta, "char ");
+      return;
+    case CASE_CTYPE_MOM (long):
+      mom_cemit_printf (csta, "long ");
+      return;
+    case CASE_CTYPE_MOM (double):
+      mom_cemit_printf (csta, "double ");
+      return;
+    default:
+    defaultctypecase:
+      break;
+    }
+  #undef MOM_NBCASE_CTYPE
+  #undef CASE_CTYPE_MOM
+  }
   if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
     MOM_CEMITFAILURE (csta, "write_ctype: typobr %s unknown",
                       mo_objref_pnamestr (typobr));
