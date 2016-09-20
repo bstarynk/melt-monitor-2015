@@ -34,6 +34,8 @@ INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
+INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
+INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
@@ -85,6 +87,20 @@ INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the includes in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_15c0LcIrdf2LE5JP8',1474361179,'
+{
+ "@name": "extend",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the object extending something (e.g. in struct ctype...)"
    }
   ]
  },
@@ -395,6 +411,20 @@ INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for list payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
+{
+ "@name": "fields",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the fields tuple (e.g. in struct or union ctype...)"
    }
   ]
  },

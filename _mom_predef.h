@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 28
+#define MOM_NB_PREDEFINED 30
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -48,6 +48,12 @@ MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072
 
 //+ class for enum ctypes
 MOM_HAS_PREDEFINED(enum_ctype_class,_1xh0H6A2nNw5upcPh,366810079,2523559174225175625,452162142)
+
+//+ gives the object extending something (e.g. in struct ctype...)
+MOM_HAS_PREDEFINED(extend,_15c0LcIrdf2LE5JP8,256382403,4194465417666792272,3740695059)
+
+//+ gives the fields tuple (e.g. in struct or union ctype...)
+MOM_HAS_PREDEFINED(fields,_7Pl7foCRjKoT6Gkdr,1849542836,813017781241674727,3535425907)
 
 //+ give some file path, e.g. for c-includes
 MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2269269987)
@@ -148,6 +154,16 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 #define moid_enum_ctype_class _1xh0H6A2nNw5upcPh
 #undef monam_1xh0H6A2nNw5upcPh
 #define monam_1xh0H6A2nNw5upcPh enum_ctype_class
+
+#undef moid_extend
+#define moid_extend _15c0LcIrdf2LE5JP8
+#undef monam_15c0LcIrdf2LE5JP8
+#define monam_15c0LcIrdf2LE5JP8 extend
+
+#undef moid_fields
+#define moid_fields _7Pl7foCRjKoT6Gkdr
+#undef monam_7Pl7foCRjKoT6Gkdr
+#define monam_7Pl7foCRjKoT6Gkdr fields
 
 #undef moid_file_path
 #define moid_file_path _6F98Bo2ChKhNVEZgt
@@ -265,6 +281,8 @@ enum mom_predefined_hashes_en {
   momphash_c_type=583145630,
   momphash_comment=2072874222,
   momphash_enum_ctype_class=452162142,
+  momphash_extend=3740695059,
+  momphash_fields=3535425907,
   momphash_file_path=2269269987,
   momphash_formals_ctypes=102498809,
   momphash_module_class=3193995711,
@@ -295,7 +313,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 28
+#define MOM_NB_NAMED_PREDEFINED 30
 
 
 #undef MOM_HAS_PREDEFINED
