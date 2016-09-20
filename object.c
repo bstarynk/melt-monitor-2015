@@ -625,7 +625,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
   char synamebuf[MOM_CSTRIDSIZ + 40];
   memset (synamebuf, 0, sizeof (synamebuf));
   snprintf (synamebuf, sizeof (synamebuf), MOM_FUNC_PREFIX "%s", bufobrid);
-  void *syad = dlsym (synamebuf, mom_prog_dlhandle);
+  void *syad = dlsym (mom_prog_dlhandle, synamebuf);
   mo_value_t errmsgv = NULL;
   if (!syad)
     {
@@ -635,7 +635,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
       memset (synamebuf, 0, sizeof (synamebuf));
       snprintf (synamebuf, sizeof (synamebuf), MOM_CODE_PREFIX "%s",
                 bufobrid);
-      syad = dlsym (synamebuf, mom_prog_dlhandle);
+      syad = dlsym (mom_prog_dlhandle, synamebuf);
       if (!syad)
         errmsgv =
           mo_make_string_sprintf ("dlsym'%s' failed: %s", synamebuf,
@@ -657,7 +657,7 @@ mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr)
   memset (synamebuf, 0, sizeof (synamebuf));
   snprintf (synamebuf, sizeof (synamebuf), MOM_SIGNATURE_PREFIX "%s",
             bufobrid);
-  char *sigstr = dlsym (synamebuf, mom_prog_dlhandle);
+  char *sigstr = dlsym (mom_prog_dlhandle, synamebuf);
   if (!sigstr)
     {
       MOM_WARNPRINTF
