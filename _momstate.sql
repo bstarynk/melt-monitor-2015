@@ -547,7 +547,7 @@ INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
  },
  "comps": null
 }
-','','','','');
+','','_8DT8VbN0FaiS0K6uf','','*');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",

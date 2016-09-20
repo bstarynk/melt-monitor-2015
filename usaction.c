@@ -22,8 +22,22 @@
 
 /// the $class (object class) GUI user action is setting the
 /// mo_ob_class of object to class
-const char mosig_class_usact[] = "signature_object_to_value";
+#define moid_class_useract _7831xB7d1ulmsaCYS
+const char
+MOM_PREFIXID (mosig_, class_useract)[] = "signature_object_to_value";
+
+extern mo_signature_object_to_value_sigt
+MOM_PREFIXID (mofun_,class_useract)
+  __attribute__ ((optimize ("O2")));
+
+
 extern mo_signature_object_to_value_sigt mofun_class_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, class_useract) (mo_objref_t obuact)
+{
+  return mofun_class_useract (obuact);
+}
 
 mo_value_t
 mofun_class_useract (mo_objref_t obuact)
@@ -67,6 +81,5 @@ mofun_class_useract (mo_objref_t obuact)
                             mo_objref_pnamestr (classobr));
   return obr;
 }                               /* end of mofun_class_useract */
-
 
 // end of file usaction.c
