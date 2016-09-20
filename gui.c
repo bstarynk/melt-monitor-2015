@@ -2768,7 +2768,7 @@ momgui_cmdparse_new_named_object (struct momgui_cmdparse_st *cpars,
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_QUESTION,
                                         GTK_BUTTONS_OK_CANCEL,
-                                        "%s", mo_string_cstr (markupv));
+                                        mo_string_cstr (markupv));
   gtk_message_dialog_format_secondary_markup
     (GTK_MESSAGE_DIALOG (createdialog),
      "(create a <i>global</i> named object <small>(%s)</small> with its <tt>comment</tt>)",
