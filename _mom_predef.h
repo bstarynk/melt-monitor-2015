@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 39
+#define MOM_NB_PREDEFINED 40
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -63,6 +63,9 @@ MOM_HAS_PREDEFINED(double,_8BM91hTnefUPcYXzf,2036136323,2502319301662783315,3623
 
 //+ class for enum ctypes
 MOM_HAS_PREDEFINED(enum_ctype_class,_1xh0H6A2nNw5upcPh,366810079,2523559174225175625,452162142)
+
+//+ class of C enumerators
+MOM_HAS_PREDEFINED(enumerator_class,_0dK6lxuDBgrY7Zdrb,54177761,5187525645314802031,2628424159)
 
 //+ for enumerators in enum ctypes
 MOM_HAS_PREDEFINED(enumerators,_4Cz6GxTDLCsTy7bco,1095481744,2046984644363025880,4273672803)
@@ -206,6 +209,11 @@ MOM_HAS_PREDEFINED(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,4789905
 #define moid_enum_ctype_class _1xh0H6A2nNw5upcPh
 #undef monam_1xh0H6A2nNw5upcPh
 #define monam_1xh0H6A2nNw5upcPh enum_ctype_class
+
+#undef moid_enumerator_class
+#define moid_enumerator_class _0dK6lxuDBgrY7Zdrb
+#undef monam_0dK6lxuDBgrY7Zdrb
+#define monam_0dK6lxuDBgrY7Zdrb enumerator_class
 
 #undef moid_enumerators
 #define moid_enumerators _4Cz6GxTDLCsTy7bco
@@ -358,6 +366,7 @@ enum mom_predefined_hashes_en {
   momphash_comment=2072874222,
   momphash_double=3623603139,
   momphash_enum_ctype_class=452162142,
+  momphash_enumerator_class=2628424159,
   momphash_enumerators=4273672803,
   momphash_extend=3740695059,
   momphash_fields=3535425907,
@@ -394,7 +403,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 39
+#define MOM_NB_NAMED_PREDEFINED 40
 
 
 #undef MOM_HAS_PREDEFINED

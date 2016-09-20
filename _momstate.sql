@@ -41,6 +41,7 @@ INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
+INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
@@ -105,6 +106,20 @@ INSERT INTO t_objects VALUES('_0Sp1Lg7ctajS7oX5i',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_0dK6lxuDBgrY7Zdrb',1474391155,'
+{
+ "@name": "enumerator_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of C enumerators"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
 {
  "@name": "c_include",
