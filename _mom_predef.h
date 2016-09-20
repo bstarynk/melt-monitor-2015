@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 40
+#define MOM_NB_PREDEFINED 41
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -144,6 +144,9 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 
 //+ class for union ctypes
 MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,3892346464482352748,3893134561)
+
+//+ attribute to give some value
+MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,3663610996)
 
 //+ the void ctype
 MOM_HAS_PREDEFINED(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
@@ -345,6 +348,11 @@ MOM_HAS_PREDEFINED(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,4789905
 #undef monam_3P48jR3hSzSCgv48c
 #define monam_3P48jR3hSzSCgv48c union_ctype_class
 
+#undef moid_value
+#define moid_value _4Cm8ln5mSkcZHI6WB
+#undef monam_4Cm8ln5mSkcZHI6WB
+#define monam_4Cm8ln5mSkcZHI6WB value
+
 #undef moid_void
 #define moid_void _1WX2mf4xwC5TU5ml7
 #undef monam_1WX2mf4xwC5TU5ml7
@@ -393,6 +401,7 @@ enum mom_predefined_hashes_en {
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
   momphash_union_ctype_class=3893134561,
+  momphash_value=3663610996,
   momphash_void=478990535,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
@@ -403,7 +412,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 40
+#define MOM_NB_NAMED_PREDEFINED 41
 
 
 #undef MOM_HAS_PREDEFINED

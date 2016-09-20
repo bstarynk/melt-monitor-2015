@@ -70,6 +70,7 @@ INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
+INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
@@ -341,6 +342,20 @@ INSERT INTO t_objects VALUES('_47n6FfKTuPHyjab71',1473065027,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for value payloads"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4Cm8ln5mSkcZHI6WB',1474392475,'
+{
+ "@name": "value",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute to give some value"
    }
   ]
  },

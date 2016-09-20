@@ -869,10 +869,10 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
       memset (fieldid, 0, sizeof (fieldid));
       mo_objref_idstr (fieldid, fieldobr);
       if (fieldnamv)
-        mom_cemit_printf (" mo_%s_fd; // %s\n", mo_string_cstr (fieldnamv),
-                          fieldid);
+        mom_cemit_printf (csta, " mo_%s_fd; // %s\n",
+                          mo_string_cstr (fieldnamv), fieldid);
       else
-        mom_cemit_printf ("mo%s_fd;\n", fieldid);
+        mom_cemit_printf (csta, "mo%s_fd;\n", fieldid);
     }
 }                               /* end mom_cemit_define_fields */
 
@@ -890,6 +890,9 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_define_enumerators: bad payl@%p in csta@%p", cemp,
                     csta);
+  MOM_ASSERTPRINTF (depth > 0 || typobr == parobr,
+                    "bad depth %d in typobr %s", depth,
+                    mo_objref_pnamestr (typobr));
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_define_enumerators: bad typobr");
   MOM_ASSERTPRINTF (mo_dyncast_objref (parobr),
@@ -900,6 +903,12 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
     MOM_CEMITFAILURE (csta,
                       "cemit_define_enumerators: %s is unknown type",
+                      mo_objref_pnamestr (typobr));
+  mo_value_t enumstup =
+    mo_dyncast_tuple (mo_objref_get_attr (typobr, MOM_PREDEF (enumerators)));
+  if (!enumstup)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_define_enumerators: %s without enumerators",
                       mo_objref_pnamestr (typobr));
   mo_objref_t extendobr =
     mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (extend)));
@@ -916,7 +925,46 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       mom_cemit_define_enumerators (csta, extendobr, parobr, depth + 1,
                                     pprev);
     }
-  
+  unsigned nbenums = mo_tuple_size (enumstup);
+  mom_cemit_printf (csta, " // %d enumerators in %s\n", nbenums,
+                    mo_objref_pnamestr (typobr));
+  for (unsigned eix = 0; eix < nbenums; eix++)
+    {
+      long curval = (*pprev) + 1;
+      mo_objref_t curenumobr = mo_tuple_nth (enumstup, eix);
+      if (!curenumobr
+          || curenumobr->mo_ob_class != MOM_PREDEF (enumerator_class))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_enumerators: %s with bad enumerator#%d %s",
+                          mo_objref_pnamestr (typobr), eix,
+                          mo_objref_pnamestr (curenumobr));
+      mo_value_t curvaluev =
+        mo_objref_get_attr (curenumobr, MOM_PREDEF (value));
+      curval = mo_value_to_int (curvaluev, curval);
+      if (!curvaluev)
+        mo_objref_put_attr (curenumobr, MOM_PREDEF (value),
+                            mo_int_to_value (curval));
+      if (typobr == parobr && depth == 0)
+        {
+          mo_value_t typnamv = mo_objref_namev (typobr);
+          if (typnamv)
+            mom_cemit_printf (csta, " mo_%s_ev=%ld,\n",
+                              mo_string_cstr (typnamv), curval);
+          else
+            {
+              char typid[MOM_CSTRIDSIZ];
+              memset (typid, 0, sizeof (typid));
+              mo_objref_idstr (typid, typobr);
+              mom_cemit_printf (csta, " mo%s_ev=%ld,\n", typid, curval);
+            }
+        }
+      else
+        {
+          mom_cemit_printf (csta, " mo_%s__x__%s__ev=%ld,\n",
+                            mo_objref_pnamestr (parobr),
+                            mo_objref_pnamestr (typobr), curval);
+        }
+    }
 }                               /* end of mom_cemit_define_enumerators */
 
 
