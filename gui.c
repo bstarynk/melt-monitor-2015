@@ -2768,7 +2768,7 @@ momgui_cmdparse_new_named_object (struct momgui_cmdparse_st *cpars,
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_QUESTION,
                                         GTK_BUTTONS_OK_CANCEL,
-                                        mo_string_cstr (markupv));
+                                        "%s", mo_string_cstr (markupv));
   gtk_message_dialog_format_secondary_markup
     (GTK_MESSAGE_DIALOG (createdialog),
      "(create a <i>global</i> named object <small>(%s)</small> with its <tt>comment</tt>)",
@@ -3240,15 +3240,16 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
           mo_objref_t operatorobr = NULL;
           mo_objref_t operfunobr = NULL;
           GtkTextIter begopit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&begopit);
           GtkTextIter endopit = begopit;
-          gtk_text_iter_forward_char (&endopit);
+          GtkTextIter namopit = begopit;
           char operbuf[32];
           memset (operbuf, 0, sizeof (operbuf));
           while ((uc = gtk_text_iter_get_char (&endopit)) > 0
                  && uc < 127 && (isalnum (uc) || uc == '_'))
             gtk_text_iter_forward_char (&endopit);
           char *opertxt =
-            gtk_text_buffer_get_text (mom_cmdtextbuf, &begopit, &endopit,
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
                                       false);
           if (isalpha (opertxt[0]))
             operatorobr = mo_find_named_cstr (opertxt);

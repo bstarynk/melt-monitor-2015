@@ -42,17 +42,29 @@ mo_value_t
 mofun_class_useract (mo_objref_t obuact)
 {
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "class_useract: bad obuact");
-  mo_objref_t obr = mo_dyncast_objref (mo_objref_get_comp (obuact, 0));
-  mo_objref_t classobr = mo_dyncast_objref (mo_objref_get_comp (obuact, 1));
-  if (mo_objref_comp_count (obuact) != 2)
+  // the obuact starts with the user action, e.g. class
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_OBJECT,
+    MOMIX_CLASS,
+    MOMIX__LAST
+  };
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  mo_objref_t obr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OBJECT));
+  mo_objref_t classobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_CLASS));
+  if (mo_objref_comp_count (obuact) != MOMIX__LAST)
     mom_gui_fail_user_action
-      ("class_useract: wants two arguments, got %d in %s",
-       mo_objref_comp_count (obuact), mo_objref_pnamestr (obuact));
+      ("class_useract: wants two user arguments, got %d in %s",
+       mo_objref_comp_count (obuact) - 1, mo_objref_pnamestr (obuact));
   // temporary, for debugging
-  MOM_BACKTRACEPRINTF ("class_useract: obuact=%s obr=%s classobr=%s",
-                       mo_objref_pnamestr (obuact),
-                       mo_objref_pnamestr (obr),
-                       mo_objref_pnamestr (classobr));
+  MOM_BACKTRACEPRINTF
+    ("class_useract: obuact=%s operobr=%s obr=%s classobr=%s",
+     mo_objref_pnamestr (obuact), mo_objref_pnamestr (operobr),
+     mo_objref_pnamestr (obr), mo_objref_pnamestr (classobr));
   if (!obr)
     mom_gui_fail_user_action ("class_useract: no object given");
   if (!classobr)

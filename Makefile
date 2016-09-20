@@ -37,7 +37,7 @@ PACKAGES= gtk+-x11-3.0 gtk+-3.0 glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
 CCINCLUDEDIR:= $(shell $(CC) -print-file-name=include/)
 PREPROFLAGS= -I $(CCINCLUDEDIR) -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES)) -I $(shell $(GCC) -print-file-name=include/)
-OPTIMFLAGS= -Og -g3
+OPTIMFLAGS= -O1 -g3
 
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
         -lhiredis -lgccjit  -lonion $(shell $(GCC) -print-file-name=libbacktrace.a) -lpthread -lcrypt -lm -ldl -latomic
