@@ -683,7 +683,7 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
     {
       mo_objref_t ctypob = mo_tuple_nth (ctypv, tix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
-      mom_cemit_declare_ctype (cta, ctypob);
+      mom_cemit_declare_ctype (csta, ctypob);
     }
   MOM_WARNPRINTF ("unimplemented cemit_ctype ctypv=%s",
                   mo_value_pnamestr (ctypv));
