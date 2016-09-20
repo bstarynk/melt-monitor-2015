@@ -91,9 +91,6 @@ static mo_assovaldatapayl_ty *momgui_displayed_objasso;
 static mo_hashsetpayl_ty *momgui_shown_obocchset;
 
 
-static void
-momgui_cmdstatus_printf (const char *fmt, ...)
-__attribute__ ((format (printf, 1, 2)));
 
 static inline int
 momgui_gobrefcount (GObject * ob)
@@ -169,6 +166,8 @@ struct momgui_cmdparse_st
   mo_hashsetpayl_ty *mo_gcp_setcreated; /* hashset of created objects */
   jmp_buf mo_gcp_failjb;        // for escaping on error
 };                              /* end of momgui_cmdparse_st */
+
+
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpar, int lineno);
 #define MOMGUI_CMDPARSEFAIL_AT(Lin,Cpars,Fmt,...) do {	\
@@ -187,6 +186,35 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpar, int lineno);
   MOMGUI_CMDPARSEFAIL_AT(Lin,Cpars,Fmt,##__VA_ARGS__)
 #define MOMGUI_CMDPARSEFAIL(Cpars,Fmt,...) \
   MOMGUI_CMDPARSEFAIL_AT_BIS(__LINE__,Cpars,Fmt,##__VA_ARGS__)
+
+static struct momgui_cmdparse_st *momgui_user_cmdparse;
+
+
+void
+mom_gui_fail_user_action (const char *fmt, ...)
+{
+  va_list args;
+  char *buf = NULL;
+  size_t siz = 0;
+  FILE *fmem = open_memstream (&buf, &siz);
+  if (MOM_UNLIKELY (!fmem))
+    MOM_FATAPRINTF ("mom_gui_fail_user_action open_memstream failure");
+  va_start (args, fmt);
+  vfprintf (fmem, fmt, args);
+  va_end (args);
+  long len = ftell (fmem);
+  fputc ('\n', fmem);
+  fflush (fmem);
+  buf[len] = 0;
+  char *bufdup = mom_gc_strdup (buf);
+  fclose (fmem);
+  if (MOM_UNLIKELY (!momgui_user_cmdparse))
+    MOM_FATAPRINTF ("mom_gui_fail_user_action %s outside of user action",
+                    bufdup);
+  MOMGUI_CMDPARSEFAIL (momgui_user_cmdparse, "mom_gui_fail_user_action: %s",
+                       bufdup);
+}                               /* end mom_gui_fail_user_action */
+
 
 // destructor for momgui_dispobjinfo_ty, for g_hash_table_new_full
 static void
@@ -1965,7 +1993,7 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
                   pb += pn - pc;
                 }
             };
-          momgui_cmdstatus_printf ("completion %s: %s", bufid, combuf);
+          mom_gui_cmdstatus_printf ("completion %s: %s", bufid, combuf);
         };
     }
   gtk_text_buffer_place_cursor (mom_cmdtextbuf, &endwit);
@@ -2171,7 +2199,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
              mom_cmdcomplprefix);
         }
       if (!mo_dyncast_set (mom_cmdcomplset))
-        momgui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
+        mom_gui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
       else if ((complsiz = mo_set_size (mom_cmdcomplset)) == 1)
         {
           /// single completion
@@ -2219,8 +2247,8 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                           pb += pn - pc;
                         }
                     };
-                  momgui_cmdstatus_printf ("completion %s: %s", bufid,
-                                           combuf);
+                  mom_gui_cmdstatus_printf ("completion %s: %s", bufid,
+                                            combuf);
                 };
               gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
             }
@@ -2228,7 +2256,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         }
       else if (complsiz == 0)
         {
-          momgui_cmdstatus_printf ("no completion for: %s", wordtxt);
+          mom_gui_cmdstatus_printf ("no completion for: %s", wordtxt);
         }
       else if (complsiz < MOMGUI_COMPLETION_MENU_MAX)
         {
@@ -2278,7 +2306,7 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
               gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
               gtk_text_buffer_end_user_action (mom_cmdtextbuf);
             }
-          momgui_cmdstatus_printf
+          mom_gui_cmdstatus_printf
             ("%d completions for %s :: %s ... %s",
              complsiz, wordtxt,
              mo_string_cstr (mo_objref_namev
@@ -2288,8 +2316,8 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
         }
       else
         {
-          momgui_cmdstatus_printf ("too many %d completions for: %s",
-                                   (int) complsiz, wordtxt);
+          mom_gui_cmdstatus_printf ("too many %d completions for: %s",
+                                    (int) complsiz, wordtxt);
         }
       g_free (wordtxt);
       return TRUE;              // don't propagate
@@ -3155,9 +3183,9 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
                                       &cpars->mo_gcp_curiter, curoff);
   if (cpars->mo_gcp_statusupdate)
-    momgui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
-                             (unsigned) curoff,
-                             mo_string_cstr (cpars->mo_gcp_errstrv));
+    mom_gui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
+                              (unsigned) curoff,
+                              mo_string_cstr (cpars->mo_gcp_errstrv));
 }                               /* end momgui_cmdparsefailure */
 
 static void
@@ -3246,7 +3274,9 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
                                 mo_objref_pnamestr (operfunobr));
               mo_signature_object_to_value_sigt *operfun =
                 operfunobr->mo_ob_payldata;
+              momgui_user_cmdparse = cpars;
               mo_value_t operationres = (*operfun) (operationobr);
+              momgui_user_cmdparse = NULL;
               v = operationres;
             }
         }
@@ -3261,15 +3291,15 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
   if (cpars->mo_gcp_statusupdate)
     {
       if (cpars->mo_gcp_onlyparse)
-        momgui_cmdstatus_printf ("parsed %d values and %u chars",
-                                 cnt,
-                                 gtk_text_buffer_get_char_count
-                                 (mom_cmdtextbuf));
+        mom_gui_cmdstatus_printf ("parsed %d values and %u chars",
+                                  cnt,
+                                  gtk_text_buffer_get_char_count
+                                  (mom_cmdtextbuf));
       else
-        momgui_cmdstatus_printf ("evaluated %d values in %u chars",
-                                 cnt,
-                                 gtk_text_buffer_get_char_count
-                                 (mom_cmdtextbuf));
+        mom_gui_cmdstatus_printf ("evaluated %d values in %u chars",
+                                  cnt,
+                                  gtk_text_buffer_get_char_count
+                                  (mom_cmdtextbuf));
     }
 }                               /* end of momgui_cmdparse_full_buffer */
 
@@ -3493,8 +3523,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   MOM_INFORMPRINTF ("appwin@%p/%s/%s", mom_appwin,
                     G_OBJECT_CLASS_NAME (mom_appwin),
                     G_OBJECT_TYPE_NAME (mom_appwin));
-  momgui_cmdstatus_printf ("loaded %u objects & %u modules",
-                           mom_load_nb_objects (), mom_load_nb_modules ());
+  mom_gui_cmdstatus_printf ("loaded %u objects & %u modules",
+                            mom_load_nb_objects (), mom_load_nb_modules ());
   gtk_widget_show_all (mom_appwin);
   gtk_widget_show_all (mom_cmdwin);
 }                               /* end mom_gtkapp_activate */
@@ -3607,8 +3637,8 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 }                               /* end mom_run_gtk */
 
 // print to the command statusbar
-static void
-momgui_cmdstatus_printf (const char *fmt, ...)
+void
+mom_gui_cmdstatus_printf (const char *fmt, ...)
 {
   static guint statctxid;
   va_list args = { };
@@ -3629,6 +3659,6 @@ momgui_cmdstatus_printf (const char *fmt, ...)
     MOM_FATAPRINTF ("cmdstatus_printf: vasprintf failed fmt=%s", fmt);
   gtk_statusbar_push (GTK_STATUSBAR (mom_cmdstatusbar), statctxid, buf);
   free (buf);
-}                               /* end momgui_cmdstatus_printf */
+}                               /* end mom_gui_cmdstatus_printf */
 
 // end of file gui.c

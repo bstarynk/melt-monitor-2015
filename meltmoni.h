@@ -1702,6 +1702,11 @@ extern bool mom_without_gui;
 void mom_run_gtk (int *pargc, char ***pargv, char **dispobjs);
 void mo_gui_display_object (mo_objref_t ob);
 void mo_gui_undisplay_object (mo_objref_t ob);
+void mom_gui_fail_user_action (const char *fmt, ...)
+__attribute__ ((format (printf, 1, 2), noreturn));
+void
+mom_gui_cmdstatus_printf (const char *fmt, ...)
+__attribute__ ((format (printf, 1, 2)));
 
 // the prefix & suffix of plugins
 #define MOM_PLUGIN_PREFIX "momplug_"
