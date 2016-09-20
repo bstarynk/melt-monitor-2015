@@ -783,6 +783,30 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
 
 }                               /* end mom_cemit_define_fields */
 
+
+void
+mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
+                              mo_objref_t typobr, mo_objref_t parobr,
+                              int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_define_enumerators: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_define_enumerators: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
+                    "cemit_define_enumerators: bad typobr");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (parobr),
+                    "cemit_define_enumerators: bad parobr");
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta, "cemit_define_enumerators: %s too deep %d",
+                      mo_objref_pnamestr (typobr), depth);
+}                               /* end of mom_cemit_define_enumerators */
+
+
 void
 mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
                         mo_objref_t typobr)
@@ -846,6 +870,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
       else
         fputc ('\n', csta->mo_cemsta_fil);
+      mom_cemit_define_enumerators (csta, typobr, typobr, 0);
       mom_cemit_printf (csta, "}; // end enum mo%s_en\n", typobid);
       break;
     case CASE_CTYPE_MOM (signature_class):
@@ -898,10 +923,6 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
       mom_cemit_define_ctype (csta, ctypob);
     }
-
-  MOM_WARNPRINTF ("unimplemented cemit_ctype ctypv=%s",
-                  mo_value_pnamestr (ctypv));
-#warning unimplemented cemit_ctypes
 }                               /* end of mom_cemit_ctypes */
 
 
