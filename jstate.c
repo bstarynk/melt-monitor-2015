@@ -2062,15 +2062,15 @@ mo_loader_load_class (mo_loader_ty * ld)
       if (!mo_get_hi_lo_ids_from_cstring (&clahid, &claloid, classidstr)
           || clahid == 0 || claloid == 0)
         MOM_FATAPRINTF ("Sqlite loader base %s with bad ob_classid %s"
-			" for ob_id %s",
+                        " for ob_id %s",
                         mo_string_cstr (ld->mo_ld_sqlitepathv),
-			classidstr, obidstr);
+                        classidstr, obidstr);
       mo_objref_t classobr = mo_objref_find_hid_loid (clahid, claloid);
       if (classobr == NULL)
         MOM_FATAPRINTF ("Sqlite loader base %s ob_classid %s not found"
-			" for ob_id %s",
+                        " for ob_id %s",
                         mo_string_cstr (ld->mo_ld_sqlitepathv),
-			classidstr, obidstr);
+                        classidstr, obidstr);
       // set the object's class
       obr->mo_ob_class = classobr;
     };                          /* end while sqlite3_step classload */

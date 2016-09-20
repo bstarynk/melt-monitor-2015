@@ -848,7 +848,31 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (typobr), flix,
                           mo_objref_pnamestr (fieldobr),
                           mo_objref_pnamestr (fieldobr->mo_ob_class));
-
+      mo_objref_t ftypobr =
+        mo_dyncast_objref (mo_objref_get_attr
+                           (fieldobr, MOM_PREDEF (c_type)));
+      if (!ftypobr)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_fields: in %s field#%d %s has no c_type",
+                          mo_objref_pnamestr (typobr), flix,
+                          mo_objref_pnamestr (fieldobr));
+      if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, ftypobr))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_fields: in %s field#%d %s with unknown c_type %s",
+                          mo_objref_pnamestr (typobr), flix,
+                          mo_objref_pnamestr (fieldobr),
+                          mo_objref_pnamestr (ftypobr));
+      fputc (' ', csta->mo_cemsta_fil);
+      mom_cemit_write_ctype (csta, ftypobr);
+      mo_value_t fieldnamv = mo_objref_namev (fieldobr);
+      char fieldid[MOM_CSTRIDSIZ];
+      memset (fieldid, 0, sizeof (fieldid));
+      mo_objref_idstr (fieldid, fieldobr);
+      if (fieldnamv)
+        mom_cemit_printf (" mo_%s_fd; // %s\n", mo_string_cstr (fieldnamv),
+                          fieldid);
+      else
+        mom_cemit_printf ("mo%s_fd;\n", fieldid);
     }
 }                               /* end mom_cemit_define_fields */
 
@@ -856,7 +880,7 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
 void
 mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                               mo_objref_t typobr, mo_objref_t parobr,
-                              int depth)
+                              int depth, long *pprev)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
@@ -873,6 +897,26 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_define_enumerators: %s too deep %d",
                       mo_objref_pnamestr (typobr), depth);
+  if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_define_enumerators: %s is unknown type",
+                      mo_objref_pnamestr (typobr));
+  mo_objref_t extendobr =
+    mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (extend)));
+  if (extendobr)
+    {
+      if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, extendobr))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_enumerators: %s extended by unknown type %s",
+                          mo_objref_pnamestr (typobr),
+                          mo_objref_pnamestr (extendobr));
+      mom_cemit_printf (csta, " // enumeration %s extended by %s\n",
+                        mo_objref_pnamestr (typobr),
+                        mo_objref_pnamestr (extendobr));
+      mom_cemit_define_enumerators (csta, extendobr, parobr, depth + 1,
+                                    pprev);
+    }
+  
 }                               /* end of mom_cemit_define_enumerators */
 
 
@@ -934,13 +978,16 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       mom_cemit_printf (csta, "}; // end union mo%s_un\n", typobid);
       break;
     case CASE_CTYPE_MOM (enum_ctype_class):
-      mom_cemit_printf (csta, "enum mo%s_en {", typobid);
-      if (typnamv)
-        mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
-      else
-        fputc ('\n', csta->mo_cemsta_fil);
-      mom_cemit_define_enumerators (csta, typobr, typobr, 0);
-      mom_cemit_printf (csta, "}; // end enum mo%s_en\n", typobid);
+      {
+        long prevnum = -1;
+        mom_cemit_printf (csta, "enum mo%s_en {", typobid);
+        if (typnamv)
+          mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
+        else
+          fputc ('\n', csta->mo_cemsta_fil);
+        mom_cemit_define_enumerators (csta, typobr, typobr, 0, &prevnum);
+        mom_cemit_printf (csta, "}; // end enum mo%s_en\n", typobid);
+      }
       break;
     case CASE_CTYPE_MOM (signature_class):
       break;
