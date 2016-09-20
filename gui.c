@@ -228,14 +228,23 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
                        mo_objref_pnamestr (dinf->mo_gdo_inobr));
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dinf->mo_gdo_dispobr);
+  /// temporary informs for debugging
   if (dinf->mo_gdo_hidezoombutton1)
     {
+      MOM_INFORMPRINTF("destroy_dispobjinfo hidezbut1@%p/%s/%s", dinf->mo_gdo_hidezoombutton1,
+		       G_OBJECT_CLASS_NAME (dinf->mo_gdo_hidezoombutton1),
+		       G_OBJECT_TYPE_NAME (dinf->mo_gdo_hidezoombutton1));
       gtk_widget_destroy (dinf->mo_gdo_hidezoombutton1);
+      MOM_INFORMPRINTF("destroy_dispobjinfo destroyed hidezbut1@%p", dinf->mo_gdo_hidezoombutton1);
       dinf->mo_gdo_hidezoombutton1 = NULL;
     }
   if (dinf->mo_gdo_hidezoombutton2)
     {
+      MOM_INFORMPRINTF("destroy_dispobjinfo hidezbut2@%p/%s/%s", dinf->mo_gdo_hidezoombutton2,
+		       G_OBJECT_CLASS_NAME (dinf->mo_gdo_hidezoombutton2),
+		       G_OBJECT_TYPE_NAME (dinf->mo_gdo_hidezoombutton2));
       gtk_widget_destroy (dinf->mo_gdo_hidezoombutton2);
+      MOM_INFORMPRINTF("destroy_dispobjinfo destroyed hidezbut2@%p", dinf->mo_gdo_hidezoombutton2);
       dinf->mo_gdo_hidezoombutton2 = NULL;
     }
   if (dinf->mo_gdo_startmark && dinf->mo_gdo_endmark

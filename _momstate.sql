@@ -35,6 +35,7 @@ INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
+INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
@@ -65,6 +66,7 @@ INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
+INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
@@ -412,6 +414,20 @@ INSERT INTO t_objects VALUES('_5JG8lVw6jwlUT7PLK',1473050875,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5Kq0Pz5eFAULvdMEL',1474372791,'
+{
+ "@name": "user_actions",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute to keep the set of user actions in the_GUI"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
 {
  "attrs": {
@@ -467,7 +483,7 @@ INSERT INTO t_objects VALUES('_6Lu6DXoGivCCHMwzV',1474362254,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473159222,'
+INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1474373623,'
 {
  "@name": "the_GUI",
  "attrs": {
@@ -475,6 +491,14 @@ INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1473159222,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "object describing the initial GUI"
+   },
+   {
+    "at": "_5Kq0Pz5eFAULvdMEL",
+    "va": {
+     "tup": [
+      "_7al47yMPGToSh0ryC"
+     ]
+    }
    }
   ]
  },
@@ -517,6 +541,20 @@ INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the fields tuple (e.g. in struct or union ctype...)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474373623,'
+{
+ "@name": "class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "anything related to class, also a user action $class (object class)"
    }
   ]
  },
