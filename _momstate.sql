@@ -35,6 +35,7 @@ INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
+INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
@@ -558,6 +559,20 @@ INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for hashset payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_84n6z6xA40eduUUjh',1474367138,'
+{
+ "@name": "class_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the class of classes"
    }
   ]
  },

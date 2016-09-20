@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 37
+#define MOM_NB_PREDEFINED 38
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -51,6 +51,9 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 
 //+ the char ctype
 MOM_HAS_PREDEFINED(char,_2Sj1dLJSbvyN3kMgI,677585412,3745052711434301676,2350112261)
+
+//+ the class of classes
+MOM_HAS_PREDEFINED(class_class,_84n6z6xA40eduUUjh,1904719392,6022568611958915173,1711456220)
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
@@ -180,6 +183,11 @@ MOM_HAS_PREDEFINED(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,4789905
 #define moid_char _2Sj1dLJSbvyN3kMgI
 #undef monam_2Sj1dLJSbvyN3kMgI
 #define monam_2Sj1dLJSbvyN3kMgI char
+
+#undef moid_class_class
+#define moid_class_class _84n6z6xA40eduUUjh
+#undef monam_84n6z6xA40eduUUjh
+#define monam_84n6z6xA40eduUUjh class_class
 
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
@@ -338,6 +346,7 @@ enum mom_predefined_hashes_en {
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
   momphash_char=2350112261,
+  momphash_class_class=1711456220,
   momphash_comment=2072874222,
   momphash_double=3623603139,
   momphash_enum_ctype_class=452162142,
@@ -376,7 +385,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 37
+#define MOM_NB_NAMED_PREDEFINED 38
 
 
 #undef MOM_HAS_PREDEFINED
