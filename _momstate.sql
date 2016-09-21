@@ -89,7 +89,12 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    {
     "set": [
      "_0Sp1Lg7ctajS7oX5i",
-     "_7831xB7d1ulmsaCYS"
+     "_1WX2mf4xwC5TU5ml7",
+     "_20B54zdX0j8vYUdsf",
+     "_2Sj1dLJSbvyN3kMgI",
+     "_3K62tYRL1azRF0cP2",
+     "_7831xB7d1ulmsaCYS",
+     "_8BM91hTnefUPcYXzf"
     ]
    },
    {
