@@ -28,6 +28,7 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
+INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
@@ -65,6 +66,7 @@ INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
+INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
@@ -114,6 +116,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_2Sj1dLJSbvyN3kMgI",
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
+     "_4iH7xI2JtAomiBySj",
      "_62H0GDHPCtIRvAdDd",
      "_6r06aqWaPdfZgAKBP",
      "_6y88mWwevVhETpkig",
@@ -121,6 +124,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
      "_7EH4RTtyF1BioGEDK",
+     "_7JP45UsR282DkTrJS",
      "_80D4pPU1WGn7IZwh6",
      "_8t42m75faVNE2kWxu",
      "_8BM91hTnefUPcYXzf",
@@ -507,6 +511,26 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
+{
+ "@name": "array_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": {
+     "ssize": 115,
+     "string": [
+      "class for array ctypes, the first component#0 is the element ctype; the second c",
+      "omponent#1 is the dimension, if an"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_84n6z6xA40eduUUjh','','','');
 INSERT INTO t_objects VALUES('_4wr5hqASKB1b0Dd5D',1473102723,'
 {
  "@name": "payload_gobject",
@@ -797,6 +821,20 @@ INSERT INTO t_objects VALUES('_7EH4RTtyF1BioGEDK',1474473165,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_7JP45UsR282DkTrJS',1474477388,'
+{
+ "@name": "pointer_ctype_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of pointer ctypes; the first component #0 is the pointed ctype."
+   }
+  ]
+ },
+ "comps": null
+}
+','_84n6z6xA40eduUUjh','','','');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",

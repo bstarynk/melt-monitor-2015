@@ -23,10 +23,13 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 22
+#define MOM_NB_GLOBAL 24
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
+
+//+ class for array ctypes, the first component#0 is the element ctype; the second c
+MOM_HAS_GLOBAL(array_ctype_class,_4iH7xI2JtAomiBySj,1017368870,4801852483639973667,2717929419)
 
 //+ the boolean ctype
 MOM_HAS_GLOBAL(bool,_3K62tYRL1azRF0cP2,889079074,5625971388704506234,1367612090)
@@ -60,6 +63,9 @@ MOM_HAS_GLOBAL(intptr_t,_8t42m75faVNE2kWxu,2001748354,8327845228897843290,178702
 
 //+ the long ctype
 MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
+
+//+ class of pointer ctypes; the first component #0 is the pointed ctype.
+MOM_HAS_GLOBAL(pointer_ctype_class,_7JP45UsR282DkTrJS,1831760218,601741714220354864,2152013395)
 
 //+ for set related stuff
 MOM_HAS_GLOBAL(set,_7h20HFhtjZljRLtbU,1718490147,6717538159123036634,3433581947)
@@ -95,6 +101,11 @@ MOM_HAS_GLOBAL(uintptr_t,_21J3zZDnsKTbAVBFo,478765968,1910349516108587076,278664
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 
 
+
+#undef moid_array_ctype_class
+#define moid_array_ctype_class _4iH7xI2JtAomiBySj
+#undef monam_4iH7xI2JtAomiBySj
+#define monam_4iH7xI2JtAomiBySj array_ctype_class
 
 #undef moid_bool
 #define moid_bool _3K62tYRL1azRF0cP2
@@ -150,6 +161,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #define moid_long _20B54zdX0j8vYUdsf
 #undef monam_20B54zdX0j8vYUdsf
 #define monam_20B54zdX0j8vYUdsf long
+
+#undef moid_pointer_ctype_class
+#define moid_pointer_ctype_class _7JP45UsR282DkTrJS
+#undef monam_7JP45UsR282DkTrJS
+#define monam_7JP45UsR282DkTrJS pointer_ctype_class
 
 #undef moid_set
 #define moid_set _7h20HFhtjZljRLtbU
@@ -210,6 +226,7 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #ifndef MOM_GLOBAL_HASHES
 #define MOM_GLOBAL_HASHES 1
 enum mom_global_hashes_en {
+  momghash_array_ctype_class=2717929419,
   momghash_bool=1367612090,
   momghash_char=2350112261,
   momghash_class_useract=3817197504,
@@ -221,6 +238,7 @@ enum mom_global_hashes_en {
   momghash_int8_t=2306438205,
   momghash_intptr_t=1787024167,
   momghash_long=314494134,
+  momghash_pointer_ctype_class=2152013395,
   momghash_set=3433581947,
   momghash_set_useract=4059762204,
   momghash_string=226985679,
@@ -241,7 +259,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 22
+#define MOM_NB_NAMED_GLOBAL 24
 
 
 #undef MOM_HAS_GLOBAL

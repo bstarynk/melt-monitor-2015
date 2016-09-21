@@ -612,7 +612,7 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
 
 void
 mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
-                           mo_objref_t typobr, const char *forstr)
+                           mo_objref_t typobr, const char *forstr, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
@@ -626,6 +626,9 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
                     csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_write_ctype_for: bad typobr");
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta, "cemit_write_ctype_for: %s too deep %d, for %s",
+                      mo_objref_pnamestr (typobr), depth, forstr);
 #define MOM_NBCASE_CTYPE 163
 #define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr != MOM_PREDEF(Ob))					\
@@ -675,19 +678,19 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
       case CASE_GLOBALCTYPE_MOM (int64_t):      // momglob_int64_t
         mom_cemit_printf (csta, "int64_t %s", forstr);
       return;
-      case CASE_GLOBALCTYPE_MOM (uintptr_t):     // momglob_uintptr_t
+      case CASE_GLOBALCTYPE_MOM (uintptr_t):    // momglob_uintptr_t
         mom_cemit_printf (csta, "uintptr_t %s", forstr);
       return;
-      case CASE_GLOBALCTYPE_MOM (uint8_t):       // momglob_uint8_t
+      case CASE_GLOBALCTYPE_MOM (uint8_t):      // momglob_uint8_t
         mom_cemit_printf (csta, "uint8_t %s", forstr);
       return;
-      case CASE_GLOBALCTYPE_MOM (uint16_t):      // momglob_uint16_t
+      case CASE_GLOBALCTYPE_MOM (uint16_t):     // momglob_uint16_t
         mom_cemit_printf (csta, "uint16_t %s", forstr);
       return;
-      case CASE_GLOBALCTYPE_MOM (uint32_t):      // momglob_uint32_t
+      case CASE_GLOBALCTYPE_MOM (uint32_t):     // momglob_uint32_t
         mom_cemit_printf (csta, "uint32_t %s", forstr);
       return;
-      case CASE_GLOBALCTYPE_MOM (uint64_t):      // momglob_uint64_t
+      case CASE_GLOBALCTYPE_MOM (uint64_t):     // momglob_uint64_t
         mom_cemit_printf (csta, "uint64_t %s", forstr);
       return;
     default:
@@ -708,6 +711,41 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
                           forstr);
       else
         mom_cemit_printf (csta, "mo%s_ty %s", typobid, forstr);
+      return;
+    }
+  if (typobr->mo_ob_class == momglob_pointer_ctype_class)
+    {
+      mo_objref_t pointedtypobr =
+        mo_dyncast_objref (mo_objref_get_comp (typobr, 0));
+      if (!pointedtypobr)
+        MOM_CEMITFAILURE (csta,
+                          "write_ctype_for: pointer typobr %s without pointed-type (comp#0)",
+                          mo_objref_pnamestr (typobr));
+      const char *pointedforstr = mom_gc_printf (" *%s", forstr);
+      mom_cemit_write_ctype_for (csta, pointedtypobr, pointedforstr,
+                                 depth + 1);
+      return;
+    }
+  else if (typobr->mo_ob_class == momglob_array_ctype_class)
+    {
+      mo_objref_t elementypobr =
+        mo_dyncast_objref (mo_objref_get_comp (typobr, 0));
+      mo_value_t dimv = mo_objref_get_comp (typobr, 1);
+      const char *arrayforstr = NULL;
+      if (!dimv)
+        arrayforstr =
+          mom_gc_printf (" %s[/*MOMFLEXIBLE %s*/]", forstr,
+                         mo_objref_pnamestr (typobr));
+      else if (mo_value_is_int (dimv))
+        arrayforstr =
+          mom_gc_printf (" %s[%ld]", forstr,
+                         (long) mo_value_to_int (dimv, -1));
+      else
+        MOM_CEMITFAILURE (csta,
+                          "write_ctype_for: array typobr %s with bad dimension %s",
+                          mo_objref_pnamestr (typobr),
+                          mo_value_pnamestr (dimv));
+      mom_cemit_write_ctype_for (csta, elementypobr, arrayforstr, depth + 1);
       return;
     }
   MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s unknown",
@@ -737,14 +775,19 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
   memset (typobid, 0, sizeof (typobid));
   mo_objref_idstr (typobid, typobr);
 #define MOM_NBCASE_CTYPE 331
-#define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+#define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr->mo_ob_class != MOM_PREDEF(Ob))			\
+    goto defaultctypecase;					\
+  goto labctype_##Ob;						\
+  labctype_##Ob
+#define CASE_GLOBALCTYPE_MOM(Ob) momghash_##Ob % MOM_NBCASE_CTYPE: \
+  if (typobr != momglob_##Ob)					\
     goto defaultctypecase;					\
   goto labctype_##Ob;						\
   labctype_##Ob
   switch (mo_objref_hash (typobr->mo_ob_class) % MOM_NBCASE_CTYPE)
     {
-    case CASE_CTYPE_MOM (basic_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (basic_ctype_class):
       {
         mo_value_t ccodv = mo_objref_get_attr (typobr, MOM_PREDEF (c_code));
         if (!mo_dyncast_string (ccodv))
@@ -756,23 +799,23 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                           mo_string_cstr (ccodv), typobid);
       }
       break;
-    case CASE_CTYPE_MOM (struct_pointer_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (struct_pointer_ctype_class):
       mom_cemit_printf (csta, "typedef struct mo%s_ptrst* mo%s_ty;\n",
                         typobid, typobid);
       break;
-    case CASE_CTYPE_MOM (struct_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (struct_ctype_class):
       mom_cemit_printf (csta, "typedef struct mo%s_st mo%s_ty;\n",
                         typobid, typobid);
       break;
-    case CASE_CTYPE_MOM (union_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (union_ctype_class):
       mom_cemit_printf (csta, "typedef union mo%s_un mo_%s_ty;\n",
                         typobid, typobid);
       break;
-    case CASE_CTYPE_MOM (enum_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (enum_ctype_class):
       mom_cemit_printf (csta, "typedef enum mo%s_en mo_%s_ty;\n",
                         typobid, typobid);
       break;
-    case CASE_CTYPE_MOM (signature_class):
+    case CASE_PREDEFCTYPE_MOM (signature_class):
       {
         mo_value_t formtytup =
           mo_dyncast_tuple (mo_objref_get_attr
@@ -806,29 +849,28 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                                 mo_objref_pnamestr (typobr));
           };
         mom_cemit_printf (csta, "typedef ");
-        mom_cemit_write_ctype_for (csta, restypobr, "");
+        mom_cemit_write_ctype_for (csta, restypobr, "", 0);
         mom_cemit_printf (csta, " mo%s_ty (", typobid);
         for (unsigned foix = 0; foix < nbformals; foix++)
           {
             if (foix > 0)
               fputs (", ", csta->mo_cemsta_fil);
             mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
-            mom_cemit_write_ctype_for (csta, curformobr, "");
+            mom_cemit_write_ctype_for (csta, curformobr, "", 0);
           };
         mom_cemit_printf (csta, ");\n");
       }
       break;
     default:
     defaultctypecase:
-      MOM_CEMITFAILURE (csta,
-                        "cemit_declare_ctype: typobr %s has bad class %s",
-                        mo_objref_pnamestr (typobr),
-                        mo_objref_pnamestr (typobr->mo_ob_class));
-
+      {
+        const char *forstr = mom_gc_printf (" mo%s_ty", typobid);
+        mom_cemit_write_ctype_for (csta, typobr, forstr, 0);
+      };
       break;
     }
 #undef MOM_NBCASE_CTYPE
-#undef CASE_CTYPE_MOM
+#undef CASE_PREDEFCTYPE_MOM
   mo_value_t typobnamv = mo_objref_namev (typobr);
   if (typobnamv)
     mom_cemit_printf (csta, "typedef mo%s_ty mo_%s_ty\n",
@@ -917,7 +959,7 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
         fieldstr = mom_gc_printf (" mo_%s_fd ", mo_string_cstr (fieldnamv));
       else
         fieldstr = mom_gc_printf (" mo%s_fd", fieldid);
-      mom_cemit_write_ctype_for (csta, ftypobr, fieldstr);
+      mom_cemit_write_ctype_for (csta, ftypobr, fieldstr, 0);
       mom_cemit_printf (csta, ";  // %s\n", fieldid);
     }
 }                               /* end mom_cemit_define_fields */
@@ -1035,16 +1077,21 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
   mo_objref_idstr (typobid, typobr);
   mo_value_t typnamv = mo_objref_namev (typobr);
 #define MOM_NBCASE_CTYPE 331
-#define CASE_CTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+#define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr->mo_ob_class != MOM_PREDEF(Ob))			\
+    goto defaultctypecase;					\
+  goto labctype_##Ob;						\
+  labctype_##Ob
+#define CASE_GLOBALCTYPE_MOM(Ob) momghash_##Ob % MOM_NBCASE_CTYPE: \
+  if (typobr != momglob_##Ob)					\
     goto defaultctypecase;					\
   goto labctype_##Ob;						\
   labctype_##Ob
   switch (mo_objref_hash (typobr->mo_ob_class) % MOM_NBCASE_CTYPE)
     {
-    case CASE_CTYPE_MOM (basic_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (basic_ctype_class):
       break;
-    case CASE_CTYPE_MOM (struct_pointer_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (struct_pointer_ctype_class):
       mom_cemit_printf (csta, "struct mo%s_ptrst {", typobid);
       if (typnamv)
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
@@ -1053,7 +1100,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       mom_cemit_define_fields (csta, typobr, false, 0);
       mom_cemit_printf (csta, "}; // end struct mo%s_ptrst\n", typobid);
       break;
-    case CASE_CTYPE_MOM (struct_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (struct_ctype_class):
       mom_cemit_printf (csta, "struct mo%s_st mo%s_ty {", typobid, typobid);
       if (typnamv)
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
@@ -1062,7 +1109,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       mom_cemit_define_fields (csta, typobr, false, 0);
       mom_cemit_printf (csta, "}; // end struct mo%s_st\n", typobid);
       break;
-    case CASE_CTYPE_MOM (union_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (union_ctype_class):
       mom_cemit_printf (csta, "union mo%s_un {", typobid);
       if (typnamv)
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
@@ -1071,7 +1118,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       mom_cemit_define_fields (csta, typobr, true, 0);
       mom_cemit_printf (csta, "}; // end union mo%s_un\n", typobid);
       break;
-    case CASE_CTYPE_MOM (enum_ctype_class):
+    case CASE_PREDEFCTYPE_MOM (enum_ctype_class):
       {
         long prevnum = -1;
         mom_cemit_printf (csta, "enum mo%s_en {", typobid);
@@ -1083,7 +1130,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
         mom_cemit_printf (csta, "}; // end enum mo%s_en\n", typobid);
       }
       break;
-    case CASE_CTYPE_MOM (signature_class):
+    case CASE_PREDEFCTYPE_MOM (signature_class):
       break;
     default:
     defaultctypecase:
@@ -1094,7 +1141,8 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       break;
     }
 #undef MOM_NBCASE_CTYPE
-#undef CASE_CTYPE_MOM
+#undef CASE_PREDEFCTYPE_MOM
+#undef CASE_GLOBALCTYPE_MOM
 }                               /* end mom_cemit_define_ctype */
 
 
