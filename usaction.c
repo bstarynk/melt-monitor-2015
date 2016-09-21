@@ -96,4 +96,5 @@ mofun_class_useract (mo_objref_t obuact)
 }                               /* end of mofun_class_useract */
 
 // momglob_set momglob_tuple momglob_string
+// momglob_set_useract momglob_tuple_useract
 // end of file usaction.c
