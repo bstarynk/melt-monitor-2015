@@ -667,18 +667,21 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
 #undef MOM_NBCASE_CTYPE
 #undef CASE_PREDEFCTYPE_MOM
 #undef CASE_GLOBALCTYPE_MOM
-  if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
-    MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s unknown",
-                      mo_objref_pnamestr (typobr));
-  char typobid[MOM_CSTRIDSIZ];
-  memset (typobid, 0, sizeof (typobid));
-  mo_objref_idstr (typobid, typobr);
-  mo_value_t typobnamv = mo_objref_namev (typobr);
-  if (typobnamv)
-    mom_cemit_printf (csta, "mo_%s_ty %s", mo_string_cstr (typobnamv),
-                      forstr);
-  else
-    mom_cemit_printf (csta, "mo%s_ty %s", typobid, forstr);
+  if (mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
+    {
+      char typobid[MOM_CSTRIDSIZ];
+      memset (typobid, 0, sizeof (typobid));
+      mo_objref_idstr (typobid, typobr);
+      mo_value_t typobnamv = mo_objref_namev (typobr);
+      if (typobnamv)
+        mom_cemit_printf (csta, "mo_%s_ty %s", mo_string_cstr (typobnamv),
+                          forstr);
+      else
+        mom_cemit_printf (csta, "mo%s_ty %s", typobid, forstr);
+      return;
+    }
+  MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s unknown",
+                    mo_objref_pnamestr (typobr));
 }                               /* end mom_cemit_write_ctype_for */
 
 

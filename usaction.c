@@ -24,7 +24,6 @@
 /// momglob_class_useract is needed
 /// the $class (object class) GUI user action is setting the
 /// mo_ob_class of object to class
-#define moid_class_useract _7831xB7d1ulmsaCYS
 const char
 MOM_PREFIXID (mosig_, class_useract)[] = "signature_object_to_value";
 
@@ -96,4 +95,5 @@ mofun_class_useract (mo_objref_t obuact)
   return obr;
 }                               /* end of mofun_class_useract */
 
+// momglob_set momglob_tuple momglob_string
 // end of file usaction.c
