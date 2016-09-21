@@ -1755,7 +1755,7 @@ mo_loader_set_globals (mo_loader_ty * ld)
 #define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) do {	\
     momglob_##Nam = mo_objref_find_hid_loid(Hid,Loid);	\
   if (!momglob_##Nam)					\
-    MOM_WARNPRINTF("cannot find global %s (%s)",	\
+    MOM_FATAPRINTF("cannot find global %s (%s)",	\
 		   #Nam, #Idstr); } while(0);
 #include "_mom_global.h"
 }                               /* end of mo_loader_set_globals */
