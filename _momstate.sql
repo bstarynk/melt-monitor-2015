@@ -88,6 +88,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
   "vectval": [
    {
     "set": [
+     "_0Sp1Lg7ctajS7oX5i",
      "_7831xB7d1ulmsaCYS"
     ]
    },

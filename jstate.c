@@ -157,12 +157,14 @@ mo_dump_csource_global_objects_set (mo_dumper_ty * du)
           else if (mom_valid_name (pn))
             globobr = mo_find_named_cstr (pn);
           if (!globobr)
-            MOM_WARNPRINTF_AT (*psrcfile, linecnt, "unknown global %s", pn);
-          else if (mo_objref_space (globobr) == mo_SPACE_PREDEF)
+            {
+              MOM_WARNPRINTF_AT (*psrcfile, linecnt, "unknown global %s", pn);
+              continue;
+            }
+          if (mo_objref_space (globobr) == mo_SPACE_PREDEF)
             MOM_WARNPRINTF_AT (*psrcfile, linecnt, "predefined global %s",
                                pn);
-          else
-            globhset = mo_hashset_put (globhset, globobr);
+          globhset = mo_hashset_put (globhset, globobr);
         }
       while (!feof (fsrc));
       free (linebuf), linebuf = NULL;
@@ -802,8 +804,6 @@ mom_dumpobjsort_cmp (const void *p1, const void *p2)
 {
   mo_objref_t ob1 = *(mo_objref_t *) p1;
   mo_objref_t ob2 = *(mo_objref_t *) p2;
-  MOM_ASSERTPRINTF (mo_objref_space (ob1) == mo_SPACE_PREDEF, "bad ob1");
-  MOM_ASSERTPRINTF (mo_objref_space (ob2) == mo_SPACE_PREDEF, "bad ob2");
   mo_value_t nam1 = mo_objref_namev (ob1);
   mo_value_t nam2 = mo_objref_namev (ob2);
   if (nam1 && nam2)
@@ -1382,8 +1382,9 @@ mom_dump_state (const char *dirname)
       mo_objref_t globobr = mo_set_nth (globalset, ix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (globobr), "bad globobr ix=%d", ix);
       mo_dump_scan_objref (&dumper, globobr);
-      MOM_ASSERTPRINTF (mo_objref_space (globobr) != mo_SPACE_PREDEF,
-                        "predef ix=%d globobr@%p", ix, globobr);
+      MOM_ASSERTPRINTF (mo_objref_space (globobr) != mo_SPACE_NONE,
+                        "ix=%d transient globobr@%p: %s", ix, globobr,
+			mo_objref_pnamestr(globobr));
     };
   long nbobj = nbpredef + nbglobal;
   double lastbelltime = mom_elapsed_real_time ();
