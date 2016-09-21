@@ -78,6 +78,11 @@ INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
+INSERT INTO t_names VALUES('uint16_t','_8T17wDyPfJSmGz5Ve');
+INSERT INTO t_names VALUES('uint32_t','_6y88mWwevVhETpkig');
+INSERT INTO t_names VALUES('uint64_t','_6r06aqWaPdfZgAKBP');
+INSERT INTO t_names VALUES('uint8_t','_3WR20H7JRlNWkDV4y');
+INSERT INTO t_names VALUES('uintptr_t','_21J3zZDnsKTbAVBFo');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
@@ -104,17 +109,22 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_1WX2mf4xwC5TU5ml7",
      "_20B54zdX0j8vYUdsf",
      "_21x8NL3oau6heNEnt",
+     "_21J3zZDnsKTbAVBFo",
      "_2k61pgEBsCRJlTpHG",
      "_2Sj1dLJSbvyN3kMgI",
      "_3K62tYRL1azRF0cP2",
+     "_3WR20H7JRlNWkDV4y",
      "_62H0GDHPCtIRvAdDd",
+     "_6r06aqWaPdfZgAKBP",
+     "_6y88mWwevVhETpkig",
      "_6Z90lCcFC3RhKoHGv",
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
      "_7EH4RTtyF1BioGEDK",
      "_80D4pPU1WGn7IZwh6",
      "_8t42m75faVNE2kWxu",
-     "_8BM91hTnefUPcYXzf"
+     "_8BM91hTnefUPcYXzf",
+     "_8T17wDyPfJSmGz5Ve"
     ]
    },
    {
@@ -295,6 +305,20 @@ INSERT INTO t_objects VALUES('_20B54zdX0j8vYUdsf',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_21J3zZDnsKTbAVBFo',1474473958,'
+{
+ "@name": "uintptr_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype of unsigned int of same size as pointers"
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_21x8NL3oau6heNEnt',1474473182,'
 {
  "@name": "int64_t",
@@ -413,6 +437,20 @@ INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_3WR20H7JRlNWkDV4y',1474473996,'
+{
+ "@name": "uint8_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype of unsigned 8 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'
 {
  "@name": "payload_file",
@@ -689,6 +727,34 @@ INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_6r06aqWaPdfZgAKBP',1474474102,'
+{
+ "@name": "uint64_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for unsigned 64 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_6y88mWwevVhETpkig',1474474068,'
+{
+ "@name": "uint32_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for unsigned 32 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",
@@ -911,6 +977,20 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
+{
+ "@name": "uint16_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for unsigned 16 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_8TY6UsXJ3Djt71By3',1474294464,'
 {
  "@name": "c_type",

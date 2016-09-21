@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 17
+#define MOM_NB_GLOBAL 22
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -75,6 +75,21 @@ MOM_HAS_GLOBAL(tuple,_0Ki51w13UIhXkBrtx,182094590,1030173250716890461,1953491597
 
 //+ user action to make a tuple out of ingredients
 MOM_HAS_GLOBAL(tuple_useract,_80D4pPU1WGn7IZwh6,1890024075,1167320895490554690,4093394012)
+
+//+ ctype for unsigned 16 bits integers
+MOM_HAS_GLOBAL(uint16_t,_8T17wDyPfJSmGz5Ve,2095960231,8754725683271532674,3685407533)
+
+//+ ctype for unsigned 32 bits integers
+MOM_HAS_GLOBAL(uint32_t,_6y88mWwevVhETpkig,1549854677,77780675169495112,928133734)
+
+//+ ctype for unsigned 64 bits integers
+MOM_HAS_GLOBAL(uint64_t,_6r06aqWaPdfZgAKBP,1521789634,5736498198274362046,3596712632)
+
+//+ ctype of unsigned 8 bits integers
+MOM_HAS_GLOBAL(uint8_t,_3WR20H7JRlNWkDV4y,931346341,4733086605554652354,26685428)
+
+//+ ctype of unsigned int of same size as pointers
+MOM_HAS_GLOBAL(uintptr_t,_21J3zZDnsKTbAVBFo,478765968,1910349516108587076,2786648670)
 
 //+ the void ctype
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
@@ -161,6 +176,31 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_80D4pPU1WGn7IZwh6
 #define monam_80D4pPU1WGn7IZwh6 tuple_useract
 
+#undef moid_uint16_t
+#define moid_uint16_t _8T17wDyPfJSmGz5Ve
+#undef monam_8T17wDyPfJSmGz5Ve
+#define monam_8T17wDyPfJSmGz5Ve uint16_t
+
+#undef moid_uint32_t
+#define moid_uint32_t _6y88mWwevVhETpkig
+#undef monam_6y88mWwevVhETpkig
+#define monam_6y88mWwevVhETpkig uint32_t
+
+#undef moid_uint64_t
+#define moid_uint64_t _6r06aqWaPdfZgAKBP
+#undef monam_6r06aqWaPdfZgAKBP
+#define monam_6r06aqWaPdfZgAKBP uint64_t
+
+#undef moid_uint8_t
+#define moid_uint8_t _3WR20H7JRlNWkDV4y
+#undef monam_3WR20H7JRlNWkDV4y
+#define monam_3WR20H7JRlNWkDV4y uint8_t
+
+#undef moid_uintptr_t
+#define moid_uintptr_t _21J3zZDnsKTbAVBFo
+#undef monam_21J3zZDnsKTbAVBFo
+#define monam_21J3zZDnsKTbAVBFo uintptr_t
+
 #undef moid_void
 #define moid_void _1WX2mf4xwC5TU5ml7
 #undef monam_1WX2mf4xwC5TU5ml7
@@ -186,6 +226,11 @@ enum mom_global_hashes_en {
   momghash_string=226985679,
   momghash_tuple=1953491597,
   momghash_tuple_useract=4093394012,
+  momghash_uint16_t=3685407533,
+  momghash_uint32_t=928133734,
+  momghash_uint64_t=3596712632,
+  momghash_uint8_t=26685428,
+  momghash_uintptr_t=2786648670,
   momghash_void=478990535,
 }; // end mom_global_hashes_en
 #endif /*MOM_GLOBAL_HASHES */
@@ -196,7 +241,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 17
+#define MOM_NB_NAMED_GLOBAL 22
 
 
 #undef MOM_HAS_GLOBAL
