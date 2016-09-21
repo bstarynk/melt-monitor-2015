@@ -2169,15 +2169,9 @@ momgui_cmdtextview_populatepopup (GtkTextView * tview MOM_UNUSED,
     MOM_BACKTRACEPRINTF ("non-menu cmdtextview popup");
 }                               /* end momgui_cmdtextview_populatepopup */
 
-// for "move-cursor" signal to mom_cmdtview
 static void
-momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
-                               GtkMovementStep step MOM_UNUSED,
-                               gint count MOM_UNUSED,
-                               gboolean extendselection MOM_UNUSED,
-                               gpointer data MOM_UNUSED)
+momgui_cmd_updatematchpair (void)
 {
-  MOM_ASSERTPRINTF (tview == GTK_TEXT_VIEW (mom_cmdtview), "bad tview");
   GtkTextIter startit = { };
   GtkTextIter endit = { };
   gtk_text_buffer_get_bounds (mom_cmdtextbuf, &startit, &endit);
@@ -2249,9 +2243,6 @@ momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
     }
   if (found)
     {
-      MOM_INFORMPRINTF
-        ("cmdtextview_movecursor found cursoff=%u otheroff=%u pairix=%d",
-         cursoff, otheroff, pairix);
       GtkTextIter otherit = { };
       gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &otherit, otheroff);
       GtkTextIter aftercursit = cursorit;
@@ -2263,8 +2254,18 @@ momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_matchpair,
                                  &otherit, &afterotherit);
     }
-  else
-    MOM_INFORMPRINTF ("cmdtextview_movecursor notfound cursoff=%u", cursoff);
+}                               /* end momgui_cmd_updatematchpair */
+
+// for "move-cursor" signal to mom_cmdtview
+static void
+momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
+                               GtkMovementStep step MOM_UNUSED,
+                               gint count MOM_UNUSED,
+                               gboolean extendselection MOM_UNUSED,
+                               gpointer data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (tview == GTK_TEXT_VIEW (mom_cmdtview), "bad tview");
+  momgui_cmd_updatematchpair ();
 }                               /* end momgui_cmdtextview_movecursor */
 
 
@@ -3505,6 +3506,7 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
       momgui_cmdparse_full_buffer (&cmdparse);
       momgui_lastdelimpairarr = cmdparse.mo_gcp_delimpairarr;
       momgui_lastdelimpaircount = cmdparse.mo_gcp_delimcount;
+      momgui_cmd_updatematchpair ();
     }
   else                          /* failerr != 0 */
     {
