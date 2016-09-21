@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 9
+#define MOM_NB_GLOBAL 12
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -51,6 +51,15 @@ MOM_HAS_GLOBAL(set,_7h20HFhtjZljRLtbU,1718490147,6717538159123036634,3433581947)
 
 //+ variadic user action to make a set from ingredients (objects or sequences)
 MOM_HAS_GLOBAL(set_useract,_6Z90lCcFC3RhKoHGv,1648167417,4195768607671425703,4059762204)
+
+//+ for string related stuff
+MOM_HAS_GLOBAL(string,_2k61pgEBsCRJlTpHG,550905679,1952392727993788814,226985679)
+
+//+ for tuple related stuff
+MOM_HAS_GLOBAL(tuple,_0Ki51w13UIhXkBrtx,182094590,1030173250716890461,1953491597)
+
+//+ user action to make a tuple out of ingredients
+MOM_HAS_GLOBAL(tuple_useract,_80D4pPU1WGn7IZwh6,1890024075,1167320895490554690,4093394012)
 
 //+ the void ctype
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
@@ -97,6 +106,21 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_6Z90lCcFC3RhKoHGv
 #define monam_6Z90lCcFC3RhKoHGv set_useract
 
+#undef moid_string
+#define moid_string _2k61pgEBsCRJlTpHG
+#undef monam_2k61pgEBsCRJlTpHG
+#define monam_2k61pgEBsCRJlTpHG string
+
+#undef moid_tuple
+#define moid_tuple _0Ki51w13UIhXkBrtx
+#undef monam_0Ki51w13UIhXkBrtx
+#define monam_0Ki51w13UIhXkBrtx tuple
+
+#undef moid_tuple_useract
+#define moid_tuple_useract _80D4pPU1WGn7IZwh6
+#undef monam_80D4pPU1WGn7IZwh6
+#define monam_80D4pPU1WGn7IZwh6 tuple_useract
+
 #undef moid_void
 #define moid_void _1WX2mf4xwC5TU5ml7
 #undef monam_1WX2mf4xwC5TU5ml7
@@ -114,6 +138,9 @@ enum mom_global_hashes_en {
   momghash_long=314494134,
   momghash_set=3433581947,
   momghash_set_useract=4059762204,
+  momghash_string=226985679,
+  momghash_tuple=1953491597,
+  momghash_tuple_useract=4093394012,
   momghash_void=478990535,
 }; // end mom_global_hashes_en
 #endif /*MOM_GLOBAL_HASHES */
@@ -124,7 +151,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 9
+#define MOM_NB_NAMED_GLOBAL 12
 
 
 #undef MOM_HAS_GLOBAL

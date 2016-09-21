@@ -137,43 +137,49 @@ mo_dump_csource_global_objects_set (mo_dumper_ty * du)
           if (linlen < 0)
             break;
           linecnt++;
-	  char* curp = linebuf;
-	  while (curp && *curp) {
-	    char *pn = strstr (linebuf, "mom"     // split that to avoid self-detection
-			       "glob_");
-	    if (!pn)
-	      break;
-	    mo_objref_t globobr = NULL;
-	    pn += 8;
-	    char *pe = pn;
-	    while (isalnum (*pe) || *pe == '_')
-	      pe++;
-	    char* nextp = NULL;
-	    if (*pe)
-	      nextp = pe+1;
-	    *pe = (char) 0;
-	    if ((*pn) == (char) 0 || pn == pe)
-	      continue;
-	    if (pe == pn + MOM_CSTRIDLEN && isdigit (*pn))
-	      {
-		mo_hid_t hid = 0;
-		mo_loid_t loid = 0;
-		if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, pn))
-		  globobr = mo_objref_find_hid_loid (hid, loid);
-	      }
-	    else if (mom_valid_name (pn))
-	      globobr = mo_find_named_cstr (pn);
-	    if (!globobr)
-	      {
-		MOM_WARNPRINTF_AT (*psrcfile, linecnt, "unknown global %s", pn);
-		continue;
-	      }
-	    if (mo_objref_space (globobr) == mo_SPACE_PREDEF)
-	      MOM_WARNPRINTF_AT (*psrcfile, linecnt, "predefined global %s",
-				 pn);
-	    globhset = mo_hashset_put (globhset, globobr);
-	    curp = nextp;
-	  }
+          char *curp = NULL;
+          char *nextp = NULL;
+          for (curp = linebuf; ((nextp = NULL), curp) && *curp; curp = nextp)
+            {
+              char *pn = strstr (curp, "mom"    // split that to avoid self-detection
+                                 "glob_");
+              if (!pn)
+                break;
+              mo_objref_t globobr = NULL;
+              pn += 8;
+              char *pe = pn;
+              while (isalnum (*pe) || *pe == '_')
+                pe++;
+              if (*pe)
+                nextp = pe + 1;
+              else
+                nextp = NULL;
+              char oldpe = *pe;
+              *pe = (char) 0;
+              if ((*pn) == (char) 0 || pn == pe)
+                continue;
+              if (pe == pn + MOM_CSTRIDLEN && isdigit (*pn))
+                {
+                  mo_hid_t hid = 0;
+                  mo_loid_t loid = 0;
+                  if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, pn))
+                    globobr = mo_objref_find_hid_loid (hid, loid);
+                }
+              else if (mom_valid_name (pn))
+                globobr = mo_find_named_cstr (pn);
+              if (!globobr)
+                {
+                  MOM_WARNPRINTF_AT (*psrcfile, linecnt, "unknown global %s",
+                                     pn);
+                  continue;
+                }
+              if (mo_objref_space (globobr) == mo_SPACE_PREDEF)
+                MOM_WARNPRINTF_AT (*psrcfile, linecnt, "predefined global %s",
+                                   pn);
+              globhset = mo_hashset_put (globhset, globobr);
+              *pe = oldpe;
+              curp = nextp;
+            }
         }
       while (!feof (fsrc));
       free (linebuf), linebuf = NULL;

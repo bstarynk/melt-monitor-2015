@@ -93,14 +93,17 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
   "vectval": [
    {
     "set": [
+     "_0Ki51w13UIhXkBrtx",
      "_0Sp1Lg7ctajS7oX5i",
      "_1WX2mf4xwC5TU5ml7",
      "_20B54zdX0j8vYUdsf",
+     "_2k61pgEBsCRJlTpHG",
      "_2Sj1dLJSbvyN3kMgI",
      "_3K62tYRL1azRF0cP2",
      "_6Z90lCcFC3RhKoHGv",
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
+     "_80D4pPU1WGn7IZwh6",
      "_8BM91hTnefUPcYXzf"
     ]
    },
