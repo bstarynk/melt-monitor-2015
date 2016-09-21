@@ -1751,7 +1751,6 @@ mo_loader_create_objects (mo_loader_ty * ld)
 void
 mo_loader_set_globals (mo_loader_ty * ld)
 {
-  int rc = 0;
   MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
 #define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) do {	\
     momglob_##Nam = mo_objref_find_hid_loid(Hid,Loid);	\
