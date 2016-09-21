@@ -147,8 +147,10 @@ typedef struct mo_dumper_st mo_dumper_ty;
 // in which a module of id FooId is in moduFooId.c & moduFooId.so
 #define MOM_MODULE_INFIX "modu"
 #define MOM_MODULE_SUFFIX ".so"
-// the generated header file
+// the generated header file for predefined objects
 #define MOM_PREDEF_HEADER "_mom_predef.h"
+// the generated header file for global objects
+#define MOM_GLOBAL_HEADER "_mom_global.h"
 
 // the dump shell script
 #define MOM_DUMP_SCRIPT "monimelt-dump-state.sh"
@@ -1542,6 +1544,9 @@ mo_value_t mo_predefined_objects_set (void);
   extern mo_objectvalue_ty MOM_VARPREDEF(Nam);
 #include "_mom_predef.h"
 
+#define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) \
+  extern mo_objref_t momglob_##Nam;
+#include "_mom_global.h"
 
 static inline mo_value_t
 mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)

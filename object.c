@@ -20,6 +20,10 @@
 
 #include "meltmoni.h"
 
+#define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) \
+  mo_objref_t momglob_##Nam;
+#include "_mom_global.h"
+
 // we keep object in bucket
 static struct mom_objbucket_st
 {

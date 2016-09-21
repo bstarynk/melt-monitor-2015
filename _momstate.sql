@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 20 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 21 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -86,6 +86,11 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
  },
  "comps": {
   "vectval": [
+   {
+    "set": [
+     "_7831xB7d1ulmsaCYS"
+    ]
+   },
    {
     "oid": "_3J97bCYloYmmXuCR1"
    }

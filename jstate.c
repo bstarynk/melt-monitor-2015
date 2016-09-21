@@ -107,6 +107,71 @@ mo_dump_emitting (mo_dumper_ty * du)
 }                               /* end mo_dump_emitting */
 
 
+/// parse quickly all *.c files from monimelt_csources to compute the
+/// set of global variables prefixed with momglob_ to compute the set
+/// of global objects
+mo_value_t
+mo_dump_csource_global_objects_set (mo_dumper_ty * du)
+{
+  if (!mo_dump_scanning (du))
+    MOM_FATAPRINTF ("mo_dump_csource_global_objects_set outside of scanning");
+  mo_hashsetpayl_ty *globhset = mo_hashset_reserve (NULL, 100);
+  for (const char *const *psrcfile = monimelt_csources;
+       *psrcfile != NULL; psrcfile++)
+    {
+      FILE *fsrc = fopen (*psrcfile, "r");
+      int linecnt = 0;
+      if (!fsrc)
+        MOM_FATAPRINTF
+          ("dump_csource_global_objects_setcannot open csource %s",
+           *psrcfile);
+      size_t sizebuf = 256;
+      char *linebuf = calloc (1, sizebuf);
+      if (!linebuf)
+        MOM_FATAPRINTF
+          ("dump_csource_global_objects_set failed to calloc linebuf of %zd bytes",
+           sizebuf);
+      do
+        {
+          ssize_t linlen = getline (&linebuf, &sizebuf, fsrc);
+          if (linlen < 0)
+            break;
+          linecnt++;
+          char *pn = strstr (linebuf, "mom"     // split that to avoid self-detection
+                             "glob_");
+          if (!pn)
+            continue;
+          mo_objref_t globobr = NULL;
+          pn += 8;
+          char *pe = pn;
+          while (isalnum (*pe) || *pe == '_')
+            pe++;
+          *pe = (char) 0;
+          if (pe == pn + MOM_CSTRIDLEN && isdigit (*pn))
+            {
+              mo_hid_t hid = 0;
+              mo_loid_t loid = 0;
+              if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, pn))
+                globobr = mo_objref_find_hid_loid (hid, loid);
+            }
+          else if (mom_valid_name (pn))
+            globobr = mo_find_named_cstr (pn);
+          if (!globobr)
+            MOM_WARNPRINTF_AT (*psrcfile, linecnt, "unknown global %s", pn);
+          else if (mo_objref_space (globobr) == mo_SPACE_PREDEF)
+            MOM_WARNPRINTF_AT (*psrcfile, linecnt, "predefined global %s",
+                               pn);
+          else
+            globhset = mo_hashset_put (globhset, globobr);
+        }
+      while (!feof (fsrc));
+      free (linebuf), linebuf = NULL;
+      fclose (fsrc);
+      fsrc = NULL;
+    }
+  return mo_hashset_elements_set (globhset);
+}                               /* end of mo_dump_csource_global_objects_set */
+
 
 // for SQLITE_CONFIG_LOG
 void
@@ -733,7 +798,7 @@ mo_dump_fopen (mo_dumper_ty * du, const char *path)
 }                               /* end of mo_dump_fopen */
 
 int
-mom_predefsort_cmp (const void *p1, const void *p2)
+mom_dumpobjsort_cmp (const void *p1, const void *p2)
 {
   mo_objref_t ob1 = *(mo_objref_t *) p1;
   mo_objref_t ob2 = *(mo_objref_t *) p2;
@@ -753,7 +818,7 @@ mom_predefsort_cmp (const void *p1, const void *p2)
     return -1;
   else
     return mo_objref_cmp (ob1, ob2);
-}                               /* end mom_predefsort_cmp */
+}                               /* end mom_dumpobjsort_cmp */
 
 void
 mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predsetv)
@@ -768,7 +833,7 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predsetv)
   mo_objref_t *predarr =
     mom_gc_alloc (((nbpredef | 0xf) + 1) * sizeof (mo_objref_t));
   memcpy (predarr, predset->mo_seqobj, nbpredef * sizeof (mo_objref_t));
-  qsort (predarr, nbpredef, sizeof (mo_objref_t), mom_predefsort_cmp);
+  qsort (predarr, nbpredef, sizeof (mo_objref_t), mom_dumpobjsort_cmp);
   FILE *fp = mo_dump_fopen (du, MOM_PREDEF_HEADER);
   mom_output_gplv3_notice (fp, "///", "", MOM_PREDEF_HEADER);
   fprintf (fp, "\n#ifndef MOM_HAS_PREDEFINED\n"
@@ -885,6 +950,132 @@ mo_dump_emit_predefined (mo_dumper_ty * du, mo_value_t predsetv)
 }                               /* end mo_dump_emit_predefined */
 
 
+void
+mo_dump_emit_globals (mo_dumper_ty * du, mo_value_t globsetv)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  const mo_setvalue_ty *globset = globsetv;
+  MOM_ASSERTPRINTF (mo_dyncast_set (globset), "bad globset");
+  int nbglob = mo_set_size (globset);
+  MOM_ASSERTPRINTF (nbglob > 0, "empty globset");
+  mo_objref_t *globarr =
+    mom_gc_alloc (((nbglob | 0xf) + 1) * sizeof (mo_objref_t));
+  memcpy (globarr, globset->mo_seqobj, nbglob * sizeof (mo_objref_t));
+  qsort (globarr, nbglob, sizeof (mo_objref_t), mom_dumpobjsort_cmp);
+  FILE *fp = mo_dump_fopen (du, MOM_GLOBAL_HEADER);
+  mom_output_gplv3_notice (fp, "///", "", MOM_GLOBAL_HEADER);
+  fprintf (fp, "\n#ifndef MOM_HAS_GLOBAL\n"
+           "#error missing MOM_HAS_GLOBAL\n" "#endif\n\n");
+  fprintf (fp, "\n#undef MOM_NB_GLOBAL\n"
+           "#define MOM_NB_GLOBAL %d\n", nbglob);
+  fprintf (fp, "\n\n//// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)\n");
+  int nbanon = 0;
+  int nbnamed = 0;
+  for (int ix = 0; ix < nbglob; ix++)
+    {
+      mo_objref_t obp = globarr[ix];
+      MOM_ASSERTPRINTF (mo_dyncast_objref (obp)
+                        && mo_objref_space (obp) != mo_SPACE_NONE, "bad obp");
+      fputc ('\n', fp);
+      mo_value_t namv = mo_objref_namev (obp);
+      char idstr[MOM_CSTRIDSIZ];
+      memset (idstr, 0, sizeof (idstr));
+      mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      mo_value_t commv =
+        mo_dyncast_string (mo_objref_get_attr (obp, MOM_PREDEF (comment)));
+      if (commv)
+        {
+          const char *pc = mo_string_cstr (commv);
+          int cnt = 0;
+          fputs ("//+ ", fp);
+          while (cnt < 80 && *pc && *pc != '\n')
+            {
+              const char *npc = g_utf8_next_char (pc);
+              if (!npc)
+                break;
+              fwrite (pc, 1, npc - pc, fp);
+              pc = npc;
+              cnt++;
+            }
+          fputc ('\n', fp);
+        }
+      else
+        {
+          fputs ("//-\n", fp);
+        }
+      if (namv != NULL)
+        {
+          nbnamed++;
+          MOM_ASSERTPRINTF (mo_dyncast_string (namv), "bad namv");
+          fprintf (fp, "MOM_HAS_GLOBAL(%s,%s,%ld,%lld,%u)\n",
+                   mo_string_cstr (namv), idstr,
+                   (long) obp->mo_ob_hid, (long long) obp->mo_ob_loid,
+                   (unsigned) mo_objref_hash (obp));
+        }
+      else
+        {
+          nbanon++;
+          fprintf (fp, "MOM_HAS_GLOBAL(%s,%s,%ld,%lld,%u)\n",
+                   idstr, idstr,
+                   (long) obp->mo_ob_hid, (long long) obp->mo_ob_loid,
+                   (unsigned) mo_objref_hash (obp));
+        }
+    }
+  fputs ("\n\n", fp);
+  for (int ix = 0; ix < nbglob; ix++)
+    {
+      mo_objref_t obp = globarr[ix];
+      mo_value_t namv = mo_objref_namev (obp);
+      char idstr[MOM_CSTRIDSIZ];
+      memset (idstr, 0, sizeof (idstr));
+      mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      if (namv != NULL)
+        {
+          const char *namstr = mo_string_cstr (namv);
+          MOM_ASSERTPRINTF (namstr != NULL
+                            && isalpha (namstr[0]), "bad namv@%p", namv);
+          fprintf (fp, "\n#undef moid_%s\n" "#define moid_%s %s\n", namstr,
+                   namstr, idstr);
+          fprintf (fp, "#undef monam%s\n" "#define monam%s %s\n", idstr,
+                   idstr, namstr);
+        }
+    };
+  fputs ("\n\n", fp);
+  fputs ("#ifndef MOM_GLOBAL_HASHES\n"
+         "#define MOM_GLOBAL_HASHES 1\n" "enum mom_global_hashes_en {\n", fp);
+  for (int ix = 0; ix < nbglob; ix++)
+    {
+      mo_objref_t obp = globarr[ix];
+      mo_value_t namv = mo_objref_namev (obp);
+      char idstr[MOM_CSTRIDSIZ];
+      memset (idstr, 0, sizeof (idstr));
+      if (namv != NULL)
+        {
+          MOM_ASSERTPRINTF (mo_dyncast_string (namv), "bad namv");
+          fprintf (fp, "  momghash_%s=%u,\n",
+                   mo_string_cstr (namv), (unsigned) mo_objref_hash (obp));
+        }
+      else
+        {
+          mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+          fprintf (fp, "  momghash%s=%u,\n",
+                   idstr, (unsigned) mo_objref_hash (obp));
+        };
+    };
+  fputs ("}; // end mom_global_hashes_en\n", fp);
+  fputs ("#endif /*MOM_GLOBAL_HASHES */\n", fp);
+  fputs ("\n\n", fp);
+  MOM_ASSERTPRINTF (nbanon + nbnamed == nbglob, "bad nbanon");
+  fprintf (fp, "\n#undef MOM_NB_ANONYMOUS_GLOBAL\n"
+           "#define MOM_NB_ANONYMOUS_GLOBAL %d\n", nbanon);
+  fprintf (fp, "\n#undef MOM_NB_NAMED_GLOBAL\n"
+           "#define MOM_NB_NAMED_GLOBAL %d\n", nbnamed);
+  fprintf (fp, "\n\n#undef MOM_HAS_GLOBAL\n");
+  fprintf (fp, "// end of generated global file %s\n", MOM_GLOBAL_HEADER);
+  fclose (fp);
+}                               /* end mom_dump_emit_globals */
 
 void
 mo_dump_emit_names (mo_dumper_ty * du)
@@ -1158,7 +1349,18 @@ mom_dump_state (const char *dirname)
       MOM_ASSERTPRINTF (mo_objref_space (predobr) == mo_SPACE_PREDEF,
                         "non predef ix=%d predobr@%p", ix, predobr);
     };
-  long nbobj = nbpredef;
+  mo_value_t globalset = mo_dump_csource_global_objects_set (&dumper);
+  mo_objref_put_comp (MOM_PREDEF (the_system), 0, globalset);
+  int nbglobal = mo_set_size (globalset);
+  for (int ix = 0; ix < nbglobal; ix++)
+    {
+      mo_objref_t globobr = mo_set_nth (globalset, ix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (globobr), "bad globobr ix=%d", ix);
+      mo_dump_scan_objref (&dumper, globobr);
+      MOM_ASSERTPRINTF (mo_objref_space (globobr) != mo_SPACE_PREDEF,
+                        "predef ix=%d globobr@%p", ix, globobr);
+    };
+  long nbobj = nbpredef + nbglobal;
   double lastbelltime = mom_elapsed_real_time ();
   /// the scan loop
   errno = 0;
@@ -1201,6 +1403,7 @@ mom_dump_state (const char *dirname)
   dumper.mo_du_state = MOMDUMP_EMIT;
   mo_dump_initialize_sqlite_database (&dumper);
   mo_dump_emit_predefined (&dumper, predefset);
+  mo_dump_emit_globals (&dumper, globalset);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
   char *errmsg = NULL;
@@ -1544,6 +1747,19 @@ mo_loader_create_objects (mo_loader_ty * ld)
                       mo_string_cstr (ld->mo_ld_sqlitepathv), obcnt, nbobj);
   }                             /* Done: SELECT ob_id FROM t_object */
 }                               /* end of mo_loader_create_objects */
+
+void
+mo_loader_set_globals (mo_loader_ty * ld)
+{
+  int rc = 0;
+  MOM_ASSERTPRINTF (ld && ld->mo_ld_magic == MOM_LOADER_MAGIC, "bad ld");
+#define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) do {	\
+    momglob_##Nam = mo_objref_find_hid_loid(Hid,Loid);	\
+  if (!momglob_##Nam)					\
+    MOM_WARNPRINTF("cannot find global %s (%s)",	\
+		   #Nam, #Idstr); } while(0);
+#include "_mom_global.h"
+}                               /* end of mo_loader_set_globals */
 
 void
 mo_loader_link_modules (mo_loader_ty * ld)
@@ -2123,6 +2339,7 @@ mom_load_state (void)
     mo_make_string_sprintf ("%s.sqlite", monimelt_perstatebase);
   mo_loader_begin_database (&loader);
   mo_loader_create_objects (&loader);
+  mo_loader_set_globals (&loader);
   mo_loader_name_objects (&loader);
   mo_loader_link_modules (&loader);
   mo_loader_fill_objects_contents (&loader);

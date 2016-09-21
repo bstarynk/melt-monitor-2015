@@ -20,6 +20,8 @@
 
 #include "meltmoni.h"
 
+
+/// momglob_class_useract is needed
 /// the $class (object class) GUI user action is setting the
 /// mo_ob_class of object to class
 #define moid_class_useract _7831xB7d1ulmsaCYS

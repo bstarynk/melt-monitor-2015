@@ -20,6 +20,8 @@
 
 #include "meltmoni.h"
 
+
+/// mention momglob_int for emission of _mom_global.h
 #define MOM_CEMIT_MAGIC 0x56c59cc3      /*1455791299 cemit_magic */
 #define MOMFIELDS_cemitpayl					\
   MOMFIELDS_countedpayl;					\
