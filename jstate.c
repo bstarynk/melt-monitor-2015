@@ -1297,6 +1297,31 @@ mo_dump_symlink_needed_file (mo_dumper_ty * du, const char *filnam)
     }
 }                               /* end of mo_dump_symlink_needed_file */
 
+
+void
+mo_dump_warn_undumped_named (mo_dumper_ty * du)
+{
+  MOM_ASSERTPRINTF (du && du->mo_du_magic == MOM_DUMPER_MAGIC
+                    && du->mo_du_state == MOMDUMP_EMIT, "bad dumper du@%p",
+                    du);
+  mo_value_t namedsetv = mo_named_objects_set ();
+  unsigned nbnamed = mo_set_size (namedsetv);
+  for (unsigned ix = 0; ix < nbnamed; ix++)
+    {
+      mo_objref_t namobr = mo_set_nth (namedsetv, ix);
+      if (!mo_hashset_contains (du->mo_du_objset, namobr))
+        {
+          char obid[MOM_CSTRIDSIZ];
+          memset (obid, 0, sizeof (obid));
+          MOM_WARNPRINTF ("named object %s (%s) is not dumped into %s",
+                          mo_objref_pnamestr (namobr), mo_objref_idstr (obid,
+                                                                        namobr),
+                          du->mo_du_dirv);
+        }
+    }
+}                               /* end mo_dump_warn_undumped_named */
+
+
 void
 mom_dump_state (const char *dirname)
 {
@@ -1404,6 +1429,7 @@ mom_dump_state (const char *dirname)
   mo_dump_initialize_sqlite_database (&dumper);
   mo_dump_emit_predefined (&dumper, predefset);
   mo_dump_emit_globals (&dumper, globalset);
+  mo_dump_warn_undumped_named (&dumper);
   mo_value_t elset = mo_hashset_elements_set (dumper.mo_du_objset);
   unsigned elsiz = mo_set_size (elset);
   char *errmsg = NULL;
