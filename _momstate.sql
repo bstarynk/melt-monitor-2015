@@ -760,7 +760,7 @@ INSERT INTO t_objects VALUES('_80D4pPU1WGn7IZwh6',1474464502,'
  },
  "comps": null
 }
-','','','','');
+','','_8DT8VbN0FaiS0K6uf','!','.');
 INSERT INTO t_objects VALUES('_8261sbF1f9ohzu2Iu',1473049630,'
 {
  "@name": "payload_hashset",
