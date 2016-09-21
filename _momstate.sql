@@ -61,13 +61,16 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
+INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
+INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
+INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
@@ -94,6 +97,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_2Sj1dLJSbvyN3kMgI",
      "_3K62tYRL1azRF0cP2",
      "_7831xB7d1ulmsaCYS",
+     "_7h20HFhtjZljRLtbU",
      "_8BM91hTnefUPcYXzf"
     ]
    },
@@ -102,6 +106,20 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0Ki51w13UIhXkBrtx',1474462446,'
+{
+ "@name": "tuple",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for tuple related stuff"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_0Sp1Lg7ctajS7oX5i',1474366358,'
@@ -263,6 +281,20 @@ INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "the char ctype"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
+{
+ "@name": "string",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for string related stuff"
    }
   ]
  },
@@ -540,7 +572,7 @@ INSERT INTO t_objects VALUES('_6Lu6DXoGivCCHMwzV',1474362254,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1474373623,'
+INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1474462452,'
 {
  "@name": "the_GUI",
  "attrs": {
@@ -553,7 +585,10 @@ INSERT INTO t_objects VALUES('_6Pc0DV2SCkMSiNlcf',1474373623,'
     "at": "_5Kq0Pz5eFAULvdMEL",
     "va": {
      "tup": [
-      "_7al47yMPGToSh0ryC"
+      "_7al47yMPGToSh0ryC",
+      "_7h20HFhtjZljRLtbU",
+      "_0Ki51w13UIhXkBrtx",
+      "_2k61pgEBsCRJlTpHG"
      ]
     }
    }
@@ -632,6 +667,20 @@ INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474374401,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "anything related to class, also a user action $class (object class)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474462440,'
+{
+ "@name": "set",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for set related stuff"
    }
   ]
  },

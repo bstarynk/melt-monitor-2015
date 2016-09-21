@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 7
+#define MOM_NB_GLOBAL 8
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -45,6 +45,9 @@ MOM_HAS_GLOBAL(int,_0Sp1Lg7ctajS7oX5i,206123378,1657221063490954190,2737754805)
 
 //+ the long ctype
 MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
+
+//+ for set related stuff
+MOM_HAS_GLOBAL(set,_7h20HFhtjZljRLtbU,1718490147,6717538159123036634,3433581947)
 
 //+ the void ctype
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
@@ -81,6 +84,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_20B54zdX0j8vYUdsf
 #define monam_20B54zdX0j8vYUdsf long
 
+#undef moid_set
+#define moid_set _7h20HFhtjZljRLtbU
+#undef monam_7h20HFhtjZljRLtbU
+#define monam_7h20HFhtjZljRLtbU set
+
 #undef moid_void
 #define moid_void _1WX2mf4xwC5TU5ml7
 #undef monam_1WX2mf4xwC5TU5ml7
@@ -96,6 +104,7 @@ enum mom_global_hashes_en {
   momghash_double=3623603139,
   momghash_int=2737754805,
   momghash_long=314494134,
+  momghash_set=3433581947,
   momghash_void=478990535,
 }; // end mom_global_hashes_en
 #endif /*MOM_GLOBAL_HASHES */
@@ -106,7 +115,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 7
+#define MOM_NB_NAMED_GLOBAL 8
 
 
 #undef MOM_HAS_GLOBAL
