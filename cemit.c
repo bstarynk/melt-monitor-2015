@@ -626,7 +626,7 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
                     csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
                     "cemit_write_ctype_for: bad typobr");
-#define MOM_NBCASE_CTYPE 59
+#define MOM_NBCASE_CTYPE 163
 #define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr != MOM_PREDEF(Ob))					\
     goto defaultctypecase;					\
@@ -659,16 +659,27 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
       return;
       case CASE_GLOBALCTYPE_MOM (double):       // momglob_double
         mom_cemit_printf (csta, "double %s", forstr);
-	// momglob_intptr_t
-	// momglob_int8_t
-	// momglob_int16_t
-	// momglob_int32_t
-	// momglob_int64_t
-	// momglob_uintptr_t
-	// momglob_uint8_t
-	// momglob_uint16_t
-	// momglob_uint32_t
-	// momglob_uint64_t
+      return;
+      case CASE_GLOBALCTYPE_MOM (intptr_t):     // momglob_intptr_t
+        mom_cemit_printf (csta, "intptr_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (int8_t):       // momglob_int8_t
+        mom_cemit_printf (csta, "int8_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (int16_t):      // momglob_int16_t
+        mom_cemit_printf (csta, "int16_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (int32_t):      // momglob_int32_t
+        mom_cemit_printf (csta, "int32_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (int64_t):      // momglob_int64_t
+        mom_cemit_printf (csta, "int64_t %s", forstr);
+      return;
+      // momglob_uintptr_t
+      // momglob_uint8_t
+      // momglob_uint16_t
+      // momglob_uint32_t
+      // momglob_uint64_t
       return;
     default:
     defaultctypecase:
@@ -891,12 +902,12 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
       mo_value_t fieldnamv = mo_objref_namev (fieldobr);
       char fieldid[MOM_CSTRIDSIZ];
       memset (fieldid, 0, sizeof (fieldid));
-      char* fieldstr = NULL;
+      const char *fieldstr = NULL;
       mo_objref_idstr (fieldid, fieldobr);
       if (fieldnamv)
-	fieldstr = mom_gc_printf(" mo_%s_fd ", mo_string_cstr(fieldnamv));
+        fieldstr = mom_gc_printf (" mo_%s_fd ", mo_string_cstr (fieldnamv));
       else
-	fieldstr = mom_gc_printf(" mo%s_fd", fieldid);
+        fieldstr = mom_gc_printf (" mo%s_fd", fieldid);
       mom_cemit_write_ctype_for (csta, ftypobr, fieldstr);
       mom_cemit_printf (csta, ";  // %s\n", fieldid);
     }

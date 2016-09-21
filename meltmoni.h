@@ -305,7 +305,8 @@ mom_gc_strdup (const char *s)
   return p;
 }                               /* end of mom_gc_strdup */
 
-const char* mom_gc_printf(const char*fmt, ...) __attribute__((format(printf,1,2)));
+const char *mom_gc_printf (const char *fmt, ...)
+__attribute__ ((format (printf, 1, 2)));
 
 void
 mom_informprintf_at (const char *fil, int lin, const char *fmt, ...)
