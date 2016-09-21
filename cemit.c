@@ -611,20 +611,21 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
 }                               /* end mom_cemit_includes */
 
 void
-mom_cemit_write_ctype (struct mom_cemitlocalstate_st *csta,
-                       mo_objref_t typobr)
+mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t typobr, const char *forstr)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
-                    "cemit_write_ctype: bad csta@%p", csta);
+                    "cemit_write_ctype_for: bad csta@%p", csta);
+  if (!forstr || forstr == MOM_EMPTY_SLOT)
+    forstr = "";
   mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
                     && cemp->mo_cemit_locstate == csta,
-                    "cemit_write_ctype: bad payl@%p in csta@%p", cemp, csta);
+                    "cemit_write_ctype_for: bad payl@%p in csta@%p", cemp,
+                    csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (typobr),
-                    "cemit_write_ctype: bad typobr");
-  if (mo_objref_space (typobr) == mo_SPACE_PREDEF)
-    {
+                    "cemit_write_ctype_for: bad typobr");
 #define MOM_NBCASE_CTYPE 59
 #define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr != MOM_PREDEF(Ob))					\
@@ -636,49 +637,49 @@ mom_cemit_write_ctype (struct mom_cemitlocalstate_st *csta,
     goto defaultctypecase;					\
   goto labctype_##Ob;						\
   labctype_##Ob
-      switch (mo_objref_hash (typobr) % MOM_NBCASE_CTYPE)
-        {
-	  /// for global ctypes, we need to mention the global in full
-	  /// with its momglob_ prefix to keep the global scanner,
-	  /// e.g. mo_dump_csource_global_objects_set happy
-          case CASE_GLOBALCTYPE_MOM (int):    // momglob_int
-            mom_cemit_printf (csta, "int ");
-          return;
-          case CASE_GLOBALCTYPE_MOM (void):   // momglob_void
-            mom_cemit_printf (csta, "void ");
-          return;
-        case CASE_GLOBALCTYPE_MOM (bool):    // momglob_bool
-          mom_cemit_printf (csta, "bool ");
-          return;
-          case CASE_GLOBALCTYPE_MOM (char):   // momglob_char
-            mom_cemit_printf (csta, "char ");
-          return;
-          case CASE_GLOBALCTYPE_MOM (long):   // momglob_long
-            mom_cemit_printf (csta, "long ");
-          return;
-          case CASE_GLOBALCTYPE_MOM (double): // momglob_double
-            mom_cemit_printf (csta, "double ");
-          return;
-        default:
-        defaultctypecase:
-          break;
-        }
+  switch (mo_objref_hash (typobr) % MOM_NBCASE_CTYPE)
+    {
+      /// for global ctypes, we need to mention the global in full
+      /// with its momglob_ prefix to keep the global scanner,
+      /// e.g. mo_dump_csource_global_objects_set, happy
+      case CASE_GLOBALCTYPE_MOM (int):  // momglob_int
+        mom_cemit_printf (csta, "int %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (void): // momglob_void
+        mom_cemit_printf (csta, "void %s", forstr);
+      return;
+    case CASE_GLOBALCTYPE_MOM (bool):  // momglob_bool
+      mom_cemit_printf (csta, "bool %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (char): // momglob_char
+        mom_cemit_printf (csta, "char %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (long): // momglob_long
+        mom_cemit_printf (csta, "long %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (double):       // momglob_double
+        mom_cemit_printf (csta, "double %s", forstr);
+      return;
+    default:
+    defaultctypecase:
+      break;
+    }
 #undef MOM_NBCASE_CTYPE
 #undef CASE_PREDEFCTYPE_MOM
 #undef CASE_GLOBALCTYPE_MOM
-    }
   if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
-    MOM_CEMITFAILURE (csta, "write_ctype: typobr %s unknown",
+    MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s unknown",
                       mo_objref_pnamestr (typobr));
   char typobid[MOM_CSTRIDSIZ];
   memset (typobid, 0, sizeof (typobid));
   mo_objref_idstr (typobid, typobr);
   mo_value_t typobnamv = mo_objref_namev (typobr);
   if (typobnamv)
-    mom_cemit_printf (csta, "mo_%s_ty ", mo_string_cstr (typobnamv));
+    mom_cemit_printf (csta, "mo_%s_ty %s", mo_string_cstr (typobnamv),
+                      forstr);
   else
-    mom_cemit_printf (csta, "mo%s_ty ", typobid);
-}                               /* end mom_cemit_write_ctype */
+    mom_cemit_printf (csta, "mo%s_ty %s", typobid, forstr);
+}                               /* end mom_cemit_write_ctype_for */
 
 
 
@@ -772,14 +773,14 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                                 mo_objref_pnamestr (typobr));
           };
         mom_cemit_printf (csta, "typedef ");
-        mom_cemit_write_ctype (csta, restypobr);
+        mom_cemit_write_ctype_for (csta, restypobr, "");
         mom_cemit_printf (csta, " mo%s_ty (", typobid);
         for (unsigned foix = 0; foix < nbformals; foix++)
           {
             if (foix > 0)
               fputs (", ", csta->mo_cemsta_fil);
             mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
-            mom_cemit_write_ctype (csta, curformobr);
+            mom_cemit_write_ctype_for (csta, curformobr, "");
           };
         mom_cemit_printf (csta, ");\n");
       }
@@ -874,7 +875,7 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (fieldobr),
                           mo_objref_pnamestr (ftypobr));
       fputc (' ', csta->mo_cemsta_fil);
-      mom_cemit_write_ctype (csta, ftypobr);
+      mom_cemit_write_ctype_for (csta, ftypobr, "");
       mo_value_t fieldnamv = mo_objref_namev (fieldobr);
       char fieldid[MOM_CSTRIDSIZ];
       memset (fieldid, 0, sizeof (fieldid));
@@ -1126,17 +1127,17 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   cemitstate.mo_cemsta_objcemit = obrcem;
   cemitstate.mo_cemsta_payl = cemp;
   cemitstate.mo_cemsta_hsetctypes =
-    mo_hashset_reserve(NULL, 2*(MOM_NB_GLOBAL+MOM_NB_PREDEFINED)+30);
+    mo_hashset_reserve (NULL, 2 * (MOM_NB_GLOBAL + MOM_NB_PREDEFINED) + 30);
 #define MOM_ADD_GLOBAL_CTYPE(Glob)			\
   cemitstate.mo_cemsta_hsetctypes =			\
     mo_hashset_put(cemitstate.mo_cemsta_hsetctypes,	\
 		   (Glob))
-  MOM_ADD_GLOBAL_CTYPE(momglob_int);
-  MOM_ADD_GLOBAL_CTYPE(momglob_bool);
-  MOM_ADD_GLOBAL_CTYPE(momglob_char);
-  MOM_ADD_GLOBAL_CTYPE(momglob_double);
-  MOM_ADD_GLOBAL_CTYPE(momglob_long);
-  MOM_ADD_GLOBAL_CTYPE(momglob_void);
+  MOM_ADD_GLOBAL_CTYPE (momglob_int);
+  MOM_ADD_GLOBAL_CTYPE (momglob_bool);
+  MOM_ADD_GLOBAL_CTYPE (momglob_char);
+  MOM_ADD_GLOBAL_CTYPE (momglob_double);
+  MOM_ADD_GLOBAL_CTYPE (momglob_long);
+  MOM_ADD_GLOBAL_CTYPE (momglob_void);
 #undef MOM_ADD_GLOBAL_CTYPE
   mo_objref_idstr (cemitstate.mo_cemsta_modid, cemp->mo_cemit_modobj);
   int errlin = setjmp (cemitstate.mo_cemsta_jmpbuf);
