@@ -659,6 +659,16 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
       return;
       case CASE_GLOBALCTYPE_MOM (double):       // momglob_double
         mom_cemit_printf (csta, "double %s", forstr);
+	// momglob_intptr_t
+	// momglob_int8_t
+	// momglob_int16_t
+	// momglob_int32_t
+	// momglob_int64_t
+	// momglob_uintptr_t
+	// momglob_uint8_t
+	// momglob_uint16_t
+	// momglob_uint32_t
+	// momglob_uint64_t
       return;
     default:
     defaultctypecase:
@@ -878,16 +888,17 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (fieldobr),
                           mo_objref_pnamestr (ftypobr));
       fputc (' ', csta->mo_cemsta_fil);
-      mom_cemit_write_ctype_for (csta, ftypobr, "");
       mo_value_t fieldnamv = mo_objref_namev (fieldobr);
       char fieldid[MOM_CSTRIDSIZ];
       memset (fieldid, 0, sizeof (fieldid));
+      char* fieldstr = NULL;
       mo_objref_idstr (fieldid, fieldobr);
       if (fieldnamv)
-        mom_cemit_printf (csta, " mo_%s_fd; // %s\n",
-                          mo_string_cstr (fieldnamv), fieldid);
+	fieldstr = mom_gc_printf(" mo_%s_fd ", mo_string_cstr(fieldnamv));
       else
-        mom_cemit_printf (csta, "mo%s_fd;\n", fieldid);
+	fieldstr = mom_gc_printf(" mo%s_fd", fieldid);
+      mom_cemit_write_ctype_for (csta, ftypobr, fieldstr);
+      mom_cemit_printf (csta, ";  // %s\n", fieldid);
     }
 }                               /* end mom_cemit_define_fields */
 

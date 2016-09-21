@@ -48,6 +48,11 @@ INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
+INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
+INSERT INTO t_names VALUES('int32_t','_7EH4RTtyF1BioGEDK');
+INSERT INTO t_names VALUES('int64_t','_21x8NL3oau6heNEnt');
+INSERT INTO t_names VALUES('int8_t','_62H0GDHPCtIRvAdDd');
+INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
@@ -95,15 +100,20 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
     "set": [
      "_0Ki51w13UIhXkBrtx",
      "_0Sp1Lg7ctajS7oX5i",
+     "_1Hx4BMvqv69AA0750",
      "_1WX2mf4xwC5TU5ml7",
      "_20B54zdX0j8vYUdsf",
+     "_21x8NL3oau6heNEnt",
      "_2k61pgEBsCRJlTpHG",
      "_2Sj1dLJSbvyN3kMgI",
      "_3K62tYRL1azRF0cP2",
+     "_62H0GDHPCtIRvAdDd",
      "_6Z90lCcFC3RhKoHGv",
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
+     "_7EH4RTtyF1BioGEDK",
      "_80D4pPU1WGn7IZwh6",
+     "_8t42m75faVNE2kWxu",
      "_8BM91hTnefUPcYXzf"
     ]
    },
@@ -204,6 +214,20 @@ INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1Hx4BMvqv69AA0750',1474473152,'
+{
+ "@name": "int16_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype for 16 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
 {
  "attrs": {
@@ -271,6 +295,20 @@ INSERT INTO t_objects VALUES('_20B54zdX0j8vYUdsf',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_21x8NL3oau6heNEnt',1474473182,'
+{
+ "@name": "int64_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype for 64 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
 {
  "@name": "module_class",
@@ -542,6 +580,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_62H0GDHPCtIRvAdDd',1474473139,'
+{
+ "@name": "int8_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype for 8 bits signed integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_64d2GXNLEBKFBzxqP',1474311988,'
 {
  "@name": "c_code",
@@ -665,6 +717,20 @@ INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_7EH4RTtyF1BioGEDK',1474473165,'
+{
+ "@name": "int32_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype for 32 bits integers"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",
@@ -867,6 +933,20 @@ INSERT INTO t_objects VALUES('_8hg5YXTgfHBnV4W8q',1474270315,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "transient payload for emission of C code"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8t42m75faVNE2kWxu',1474473117,'
+{
+ "@name": "intptr_t",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype of signed integers \"equivalent\" (castable) to pointers"
    }
   ]
  },

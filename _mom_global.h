@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 12
+#define MOM_NB_GLOBAL 17
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -42,6 +42,21 @@ MOM_HAS_GLOBAL(double,_8BM91hTnefUPcYXzf,2036136323,2502319301662783315,36236031
 
 //+ the int ctype
 MOM_HAS_GLOBAL(int,_0Sp1Lg7ctajS7oX5i,206123378,1657221063490954190,2737754805)
+
+//+ the ctype for 16 bits integers
+MOM_HAS_GLOBAL(int16_t,_1Hx4BMvqv69AA0750,407207950,7980475163603109788,1383035942)
+
+//+ the ctype for 32 bits integers
+MOM_HAS_GLOBAL(int32_t,_7EH4RTtyF1BioGEDK,1811646092,4716021617753196882,2754588426)
+
+//+ the ctype for 64 bits integers
+MOM_HAS_GLOBAL(int64_t,_21x8NL3oau6heNEnt,478016564,8407009047818543553,249091822)
+
+//+ the ctype for 8 bits signed integers
+MOM_HAS_GLOBAL(int8_t,_62H0GDHPCtIRvAdDd,1426265002,5367769641288350209,2306438205)
+
+//+ the ctype of signed integers "equivalent" (castable) to pointers
+MOM_HAS_GLOBAL(intptr_t,_8t42m75faVNE2kWxu,2001748354,8327845228897843290,1787024167)
 
 //+ the long ctype
 MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
@@ -91,6 +106,31 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_0Sp1Lg7ctajS7oX5i
 #define monam_0Sp1Lg7ctajS7oX5i int
 
+#undef moid_int16_t
+#define moid_int16_t _1Hx4BMvqv69AA0750
+#undef monam_1Hx4BMvqv69AA0750
+#define monam_1Hx4BMvqv69AA0750 int16_t
+
+#undef moid_int32_t
+#define moid_int32_t _7EH4RTtyF1BioGEDK
+#undef monam_7EH4RTtyF1BioGEDK
+#define monam_7EH4RTtyF1BioGEDK int32_t
+
+#undef moid_int64_t
+#define moid_int64_t _21x8NL3oau6heNEnt
+#undef monam_21x8NL3oau6heNEnt
+#define monam_21x8NL3oau6heNEnt int64_t
+
+#undef moid_int8_t
+#define moid_int8_t _62H0GDHPCtIRvAdDd
+#undef monam_62H0GDHPCtIRvAdDd
+#define monam_62H0GDHPCtIRvAdDd int8_t
+
+#undef moid_intptr_t
+#define moid_intptr_t _8t42m75faVNE2kWxu
+#undef monam_8t42m75faVNE2kWxu
+#define monam_8t42m75faVNE2kWxu intptr_t
+
 #undef moid_long
 #define moid_long _20B54zdX0j8vYUdsf
 #undef monam_20B54zdX0j8vYUdsf
@@ -135,6 +175,11 @@ enum mom_global_hashes_en {
   momghash_class_useract=3817197504,
   momghash_double=3623603139,
   momghash_int=2737754805,
+  momghash_int16_t=1383035942,
+  momghash_int32_t=2754588426,
+  momghash_int64_t=249091822,
+  momghash_int8_t=2306438205,
+  momghash_intptr_t=1787024167,
   momghash_long=314494134,
   momghash_set=3433581947,
   momghash_set_useract=4059762204,
@@ -151,7 +196,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 12
+#define MOM_NB_NAMED_GLOBAL 17
 
 
 #undef MOM_HAS_GLOBAL
