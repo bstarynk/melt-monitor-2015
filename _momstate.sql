@@ -636,7 +636,7 @@ INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
  },
  "comps": null
 }
-','','','','');
+','','_8DT8VbN0FaiS0K6uf','!','.');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",
