@@ -62,6 +62,7 @@ INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
+INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
@@ -71,6 +72,7 @@ INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
+INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
@@ -108,11 +110,17 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
  }
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_0Ki51w13UIhXkBrtx',1474462446,'
+INSERT INTO t_objects VALUES('_0Ki51w13UIhXkBrtx',1474464502,'
 {
  "@name": "tuple",
  "attrs": {
   "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_80D4pPU1WGn7IZwh6"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for tuple related stuff"
@@ -611,6 +619,20 @@ INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
+{
+ "@name": "set_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "variadic user action to make a set from ingredients (objects or sequences)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",
@@ -673,11 +695,17 @@ INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474374401,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474462440,'
+INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474464458,'
 {
  "@name": "set",
  "attrs": {
   "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_6Z90lCcFC3RhKoHGv"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for set related stuff"
@@ -709,6 +737,20 @@ INSERT INTO t_objects VALUES('_7zd6NdDtMbPp0s5HT',1474308434,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class of basic C types like int"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_80D4pPU1WGn7IZwh6',1474464502,'
+{
+ "@name": "tuple_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "user action to make a tuple out of ingredients"
    }
   ]
  },
