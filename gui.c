@@ -2269,6 +2269,13 @@ momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
 }                               /* end momgui_cmdtextview_movecursor */
 
 
+static void
+momgui_cmdtextview_insertatcursor (GtkTextView * tview MOM_UNUSED,
+                                   gchar * str, gpointer data MOM_UNUSED)
+{
+  if (str && str[0])
+    momgui_cmd_updatematchpair ();
+}                               /* end momgui_cmd_updatematchpair */
 
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
@@ -3687,6 +3694,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                     G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
   g_signal_connect (mom_cmdtview, "move-cursor",
                     G_CALLBACK (momgui_cmdtextview_movecursor), NULL);
+  g_signal_connect (mom_cmdtview, "insert-at-cursor",
+                    G_CALLBACK (momgui_cmdtextview_insertatcursor), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
