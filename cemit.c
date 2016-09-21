@@ -675,11 +675,20 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
       case CASE_GLOBALCTYPE_MOM (int64_t):      // momglob_int64_t
         mom_cemit_printf (csta, "int64_t %s", forstr);
       return;
-      // momglob_uintptr_t
-      // momglob_uint8_t
-      // momglob_uint16_t
-      // momglob_uint32_t
-      // momglob_uint64_t
+      case CASE_GLOBALCTYPE_MOM (uintptr_t):     // momglob_uintptr_t
+        mom_cemit_printf (csta, "uintptr_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (uint8_t):       // momglob_uint8_t
+        mom_cemit_printf (csta, "uint8_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (uint16_t):      // momglob_uint16_t
+        mom_cemit_printf (csta, "uint16_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (uint32_t):      // momglob_uint32_t
+        mom_cemit_printf (csta, "uint32_t %s", forstr);
+      return;
+      case CASE_GLOBALCTYPE_MOM (uint64_t):      // momglob_uint64_t
+        mom_cemit_printf (csta, "uint64_t %s", forstr);
       return;
     default:
     defaultctypecase:
