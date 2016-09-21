@@ -671,6 +671,27 @@ mo_vectval_append (mo_vectvaldatapayl_ty * vect, mo_value_t val)
   return vect;
 }                               /* end of mo_vectval_append */
 
+// make a tuple of all objects in a vector
+mo_value_t
+mo_vectval_objects_tuple (mo_vectvaldatapayl_ty * vect)
+{
+  if (!mo_dyncastpayl_vectval (vect))
+    return NULL;
+  unsigned nbob = 0;
+  unsigned len = 0;
+  for (unsigned ix = 0; ix < vect->mo_cpl_count; ix++)
+    if (mo_dyncast_objref (vect->mo_vect_arr[ix]))
+      len++;
+  mo_sequencevalue_ty *seq = mo_sequence_allocate (len);
+  mo_objref_t curobj = NULL;
+  for (unsigned ix = 0; ix < vect->mo_cpl_count; ix++)
+    if ((curobj = mo_dyncast_objref (vect->mo_vect_arr[ix])) != NULL)
+      {
+        MOM_ASSERTPRINTF (nbob < len, "bad nbob=%u len=%u", nbob, len);
+        seq->mo_seqobj[nbob++] = curobj;
+      };
+  return mo_make_tuple_closeq (seq);
+}                               /* end of mo_vectval_objects_tuple */
 
 void
 mo_dump_scan_vectval (mo_dumper_ty * du, mo_vectvaldatapayl_ty * vect)

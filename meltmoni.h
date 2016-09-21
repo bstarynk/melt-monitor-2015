@@ -1227,6 +1227,8 @@ mo_vectvaldatapayl_ty *mo_vectval_resize (mo_vectvaldatapayl_ty * vect,
     unsigned newlen);
 mo_vectvaldatapayl_ty *mo_vectval_append (mo_vectvaldatapayl_ty * vect,
     mo_value_t val);
+// make a tuple of all objects in a vector
+mo_value_t mo_vectval_objects_tuple (mo_vectvaldatapayl_ty * vect);
 
 void mo_dump_scan_vectval (mo_dumper_ty *, mo_vectvaldatapayl_ty *);
 mo_json_t mo_dump_json_of_vectval (mo_dumper_ty *, mo_vectvaldatapayl_ty *);

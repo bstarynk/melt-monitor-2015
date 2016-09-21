@@ -151,5 +151,58 @@ mofun_set_useract (mo_objref_t obuact)
 // momglob_tuple  &  momglob_tuple_useract
 
 
+const char
+MOM_PREFIXID (mosig_, tuple_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, tuple_useract) __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_tuple_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, tuple_useract) (mo_objref_t obuact)
+{
+  return mofun_tuple_useract (obuact);
+}
+
+mo_value_t
+mofun_tuple_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "set_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+  mo_vectvaldatapayl_ty *vect =
+    mo_vectval_reserve (NULL, 3 * nbargs / 2 + 20);
+  for (unsigned ix = 1; ix < nbargs; ix++)
+    {
+      mo_value_t curargv = mo_objref_get_comp (obuact, ix);
+      enum mo_valkind_en k = mo_kind_of_value (curargv);
+      switch (k)
+        {
+        case mo_KNONE:
+        case mo_KINT:
+        case mo_KSTRING:
+          break;
+        case mo_KTUPLE:
+        case mo_KSET:
+          {
+            const mo_sequencevalue_ty *seq =
+              (const mo_sequencevalue_ty *) curargv;
+            unsigned siz = mo_sequence_size (seq);
+            vect = mo_vectval_reserve (vect, 3 * siz / 2 + 5);
+            for (unsigned ix = 0; ix < siz; ix++)
+              if (mo_dyncast_object (seq->mo_seqobj[ix]))
+                vect = mo_vectval_append (vect, seq->mo_seqobj[ix]);
+          }
+          break;
+        case mo_KOBJECT:
+          vect = mo_vectval_append (vect, (mo_objref_t) (curargv));
+          break;
+        }
+    }
+  return mo_vectval_objects_tuple (vect);
+}                               /* end mofun_tuple_useract */
+
+
 // momglob_string
 // end of file usaction.c
