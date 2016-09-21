@@ -219,6 +219,22 @@ mom_gui_fail_user_action (const char *fmt, ...)
 }                               /* end mom_gui_fail_user_action */
 
 
+static void
+momgui_clear_hidzoombut1 (GtkWidget * wid, gpointer data)
+{
+  momgui_dispobjinfo_ty *dinf = (momgui_dispobjinfo_ty *) data;
+  if (dinf->mo_gdo_hidezoombutton1 == wid)
+    dinf->mo_gdo_hidezoombutton1 = NULL;
+}                               /* end momgui_clear_hidzoombut1 */
+
+static void
+momgui_clear_hidzoombut2 (GtkWidget * wid, gpointer data)
+{
+  momgui_dispobjinfo_ty *dinf = (momgui_dispobjinfo_ty *) data;
+  if (dinf->mo_gdo_hidezoombutton2 == wid)
+    dinf->mo_gdo_hidezoombutton2 = NULL;
+}                               /* end momgui_clear_hidzoombut2 */
+
 // destructor for momgui_dispobjinfo_ty, for g_hash_table_new_full
 static void
 mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
@@ -231,25 +247,23 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
   /// temporary informs for debugging
   if (dinf->mo_gdo_hidezoombutton1)
     {
+      GtkWidget *hidezbut1 = dinf->mo_gdo_hidezoombutton1;
       MOM_INFORMPRINTF ("destroy_dispobjinfo hidezbut1@%p/%s/%s",
-                        dinf->mo_gdo_hidezoombutton1,
-                        G_OBJECT_CLASS_NAME (dinf->mo_gdo_hidezoombutton1),
-                        G_OBJECT_TYPE_NAME (dinf->mo_gdo_hidezoombutton1));
-      gtk_widget_destroy (dinf->mo_gdo_hidezoombutton1);
-      MOM_INFORMPRINTF ("destroy_dispobjinfo destroyed hidezbut1@%p",
-                        dinf->mo_gdo_hidezoombutton1);
+                        hidezbut1,
+                        G_OBJECT_CLASS_NAME (hidezbut1),
+                        G_OBJECT_TYPE_NAME (hidezbut1));
       dinf->mo_gdo_hidezoombutton1 = NULL;
+      gtk_container_remove (GTK_CONTAINER (mom_tview1), hidezbut1);
     }
   if (dinf->mo_gdo_hidezoombutton2)
     {
+      GtkWidget *hidezbut2 = dinf->mo_gdo_hidezoombutton2;
       MOM_INFORMPRINTF ("destroy_dispobjinfo hidezbut2@%p/%s/%s",
-                        dinf->mo_gdo_hidezoombutton2,
-                        G_OBJECT_CLASS_NAME (dinf->mo_gdo_hidezoombutton2),
-                        G_OBJECT_TYPE_NAME (dinf->mo_gdo_hidezoombutton2));
-      gtk_widget_destroy (dinf->mo_gdo_hidezoombutton2);
-      MOM_INFORMPRINTF ("destroy_dispobjinfo destroyed hidezbut2@%p",
-                        dinf->mo_gdo_hidezoombutton2);
+                        hidezbut2,
+                        G_OBJECT_CLASS_NAME (hidezbut2),
+                        G_OBJECT_TYPE_NAME (hidezbut2));
       dinf->mo_gdo_hidezoombutton2 = NULL;
+      gtk_container_remove (GTK_CONTAINER (mom_tview2), hidezbut2);
     }
   if (dinf->mo_gdo_startmark && dinf->mo_gdo_endmark
       && !gtk_text_mark_get_deleted (dinf->mo_gdo_startmark)
@@ -1191,8 +1205,12 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                                      dinf->mo_gdo_hidezoomanchor);
   g_signal_connect (dinf->mo_gdo_hidezoombutton1, "clicked",
                     G_CALLBACK (momgui_hideobj), obr);
+  g_signal_connect (dinf->mo_gdo_hidezoombutton1, "destroy",
+                    G_CALLBACK (momgui_clear_hidzoombut1), dinf);
   g_signal_connect (dinf->mo_gdo_hidezoombutton2, "clicked",
                     G_CALLBACK (momgui_hideobj), obr);
+  g_signal_connect (dinf->mo_gdo_hidezoombutton2, "destroy",
+                    G_CALLBACK (momgui_clear_hidzoombut2), dinf);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton1);
   gtk_widget_show (dinf->mo_gdo_hidezoombutton2);
   enum mo_space_en spa = mo_objref_space (obr);
