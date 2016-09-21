@@ -60,6 +60,7 @@ static GtkTextTag *mom_cmdtag_fail;     // tag for failure rest in command
 static GtkTextTag *mom_cmdtag_number;   // tag for number
 static GtkTextTag *mom_cmdtag_string;   // tag for strings
 static GtkTextTag *mom_cmdtag_delim;    // tag for delimiters
+static GtkTextTag *mom_cmdtag_matchpair;        // tag for matching pair of delimiters
 static GtkTextTag *mom_cmdtag_oper;     // tag for operator
 static GtkTextTag *mom_cmdtag_name;     // tag for existing named object
 static GtkTextTag *mom_cmdtag_anon;     // tag for existing anonymous object
@@ -153,6 +154,14 @@ struct momgui_shownobocc_st
 static GHashTable *mom_shownobjocc_hashtable;
 
 
+struct momgui_delimpair_st
+{
+  unsigned mo_delp_left;
+  unsigned mo_delp_right;
+};
+
+static struct momgui_delimpair_st *momgui_lastdelimpairarr;
+static unsigned momgui_lastdelimpaircount;
 // stack-allocated struct for parsing & decorating the command buffer
 #define MOMGUI_CMDPARSE_MAGIC 0x3201f56b        /* 838989163 */
 struct momgui_cmdparse_st
@@ -164,6 +173,9 @@ struct momgui_cmdparse_st
   mo_value_t mo_gcp_errstrv;    // error string value
   mo_hashsetpayl_ty *mo_gcp_setparsed;  /* hashset of parsed objects */
   mo_hashsetpayl_ty *mo_gcp_setcreated; /* hashset of created objects */
+  unsigned mo_gcp_delimsize;    /* allocated size of delim array */
+  unsigned mo_gcp_delimcount;   /* used count of delim array */
+  struct momgui_delimpair_st *mo_gcp_delimpairarr;      /* delimiter array */
   jmp_buf mo_gcp_failjb;        // for escaping on error
 };                              /* end of momgui_cmdparse_st */
 
@@ -2157,6 +2169,106 @@ momgui_cmdtextview_populatepopup (GtkTextView * tview MOM_UNUSED,
     MOM_BACKTRACEPRINTF ("non-menu cmdtextview popup");
 }                               /* end momgui_cmdtextview_populatepopup */
 
+// for "move-cursor" signal to mom_cmdtview
+static void
+momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
+                               GtkMovementStep step MOM_UNUSED,
+                               gint count MOM_UNUSED,
+                               gboolean extendselection MOM_UNUSED,
+                               gpointer data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (tview == GTK_TEXT_VIEW (mom_cmdtview), "bad tview");
+  GtkTextIter startit = { };
+  GtkTextIter endit = { };
+  gtk_text_buffer_get_bounds (mom_cmdtextbuf, &startit, &endit);
+  gtk_text_buffer_remove_tag (mom_cmdtextbuf,
+                              mom_cmdtag_matchpair, &startit, &endit);
+  GtkTextMark *cursormark = gtk_text_buffer_get_insert (mom_cmdtextbuf);
+  GtkTextIter cursorit = { };
+  gtk_text_buffer_get_iter_at_mark (mom_cmdtextbuf, &cursorit, cursormark);
+  unsigned cursoff = gtk_text_iter_get_offset (&cursorit);
+  if (momgui_lastdelimpaircount == 0 || momgui_lastdelimpairarr == NULL)
+    return;
+  unsigned otheroff = 0;
+  int pairix = -1;
+  bool found = false;
+  int lo = 0, hi = 0;
+  /// dichotomical search on the left side of pairs
+  lo = 0;
+  hi = (int) momgui_lastdelimpaircount;
+  while (lo + 6 < hi && pairix < 0)
+    {
+      int md = (lo + hi) / 2;
+      unsigned curleft = momgui_lastdelimpairarr[md].mo_delp_left;
+      if (curleft == cursoff)
+        {
+          pairix = md;
+        }
+      else if (curleft < cursoff)
+        hi = md;
+      else
+        lo = md;
+    }
+  for (int ix = lo; ix < hi && pairix < 0; ix++)
+    {
+      unsigned curleft = momgui_lastdelimpairarr[ix].mo_delp_left;
+      if (curleft == cursoff)
+        {
+          pairix = ix;
+        }
+    }
+  if (pairix >= 0)
+    {
+      otheroff = momgui_lastdelimpairarr[pairix].mo_delp_right;
+      found = true;
+    }
+  // dichotomical search on the right side of pairs
+  lo = 0;
+  hi = (int) momgui_lastdelimpaircount;
+  while (lo + 6 < hi && pairix < 0)
+    {
+      int md = (lo + hi) / 2;
+      unsigned curright = momgui_lastdelimpairarr[md].mo_delp_right;
+      if (curright == cursoff)
+        pairix = md;
+      else if (curright < cursoff)
+        hi = md;
+      else
+        lo = md;
+    }
+  for (int ix = lo; ix < hi && pairix < 0; ix++)
+    {
+      unsigned curright = momgui_lastdelimpairarr[ix].mo_delp_right;
+      if (curright == cursoff)
+        pairix = ix;
+    }
+  if (!found && pairix >= 0)
+    {
+      otheroff = momgui_lastdelimpairarr[pairix].mo_delp_left;
+      found = true;
+    }
+  if (found)
+    {
+      MOM_INFORMPRINTF
+        ("cmdtextview_movecursor found cursoff=%u otheroff=%u pairix=%d",
+         cursoff, otheroff, pairix);
+      GtkTextIter otherit = { };
+      gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &otherit, otheroff);
+      GtkTextIter aftercursit = cursorit;
+      gtk_text_iter_forward_char (&aftercursit);
+      GtkTextIter afterotherit = otherit;
+      gtk_text_iter_forward_char (&afterotherit);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_matchpair,
+                                 &cursorit, &aftercursit);
+      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_matchpair,
+                                 &otherit, &afterotherit);
+    }
+  else
+    MOM_INFORMPRINTF ("cmdtextview_movecursor notfound cursoff=%u", cursoff);
+}                               /* end momgui_cmdtextview_movecursor */
+
+
+
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
 static bool
@@ -2406,10 +2518,25 @@ momgui_cmdparse_delimoffsetpairs (struct momgui_cmdparse_st *cpars,
                     "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (leftoff < rightoff, "bad leftoff=%u rightoff=%u",
                     leftoff, rightoff);
-  MOM_WARNPRINTF
-    ("cmdparse_delimoffsetpairs unimplemented leftoff=%u rightoff=%u",
-     leftoff, rightoff);
-#warning unimplemented momgui_cmdparse_delimoffsetpairs
+  unsigned delcount = cpars->mo_gcp_delimcount;
+  if (MOM_UNLIKELY (delcount + 1 >= cpars->mo_gcp_delimsize))
+    {
+      unsigned oldcount = cpars->mo_gcp_delimcount;
+      struct momgui_delimpair_st *oldpairarr = cpars->mo_gcp_delimpairarr;
+      unsigned newsize =
+        mom_prime_above (4 * oldcount / 3 + oldcount / 16 + 30);
+      struct momgui_delimpair_st *newpairarr =
+        mom_gc_alloc_scalar (newsize * sizeof (struct momgui_delimpair_st));
+      if (oldcount > 0)
+        memcpy (newpairarr, oldpairarr,
+                oldcount * sizeof (struct momgui_delimpair_st));
+      cpars->mo_gcp_delimpairarr = newpairarr;
+      cpars->mo_gcp_delimsize = newsize;
+    }
+  cpars->mo_gcp_delimpairarr[delcount] = (struct momgui_delimpair_st)
+  {
+  leftoff, rightoff};
+  cpars->mo_gcp_delimcount = delcount + 1;
 }                               /* end momgui_cmdparse_delimoffsetpairs */
 
 // skip spaces, return true if end-of-buffer reached
@@ -3238,9 +3365,16 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
                               &itend);
   gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
-  gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-                              &itend);
   cpars->mo_gcp_curiter = itstart;
+  cpars->mo_gcp_delimpairarr = NULL;
+  cpars->mo_gcp_delimsize = 0;
+  cpars->mo_gcp_delimcount = 0;
+  unsigned delsize =
+    mom_prime_above (gtk_text_buffer_get_char_count (mom_cmdtextbuf) / 16 +
+                     10);
+  cpars->mo_gcp_delimpairarr =
+    mom_gc_alloc_scalar (delsize * sizeof (struct momgui_delimpair_st));
+  cpars->mo_gcp_delimsize = delsize;
   int cnt = 0;
 #warning this is temporary, we really should do something more fancy
   while (!momgui_cmdparse_skipspaces (cpars))
@@ -3363,13 +3497,19 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   cmdparse.mo_gcp_curiter = itstart;
   cmdparse.mo_gcp_onlyparse = true;
   cmdparse.mo_gcp_statusupdate = false;
+  momgui_lastdelimpairarr = NULL;
+  momgui_lastdelimpaircount = 0;
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
       momgui_cmdparse_full_buffer (&cmdparse);
+      momgui_lastdelimpairarr = cmdparse.mo_gcp_delimpairarr;
+      momgui_lastdelimpaircount = cmdparse.mo_gcp_delimcount;
     }
   else                          /* failerr != 0 */
     {
+      momgui_lastdelimpairarr = cmdparse.mo_gcp_delimpairarr;
+      momgui_lastdelimpaircount = cmdparse.mo_gcp_delimcount;
       if (cmdparse.mo_gcp_statusupdate)
         MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
                         failerr);
@@ -3484,6 +3624,13 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                 "scale", 1.07,
                                 "family", "FreeMono, Bold",
                                 "foreground", "steelblue", NULL);
+  mom_cmdtag_matchpair =
+    gtk_text_buffer_create_tag (mom_cmdtextbuf,
+                                "matchpair",
+                                "scale", 1.09,
+                                "family", "Liberation Mono, Bold",
+                                "background", "lightpink",
+                                "foreground", "steelblue", NULL);
   mom_cmdtag_name =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
                                 "name",
@@ -3536,6 +3683,8 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                     G_CALLBACK (momgui_cmdtextview_populatepopup), NULL);
   g_signal_connect (mom_cmdtextbuf, "end-user-action",
                     G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
+  g_signal_connect (mom_cmdtview, "move-cursor",
+                    G_CALLBACK (momgui_cmdtextview_movecursor), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
