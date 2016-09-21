@@ -147,6 +147,8 @@ mo_dump_csource_global_objects_set (mo_dumper_ty * du)
           while (isalnum (*pe) || *pe == '_')
             pe++;
           *pe = (char) 0;
+          if ((*pn) == (char) 0 || pn == pe)
+            continue;
           if (pe == pn + MOM_CSTRIDLEN && isdigit (*pn))
             {
               mo_hid_t hid = 0;
@@ -978,11 +980,14 @@ mo_dump_emit_globals (mo_dumper_ty * du, mo_value_t globsetv)
       mo_objref_t obp = globarr[ix];
       MOM_ASSERTPRINTF (mo_dyncast_objref (obp)
                         && mo_objref_space (obp) != mo_SPACE_NONE, "bad obp");
-      fputc ('\n', fp);
       mo_value_t namv = mo_objref_namev (obp);
       char idstr[MOM_CSTRIDSIZ];
       memset (idstr, 0, sizeof (idstr));
       mo_cstring_from_hi_lo_ids (idstr, obp->mo_ob_hid, obp->mo_ob_loid);
+      if (mo_objref_space (obp) == mo_SPACE_PREDEF)
+        MOM_WARNPRINTF ("global object#%d %s (%s) is also predefined",
+                        ix, namv ? mo_string_cstr (namv) : idstr, idstr);
+      fputc ('\n', fp);
       mo_value_t commv =
         mo_dyncast_string (mo_objref_get_attr (obp, MOM_PREDEF (comment)));
       if (commv)
@@ -1384,7 +1389,7 @@ mom_dump_state (const char *dirname)
       mo_dump_scan_objref (&dumper, globobr);
       MOM_ASSERTPRINTF (mo_objref_space (globobr) != mo_SPACE_NONE,
                         "ix=%d transient globobr@%p: %s", ix, globobr,
-			mo_objref_pnamestr(globobr));
+                        mo_objref_pnamestr (globobr));
     };
   long nbobj = nbpredef + nbglobal;
   double lastbelltime = mom_elapsed_real_time ();
