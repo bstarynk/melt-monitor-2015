@@ -3366,6 +3366,7 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
                                 && operfunobr->mo_ob_payldata != NULL,
                                 "bad operfunobr %s",
                                 mo_objref_pnamestr (operfunobr));
+	      mo_objref_put_attr(operationobr, MOM_PREDEF(extend), obr);
               mo_signature_object_to_value_sigt *operfun =
                 operfunobr->mo_ob_payldata;
               momgui_user_cmdparse = cpars;
