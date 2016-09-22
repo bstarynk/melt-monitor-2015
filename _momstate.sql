@@ -519,10 +519,10 @@ INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": {
-     "ssize": 115,
+     "ssize": 116,
      "string": [
-      "class for array ctypes, the first component#0 is the element ctype; the second c",
-      "omponent#1 is the dimension, if an"
+      "class for array ctypes, the first component#0 is the element ctype; the second ",
+      "component#1 is the dimension, if any."
      ]
     }
    }

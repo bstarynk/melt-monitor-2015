@@ -2461,14 +2461,22 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
             const char *ends = cstr + sz;
             const char *schk = cstr;
             const char *npc = NULL;
+	    MOM_ASSERTPRINTF(*ends == (char)0, "bad ends@%p for sz=%u cstr@%p:%s",
+			     ends, sz, cstr, cstr);
+	    MOM_ASSERTPRINTF(strlen(cstr) == sz, "bad sz=%u for cstr@%p/l%d:%s",
+			     sz, cstr, strlen(cstr), cstr);
             for (const char *pc = cstr; pc < ends && *pc; pc = npc)
               {
+		MOM_ASSERTPRINTF(pc >= cstr, "I want gdb to keep cstr=%s",
+				 cstr);
                 npc = g_utf8_next_char (pc);
-                if (pc - schk >= 80 || pc + 1 >= ends
+                if (pc - schk >= 80 || npc >= ends || *npc == (char)0
                     || (pc - schk > 24 && *pc == '\n')
-                    || (pc - schk > 36 && isspace (*pc)))
+                    || (pc - schk > 36 && (isspace (*pc) || ispunct(*pc))))
                   {
-                    if (*pc == '\n' || isspace (*pc))
+		    if (*npc == (char)0 && *pc != (char)0)
+		      pc++;
+                    else if (*pc == '\n' || isspace (*pc))
                       {
                         pc++;
                         npc = g_utf8_next_char (pc);
@@ -2633,6 +2641,8 @@ mo_value_of_json (mo_json_t js)
             }
           MOM_ASSERTPRINTF (pos <= ln, "bad final pos=%ld ln=%ld", pos,
                             (long) ln);
+	  MOM_ASSERTPRINTF (ln == strlen(buf), "bad ln=%d for buf@%p/l%d:%s",
+			    ln, buf, (int)strlen(buf), buf);
           mo_value_t vstr = mo_make_string_len (buf, ln);
           free (buf), buf = NULL;
           return vstr;
