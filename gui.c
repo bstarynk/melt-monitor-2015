@@ -42,8 +42,8 @@ static GtkTextTag *mom_tag_comment;     // tag for comment
 static GtkTextTag *mom_tag_index;       // tag for indexes
 static GtkTextTag *mom_tag_json;        // tag for JSON
 static GtkWidget *mom_appwin;
-static GtkWidget *mom_tview1;
-static GtkWidget *mom_tview2;
+static GtkWidget *mom_obtview1;
+static GtkWidget *mom_obtview2;
 static GtkWidget *mom_checkitemcmd;
 static bool mom_cmdcomplwithname;
 static GtkWidget *mom_cmdcomplmenu;     // the (temporary) command completion menu
@@ -265,7 +265,7 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
                         G_OBJECT_CLASS_NAME (hidezbut1),
                         G_OBJECT_TYPE_NAME (hidezbut1));
       dinf->mo_gdo_hidezoombutton1 = NULL;
-      gtk_container_remove (GTK_CONTAINER (mom_tview1), hidezbut1);
+      gtk_container_remove (GTK_CONTAINER (mom_obtview1), hidezbut1);
     }
   if (dinf->mo_gdo_hidezoombutton2)
     {
@@ -275,7 +275,7 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
                         G_OBJECT_CLASS_NAME (hidezbut2),
                         G_OBJECT_TYPE_NAME (hidezbut2));
       dinf->mo_gdo_hidezoombutton2 = NULL;
-      gtk_container_remove (GTK_CONTAINER (mom_tview2), hidezbut2);
+      gtk_container_remove (GTK_CONTAINER (mom_obtview2), hidezbut2);
     }
   if (dinf->mo_gdo_startmark && dinf->mo_gdo_endmark
       && !gtk_text_mark_get_deleted (dinf->mo_gdo_startmark)
@@ -1209,10 +1209,10 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
   //gtk_button_new_from_icon_name ("stock_delete", GTK_ICON_SIZE_BUTTON);
   dinf->mo_gdo_hidezoombutton2 =
     gtk_button_new_from_icon_name ("gtk-close", GTK_ICON_SIZE_BUTTON);
-  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview1),
+  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_obtview1),
                                      dinf->mo_gdo_hidezoombutton1,
                                      dinf->mo_gdo_hidezoomanchor);
-  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_tview2),
+  gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (mom_obtview2),
                                      dinf->mo_gdo_hidezoombutton2,
                                      dinf->mo_gdo_hidezoomanchor);
   g_signal_connect (dinf->mo_gdo_hidezoombutton1, "clicked",
@@ -3602,6 +3602,25 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
 
+static gboolean
+momgui_obtview_querytooltip (GtkWidget * widget MOM_UNUSED,
+                             gint x, gint y,
+                             gboolean kbdmode,
+                             GtkTooltip * tooltip, gpointer data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (widget == mom_obtview1 || widget == mom_obtview2,
+                    "bad widget");
+  if (kbdmode)
+    return false;               /* dont show the tooltip */
+#warning obtview_querytooltip temporary, just for debugging
+  char msgbuf[128];
+  snprintf (msgbuf, sizeof (msgbuf),
+            "<b>obtview</b> tooltip <tt>x=%d, y=%d</tt>", (int) x, (int) y);
+  gtk_tooltip_set_markup (tooltip, msgbuf);
+  return true;
+}                               /* end of momgui_obtview_querytooltip */
+
+
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
 {
@@ -3663,14 +3682,20 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_obtextbuf = gtk_text_buffer_new (mom_obtagtable);
   mom_initialize_gtk_tags_for_objects ();
   GtkWidget *paned = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
-  mom_tview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
-  mom_tview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview1), false);
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_tview2), false);
+  mom_obtview1 = gtk_text_view_new_with_buffer (mom_obtextbuf);
+  mom_obtview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview1), false);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview2), false);
+  gtk_widget_set_has_tooltip (GTK_WIDGET (mom_obtview1), true);
+  gtk_widget_set_has_tooltip (GTK_WIDGET (mom_obtview2), true);
+  g_signal_connect (GTK_WIDGET (mom_obtview1), "query-tooltip",
+                    G_CALLBACK (momgui_obtview_querytooltip), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview2), "query-tooltip",
+                    G_CALLBACK (momgui_obtview_querytooltip), NULL);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
-  gtk_container_add (GTK_CONTAINER (scrotv1), mom_tview1);
+  gtk_container_add (GTK_CONTAINER (scrotv1), mom_obtview1);
   GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
-  gtk_container_add (GTK_CONTAINER (scrotv2), mom_tview2);
+  gtk_container_add (GTK_CONTAINER (scrotv2), mom_obtview2);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv1),
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv2),
