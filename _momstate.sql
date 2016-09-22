@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 21 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 22 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -521,8 +521,9 @@ INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
     "va": {
      "ssize": 116,
      "string": [
-      "class for array ctypes, the first component#0 is the element ctype; the second ",
-      "component#1 is the dimension, if any."
+      "class for array ctypes, the first component",
+      "#0 is the element ctype; the second component",
+      "#1 is the dimension, if any."
      ]
     }
    }
