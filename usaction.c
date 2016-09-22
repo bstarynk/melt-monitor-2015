@@ -169,7 +169,7 @@ MOM_PREFIXID (mofun_, tuple_useract) (mo_objref_t obuact)
 mo_value_t
 mofun_tuple_useract (mo_objref_t obuact)
 {
-  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "set_useract: bad obuact");
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "tuple_useract: bad obuact");
   unsigned nbargs = mo_objref_comp_count (obuact);
   mo_vectvaldatapayl_ty *vect =
     mo_vectval_reserve (NULL, 3 * nbargs / 2 + 20);
@@ -205,4 +205,79 @@ mofun_tuple_useract (mo_objref_t obuact)
 
 
 // momglob_string
+const char
+MOM_PREFIXID (mosig_, string_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, string_useract)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_string_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, string_useract) (mo_objref_t obuact)
+{
+  return mofun_string_useract (obuact);
+}
+
+mo_value_t
+mofun_string_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "string_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+  char *buf = NULL;
+  size_t siz = 0;
+  FILE *fmem = open_memstream (&buf, &siz);
+  if (!fmem)
+    MOM_FATAPRINTF ("string_useract: open_memstream fail");
+  for (unsigned ix = 1; ix < nbargs; ix++)
+    {
+      mo_value_t curargv = mo_objref_get_comp (obuact, ix);
+      enum mo_valkind_en k = mo_kind_of_value (curargv);
+      if (k == mo_KNONE)
+        continue;
+      else if (k == mo_KSTRING)
+        fputs (mo_string_cstr (curargv), fmem);
+      else if (k == mo_KINT)
+        fprintf (fmem, "%ld", (long) mo_value_to_int (curargv, -1));
+      else
+        fputs (mo_value_pnamestr (curargv), fmem);
+    }
+  long ln = ftell (fmem);
+  fflush (fmem);
+  mo_value_t vstr = mo_make_string_len (buf, ln);
+  fclose (fmem);
+  free (buf), buf = NULL;
+  return vstr;
+}                               /* end of mofun_string_useract */
+
+// momglob_add_user_action
+const char
+MOM_PREFIXID (mosig_, add_user_action_useract)[] =
+  "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, add_user_action_useract)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_add_user_action_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, add_user_action_useract) (mo_objref_t obuact)
+{
+  return mofun_add_user_action_useract (obuact);
+}
+
+mo_value_t
+mofun_add_user_action_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact),
+                    "add_user_action_useract: bad obuact");
+  MOM_FATAPRINTF ("add_user_action_useract unimplemented obuact=%s",
+                  mo_objref_pnamestr (obuact));
+#warning mofun_add_user_action_useract unimplemented
+}                               /* end of mofun_add_user_action_useract */
+
 // end of file usaction.c
