@@ -251,9 +251,6 @@ momgui_clear_hidzoombut2 (GtkWidget * wid, gpointer data)
 static void
 mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
 {
-  MOM_BACKTRACEPRINTF ("destroy_dispobjinfo dinf@%p dispobr=%s inobr=%s",
-                       dinf, mo_objref_pnamestr (dinf->mo_gdo_dispobr),
-                       mo_objref_pnamestr (dinf->mo_gdo_inobr));
   momgui_displayed_objasso =    //
     mo_assoval_remove (momgui_displayed_objasso, dinf->mo_gdo_dispobr);
   /// temporary informs for debugging
@@ -463,8 +460,6 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
              mo_objref_pnamestr (obr));
         shoc->mo_gso_showobr = obr;
         shoc->mo_gso_txtag = NULL;
-        MOM_INFORMPRINTF ("display_objref create shoc@%p for obr=%s",
-                          shoc, mo_objref_pnamestr (obr));
         objtag = gtk_text_tag_table_lookup (mom_obtagtable, idbuf);
         if (objtag)
           {
@@ -1558,13 +1553,14 @@ mo_gui_display_object (mo_objref_t ob)
       g_hash_table_lookup (mom_dispobjinfo_hashtable, ob);
     MOM_ASSERTPRINTF (dinf != NULL, "null dinf! for ob=%s",
                       mo_objref_pnamestr (ob));
-    if (dinf->mo_gdo_startmark) {
-      GtkTextIter newit = { };
-      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &newit,
-					dinf->mo_gdo_startmark);
-      gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &newit, 0.2,
-				    false, 0.0, 0.0);
-    }
+    if (dinf->mo_gdo_startmark)
+      {
+        GtkTextIter newit = { };
+        gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &newit,
+                                          dinf->mo_gdo_startmark);
+        gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &newit,
+                                      0.2, false, 0.0, 0.0);
+      }
   }
   MOM_INFORMPRINTF ("gui_display_object end ob=%s", mo_objref_pnamestr (ob));
 }                               /* end of mo_gui_display_object */
@@ -2256,8 +2252,6 @@ momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
       && g_hash_table_lookup (mom_dispobjinfo_hashtable,
                               momgui_underlined_obr) == NULL)
     {
-      gtk_menu_shell_append (GTK_MENU_SHELL (popup),
-                             gtk_separator_menu_item_new ());
       GtkWidget *menulitem = gtk_menu_item_new_with_label ("");
       GtkWidget *itemlab = gtk_bin_get_child (GTK_BIN (menulitem));
       const char *labmarkup = NULL;
@@ -2275,7 +2269,9 @@ momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
         }
       MOM_ASSERTPRINTF (GTK_IS_LABEL (itemlab), "bad itemlab@%p", itemlab);
       gtk_label_set_markup (GTK_LABEL (itemlab), labmarkup);
-      gtk_menu_shell_append (GTK_MENU_SHELL (popup), menulitem);
+      gtk_menu_shell_prepend (GTK_MENU_SHELL (popup),
+                              gtk_separator_menu_item_new ());
+      gtk_menu_shell_prepend (GTK_MENU_SHELL (popup), menulitem);
       gtk_widget_show_all (popup);
       g_signal_connect (menulitem, "activate",
                         G_CALLBACK (momgui_display_underlined),
