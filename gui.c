@@ -3603,23 +3603,63 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
 
 
 static gboolean
-momgui_obtview_querytooltip (GtkWidget * widget MOM_UNUSED,
-                             gint x, gint y,
-                             gboolean kbdmode,
-                             GtkTooltip * tooltip, gpointer data MOM_UNUSED)
+momgui_obtview_motion_notifev (GtkWidget * widg,
+                               GdkEvent * ev, gpointer data MOM_UNUSED)
 {
-  MOM_ASSERTPRINTF (widget == mom_obtview1 || widget == mom_obtview2,
-                    "bad widget");
-  if (kbdmode)
-    return false;               /* dont show the tooltip */
-#warning obtview_querytooltip temporary, just for debugging
-  char msgbuf[128];
-  snprintf (msgbuf, sizeof (msgbuf),
-            "<b>obtview</b> tooltip <tt>x=%d, y=%d</tt>", (int) x, (int) y);
-  gtk_tooltip_set_markup (tooltip, msgbuf);
-  return true;
-}                               /* end of momgui_obtview_querytooltip */
-
+  MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
+  gint bufx = 0, bufy = 0;
+  GdkEventMotion *motev = ev;
+  gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
+                                         GTK_TEXT_WINDOW_TEXT,
+                                         (gint) motev->x,
+                                         (gint) motev->y, &bufx, &bufy);
+  GtkTextIter curit = { };
+  if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
+                                          &curit, bufx, bufy))
+    {
+      mo_objref_t taggedobr = NULL;
+      GSList *tagslist = gtk_text_iter_get_tags (&curit);
+      bool hasobjecttag = false;
+      for (GSList * curtagslist = tagslist;
+           curtagslist != NULL && !hasobjecttag;
+           curtagslist = g_slist_next (curtagslist))
+        {
+          GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
+          hasobjecttag =
+            (curtag == mom_tag_objname)
+            || (curtag == mom_tag_idstart) || (curtag == mom_tag_idrest);
+        }
+      if (hasobjecttag)
+        {
+          for (GSList * curtagslist = tagslist;
+               curtagslist != NULL && !taggedobr;
+               curtagslist = g_slist_next (curtagslist))
+            {
+              GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
+              if ((curtag == mom_tag_objname)
+                  || (curtag == mom_tag_idstart)
+                  || (curtag == mom_tag_idrest))
+                continue;
+              char *nameprop = NULL;
+              g_object_get (curtag, "name", &nameprop, NULL);
+              if (nameprop && nameprop[0] == '_')
+                {
+                  mo_hid_t hid = 0;
+                  mo_loid_t loid = 0;
+                  if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nameprop))
+                    taggedobr = mo_objref_find_hid_loid (hid, loid);
+                }
+            }
+        }
+      if (tagslist)
+        g_slist_free (tagslist);
+      // for debugging only
+      MOM_INFORMPRINTF ("obtview_motion_notifev bufx=%d bufy=%d taggedobr=%s",
+                        (int) bufx, (int) bufy,
+                        mo_objref_pnamestr (taggedobr));
+    }
+  return false;                 // propagate the event
+}                               /* end of momgui_obtview_motion_notifev */
 
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
@@ -3686,12 +3726,10 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   mom_obtview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview1), false);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview2), false);
-  gtk_widget_set_has_tooltip (GTK_WIDGET (mom_obtview1), true);
-  gtk_widget_set_has_tooltip (GTK_WIDGET (mom_obtview2), true);
-  g_signal_connect (GTK_WIDGET (mom_obtview1), "query-tooltip",
-                    G_CALLBACK (momgui_obtview_querytooltip), NULL);
-  g_signal_connect (GTK_WIDGET (mom_obtview2), "query-tooltip",
-                    G_CALLBACK (momgui_obtview_querytooltip), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview1), "motion-notify-event",
+                    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview2), "motion-notify-event",
+                    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrotv1), mom_obtview1);
   GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
