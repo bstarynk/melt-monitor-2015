@@ -1558,11 +1558,13 @@ mo_gui_display_object (mo_objref_t ob)
       g_hash_table_lookup (mom_dispobjinfo_hashtable, ob);
     MOM_ASSERTPRINTF (dinf != NULL, "null dinf! for ob=%s",
                       mo_objref_pnamestr (ob));
-    GtkTextIter newit = { };
-    gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &newit,
-                                      dinf->mo_gdo_startmark);
-    gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &newit, 0.2,
-                                  false, 0.0, 0.0);
+    if (dinf->mo_gdo_startmark) {
+      GtkTextIter newit = { };
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &newit,
+					dinf->mo_gdo_startmark);
+      gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &newit, 0.2,
+				    false, 0.0, 0.0);
+    }
   }
   MOM_INFORMPRINTF ("gui_display_object end ob=%s", mo_objref_pnamestr (ob));
 }                               /* end of mo_gui_display_object */
