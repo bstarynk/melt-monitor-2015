@@ -270,11 +270,64 @@ MOM_PREFIXID (mofun_, add_user_action_useract) (mo_objref_t obuact)
   return mofun_add_user_action_useract (obuact);
 }
 
+/// for $add_user_action(Action Action_useract)
 mo_value_t
 mofun_add_user_action_useract (mo_objref_t obuact)
 {
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact),
                     "add_user_action_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_ACTION,
+    MOMIX_USERACT,
+    MOMIX__LAST
+  };
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  mo_objref_t actionobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_ACTION));
+  mo_objref_t useractobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_USERACT));
+  if (nbargs != MOMIX__LAST)
+    mom_gui_fail_user_action
+      ("add_user_action_useract for $add_user_action wants two user arguments, got %d in %s",
+       mo_objref_comp_count (obuact) - 1, mo_objref_pnamestr (obuact));
+  if (!actionobr)
+    mom_gui_fail_user_action
+      ("add_user_action_useract: missing action (first argument) in %s",
+       mo_objref_pnamestr (obuact));
+  if (!useractobr)
+    mom_gui_fail_user_action
+      ("add_user_action_useract: missing useract (second argument) in %s",
+       mo_objref_pnamestr (obuact));
+  char useractid[MOM_CSTRIDSIZ];
+  memset (useractid, 0, sizeof (useractid));
+  mo_objref_idstr (useractid, useractobr);
+  char funsymbuf[MOM_CSTRIDSIZ + 24];
+  memset (funsymbuf, 0, sizeof (funsymbuf));
+  snprintf (funsymbuf, sizeof (funsymbuf), MOM_FUNC_PREFIX "%s", useractid);
+  void *funad = dlsym (mom_prog_dlhandle, funsymbuf);
+  if (!funad)
+    mom_gui_fail_user_action
+      ("add_user_action_useract: function %s not found (%s) for $%s",
+       funsymbuf, dlerror (), mo_objref_pnamestr (actionobr));
+  char sigsymbuf[MOM_CSTRIDSIZ + 24];
+  memset (sigsymbuf, 0, sizeof (sigsymbuf));
+  snprintf (sigsymbuf, sizeof (sigsymbuf),
+            MOM_SIGNATURE_PREFIX "%s", useractid);
+  const char *sigad = dlsym (mom_prog_dlhandle, sigsymbuf);
+  if (!sigad)
+    mom_gui_fail_user_action
+      ("add_user_action_useract: signature %s not found (%s) for $%s",
+       sigsymbuf, dlerror (), mo_objref_pnamestr (actionobr));
+  if (strcmp (sigad, "signature_object_to_value")
+      && strcmp (sigad, MOM_IDENTOFNAME (signature_object_to_value)))
+    mom_gui_fail_user_action
+      ("add_user_action_useract: signature %s unexpected '%s' for $%s",
+       sigsymbuf, sigad, mo_objref_pnamestr (actionobr));
+
   MOM_FATAPRINTF ("add_user_action_useract unimplemented obuact=%s",
                   mo_objref_pnamestr (obuact));
 #warning mofun_add_user_action_useract unimplemented

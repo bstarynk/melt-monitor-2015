@@ -1543,6 +1543,9 @@ mo_value_t mo_named_set_of_prefix (const char *prefix);
 
 mo_value_t mo_predefined_objects_set (void);
 #define MOM_VARPREDEF(Nam) mompredef_##Nam
+#define MOM_IDENTOFNAMEGET(Momid) #Momid
+#define MOM_IDENTOFNAMEGETBIS(Momid) MOM_IDENTOFNAMEGET(#Momid)
+#define MOM_IDENTOFNAME(Nam) MOM_IDENTOFNAMEGETBIS(momid_##Nam)
 #define MOM_PREDEF(Nam) ((mo_objref_t)(&MOM_VARPREDEF(Nam)))
 /* declare them as objects */
 #define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) \
