@@ -3227,7 +3227,8 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
                              &leftpit, &cpars->mo_gcp_curiter);
   while (!momgui_cmdparse_skipspaces (cpars))
     {
-      gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+      gunichar nextc = 0;
+      curc = momgui_cmdparse_peekchar (cpars, 0);
       /// star to add an attribute
       if (curc == '*' || curc == 0x22C6 /*U+22C6 STAR OPERATOR ⋆ */ )
         {
@@ -3286,6 +3287,7 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
               mo_objref_put_attr (obr, obattr, valat);
             };
         }
+      //// amperstand to add a component
       else if (curc == '&')
         {
           // perhaps we might ignore any index info, e.g. &#10: could be parsed as & 
@@ -3300,6 +3302,78 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
               mo_objref_comp_append (obr, valcomp);
             }
         }
+      /// dollar for some user action applied to the current object
+      else if (curc == '$'
+               && (nextc = momgui_cmdparse_peekchar (cpars, 1)) > 0
+               && nextc < 127 << (isalpha (nextc) || nextc == '_'))
+        {
+          mo_objref_t operatorobr = NULL;
+          mo_objref_t operfunobr = NULL;
+          GtkTextIter begopit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&begopit);
+          GtkTextIter endopit = begopit;
+          GtkTextIter namopit = begopit;
+          char operbuf[32];
+          memset (operbuf, 0, sizeof (operbuf));
+          while ((nextc = gtk_text_iter_get_char (&endopit)) > 0
+                 && nextc < 127 && (isalnum (nextc) || nextc == '_'))
+            gtk_text_iter_forward_char (&endopit);
+          char *opertxt =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
+                                      false);
+          if (isalpha (opertxt[0]))
+            operatorobr = mo_find_named_cstr (opertxt);
+          else if (opertxt[0] == '_')
+            {
+              mo_hid_t ophid = 0;
+              mo_loid_t oploid = 0;
+              if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
+                operatorobr = mo_objref_find_hid_loid (ophid, oploid);
+            }
+          strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
+          g_free (opertxt);
+          if (!mo_dyncast_objref (operatorobr))
+            MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
+          if (operatorobr->mo_ob_paylkind ==
+              MOM_PREDEF (signature_object_to_value))
+            operfunobr = operatorobr;
+          else
+            operfunobr =
+              mo_dyncast_objref (mo_objref_get_attr
+                                 (operatorobr, MOM_PREDEF (GUI_operation)));
+          if (!mo_dyncast_objref (operfunobr)
+              || operfunobr->mo_ob_paylkind !=
+              MOM_PREDEF (signature_object_to_value)
+              || !operfunobr->mo_ob_payldata)
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "wrong operator $%s... (invalid payload in operator function %s)...",
+                                 operbuf, mo_objref_pnamestr (operfunobr));
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
+                                     &begopit, &endopit);
+          cpars->mo_gcp_curiter = endopit;
+          mo_objref_t operationobr = mo_make_object ();
+          mo_objref_comp_append (operationobr, operatorobr);
+          mo_objref_comp_append (operationobr, obr);
+          if (!momgui_cmdparse_skipspaces (cpars)
+              && momgui_cmdparse_peekchar (cpars, 0) == '(')
+            momgui_cmdparse_complement (cpars, operationobr, "operation");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              MOM_ASSERTPRINTF (operfunobr != NULL
+                                && operfunobr != MOM_EMPTY_SLOT
+                                && operfunobr->mo_ob_paylkind ==
+                                MOM_PREDEF (signature_object_to_value)
+                                && operfunobr->mo_ob_payldata != NULL,
+                                "bad operfunobr %s",
+                                mo_objref_pnamestr (operfunobr));
+              mo_signature_object_to_value_sigt *operfun =
+                operfunobr->mo_ob_payldata;
+              momgui_user_cmdparse = cpars;
+              (void) (*operfun) (operationobr);
+              momgui_user_cmdparse = NULL;
+            }
+        }
+      /// end of complement with closing parenthesis
       else if (curc == ')')
         {
           GtkTextIter parit = cpars->mo_gcp_curiter;
@@ -3331,6 +3405,7 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
         }
     };
 }                               /* end of momgui_cmdparse_complement */
+
 
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
