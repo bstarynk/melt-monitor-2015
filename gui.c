@@ -306,10 +306,6 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
 static void
 mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
 {
-  MOM_BACKTRACEPRINTF ("destroy_shownobocc shoc@%p txtag@%p#r%d showobr=%s",
-                       shoc, shoc->mo_gso_txtag,
-                       MOMGUI_GOBREFCOUNT (shoc->mo_gso_txtag),
-                       mo_objref_pnamestr (shoc->mo_gso_showobr));
   momgui_shown_obocchset =      //
     mo_hashset_remove (momgui_shown_obocchset, shoc->mo_gso_showobr);
   if (shoc->mo_gso_txtag)
@@ -337,7 +333,6 @@ mom_destroy_shownobocc (momgui_shownobocc_ty * shoc)
       shoc->mo_gso_txtag = NULL;
     }
   memset (shoc, 0, sizeof (*shoc));
-  MOM_INFORMPRINTF ("destroy_shownobocc shoc@%p free", shoc);
   free (shoc);
 }                               /* end of mom_destroy_shownobocc */
 
@@ -1510,6 +1505,25 @@ mo_gui_display_object (mo_objref_t ob)
                     mo_objref_pnamestr (ob));
   if (!mo_dyncast_objref (ob) || mom_without_gui)
     return;
+  // we try to show the tview1 at approximately its former position, so we compute some ratioy1
+  double ratioy1 = 0.0;
+  {
+    GdkRectangle visibrect1 = { };
+    gtk_text_view_get_visible_rect (GTK_TEXT_VIEW (mom_obtview1),
+                                    &visibrect1);
+    gint bottomy1 = 0;
+    gint lastlineh1 = 0;
+    GtkTextIter endit = { };
+    gtk_text_buffer_get_end_iter (mom_obtextbuf, &endit);
+    gtk_text_view_get_line_yrange (GTK_TEXT_VIEW (mom_obtview1), &endit,
+                                   &bottomy1, &lastlineh1);
+    gint lowy1 = bottomy1 + lastlineh1;
+    ratioy1 = ((double) visibrect1.y) / ((double) lowy1 + 1.0);
+    if (ratioy1 >= 1.0 - (double) lastlineh1 / (lowy1 + 1.0))
+      ratioy1 = 1.0 - 2.0 * ((double) lastlineh1 / (lowy1 + 1.0));
+    if (ratioy1 < 0.0)
+      ratioy1 = 0.0;
+  }
   if (mo_assoval_get (momgui_displayed_objasso, ob))
     {
       MOM_INFORMPRINTF ("gui_display_object already displayed ob=%s",
@@ -1519,6 +1533,37 @@ mo_gui_display_object (mo_objref_t ob)
   momgui_displayed_objasso =    //
     mo_assoval_put (momgui_displayed_objasso, ob, mo_int_to_value (1));
   mo_gui_generate_object_text_buffer ();
+  // we show tview1 according to ratioy1
+  {
+    GdkRectangle visibrect1 = { };
+    gtk_text_view_get_visible_rect (GTK_TEXT_VIEW (mom_obtview1),
+                                    &visibrect1);
+    gint bottomy1 = 0;
+    gint lastlineh1 = 0;
+    GtkTextIter endit = { };
+    gtk_text_buffer_get_end_iter (mom_obtextbuf, &endit);
+    gtk_text_view_get_line_yrange (GTK_TEXT_VIEW (mom_obtview1), &endit,
+                                   &bottomy1, &lastlineh1);
+    gint lowy1 = bottomy1 + lastlineh1;
+    gint cury = (gint) (lowy1 * ratioy1);
+    GtkTextIter curit = { };
+    gtk_text_view_get_line_at_y (GTK_TEXT_VIEW (mom_obtview1), &curit, cury,
+                                 NULL);
+    gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &curit, 0.2,
+                                  false, 0.0, 0.0);
+  }
+  // we want to show the tview2 at approximately the new's object position
+  {
+    momgui_dispobjinfo_ty *dinf =
+      g_hash_table_lookup (mom_dispobjinfo_hashtable, ob);
+    MOM_ASSERTPRINTF (dinf != NULL, "null dinf! for ob=%s",
+                      mo_objref_pnamestr (ob));
+    GtkTextIter newit = { };
+    gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &newit,
+                                      dinf->mo_gdo_startmark);
+    gtk_text_view_scroll_to_iter (GTK_TEXT_VIEW (mom_obtview1), &newit, 0.2,
+                                  false, 0.0, 0.0);
+  }
   MOM_INFORMPRINTF ("gui_display_object end ob=%s", mo_objref_pnamestr (ob));
 }                               /* end of mo_gui_display_object */
 
