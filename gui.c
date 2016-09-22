@@ -519,8 +519,8 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
       char *pb = combuf;
       for (pc = mo_string_cstr (commv);
            pc && *pc
-	     && (((pn = g_utf8_next_char (pc)),
-		  pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
+           && (((pn = g_utf8_next_char (pc)),
+                pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
         {
           if (*pc == '\n')
             break;
@@ -1295,8 +1295,8 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
       char *pb = combuf;
       for (pc = mo_string_cstr (commv);
            pc && *pc
-	     && (((pn = g_utf8_next_char (pc)),
-		  pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
+           && (((pn = g_utf8_next_char (pc)),
+                pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
         {
           if (*pc == '\n')
             break;
@@ -2023,8 +2023,8 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
           char *pb = combuf;
           for (pc = mo_string_cstr (commv);
                pc && *pc
-		 && (((pn = g_utf8_next_char (pc)),
-		      pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
+               && (((pn = g_utf8_next_char (pc)),
+                    pb - combuf < (int) sizeof (combuf) - 10)); pc = pn)
             {
               if (*pc == '\n')
                 break;
@@ -2118,13 +2118,12 @@ momgui_dont_underline (gpointer data MOM_UNUSED)
 }                               /* end of momgui_dont_underline */
 
 static void
-momgui_display_underlined (GtkMenuItem * mitem, gpointer data)
+momgui_display_underlined (GtkMenuItem * mitem MOM_UNUSED, gpointer data)
 {
   mo_objref_t obr = data;
   if (mo_dyncast_objref (obr))
     {
-      /// temporary
-      MOM_INFORMPRINTF ("should display %s", mo_objref_pnamestr (obr));
+      mo_gui_display_object (obr);
     }
 }                               /* end momgui_display_underlined */
 
@@ -2203,17 +2202,16 @@ static void
 momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
                               GtkWidget * popup, gpointer data MOM_UNUSED)
 {
-  MOM_ASSERTPRINTF (tview == mom_obtview1 || tview == mom_obtview2,
-                    "bad tview");
-  momgui_dispobjinfo_ty *dinf = NULL;
-  if (GTK_IS_MENU (popup)
-      && momgui_underlined_obr && mom_dispobjinfo_hashtable
+  MOM_ASSERTPRINTF (tview == GTK_TEXT_VIEW (mom_obtview1)
+                    || tview == GTK_TEXT_VIEW (mom_obtview2), "bad tview");
+  if (GTK_IS_MENU (popup) && momgui_underlined_obr
+      && mom_dispobjinfo_hashtable
       && g_hash_table_lookup (mom_dispobjinfo_hashtable,
                               momgui_underlined_obr) == NULL)
     {
       gtk_menu_shell_append (GTK_MENU_SHELL (popup),
                              gtk_separator_menu_item_new ());
-      GtkWidget *menulitem = gtk_menu_item_new ();
+      GtkWidget *menulitem = gtk_menu_item_new_with_label ("");
       GtkWidget *itemlab = gtk_bin_get_child (GTK_BIN (menulitem));
       const char *labmarkup = NULL;
       mo_value_t namev = mo_objref_namev (momgui_underlined_obr);
@@ -2227,25 +2225,27 @@ momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
           labmarkup = mom_gc_printf ("Display <tt><i>%s</i></tt>",
                                      mo_objref_idstr (underid,
                                                       momgui_underlined_obr));
-	}
+        }
+      MOM_ASSERTPRINTF (GTK_IS_LABEL (itemlab), "bad itemlab@%p", itemlab);
       gtk_label_set_markup (GTK_LABEL (itemlab), labmarkup);
       gtk_menu_shell_append (GTK_MENU_SHELL (popup), menulitem);
       gtk_widget_show_all (popup);
       g_signal_connect (menulitem, "activate",
-			G_CALLBACK (momgui_display_underlined),
-			momgui_underlined_obr);
+                        G_CALLBACK (momgui_display_underlined),
+                        momgui_underlined_obr);
     }
   else
     MOM_BACKTRACEPRINTF ("non-menu obtview popup");
-}                           /* end of momgui_obtview_populatepopup */
+}                               /* end of momgui_obtview_populatepopup */
 
-static void momgui_cmd_updatematchpair (void)
+static void
+momgui_cmd_updatematchpair (void)
 {
   GtkTextIter startit = { };
   GtkTextIter endit = { };
   gtk_text_buffer_get_bounds (mom_cmdtextbuf, &startit, &endit);
   gtk_text_buffer_remove_tag (mom_cmdtextbuf,
-			      mom_cmdtag_matchpair, &startit, &endit);
+                              mom_cmdtag_matchpair, &startit, &endit);
   GtkTextMark *cursormark = gtk_text_buffer_get_insert (mom_cmdtextbuf);
   GtkTextIter cursorit = { };
   gtk_text_buffer_get_iter_at_mark (mom_cmdtextbuf, &cursorit, cursormark);
@@ -2264,21 +2264,21 @@ static void momgui_cmd_updatematchpair (void)
       int md = (lo + hi) / 2;
       unsigned curleft = momgui_lastdelimpairarr[md].mo_delp_left;
       if (curleft == cursoff)
-	{
-	  pairix = md;
-	}
+        {
+          pairix = md;
+        }
       else if (curleft < cursoff)
-	hi = md;
+        hi = md;
       else
-	lo = md;
+        lo = md;
     }
   for (int ix = lo; ix < hi && pairix < 0; ix++)
     {
       unsigned curleft = momgui_lastdelimpairarr[ix].mo_delp_left;
       if (curleft == cursoff)
-	{
-	  pairix = ix;
-	}
+        {
+          pairix = ix;
+        }
     }
   if (pairix >= 0)
     {
@@ -2293,17 +2293,17 @@ static void momgui_cmd_updatematchpair (void)
       int md = (lo + hi) / 2;
       unsigned curright = momgui_lastdelimpairarr[md].mo_delp_right;
       if (curright == cursoff)
-	pairix = md;
+        pairix = md;
       else if (curright < cursoff)
-	hi = md;
+        hi = md;
       else
-	lo = md;
+        lo = md;
     }
   for (int ix = lo; ix < hi && pairix < 0; ix++)
     {
       unsigned curright = momgui_lastdelimpairarr[ix].mo_delp_right;
       if (curright == cursoff)
-	pairix = ix;
+        pairix = ix;
     }
   if (!found && pairix >= 0)
     {
@@ -2313,45 +2313,44 @@ static void momgui_cmd_updatematchpair (void)
   if (found)
     {
       GtkTextIter otherit = { };
-      gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &otherit,
-					  otheroff);
+      gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf, &otherit, otheroff);
       GtkTextIter aftercursit = cursorit;
       gtk_text_iter_forward_char (&aftercursit);
       GtkTextIter afterotherit = otherit;
       gtk_text_iter_forward_char (&afterotherit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_matchpair,
-				 &cursorit, &aftercursit);
+                                 &cursorit, &aftercursit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_matchpair,
-				 &otherit, &afterotherit);
+                                 &otherit, &afterotherit);
     }
-}                             /* end momgui_cmd_updatematchpair */
+}                               /* end momgui_cmd_updatematchpair */
 
 // for "move-cursor" signal to mom_cmdtview
 static void
 momgui_cmdtextview_movecursor (GtkTextView * tview MOM_UNUSED,
-			       GtkMovementStep step MOM_UNUSED,
-			       gint count MOM_UNUSED,
-			       gboolean extendselection MOM_UNUSED,
-			       gpointer data MOM_UNUSED)
+                               GtkMovementStep step MOM_UNUSED,
+                               gint count MOM_UNUSED,
+                               gboolean extendselection MOM_UNUSED,
+                               gpointer data MOM_UNUSED)
 {
   MOM_ASSERTPRINTF (tview == GTK_TEXT_VIEW (mom_cmdtview), "bad tview");
   momgui_cmd_updatematchpair ();
-}                             /* end momgui_cmdtextview_movecursor */
+}                               /* end momgui_cmdtextview_movecursor */
 
 
 static void
 momgui_cmdtextview_insertatcursor (GtkTextView * tview MOM_UNUSED,
-				   gchar * str, gpointer data MOM_UNUSED)
+                                   gchar * str, gpointer data MOM_UNUSED)
 {
   if (str && str[0])
     momgui_cmd_updatematchpair ();
-}                             /* end momgui_cmd_updatematchpair */
+}                               /* end momgui_cmd_updatematchpair */
 
 // for "key-release-event" signal to mom_cmdtview, handle
 // auto-completion with TAB key
 static bool
 momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
-			       void *data MOM_UNUSED)
+                               void *data MOM_UNUSED)
 {
   if (ev && ev->type == GDK_KEY_RELEASE
       && ((GdkEventKey *) ev)->keyval == GDK_KEY_Tab)
@@ -2362,336 +2361,334 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
       mom_cmdcomplprefix = NULL;
       mom_cmdcomplset = NULL;
       if (MOM_UNLIKELY (mom_cmdcomplmenu))
-	{
-	  gtk_widget_destroy (mom_cmdcomplmenu);
-	  mom_cmdcomplmenu = NULL;
-	}
+        {
+          gtk_widget_destroy (mom_cmdcomplmenu);
+          mom_cmdcomplmenu = NULL;
+        }
       GtkTextIter itcurs = { };
-      gtk_text_buffer_get_iter_at_mark        //
-	(mom_cmdtextbuf,
-	 &itcurs, gtk_text_buffer_get_insert (mom_cmdtextbuf));
+      gtk_text_buffer_get_iter_at_mark  //
+        (mom_cmdtextbuf,
+         &itcurs, gtk_text_buffer_get_insert (mom_cmdtextbuf));
       GtkTextIter itbword = itcurs;
       if (!gtk_text_iter_starts_line (&itbword))
-	gtk_text_iter_backward_char (&itbword);
+        gtk_text_iter_backward_char (&itbword);
       gunichar bwordc = 0;
       int nbackw = 0;
       while (true)
-	{
-	  bwordc = gtk_text_iter_get_char (&itbword);
-	  if (bwordc >= 127 || isspace (bwordc) || bwordc == 0
-	      || iscntrl (bwordc) || (!isalnum (bwordc) && bwordc != '_'))
-	    break;
-	  if (gtk_text_iter_starts_line (&itbword)
-	      || !gtk_text_iter_backward_char (&itbword))
-	    break;
-	  nbackw++;
-	};
+        {
+          bwordc = gtk_text_iter_get_char (&itbword);
+          if (bwordc >= 127 || isspace (bwordc) || bwordc == 0
+              || iscntrl (bwordc) || (!isalnum (bwordc) && bwordc != '_'))
+            break;
+          if (gtk_text_iter_starts_line (&itbword)
+              || !gtk_text_iter_backward_char (&itbword))
+            break;
+          nbackw++;
+        };
       if (bwordc > 0 && bwordc < 127 && !(isalnum (bwordc) || bwordc == '_')
-	  && nbackw > 0 && !gtk_text_iter_ends_line (&itbword))
-	gtk_text_iter_forward_char (&itbword);
+          && nbackw > 0 && !gtk_text_iter_ends_line (&itbword))
+        gtk_text_iter_forward_char (&itbword);
       char *wordtxt =
-	gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, false);
-      gunichar cursc = gtk_text_iter_get_char (&itcurs);      // character just after the cursor, so useless
+        gtk_text_buffer_get_text (mom_cmdtextbuf, &itbword, &itcurs, false);
+      gunichar cursc = gtk_text_iter_get_char (&itcurs);        // character just after the cursor, so useless
       MOM_INFORMPRINTF
-	("cmdtextview_keyrelease block TAB, curschar#%u'%c', line %d offset %d bword %d wordtxt '%s'",
-	 (unsigned) cursc, (cursc >= (unsigned) ' '
-			    && cursc < 127U) ? (char) cursc : '?',
-	 gtk_text_iter_get_line (&itcurs),
-	 gtk_text_iter_get_line_offset (&itcurs),
-	 gtk_text_iter_get_line_offset (&itbword), wordtxt);
+        ("cmdtextview_keyrelease block TAB, curschar#%u'%c', line %d offset %d bword %d wordtxt '%s'",
+         (unsigned) cursc, (cursc >= (unsigned) ' '
+                            && cursc < 127U) ? (char) cursc : '?',
+         gtk_text_iter_get_line (&itcurs),
+         gtk_text_iter_get_line_offset (&itcurs),
+         gtk_text_iter_get_line_offset (&itbword), wordtxt);
       MOM_INFORMPRINTF
-	("cmdtextview_keyrelease block TAB bwordc#%u'%c' wordtxt '%s'",
-	 (unsigned) bwordc, (bwordc >= (unsigned) ' '
-			     && bwordc < 127U) ? (char) bwordc : '?',
-	 wordtxt);
+        ("cmdtextview_keyrelease block TAB bwordc#%u'%c' wordtxt '%s'",
+         (unsigned) bwordc, (bwordc >= (unsigned) ' '
+                             && bwordc < 127U) ? (char) bwordc : '?',
+         wordtxt);
       unsigned complsiz = 0;
       if (isalpha (wordtxt[0]))
-	{
-	  /// should do a name completion
-	  mom_cmdcomplwithname = true;
-	  mom_cmdcomplset = (mo_value_t) mo_named_set_of_prefix (wordtxt);
-	  mom_cmdcomplprefix =
-	    mo_set_common_prefix (mom_cmdcomplset, false);
-	  MOM_INFORMPRINTF
-	    ("cmdtextview_keyrelease name word '%s' complset %s common prefix '%s'",
-	     wordtxt, mo_value_pnamestr (mom_cmdcomplset),
-	     mom_cmdcomplprefix);
-	}
+        {
+          /// should do a name completion
+          mom_cmdcomplwithname = true;
+          mom_cmdcomplset = (mo_value_t) mo_named_set_of_prefix (wordtxt);
+          mom_cmdcomplprefix = mo_set_common_prefix (mom_cmdcomplset, false);
+          MOM_INFORMPRINTF
+            ("cmdtextview_keyrelease name word '%s' complset %s common prefix '%s'",
+             wordtxt, mo_value_pnamestr (mom_cmdcomplset),
+             mom_cmdcomplprefix);
+        }
       else if (wordtxt[0] == '_' && isdigit (wordtxt[1])
-	       && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
-	{
-	  /// should do an objid completion
-	  mom_cmdcomplwithname = false;
-	  mom_cmdcomplset =
-	    (mo_value_t) mom_set_complete_objectid (wordtxt);
-	  mom_cmdcomplprefix = mo_set_common_prefix (mom_cmdcomplset, true);
-	  MOM_INFORMPRINTF
-	    ("cmdtextview_keyrelease id word '%s' complset %s common prefix '%s'",
-	     wordtxt, mo_value_pnamestr (mom_cmdcomplset),
-	     mom_cmdcomplprefix);
-	}
+               && isalnum (wordtxt[2]) && isalnum (wordtxt[3]))
+        {
+          /// should do an objid completion
+          mom_cmdcomplwithname = false;
+          mom_cmdcomplset = (mo_value_t) mom_set_complete_objectid (wordtxt);
+          mom_cmdcomplprefix = mo_set_common_prefix (mom_cmdcomplset, true);
+          MOM_INFORMPRINTF
+            ("cmdtextview_keyrelease id word '%s' complset %s common prefix '%s'",
+             wordtxt, mo_value_pnamestr (mom_cmdcomplset),
+             mom_cmdcomplprefix);
+        }
       if (!mo_dyncast_set (mom_cmdcomplset))
-	mom_gui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
+        mom_gui_cmdstatus_printf ("cannot complete: %s.", wordtxt);
       else if ((complsiz = mo_set_size (mom_cmdcomplset)) == 1)
-	{
-	  /// single completion
-	  mo_objref_t compl1obj = mo_set_nth (mom_cmdcomplset, 0);
-	  MOM_ASSERTPRINTF (mo_dyncast_objref (compl1obj), "bad compl1obj");
-	  gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
-	  gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
-	  if (isalpha (wordtxt[0]))
-	    gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
-				    mo_objref_pnamestr (compl1obj), -1);
-	  else
-	    {
-	      char bufid[MOM_CSTRIDSIZ];
-	      mo_value_t commv = NULL;
-	      memset (bufid, 0, sizeof (bufid));
-	      mo_objref_idstr (bufid, compl1obj);
-	      gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs, bufid,
-				      MOM_CSTRIDLEN);
-	      if ((commv =
-		   mo_objref_get_attr (compl1obj,
-				       MOM_PREDEF (comment))) != NULL
-		  && mo_dyncast_string (commv))
-		{
-		  char combuf[72];
-		  memset (combuf, 0, sizeof (combuf));
-		  const char *pc = NULL;
-		  const char *pn = NULL;
-		  char *pb = combuf;
-		  for (pc = mo_string_cstr (commv);
-		       pc && *pc
-                         && (((pn = g_utf8_next_char (pc)),
-                              pb - combuf < (int) sizeof (combuf) - 10));
-		       pc = pn)
-		    {
-		      if (*pc == '\n')
-			break;
-		      if (pb > combuf + 2 * sizeof (combuf) / 3
-			  && isspace (*pc))
-			break;
-		      if (pn == pc + 1)
-			*(pb++) = *pc;
-		      else
-			{
-			  memcpy (pb, pc, pn - pc);
-			  pb += pn - pc;
-			}
-		    };
-		  mom_gui_cmdstatus_printf ("completion %s: %s", bufid,
-					    combuf);
-		};
-	      gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
-	    }
-	  gtk_text_buffer_end_user_action (mom_cmdtextbuf);
-	}
+        {
+          /// single completion
+          mo_objref_t compl1obj = mo_set_nth (mom_cmdcomplset, 0);
+          MOM_ASSERTPRINTF (mo_dyncast_objref (compl1obj), "bad compl1obj");
+          gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
+          gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+          if (isalpha (wordtxt[0]))
+            gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                    mo_objref_pnamestr (compl1obj), -1);
+          else
+            {
+              char bufid[MOM_CSTRIDSIZ];
+              mo_value_t commv = NULL;
+              memset (bufid, 0, sizeof (bufid));
+              mo_objref_idstr (bufid, compl1obj);
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs, bufid,
+                                      MOM_CSTRIDLEN);
+              if ((commv =
+                   mo_objref_get_attr (compl1obj,
+                                       MOM_PREDEF (comment))) != NULL
+                  && mo_dyncast_string (commv))
+                {
+                  char combuf[72];
+                  memset (combuf, 0, sizeof (combuf));
+                  const char *pc = NULL;
+                  const char *pn = NULL;
+                  char *pb = combuf;
+                  for (pc = mo_string_cstr (commv);
+                       pc && *pc
+                       && (((pn = g_utf8_next_char (pc)),
+                            pb - combuf < (int) sizeof (combuf) - 10));
+                       pc = pn)
+                    {
+                      if (*pc == '\n')
+                        break;
+                      if (pb > combuf + 2 * sizeof (combuf) / 3
+                          && isspace (*pc))
+                        break;
+                      if (pn == pc + 1)
+                        *(pb++) = *pc;
+                      else
+                        {
+                          memcpy (pb, pc, pn - pc);
+                          pb += pn - pc;
+                        }
+                    };
+                  mom_gui_cmdstatus_printf ("completion %s: %s", bufid,
+                                            combuf);
+                };
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+            }
+          gtk_text_buffer_end_user_action (mom_cmdtextbuf);
+        }
       else if (complsiz == 0)
-	{
-	  mom_gui_cmdstatus_printf ("no completion for: %s", wordtxt);
-	}
+        {
+          mom_gui_cmdstatus_printf ("no completion for: %s", wordtxt);
+        }
       else if (complsiz < MOMGUI_COMPLETION_MENU_MAX)
-	{
-	  char complbufid[MOM_CSTRIDSIZ];
-	  memset (complbufid, 0, sizeof (complbufid));
-	  mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
-	  mom_cmdcomplendoff = gtk_text_iter_get_offset (&itcurs);
-	  if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
-	    {
-	      gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
-	      gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
-	      gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
-				      mom_cmdcomplprefix, -1);
-	      gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
-	      gtk_text_buffer_end_user_action (mom_cmdtextbuf);
-	    }
-	  mom_cmdcomplmenu = gtk_menu_new ();
-	  for (int ix = 0; ix < (int) complsiz; ix++)
-	    {
-	      mo_objref_t curcomplobj = mo_set_nth (mom_cmdcomplset, ix);
-	      GtkWidget *curcomplitem =
-		gtk_menu_item_new_with_label
-		(mom_cmdcomplwithname
-		 ? mo_objref_pnamestr (curcomplobj)
-		 : mo_objref_idstr (complbufid, curcomplobj));
-	      gtk_menu_shell_append (GTK_MENU_SHELL (mom_cmdcomplmenu),
-				     curcomplitem);
-	      g_signal_connect (curcomplitem, "activate",
-				G_CALLBACK (momgui_completecmdix),
-				(void *) ((intptr_t) ix));
-	    }
-	  g_signal_connect (mom_cmdcomplmenu, "deactivate",
-			    G_CALLBACK (gtk_widget_destroyed),
-			    &mom_cmdcomplmenu);
-	  gtk_widget_show_all (mom_cmdcomplmenu);
-	  gtk_menu_popup_at_pointer (GTK_MENU (mom_cmdcomplmenu), NULL);
-	}
+        {
+          char complbufid[MOM_CSTRIDSIZ];
+          memset (complbufid, 0, sizeof (complbufid));
+          mom_cmdcomplstartoff = gtk_text_iter_get_offset (&itbword);
+          mom_cmdcomplendoff = gtk_text_iter_get_offset (&itcurs);
+          if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
+            {
+              gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
+              gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                      mom_cmdcomplprefix, -1);
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+              gtk_text_buffer_end_user_action (mom_cmdtextbuf);
+            }
+          mom_cmdcomplmenu = gtk_menu_new ();
+          for (int ix = 0; ix < (int) complsiz; ix++)
+            {
+              mo_objref_t curcomplobj = mo_set_nth (mom_cmdcomplset, ix);
+              GtkWidget *curcomplitem =
+                gtk_menu_item_new_with_label
+                (mom_cmdcomplwithname
+                 ? mo_objref_pnamestr (curcomplobj)
+                 : mo_objref_idstr (complbufid, curcomplobj));
+              gtk_menu_shell_append (GTK_MENU_SHELL (mom_cmdcomplmenu),
+                                     curcomplitem);
+              g_signal_connect (curcomplitem, "activate",
+                                G_CALLBACK (momgui_completecmdix),
+                                (void *) ((intptr_t) ix));
+            }
+          g_signal_connect (mom_cmdcomplmenu, "deactivate",
+                            G_CALLBACK (gtk_widget_destroyed),
+                            &mom_cmdcomplmenu);
+          gtk_widget_show_all (mom_cmdcomplmenu);
+          gtk_menu_popup_at_pointer (GTK_MENU (mom_cmdcomplmenu), NULL);
+        }
       else if (mom_cmdcomplwithname
-	       && complsiz < MOMGUI_COMPLETION_MANY_NAMES
-	       && complsiz >= MOMGUI_COMPLETION_MENU_MAX)
-	{
-	  if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
-	    {
-	      gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
-	      gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
-	      gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
-				      mom_cmdcomplprefix, -1);
-	      gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
-	      gtk_text_buffer_end_user_action (mom_cmdtextbuf);
-	    }
-	  mom_gui_cmdstatus_printf
-	    ("%d completions for %s :: %s ... %s",
-	     complsiz, wordtxt,
-	     mo_string_cstr (mo_objref_namev
-			     (mo_set_nth (mom_cmdcomplset, 0))),
-	     mo_string_cstr (mo_objref_namev
-			     (mo_set_nth (mom_cmdcomplset, complsiz - 1))));
-	}
+               && complsiz < MOMGUI_COMPLETION_MANY_NAMES
+               && complsiz >= MOMGUI_COMPLETION_MENU_MAX)
+        {
+          if (mom_cmdcomplprefix &&& mom_cmdcomplprefix[0])
+            {
+              gtk_text_buffer_begin_user_action (mom_cmdtextbuf);
+              gtk_text_buffer_delete (mom_cmdtextbuf, &itbword, &itcurs);
+              gtk_text_buffer_insert (mom_cmdtextbuf, &itcurs,
+                                      mom_cmdcomplprefix, -1);
+              gtk_text_buffer_place_cursor (mom_cmdtextbuf, &itcurs);
+              gtk_text_buffer_end_user_action (mom_cmdtextbuf);
+            }
+          mom_gui_cmdstatus_printf
+            ("%d completions for %s :: %s ... %s",
+             complsiz, wordtxt,
+             mo_string_cstr (mo_objref_namev
+                             (mo_set_nth (mom_cmdcomplset, 0))),
+             mo_string_cstr (mo_objref_namev
+                             (mo_set_nth (mom_cmdcomplset, complsiz - 1))));
+        }
       else
-	{
-	  mom_gui_cmdstatus_printf ("too many %d completions for: %s",
-				    (int) complsiz, wordtxt);
-	}
+        {
+          mom_gui_cmdstatus_printf ("too many %d completions for: %s",
+                                    (int) complsiz, wordtxt);
+        }
       g_free (wordtxt);
-      return TRUE;            // don't propagate
-    }                         /* end if tab */
+      return TRUE;              // don't propagate
+    }                           /* end if tab */
   ///
 
   else if (ev && ev->type == GDK_KEY_PRESS
-	   && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK
-	   && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
-	       || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
-	       || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)))
+           && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK
+           && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
+               || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
+               || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)))
     {
       momgui_parse_cmdtext ();
-      return TRUE;            /* don't propagate */
+      return TRUE;              /* don't propagate */
     }
   else if (ev && ev->type == GDK_KEY_RELEASE
-	   && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
-	       || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
-	       || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return
-		   && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK)))
-    {                         /* F1, Escape or Ctrl-Return are evaluating the buffer */
+           && (((GdkEventKey *) ev)->keyval == GDK_KEY_F1
+               || ((GdkEventKey *) ev)->keyval == GDK_KEY_Escape
+               || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return
+                   && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK)))
+    {                           /* F1, Escape or Ctrl-Return are evaluating the buffer */
       momgui_run_cmdtext ();
       if (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)
-	{
-	  momgui_delayed_clearcmd ();
-	}
-      return TRUE;            /* don't propagate */
-    }                         /* end if F1, Escape, or Ctrl-Return */
+        {
+          momgui_delayed_clearcmd ();
+        }
+      return TRUE;              /* don't propagate */
+    }                           /* end if F1, Escape, or Ctrl-Return */
 
   else
-    return FALSE;             // to propagate the event
-}                             /* end momgui_cmdtextview_keyrelease */
+    return FALSE;               // to propagate the event
+}                               /* end momgui_cmdtextview_keyrelease */
 
 
 static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *,
-					   const char *);
+                                           const char *);
 static mo_value_t momgui_cmdparse_value (struct momgui_cmdparse_st *,
-					 const char *);
+                                         const char *);
 
 // register a pair of matching delimiters, e.g. open & closing parenthesis
 static void
 momgui_cmdparse_delimoffsetpairs (struct momgui_cmdparse_st *cpars,
-				  unsigned leftoff, unsigned rightoff)
+                                  unsigned leftoff, unsigned rightoff)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (leftoff < rightoff, "bad leftoff=%u rightoff=%u",
-		    leftoff, rightoff);
+                    leftoff, rightoff);
   unsigned delcount = cpars->mo_gcp_delimcount;
   if (MOM_UNLIKELY (delcount + 1 >= cpars->mo_gcp_delimsize))
     {
       unsigned oldcount = cpars->mo_gcp_delimcount;
       struct momgui_delimpair_st *oldpairarr = cpars->mo_gcp_delimpairarr;
       unsigned newsize =
-	mom_prime_above (4 * oldcount / 3 + oldcount / 16 + 30);
+        mom_prime_above (4 * oldcount / 3 + oldcount / 16 + 30);
       struct momgui_delimpair_st *newpairarr =
-	mom_gc_alloc_scalar (newsize * sizeof (struct momgui_delimpair_st));
+        mom_gc_alloc_scalar (newsize * sizeof (struct momgui_delimpair_st));
       if (oldcount > 0)
-	memcpy (newpairarr, oldpairarr,
-		oldcount * sizeof (struct momgui_delimpair_st));
+        memcpy (newpairarr, oldpairarr,
+                oldcount * sizeof (struct momgui_delimpair_st));
       cpars->mo_gcp_delimpairarr = newpairarr;
       cpars->mo_gcp_delimsize = newsize;
     }
   cpars->mo_gcp_delimpairarr[delcount] = (struct momgui_delimpair_st)
-    {
-      leftoff, rightoff};
+  {
+  leftoff, rightoff};
   cpars->mo_gcp_delimcount = delcount + 1;
-}                             /* end momgui_cmdparse_delimoffsetpairs */
+}                               /* end momgui_cmdparse_delimoffsetpairs */
 
 // skip spaces, return true if end-of-buffer reached
-static bool momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
+static bool
+momgui_cmdparse_skipspaces (struct momgui_cmdparse_st *cpars)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   gunichar uc = 0;
   int nbspaces = 0;
   GtkTextIter itbeg = cpars->mo_gcp_curiter;
   while ((uc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter)) != 0)
     {
       if (!g_unichar_isspace (uc))
-	break;
+        break;
       if (!gtk_text_iter_forward_char (&cpars->mo_gcp_curiter))
-	break;
+        break;
       nbspaces++;
     }
   if (nbspaces > 0)
     {
       gint curoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
       gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itbeg,
-				       &cpars->mo_gcp_curiter);
+                                       &cpars->mo_gcp_curiter);
       gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
-					  &cpars->mo_gcp_curiter, curoff);
+                                          &cpars->mo_gcp_curiter, curoff);
     }
   return gtk_text_iter_is_end (&cpars->mo_gcp_curiter);
-}                             /* end momgui_cmdparse_skipspaces */
+}                               /* end momgui_cmdparse_skipspaces */
 
 static inline gunichar
 momgui_cmdparse_peekchar (struct momgui_cmdparse_st *cpars, int delta)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   if (delta == 0)
     return gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
   GtkTextIter it = cpars->mo_gcp_curiter;
   if (delta > 0)
     {
       if (!gtk_text_iter_forward_chars (&it, delta))
-	return 0;
+        return 0;
       return gtk_text_iter_get_char (&it);
     }
   else if (delta < 0)
     {
       if (!gtk_text_iter_backward_chars (&it, delta))
-	return 0;
+        return 0;
       return gtk_text_iter_get_char (&it);
     }
   return 0;
-}                             /* end of momgui_cmdparse_peekchar */
+}                               /* end of momgui_cmdparse_peekchar */
 
 static inline int
 momgui_cmdparse_curline_bytesize (struct momgui_cmdparse_st *cpars)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   GtkTextIter it = cpars->mo_gcp_curiter;
   gtk_text_iter_forward_line (&it);
   return gtk_text_iter_get_line_index (&it) -
     gtk_text_iter_get_line_index (&cpars->mo_gcp_curiter);
-}                             /* end of momgui_cmdparse_curline_bytesize */
+}                               /* end of momgui_cmdparse_curline_bytesize */
 
 
 static mo_value_t
 momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
   if (momgui_cmdparse_skipspaces (cpars))
     MOMGUI_CMDPARSEFAIL (cpars,
-			 "reached end of buffer, expecting value (%s)",
-			 msg);
+                         "reached end of buffer, expecting value (%s)", msg);
   gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
   gunichar nextc = momgui_cmdparse_peekchar (cpars, 1);
   gunichar digc = 0;
@@ -2705,24 +2702,23 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       sbuf[0] = curc;
       sbuf[1] = nextc;
       for (ix = 2; ix < (int) sizeof (sbuf) - 2
-             && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
-             && digc < 127 && isxdigit (digc); ix++)
-	sbuf[ix] = (char) digc;
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc < 127 && isxdigit (digc); ix++)
+        sbuf[ix] = (char) digc;
       if (ix >= (int) sizeof (sbuf) - 4)
-	MOMGUI_CMDPARSEFAIL (cpars, "too long hex number %s (%s)", sbuf,
-			     msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too long hex number %s (%s)", sbuf, msg);
       long long ll = strtoll (sbuf, &endp, 16);
       if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
-	MOMGUI_CMDPARSEFAIL (cpars, "bad hex number %s (%s)", sbuf, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "bad hex number %s (%s)", sbuf, msg);
       int numlen = endp - sbuf;
       GtkTextIter startnumit = cpars->mo_gcp_curiter;
       GtkTextIter endnumit = startnumit;
       gtk_text_iter_forward_chars (&endnumit, numlen);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
-				 &startnumit, &endnumit);
+                                 &startnumit, &endnumit);
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
-    }                         // end hex number
+    }                           // end hex number
   else if (curc == '0' && (nextc == 'o' || nextc == 'O'))
     {
       // parse an octal number
@@ -2731,24 +2727,24 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       sbuf[0] = curc;
       sbuf[1] = nextc;
       for (ix = 2; ix < (int) sizeof (sbuf) - 2
-             && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
-             && digc < 127 && digc >= '0' && digc <= '7'; ix++)
-	sbuf[ix] = (char) digc;
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc < 127 && digc >= '0' && digc <= '7'; ix++)
+        sbuf[ix] = (char) digc;
       if (ix >= (int) sizeof (sbuf) - 4)
-	MOMGUI_CMDPARSEFAIL (cpars, "too long octal number %s (%s)", sbuf,
-			     msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too long octal number %s (%s)", sbuf,
+                             msg);
       long long ll = strtoll (sbuf + 2, &endp, 8);
       if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
-	MOMGUI_CMDPARSEFAIL (cpars, "bad octal number %s (%s)", sbuf, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "bad octal number %s (%s)", sbuf, msg);
       int numlen = endp - sbuf;
       GtkTextIter startnumit = cpars->mo_gcp_curiter;
       GtkTextIter endnumit = startnumit;
       gtk_text_iter_forward_chars (&endnumit, numlen);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
-				 &startnumit, &endnumit);
+                                 &startnumit, &endnumit);
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
-    }                         // end octal number
+    }                           // end octal number
   else if (curc == '0' && (nextc == 'b' || nextc == 'B'))
     {
       // parse a binary number
@@ -2757,116 +2753,115 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       sbuf[0] = curc;
       sbuf[1] = nextc;
       for (ix = 2; ix < (int) sizeof (sbuf) - 2
-             && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
-             && (digc == '0' || digc == '1'); ix++)
-	sbuf[ix] = (char) digc;
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && (digc == '0' || digc == '1'); ix++)
+        sbuf[ix] = (char) digc;
       if (ix >= (int) sizeof (sbuf) - 4)
-	MOMGUI_CMDPARSEFAIL (cpars, "too long binary number %s (%s)", sbuf,
-			     msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too long binary number %s (%s)", sbuf,
+                             msg);
       long long ll = strtoll (sbuf + 2, &endp, 8);
       if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
-	MOMGUI_CMDPARSEFAIL (cpars, "bad binary number %s (%s)", sbuf, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "bad binary number %s (%s)", sbuf, msg);
       int numlen = endp - sbuf;
       GtkTextIter startnumit = cpars->mo_gcp_curiter;
       GtkTextIter endnumit = startnumit;
       gtk_text_iter_forward_chars (&endnumit, numlen);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
-				 &startnumit, &endnumit);
+                                 &startnumit, &endnumit);
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
-    }                         // end binary number
+    }                           // end binary number
   else if ((curc >= '0' && curc <= '9')
-	   || ((curc == '+' || curc == '-') && nextc >= '0'
-	       && nextc <= '9'))
-    {                         /* signed decimal number */
+           || ((curc == '+' || curc == '-') && nextc >= '0' && nextc <= '9'))
+    {                           /* signed decimal number */
       int ix;
       char *endp = NULL;
       sbuf[0] = curc;
       sbuf[1] = nextc;
       for (ix = 1; ix < (int) sizeof (sbuf) - 2
-             && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
-             && digc >= '0' && digc <= '9'; ix++)
-	sbuf[ix] = (char) digc;
+           && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
+           && digc >= '0' && digc <= '9'; ix++)
+        sbuf[ix] = (char) digc;
       if (ix >= (int) sizeof (sbuf) - 4)
-	MOMGUI_CMDPARSEFAIL (cpars, "too long number %s (%s)", sbuf, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too long number %s (%s)", sbuf, msg);
       long long ll = strtoll (sbuf, &endp, 0);
       if (!endp || *endp || ll < MO_INTMIN || ll > MO_INTMAX)
-	MOMGUI_CMDPARSEFAIL (cpars, "bad number %s (%s)", sbuf, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "bad number %s (%s)", sbuf, msg);
       int numlen = endp - sbuf;
       GtkTextIter startnumit = cpars->mo_gcp_curiter;
       GtkTextIter endnumit = startnumit;
       gtk_text_iter_forward_chars (&endnumit, numlen);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_number,
-				 &startnumit, &endnumit);
+                                 &startnumit, &endnumit);
       cpars->mo_gcp_curiter = endnumit;
       return mo_int_to_value (ll);
-    }                         // end decimal or signed number
-  else if (curc < 127 && (isalpha (curc) || curc == '_' || curc == '?'))      // parse objects
+    }                           // end decimal or signed number
+  else if (curc < 127 && (isalpha (curc) || curc == '_' || curc == '?'))        // parse objects
     return momgui_cmdparse_object (cpars, msg);
   else if (curc == '~')
-    {                         // ~ is for NIL
+    {                           // ~ is for NIL
       GtkTextIter tildit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &tildit, &cpars->mo_gcp_curiter);
+                                 &tildit, &cpars->mo_gcp_curiter);
       return NULL;
     }
   else if (curc == '\'')
-    {                         // ' is for eol-terminated strings
+    {                           // ' is for eol-terminated strings
       GtkTextIter strit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       GtkTextIter begit = cpars->mo_gcp_curiter;
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &strit, &cpars->mo_gcp_curiter);
+                                 &strit, &cpars->mo_gcp_curiter);
       GtkTextIter endlinit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_line (&endlinit);
       cpars->mo_gcp_curiter = endlinit;
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_string,
-				 &begit, &cpars->mo_gcp_curiter);
+                                 &begit, &cpars->mo_gcp_curiter);
       if (cpars->mo_gcp_onlyparse)
-	return NULL;
+        return NULL;
       else
-	{
-	  char *strtxt =
-	    gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endlinit,
-				      false);
-	  mo_value_t vstr = mo_make_string_cstr (strtxt);
-	  g_free (strtxt), strtxt = NULL;
-	  return vstr;
-	}
+        {
+          char *strtxt =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endlinit,
+                                      false);
+          mo_value_t vstr = mo_make_string_cstr (strtxt);
+          g_free (strtxt), strtxt = NULL;
+          return vstr;
+        }
     }
   else if (curc == '"')
-    {                         // " is for C-encoded strings terminated by a "
+    {                           // " is for C-encoded strings terminated by a "
       GtkTextIter strit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       GtkTextIter begit = cpars->mo_gcp_curiter;
       gunichar sc = 0;
       do
-	{
-	  sc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
-	  if (sc == '\n' || sc == 0)
-	    {
-	      cpars->mo_gcp_curiter = strit;
-	      MOMGUI_CMDPARSEFAIL (cpars,
-				   "unterminated encoded string (%s)", msg);
-	    }
-	  if (sc == '\\')
-	    gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	}
+        {
+          sc = gtk_text_iter_get_char (&cpars->mo_gcp_curiter);
+          if (sc == '\n' || sc == 0)
+            {
+              cpars->mo_gcp_curiter = strit;
+              MOMGUI_CMDPARSEFAIL (cpars,
+                                   "unterminated encoded string (%s)", msg);
+            }
+          if (sc == '\\')
+            gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+          gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+        }
       while (sc != '"');
       GtkTextIter endit = cpars->mo_gcp_curiter;
       gtk_text_iter_backward_char (&endit);
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-      char *encbuf =          //
-	gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endit, false);
+      char *encbuf =            //
+        gtk_text_buffer_get_text (mom_cmdtextbuf, &begit, &endit, false);
       size_t bufsiz =
-	gtk_text_iter_get_line_index (&endit)
-	- gtk_text_iter_get_line_index (&begit);
+        gtk_text_iter_get_line_index (&endit)
+        - gtk_text_iter_get_line_index (&begit);
       FILE *fmem = fmemopen ((void *) encbuf, bufsiz, "r");
       if (!fmem)
-	MOM_FATAPRINTF
-	  ("fmemopen failure for C-encoded string of %zd bytes", bufsiz);
+        MOM_FATAPRINTF
+          ("fmemopen failure for C-encoded string of %zd bytes", bufsiz);
       struct mom_string_and_size_st ss = mom_input_quoted_utf8 (fmem);
       mo_value_t val = mo_make_string_len (ss.ss_str, ss.ss_len);
       fclose (fmem);
@@ -2874,49 +2869,49 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       return val;
     }
   else if (curc == '{')
-    {                         // parse sets of objects
+    {                           // parse sets of objects
       mo_vectvaldatapayl_ty *vectobj = NULL;
       unsigned leftbraceoff =
-	gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+        gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
       unsigned rightbraceoff = 0;
       GtkTextIter bracit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &bracit, &cpars->mo_gcp_curiter);
+                                 &bracit, &cpars->mo_gcp_curiter);
       while (!momgui_cmdparse_skipspaces (cpars))
-	{
-	  gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
-	  if (curc == '}')
-	    {
-	      rightbraceoff =
-		gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
-	      GtkTextIter bracit = cpars->mo_gcp_curiter;
-	      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-					 &bracit, &cpars->mo_gcp_curiter);
-	      momgui_cmdparse_delimoffsetpairs (cpars, leftbraceoff,
-						rightbraceoff);
-	      break;
-	    }
-	  mo_objref_t elemob = momgui_cmdparse_object (cpars, "set-elem");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      if (!elemob)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "nil object as set element (%s)", msg);
-	      vectobj = mo_vectval_append (vectobj, elemob);
-	    }
-	};
+        {
+          gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+          if (curc == '}')
+            {
+              rightbraceoff =
+                gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+              GtkTextIter bracit = cpars->mo_gcp_curiter;
+              gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                         &bracit, &cpars->mo_gcp_curiter);
+              momgui_cmdparse_delimoffsetpairs (cpars, leftbraceoff,
+                                                rightbraceoff);
+              break;
+            }
+          mo_objref_t elemob = momgui_cmdparse_object (cpars, "set-elem");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              if (!elemob)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "nil object as set element (%s)", msg);
+              vectobj = mo_vectval_append (vectobj, elemob);
+            }
+        };
       if (!cpars->mo_gcp_onlyparse)
-	{
-	  unsigned cnt = mo_vectval_count (vectobj);
-	  if (!cnt)
-	    return mo_make_empty_set ();
-	  return mo_make_set_closeq
-	    (mo_sequence_filled_allocate (cnt,
-					  (mo_objref_t
-					   *) (vectobj->mo_vect_arr)));
-	}
+        {
+          unsigned cnt = mo_vectval_count (vectobj);
+          if (!cnt)
+            return mo_make_empty_set ();
+          return mo_make_set_closeq
+            (mo_sequence_filled_allocate (cnt,
+                                          (mo_objref_t
+                                           *) (vectobj->mo_vect_arr)));
+        }
       return NULL;
     }
   else if (curc == 0x2205 /* U+2205 EMPTY SET ∅ */ )
@@ -2924,67 +2919,67 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       GtkTextIter delit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &delit, &cpars->mo_gcp_curiter);
+                                 &delit, &cpars->mo_gcp_curiter);
       return mo_make_empty_set ();
     }
   else if (curc == '[')
-    {                         // parse tuples of objects
+    {                           // parse tuples of objects
       mo_vectvaldatapayl_ty *vectobj = NULL;
       unsigned leftbrackoff =
-	gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+        gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
       unsigned rightbrackoff = 0;
       GtkTextIter brackit = cpars->mo_gcp_curiter;
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &brackit, &cpars->mo_gcp_curiter);
+                                 &brackit, &cpars->mo_gcp_curiter);
       while (!momgui_cmdparse_skipspaces (cpars))
-	{
-	  gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
-	  if (curc == ']')
-	    {
-	      rightbrackoff =
-		gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
-	      GtkTextIter bracit = cpars->mo_gcp_curiter;
-	      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-					 &bracit, &cpars->mo_gcp_curiter);
-	      momgui_cmdparse_delimoffsetpairs (cpars, leftbrackoff,
-						rightbrackoff);
-	      break;
-	    }
-	  mo_objref_t elemob = momgui_cmdparse_object (cpars, "tuple-comp");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      vectobj = mo_vectval_append (vectobj, elemob);
-	    }
-	};
+        {
+          gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
+          if (curc == ']')
+            {
+              rightbrackoff =
+                gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+              GtkTextIter bracit = cpars->mo_gcp_curiter;
+              gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                         &bracit, &cpars->mo_gcp_curiter);
+              momgui_cmdparse_delimoffsetpairs (cpars, leftbrackoff,
+                                                rightbrackoff);
+              break;
+            }
+          mo_objref_t elemob = momgui_cmdparse_object (cpars, "tuple-comp");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              vectobj = mo_vectval_append (vectobj, elemob);
+            }
+        };
       if (!cpars->mo_gcp_onlyparse)
-	{
-	  unsigned cnt = mo_vectval_count (vectobj);
-	  if (!cnt)
-	    return mo_make_empty_tuple ();
-	  return mo_make_tuple_closeq
-	    (mo_sequence_filled_allocate (cnt,
-					  (mo_objref_t
-					   *) (vectobj->mo_vect_arr)));
-	}
+        {
+          unsigned cnt = mo_vectval_count (vectobj);
+          if (!cnt)
+            return mo_make_empty_tuple ();
+          return mo_make_tuple_closeq
+            (mo_sequence_filled_allocate (cnt,
+                                          (mo_objref_t
+                                           *) (vectobj->mo_vect_arr)));
+        }
       return NULL;
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
-}                             /* end momgui_cmdparse_value */
+}                               /* end momgui_cmdparse_value */
 
 static void
 momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars,
-			    mo_objref_t obr, const char *msg);
-static mo_objref_t momgui_cmdparse_new_named_object (struct
-						     momgui_cmdparse_st
-						     *cpars,
-						     const char *namebuf,
-						     const char *msg)
+                            mo_objref_t obr, const char *msg);
+static mo_objref_t
+momgui_cmdparse_new_named_object (struct
+                                  momgui_cmdparse_st
+                                  *cpars,
+                                  const char *namebuf, const char *msg)
 {
   mo_objref_t newobr = NULL;
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
   if (!mom_valid_name (namebuf))
     return NULL;
@@ -2994,11 +2989,11 @@ static mo_objref_t momgui_cmdparse_new_named_object (struct
      namebuf);
   GtkWidget *createdialog =
     gtk_message_dialog_new_with_markup (GTK_WINDOW (mom_cmdwin),
-					GTK_DIALOG_MODAL |
-					GTK_DIALOG_DESTROY_WITH_PARENT,
-					GTK_MESSAGE_QUESTION,
-					GTK_BUTTONS_OK_CANCEL,
-					mo_string_cstr (markupv));
+                                        GTK_DIALOG_MODAL |
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_QUESTION,
+                                        GTK_BUTTONS_OK_CANCEL,
+                                        mo_string_cstr (markupv));
   gtk_message_dialog_format_secondary_markup
     (GTK_MESSAGE_DIALOG (createdialog),
      "(create a <i>global</i> named object <small>(%s)</small> with its <tt>comment</tt>)",
@@ -3018,15 +3013,15 @@ static mo_objref_t momgui_cmdparse_new_named_object (struct
     {
       newobr = mo_make_global_object ();
       if (!mo_register_named (newobr, namebuf))
-	newobr = NULL;
+        newobr = NULL;
       const char *commstr = gtk_entry_get_text (GTK_ENTRY (entcomment));
       if (commstr && commstr[0] && newobr)
-	mo_objref_put_attr (newobr, MOM_PREDEF (comment),
-			    mo_make_string_cstr (commstr));
+        mo_objref_put_attr (newobr, MOM_PREDEF (comment),
+                            mo_make_string_cstr (commstr));
     }
   gtk_widget_destroy (createdialog);
   return newobr;
-}                             /* end momgui_cmdparse_new_named_object */
+}                               /* end momgui_cmdparse_new_named_object */
 
 static mo_objref_t
 momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
@@ -3034,88 +3029,86 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
   mo_objref_t objp = NULL;
   bool gotnil = false;
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
   if (momgui_cmdparse_skipspaces (cpars))
     MOMGUI_CMDPARSEFAIL (cpars,
-			 "reached end of buffer, expecting object (%s)",
-			 msg);
+                         "reached end of buffer, expecting object (%s)", msg);
   gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
   gunichar nextc = momgui_cmdparse_peekchar (cpars, 1);
   // handle objects like "the_GUI" or "_1HW4pIotlYRImRGnL"
   if (curc > 0 && curc < 127
       && (isalpha ((char) curc)
-	  || (curc == '_' && nextc >= '0' && nextc <= '9')))
+          || (curc == '_' && nextc >= '0' && nextc <= '9')))
     {
       gunichar namc = 0;
       int nlen = 0;
       char smallnambuf[40];
       memset (smallnambuf, 0, sizeof (smallnambuf));
       for (nlen = 0; nlen <= MOM_NAME_MAXLEN + 2
-             && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
-             && (namc < 127 && (isalnum ((char) namc) || namc == '_'));
-	   nlen++);
+           && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
+           && (namc < 127 && (isalnum ((char) namc) || namc == '_')); nlen++);
       if (nlen >= MOM_NAME_MAXLEN)
-	MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
-			     nlen, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
+                             nlen, msg);
       char *nambuf =
-	(nlen < (int) sizeof (smallnambuf) - 2)
-	? smallnambuf
-	: mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
+        (nlen < (int) sizeof (smallnambuf) - 2)
+        ? smallnambuf
+        : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
       for (int ix = 0; ix < nlen; ix++)
-	nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
+        nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
       if (isalpha (nambuf[0]))
-	{
-	  objp = mo_find_named_cstr (nambuf);
-	  if (objp)
-	    {
-	      GtkTextIter startnamit = cpars->mo_gcp_curiter;
-	      GtkTextIter endnamit = startnamit;
-	      gtk_text_iter_forward_chars (&endnamit, nlen);
-	      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_name,
-					 &startnamit, &endnamit);
-	      cpars->mo_gcp_curiter = endnamit;
-	    }
-	}
+        {
+          objp = mo_find_named_cstr (nambuf);
+          if (objp)
+            {
+              GtkTextIter startnamit = cpars->mo_gcp_curiter;
+              GtkTextIter endnamit = startnamit;
+              gtk_text_iter_forward_chars (&endnamit, nlen);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_name,
+                                         &startnamit, &endnamit);
+              cpars->mo_gcp_curiter = endnamit;
+            }
+        }
       else if (nambuf[0] == '_' && isdigit (nambuf[1]))
-	{
-	  mo_hid_t hid = 0;
-	  mo_loid_t loid = 0;
-	  if (nlen == MOM_CSTRIDLEN
-	      && mo_get_hi_lo_ids_from_cstring (&hid, &loid, nambuf))
-	    {
-	      objp = mo_objref_find_hid_loid (hid, loid);
-	      if (objp)
-		{
-		  GtkTextIter startidit = cpars->mo_gcp_curiter;
-		  GtkTextIter endidit = startidit;
-		  gtk_text_iter_forward_chars (&endidit, MOM_CSTRIDLEN);
-		  gtk_text_buffer_apply_tag (mom_cmdtextbuf,
-					     mom_cmdtag_anon, &startidit,
-					     &endidit);
-		  cpars->mo_gcp_curiter = endidit;
-		}
-	    }
-	};
+        {
+          mo_hid_t hid = 0;
+          mo_loid_t loid = 0;
+          if (nlen == MOM_CSTRIDLEN
+              && mo_get_hi_lo_ids_from_cstring (&hid, &loid, nambuf))
+            {
+              objp = mo_objref_find_hid_loid (hid, loid);
+              if (objp)
+                {
+                  GtkTextIter startidit = cpars->mo_gcp_curiter;
+                  GtkTextIter endidit = startidit;
+                  gtk_text_iter_forward_chars (&endidit, MOM_CSTRIDLEN);
+                  gtk_text_buffer_apply_tag (mom_cmdtextbuf,
+                                             mom_cmdtag_anon, &startidit,
+                                             &endidit);
+                  cpars->mo_gcp_curiter = endidit;
+                }
+            }
+        };
       if (!objp)
-	{
-	  GtkTextIter startunit = cpars->mo_gcp_curiter;
-	  GtkTextIter endunit = startunit;
-	  gtk_text_iter_forward_chars (&endunit, nlen);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
-				     &startunit, &endunit);
-	  MOM_WARNPRINTF ("unknown object '%s' (%s) nlen=%d pos#%d",
-			  nambuf, msg, nlen,
-			  gtk_text_iter_get_offset (&startunit));
-	  cpars->mo_gcp_curiter = endunit;
-	  if (!cpars->mo_gcp_onlyparse)
-	    MOMGUI_CMDPARSEFAIL (cpars, "unknown object %s (%s)",
-				 nambuf, msg);
-	  cpars->mo_gcp_curiter = endunit;
-	}
+        {
+          GtkTextIter startunit = cpars->mo_gcp_curiter;
+          GtkTextIter endunit = startunit;
+          gtk_text_iter_forward_chars (&endunit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
+                                     &startunit, &endunit);
+          MOM_WARNPRINTF ("unknown object '%s' (%s) nlen=%d pos#%d",
+                          nambuf, msg, nlen,
+                          gtk_text_iter_get_offset (&startunit));
+          cpars->mo_gcp_curiter = endunit;
+          if (!cpars->mo_gcp_onlyparse)
+            MOMGUI_CMDPARSEFAIL (cpars, "unknown object %s (%s)",
+                                 nambuf, msg);
+          cpars->mo_gcp_curiter = endunit;
+        }
       else
-	cpars->mo_gcp_setparsed =
-	  mo_hashset_put (cpars->mo_gcp_setparsed, objp);
+        cpars->mo_gcp_setparsed =
+          mo_hashset_put (cpars->mo_gcp_setparsed, objp);
     }
   /** ?foo will possibly create, and always display, an object named foo 
    **/
@@ -3127,64 +3120,63 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       memset (smallnambuf, 0, sizeof (smallnambuf));
       for (nlen = 0; nlen <= MOM_NAME_MAXLEN + 2
-             && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
-             && (namc < 127 && (isalnum ((char) namc) || namc == '_'));
-	   nlen++);
+           && (namc = momgui_cmdparse_peekchar (cpars, nlen)) > 0
+           && (namc < 127 && (isalnum ((char) namc) || namc == '_')); nlen++);
       if (nlen >= MOM_NAME_MAXLEN)
-	MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
-			     nlen, msg);
+        MOMGUI_CMDPARSEFAIL (cpars, "too wide name of %d chars (%s)",
+                             nlen, msg);
       char *nambuf =
-	(nlen < (int) sizeof (smallnambuf) - 2)
-	? smallnambuf
-	: mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
+        (nlen < (int) sizeof (smallnambuf) - 2)
+        ? smallnambuf
+        : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
       for (int ix = 0; ix < nlen; ix++)
-	nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
+        nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
       MOM_INFORMPRINTF ("parseobj? nambuf='%s'", nambuf);
       if (!mom_valid_name (nambuf))
-	{                     // invalid name, e.g. terminated by _
-	  GtkTextIter startunit = cpars->mo_gcp_curiter;
-	  GtkTextIter endunit = startunit;
-	  gtk_text_iter_forward_chars (&endunit, nlen);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
-				     &startunit, &endunit);
-	  if (!cpars->mo_gcp_onlyparse)
-	    MOMGUI_CMDPARSEFAIL (cpars, "invalid new name %s (%s)",
-				 nambuf, msg);
-	  cpars->mo_gcp_curiter = endunit;
-	}
+        {                       // invalid name, e.g. terminated by _
+          GtkTextIter startunit = cpars->mo_gcp_curiter;
+          GtkTextIter endunit = startunit;
+          gtk_text_iter_forward_chars (&endunit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_unknown,
+                                     &startunit, &endunit);
+          if (!cpars->mo_gcp_onlyparse)
+            MOMGUI_CMDPARSEFAIL (cpars, "invalid new name %s (%s)",
+                                 nambuf, msg);
+          cpars->mo_gcp_curiter = endunit;
+        }
       else if (!(objp = mo_find_named_cstr (nambuf)))
-	{                     // new name
-	  GtkTextIter startnamit = cpars->mo_gcp_curiter;
-	  GtkTextIter endnamit = startnamit;
-	  gtk_text_iter_forward_chars (&endnamit, nlen);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newname,
-				     &startnamit, &endnamit);
-	  cpars->mo_gcp_curiter = endnamit;
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      objp = momgui_cmdparse_new_named_object (cpars, nambuf, msg);
-	      if (!objp)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "did not create new named object %s  (%s)",
-				     nambuf, msg);
-	      cpars->mo_gcp_setcreated =
-		mo_hashset_put (cpars->mo_gcp_setcreated, objp);
-	    }
-	}
+        {                       // new name
+          GtkTextIter startnamit = cpars->mo_gcp_curiter;
+          GtkTextIter endnamit = startnamit;
+          gtk_text_iter_forward_chars (&endnamit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newname,
+                                     &startnamit, &endnamit);
+          cpars->mo_gcp_curiter = endnamit;
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              objp = momgui_cmdparse_new_named_object (cpars, nambuf, msg);
+              if (!objp)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "did not create new named object %s  (%s)",
+                                     nambuf, msg);
+              cpars->mo_gcp_setcreated =
+                mo_hashset_put (cpars->mo_gcp_setcreated, objp);
+            }
+        }
       else
-	{                     // existing name
-	  GtkTextIter startnamit = cpars->mo_gcp_curiter;
-	  GtkTextIter endnamit = startnamit;
-	  gtk_text_iter_forward_chars (&endnamit, nlen);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_name,
-				     &startnamit, &endnamit);
-	  cpars->mo_gcp_curiter = endnamit;
-	}
+        {                       // existing name
+          GtkTextIter startnamit = cpars->mo_gcp_curiter;
+          GtkTextIter endnamit = startnamit;
+          gtk_text_iter_forward_chars (&endnamit, nlen);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_name,
+                                     &startnamit, &endnamit);
+          cpars->mo_gcp_curiter = endnamit;
+        }
       if (!cpars->mo_gcp_onlyparse && objp)
-	{
-	  /// add objp to the set of displayed objects
-	  mo_gui_display_object (objp);
-	}
+        {
+          /// add objp to the set of displayed objects
+          mo_gui_display_object (objp);
+        }
     }
   /** something like
       _'some comment till eol
@@ -3198,25 +3190,25 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       GtkTextIter endlinit = startcomit;
       gtk_text_iter_forward_line (&endlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newglob,
-				 &startglit, &endlinit);
+                                 &startglit, &endlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newcomm,
-				 &startcomit, &endlinit);
+                                 &startcomit, &endlinit);
       if (!cpars->mo_gcp_onlyparse)
-	{
-	  mo_value_t commv = NULL;
-	  char *commbuf =
-	    gtk_text_buffer_get_text (mom_cmdtextbuf, &startcomit,
-				      &endlinit,
-				      false);
-	  if (commbuf && commbuf[0])
-	    commv = mo_make_string_cstr (commbuf);
-	  g_free (commbuf), commbuf = NULL;
-	  objp = mo_make_global_object ();
-	  if (commv)
-	    mo_objref_put_attr (objp, MOM_PREDEF (comment), commv);
-	  cpars->mo_gcp_setcreated =
-	    mo_hashset_put (cpars->mo_gcp_setcreated, objp);
-	}
+        {
+          mo_value_t commv = NULL;
+          char *commbuf =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &startcomit,
+                                      &endlinit,
+                                      false);
+          if (commbuf && commbuf[0])
+            commv = mo_make_string_cstr (commbuf);
+          g_free (commbuf), commbuf = NULL;
+          objp = mo_make_global_object ();
+          if (commv)
+            mo_objref_put_attr (objp, MOM_PREDEF (comment), commv);
+          cpars->mo_gcp_setcreated =
+            mo_hashset_put (cpars->mo_gcp_setcreated, objp);
+        }
       cpars->mo_gcp_curiter = endlinit;
     }
   /** something like
@@ -3225,7 +3217,7 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       "some other comment till eol"
   **/
   else if (curc == '_' && nextc == '_'
-	   && momgui_cmdparse_peekchar (cpars, 2) == '\'')
+           && momgui_cmdparse_peekchar (cpars, 2) == '\'')
     {
       GtkTextIter startglit = cpars->mo_gcp_curiter;
       GtkTextIter startcomit = startglit;
@@ -3233,25 +3225,25 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       GtkTextIter endlinit = startcomit;
       gtk_text_iter_forward_line (&endlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newglob,
-				 &startglit, &endlinit);
+                                 &startglit, &endlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newcomm,
-				 &startcomit, &endlinit);
+                                 &startcomit, &endlinit);
       if (!cpars->mo_gcp_onlyparse)
-	{
-	  mo_value_t commv = NULL;
-	  char *commbuf =
-	    gtk_text_buffer_get_text (mom_cmdtextbuf, &startcomit,
-				      &endlinit,
-				      false);
-	  if (commbuf && commbuf[0])
-	    commv = mo_make_string_cstr (commbuf);
-	  g_free (commbuf), commbuf = NULL;
-	  objp = mo_make_object ();
-	  if (commv)
-	    mo_objref_put_attr (objp, MOM_PREDEF (comment), commv);
-	  cpars->mo_gcp_setcreated =
-	    mo_hashset_put (cpars->mo_gcp_setcreated, objp);
-	}
+        {
+          mo_value_t commv = NULL;
+          char *commbuf =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &startcomit,
+                                      &endlinit,
+                                      false);
+          if (commbuf && commbuf[0])
+            commv = mo_make_string_cstr (commbuf);
+          g_free (commbuf), commbuf = NULL;
+          objp = mo_make_object ();
+          if (commv)
+            mo_objref_put_attr (objp, MOM_PREDEF (comment), commv);
+          cpars->mo_gcp_setcreated =
+            mo_hashset_put (cpars->mo_gcp_setcreated, objp);
+        }
       cpars->mo_gcp_curiter = endlinit;
     }
   // ?_'foo is creating and display an anonymous global object
@@ -3260,10 +3252,10 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
       objp = momgui_cmdparse_object (cpars, "disp-anon");
       if (!cpars->mo_gcp_onlyparse && objp)
-	{
-	  /// add objp to the set of displayed objects
-	  mo_gui_display_object (objp);
-	}
+        {
+          /// add objp to the set of displayed objects
+          mo_gui_display_object (objp);
+        }
     }
   /*** ~ represents the nil object ****/
   else if (curc == '~')
@@ -3273,7 +3265,7 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
       GtkTextIter endnilit = startnilit;
       gtk_text_iter_forward_char (&endnilit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				 &startnilit, &endnilit);
+                                 &startnilit, &endnilit);
       cpars->mo_gcp_curiter = endnilit;
       gotnil = true;
     }
@@ -3287,19 +3279,19 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
   if (!gotnil && momgui_cmdparse_peekchar (cpars, 0) == '(')
     momgui_cmdparse_complement (cpars, objp, msg);
   return objp;
-}                             /* end momgui_cmdparse_object */
+}                               /* end momgui_cmdparse_object */
 
 static void
 momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars,
-			    mo_objref_t obr, const char *msg)
+                            mo_objref_t obr, const char *msg)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
   if (momgui_cmdparse_skipspaces (cpars))
     MOMGUI_CMDPARSEFAIL (cpars,
-			 "reached end of buffer, expecting complement (%s)",
-			 msg);
+                         "reached end of buffer, expecting complement (%s)",
+                         msg);
   gunichar curc = momgui_cmdparse_peekchar (cpars, 0);
   if (curc != '(')
     return;
@@ -3307,230 +3299,230 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars,
   unsigned leftparenoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
   gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
   gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-			     &leftpit, &cpars->mo_gcp_curiter);
+                             &leftpit, &cpars->mo_gcp_curiter);
   while (!momgui_cmdparse_skipspaces (cpars))
     {
       gunichar nextc = 0;
       curc = momgui_cmdparse_peekchar (cpars, 0);
       /// star to add an attribute
       if (curc == '*' || curc == 0x22C6 /*U+22C6 STAR OPERATOR ⋆ */ )
-	{
-	  GtkTextIter starit = cpars->mo_gcp_curiter;
-	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				     &starit, &cpars->mo_gcp_curiter);
-	  mo_objref_t obattr = momgui_cmdparse_object (cpars, "attr");
-	  momgui_cmdparse_skipspaces (cpars);
-	  curc = momgui_cmdparse_peekchar (cpars, 0);
-	  if (curc == ':' || curc == '>'
-	      || curc ==
-	      0x21FE /*U+21FE RIGHTWARDS OPEN-HEADED ARROW ⇾ */ )
-	    {
-	      GtkTextIter colit = cpars->mo_gcp_curiter;
-	      gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	      gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-					 &colit, &cpars->mo_gcp_curiter);
-	    }
-	  else
-	    {
-	      if (obattr && obr)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "expecting colon after attribute %s of %s (%s)",
-				     mo_objref_pnamestr (obattr),
-				     mo_objref_pnamestr (obr), msg);
-	      else if (obattr)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "expecting colon after attribute %s (%s)",
-				     mo_objref_pnamestr (obattr), msg);
-	      else
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "expecting colon after attribute (%s)",
-				     msg);
-	    }
-	  momgui_cmdparse_skipspaces (cpars);
-	  mo_value_t valat = momgui_cmdparse_value (cpars, "atval");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      if (!obr && !obattr)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "missing object to add attribute (%s)",
-				     msg);
-	      else if (!obr)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "missing object to add attribute %s (%s)",
-				     mo_objref_pnamestr (obattr), msg);
-	      else if (!obattr)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "missing attribute to add into %s (%s)",
-				     mo_objref_pnamestr (obr), msg);
-	      if (!valat)
-		MOMGUI_CMDPARSEFAIL (cpars,
-				     "missing value for adding attribute %s in %s (%s)",
-				     mo_objref_pnamestr (obattr),
-				     mo_objref_pnamestr (obr), msg);
-	      mo_objref_put_attr (obr, obattr, valat);
-	    };
-	}
+        {
+          GtkTextIter starit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &starit, &cpars->mo_gcp_curiter);
+          mo_objref_t obattr = momgui_cmdparse_object (cpars, "attr");
+          momgui_cmdparse_skipspaces (cpars);
+          curc = momgui_cmdparse_peekchar (cpars, 0);
+          if (curc == ':' || curc == '>'
+              || curc == 0x21FE /*U+21FE RIGHTWARDS OPEN-HEADED ARROW ⇾ */ )
+            {
+              GtkTextIter colit = cpars->mo_gcp_curiter;
+              gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+              gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                         &colit, &cpars->mo_gcp_curiter);
+            }
+          else
+            {
+              if (obattr && obr)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "expecting colon after attribute %s of %s (%s)",
+                                     mo_objref_pnamestr (obattr),
+                                     mo_objref_pnamestr (obr), msg);
+              else if (obattr)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "expecting colon after attribute %s (%s)",
+                                     mo_objref_pnamestr (obattr), msg);
+              else
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "expecting colon after attribute (%s)",
+                                     msg);
+            }
+          momgui_cmdparse_skipspaces (cpars);
+          mo_value_t valat = momgui_cmdparse_value (cpars, "atval");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              if (!obr && !obattr)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "missing object to add attribute (%s)",
+                                     msg);
+              else if (!obr)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "missing object to add attribute %s (%s)",
+                                     mo_objref_pnamestr (obattr), msg);
+              else if (!obattr)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "missing attribute to add into %s (%s)",
+                                     mo_objref_pnamestr (obr), msg);
+              if (!valat)
+                MOMGUI_CMDPARSEFAIL (cpars,
+                                     "missing value for adding attribute %s in %s (%s)",
+                                     mo_objref_pnamestr (obattr),
+                                     mo_objref_pnamestr (obr), msg);
+              mo_objref_put_attr (obr, obattr, valat);
+            };
+        }
       //// amperstand to add a component
       else if (curc == '&')
-	{
-	  // perhaps we might ignore any index info, e.g. &#10: could be parsed as & 
-	  GtkTextIter ampit = cpars->mo_gcp_curiter;
-	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				     &ampit, &cpars->mo_gcp_curiter);
-	  momgui_cmdparse_skipspaces (cpars);
-	  mo_value_t valcomp = momgui_cmdparse_value (cpars, "comp");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      mo_objref_comp_append (obr, valcomp);
-	    }
-	}
+        {
+          // perhaps we might ignore any index info, e.g. &#10: could be parsed as & 
+          GtkTextIter ampit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &ampit, &cpars->mo_gcp_curiter);
+          momgui_cmdparse_skipspaces (cpars);
+          mo_value_t valcomp = momgui_cmdparse_value (cpars, "comp");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              mo_objref_comp_append (obr, valcomp);
+            }
+        }
       /// dollar for some user action applied to the current object
       else if (curc == '$'
-	       && (nextc = momgui_cmdparse_peekchar (cpars, 1)) > 0
-	       && nextc < 127 && (isalpha (nextc) || nextc == '_'))
-	{
-	  mo_objref_t operatorobr = NULL;
-	  mo_objref_t operfunobr = NULL;
-	  GtkTextIter begopit = cpars->mo_gcp_curiter;
-	  gtk_text_iter_forward_char (&begopit);
-	  GtkTextIter endopit = begopit;
-	  GtkTextIter namopit = begopit;
-	  char operbuf[32];
-	  memset (operbuf, 0, sizeof (operbuf));
-	  while ((nextc = gtk_text_iter_get_char (&endopit)) > 0
-		 && nextc < 127 && (isalnum (nextc) || nextc == '_'))
-	    gtk_text_iter_forward_char (&endopit);
-	  char *opertxt =
-	    gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
-				      false);
-	  if (isalpha (opertxt[0]))
-	    operatorobr = mo_find_named_cstr (opertxt);
-	  else if (opertxt[0] == '_')
-	    {
-	      mo_hid_t ophid = 0;
-	      mo_loid_t oploid = 0;
-	      if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
-		operatorobr = mo_objref_find_hid_loid (ophid, oploid);
-	    }
-	  strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
-	  g_free (opertxt);
-	  if (!mo_dyncast_objref (operatorobr))
-	    MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
-	  if (operatorobr->mo_ob_paylkind ==
-	      MOM_PREDEF (signature_object_to_value))
-	    operfunobr = operatorobr;
-	  else
-	    operfunobr =
-	      mo_dyncast_objref (mo_objref_get_attr
-				 (operatorobr, MOM_PREDEF (GUI_operation)));
-	  if (!mo_dyncast_objref (operfunobr)
-	      || operfunobr->mo_ob_paylkind !=
-	      MOM_PREDEF (signature_object_to_value)
-	      || !operfunobr->mo_ob_payldata)
-	    MOMGUI_CMDPARSEFAIL (cpars,
-				 "wrong operator $%s... (invalid payload in operator function %s)...",
-				 operbuf, mo_objref_pnamestr (operfunobr));
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
-				     &begopit, &endopit);
-	  cpars->mo_gcp_curiter = endopit;
-	  mo_objref_t operationobr = mo_make_object ();
-	  mo_objref_comp_append (operationobr, operatorobr);
-	  mo_objref_comp_append (operationobr, obr);
-	  if (!momgui_cmdparse_skipspaces (cpars)
-	      && momgui_cmdparse_peekchar (cpars, 0) == '(')
-	    momgui_cmdparse_complement (cpars, operationobr, "operation");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      MOM_ASSERTPRINTF (operfunobr != NULL
-				&& operfunobr != MOM_EMPTY_SLOT
-				&& operfunobr->mo_ob_paylkind ==
-				MOM_PREDEF (signature_object_to_value)
-				&& operfunobr->mo_ob_payldata != NULL,
-				"bad operfunobr %s",
-				mo_objref_pnamestr (operfunobr));
-	      mo_objref_put_attr (operationobr, MOM_PREDEF (extend), obr);
-	      mo_signature_object_to_value_sigt *operfun =
-		operfunobr->mo_ob_payldata;
-	      momgui_user_cmdparse = cpars;
-	      (void) (*operfun) (operationobr);
-	      momgui_user_cmdparse = NULL;
-	    }
-	}
+               && (nextc = momgui_cmdparse_peekchar (cpars, 1)) > 0
+               && nextc < 127 && (isalpha (nextc) || nextc == '_'))
+        {
+          mo_objref_t operatorobr = NULL;
+          mo_objref_t operfunobr = NULL;
+          GtkTextIter begopit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&begopit);
+          GtkTextIter endopit = begopit;
+          GtkTextIter namopit = begopit;
+          char operbuf[32];
+          memset (operbuf, 0, sizeof (operbuf));
+          while ((nextc = gtk_text_iter_get_char (&endopit)) > 0
+                 && nextc < 127 && (isalnum (nextc) || nextc == '_'))
+            gtk_text_iter_forward_char (&endopit);
+          char *opertxt =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
+                                      false);
+          if (isalpha (opertxt[0]))
+            operatorobr = mo_find_named_cstr (opertxt);
+          else if (opertxt[0] == '_')
+            {
+              mo_hid_t ophid = 0;
+              mo_loid_t oploid = 0;
+              if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
+                operatorobr = mo_objref_find_hid_loid (ophid, oploid);
+            }
+          strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
+          g_free (opertxt);
+          if (!mo_dyncast_objref (operatorobr))
+            MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
+          if (operatorobr->mo_ob_paylkind ==
+              MOM_PREDEF (signature_object_to_value))
+            operfunobr = operatorobr;
+          else
+            operfunobr =
+              mo_dyncast_objref (mo_objref_get_attr
+                                 (operatorobr, MOM_PREDEF (GUI_operation)));
+          if (!mo_dyncast_objref (operfunobr)
+              || operfunobr->mo_ob_paylkind !=
+              MOM_PREDEF (signature_object_to_value)
+              || !operfunobr->mo_ob_payldata)
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "wrong operator $%s... (invalid payload in operator function %s)...",
+                                 operbuf, mo_objref_pnamestr (operfunobr));
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
+                                     &begopit, &endopit);
+          cpars->mo_gcp_curiter = endopit;
+          mo_objref_t operationobr = mo_make_object ();
+          mo_objref_comp_append (operationobr, operatorobr);
+          mo_objref_comp_append (operationobr, obr);
+          if (!momgui_cmdparse_skipspaces (cpars)
+              && momgui_cmdparse_peekchar (cpars, 0) == '(')
+            momgui_cmdparse_complement (cpars, operationobr, "operation");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              MOM_ASSERTPRINTF (operfunobr != NULL
+                                && operfunobr != MOM_EMPTY_SLOT
+                                && operfunobr->mo_ob_paylkind ==
+                                MOM_PREDEF (signature_object_to_value)
+                                && operfunobr->mo_ob_payldata != NULL,
+                                "bad operfunobr %s",
+                                mo_objref_pnamestr (operfunobr));
+              mo_objref_put_attr (operationobr, MOM_PREDEF (extend), obr);
+              mo_signature_object_to_value_sigt *operfun =
+                operfunobr->mo_ob_payldata;
+              momgui_user_cmdparse = cpars;
+              (void) (*operfun) (operationobr);
+              momgui_user_cmdparse = NULL;
+            }
+        }
       /// end of complement with closing parenthesis
       else if (curc == ')')
-	{
-	  GtkTextIter parit = cpars->mo_gcp_curiter;
-	  unsigned rightparenoff =
-	    gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
-	  gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
-				     &parit, &cpars->mo_gcp_curiter);
-	  momgui_cmdparse_delimoffsetpairs (cpars, leftparenoff,
-					    rightparenoff);
-	  break;
-	}
+        {
+          GtkTextIter parit = cpars->mo_gcp_curiter;
+          unsigned rightparenoff =
+            gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
+          gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &parit, &cpars->mo_gcp_curiter);
+          momgui_cmdparse_delimoffsetpairs (cpars, leftparenoff,
+                                            rightparenoff);
+          break;
+        }
       else
-	{
-	  char ubuf[8];
-	  memset (ubuf, 0, sizeof (ubuf));
-	  if (curc)
-	    g_unichar_to_utf8 (curc, ubuf);
-	  else
-	    strcpy (ubuf, "END");
-	  if (obr)
-	    MOMGUI_CMDPARSEFAIL (cpars,
-				 "unexpected character %s in complement of %s (%s)",
-				 ubuf, mo_objref_pnamestr (obr), msg);
-	  else
-	    MOMGUI_CMDPARSEFAIL (cpars,
-				 "unexpected character %s in complement (%s)",
-				 ubuf, msg);
-	}
+        {
+          char ubuf[8];
+          memset (ubuf, 0, sizeof (ubuf));
+          if (curc)
+            g_unichar_to_utf8 (curc, ubuf);
+          else
+            strcpy (ubuf, "END");
+          if (obr)
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "unexpected character %s in complement of %s (%s)",
+                                 ubuf, mo_objref_pnamestr (obr), msg);
+          else
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "unexpected character %s in complement (%s)",
+                                 ubuf, msg);
+        }
     };
-}                             /* end of momgui_cmdparse_complement */
+}                               /* end of momgui_cmdparse_complement */
 
 
 static void
 momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
 {
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (lineno > 0, "bad lineno=%d", lineno);
   MOM_ASSERTPRINTF (mo_dyncast_string (cpars->mo_gcp_errstrv),
-		    "bad errstrv in cpars@%p", cpars);
+                    "bad errstrv in cpars@%p", cpars);
   gint curoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
   MOM_WARNPRINTF_AT (__FILE__, lineno, "command parse failure (pos#%d): %s",
-		     curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
+                     curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
   GtkTextIter itstart = { };
   GtkTextIter itend = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-			      &itend);
+                              &itend);
   gtk_text_buffer_remove_all_tags (mom_cmdtextbuf,
-				   &cpars->mo_gcp_curiter, &itend);
+                                   &cpars->mo_gcp_curiter, &itend);
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
-				      &cpars->mo_gcp_curiter, curoff);
+                                      &cpars->mo_gcp_curiter, curoff);
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-			      &itend);
+                              &itend);
   gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_fail,
-			     &cpars->mo_gcp_curiter, &itend);
+                             &cpars->mo_gcp_curiter, &itend);
   gtk_text_buffer_get_iter_at_offset (mom_cmdtextbuf,
-				      &cpars->mo_gcp_curiter, curoff);
+                                      &cpars->mo_gcp_curiter, curoff);
   if (cpars->mo_gcp_statusupdate)
     mom_gui_cmdstatus_printf ("parse failure#%d@%u: %s", lineno,
-			      (unsigned) curoff,
-			      mo_string_cstr (cpars->mo_gcp_errstrv));
-}                             /* end momgui_cmdparsefailure */
+                              (unsigned) curoff,
+                              mo_string_cstr (cpars->mo_gcp_errstrv));
+}                               /* end momgui_cmdparsefailure */
 
-static void momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
+static void
+momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
 {
   GtkTextIter itstart = { };
   GtkTextIter itend = { };
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
-		    "bad cpars@%p", cpars);
+                    "bad cpars@%p", cpars);
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-			      &itend);
+                              &itend);
   gtk_text_buffer_remove_all_tags (mom_cmdtextbuf, &itstart, &itend);
   cpars->mo_gcp_curiter = itstart;
   cpars->mo_gcp_delimpairarr = NULL;
@@ -3538,7 +3530,7 @@ static void momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
   cpars->mo_gcp_delimcount = 0;
   unsigned delsize =
     mom_prime_above (gtk_text_buffer_get_char_count (mom_cmdtextbuf) / 16 +
-		     10);
+                     10);
   cpars->mo_gcp_delimpairarr =
     mom_gc_alloc_scalar (delsize * sizeof (struct momgui_delimpair_st));
   cpars->mo_gcp_delimsize = delsize;
@@ -3553,112 +3545,111 @@ static void momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
       cnt++;
       snprintf (cntbuf, sizeof (cntbuf), "count#%d", cnt);
       if (momgui_cmdparse_peekchar (cpars, 0) == '$'
-	  && (uc = momgui_cmdparse_peekchar (cpars, 1)) > 0
-	  && uc < 127 && (isalpha (uc) || uc == '_'))
-	{
-	  mo_objref_t operatorobr = NULL;
-	  mo_objref_t operfunobr = NULL;
-	  GtkTextIter begopit = cpars->mo_gcp_curiter;
-	  gtk_text_iter_forward_char (&begopit);
-	  GtkTextIter endopit = begopit;
-	  GtkTextIter namopit = begopit;
-	  char operbuf[32];
-	  memset (operbuf, 0, sizeof (operbuf));
-	  while ((uc = gtk_text_iter_get_char (&endopit)) > 0
-		 && uc < 127 && (isalnum (uc) || uc == '_'))
-	    gtk_text_iter_forward_char (&endopit);
-	  char *opertxt =
-	    gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
-				      false);
-	  if (isalpha (opertxt[0]))
-	    operatorobr = mo_find_named_cstr (opertxt);
-	  else if (opertxt[0] == '_')
-	    {
-	      mo_hid_t ophid = 0;
-	      mo_loid_t oploid = 0;
-	      if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
-		operatorobr = mo_objref_find_hid_loid (ophid, oploid);
-	    }
-	  strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
-	  g_free (opertxt);
-	  if (!mo_dyncast_objref (operatorobr))
-	    MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
-	  if (operatorobr->mo_ob_paylkind ==
-	      MOM_PREDEF (signature_object_to_value))
-	    operfunobr = operatorobr;
-	  else
-	    operfunobr =
-	      mo_dyncast_objref (mo_objref_get_attr
-				 (operatorobr, MOM_PREDEF (GUI_operation)));
-	  if (!mo_dyncast_objref (operfunobr)
-	      || operfunobr->mo_ob_paylkind !=
-	      MOM_PREDEF (signature_object_to_value)
-	      || !operfunobr->mo_ob_payldata)
-	    MOMGUI_CMDPARSEFAIL (cpars,
-				 "wrong operator $%s... (invalid payload in operator function %s)...",
-				 operbuf, mo_objref_pnamestr (operfunobr));
-	  gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
-				     &begopit, &endopit);
-	  cpars->mo_gcp_curiter = endopit;
-	  mo_objref_t operationobr = mo_make_object ();
-	  mo_objref_comp_append (operationobr, operatorobr);
-	  if (!momgui_cmdparse_skipspaces (cpars)
-	      && momgui_cmdparse_peekchar (cpars, 0) == '(')
-	    momgui_cmdparse_complement (cpars, operationobr, "operation");
-	  if (!cpars->mo_gcp_onlyparse)
-	    {
-	      MOM_ASSERTPRINTF (operfunobr != NULL
-				&& operfunobr != MOM_EMPTY_SLOT
-				&& operfunobr->mo_ob_paylkind ==
-				MOM_PREDEF (signature_object_to_value)
-				&& operfunobr->mo_ob_payldata != NULL,
-				"bad operfunobr %s",
-				mo_objref_pnamestr (operfunobr));
-	      mo_signature_object_to_value_sigt *operfun =
-		operfunobr->mo_ob_payldata;
-	      momgui_user_cmdparse = cpars;
-	      mo_value_t operationres = (*operfun) (operationobr);
-	      momgui_user_cmdparse = NULL;
-	      v = operationres;
-	    }
-	}
+          && (uc = momgui_cmdparse_peekchar (cpars, 1)) > 0
+          && uc < 127 && (isalpha (uc) || uc == '_'))
+        {
+          mo_objref_t operatorobr = NULL;
+          mo_objref_t operfunobr = NULL;
+          GtkTextIter begopit = cpars->mo_gcp_curiter;
+          gtk_text_iter_forward_char (&begopit);
+          GtkTextIter endopit = begopit;
+          GtkTextIter namopit = begopit;
+          char operbuf[32];
+          memset (operbuf, 0, sizeof (operbuf));
+          while ((uc = gtk_text_iter_get_char (&endopit)) > 0
+                 && uc < 127 && (isalnum (uc) || uc == '_'))
+            gtk_text_iter_forward_char (&endopit);
+          char *opertxt =
+            gtk_text_buffer_get_text (mom_cmdtextbuf, &namopit, &endopit,
+                                      false);
+          if (isalpha (opertxt[0]))
+            operatorobr = mo_find_named_cstr (opertxt);
+          else if (opertxt[0] == '_')
+            {
+              mo_hid_t ophid = 0;
+              mo_loid_t oploid = 0;
+              if (mo_get_hi_lo_ids_from_cstring (&ophid, &oploid, opertxt))
+                operatorobr = mo_objref_find_hid_loid (ophid, oploid);
+            }
+          strncpy (operbuf, opertxt, sizeof (operbuf) - 2);
+          g_free (opertxt);
+          if (!mo_dyncast_objref (operatorobr))
+            MOMGUI_CMDPARSEFAIL (cpars, "bad operator $%s...", operbuf);
+          if (operatorobr->mo_ob_paylkind ==
+              MOM_PREDEF (signature_object_to_value))
+            operfunobr = operatorobr;
+          else
+            operfunobr =
+              mo_dyncast_objref (mo_objref_get_attr
+                                 (operatorobr, MOM_PREDEF (GUI_operation)));
+          if (!mo_dyncast_objref (operfunobr)
+              || operfunobr->mo_ob_paylkind !=
+              MOM_PREDEF (signature_object_to_value)
+              || !operfunobr->mo_ob_payldata)
+            MOMGUI_CMDPARSEFAIL (cpars,
+                                 "wrong operator $%s... (invalid payload in operator function %s)...",
+                                 operbuf, mo_objref_pnamestr (operfunobr));
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_oper,
+                                     &begopit, &endopit);
+          cpars->mo_gcp_curiter = endopit;
+          mo_objref_t operationobr = mo_make_object ();
+          mo_objref_comp_append (operationobr, operatorobr);
+          if (!momgui_cmdparse_skipspaces (cpars)
+              && momgui_cmdparse_peekchar (cpars, 0) == '(')
+            momgui_cmdparse_complement (cpars, operationobr, "operation");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              MOM_ASSERTPRINTF (operfunobr != NULL
+                                && operfunobr != MOM_EMPTY_SLOT
+                                && operfunobr->mo_ob_paylkind ==
+                                MOM_PREDEF (signature_object_to_value)
+                                && operfunobr->mo_ob_payldata != NULL,
+                                "bad operfunobr %s",
+                                mo_objref_pnamestr (operfunobr));
+              mo_signature_object_to_value_sigt *operfun =
+                operfunobr->mo_ob_payldata;
+              momgui_user_cmdparse = cpars;
+              mo_value_t operationres = (*operfun) (operationobr);
+              momgui_user_cmdparse = NULL;
+              v = operationres;
+            }
+        }
       else
-	{
-	  v = momgui_cmdparse_value (cpars, cntbuf);
-	  if (cnt < 10)
-	    MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
-			      cnt, mo_value_pnamestr (v));
-	}
+        {
+          v = momgui_cmdparse_value (cpars, cntbuf);
+          if (cnt < 10)
+            MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
+                              cnt, mo_value_pnamestr (v));
+        }
     }
   if (cpars->mo_gcp_statusupdate)
     {
       if (cpars->mo_gcp_onlyparse)
-	mom_gui_cmdstatus_printf ("parsed %d values and %u chars",
-				  cnt,
-				  gtk_text_buffer_get_char_count
-				  (mom_cmdtextbuf));
+        mom_gui_cmdstatus_printf ("parsed %d values and %u chars",
+                                  cnt,
+                                  gtk_text_buffer_get_char_count
+                                  (mom_cmdtextbuf));
       else
-	mom_gui_cmdstatus_printf ("evaluated %d values in %u chars",
-				  cnt,
-				  gtk_text_buffer_get_char_count
-				  (mom_cmdtextbuf));
+        mom_gui_cmdstatus_printf ("evaluated %d values in %u chars",
+                                  cnt,
+                                  gtk_text_buffer_get_char_count
+                                  (mom_cmdtextbuf));
     }
-}                             /* end of momgui_cmdparse_full_buffer */
+}                               /* end of momgui_cmdparse_full_buffer */
 
 // for "end-user-action" signal to mom_cmdtextbuf
 static void
 momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
-				 void *data MOM_UNUSED)
+                                 void *data MOM_UNUSED)
 {
   MOM_ASSERTPRINTF (tbuf == GTK_TEXT_BUFFER (mom_cmdtextbuf),
-		    "cmdtextbuf_enduseraction bad tbuf");
+                    "cmdtextbuf_enduseraction bad tbuf");
   int curspos = 0;
-  g_object_get (G_OBJECT (mom_cmdtextbuf), "cursor-position", &curspos,
-		NULL);
+  g_object_get (G_OBJECT (mom_cmdtextbuf), "cursor-position", &curspos, NULL);
   GtkTextIter itstart = { };
   GtkTextIter itend = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
-			      &itend);
+                              &itend);
   struct momgui_cmdparse_st cmdparse = { };
   memset (&cmdparse, 0, sizeof (cmdparse));
   cmdparse.mo_gcp_nmagic = MOMGUI_CMDPARSE_MAGIC;
@@ -3675,102 +3666,101 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
       momgui_lastdelimpaircount = cmdparse.mo_gcp_delimcount;
       momgui_cmd_updatematchpair ();
     }
-  else                        /* failerr != 0 */
+  else                          /* failerr != 0 */
     {
       momgui_lastdelimpairarr = cmdparse.mo_gcp_delimpairarr;
       momgui_lastdelimpaircount = cmdparse.mo_gcp_delimcount;
       if (cmdparse.mo_gcp_statusupdate)
-	MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
-			failerr);
+        MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
+                        failerr);
     };
-}                             /* end momgui_cmdtextbuf_enduseraction */
+}                               /* end momgui_cmdtextbuf_enduseraction */
 
 
 static gboolean
 momgui_obtview_motion_notifev (GtkWidget * widg,
-			       GdkEvent * ev, gpointer data MOM_UNUSED)
+                               GdkEvent * ev, gpointer data MOM_UNUSED)
 {
-  MOM_ASSERTPRINTF (widg == mom_obtview1
-		    || widg == mom_obtview2, "bad widg");
+  MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
   gint bufx = 0, bufy = 0;
   GdkEventMotion *motev = (GdkEventMotion *) (ev);
   gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
-					 GTK_TEXT_WINDOW_TEXT,
-					 (gint) motev->x,
-					 (gint) motev->y, &bufx, &bufy);
+                                         GTK_TEXT_WINDOW_TEXT,
+                                         (gint) motev->x,
+                                         (gint) motev->y, &bufx, &bufy);
   GtkTextIter curit = { };
   if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
-					  &curit, bufx, bufy))
+                                          &curit, bufx, bufy))
     {
       mo_objref_t taggedobr = NULL;
       GSList *tagslist = gtk_text_iter_get_tags (&curit);
       bool hasobjecttag = false;
       for (GSList * curtagslist = tagslist;
-	   curtagslist != NULL && !hasobjecttag;
-	   curtagslist = g_slist_next (curtagslist))
-	{
-	  GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
-	  hasobjecttag =
-	    (curtag == mom_tag_objname)
-	    || (curtag == mom_tag_idstart) || (curtag == mom_tag_idrest);
-	}
+           curtagslist != NULL && !hasobjecttag;
+           curtagslist = g_slist_next (curtagslist))
+        {
+          GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
+          hasobjecttag =
+            (curtag == mom_tag_objname)
+            || (curtag == mom_tag_idstart) || (curtag == mom_tag_idrest);
+        }
       if (hasobjecttag)
-	{
-	  for (GSList * curtagslist = tagslist;
-	       curtagslist != NULL && !taggedobr;
-	       curtagslist = g_slist_next (curtagslist))
-	    {
-	      GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
-	      if ((curtag == mom_tag_objname)
-		  || (curtag == mom_tag_idstart)
-		  || (curtag == mom_tag_idrest))
-		continue;
-	      char *nameprop = NULL;
-	      g_object_get (curtag, "name", &nameprop, NULL);
-	      if (nameprop && nameprop[0] == '_')
-		{
-		  mo_hid_t hid = 0;
-		  mo_loid_t loid = 0;
-		  if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nameprop))
-		    taggedobr = mo_objref_find_hid_loid (hid, loid);
-		}
-	    }
-	}
+        {
+          for (GSList * curtagslist = tagslist;
+               curtagslist != NULL && !taggedobr;
+               curtagslist = g_slist_next (curtagslist))
+            {
+              GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
+              if ((curtag == mom_tag_objname)
+                  || (curtag == mom_tag_idstart)
+                  || (curtag == mom_tag_idrest))
+                continue;
+              char *nameprop = NULL;
+              g_object_get (curtag, "name", &nameprop, NULL);
+              if (nameprop && nameprop[0] == '_')
+                {
+                  mo_hid_t hid = 0;
+                  mo_loid_t loid = 0;
+                  if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nameprop))
+                    taggedobr = mo_objref_find_hid_loid (hid, loid);
+                }
+            }
+        }
       if (tagslist)
-	g_slist_free (tagslist), tagslist = NULL;
+        g_slist_free (tagslist), tagslist = NULL;
       if (momgui_underlined_obr != taggedobr && momgui_underlined_obr)
-	{
-	  momgui_shownobocc_ty *shoc =
-	    (momgui_shownobocc_ty *)
-	    g_hash_table_lookup (mom_shownobjocc_hashtable,
-				 momgui_underlined_obr);
-	  if (shoc && shoc->mo_gso_txtag
-	      && shoc->mo_gso_showobr == momgui_underlined_obr)
-	    {
-	      g_object_set (shoc->mo_gso_txtag, "underline",
-			    PANGO_UNDERLINE_NONE, NULL);
-	    }
-	  momgui_underlined_obr = NULL;
-	}
+        {
+          momgui_shownobocc_ty *shoc =
+            (momgui_shownobocc_ty *)
+            g_hash_table_lookup (mom_shownobjocc_hashtable,
+                                 momgui_underlined_obr);
+          if (shoc && shoc->mo_gso_txtag
+              && shoc->mo_gso_showobr == momgui_underlined_obr)
+            {
+              g_object_set (shoc->mo_gso_txtag, "underline",
+                            PANGO_UNDERLINE_NONE, NULL);
+            }
+          momgui_underlined_obr = NULL;
+        }
       if (momgui_underlined_obr != taggedobr)
-	{
-	  momgui_underlined_obr = taggedobr;
-	  momgui_shownobocc_ty *shoc =
-	    (momgui_shownobocc_ty *)
-	    g_hash_table_lookup (mom_shownobjocc_hashtable,
-				 momgui_underlined_obr);
-	  if (shoc && shoc->mo_gso_txtag
-	      && shoc->mo_gso_showobr == momgui_underlined_obr)
-	    {
-	      g_object_set (shoc->mo_gso_txtag, "underline",
-			    PANGO_UNDERLINE_SINGLE, NULL);
-	      g_timeout_add (MOMGUI_DELAY_DONTUNDERLINE_MILLISECONDS,
-			     momgui_dont_underline, NULL);
-	    }
-	}
+        {
+          momgui_underlined_obr = taggedobr;
+          momgui_shownobocc_ty *shoc =
+            (momgui_shownobocc_ty *)
+            g_hash_table_lookup (mom_shownobjocc_hashtable,
+                                 momgui_underlined_obr);
+          if (shoc && shoc->mo_gso_txtag
+              && shoc->mo_gso_showobr == momgui_underlined_obr)
+            {
+              g_object_set (shoc->mo_gso_txtag, "underline",
+                            PANGO_UNDERLINE_SINGLE, NULL);
+              g_timeout_add (MOMGUI_DELAY_DONTUNDERLINE_MILLISECONDS,
+                             momgui_dont_underline, NULL);
+            }
+        }
     }
-  return false;               // propagate the event
-}                             /* end of momgui_obtview_motion_notifev */
+  return false;                 // propagate the event
+}                               /* end of momgui_obtview_motion_notifev */
 
 static void
 mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
@@ -3780,12 +3770,12 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GdkScreen *screen = gdk_screen_get_default ();
   MOM_ASSERTPRINTF (GDK_IS_SCREEN (screen), "bad screen @%p", screen);
   gtk_style_context_add_provider_for_screen (GDK_SCREEN (screen),
-					     GTK_STYLE_PROVIDER
-					     (mom_gtkcssprov),
-					     GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                                             GTK_STYLE_PROVIDER
+                                             (mom_gtkcssprov),
+                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth,
-			       defwinheight);
+                               defwinheight);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_appwin), topvbox);
   /////////// create & fill the menubar
@@ -3796,7 +3786,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), appitem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (appitem), appmenu);
   g_signal_connect (appitem, "activate", G_CALLBACK (mom_activate_app_menu),
-		    NULL);
+                    NULL);
   GtkWidget *dumpitem = gtk_menu_item_new_with_label ("Dump");
   GtkWidget *dumpexititem = gtk_menu_item_new_with_label ("dump & eXit");
   GtkWidget *quititem = gtk_menu_item_new_with_label ("Quit");
@@ -3804,14 +3794,14 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), dumpexititem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), quititem);
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu),
-			 gtk_separator_menu_item_new ());
+                         gtk_separator_menu_item_new ());
   mom_checkitemcmd = gtk_check_menu_item_new_with_label ("show/hide Cmd");
   gtk_menu_shell_append (GTK_MENU_SHELL (appmenu), mom_checkitemcmd);
   g_signal_connect (mom_checkitemcmd, "toggled",
-		    G_CALLBACK (mom_toggled_command_shown), NULL);
+                    G_CALLBACK (mom_toggled_command_shown), NULL);
   g_signal_connect (dumpitem, "activate", G_CALLBACK (mom_dump_app), NULL);
   g_signal_connect (dumpexititem, "activate", G_CALLBACK (mom_dumpexit_app),
-		    NULL);
+                    NULL);
   g_signal_connect (quititem, "activate", G_CALLBACK (mom_quit_app), NULL);
   //// editmenu
   GtkWidget *editmenu = gtk_menu_new ();
@@ -3823,11 +3813,10 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), displayitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu), newobitem);
   gtk_menu_shell_append (GTK_MENU_SHELL (editmenu),
-			 gtk_separator_menu_item_new ());
+                         gtk_separator_menu_item_new ());
   g_signal_connect (displayitem, "activate", G_CALLBACK (mom_display_edit),
-		    NULL);
-  g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit),
-		    NULL);
+                    NULL);
+  g_signal_connect (newobitem, "activate", G_CALLBACK (mom_newob_edit), NULL);
   gtk_box_pack_start (GTK_BOX (topvbox), menubar, FALSE, FALSE, 2);
   ////
   mom_obtagtable = gtk_text_tag_table_new ();
@@ -3839,119 +3828,118 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview1), false);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview2), false);
   g_signal_connect (GTK_WIDGET (mom_obtview1), "motion-notify-event",
-		    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
+                    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
   g_signal_connect (GTK_WIDGET (mom_obtview2), "motion-notify-event",
-		    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
+                    G_CALLBACK (momgui_obtview_motion_notifev), NULL);
   g_signal_connect (mom_obtview1, "populate-popup",
-		    G_CALLBACK (momgui_obtview_populatepopup), NULL);
+                    G_CALLBACK (momgui_obtview_populatepopup), NULL);
   g_signal_connect (mom_obtview2, "populate-popup",
-		    G_CALLBACK (momgui_obtview_populatepopup), NULL);
+                    G_CALLBACK (momgui_obtview_populatepopup), NULL);
   GtkWidget *scrotv1 = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrotv1), mom_obtview1);
   GtkWidget *scrotv2 = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrotv2), mom_obtview2);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv1),
-				  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrotv2),
-				  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_paned_add1 (GTK_PANED (paned), scrotv1);
   gtk_paned_add2 (GTK_PANED (paned), scrotv2);
   gtk_paned_set_position (GTK_PANED (paned), defwinheight / 3);
   gtk_box_pack_end (GTK_BOX (topvbox), paned, TRUE, TRUE, 2);
   GtkWidget *scrocmd = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrocmd),
-				  GTK_POLICY_AUTOMATIC,
-				  GTK_POLICY_AUTOMATIC);
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   mom_cmdtextbuf = gtk_text_buffer_new (NULL);
   mom_cmdtview = gtk_text_view_new_with_buffer (mom_cmdtextbuf);
   gtk_widget_set_tooltip_markup
     (mom_cmdtview, "<b>command window tooltip</b>\n" "");
   mom_cmdtag_fail =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"fail",
-				"foreground", "darkred",
-				"background", "lightyellow",
-				"weight", PANGO_WEIGHT_BOLD, NULL);
+                                "fail",
+                                "foreground", "darkred",
+                                "background", "lightyellow",
+                                "weight", PANGO_WEIGHT_BOLD, NULL);
   mom_cmdtag_number =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"number",
-				"family", "Courier New",
-				"foreground", "darkgoldenrod", NULL);
+                                "number",
+                                "family", "Courier New",
+                                "foreground", "darkgoldenrod", NULL);
   mom_cmdtag_string =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"string",
-				"family", "Courier New, Italics",
-				"background", "cornsilk2",
-				"foreground", "darkviolet", NULL);
+                                "string",
+                                "family", "Courier New, Italics",
+                                "background", "cornsilk2",
+                                "foreground", "darkviolet", NULL);
   mom_cmdtag_delim =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"delim",
-				"scale", 1.07,
-				"family", "FreeMono, Bold",
-				"foreground", "steelblue", NULL);
+                                "delim",
+                                "scale", 1.07,
+                                "family", "FreeMono, Bold",
+                                "foreground", "steelblue", NULL);
   mom_cmdtag_matchpair =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"matchpair",
-				"scale", 1.09,
-				"family", "Liberation Mono, Bold",
-				"background", "lightpink",
-				"foreground", "steelblue", NULL);
+                                "matchpair",
+                                "scale", 1.09,
+                                "family", "Liberation Mono, Bold",
+                                "background", "lightpink",
+                                "foreground", "steelblue", NULL);
   mom_cmdtag_name =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"name",
-				"family", "DejaVu Sans Mono, Bold",
-				"foreground", "mediumpurple", NULL);
+                                "name",
+                                "family", "DejaVu Sans Mono, Bold",
+                                "foreground", "mediumpurple", NULL);
   mom_cmdtag_oper =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"oper",
-				"family", "DejaVu Sans Mono, Bold",
-				"foreground", "darkred", NULL);
+                                "oper",
+                                "family", "DejaVu Sans Mono, Bold",
+                                "foreground", "darkred", NULL);
   mom_cmdtag_anon =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"anon",
-				"family", "Courier New",
-				"foreground", "darkgreen", NULL);
+                                "anon",
+                                "family", "Courier New",
+                                "foreground", "darkgreen", NULL);
   mom_cmdtag_unknown =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"unknown",
-				"family", "Courier New, Bold Italic",
-				"foreground", "darkred", NULL);
+                                "unknown",
+                                "family", "Courier New, Bold Italic",
+                                "foreground", "darkred", NULL);
   mom_cmdtag_newglob =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"newglob",
-				"family", "Liberation Mono, Bold",
-				"foreground", "darkolivegreen",
-				"background", "lavender", NULL);
+                                "newglob",
+                                "family", "Liberation Mono, Bold",
+                                "foreground", "darkolivegreen",
+                                "background", "lavender", NULL);
   mom_cmdtag_newname =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"newname",
-				"family", "Liberation Mono, Bold",
-				"foreground", "darkgreen",
-				"background", "lavender", NULL);
+                                "newname",
+                                "family", "Liberation Mono, Bold",
+                                "foreground", "darkgreen",
+                                "background", "lavender", NULL);
   mom_cmdtag_newtrans =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"newtrans",
-				"family", "Liberation Mono, Bold",
-				"foreground", "seagreen",
-				"background", "lightcyan", NULL);
+                                "newtrans",
+                                "family", "Liberation Mono, Bold",
+                                "foreground", "seagreen",
+                                "background", "lightcyan", NULL);
   mom_cmdtag_newcomm =
     gtk_text_buffer_create_tag (mom_cmdtextbuf,
-				"newcomm",
-				"scale", 0.75,
-				"family", "Courier New, Italic", NULL);
+                                "newcomm",
+                                "scale", 0.75,
+                                "family", "Courier New, Italic", NULL);
   gtk_widget_set_name (mom_cmdtview, "cmdtview");
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_cmdtview), true);
   gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (mom_cmdtview), false);
   g_signal_connect (mom_cmdtview, "key-release-event",
-		    G_CALLBACK (momgui_cmdtextview_keyrelease), NULL);
+                    G_CALLBACK (momgui_cmdtextview_keyrelease), NULL);
   g_signal_connect (mom_cmdtview, "populate-popup",
-		    G_CALLBACK (momgui_cmdtextview_populatepopup), NULL);
+                    G_CALLBACK (momgui_cmdtextview_populatepopup), NULL);
   g_signal_connect (mom_cmdtextbuf, "end-user-action",
-		    G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
+                    G_CALLBACK (momgui_cmdtextbuf_enduseraction), NULL);
   g_signal_connect (mom_cmdtview, "move-cursor",
-		    G_CALLBACK (momgui_cmdtextview_movecursor), NULL);
+                    G_CALLBACK (momgui_cmdtextview_movecursor), NULL);
   g_signal_connect (mom_cmdtview, "insert-at-cursor",
-		    G_CALLBACK (momgui_cmdtextview_insertatcursor), NULL);
+                    G_CALLBACK (momgui_cmdtextview_insertatcursor), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
@@ -3960,79 +3948,80 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
   mom_cmdstatusbar = gtk_statusbar_new ();
   gtk_box_pack_start (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
-  gtk_box_pack_end (GTK_BOX (cmdtopvbox), mom_cmdstatusbar, FALSE, FALSE,
-		    2);
+  gtk_box_pack_end (GTK_BOX (cmdtopvbox), mom_cmdstatusbar, FALSE, FALSE, 2);
   gtk_widget_set_name (mom_cmdstatusbar, "cmdstatusbar");
   gtk_style_context_add_provider (gtk_widget_get_style_context (mom_cmdwin),
-				  GTK_STYLE_PROVIDER (mom_gtkcssprov),
-				  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                                  GTK_STYLE_PROVIDER (mom_gtkcssprov),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   gtk_style_context_add_provider (gtk_widget_get_style_context (mom_appwin),
-				  GTK_STYLE_PROVIDER (mom_gtkcssprov),
-				  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                                  GTK_STYLE_PROVIDER (mom_gtkcssprov),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   g_signal_connect (mom_cmdwin, "delete-event",
-		    G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+                    G_CALLBACK (gtk_widget_hide_on_delete), NULL);
   g_signal_connect (mom_appwin, "delete-event", G_CALLBACK (mom_stopgui),
-		    NULL);
+                    NULL);
   mo_gui_generate_object_text_buffer ();
   MOM_INFORMPRINTF ("cmdwin@%p/%s/%s",
-		    mom_cmdwin,
-		    G_OBJECT_CLASS_NAME (mom_cmdwin),
-		    G_OBJECT_TYPE_NAME (mom_cmdwin));
+                    mom_cmdwin,
+                    G_OBJECT_CLASS_NAME (mom_cmdwin),
+                    G_OBJECT_TYPE_NAME (mom_cmdwin));
   MOM_INFORMPRINTF ("appwin@%p/%s/%s", mom_appwin,
-		    G_OBJECT_CLASS_NAME (mom_appwin),
-		    G_OBJECT_TYPE_NAME (mom_appwin));
+                    G_OBJECT_CLASS_NAME (mom_appwin),
+                    G_OBJECT_TYPE_NAME (mom_appwin));
   mom_gui_cmdstatus_printf ("loaded %u objects & %u modules",
-			    mom_load_nb_objects (), mom_load_nb_modules ());
+                            mom_load_nb_objects (), mom_load_nb_modules ());
   gtk_widget_show_all (mom_appwin);
   gtk_widget_show_all (mom_cmdwin);
-}                             /* end mom_gtkapp_activate */
+}                               /* end mom_gtkapp_activate */
 
-static guint momgui_objhash (const void *ob)
+static guint
+momgui_objhash (const void *ob)
 {
   if (ob != NULL)
     return mo_objref_hash ((mo_objref_t) ob);
   return 0;
-}                             /* end momgui_objhash */
+}                               /* end momgui_objhash */
 
 extern void momgui_begin_running (void);
-void momgui_begin_running (void)
+void
+momgui_begin_running (void)
 {
   MOM_INFORMPRINTF ("momgui_begin_running");
-}                             /* end of momgui_begin_running */
+}                               /* end of momgui_begin_running */
 
 static void
 momgui_cssparsingerror (GtkCssProvider * gtkprov MOM_UNUSED,
-			GtkCssSection * sect,
-			GError * err, void *data MOM_UNUSED)
+                        GtkCssSection * sect,
+                        GError * err, void *data MOM_UNUSED)
 {
   GFile *gfil = sect ? gtk_css_section_get_file (sect) : NULL;
   char *path = gfil ? g_file_get_path (gfil) : "*";
   MOM_WARNPRINTF ("GTK CSS parsing error (file %s, lines %d-%d): (%s#%d)\n"
-		  "@!?!@ %s",
-		  path,
-		  gfil ? gtk_css_section_get_start_line (sect) : 0,
-		  gfil ? gtk_css_section_get_end_line (sect) : 0,
-		  err ? g_quark_to_string (err->domain) : "-",
-		  err ? err->code : 0, err ? err->message : "?");
-  MOM_BACKTRACEPRINTF ("GTK CSS parsing error - %s",
-		       err ? err->message : 0);
+                  "@!?!@ %s",
+                  path,
+                  gfil ? gtk_css_section_get_start_line (sect) : 0,
+                  gfil ? gtk_css_section_get_end_line (sect) : 0,
+                  err ? g_quark_to_string (err->domain) : "-",
+                  err ? err->code : 0, err ? err->message : "?");
+  MOM_BACKTRACEPRINTF ("GTK CSS parsing error - %s", err ? err->message : 0);
   if (path)
     g_free (path), path = NULL;
-}                             /* end momgui_cssparsingerror */
+}                               /* end momgui_cssparsingerror */
 
 
-void mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
+void
+mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 {
   int sta = 0;
   mom_gquark = g_quark_from_static_string ("monimelt");
   momgui_displayed_objasso = mo_assoval_reserve (NULL, 100);
   momgui_shown_obocchset = mo_hashset_reserve (NULL, 1500);
-  mom_dispobjinfo_hashtable = //
+  mom_dispobjinfo_hashtable =   //
     g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
-			   NULL, (GDestroyNotify) mom_destroy_dispobjinfo);
-  mom_shownobjocc_hashtable = //
+                           NULL, (GDestroyNotify) mom_destroy_dispobjinfo);
+  mom_shownobjocc_hashtable =   //
     g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
-			   NULL, (GDestroyNotify) mom_destroy_shownobocc);
+                           NULL, (GDestroyNotify) mom_destroy_shownobocc);
   mom_gtkapp =
     gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   mom_gtkcssprov = gtk_css_provider_get_default ();
@@ -4044,43 +4033,42 @@ void mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
   if (access (mom_gtk_style_path, R_OK))
     MOM_FATAPRINTF ("GTK style %s is not readable", mom_gtk_style_path);
   g_signal_connect (mom_gtkcssprov, "parsing-error",
-		    G_CALLBACK (momgui_cssparsingerror), NULL);
-  gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path,
-				   NULL);
+                    G_CALLBACK (momgui_cssparsingerror), NULL);
+  gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path, NULL);
   MOM_INFORMPRINTF ("after loading GTK style %s", mom_gtk_style_path);
   g_signal_connect (mom_gtkapp, "activate",
-		    G_CALLBACK (mom_gtkapp_activate), NULL);
+                    G_CALLBACK (mom_gtkapp_activate), NULL);
   if (dispobjects)
     {
       int nbdisp = 0;
       for (const char **pobn = (const char **)dispobjects; *pobn; pobn++)
-	nbdisp++;
+        nbdisp++;
       momgui_displayed_objasso =
-	mo_assoval_reserve (momgui_displayed_objasso, 2 * nbdisp + 3);
+        mo_assoval_reserve (momgui_displayed_objasso, 2 * nbdisp + 3);
       for (const char **pobn = (const char **)dispobjects; *pobn; pobn++)
-	{
-	  const char *curdispname = *pobn;
-	  mo_hid_t hid = 0;
-	  mo_loid_t loid = 0;
-	  mo_objref_t dispobr = NULL;
-	  if (mom_valid_name (curdispname))
-	    {
-	      dispobr = mo_find_named_cstr (curdispname);
-	    }
-	  else if (curdispname[0] == '_'
-		   && mo_get_hi_lo_ids_from_cstring (&hid, &loid,
-						     curdispname))
-	    {
-	      dispobr = mo_objref_find_hid_loid (hid, loid);
-	    }
-	  else
-	    MOM_FATAPRINTF ("invalid display name %s", curdispname);
-	  if (!dispobr)
-	    MOM_FATAPRINTF ("cannot find displayed object %s", curdispname);
-	  momgui_displayed_objasso =
-	    mo_assoval_put (momgui_displayed_objasso, dispobr,
-			    mo_int_to_value (MOMGUI_INITIAL_DEPTH));
-	}
+        {
+          const char *curdispname = *pobn;
+          mo_hid_t hid = 0;
+          mo_loid_t loid = 0;
+          mo_objref_t dispobr = NULL;
+          if (mom_valid_name (curdispname))
+            {
+              dispobr = mo_find_named_cstr (curdispname);
+            }
+          else if (curdispname[0] == '_'
+                   && mo_get_hi_lo_ids_from_cstring (&hid, &loid,
+                                                     curdispname))
+            {
+              dispobr = mo_objref_find_hid_loid (hid, loid);
+            }
+          else
+            MOM_FATAPRINTF ("invalid display name %s", curdispname);
+          if (!dispobr)
+            MOM_FATAPRINTF ("cannot find displayed object %s", curdispname);
+          momgui_displayed_objasso =
+            mo_assoval_put (momgui_displayed_objasso, dispobr,
+                            mo_int_to_value (MOMGUI_INITIAL_DEPTH));
+        }
     }
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
   momgui_begin_running ();
@@ -4091,18 +4079,19 @@ void mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
   mom_gtkapp = NULL;
   MOM_INFORMPRINTF ("Ended GTK graphical interface...");
   return;
-}                             /* end mom_run_gtk */
+}                               /* end mom_run_gtk */
 
 // print to the command statusbar
-void mom_gui_cmdstatus_printf (const char *fmt, ...)
+void
+mom_gui_cmdstatus_printf (const char *fmt, ...)
 {
   static guint statctxid;
   va_list args = { };
   if (MOM_UNLIKELY (statctxid == 0))
     {
       statctxid =
-	gtk_statusbar_get_context_id (GTK_STATUSBAR (mom_cmdstatusbar),
-				      "MOMCMDSTATUS");
+        gtk_statusbar_get_context_id (GTK_STATUSBAR (mom_cmdstatusbar),
+                                      "MOMCMDSTATUS");
       MOM_ASSERTPRINTF (statctxid > 0, "bad statctxid %u", statctxid);
     }
   gtk_statusbar_remove_all (GTK_STATUSBAR (mom_cmdstatusbar), statctxid);
@@ -4115,6 +4104,6 @@ void mom_gui_cmdstatus_printf (const char *fmt, ...)
     MOM_FATAPRINTF ("cmdstatus_printf: vasprintf failed fmt=%s", fmt);
   gtk_statusbar_push (GTK_STATUSBAR (mom_cmdstatusbar), statctxid, buf);
   free (buf);
-}                             /* end mom_gui_cmdstatus_printf */
+}                               /* end mom_gui_cmdstatus_printf */
 
 // end of file gui.c
