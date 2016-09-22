@@ -28,6 +28,8 @@ CREATE UNIQUE INDEX x_namedid ON t_names (nam_oid);
 INSERT INTO t_params VALUES('monimelt_format_version','MoniMelt2016B');
 ---- TABLE t_names @@@@@@@
 INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
+INSERT INTO t_names VALUES('add_user_action','_3cH0f65UzqnPaGsLY');
+INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
@@ -105,6 +107,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
   "vectval": [
    {
     "set": [
+     "_0xA91ltlCCIeN6K9H",
      "_0Ki51w13UIhXkBrtx",
      "_0Sp1Lg7ctajS7oX5i",
      "_1Hx4BMvqv69AA0750",
@@ -114,6 +117,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_21J3zZDnsKTbAVBFo",
      "_2k61pgEBsCRJlTpHG",
      "_2Sj1dLJSbvyN3kMgI",
+     "_3cH0f65UzqnPaGsLY",
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
      "_4iH7xI2JtAomiBySj",
@@ -200,6 +204,20 @@ INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_0xA91ltlCCIeN6K9H',1474534835,'
+{
+ "@name": "add_user_action_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "routine for add_user_action"
+   }
+  ]
+ },
+ "comps": null
+}
+','','_8DT8VbN0FaiS0K6uf','!','.');
 INSERT INTO t_objects VALUES('_15c0LcIrdf2LE5JP8',1474361179,'
 {
  "@name": "extend",
@@ -455,6 +473,33 @@ INSERT INTO t_objects VALUES('_3WR20H7JRlNWkDV4y',1474473996,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_3cH0f65UzqnPaGsLY',1474534835,'
+{
+ "@name": "add_user_action",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_0xA91ltlCCIeN6K9H"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": {
+     "ssize": 110,
+     "string": [
+      "$add_user_action (Action Action_useract",
+      ") would add the user action $Action with ",
+      "the routine Action_useract...."
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'
 {
  "@name": "payload_file",

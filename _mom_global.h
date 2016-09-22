@@ -23,10 +23,16 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 24
+#define MOM_NB_GLOBAL 26
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
+
+//+ $add_user_action (Action Action_useract) would add the user action $Action with 
+MOM_HAS_GLOBAL(add_user_action,_3cH0f65UzqnPaGsLY,757794550,888791185045795966,2268284358)
+
+//+ routine for add_user_action
+MOM_HAS_GLOBAL(add_user_action_useract,_0xA91ltlCCIeN6K9H,132184458,3965990523290568871,2505338322)
 
 //+ class for array ctypes, the first component#0 is the element ctype; the second c
 MOM_HAS_GLOBAL(array_ctype_class,_4iH7xI2JtAomiBySj,1017368870,4801852483639973667,2717929419)
@@ -101,6 +107,16 @@ MOM_HAS_GLOBAL(uintptr_t,_21J3zZDnsKTbAVBFo,478765968,1910349516108587076,278664
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 
 
+
+#undef moid_add_user_action
+#define moid_add_user_action _3cH0f65UzqnPaGsLY
+#undef monam_3cH0f65UzqnPaGsLY
+#define monam_3cH0f65UzqnPaGsLY add_user_action
+
+#undef moid_add_user_action_useract
+#define moid_add_user_action_useract _0xA91ltlCCIeN6K9H
+#undef monam_0xA91ltlCCIeN6K9H
+#define monam_0xA91ltlCCIeN6K9H add_user_action_useract
 
 #undef moid_array_ctype_class
 #define moid_array_ctype_class _4iH7xI2JtAomiBySj
@@ -226,6 +242,8 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #ifndef MOM_GLOBAL_HASHES
 #define MOM_GLOBAL_HASHES 1
 enum mom_global_hashes_en {
+  momghash_add_user_action=2268284358,
+  momghash_add_user_action_useract=2505338322,
   momghash_array_ctype_class=2717929419,
   momghash_bool=1367612090,
   momghash_char=2350112261,
@@ -259,7 +277,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 24
+#define MOM_NB_NAMED_GLOBAL 26
 
 
 #undef MOM_HAS_GLOBAL

@@ -252,7 +252,7 @@ mofun_string_useract (mo_objref_t obuact)
   return vstr;
 }                               /* end of mofun_string_useract */
 
-// momglob_add_user_action
+// momglob_add_user_action momglob_add_user_action_useract
 const char
 MOM_PREFIXID (mosig_, add_user_action_useract)[] =
   "signature_object_to_value";
