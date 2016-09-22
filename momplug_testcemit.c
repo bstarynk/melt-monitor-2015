@@ -13,7 +13,7 @@ momplugin_startup (const char *arg)
   mo_objref_t modulobr = mo_find_named_cstr (arg);
   if (!modulobr)
     MOM_FATAPRINTF ("testcemit plugin don't find module:%s", arg);
-  mo_objref_t cemitobr = mom_make_object ();
+  mo_objref_t cemitobr = mo_make_object ();
   mo_objref_put_cemit_payload (cemitobr, modulobr);
   MOM_INFORMPRINTF
     ("testcemit before generation of module %s thru cemitobr %s",
