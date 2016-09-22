@@ -3305,7 +3305,7 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars, mo_objref_t obr,
       /// dollar for some user action applied to the current object
       else if (curc == '$'
                && (nextc = momgui_cmdparse_peekchar (cpars, 1)) > 0
-               && nextc < 127 << (isalpha (nextc) || nextc == '_'))
+               && nextc < 127 && (isalpha (nextc) || nextc == '_'))
         {
           mo_objref_t operatorobr = NULL;
           mo_objref_t operfunobr = NULL;
