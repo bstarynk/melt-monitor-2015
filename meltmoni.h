@@ -1542,10 +1542,8 @@ mo_value_t mo_named_set_of_prefix (const char *prefix);
 /************* PREDEFINED ***********/
 
 mo_value_t mo_predefined_objects_set (void);
+#define MOM_STRINGIFY(X) #X
 #define MOM_VARPREDEF(Nam) mompredef_##Nam
-#define MOM_IDENTOFNAMEGET(Momid) #Momid
-#define MOM_IDENTOFNAMEGETBIS(Momid) MOM_IDENTOFNAMEGET(#Momid)
-#define MOM_IDENTOFNAME(Nam) MOM_IDENTOFNAMEGETBIS(momid_##Nam)
 #define MOM_PREDEF(Nam) ((mo_objref_t)(&MOM_VARPREDEF(Nam)))
 /* declare them as objects */
 #define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) \
@@ -1555,6 +1553,10 @@ mo_value_t mo_predefined_objects_set (void);
 #define MOM_HAS_GLOBAL(Nam,Idstr,Hid,Loid,Hash) \
   extern mo_objref_t momglob_##Nam;
 #include "_mom_global.h"
+
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash) \
+  extern const char momidstr_##Nam[];
+#include "_mom_predef.h"
 
 static inline mo_value_t
 mo_objref_get_attr (mo_objref_t ob, mo_objref_t obat)

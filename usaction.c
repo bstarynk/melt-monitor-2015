@@ -286,6 +286,7 @@ mofun_add_user_action_useract (mo_objref_t obuact)
   };
   mo_objref_t operobr =
     mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  MOM_ASSERTPRINTF (operobr != NULL, "bad operobr");
   mo_objref_t actionobr =
     mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_ACTION));
   mo_objref_t useractobr =
@@ -323,14 +324,18 @@ mofun_add_user_action_useract (mo_objref_t obuact)
       ("add_user_action_useract: signature %s not found (%s) for $%s",
        sigsymbuf, dlerror (), mo_objref_pnamestr (actionobr));
   if (strcmp (sigad, "signature_object_to_value")
-      && strcmp (sigad, MOM_IDENTOFNAME (signature_object_to_value)))
+      && strcmp (sigad, momidstr_signature_object_to_value))
     mom_gui_fail_user_action
       ("add_user_action_useract: signature %s unexpected '%s' for $%s",
        sigsymbuf, sigad, mo_objref_pnamestr (actionobr));
-
-  MOM_FATAPRINTF ("add_user_action_useract unimplemented obuact=%s",
-                  mo_objref_pnamestr (obuact));
-#warning mofun_add_user_action_useract unimplemented
+  mo_objref_put_signature_payload (useractobr,
+                                   MOM_PREDEF (signature_object_to_value));
+  if (useractobr->mo_ob_payldata != funad)
+    mom_gui_fail_user_action
+      ("add_user_action_useract: failed to put signature payload into %s for $%s",
+       mo_objref_pnamestr (useractobr), mo_objref_pnamestr (actionobr));
+  mo_objref_put_attr (actionobr, MOM_PREDEF (GUI_operation), useractobr);
+  return actionobr;
 }                               /* end of mofun_add_user_action_useract */
 
 // end of file usaction.c

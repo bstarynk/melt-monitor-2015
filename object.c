@@ -771,5 +771,8 @@ mom_init_objects (void)
   MOM_INFORMPRINTF ("initialized %d predefined", cnt);
 }                               /* end mom_init_objects */
 
+#define MOM_HAS_PREDEFINED(Nam,Idstr,Hid,Loid,Hash)	\
+  const char momidstr_##Nam[]=#Idstr;
+#include "_mom_predef.h"
 
 // end of file object.c

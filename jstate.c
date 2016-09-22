@@ -2466,7 +2466,7 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
                               cstr, cstr);
             MOM_ASSERTPRINTF (strlen (cstr) == sz,
                               "bad sz=%u for cstr@%p/l%d:%s", sz, cstr,
-                              strlen (cstr), cstr);
+                              (int) strlen (cstr), cstr);
             for (const char *pc = cstr; pc < ends && *pc; pc = npc)
               {
                 MOM_ASSERTPRINTF (pc >= cstr, "I want gdb to keep cstr=%s",
@@ -2643,8 +2643,9 @@ mo_value_of_json (mo_json_t js)
             }
           MOM_ASSERTPRINTF (pos <= ln, "bad final pos=%ld ln=%ld", pos,
                             (long) ln);
-          MOM_ASSERTPRINTF (ln == strlen (buf), "bad ln=%d for buf@%p/l%d:%s",
-                            ln, buf, (int) strlen (buf), buf);
+          MOM_ASSERTPRINTF (ln == (long) strlen (buf),
+                            "bad ln=%ld for buf@%p/l%d:%s",
+                            ln, buf, (int) (int) strlen (buf), buf);
           mo_value_t vstr = mo_make_string_len (buf, ln);
           free (buf), buf = NULL;
           return vstr;
