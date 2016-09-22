@@ -2465,9 +2465,10 @@ mo_dump_json_of_value (mo_dumper_ty * du, mo_value_t v)
               {
                 npc = g_utf8_next_char (pc);
                 if (pc - schk >= 80 || pc + 1 >= ends
-                    || (*pc == '\n' && pc - schk > 24))
+                    || (pc - schk > 24 && *pc == '\n')
+                    || (pc - schk > 36 && isspace (*pc)))
                   {
-                    if (*pc == '\n')
+                    if (*pc == '\n' || isspace (*pc))
                       {
                         pc++;
                         npc = g_utf8_next_char (pc);
