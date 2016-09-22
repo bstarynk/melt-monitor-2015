@@ -77,6 +77,7 @@ INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
+INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -137,6 +138,9 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
    },
    {
     "oid": "_3J97bCYloYmmXuCR1"
+   },
+   {
+    "oid": "_4NE8paRtDiMVlhHXX"
    }
   ]
  }
@@ -550,6 +554,20 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for enumerators in enum ctypes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474553565,'
+{
+ "@name": "test1_module",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "some module to test c-emission"
    }
   ]
  },
