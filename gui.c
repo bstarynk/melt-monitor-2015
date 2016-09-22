@@ -152,7 +152,7 @@ struct momgui_shownobocc_st
 };
 // The glib hashtable mapping objects to above
 static GHashTable *mom_shownobjocc_hashtable;
-
+static mo_objref_t momgui_underlined_obr;
 
 struct momgui_delimpair_st
 {
@@ -1458,7 +1458,6 @@ mo_gui_generate_object_text_buffer (void)
                             "(at %Y %b %d, %T.__ %Z)");
     gtk_text_buffer_insert_with_tags (mom_obtextbuf, &tititer, datibuf, -1,
                                       mom_tag_time, NULL);
-
   }
   // forward-add every displayed object
   for (int ix = 0; ix < (int) nbdispob; ix++)
@@ -2098,6 +2097,26 @@ momgui_delayed_clearcmd (void)
   g_timeout_add (MOMGUI_DELAY_CLEAR_MILLISEC, momgui_postponed_clear_cmdtview,
                  NULL);
 }                               /* end of momgui_delayed_clearcmd */
+
+#define MOMGUI_DELAY_DONTUNDERLINE_MILLISECONDS 1500    /*one and a half seconds */
+
+static gboolean
+momgui_dont_underline (gpointer data MOM_UNUSED)
+{
+  if (momgui_underlined_obr)
+    {
+      momgui_shownobocc_ty *shoc =
+        (momgui_shownobocc_ty *)
+        g_hash_table_lookup (mom_shownobjocc_hashtable,
+                             momgui_underlined_obr);
+      momgui_underlined_obr = NULL;
+      if (shoc && shoc->mo_gso_txtag)
+        g_object_set (shoc->mo_gso_txtag, "underline",
+                      PANGO_UNDERLINE_NONE, NULL);
+    }
+  return G_SOURCE_REMOVE;       // to remove the timeout
+}                               /* end of momgui_dont_underline */
+
 
 static void
 momgui_parse_cmdtext (void)
@@ -3608,7 +3627,7 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
 {
   MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
   gint bufx = 0, bufy = 0;
-  GdkEventMotion *motev = ev;
+  GdkEventMotion *motev = (GdkEventMotion*)(ev);
   gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
                                          GTK_TEXT_WINDOW_TEXT,
                                          (gint) motev->x,
@@ -3652,11 +3671,37 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
             }
         }
       if (tagslist)
-        g_slist_free (tagslist);
-      // for debugging only
-      MOM_INFORMPRINTF ("obtview_motion_notifev bufx=%d bufy=%d taggedobr=%s",
-                        (int) bufx, (int) bufy,
-                        mo_objref_pnamestr (taggedobr));
+        g_slist_free (tagslist), tagslist = NULL;
+      if (momgui_underlined_obr != taggedobr && momgui_underlined_obr)
+        {
+          momgui_shownobocc_ty *shoc =
+            (momgui_shownobocc_ty *)
+            g_hash_table_lookup (mom_shownobjocc_hashtable,
+                                 momgui_underlined_obr);
+          momgui_underlined_obr = NULL;
+          if (shoc && shoc->mo_gso_txtag
+              && shoc->mo_gso_showobr == momgui_underlined_obr)
+            {
+              g_object_set (shoc->mo_gso_txtag, "underline",
+                            PANGO_UNDERLINE_NONE, NULL);
+            }
+        }
+      if (momgui_underlined_obr != taggedobr)
+        {
+          momgui_underlined_obr = taggedobr;
+          momgui_shownobocc_ty *shoc =
+            (momgui_shownobocc_ty *)
+            g_hash_table_lookup (mom_shownobjocc_hashtable,
+                                 momgui_underlined_obr);
+          if (shoc && shoc->mo_gso_txtag
+              && shoc->mo_gso_showobr == momgui_underlined_obr)
+            {
+              g_object_set (shoc->mo_gso_txtag, "underline",
+                            PANGO_UNDERLINE_SINGLE, NULL);
+              g_timeout_add (MOMGUI_DELAY_DONTUNDERLINE_MILLISECONDS,
+                             momgui_dont_underline, NULL);
+            }
+        }
     }
   return false;                 // propagate the event
 }                               /* end of momgui_obtview_motion_notifev */
