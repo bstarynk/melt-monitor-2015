@@ -21,13 +21,13 @@ momplugin_startup (const char *arg)
   mo_value_t val = mo_objref_cemit_generate (cemitobr);
   if (val)
     MOM_WARNPRINTF ("testcemit for module %s thru cemitobr %s failed with %s",
-		    mo_objref_pnamestr (modulobr),
-		    mo_objref_pnamestr (cemitobr), mo_value_pnamestr (val));
+                    mo_objref_pnamestr (modulobr),
+                    mo_objref_pnamestr (cemitobr), mo_value_pnamestr (val));
   else
     MOM_INFORMPRINTF ("testcemit for module %s thru cemitobr %s successful",
-		      mo_objref_pnamestr (modulobr),
-		      mo_objref_pnamestr (cemitobr));
-}				/* end momplugin_startup */
+                      mo_objref_pnamestr (modulobr),
+                      mo_objref_pnamestr (cemitobr));
+}                               /* end momplugin_startup */
 
 
 // eof momplug_testcemit.c

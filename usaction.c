@@ -338,4 +338,70 @@ mofun_add_user_action_useract (mo_objref_t obuact)
   return actionobr;
 }                               /* end of mofun_add_user_action_useract */
 
+
+// momglob_cemit_module momglob_cemit_module_useract
+const char
+MOM_PREFIXID (mosig_, cemit_module_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, cemit_module_useract)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_cemit_module_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, cemit_module_useract) (mo_objref_t obuact)
+{
+  return mofun_cemit_module_useract (obuact);
+}
+
+/// for $cemit_module(TheModule)
+mo_value_t
+mofun_cemit_module_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "cemit_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_MODULE,
+    MOMIX__LAST
+  };
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  MOM_ASSERTPRINTF (operobr != NULL, "bad operobr");
+  mo_objref_t moduleobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_MODULE));
+  if (nbargs != MOMIX__LAST)
+    mom_gui_fail_user_action
+      ("cemit_module_useract for cemit_module wants one user arguments, got %d in %s",
+       mo_objref_comp_count (obuact) - 1, mo_objref_pnamestr (obuact));
+  if (!moduleobr)
+    mom_gui_fail_user_action
+      ("cemit_module_useract: missing module (first argument) in %s",
+       mo_objref_pnamestr (obuact));
+  mo_objref_t cemitobr = mo_make_object ();
+  mo_objref_put_cemit_payload (cemitobr, moduleobr);
+  MOM_INFORMPRINTF
+    ("cemit_module_useract: generation of module %s thru cemitobr %s",
+     mo_objref_pnamestr (moduleobr), mo_objref_pnamestr (cemitobr));
+  mo_value_t val = mo_objref_cemit_generate (cemitobr);
+  if (val)
+    {
+      MOM_WARNPRINTF
+        ("cemit_module_useract:  for module %s thru cemitobr %s failed with %s",
+         mo_objref_pnamestr (moduleobr), mo_objref_pnamestr (cemitobr),
+         mo_value_pnamestr (val));
+      mom_gui_fail_user_action
+        ("cemit_module_useract: failure for module %s: %s",
+         mo_objref_pnamestr (moduleobr), mo_value_pnamestr (val));
+    }
+  else
+    MOM_INFORMPRINTF
+      ("cemit_module_useracr for module %s thru cemitobr %s successful",
+       mo_objref_pnamestr (moduleobr), mo_objref_pnamestr (cemitobr));
+  return moduleobr;
+}                               /* end of mofun_cemit_module_useract */
+
 // end of file usaction.c
