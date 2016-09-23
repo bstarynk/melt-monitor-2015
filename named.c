@@ -773,4 +773,209 @@ mo_named_set_of_prefix (const char *prefix)
   return NULL;
 }                               /* end of mo_named_set_of_prefix */
 
+#if 0
+
+// we use a binary balanced tree (similar to red-black tree)
+// shamelessly copied from Ocaml's stdlib/map.ml by X.Leroy
+#define MOM_NN_MAX_HEIGHT 256
+typedef struct mom_nnode_st mom_nnode_ty;
+struct mom_nnode_st
+{
+  uint16_t nn_magic;
+  uint16_t nn_height;
+  mom_nnode_ty *nn_left;
+  mo_stringvalue_ty *nn_name;
+  mo_objref_t nn_objref;
+  mom_nnode_ty *nn_right;
+};
+
+static inline bool
+mom_nnode_exists (mom_nnode_ty * n)
+{
+  if (!n)
+    return false;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  return true;
+}				/* end mom_nnode_exists */
+
+static inline unsigned
+mom_nnode_height (mom_nnode_ty * n)
+{
+  if (!n)
+    return 0;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  return n->nn_height;
+}
+
+static inline mom_nnode_ty *
+mom_nnode_left (mom_nnode_ty * n)
+{
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  return n->nn_left;
+}				/* end mom_nnode_left */
+
+static inline mom_nnode_ty *
+mom_nnode_right (mom_nnode_ty * n)
+{
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  return n->nn_right;
+}				/* end mom_nnode_right */
+
+static inline mo_stringvalue_ty *
+mom_nnode_name (mom_nnode_ty * n)
+{
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  MOM_ASSERTPRINTF (mo_dyncast_string (n->nn_name), "bad name in n@%p", n);
+  return n->nn_name;
+}				/* end mom_nnode_name */
+
+static inline mo_objref_t
+mom_nnode_objref (mom_nnode_ty * n)
+{
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  return n->nn_objref;
+}				/* end of mom_nnode_objref */
+
+static inline mom_nnode_ty *
+mom_nnode_create (mom_nnode_ty * left, mo_stringvalue_ty * name,
+		  mom_nnode_ty * right)
+{
+  mom_nnode_ty *n = mom_gc_alloc (sizeof (mom_nnode_ty));
+  MOM_ASSERTPRINTF (!left
+		    || (left->nn_magic == MOM_NAME_MAGIC
+			&& left->nn_height < MOM_NN_MAX_HEIGHT),
+		    "mom_nnode_create: bad left@%p");
+  MOM_ASSERTPRINTF (!right
+		    || (right->nn_magic == MOM_NAME_MAGIC
+			&& right->nn_height < MOM_NN_MAX_HEIGHT),
+		    "mom_nnode_create: bad left@%p");
+  MOM_ASSERTPRINTF (mo_dyncast_string (name) != NULL,
+		    "mom_nnode_create: nil name");
+  n->nn_magic = MOM_NAME_MAGIC;
+  n->nn_left = left;
+  n->nn_right = right;
+  unsigned lefth = mom_nnode_height (left);
+  unsigned righth = mom_nnode_height (right);
+  n->nn_height = (lefth > righth) ? (lefth + 1) : (righth + 1);
+  return n;
+}				/* end mom_nnode_create */
+
+static inline mom_nnode_ty *
+mom_nnode_singleton (mo_stringvalue_ty * name)
+{
+  return mom_nnode_create (NULL, name, NULL);
+}
+
+/* end mom_nnode_singleton */
+
+static mom_nnode_ty *
+mom_nnode_balance (mom_nnode_ty * left, mo_stringvalue_ty * name,
+		   mom_nnode_ty * right)
+{
+  unsigned lefth = mom_nnode_height (left);
+  unsigned righth = mom_nnode_height (right);
+  if (lefth > righth + 2)
+    {
+      MOM_ASSERTPRINTF (mom_nnode_exists (left), "nil left");
+      if (mom_nnode_height (left->nn_left) >=
+	  mom_nnode_height (left->nn_right))
+	return mom_nnode_create (left->nn_left, left->nn_name,
+				 mom_nnode_create (left->nn_right, name,
+						   right));
+      else
+	{
+	  mom_node_ty *lr = left->nn_right;
+	  MOM_ASSERTPRINTF (mom_nnode_exists (lr), "nil right of left");
+	  return
+	    mom_nnode_create (mom_nnode_create(left->nn_left, left->nn_name, lr->nn_left),
+			      lr->nn_name, mom_nnode_create (lr->right, name,
+							     right));
+	}
+    }
+  else if (righth > lefth + 2)
+    {
+      MOM_ASSERTPRINTF (mom_nnode_exists (right), "nil right");
+      mom_node_ty *rl = right->nn_left;
+      mom_node_ty *rr = right->nn_right;
+      if (mom_nnode_height (rr) >= mom_nnode_height (rl))
+	return mom_nnode_create (mom_nnode_create (left, name, rl),
+				 right->nn_name, rr);
+      else
+	{
+	  MOM_ASSERTPRINTF (mom_nnode_exists (rl), "nil rl");
+	  mom_node_ty *rll = rl->nn_left;
+	  mom_node_ty *rlr = rl->nn_right;
+	  return mom_nnode_create (mom_nnode_create (left, name, rll),
+				   rl->nn_name,
+				   mom_nnode_create (rlr, right->nn_name,
+						     rr));
+	}
+    }
+  else
+    return mom_nnode_create (left, name, right);
+}				/* end mom_nnode_balance */
+
+static mom_nnode_ty *
+mom_nnode_add (mo_stringvalue_ty*x, mom_nnode_ty*n)
+{
+  MOM_ASSERTPRINTF(mo_dyncast_string(x) != NULL, "bad data");
+  if (!n) return mom_nnode_create(NULL, x, NULL);
+  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad x");
+  mom_nnode_ty*l = mom_nnode_left(n);
+  mom_nnode_ty*r = mom_nnode_right(n);
+  mo_stringvalue_ty*d = mom_nnode_name(x);
+  MOM_ASSERTPRINTF(mo_dyncast_string(d), "bad name d in x");
+  int cmp = strcmp(x->mo_cstr, d->mo_cstr);
+  if (!cmp) return x;
+  else if (cmp<0) {
+    mom_nnode_ty*l = mom_nnode_left(n);
+    mom_nnode_ty*r = mom_nnode_right(n);
+    mom_nnode_ty* ll = mom_nnode_add(x,l);
+    if (l == ll) return n;
+    else return mom_nnode_balance(ll,n->nn_name,r);
+  }
+  else /*cmp>0*/ {
+    mom_nnode_ty*rr = mom_nnode_add(x,r);
+    if (r == rr) return n;
+    else return mom_nnode_balance(l,n->nn_name,rr);
+  }
+} /* end of mom_nnode_add */
+
+static mom_nnode_ty*
+mom_nnode_find(mo_stringvalue_ty*x, mom_nnode_ty*n)
+{
+  if (!mo_dyncast_string(x)) return NULL;
+  if (!n) return NULL;
+  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
+  int cmp = strcmp(x->mo_cstr, n->nn_name->mo_cstr);
+  if (!cmp) return n;
+  if (cmp<0) return mom_nnode_find(x,n->nn_left);
+  else return mom_nnode_find(x,n->nn_right);
+}
+
+static mom_nnode_ty*
+mom_nnode_strfind(const char*s, mom_nnode_ty*n)
+{
+  if (!s) return NULL;
+  if (!n) return NULL;
+  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
+  int cmp = strcmp(s n->nn_name->mo_cstr);
+  if (!cmp) return n;
+  if (cmp<0) return mom_nnode_strfind(s,n->nn_left);
+  else return mom_nnode_strfind(s,n->nn_right);
+}
+
+struct mom_stringandnode_st {
+  mo_stringvalue_ty* sn_str;
+  mom_nnode_ty* sn_nod;
+};
+#endif /*0 because new code*/
 /* eof named.c */
