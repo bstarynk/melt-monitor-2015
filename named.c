@@ -777,6 +777,9 @@ mo_named_set_of_prefix (const char *prefix)
 
 // we use a binary balanced tree (similar to red-black tree)
 // shamelessly copied from Ocaml's stdlib/map.ml by X.Leroy
+// actually, this code should look very close to
+// https://github.com/bstarynk/misc-basile/blob/master/basilemap.ml
+// which is itself a slight rewriting of X.Leroy's map.ml
 #define MOM_NN_MAX_HEIGHT 256
 typedef struct mom_nnode_st mom_nnode_ty;
 struct mom_nnode_st
@@ -795,15 +798,20 @@ mom_nnode_exists (mom_nnode_ty * n)
   if (!n)
     return false;
   MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  MOM_ASSERTPRINTF (mo_dyncast_string (n->nn_name), "bad name in n@%p", n);
+  MOM_ASSERTPRINTF (n->nn_objref == NULL
+                    || mo_dyncast_objref (n->nn_objref), "bad objref in n@%p",
+                    n);
   return true;
-}				/* end mom_nnode_exists */
+}                               /* end mom_nnode_exists */
 
 static inline unsigned
 mom_nnode_height (mom_nnode_ty * n)
 {
   if (!n)
     return 0;
-  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
+  MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC && n->nn_height > 0,
+                    "bad n@%p", n);
   return n->nn_height;
 }
 
@@ -814,7 +822,7 @@ mom_nnode_left (mom_nnode_ty * n)
     return NULL;
   MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
   return n->nn_left;
-}				/* end mom_nnode_left */
+}                               /* end mom_nnode_left */
 
 static inline mom_nnode_ty *
 mom_nnode_right (mom_nnode_ty * n)
@@ -823,7 +831,7 @@ mom_nnode_right (mom_nnode_ty * n)
     return NULL;
   MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
   return n->nn_right;
-}				/* end mom_nnode_right */
+}                               /* end mom_nnode_right */
 
 static inline mo_stringvalue_ty *
 mom_nnode_name (mom_nnode_ty * n)
@@ -833,7 +841,7 @@ mom_nnode_name (mom_nnode_ty * n)
   MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
   MOM_ASSERTPRINTF (mo_dyncast_string (n->nn_name), "bad name in n@%p", n);
   return n->nn_name;
-}				/* end mom_nnode_name */
+}                               /* end mom_nnode_name */
 
 static inline mo_objref_t
 mom_nnode_objref (mom_nnode_ty * n)
@@ -842,26 +850,25 @@ mom_nnode_objref (mom_nnode_ty * n)
     return NULL;
   MOM_ASSERTPRINTF (n->nn_magic == MOM_NAME_MAGIC, "bad n@%p", n);
   return n->nn_objref;
-}				/* end of mom_nnode_objref */
+}                               /* end of mom_nnode_objref */
 
 static inline mom_nnode_ty *
 mom_nnode_create (mom_nnode_ty * left, mo_stringvalue_ty * name,
-		  mo_objref_t objr,
-		  mom_nnode_ty * right)
+                  mo_objref_t objr, mom_nnode_ty * right)
 {
   mom_nnode_ty *n = mom_gc_alloc (sizeof (mom_nnode_ty));
   MOM_ASSERTPRINTF (!left
-		    || (left->nn_magic == MOM_NAME_MAGIC
-			&& left->nn_height < MOM_NN_MAX_HEIGHT),
-		    "mom_nnode_create: bad left@%p");
+                    || (left->nn_magic == MOM_NAME_MAGIC
+                        && left->nn_height < MOM_NN_MAX_HEIGHT),
+                    "mom_nnode_create: bad left@%p");
   MOM_ASSERTPRINTF (!right
-		    || (right->nn_magic == MOM_NAME_MAGIC
-			&& right->nn_height < MOM_NN_MAX_HEIGHT),
-		    "mom_nnode_create: bad left@%p");
+                    || (right->nn_magic == MOM_NAME_MAGIC
+                        && right->nn_height < MOM_NN_MAX_HEIGHT),
+                    "mom_nnode_create: bad left@%p");
   MOM_ASSERTPRINTF (mo_dyncast_string (name) != NULL,
-		    "mom_nnode_create: nil name");
-  MOM_ASSERTPRINTF(!objr || mo_dyncast_objref(objr),
-		   "mom_nnode_create: bad objr");
+                    "mom_nnode_create: nil name");
+  MOM_ASSERTPRINTF (!objr || mo_dyncast_objref (objr),
+                    "mom_nnode_create: bad objr");
   n->nn_magic = MOM_NAME_MAGIC;
   n->nn_left = left;
   n->nn_right = right;
@@ -871,7 +878,7 @@ mom_nnode_create (mom_nnode_ty * left, mo_stringvalue_ty * name,
   unsigned righth = mom_nnode_height (right);
   n->nn_height = (lefth > righth) ? (lefth + 1) : (righth + 1);
   return n;
-}				/* end mom_nnode_create */
+}                               /* end mom_nnode_create */
 
 static inline mom_nnode_ty *
 mom_nnode_singleton (mo_stringvalue_ty * name, mo_objref_t objr)
@@ -883,38 +890,36 @@ mom_nnode_singleton (mo_stringvalue_ty * name, mo_objref_t objr)
 
 static mom_nnode_ty *
 mom_nnode_balance (mom_nnode_ty * left,
-		   mo_stringvalue_ty * name, mo_objref_t objr,
-		   mom_nnode_ty * right)
+                   mo_stringvalue_ty * name, mo_objref_t objr,
+                   mom_nnode_ty * right)
 {
-  MOM_ASSERTPRINTF(!left || mom_nnode_exists(left), "bad left");
-  MOM_ASSERTPRINTF(!right || mom_nnode_exists(right), "bad right");
-  MOM_ASSERTPRINTF(mo_dyncast_string(name), "bad name");
-  MOM_ASSERTPRINTF(!objr || mo_dyncast_objref(obr), "bad obr");
+  MOM_ASSERTPRINTF (!left || mom_nnode_exists (left), "bad left");
+  MOM_ASSERTPRINTF (!right || mom_nnode_exists (right), "bad right");
+  MOM_ASSERTPRINTF (mo_dyncast_string (name), "bad name");
+  MOM_ASSERTPRINTF (!objr || mo_dyncast_objref (obr), "bad obr");
   unsigned lefth = mom_nnode_height (left);
   unsigned righth = mom_nnode_height (right);
   if (lefth > righth + 2)
     {
       MOM_ASSERTPRINTF (mom_nnode_exists (left), "nil left");
       if (mom_nnode_height (left->nn_left) >=
-	  mom_nnode_height (left->nn_right))
-	return mom_nnode_create (left->nn_left,
-				 left->nn_name, left->nn_objr,
-				 mom_nnode_create (left->nn_right,
-						   name, objr,
-						   right));
+          mom_nnode_height (left->nn_right))
+        return mom_nnode_create (left->nn_left,
+                                 left->nn_name, left->nn_objr,
+                                 mom_nnode_create (left->nn_right,
+                                                   name, objr, right));
       else
-	{
-	  mom_node_ty *lr = left->nn_right;
-	  MOM_ASSERTPRINTF (mom_nnode_exists (lr), "nil right of left");
-	  return
-	    mom_nnode_create (mom_nnode_create(left->nn_left,
-					       left->nn_name, left->nn_objr,
-					       lr->nn_left),
-			      lr->nn_name, lr->nn_objr,
-			      mom_nnode_create (lr->right,
-						name, objr,
-						right));
-	}
+        {
+          mom_node_ty *lr = left->nn_right;
+          MOM_ASSERTPRINTF (mom_nnode_exists (lr), "nil right of left");
+          return
+            mom_nnode_create (mom_nnode_create (left->nn_left,
+                                                left->nn_name, left->nn_objr,
+                                                lr->nn_left),
+                              lr->nn_name, lr->nn_objr,
+                              mom_nnode_create (lr->right,
+                                                name, objr, right));
+        }
     }
   else if (righth > lefth + 2)
     {
@@ -922,106 +927,308 @@ mom_nnode_balance (mom_nnode_ty * left,
       mom_node_ty *rl = right->nn_left;
       mom_node_ty *rr = right->nn_right;
       if (mom_nnode_height (rr) >= mom_nnode_height (rl))
-	return mom_nnode_create (mom_nnode_create (left,
-						   name, objr,
-						   rl),
-				 right->nn_name, right->nn_objr,
-				 rr);
+        return mom_nnode_create (mom_nnode_create (left,
+                                                   name, objr,
+                                                   rl),
+                                 right->nn_name, right->nn_objr, rr);
       else
-	{
-	  MOM_ASSERTPRINTF (mom_nnode_exists (rl), "nil rl");
-	  mom_node_ty *rll = rl->nn_left;
-	  mom_node_ty *rlr = rl->nn_right;
-	  return mom_nnode_create (mom_nnode_create (left,
-						     name, objr,
-						     rll),
-				   rl->nn_name, rl->nn_objr,
-				   mom_nnode_create (rlr,
-						     right->nn_name, right->nn_objr,
-						     rr));
-	}
+        {
+          MOM_ASSERTPRINTF (mom_nnode_exists (rl), "nil rl");
+          mom_node_ty *rll = rl->nn_left;
+          mom_node_ty *rlr = rl->nn_right;
+          return mom_nnode_create (mom_nnode_create (left,
+                                                     name, objr,
+                                                     rll),
+                                   rl->nn_name, rl->nn_objr,
+                                   mom_nnode_create (rlr,
+                                                     right->nn_name,
+                                                     right->nn_objr, rr));
+        }
     }
   else
     return mom_nnode_create (left, name, objr, right);
-}				/* end mom_nnode_balance */
+}                               /* end mom_nnode_balance */
 
 static mom_nnode_ty *
-mom_nnode_add (mo_stringvalue_ty*nam, mo_objref_t obr, mom_nnode_ty*n)
+mom_nnode_add (mo_stringvalue_ty * nam, mo_objref_t obr, mom_nnode_ty * n)
 {
-  MOM_ASSERTPRINTF(mo_dyncast_string(nam) != NULL, "bad nam");
-  MOM_ASSERTPRINTF(!obr || mo_dyncast_objref(obr), "bad obr");
-  if (!n) return mom_nnode_create(NULL, nam, obr, NULL);
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad x");
-  mom_nnode_ty*l = mom_nnode_left(n);
-  mom_nnode_ty*r = mom_nnode_right(n);
-  mo_stringvalue_ty*d = mom_nnode_name(x);
-  MOM_ASSERTPRINTF(mo_dyncast_string(d), "bad name d in x");
-  int cmp = strcmp(x->mo_cstr, d->mo_cstr);
-  if (!cmp) return x;
-  else if (cmp<0) {
-    mom_nnode_ty*l = mom_nnode_left(n);
-    mom_nnode_ty*r = mom_nnode_right(n);
-    mom_nnode_ty* ll = mom_nnode_add(x,l);
-    if (l == ll) return n;
-    else return mom_nnode_balance(ll,n->nn_name,r);
-  }
-  else /*cmp>0*/ {
-    mom_nnode_ty*rr = mom_nnode_add(x,r);
-    if (r == rr) return n;
-    else return mom_nnode_balance(l,n->nn_name,rr);
-  }
-} /* end of mom_nnode_add */
+  MOM_ASSERTPRINTF (mo_dyncast_string (nam) != NULL, "bad nam");
+  MOM_ASSERTPRINTF (!obr || mo_dyncast_objref (obr), "bad obr");
+  if (!n)
+    return mom_nnode_create (NULL, nam, obr, NULL);
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad x");
+  mom_nnode_ty *l = mom_nnode_left (n);
+  mom_nnode_ty *r = mom_nnode_right (n);
+  mo_stringvalue_ty *d = mom_nnode_name (x);
+  MOM_ASSERTPRINTF (mo_dyncast_string (d), "bad name d in x");
+  int cmp = strcmp (x->mo_cstr, d->mo_cstr);
+  if (!cmp)
+    return x;
+  else if (cmp < 0)
+    {
+      mom_nnode_ty *l = mom_nnode_left (n);
+      mom_nnode_ty *r = mom_nnode_right (n);
+      mom_nnode_ty *ll = mom_nnode_add (x, l);
+      if (l == ll)
+        return n;
+      else
+        return mom_nnode_balance (ll, n->nn_name, r);
+    }
+  else                          /*cmp>0 */
+    {
+      mom_nnode_ty *rr = mom_nnode_add (x, r);
+      if (r == rr)
+        return n;
+      else
+        return mom_nnode_balance (l, n->nn_name, rr);
+    }
+}                               /* end of mom_nnode_add */
 
-static mom_nnode_ty*
-mom_nnode_find(mo_stringvalue_ty*x, mom_nnode_ty*n)
+static mom_nnode_ty *
+mom_nnode_find (mo_stringvalue_ty * x, mom_nnode_ty * n)
 {
-  if (!mo_dyncast_string(x)) return NULL;
-  if (!n) return NULL;
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
-  int cmp = strcmp(x->mo_cstr, n->nn_name->mo_cstr);
-  if (!cmp) return n;
-  if (cmp<0) return mom_nnode_find(x,n->nn_left);
-  else return mom_nnode_find(x,n->nn_right);
+  if (!mo_dyncast_string (x))
+    return NULL;
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad n");
+  int cmp = strcmp (x->mo_cstr, n->nn_name->mo_cstr);
+  if (!cmp)
+    return n;
+  if (cmp < 0)
+    return mom_nnode_find (x, n->nn_left);
+  else
+    return mom_nnode_find (x, n->nn_right);
 }
 
-static mom_nnode_ty*
-mom_nnode_strfind(const char*s, mom_nnode_ty*n)
+static mom_nnode_ty *
+mom_nnode_strfind (const char *s, mom_nnode_ty * n)
 {
-  if (!s) return NULL;
-  if (!n) return NULL;
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
-  int cmp = strcmp(s n->nn_name->mo_cstr);
-  if (!cmp) return n;
-  if (cmp<0) return mom_nnode_strfind(s,n->nn_left);
-  else return mom_nnode_strfind(s,n->nn_right);
-} /* end mom_nnode_strfind */
+  if (!s)
+    return NULL;
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad n");
+  int cmp = strcmp (s n->nn_name->mo_cstr);
+  if (!cmp)
+    return n;
+  if (cmp < 0)
+    return mom_nnode_strfind (s, n->nn_left);
+  else
+    return mom_nnode_strfind (s, n->nn_right);
+}                               /* end mom_nnode_strfind */
 
 
-static mom_nnode_ty*
-mom_nnode_min_binding (mom_nnode_ty*n)
+static mom_nnode_ty *
+mom_nnode_min_binding (mom_nnode_ty * n)
 {
-  if (!n) return NULL;
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
-  if (n->nn_left == NULL) return n;
-  return mom_nnode_min_binding(n->nn_left);
-} /* end mom_nnode_min_binding */
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad n");
+  if (n->nn_left == NULL)
+    return n;
+  return mom_nnode_min_binding (n->nn_left);
+}                               /* end mom_nnode_min_binding */
 
-static mom_nnode_ty*
-mom_nnode_max_binding (mom_nnode_ty*n)
+static mom_nnode_ty *
+mom_nnode_max_binding (mom_nnode_ty * n)
 {
-  if (!n) return NULL;
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
-  if (n->nn_right == NULL) return n;
-  return mom_nnode_max_binding(n->nn_right);
-} /* end mom_nnode_max_binding */
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad n");
+  if (n->nn_right == NULL)
+    return n;
+  return mom_nnode_max_binding (n->nn_right);
+}                               /* end mom_nnode_max_binding */
 
-static mom_nnode_ty*
-mom_nnode_remove_min_binding (mom_nnode_ty*n)
+static mom_nnode_ty *
+mom_nnode_remove_min_binding (mom_nnode_ty * n)
 {
-  if (!n) return NULL;
-  MOM_ASSERTPRINTF(mom_nnode_exists(n), "bad n");
-  if (n->nn_left == NULL) return n->nn_right;
-} /* end mom_nnode_remove_min_binding */
+  if (!n)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (n), "bad n");
+  if (n->nn_left == NULL)
+    return n->nn_right;
+  return mom_nnode_balance (mom_nnode_remove_min_binding (n->nn_left),
+                            n->nn_name, n->nn_objr, n->nn_right);
+}                               /* end mom_nnode_remove_min_binding */
 
-#endif /*0 because new code*/
+static mom_nnode_ty *
+mom_nnode_merge (mom_nnode_ty * t1, mom_nnode_ty * t2)
+{
+  if (t1 == NULL && t2 == NULL)
+    return NULL;
+  if (t1 == NULL)
+    {
+      MOM_ASSERTPRINTF (mom_nnode_exists (t2), "bad t2");
+      return t2;
+    };
+  if (t2 == NULL)
+    {
+      MOM_ASSERTPRINTF (mom_nnode_exists (t1), "bad t1");
+      return t1;
+    };
+  mom_nnode_ty *mb = mom_nnode_min_binding (t2);
+  MOM_ASSERTPRINTF (mom_nnode_exists (mb), "bad mb2");
+  return mom_nnode_balance ();
+}                               /* end of mom_nnode_merge */
+
+
+static mom_nnode_ty *
+mom_nnode_remove (mo_stringvalue_ty * xn, mom_nnode_ty * nd)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_string (xn), "bad xn");
+  if (!nd)
+    return NULL;
+  MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
+  int cmp = strcmp (xn->mo_cstr, nd->nn_name->mo_cstr);
+  if (cmp == 0)
+    return mom_nnode_merge (nd->nn_left, nd->nn_right);
+  else if (cmp < 0)
+    return mom_nnode_balance (mom_nnode_remove (xn, nd->nn_left),
+                              nd->nn_name, nd->nn_objr, nd->nn_right);
+  else
+    return mom_nnode_balance (nd->nn_left,
+                              nd->nn_name, nd->nn_objr,
+                              mom_nnode_remove (xn, nd->nn_right));
+}                               /* end of mom_nnode_remove */
+
+// to iterate on every node
+typedef void mom_nnode_iterfun_sigt (const mom_nnode_ty * nd, void *data);
+
+static void
+mom_nnode_iter (mom_nnode_iterfun_sigt * fun, void *data, mom_nnode_ty * nd)
+{
+  if (!fun)
+    return;
+  if (nd == NULL)
+    return;
+  MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
+  if (nd->nn_left)
+    mom_nnode_iter (fun, data, nd->nn_left);
+  (*fun) (nd, data);
+  if (nd->nn_right)
+    mom_nnode_iter (fun, data, nd->nn_right);
+}                               /* end mom_nnode_iter */
+
+// to repeat on every node, till the function gives true to stop or
+// false to continue; return true if it has been stopped
+typedef bool mom_nnode_repeatfun_sigt (const mom_nnode_ty * nd, void *data);
+static bool
+mom_nnode_repeat (mom_nnode_repeatfun_sigt * fun, void *data,
+                  mom_nnode_ty * nd)
+{
+  if (!fun)
+    return true;
+  if (nd == NULL)
+    return false;
+  MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
+  if (nd->nn_left)
+    {
+      if (mom_nnode_repeat (fun, data, nd->nn_left))
+        return true;
+    }
+  if ((*fun) (nd, data))
+    return true;
+  if (nd->nn_right)
+    {
+      return mom_nnode_repeat (fun, data, nd->nn_right);
+    }
+  return false;
+}                               /* end of mom_nnode_repeat */
+
+/** The below comment was originally by X.Leroy in his stdlib/map.ml:
+
+  (* Beware: those two functions assume that the added k is *strictly*
+       smaller (or bigger) than all the present keys in the tree; it
+       does not test for equality with the current min (or max) key.
+
+       Indeed, they are only used during the "join" operation which
+       respects this precondition.
+  *)
+
+ **/
+static mom_nnode_ty *
+mom_nnode_add_min_binding_internal (mo_stringvalue_ty * kn, mo_objref_t vo,
+                                    mom_nnode_ty * nd)
+{
+  if (!nd)
+    return mom_nnode_singleton (kn, vo);
+  MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
+  return
+    mom_nnode_balance (mom_nnode_add_min_binding_internal
+                       (kn, vo, nd->nn_left), nd->nn_name, nd->nn_objr,
+                       nd->nn_right);
+}                               /* end of mom_nnode_add_min_binding_internal */
+
+static mom_nnode_ty *
+mom_nnode_add_max_binding_internal (mo_stringvalue_ty * kn, mo_objref_t vo,
+                                    mom_nnode_ty * nd)
+{
+  if (!nd)
+    return mom_nnode_singleton (kn, vo);
+  MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
+  return mom_nnode_balance (nd->nn_left,
+                            nd->nn_name, nd->nn_objr,
+                            mom_nnode_add_max_binding_internal (kn, vo,
+                                                                nd->nn_right));
+}                               /* end mom_nnode_add_max_binding_internal */
+
+/** Comment by X.Leroy:
+  (* Same as create and bal, but no assumptions are made on the
+       relative heights of l and r. *)
+**/
+static mom_nnode_ty *
+mom_nnode_join (mom_nnode_ty * left, mo_stringvalue_ty * name,
+                mo_objref_t objr, mom_nnode_ty * right)
+{
+  if (!left)
+    return mom_nnode_add_min_binding_internal (name, objr, right);
+  else if (!right)
+    return mom_nnode_add_max_binding_internal (name, objr, left);
+  MOM_ASSERTPRINTF (mom_nnode_exists (left), "bad left");
+  MOM_ASSERTPRINTF (mom_nnode_exists (right), "bad right");
+  if (left->nn_height > right->nn_height + 2)
+    return mom_nnode_balance (left->nn_left,
+                              left->nn_name, left->nn_objr,
+                              mom_nnode_join (left->nn_right, name, objr,
+                                              right));
+  else if (right->nn_height > left->nn_height + 2)
+    return
+      mom_nnode_balance (mom_nnode_join (left, name, objr, right->nn_left),
+                         right->nn_name, right->nn_objr, right->nn_right);
+  else
+    return mom_nnode_create (left, name, objr, right);
+}                               /* end mom_nnode_join */
+
+
+/** Comment by X.Leroy:
+ (* Merge two trees l and r into one.
+       All elements of l must precede the elements of r.
+       No assumption on the heights of l and r. *)
+**/
+static mom_nnode_ty *
+mom_nnode_concat (mom_nnode_ty * t1, mom_nnode_ty * t2)
+{
+  if (!t1)
+    return t2;
+  if (!t2)
+    return t1;
+  MOM_ASSERTPRINTF (mom_nnode_exists (t1), "bad t1");
+  MOM_ASSERTPRINTF (mom_nnode_exists (t2), "bad t2");
+  mom_nnode_ty *minb2 = mom_nnode_min_binding (t2);
+  return mom_nnode_join (t1,
+                         minb2->nn_name, minb2->nn_objr,
+                         mom_nnode_remove_min_binding (t2));
+}                               /* end of mom_nnode_concat */
+
+
+// probably useless:
+//static  mom_nnode_ty*
+//mom_nnode_concat_or_join(mom_nnode_ty * t1,
+//                       mo_stringvalue_ty * name, mo_objref_t objr,
+//                       mom_nnode_ty * t2)
+//{
+//}      /* end of mom_nnode_concat_or_join */
+#endif /*0 because new code */
 /* eof named.c */
