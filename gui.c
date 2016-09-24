@@ -228,8 +228,7 @@ mom_gui_fail_user_action (const char *fmt, ...)
   if (MOM_UNLIKELY (!momgui_user_cmdparse))
     MOM_FATAPRINTF ("mom_gui_fail_user_action %s outside of user action",
                     bufdup);
-  MOMGUI_CMDPARSEFAIL (momgui_user_cmdparse, "mom_gui_fail_user_action: %s",
-                       bufdup);
+  MOMGUI_CMDPARSEFAIL (momgui_user_cmdparse, "GUI fail: %s", bufdup);
 }                               /* end mom_gui_fail_user_action */
 
 
@@ -4004,7 +4003,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
         GtkWidget *chwidg = l->data;
         MOM_ASSERTPRINTF (GTK_IS_WIDGET (chwidg), "bad chwidg@%p", chwidg);
         if (GTK_IS_LABEL (chwidg))
-          gtk_label_set_selectable (GTK_LABEL(chwidg), true);
+          gtk_label_set_selectable (GTK_LABEL (chwidg), true);
       }
     g_list_free (lischs), lischs = NULL;
   }

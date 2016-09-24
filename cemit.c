@@ -29,7 +29,7 @@
   /* the suffix is often '.c' */				\
   char mo_cemit_suffix[4];					\
 /* the prefix could be 'modules.dir/momg_' */			\
-  char mo_cemit_prefix[32];					\
+  char mo_cemit_prefix[40];					\
   /* a pointer to a local struct during emission */		\
   struct mom_cemitlocalstate_st* mo_cemit_locstate;      	\
 /* the source module */						\
@@ -105,7 +105,8 @@ mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul)
   cemp->mo_cemit_nmagic = MOM_CEMIT_MAGIC;
   strcpy (cemp->mo_cemit_suffix, ".c");
   cemp->mo_cemit_suffix[sizeof (cemp->mo_cemit_suffix) - 1] = 0;
-  strcpy (cemp->mo_cemit_prefix, MOM_MODULES_DIR "/" MOM_MODULE_INFIX);
+  strncpy (cemp->mo_cemit_prefix, MOM_MODULES_DIR "/" MOM_MODULE_INFIX,
+           sizeof (cemp->mo_cemit_prefix) - 1);
   cemp->mo_cemit_prefix[sizeof (cemp->mo_cemit_prefix) - 1] = 0;
   cemp->mo_cemit_locstate = NULL;
   cemp->mo_cemit_modobj = obmodul;
@@ -401,7 +402,8 @@ mom_cemit_open (struct mom_cemitlocalstate_st *csta)
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_open: bad payl@%p in csta@%p", cemp, csta);
   snprintf (csta->mo_cemsta_tempsuffix, sizeof (csta->mo_cemsta_tempsuffix),
-            "+r%x_%x_p%d", (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
+            "+r%x_%x_p%d.tmp~",
+            (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
             (int) (momrand_genrand_int31 () & 0x3ffffff) + 1,
             (int) getpid ());
   char *pathbuf = NULL;
@@ -601,8 +603,8 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
         MOM_CEMITFAILURE (csta, "included %s with bad `file_path`",
                           mo_objref_pnamestr (curinclob));
       for (const char *pi = inclcstr; *pi; pi++)
-        if (!isalnum (*pi) || *pi == '/' || *pi == '_' || *pi == '+'
-            || *pi == '-' || *pi == '.')
+        if (!(isalnum (*pi) || *pi == '/' || *pi == '_' || *pi == '+'
+              || *pi == '-' || *pi == '.'))
           MOM_CEMITFAILURE (csta, "included %s with invalid `file_path` %s",
                             mo_objref_pnamestr (curinclob), inclcstr);
       mom_cemit_printf (csta, "#include \"%s\"\n", inclcstr);
