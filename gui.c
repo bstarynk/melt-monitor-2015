@@ -72,6 +72,8 @@ static GtkTextTag *mom_cmdtag_newcomm;  // tag for new comment
 
 static GtkWidget *mom_cmdtview;
 static GtkWidget *mom_cmdstatusbar;
+static const char *mom_cmdstatustext;
+
 
 #define MOMGUI_IDSTART_LEN 7
 
@@ -3848,6 +3850,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   g_signal_connect (quititem, "activate", G_CALLBACK (mom_quit_app), NULL);
   //// editmenu
   GtkWidget *editmenu = gtk_menu_new ();
+  gtk_widget_set_name (editmenu, "editmenu");
   GtkWidget *edititem = gtk_menu_item_new_with_label ("Edit");
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), edititem);
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (edititem), editmenu);
@@ -3990,6 +3993,21 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
   mom_cmdstatusbar = gtk_statusbar_new ();
+  {
+    GtkWidget *statmsgarea =
+      gtk_statusbar_get_message_area (GTK_STATUSBAR (mom_cmdstatusbar));
+    MOM_ASSERTPRINTF (GTK_IS_CONTAINER (statmsgarea), "bad statmsgarea@%p",
+                      statmsgarea);
+    GList *lischs = gtk_container_get_children (GTK_CONTAINER (statmsgarea));
+    for (GList * l = lischs; l != NULL; l = l->next)
+      {
+        GtkWidget *chwidg = l->data;
+        MOM_ASSERTPRINTF (GTK_IS_WIDGET (chwidg), "bad chwidg@%p", chwidg);
+        if (GTK_IS_LABEL (chwidg))
+          gtk_label_set_selectable (chwidg, true);
+      }
+    g_list_free (lischs), lischs = NULL;
+  }
   gtk_box_pack_start (GTK_BOX (cmdtopvbox), scrocmd, TRUE, TRUE, 2);
   gtk_box_pack_end (GTK_BOX (cmdtopvbox), mom_cmdstatusbar, FALSE, FALSE, 2);
   gtk_widget_set_name (mom_cmdstatusbar, "cmdstatusbar");
@@ -4145,6 +4163,7 @@ mom_gui_cmdstatus_printf (const char *fmt, ...)
   va_end (args);
   if (len < 0 || buf == NULL)
     MOM_FATAPRINTF ("cmdstatus_printf: vasprintf failed fmt=%s", fmt);
+  mom_cmdstatustext = mom_gc_strdup (buf);
   gtk_statusbar_push (GTK_STATUSBAR (mom_cmdstatusbar), statctxid, buf);
   free (buf);
 }                               /* end mom_gui_cmdstatus_printf */
