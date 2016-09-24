@@ -38,6 +38,7 @@ INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
+INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
@@ -116,6 +117,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_1Hx4BMvqv69AA0750",
      "_1WX2mf4xwC5TU5ml7",
      "_20B54zdX0j8vYUdsf",
+     "_21c6aoW2jM5uS1jrN",
      "_21x8NL3oau6heNEnt",
      "_21J3zZDnsKTbAVBFo",
      "_2k61pgEBsCRJlTpHG",
@@ -369,6 +371,20 @@ INSERT INTO t_objects VALUES('_21J3zZDnsKTbAVBFo',1474473958,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_21c6aoW2jM5uS1jrN',1474699053,'
+{
+ "@name": "cemit_module_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "user action for cemit_module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_21x8NL3oau6heNEnt',1474473182,'
 {
  "@name": "int64_t",
