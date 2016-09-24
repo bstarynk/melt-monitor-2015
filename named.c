@@ -350,8 +350,10 @@ mom_nnode_remove_min_binding (mom_nnode_ty * n)
                             n->nn_name, n->nn_objref, n->nn_right);
 }                               /* end mom_nnode_remove_min_binding */
 
+/* in X.Leroy's code there are two merge functions -one internal,
+   another public-, this is the internal first */
 static mom_nnode_ty *
-mom_nnode_merge (mom_nnode_ty * t1, mom_nnode_ty * t2)
+mom_nnode_merge_trees (mom_nnode_ty * t1, mom_nnode_ty * t2)
 {
   if (t1 == NULL && t2 == NULL)
     return NULL;
@@ -365,11 +367,11 @@ mom_nnode_merge (mom_nnode_ty * t1, mom_nnode_ty * t2)
       MOM_ASSERTPRINTF (mom_nnode_exists (t1), "bad t1");
       return t1;
     };
-  unsigned h1 = mom_nnode_height (t1);
-  unsigned h2 = mom_nnode_height (t2);
-#warning mom_nnode_merge unimplemented
-  MOM_FATAPRINTF ("mom_nnode_merge unimplemented t1@%p t2@%p", t1, t2);
-}                               /* end of mom_nnode_merge */
+  mom_nnode_ty *mint2 = mom_nnode_min_binding(t2);
+  MOM_ASSERTPRINTF(mom_nnode_exists(mint2), "bad mint2");
+  return mom_nnode_balance(t1, mint2->nn_name, mint2->nn_objref,
+			   mom_nnode_remove_min_binding(t2));
+}                               /* end of mom_nnode_merge_trees */
 
 
 static mom_nnode_ty *
@@ -381,7 +383,7 @@ mom_nnode_remove (mo_stringvalue_ty * xn, mom_nnode_ty * nd)
   MOM_ASSERTPRINTF (mom_nnode_exists (nd), "bad nd");
   int cmp = strcmp (xn->mo_cstr, nd->nn_name->mo_cstr);
   if (cmp == 0)
-    return mom_nnode_merge (nd->nn_left, nd->nn_right);
+    return mom_nnode_merge_trees (nd->nn_left, nd->nn_right);
   else if (cmp < 0)
     return mom_nnode_balance (mom_nnode_remove (xn, nd->nn_left),
                               nd->nn_name, nd->nn_objref, nd->nn_right);
@@ -523,9 +525,9 @@ mom_nnode_concat (mom_nnode_ty * t1, mom_nnode_ty * t2)
 // the split function gives the following structure:
 struct mom_splitnnode_st
 {
-  mom_nnode_ty *nsp_below;      // the node below the key
-  mom_nnode_ty *nsp_found;      // the node containing the key
-  mom_nnode_ty *nsp_above;      // the node above the key
+  mom_nnode_ty *nsp_below;      // the subtree below the key
+  mom_nnode_ty *nsp_found;      // the node containing the key, if any
+  mom_nnode_ty *nsp_above;      // the subtree above the key
 };
 struct mom_splitnnode_st
 mom_nnode_split (mo_stringvalue_ty * namx, mom_nnode_ty * nd)
