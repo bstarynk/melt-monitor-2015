@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 26
+#define MOM_NB_GLOBAL 27
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -39,6 +39,9 @@ MOM_HAS_GLOBAL(array_ctype_class,_4iH7xI2JtAomiBySj,1017368870,48018524836399736
 
 //+ the boolean ctype
 MOM_HAS_GLOBAL(bool,_3K62tYRL1azRF0cP2,889079074,5625971388704506234,1367612090)
+
+//+ operation to emit c code for a module: $cemit_module(TheModule)
+MOM_HAS_GLOBAL(cemit_module,_6bK8gGYmKZXwwNXj4,1461904630,5629140260882290120,1714563547)
 
 //+ the char ctype
 MOM_HAS_GLOBAL(char,_2Sj1dLJSbvyN3kMgI,677585412,3745052711434301676,2350112261)
@@ -127,6 +130,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #define moid_bool _3K62tYRL1azRF0cP2
 #undef monam_3K62tYRL1azRF0cP2
 #define monam_3K62tYRL1azRF0cP2 bool
+
+#undef moid_cemit_module
+#define moid_cemit_module _6bK8gGYmKZXwwNXj4
+#undef monam_6bK8gGYmKZXwwNXj4
+#define monam_6bK8gGYmKZXwwNXj4 cemit_module
 
 #undef moid_char
 #define moid_char _2Sj1dLJSbvyN3kMgI
@@ -246,6 +254,7 @@ enum mom_global_hashes_en {
   momghash_add_user_action_useract=2505338322,
   momghash_array_ctype_class=2717929419,
   momghash_bool=1367612090,
+  momghash_cemit_module=1714563547,
   momghash_char=2350112261,
   momghash_class_useract=3817197504,
   momghash_double=3623603139,
@@ -277,7 +286,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 26
+#define MOM_NB_NAMED_GLOBAL 27
 
 
 #undef MOM_HAS_GLOBAL

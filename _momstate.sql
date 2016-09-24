@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 22 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 24 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -51,6 +51,7 @@ INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
+INSERT INTO t_names VALUES('include_monimelt','_0m37ffFuKe0qxNfTK');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
 INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
 INSERT INTO t_names VALUES('int32_t','_7EH4RTtyF1BioGEDK');
@@ -124,6 +125,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_3WR20H7JRlNWkDV4y",
      "_4iH7xI2JtAomiBySj",
      "_62H0GDHPCtIRvAdDd",
+     "_6bK8gGYmKZXwwNXj4",
      "_6r06aqWaPdfZgAKBP",
      "_6y88mWwevVhETpkig",
      "_6Z90lCcFC3RhKoHGv",
@@ -206,6 +208,24 @@ INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the includes in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0m37ffFuKe0qxNfTK',1474696522,'
+{
+ "@name": "include_monimelt",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "to include the \"monimelt.h\" header"
+   },
+   {
+    "at": "_6F98Bo2ChKhNVEZgt",
+    "va": "monimelt.h"
    }
   ]
  },
@@ -564,11 +584,19 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474553565,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474696436,'
 {
  "@name": "test1_module",
  "attrs": {
   "assoval": [
+   {
+    "at": "_0hA5FCeEWGc6gpfnU",
+    "va": {
+     "tup": [
+      "_0m37ffFuKe0qxNfTK"
+     ]
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "some module to test c-emission"
