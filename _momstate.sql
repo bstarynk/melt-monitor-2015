@@ -384,7 +384,7 @@ INSERT INTO t_objects VALUES('_21c6aoW2jM5uS1jrN',1474699053,'
  },
  "comps": null
 }
-','','','','');
+','','_8DT8VbN0FaiS0K6uf','!','.');
 INSERT INTO t_objects VALUES('_21x8NL3oau6heNEnt',1474473182,'
 {
  "@name": "int64_t",
@@ -863,11 +863,17 @@ INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
-INSERT INTO t_objects VALUES('_6bK8gGYmKZXwwNXj4',1474558574,'
+INSERT INTO t_objects VALUES('_6bK8gGYmKZXwwNXj4',1474699623,'
 {
  "@name": "cemit_module",
  "attrs": {
   "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_21c6aoW2jM5uS1jrN"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "operation to emit c code for a module: $cemit_module(TheModule)"
