@@ -4004,7 +4004,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
         GtkWidget *chwidg = l->data;
         MOM_ASSERTPRINTF (GTK_IS_WIDGET (chwidg), "bad chwidg@%p", chwidg);
         if (GTK_IS_LABEL (chwidg))
-          gtk_label_set_selectable (chwidg, true);
+          gtk_label_set_selectable (GTK_LABEL(chwidg), true);
       }
     g_list_free (lischs), lischs = NULL;
   }
