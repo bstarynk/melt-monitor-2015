@@ -367,10 +367,10 @@ mom_nnode_merge_trees (mom_nnode_ty * t1, mom_nnode_ty * t2)
       MOM_ASSERTPRINTF (mom_nnode_exists (t1), "bad t1");
       return t1;
     };
-  mom_nnode_ty *mint2 = mom_nnode_min_binding(t2);
-  MOM_ASSERTPRINTF(mom_nnode_exists(mint2), "bad mint2");
-  return mom_nnode_balance(t1, mint2->nn_name, mint2->nn_objref,
-			   mom_nnode_remove_min_binding(t2));
+  mom_nnode_ty *mint2 = mom_nnode_min_binding (t2);
+  MOM_ASSERTPRINTF (mom_nnode_exists (mint2), "bad mint2");
+  return mom_nnode_balance (t1, mint2->nn_name, mint2->nn_objref,
+                            mom_nnode_remove_min_binding (t2));
 }                               /* end of mom_nnode_merge_trees */
 
 
