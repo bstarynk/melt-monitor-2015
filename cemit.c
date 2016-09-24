@@ -487,7 +487,7 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
     MOM_FATAPRINTF ("cemit_close: asprintf oldpathbuf failed for module %s",
                     csta->mo_cemsta_modid);
   char *backuppathbuf = NULL;
-  asprintf (&oldpathbuf, "%s%s%s%%",
+  asprintf (&backuppathbuf, "%s%s%s%%",
             cemp->mo_cemit_prefix,
             csta->mo_cemsta_modid, cemp->mo_cemit_suffix);
   if (MOM_UNLIKELY (!backuppathbuf))
