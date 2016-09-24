@@ -81,6 +81,7 @@ mo_objref_cleanup_cemit (mo_objref_t obr)
     }
 }                               /* end of mo_objref_cleanup_cemit */
 
+
 void
 mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul)
 {
@@ -107,12 +108,12 @@ mo_objref_put_cemit_payload (mo_objref_t obr, mo_objref_t obmodul)
   strcpy (cemp->mo_cemit_prefix, MOM_MODULES_DIR "/" MOM_MODULE_INFIX);
   cemp->mo_cemit_prefix[sizeof (cemp->mo_cemit_prefix) - 1] = 0;
   cemp->mo_cemit_locstate = NULL;
-  cemp->mo_cemit_modobj = NULL;
-  MOM_FATAPRINTF ("put_cemit_payload uncomplete cemp@%p", cemp);
+  cemp->mo_cemit_modobj = obmodul;
   mo_objref_clear_payload (obr);
   obr->mo_ob_paylkind = MOM_PREDEF (payload_c_emit);
   obr->mo_ob_payldata = cemp;
 }                               /* end mo_objref_put_cemit_payload */
+
 
 mo_cemitpayl_ty *
 mo_dyncastpayl_cemit (const void *p)
