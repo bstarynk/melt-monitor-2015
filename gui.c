@@ -1414,6 +1414,8 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 static void
 momgui_set_displayed_nth_value (int ix, mo_value_t curval)
 {
+  MOM_BACKTRACEPRINTF ("set_displayed_nth_value ix#%d curval:%s", ix,
+                       mo_value_pnamestr (curval));
   MOM_ASSERTPRINTF (ix >= 0
                     && ix < MOM_DISPVAL_MAX,
                     "set_displayed_nth_value bad ix%d", ix);
@@ -1434,9 +1436,17 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
                                         mo_dispval_startmark[ix]);
       gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &endit,
                                         mo_dispval_endmark[ix]);
-      MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) < 0,
-                        "startit not before endit");
+      MOM_INFORMPRINTF ("startit/%d endit/%d for ix#%d",
+                        (int) gtk_text_iter_get_offset (&startit),
+                        (int) gtk_text_iter_get_offset (&endit), ix);
+      MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) <= 0,
+                        "startit/%d not before endit/%d for ix#%d",
+                        (int) gtk_text_iter_get_offset (&startit),
+                        (int) gtk_text_iter_get_offset (&endit), ix);
       gtk_text_buffer_delete (mom_obtextbuf, &startit, &endit);
+      MOM_INFORMPRINTF ("afterdel startit/%d endit/%d for ix#%d",
+                        (int) gtk_text_iter_get_offset (&startit),
+                        (int) gtk_text_iter_get_offset (&endit), ix);
       gtk_text_buffer_move_mark (mom_obtextbuf, mo_dispval_startmark[ix],
                                  &endit);
       dispctx.mo_gdx_iter = endit;
@@ -3458,7 +3468,8 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg,
         }
     }
   // $2= is setting the value #2 but $0 is retrieving the value #0
-  else if (curc == '$' && nextc >= '0' && nextc <= '9')
+  else if ((curc == '$' || curc == 0x20AC /* U+20AC EURO SIGN € */ )
+           && nextc >= '0' && nextc <= '9')
     {
       valix = nextc - '0';
       gunichar afterc = momgui_cmdparse_peekchar (cpars, 2);
@@ -3710,11 +3721,11 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars,
             strcpy (ubuf, "END");
           if (obr)
             MOMGUI_CMDPARSEFAIL (cpars,
-                                 "unexpected character %s in complement of %s (%s)",
+                                 "unexpected character %s in complement of %s (%s), perhaps missing & or *",
                                  ubuf, mo_objref_pnamestr (obr), msg);
           else
             MOMGUI_CMDPARSEFAIL (cpars,
-                                 "unexpected character %s in complement (%s)",
+                                 "unexpected character %s in complement (%s), perhaps missing & or *",
                                  ubuf, msg);
         }
     };
