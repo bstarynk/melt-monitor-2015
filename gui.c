@@ -140,6 +140,10 @@ struct momgui_dispctxt_st
 // The glib hashtable mapping objects to above momgui_dispobjinfo_ty
 static GHashTable *mom_dispobjinfo_hashtable;
 
+#define MOM_DISPVAL_MAX 10
+static mo_value_t mom_dispvalarr[MOM_DISPVAL_MAX];
+GtkTextMark *mo_dispval_startmark[MOM_DISPVAL_MAX];
+GtkTextMark *mo_dispval_endmark[MOM_DISPVAL_MAX];
 
 // Each shown object can be shown in many occurrences. We keep the
 // following GTK information about it
@@ -1407,6 +1411,73 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, TRUE);
 }                               /* end mom_display_the_object */
 
+static void
+momgui_set_displayed_nth_value (int ix, mo_value_t curval)
+{
+  MOM_ASSERTPRINTF (ix >= 0
+                    && ix < MOM_DISPVAL_MAX,
+                    "set_displayed_nth_value bad ix%d", ix);
+  MOM_ASSERTPRINTF (mo_dispval_startmark[0] != NULL, "no $0 startmark");
+  mom_dispvalarr[ix] = curval;
+  momgui_dispctxt_ty dispctx;
+  memset (&dispctx, 0, sizeof (dispctx));
+  dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
+  GtkTextIter startit = { };
+  GtkTextIter endit = { };
+  if (mo_dispval_startmark[ix])
+    {
+      MOM_ASSERTPRINTF (GTK_IS_TEXT_MARK (mo_dispval_startmark[ix]),
+                        "bad start textmark value ix%d", ix);
+      MOM_ASSERTPRINTF (GTK_IS_TEXT_MARK (mo_dispval_endmark[ix]),
+                        "bad end textmark value ix%d", ix);
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
+                                        mo_dispval_startmark[ix]);
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &endit,
+                                        mo_dispval_endmark[ix]);
+      MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) < 0,
+                        "startit not before endit");
+      gtk_text_buffer_delete (mom_obtextbuf, &startit, &endit);
+      gtk_text_buffer_move_mark (mom_obtextbuf, mo_dispval_startmark[ix],
+                                 &endit);
+      dispctx.mo_gdx_iter = endit;
+    }
+  else
+    {
+      MOM_ASSERTPRINTF (ix > 0, "bad missing ix=%d", ix);
+      MOM_ASSERTPRINTF (mo_dispval_endmark[ix] == NULL,
+                        "nonnull end textmark#%d", ix);
+      int previx = -1;
+      for (int bix = ix - 1; bix >= 0 && previx < 0; bix--)
+        {
+          if (mo_dispval_endmark[bix])
+            previx = bix;
+        }
+      MOM_ASSERTPRINTF (previx >= 0 && previx < MOM_DISPVAL_MAX, "no previx");
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
+                                        mo_dispval_endmark[previx]);
+      dispctx.mo_gdx_iter = startit;
+      mo_dispval_startmark[ix] =
+        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
+                                     &dispctx.mo_gdx_iter, FALSE);
+    }
+
+  gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+  char valtitbuf[64];
+  memset (&valtitbuf, 0, sizeof (valtitbuf));
+  snprintf (valtitbuf, sizeof (valtitbuf), "$%d:", ix);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, &dispctx.mo_gdx_iter,
+                                    valtitbuf, -1, mom_tag_objtitle, NULL);
+  gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+  mom_display_value (curval, &dispctx, 0, NULL);
+  gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+  if (!mo_dispval_endmark[ix])
+    mo_dispval_endmark[ix] =
+      gtk_text_buffer_create_mark (mom_obtextbuf, NULL, &dispctx.mo_gdx_iter,
+                                   FALSE);
+  else
+    gtk_text_buffer_move_mark (mom_obtextbuf, mo_dispval_endmark[ix],
+                               &dispctx.mo_gdx_iter);
+}                               /* end of momgui_set_displayed_nth_value */
 
 // an expensive operation, we regenerate everything. But that might be
 // enough for a while, because computer is fast enough to redisplay
@@ -1414,6 +1485,17 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 void
 mo_gui_generate_object_text_buffer (void)
 {
+  for (unsigned ix = 0; ix < MOM_DISPVAL_MAX; ix++)
+    {
+      mo_objref_t curdispobj = mo_dyncast_objref (mom_dispvalarr[ix]);
+      if (!curdispobj)
+        continue;
+      if (!mo_assoval_get (momgui_displayed_objasso, curdispobj))
+        momgui_displayed_objasso = mo_assoval_put (momgui_displayed_objasso,
+                                                   curdispobj,
+                                                   mo_int_to_value
+                                                   (MOMGUI_INITIAL_DEPTH));
+    }
   mo_setvalue_ty *dispset =
     (mo_setvalue_ty *) mo_assoval_keys_set (momgui_displayed_objasso);
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
@@ -1490,6 +1572,39 @@ mo_gui_generate_object_text_buffer (void)
       mom_display_ctx_object (&dispctx, 0);
 #warning FIXME: we should have some way to remove one displayed object
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+    }
+  /// display each displayed value
+  for (int ix = 0; ix < MOM_DISPVAL_MAX; ix++)
+    {
+      mo_value_t curval = mom_dispvalarr[0];
+      if (mo_dispval_startmark[ix])
+        gtk_text_buffer_delete_mark (mom_obtextbuf, mo_dispval_startmark[ix]);
+      mo_dispval_startmark[ix] = NULL;
+      if (mo_dispval_endmark[ix])
+        gtk_text_buffer_delete_mark (mom_obtextbuf, mo_dispval_endmark[ix]);
+      mo_dispval_endmark[ix] = NULL;
+      if (ix > 0 && !curval)
+        continue;
+      momgui_dispctxt_ty dispctx;
+      memset (&dispctx, 0, sizeof (dispctx));
+      dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
+      gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
+      mo_dispval_startmark[ix] =
+        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
+                                     &dispctx.mo_gdx_iter, FALSE);
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+      char valtitbuf[64];
+      memset (&valtitbuf, 0, sizeof (valtitbuf));
+      snprintf (valtitbuf, sizeof (valtitbuf), "$%d:", ix);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, &dispctx.mo_gdx_iter,
+                                        valtitbuf, -1,
+                                        mom_tag_objtitle, NULL);
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+      mom_display_value (curval, &dispctx, 0, NULL);
+      gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+      mo_dispval_endmark[ix] =
+        gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
+                                     &dispctx.mo_gdx_iter, FALSE);
     }
 }                               /* end mo_gui_generate_object_text_buffer */
 
@@ -2626,8 +2741,8 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
 }                               /* end momgui_cmdtextview_keyrelease */
 
 
-static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *,
-                                           const char *);
+static mo_objref_t momgui_cmdparse_object (struct momgui_cmdparse_st *cpars,
+                                           const char *msg, bool withcompl);
 static mo_value_t momgui_cmdparse_value (struct momgui_cmdparse_st *,
                                          const char *);
 
@@ -2727,6 +2842,7 @@ momgui_cmdparse_curline_bytesize (struct momgui_cmdparse_st *cpars)
 static mo_value_t
 momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
 {
+  int valix = -1;
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
                     "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
@@ -2841,7 +2957,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
       return mo_int_to_value (ll);
     }                           // end decimal or signed number
   else if (curc < 127 && (isalpha (curc) || curc == '_' || curc == '?'))        // parse objects
-    return momgui_cmdparse_object (cpars, msg);
+    return momgui_cmdparse_object (cpars, msg, true);
   else if (curc == '~')
     {                           // ~ is for NIL
       GtkTextIter tildit = cpars->mo_gcp_curiter;
@@ -2937,7 +3053,8 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
                                                 rightbraceoff);
               break;
             }
-          mo_objref_t elemob = momgui_cmdparse_object (cpars, "set-elem");
+          mo_objref_t elemob =
+            momgui_cmdparse_object (cpars, "set-elem", true);
           if (!cpars->mo_gcp_onlyparse)
             {
               if (!elemob)
@@ -2991,7 +3108,8 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
                                                 rightbrackoff);
               break;
             }
-          mo_objref_t elemob = momgui_cmdparse_object (cpars, "tuple-comp");
+          mo_objref_t elemob =
+            momgui_cmdparse_object (cpars, "tuple-comp", true);
           if (!cpars->mo_gcp_onlyparse)
             {
               vectobj = mo_vectval_append (vectobj, elemob);
@@ -3008,6 +3126,42 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
                                            *) (vectobj->mo_vect_arr)));
         }
       return NULL;
+    }
+  // $2= is setting the value #2 but $0 is retrieving the value #0
+  else if (curc == '$' && nextc >= '0' && nextc <= '9')
+    {
+      mo_value_t val = NULL;
+      valix = nextc - '0';
+      gunichar afterc = momgui_cmdparse_peekchar (cpars, 2);
+      if (afterc > 0 && afterc < 127 && (isalnum (afterc) || afterc == '_'))
+        MOMGUI_CMDPARSEFAIL (cpars, "invalid reference $%c%c", (char) nextc,
+                             (char) afterc);
+      if (afterc == '=')
+        {
+          GtkTextIter startdollit = cpars->mo_gcp_curiter;
+          GtkTextIter enddollit = startdollit;
+          gtk_text_iter_forward_chars (&enddollit, 3);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &startdollit, &enddollit);
+          cpars->mo_gcp_curiter = enddollit;
+          val = momgui_cmdparse_value (cpars, "dollareqv");
+          if (!cpars->mo_gcp_onlyparse)
+            {
+              mom_dispvalarr[valix] = val;
+            }
+        }
+      else
+        {
+          GtkTextIter startdollit = cpars->mo_gcp_curiter;
+          GtkTextIter enddollit = startdollit;
+          gtk_text_iter_forward_chars (&enddollit, 2);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &startdollit, &enddollit);
+          cpars->mo_gcp_curiter = enddollit;
+          val = (mom_dispvalarr[valix]);
+        }
+      if (valix >= 0 && !cpars->mo_gcp_onlyparse)
+        momgui_set_displayed_nth_value (valix, val);
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
 }                               /* end momgui_cmdparse_value */
@@ -3068,10 +3222,12 @@ momgui_cmdparse_new_named_object (struct
 }                               /* end momgui_cmdparse_new_named_object */
 
 static mo_objref_t
-momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
+momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg,
+                        bool withcompl)
 {
   mo_objref_t objp = NULL;
   bool gotnil = false;
+  int valix = -1;
   MOM_ASSERTPRINTF (cpars && cpars->mo_gcp_nmagic == MOMGUI_CMDPARSE_MAGIC,
                     "bad cpars@%p", cpars);
   MOM_ASSERTPRINTF (msg != NULL, "missing msg");
@@ -3294,13 +3450,49 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
   else if (curc == '?' && nextc == '_')
     {
       gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
-      objp = momgui_cmdparse_object (cpars, "disp-anon");
+      objp = momgui_cmdparse_object (cpars, "disp-anon", true);
       if (!cpars->mo_gcp_onlyparse && objp)
         {
           /// add objp to the set of displayed objects
           mo_gui_display_object (objp);
         }
     }
+  // $2= is setting the value #2 but $0 is retrieving the value #0
+  else if (curc == '$' && nextc >= '0' && nextc <= '9')
+    {
+      valix = nextc - '0';
+      gunichar afterc = momgui_cmdparse_peekchar (cpars, 2);
+      if (afterc > 0 && afterc < 127 && (isalnum (afterc) || afterc == '_'))
+        MOMGUI_CMDPARSEFAIL (cpars, "invalid reference $%c%c", (char) nextc,
+                             (char) afterc);
+      if (afterc == '=')
+        {
+          GtkTextIter startdollit = cpars->mo_gcp_curiter;
+          GtkTextIter enddollit = startdollit;
+          gtk_text_iter_forward_chars (&enddollit, 3);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &startdollit, &enddollit);
+          cpars->mo_gcp_curiter = enddollit;
+          objp = momgui_cmdparse_object (cpars, "dollareq", false);
+          if (!cpars->mo_gcp_onlyparse && objp)
+            {
+              mom_dispvalarr[valix] = objp;
+            }
+        }
+      else
+        {
+          GtkTextIter startdollit = cpars->mo_gcp_curiter;
+          GtkTextIter enddollit = startdollit;
+          gtk_text_iter_forward_chars (&enddollit, 2);
+          gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
+                                     &startdollit, &enddollit);
+          cpars->mo_gcp_curiter = enddollit;
+          objp = mo_dyncast_objref (mom_dispvalarr[valix]);
+          if (!cpars->mo_gcp_onlyparse && !objp)
+            MOMGUI_CMDPARSEFAIL (cpars, "$%c is not an object", (char) nextc);
+        }
+    }
+
   /*** ~ represents the nil object ****/
   else if (curc == '~')
     {
@@ -3320,8 +3512,10 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg)
     }
   if (momgui_cmdparse_skipspaces (cpars))
     return objp;
-  if (!gotnil && momgui_cmdparse_peekchar (cpars, 0) == '(')
+  if (!gotnil && withcompl && momgui_cmdparse_peekchar (cpars, 0) == '(')
     momgui_cmdparse_complement (cpars, objp, msg);
+  if (valix >= 0 && !cpars->mo_gcp_onlyparse)
+    momgui_set_displayed_nth_value (valix, objp);
   return objp;
 }                               /* end momgui_cmdparse_object */
 
@@ -3355,7 +3549,7 @@ momgui_cmdparse_complement (struct momgui_cmdparse_st *cpars,
           gtk_text_iter_forward_char (&cpars->mo_gcp_curiter);
           gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_delim,
                                      &starit, &cpars->mo_gcp_curiter);
-          mo_objref_t obattr = momgui_cmdparse_object (cpars, "attr");
+          mo_objref_t obattr = momgui_cmdparse_object (cpars, "attr", true);
           momgui_cmdparse_skipspaces (cpars);
           curc = momgui_cmdparse_peekchar (cpars, 0);
           if (curc == ':' || curc == '>'
@@ -3661,9 +3855,10 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
       else
         {
           v = momgui_cmdparse_value (cpars, cntbuf);
-          if (cnt < 10)
-            MOM_INFORMPRINTF ("cmdparse_full_buffer cnt#%d, v=\n\t %s\n",
-                              cnt, mo_value_pnamestr (v));
+        }
+      if (cnt > 0 && cnt <= MOM_DISPVAL_MAX)
+        {
+          momgui_set_displayed_nth_value (cnt - 1, v);
         }
     }
   if (cpars->mo_gcp_statusupdate)
