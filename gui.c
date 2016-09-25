@@ -2266,6 +2266,7 @@ momgui_run_cmdtext (void)
   cmdparse.mo_gcp_curiter = itstart;
   cmdparse.mo_gcp_onlyparse = false;
   cmdparse.mo_gcp_statusupdate = true;
+  MOM_BACKTRACEPRINTF ("run_cmdtext start");
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
@@ -2273,8 +2274,12 @@ momgui_run_cmdtext (void)
     }
   else                          /* failerr != 0 */
     {
-      MOM_WARNPRINTF ("running of command failed, failerr=%d", failerr);
+      GtkTextIter errit = cmdparse.mo_gcp_curiter;
+      MOM_WARNPRINTF ("running of command failed, failerr=%d curiter/%d",
+                      failerr, (int) gtk_text_iter_get_offset (&errit));
+      gtk_text_buffer_place_cursor (mom_cmdtextbuf, &errit);
     };
+  MOM_INFORMPRINTF ("run_cmdtext end failerr=%d", failerr);
 }                               /* end momgui_run_cmdtext */
 
 static gboolean
@@ -2765,10 +2770,17 @@ momgui_cmdtextview_keyrelease (GtkWidget * widg MOM_UNUSED, GdkEvent * ev,
                || (((GdkEventKey *) ev)->keyval == GDK_KEY_Return
                    && ((GdkEventKey *) ev)->state & GDK_CONTROL_MASK)))
     {                           /* F1, Escape or Ctrl-Return are evaluating the buffer */
+      long oldnbf = momgui_nbcmdfailure;
       momgui_run_cmdtext ();
+      long newnbf = momgui_nbcmdfailure;
       if (((GdkEventKey *) ev)->keyval == GDK_KEY_Return)
         {
-          momgui_delayed_clearcmd ();
+          if (newnbf == oldnbf)
+            momgui_delayed_clearcmd ();
+          else
+            MOM_INFORMPRINTF
+              ("cmdtextview_keyrelease dont clear cmd newnbf=%ld > oldnbf=%ld",
+               newnbf, oldnbf);
         }
       return TRUE;              /* don't propagate */
     }                           /* end if F1, Escape, or Ctrl-Return */
@@ -3768,8 +3780,12 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
   MOM_ASSERTPRINTF (mo_dyncast_string (cpars->mo_gcp_errstrv),
                     "bad errstrv in cpars@%p", cpars);
   gint curoff = gtk_text_iter_get_offset (&cpars->mo_gcp_curiter);
-  MOM_WARNPRINTF_AT (__FILE__, lineno, "command parse failure (pos#%d): %s",
-                     curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
+  if (cpars->mo_gcp_onlyparse)
+    MOM_WARNPRINTF_AT (__FILE__, lineno, "cmdparsefailure (pos#%d): %s",
+                       curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
+  else
+    MOM_BACKTRACEPRINTF ("cmdparsefailure (pos#%d): %s",
+                         curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
   GtkTextIter itstart = { };
   GtkTextIter itend = { };
   gtk_text_buffer_get_bounds (GTK_TEXT_BUFFER (mom_cmdtextbuf), &itstart,
@@ -3935,6 +3951,7 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   cmdparse.mo_gcp_statusupdate = false;
   momgui_lastdelimpairarr = NULL;
   momgui_lastdelimpaircount = 0;
+  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction before setjmp");
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
@@ -3951,6 +3968,7 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
         MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
                         failerr);
     };
+  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction end failerr=%d", failerr);
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
 
