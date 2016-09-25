@@ -427,7 +427,6 @@ MOM_PREFIXID (mofun_, fnmatch_useract) (mo_objref_t obuact)
 mo_value_t
 mofun_fnmatch_useract (mo_objref_t obuact)
 {
-  mo_value_t res = NULL;
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact),
                     "fnmatch_useract: bad obuact");
   unsigned nbargs = mo_objref_comp_count (obuact);
@@ -468,10 +467,12 @@ mofun_fnmatch_useract (mo_objref_t obuact)
       MOM_ASSERTPRINTF (mo_dyncast_objref (curnamob), "bad curnamob");
       mo_value_t curnamv = mo_objref_namev (curnamob);
       MOM_ASSERTPRINTF (mo_dyncast_string (curnamv), "bad curnamv");
-      if (!fnmatch (mo_string_cstr (curnamv), strpat, fnflags))
+      if (!fnmatch (strpat, mo_string_cstr (curnamv), fnflags))
         hset = mo_hashset_put (hset, curnamob);
     }
-  return mo_hashset_elements_set (hset);
+  mo_value_t setv = mo_hashset_elements_set (hset);
+  MOM_INFORMPRINTF ("fnmatch '%s' => %s", strpat, mo_value_pnamestr (setv));
+  return setv;
 }                               /* end of mofun_fnmatch_useract */
 
 // end of file usaction.c
