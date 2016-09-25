@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 28
+#define MOM_NB_GLOBAL 30
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -54,6 +54,12 @@ MOM_HAS_GLOBAL(class_useract,_7831xB7d1ulmsaCYS,1683172135,6288468238231678380,3
 
 //+ the double ctype
 MOM_HAS_GLOBAL(double,_8BM91hTnefUPcYXzf,2036136323,2502319301662783315,3623603139)
+
+//+ for $fnmatch("*ab*") to use fnmatch with FNM_EXTMATCH & FNM_CASEFOLD on names
+MOM_HAS_GLOBAL(fnmatch,_5Ta34TyJJebRyD9sN,1388729658,731614781365540241,2389107487)
+
+//+ for implementing $fnmatch command
+MOM_HAS_GLOBAL(fnmatch_useract,_59g7wsJyXlj962jlx,1216139410,3556611507501676989,1836628331)
 
 //+ the int ctype
 MOM_HAS_GLOBAL(int,_0Sp1Lg7ctajS7oX5i,206123378,1657221063490954190,2737754805)
@@ -158,6 +164,16 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #define moid_double _8BM91hTnefUPcYXzf
 #undef monam_8BM91hTnefUPcYXzf
 #define monam_8BM91hTnefUPcYXzf double
+
+#undef moid_fnmatch
+#define moid_fnmatch _5Ta34TyJJebRyD9sN
+#undef monam_5Ta34TyJJebRyD9sN
+#define monam_5Ta34TyJJebRyD9sN fnmatch
+
+#undef moid_fnmatch_useract
+#define moid_fnmatch_useract _59g7wsJyXlj962jlx
+#undef monam_59g7wsJyXlj962jlx
+#define monam_59g7wsJyXlj962jlx fnmatch_useract
 
 #undef moid_int
 #define moid_int _0Sp1Lg7ctajS7oX5i
@@ -267,6 +283,8 @@ enum mom_global_hashes_en {
   momghash_char=2350112261,
   momghash_class_useract=3817197504,
   momghash_double=3623603139,
+  momghash_fnmatch=2389107487,
+  momghash_fnmatch_useract=1836628331,
   momghash_int=2737754805,
   momghash_int16_t=1383035942,
   momghash_int32_t=2754588426,
@@ -295,7 +313,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 28
+#define MOM_NB_NAMED_GLOBAL 30
 
 
 #undef MOM_HAS_GLOBAL

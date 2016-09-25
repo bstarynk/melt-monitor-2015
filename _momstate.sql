@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 24 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 25 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -51,6 +51,8 @@ INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
+INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
+INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('include_monimelt','_0m37ffFuKe0qxNfTK');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
@@ -126,6 +128,8 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
      "_4iH7xI2JtAomiBySj",
+     "_59g7wsJyXlj962jlx",
+     "_5Ta34TyJJebRyD9sN",
      "_62H0GDHPCtIRvAdDd",
      "_6bK8gGYmKZXwwNXj4",
      "_6r06aqWaPdfZgAKBP",
@@ -699,6 +703,20 @@ INSERT INTO t_objects VALUES('_53F6MjNKRJ8dutl09',1474308434,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_59g7wsJyXlj962jlx',1474789841,'
+{
+ "@name": "fnmatch_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for implementing $fnmatch command"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5Hf0fFKvRVa71ZPM0',1473049889,'
 {
  "@name": "payload_vectval",
@@ -735,6 +753,20 @@ INSERT INTO t_objects VALUES('_5Kq0Pz5eFAULvdMEL',1474372791,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "attribute to keep the set of user actions in the_GUI"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474789811,'
+{
+ "@name": "fnmatch",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for $fnmatch(\"*ab*\") to use fnmatch with FNM_EXTMATCH & FNM_CASEFOLD on names"
    }
   ]
  },

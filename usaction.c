@@ -203,7 +203,7 @@ mofun_tuple_useract (mo_objref_t obuact)
   return mo_vectval_objects_tuple (vect);
 }                               /* end mofun_tuple_useract */
 
-
+/// for $string(&"somestring" &name ...)
 // momglob_string
 const char
 MOM_PREFIXID (mosig_, string_useract)[] = "signature_object_to_value";
@@ -252,6 +252,7 @@ mofun_string_useract (mo_objref_t obuact)
   return vstr;
 }                               /* end of mofun_string_useract */
 
+/// for $add_user_action(&command &useract)
 // momglob_add_user_action momglob_add_user_action_useract
 const char
 MOM_PREFIXID (mosig_, add_user_action_useract)[] =
@@ -356,7 +357,7 @@ MOM_PREFIXID (mofun_, cemit_module_useract) (mo_objref_t obuact)
   return mofun_cemit_module_useract (obuact);
 }
 
-/// for $cemit_module(TheModule)
+/// for $cemit_module(&TheModule)
 mo_value_t
 mofun_cemit_module_useract (mo_objref_t obuact)
 {
@@ -403,5 +404,74 @@ mofun_cemit_module_useract (mo_objref_t obuact)
        mo_objref_pnamestr (moduleobr), mo_objref_pnamestr (cemitobr));
   return moduleobr;
 }                               /* end of mofun_cemit_module_useract */
+
+
+/// momglob_fnmatch & momglob_fnmatch_useract
+/// for $fnmatch (&"*ab*") retrieving all names matching ab
+const char
+MOM_PREFIXID (mosig_, fnmatch_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, fnmatch_useract)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_fnmatch_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, fnmatch_useract) (mo_objref_t obuact)
+{
+  return mofun_fnmatch_useract (obuact);
+}
+
+mo_value_t
+mofun_fnmatch_useract (mo_objref_t obuact)
+{
+  mo_value_t res = NULL;
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact),
+                    "fnmatch_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_STRINGPATTERN,
+    MOMIX__LAST
+  };
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  MOM_ASSERTPRINTF (operobr != NULL, "bad operobr");
+  mo_value_t stringpatv =
+    mo_dyncast_string (mo_objref_get_comp (obuact, MOMIX_STRINGPATTERN));
+  if (nbargs != MOMIX__LAST)
+    mom_gui_fail_user_action
+      ("fnmatch_useract for $fnmatch wants one user arguments, got %d in %s",
+       mo_objref_comp_count (obuact) - 1, mo_objref_pnamestr (obuact));
+  if (!stringpatv)
+    mom_gui_fail_user_action
+      ("fnmatch_useract: missing string (first argument) in %s",
+       mo_objref_pnamestr (obuact));
+  mo_value_t setnamesv = mo_named_objects_set ();
+  unsigned nbnames = mo_set_size (setnamesv);
+  const char *strpat = mo_string_cstr (stringpatv);
+  int fnflags = FNM_EXTMATCH;
+  bool withuppercase = false;
+  for (const char *pc = strpat; *pc != 0 && !withuppercase; pc++)
+    if (*pc >= 'A' && *pc <= 'Z')
+      withuppercase = true;
+  if (!withuppercase)
+    fnflags |= FNM_CASEFOLD;
+  mo_hashsetpayl_ty *hset = mo_hashset_reserve (NULL, nbnames / 8 + 10);
+  for (unsigned ix = 0; ix < nbnames; ix++)
+    {
+      mo_objref_t curnamob =
+        ((mo_sequencevalue_ty *) setnamesv)->mo_seqobj[ix];
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curnamob), "bad curnamob");
+      mo_value_t curnamv = mo_objref_namev (curnamob);
+      MOM_ASSERTPRINTF (mo_dyncast_string (curnamv), "bad curnamv");
+      if (!fnmatch (mo_string_cstr (curnamv), strpat, fnflags))
+        hset = mo_hashset_put (hset, curnamob);
+    }
+  return mo_hashset_elements_set (hset);
+}                               /* end of mofun_fnmatch_useract */
 
 // end of file usaction.c

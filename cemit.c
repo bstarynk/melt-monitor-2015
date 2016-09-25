@@ -501,9 +501,10 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
   if (MOM_UNLIKELY (!oldfil))
     {
       if (errno != ENOENT)
-	MOM_WARNPRINTF("fopen %s strange failure", oldpathbuf);
+        MOM_WARNPRINTF ("fopen %s strange failure", oldpathbuf);
       if (rename (newpathbuf, oldpathbuf))
-        MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", newpathbuf, oldpathbuf);
+        MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", newpathbuf,
+                        oldpathbuf);
       fclose (newfil);
       return;
     }

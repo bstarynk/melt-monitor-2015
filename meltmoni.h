@@ -54,6 +54,7 @@
 #include <ctype.h>
 #include <getopt.h>
 #include <errno.h>
+#include <fnmatch.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
@@ -1479,8 +1480,6 @@ bool mom_valid_name (const char *nam);  // in name.c
 mo_value_t mo_objref_namev (mo_objref_t ob);
 
 
-/* currently, the names are never forgotten, old their associated
-   object may be removed. */
 // register a name for an anonymous object, return true if successful
 bool mo_register_named (mo_objref_t obr, const char *nam);
 bool mo_register_name_string (mo_objref_t obr, mo_value_t namv);
