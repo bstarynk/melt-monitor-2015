@@ -716,7 +716,7 @@ INSERT INTO t_objects VALUES('_59g7wsJyXlj962jlx',1474789841,'
  },
  "comps": null
 }
-','','','','');
+','','_8DT8VbN0FaiS0K6uf','!','.');
 INSERT INTO t_objects VALUES('_5Hf0fFKvRVa71ZPM0',1473049889,'
 {
  "@name": "payload_vectval",
@@ -759,11 +759,17 @@ INSERT INTO t_objects VALUES('_5Kq0Pz5eFAULvdMEL',1474372791,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474789811,'
+INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474795461,'
 {
  "@name": "fnmatch",
  "attrs": {
   "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_59g7wsJyXlj962jlx"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for $fnmatch(\"*ab*\") to use fnmatch with FNM_EXTMATCH & FNM_CASEFOLD on names"
