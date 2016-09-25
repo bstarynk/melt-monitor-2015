@@ -1414,8 +1414,10 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 static void
 momgui_set_displayed_nth_value (int ix, mo_value_t curval)
 {
-  MOM_BACKTRACEPRINTF ("set_displayed_nth_value ix#%d curval:%s", ix,
-                       mo_value_pnamestr (curval));
+  MOM_BACKTRACEPRINTF
+    ("set_displayed_nth_value ix#%d curval:%s startmark@%p endmark@%p", ix,
+     mo_value_pnamestr (curval), mo_dispval_startmark[ix],
+     mo_dispval_endmark[ix]);
   MOM_ASSERTPRINTF (ix >= 0
                     && ix < MOM_DISPVAL_MAX,
                     "set_displayed_nth_value bad ix%d", ix);
@@ -1447,8 +1449,12 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
       MOM_INFORMPRINTF ("afterdel startit/%d endit/%d for ix#%d",
                         (int) gtk_text_iter_get_offset (&startit),
                         (int) gtk_text_iter_get_offset (&endit), ix);
+      MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) == 0,
+                        "startit/%d not same endit/%d for ix#%d",
+                        (int) gtk_text_iter_get_offset (&startit),
+                        (int) gtk_text_iter_get_offset (&endit), ix);
       gtk_text_buffer_move_mark (mom_obtextbuf, mo_dispval_startmark[ix],
-                                 &endit);
+                                 &startit);
       dispctx.mo_gdx_iter = endit;
     }
   else
@@ -1465,13 +1471,13 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
       MOM_ASSERTPRINTF (previx >= 0 && previx < MOM_DISPVAL_MAX, "no previx");
       gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
                                         mo_dispval_endmark[previx]);
-      MOM_INFORMPRINTF ("startit/%d for previx#%d ix#%d",
+      MOM_INFORMPRINTF ("startit/%d for end.previx#%d ix#%d",
                         (int) gtk_text_iter_get_offset (&startit),
                         previx, ix);
       dispctx.mo_gdx_iter = startit;
       mo_dispval_startmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
-                                     &dispctx.mo_gdx_iter, FALSE);
+                                     &dispctx.mo_gdx_iter, TRUE);
     }
   gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
   char valtitbuf[64];
@@ -1613,12 +1619,13 @@ mo_gui_generate_object_text_buffer (void)
       memset (&dispctx, 0, sizeof (dispctx));
       dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
-      MOM_INFORMPRINTF ("generate_object_text_buffer ix#%d curval:%s iter/%d",
-                        ix, mo_value_pnamestr (curval),
-                        gtk_text_iter_get_offset (&dispctx.mo_gdx_iter));
+      MOM_INFORMPRINTF
+        ("generate_object_text_buffer ix#%d curval:%s start iter/%d", ix,
+         mo_value_pnamestr (curval),
+         gtk_text_iter_get_offset (&dispctx.mo_gdx_iter));
       mo_dispval_startmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
-                                     &dispctx.mo_gdx_iter, FALSE);
+                                     &dispctx.mo_gdx_iter, TRUE);
       gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
       char valtitbuf[64];
       memset (&valtitbuf, 0, sizeof (valtitbuf));
@@ -1632,6 +1639,8 @@ mo_gui_generate_object_text_buffer (void)
       mo_dispval_endmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
                                      &dispctx.mo_gdx_iter, FALSE);
+      MOM_INFORMPRINTF ("generate_object_text_buffer ix#%d enditer/%d",
+                        ix, gtk_text_iter_get_offset (&dispctx.mo_gdx_iter));
     }
   MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
@@ -3885,7 +3894,7 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
         {
           v = momgui_cmdparse_value (cpars, cntbuf);
         }
-      if (cnt > 0 && cnt <= MOM_DISPVAL_MAX)
+      if (cnt > 0 && cnt <= MOM_DISPVAL_MAX && !cpars->mo_gcp_onlyparse)
         {
           momgui_set_displayed_nth_value (cnt - 1, v);
         }
