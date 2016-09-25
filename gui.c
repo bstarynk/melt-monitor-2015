@@ -1452,7 +1452,7 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
       dispctx.mo_gdx_iter = endit;
     }
   else
-    {
+    {                           // no mo_dispval_startmark[ix]
       MOM_ASSERTPRINTF (ix > 0, "bad missing ix=%d", ix);
       MOM_ASSERTPRINTF (mo_dispval_endmark[ix] == NULL,
                         "nonnull end textmark#%d", ix);
@@ -1465,12 +1465,14 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
       MOM_ASSERTPRINTF (previx >= 0 && previx < MOM_DISPVAL_MAX, "no previx");
       gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
                                         mo_dispval_endmark[previx]);
+      MOM_INFORMPRINTF ("startit/%d for previx#%d ix#%d",
+                        (int) gtk_text_iter_get_offset (&startit),
+                        previx, ix);
       dispctx.mo_gdx_iter = startit;
       mo_dispval_startmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
                                      &dispctx.mo_gdx_iter, FALSE);
     }
-
   gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
   char valtitbuf[64];
   memset (&valtitbuf, 0, sizeof (valtitbuf));
@@ -1480,6 +1482,9 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
   gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
   mom_display_value (curval, &dispctx, 0, NULL);
   gtk_text_buffer_insert (mom_obtextbuf, &dispctx.mo_gdx_iter, "\n", -1);
+  MOM_INFORMPRINTF ("set_displayed_nth_value ix#%d final it/%d",
+                    ix,
+                    (int) gtk_text_iter_get_offset (&dispctx.mo_gdx_iter));
   if (!mo_dispval_endmark[ix])
     mo_dispval_endmark[ix] =
       gtk_text_buffer_create_mark (mom_obtextbuf, NULL, &dispctx.mo_gdx_iter,
@@ -1508,6 +1513,8 @@ mo_gui_generate_object_text_buffer (void)
     }
   mo_setvalue_ty *dispset =
     (mo_setvalue_ty *) mo_assoval_keys_set (momgui_displayed_objasso);
+  MOM_BACKTRACEPRINTF ("generate_object_text_buffer begin dispset=%s",
+                       mo_value_pnamestr (dispset));
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
   unsigned nbdispob = mo_set_size (dispset);
   g_hash_table_remove_all (mom_dispobjinfo_hashtable);
@@ -1586,19 +1593,29 @@ mo_gui_generate_object_text_buffer (void)
   /// display each displayed value
   for (int ix = 0; ix < MOM_DISPVAL_MAX; ix++)
     {
-      mo_value_t curval = mom_dispvalarr[0];
       if (mo_dispval_startmark[ix])
-        gtk_text_buffer_delete_mark (mom_obtextbuf, mo_dispval_startmark[ix]);
-      mo_dispval_startmark[ix] = NULL;
-      if (mo_dispval_endmark[ix])
-        gtk_text_buffer_delete_mark (mom_obtextbuf, mo_dispval_endmark[ix]);
-      mo_dispval_endmark[ix] = NULL;
+        {
+          MOM_ASSERTPRINTF (mo_dispval_endmark[ix] != NULL,
+                            "missing endmark ix=%d", ix);
+          gtk_text_buffer_delete_mark (mom_obtextbuf,
+                                       mo_dispval_startmark[ix]);
+          mo_dispval_startmark[ix] = NULL;
+          gtk_text_buffer_delete_mark (mom_obtextbuf, mo_dispval_endmark[ix]);
+          mo_dispval_endmark[ix] = NULL;
+        }
+      else
+        MOM_ASSERTPRINTF (!mo_dispval_endmark[ix],
+                          "endmark without start ix=%d", ix);
+      mo_value_t curval = mom_dispvalarr[ix];
       if (ix > 0 && !curval)
         continue;
       momgui_dispctxt_ty dispctx;
       memset (&dispctx, 0, sizeof (dispctx));
       dispctx.mo_gdx_nmagic = MOMGUI_DISPCTXT_MAGIC;
       gtk_text_buffer_get_end_iter (mom_obtextbuf, &dispctx.mo_gdx_iter);
+      MOM_INFORMPRINTF ("generate_object_text_buffer ix#%d curval:%s iter/%d",
+                        ix, mo_value_pnamestr (curval),
+                        gtk_text_iter_get_offset (&dispctx.mo_gdx_iter));
       mo_dispval_startmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
                                      &dispctx.mo_gdx_iter, FALSE);
@@ -1616,6 +1633,7 @@ mo_gui_generate_object_text_buffer (void)
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
                                      &dispctx.mo_gdx_iter, FALSE);
     }
+  MOM_INFORMPRINTF ("generate_object_text_buffer end");
 }                               /* end mo_gui_generate_object_text_buffer */
 
 
