@@ -500,12 +500,14 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
   FILE *oldfil = fopen (oldpathbuf, "r");
   if (MOM_UNLIKELY (!oldfil))
     {
-      if (rename (oldpathbuf, newpathbuf))
-        MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", oldpathbuf,
-                        newpathbuf);
+      if (errno != ENOENT)
+	MOM_WARNPRINTF("fopen %s strange failure", oldpathbuf);
+      if (rename (newpathbuf, oldpathbuf))
+        MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", newpathbuf, oldpathbuf);
       fclose (newfil);
       return;
     }
+  errno = 0;
   struct stat newstat = { };
   struct stat oldstat = { };
   if (fstat (fileno (oldfil), &oldstat))
