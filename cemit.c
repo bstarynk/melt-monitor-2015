@@ -26,7 +26,7 @@
 #define MOMFIELDS_cemitpayl					\
   MOMFIELDS_countedpayl;					\
   uint32_t mo_cemit_nmagic; /* always MOM_CEMIT_MAGIC */	\
-  /* the suffix is often '.c' */				\
+  /* the suffix is often '.c', but without underscores */      	\
   char mo_cemit_suffix[4];					\
 /* the prefix could be 'modules.dir/momg_' */			\
   char mo_cemit_prefix[40];					\
@@ -246,6 +246,13 @@ mo_objref_cemit_set_suffix (mo_objref_t obrcem, const char *suffix)
     return;
   if (!suffix || suffix == MOM_EMPTY_SLOT)
     return;
+  if (strchr (suffix, '_'))
+    {
+      MOM_WARNPRINTF
+        ("invalid suffix '%s' for obrcem=%s; underscores forbidden", suffix,
+         mo_objref_pnamestr (obrcem));
+      return;
+    }
   if (cemp->mo_cemit_locstate)
     {
       MOM_WARNPRINTF
@@ -542,23 +549,33 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
     };
   /// add a symbolic link for named modules
   mo_value_t namodv = mo_objref_namev (cemp->mo_cemit_modobj);
+  MOM_INFORMPRINTF ("cemit_close: modobj %s namodv %s",
+                    mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                    mo_value_pnamestr (namodv));
   if (namodv != NULL)
     {
       MOM_ASSERTPRINTF (mo_dyncast_string (namodv), "bad namodv for %s",
                         mo_objref_pnamestr (cemp->mo_cemit_modobj));
       char *oldbase = basename (oldpathbuf);
+      char *oldunder = strrchr (oldbase, '_');
+      MOM_INFORMPRINTF
+        ("cemit_close: oldbase='%s' oldunder='%s' oldunder+CSTRIDLEN='%s'",
+         oldbase, oldunder, oldunder + MOM_CSTRIDLEN);
       MOM_ASSERTPRINTF (oldbase != NULL
                         && oldbase >= oldpathbuf, "bad oldbase");
       char *oldbidp = strstr (oldbase, csta->mo_cemsta_modid);
       MOM_ASSERTPRINTF (oldbidp != NULL
                         && strlen (oldbidp) >= MOM_CSTRIDLEN, "bad oldbidp");
       char *symlpathbuf = NULL;
+#warning the below asprintf is wrong.
       asprintf (&symlpathbuf, "%*s%s%s", (int) (oldbidp - oldpathbuf),
                 oldpathbuf, mo_string_cstr (namodv), oldbidp + MOM_CSTRIDLEN);
       if (MOM_UNLIKELY (symlpathbuf == NULL))
         MOM_FATAPRINTF ("cemit_close: asprintf symlpathbuf failed for %s",
                         mo_objref_pnamestr (cemp->mo_cemit_modobj));
       errno = 0;
+      MOM_INFORMPRINTF ("cemit_close symlpathbuf=%s oldbase=%s", symlpathbuf,
+                        oldbase);
       if (access (symlpathbuf, R_OK) && errno == ENOENT)
         {
           if (symlink (oldbase, symlpathbuf))
@@ -567,6 +584,10 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
                symlpathbuf, oldbase, mo_string_cstr (namodv),
                csta->mo_cemsta_modid);
         }
+      else
+        MOM_WARNPRINTF
+          ("cemit_close did not symlink oldbase=%s symlpathbuf=%s", oldbase,
+           symlpathbuf);
     }
 }                               /* end of mom_cemit_close */
 
