@@ -1438,17 +1438,19 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
                                         mo_dispval_startmark[ix]);
       gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &endit,
                                         mo_dispval_endmark[ix]);
-      MOM_INFORMPRINTF ("startit/%d endit/%d for ix#%d",
-                        (int) gtk_text_iter_get_offset (&startit),
-                        (int) gtk_text_iter_get_offset (&endit), ix);
+      MOM_INFORMPRINTF
+        ("set_displayed_nth_value startit/%d endit/%d for ix#%d",
+         (int) gtk_text_iter_get_offset (&startit),
+         (int) gtk_text_iter_get_offset (&endit), ix);
       MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) <= 0,
                         "startit/%d not before endit/%d for ix#%d",
                         (int) gtk_text_iter_get_offset (&startit),
                         (int) gtk_text_iter_get_offset (&endit), ix);
       gtk_text_buffer_delete (mom_obtextbuf, &startit, &endit);
-      MOM_INFORMPRINTF ("afterdel startit/%d endit/%d for ix#%d",
-                        (int) gtk_text_iter_get_offset (&startit),
-                        (int) gtk_text_iter_get_offset (&endit), ix);
+      MOM_INFORMPRINTF
+        ("set_displayed_nth_value afterdel startit/%d endit/%d for ix#%d",
+         (int) gtk_text_iter_get_offset (&startit),
+         (int) gtk_text_iter_get_offset (&endit), ix);
       MOM_ASSERTPRINTF (gtk_text_iter_compare (&startit, &endit) == 0,
                         "startit/%d not same endit/%d for ix#%d",
                         (int) gtk_text_iter_get_offset (&startit),
@@ -1471,9 +1473,11 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
       MOM_ASSERTPRINTF (previx >= 0 && previx < MOM_DISPVAL_MAX, "no previx");
       gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
                                         mo_dispval_endmark[previx]);
-      MOM_INFORMPRINTF ("startit/%d for end.previx#%d ix#%d",
-                        (int) gtk_text_iter_get_offset (&startit),
-                        previx, ix);
+      MOM_INFORMPRINTF
+        ("set_displayed_nth_value startit/%d for end.previx#%d ix#%d",
+         (int) gtk_text_iter_get_offset (&startit), previx, ix);
+      /// insert a newline, forget about the gravity of the previous endmark
+      gtk_text_buffer_insert (mom_obtextbuf, &startit, "\n", -1);
       dispctx.mo_gdx_iter = startit;
       mo_dispval_startmark[ix] =
         gtk_text_buffer_create_mark (mom_obtextbuf, NULL,
@@ -3211,6 +3215,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
         }
       if (valix >= 0 && !cpars->mo_gcp_onlyparse)
         momgui_set_displayed_nth_value (valix, val);
+      return;
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
 }                               /* end momgui_cmdparse_value */
@@ -3913,6 +3918,8 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
         }
       if (cnt > 0 && cnt <= MOM_DISPVAL_MAX && !cpars->mo_gcp_onlyparse)
         {
+          MOM_INFORMPRINTF ("cmdparse_full_buffer cnt=%d v=%s", cnt,
+                            mo_value_pnamestr (v));
           momgui_set_displayed_nth_value (cnt - 1, v);
         }
     }
