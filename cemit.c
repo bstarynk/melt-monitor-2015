@@ -981,11 +981,18 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (typobr), flix,
                           mo_objref_pnamestr (fieldobr));
       if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, ftypobr))
-        MOM_CEMITFAILURE (csta,
-                          "cemit_define_fields: in %s field#%d %s with unknown c_type %s",
-                          mo_objref_pnamestr (typobr), flix,
-                          mo_objref_pnamestr (fieldobr),
-                          mo_objref_pnamestr (ftypobr));
+        {
+          MOM_INFORMPRINTF
+            ("cemit_define_fields: fieldobr=%s ftypobr=%s hsetctypes=%s",
+             mo_objref_pnamestr (fieldobr), mo_objref_pnamestr (ftypobr),
+             mo_value_pnamestr (mo_hashset_elements_set
+                                (csta->mo_cemsta_hsetctypes)));
+          MOM_CEMITFAILURE (csta,
+                            "cemit_define_fields: in %s field#%d %s with unknown c_type %s",
+                            mo_objref_pnamestr (typobr), flix,
+                            mo_objref_pnamestr (fieldobr),
+                            mo_objref_pnamestr (ftypobr));
+        }
       fputc (' ', csta->mo_cemsta_fil);
       mo_value_t fieldnamv = mo_objref_namev (fieldobr);
       char fieldid[MOM_CSTRIDSIZ];
@@ -1266,6 +1273,14 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   MOM_ADD_GLOBAL_CTYPE (momglob_double);
   MOM_ADD_GLOBAL_CTYPE (momglob_long);
   MOM_ADD_GLOBAL_CTYPE (momglob_void);
+  MOM_ADD_GLOBAL_CTYPE (momglob_int16_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_int32_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_int64_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_intptr_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_uint16_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_uint32_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_uint64_t);
+  MOM_ADD_GLOBAL_CTYPE (momglob_uintptr_t);
 #undef MOM_ADD_GLOBAL_CTYPE
   mo_objref_idstr (cemitstate.mo_cemsta_modid, cemp->mo_cemit_modobj);
   int errlin = setjmp (cemitstate.mo_cemsta_jmpbuf);
