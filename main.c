@@ -30,6 +30,12 @@ void *mom_prog_dlhandle;
 char *mom_dump_dir;
 
 char *mom_gtk_style_path = MONIMELT_GTK_STYLE;
+gboolean mom_no_color_stderr;
+
+/// see https://en.wikipedia.org/wiki/ANSI_escape_code
+#define MOM_TERMWARNCOLOR (mom_no_color_stderr?"":"\033[1m""\033[34m" /*bold blue*/)
+#define MOM_TERMFATALCOLOR (mom_no_color_stderr?"":"\033[1m""\033[31m" /*bold red*/)
+#define MOM_TERMPLAIN (mom_no_color_stderr?"":"\033[0m")
 
 const char *
 mom_hostname (void)
@@ -740,12 +746,14 @@ mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
     msg = buf;
   {
     if (err)
-      fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s (%s)\n",
-               nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf,
-               msg, strerror (err));
+      fprintf (stderr,
+               "%s*MONIMELT WARNING#%d*%s @%s:%d <%s:%d> %s %s (%s)\n",
+               MOM_TERMWARNCOLOR, nbwarn, MOM_TERMPLAIN, fil, lin, thrname,
+               (int) mom_gettid (), timbuf, msg, strerror (err));
     else
-      fprintf (stderr, "MONIMELT WARNING#%d @%s:%d <%s:%d> %s %s\n",
-               nbwarn, fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+      fprintf (stderr, "%s*MONIMELT WARNING#%d*%s @%s:%d <%s:%d> %s %s\n",
+               MOM_TERMWARNCOLOR, nbwarn, MOM_TERMPLAIN,
+               fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
     fflush (NULL);
   }
   if (bigbuf)
@@ -802,11 +810,13 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
     msg = buf;
 
   if (err)
-    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s\n.. %s (%s)\n",
+    fprintf (stderr, "%s*MONIMELT FATAL*%s @%s:%d <%s:%d> %s\n.. %s (%s)\n",
+             MOM_TERMFATALCOLOR, MOM_TERMPLAIN,
              fil, lin, thrname, (int) mom_gettid (), timbuf,
              msg, strerror (err));
   else
-    fprintf (stderr, "MONIMELT FATAL @%s:%d <%s:%d> %s\n.. %s\n",
+    fprintf (stderr, "%s*MONIMELT FATAL*%s @%s:%d <%s:%d> %s\n.. %s\n",
+             MOM_TERMFATALCOLOR, MOM_TERMPLAIN,
              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
   fflush (NULL);
   if (bigbuf)
@@ -1119,6 +1129,8 @@ static const GOptionEntry mom_goptions[] = {
    &silent_big_alloc_mom, "don't warn for large allocation", NULL},
   {"no-custom-glib-log", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
    &no_custom_gliblog_mom, "don't install our Glib/Gtk log handler", NULL},
+  {"no-color", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+   &mom_no_color_stderr, "don't use color on stderr", NULL},
   {"add-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
    &predef_names_mom, "add predefined of name N with comment C", "N"},
   {"comment-predef", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY,
@@ -1145,8 +1157,9 @@ mom_gc_warn_big_alloc (size_t sz)
 {
   if (silent_big_alloc_mom)
     return;
-  MOM_BACKTRACEPRINTF ("BIG ALLOCATION of %d megabytes, %zd bytes",
-                       (int) (sz >> 20), sz);
+  MOM_BACKTRACEPRINTF ("%s*BIG ALLOCATION*%s of %d megabytes, %zd bytes",
+                       MOM_TERMWARNCOLOR,
+                       MOM_TERMPLAIN, (int) (sz >> 20), sz);
 }                               /* end mom_gc_warn_big_alloc */
 
 
@@ -1637,6 +1650,8 @@ main (int argc_main, char **argv_main)
   char **argv = argv_main;
   int argc = argc_main;
   mom_prog_dlhandle = dlopen (NULL, RTLD_NOW);
+  if (!isatty (STDERR_FILENO))
+    mom_no_color_stderr = true;
   if (MOM_UNLIKELY (!mom_prog_dlhandle))
     MOM_FATAPRINTF ("failed to dlopen program (%s)", dlerror ());
   if (argc_main > 3 && !strcmp (argv_main[1], "--init-random"))
