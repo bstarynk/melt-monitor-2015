@@ -599,7 +599,7 @@ mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
         memset (intbuf, 0, sizeof (intbuf));
         snprintf (intbuf, sizeof (intbuf), "%lld",
                   (long long) mo_value_to_int (val, 0));
-        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, intbuf, 1,
+        gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, intbuf, -1,
                                           mom_tag_number, valtag, NULL);
       }
       break;
