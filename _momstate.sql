@@ -992,7 +992,7 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474880778,'
+INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474887990,'
 {
  "@name": "fieldubw_test1",
  "attrs": {
@@ -1000,12 +1000,18 @@ INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474880778,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "field ubw in unionb for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_8t42m75faVNE2kWxu"
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_62H0GDHPCtIRvAdDd',1474473139,'
 {
  "@name": "int8_t",
