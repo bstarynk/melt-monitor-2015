@@ -2985,8 +2985,8 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
     {                           /* signed decimal number */
       int ix;
       char *endp = NULL;
+      memset (sbuf, 0, sizeof(sbuf));
       sbuf[0] = curc;
-      sbuf[1] = nextc;
       for (ix = 1; ix < (int) sizeof (sbuf) - 2
            && (digc = momgui_cmdparse_peekchar (cpars, ix)) > 0
            && digc >= '0' && digc <= '9'; ix++)
