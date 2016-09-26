@@ -694,11 +694,6 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               // dli_sname is the symbol name; dli_fname is the file path
               if (dif.dli_sname && dif.dli_saddr == payldata && dif.dli_fname)
                 {
-                  MOM_WARNPRINTF
-                    ("obr@%p=%s with payldata %p payk %s dli_sname %s dli_fname %s",
-                     obr, mo_objref_pnamestr (obr), payldata,
-                     mo_objref_pnamestr (obrpayk), dif.dli_sname,
-                     dif.dli_fname);
                   if (((sscanf
                         (dif.dli_sname, MOM_CODE_PREFIX MOM_CSTRIDSCANF "%n",
                          funidstr, &posfun) >= 1 && posfun > 0
