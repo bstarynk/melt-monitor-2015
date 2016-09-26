@@ -1062,6 +1062,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   unsigned nbenums = mo_tuple_size (enumstup);
   mom_cemit_printf (csta, " // %d enumerators in %s\n", nbenums,
                     mo_objref_pnamestr (typobr));
+
   for (unsigned eix = 0; eix < nbenums; eix++)
     {
       long curval = (*pprev) + 1;
@@ -1086,9 +1087,9 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       if (!curvaluev)
         mo_objref_put_attr (curenumobr, MOM_PREDEF (value),
                             mo_int_to_value (curval));
+      mo_value_t curenumnamv = mo_objref_namev (curenumobr);
       if (typobr == parobr && depth == 0)
         {
-          mo_value_t curenumnamv = mo_objref_namev (curenumobr);
           if (curenumnamv)
             {
               mom_cemit_printf (csta, " mo_%s_ev=%ld,\n",
@@ -1105,7 +1106,8 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
         {
           mom_cemit_printf (csta, " mo_%s__x__%s__ev=%ld, //%s\n",
                             mo_objref_pnamestr (parobr),
-                            mo_objref_pnamestr (typobr), curval, curenumid);
+                            mo_objref_pnamestr (curenumobr), curval,
+                            curenumid);
         }
     }
 }                               /* end of mom_cemit_define_enumerators */
@@ -1242,10 +1244,10 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
       mo_value_t ctypnamob = mo_objref_namev (ctypob);
       if (ctypnamob != NULL)
-        mom_cemit_printf (csta, "// type#%d declaration for %s (%s)\n",
+        mom_cemit_printf (csta, "\n// type#%d declaration for %s (%s)\n",
                           tix, mo_string_cstr (ctypnamob), ctypid);
       else
-        mom_cemit_printf (csta, "// type#%d declaration for %s\n",
+        mom_cemit_printf (csta, "\n// type#%d declaration for %s\n",
                           tix, ctypid);
       mom_cemit_declare_ctype (csta, ctypob);
     }
@@ -1260,14 +1262,14 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
       mo_value_t ctypnamob = mo_objref_namev (ctypob);
       if (ctypnamob != NULL)
-        mom_cemit_printf (csta, "// type definition#%d for %s (%s)\n",
+        mom_cemit_printf (csta, "\n// type definition#%d for %s (%s)\n",
                           tix, mo_string_cstr (ctypnamob), ctypid);
       else
-        mom_cemit_printf (csta, "// type definition#%d for %s\n",
+        mom_cemit_printf (csta, "\n// type definition#%d for %s\n",
                           tix, ctypid);
       mom_cemit_define_ctype (csta, ctypob);
     }
-  mom_cemit_printf (csta, "\n// end of %d types definitions\n\n", nbctyp);
+  mom_cemit_printf (csta, "\n// end of %d types definitions ***\n\n", nbctyp);
 }                               /* end of mom_cemit_ctypes */
 
 
