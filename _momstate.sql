@@ -805,7 +805,7 @@ INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474884393,'
  },
  "comps": null
 }
-','','','','');
+','_0dK6lxuDBgrY7Zdrb','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",
@@ -1121,7 +1121,7 @@ INSERT INTO t_objects VALUES('_6VK4TFfclh68txISx',1474869958,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
-INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474881738,'
+INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474891268,'
 {
  "@name": "enumaa_test1",
  "attrs": {
@@ -1129,12 +1129,16 @@ INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474881738,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "first enumerator in type_enuma_test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 0
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_0dK6lxuDBgrY7Zdrb','','','');
 INSERT INTO t_objects VALUES('_6Z810NfglNjogmNcG',1474879548,'
 {
  "@name": "type_uniona_test1",
@@ -1600,7 +1604,7 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
-INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474881756,'
+INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474891268,'
 {
  "@name": "enumab_test1",
  "attrs": {
@@ -1608,12 +1612,16 @@ INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474881756,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "second enumerator in type_enuma_test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 0
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_0dK6lxuDBgrY7Zdrb','','','');
 INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
 {
  "@name": "uint16_t",

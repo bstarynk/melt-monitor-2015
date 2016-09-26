@@ -1063,13 +1063,18 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   for (unsigned eix = 0; eix < nbenums; eix++)
     {
       long curval = (*pprev) + 1;
-      mo_objref_t curenumobr = mo_tuple_nth (enumstup, eix);
-      if (!curenumobr
-          || curenumobr->mo_ob_class != MOM_PREDEF (enumerator_class))
+      mo_objref_t curenumobr =
+        mo_dyncast_objref (mo_tuple_nth (enumstup, eix));
+      if (!curenumobr)
         MOM_CEMITFAILURE (csta,
-                          "cemit_define_enumerators: %s with bad enumerator#%d %s",
+                          "cemit_define_enumerators: %s with missing enumerator#%d",
+                          mo_objref_pnamestr (typobr), eix);
+      if (curenumobr->mo_ob_class != MOM_PREDEF (enumerator_class))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_enumerators: %s with bad enumerator#%d %s of class %s (enumerator_class expected)",
                           mo_objref_pnamestr (typobr), eix,
-                          mo_objref_pnamestr (curenumobr));
+                          mo_objref_pnamestr (curenumobr),
+                          mo_objref_pnamestr (curenumobr->mo_ob_class));
       mo_value_t curvaluev =
         mo_objref_get_attr (curenumobr, MOM_PREDEF (value));
       curval = mo_value_to_int (curvaluev, curval);
