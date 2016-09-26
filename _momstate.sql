@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 25 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 26 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -49,6 +49,7 @@ INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
+INSERT INTO t_names VALUES('fieldaa_test1','_1Ma1hIkjW2pwNHiKZ');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
@@ -88,6 +89,13 @@ INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
+INSERT INTO t_names VALUES('type_enuma_test1','_6zI7Ksmo3XlnSBba9');
+INSERT INTO t_names VALUES('type_enumb_test1','_2fW8RGq4VsALItRsE');
+INSERT INTO t_names VALUES('type_ptrint','_0m46GxlBP9bdo05q4');
+INSERT INTO t_names VALUES('type_structa_test1','_7M91oqNZoxo8xMq7c');
+INSERT INTO t_names VALUES('type_structb_test1','_6cu0xvaoNV0W4X4aW');
+INSERT INTO t_names VALUES('type_uniona_test1','_6Z810NfglNjogmNcG');
+INSERT INTO t_names VALUES('type_unionb_test1','_7BI45k1e9Ri0Wv9rm');
 INSERT INTO t_names VALUES('uint16_t','_8T17wDyPfJSmGz5Ve');
 INSERT INTO t_names VALUES('uint32_t','_6y88mWwevVhETpkig');
 INSERT INTO t_names VALUES('uint64_t','_6r06aqWaPdfZgAKBP');
@@ -238,6 +246,26 @@ INSERT INTO t_objects VALUES('_0m37ffFuKe0qxNfTK',1474696522,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_0m46GxlBP9bdo05q4',1474868749,'
+{
+ "@name": "type_ptrint",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype pointer to int"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_0Sp1Lg7ctajS7oX5i"
+   }
+  ]
+ }
+}
+','_7JP45UsR282DkTrJS','','','');
 INSERT INTO t_objects VALUES('_0xA91ltlCCIeN6K9H',1474534835,'
 {
  "@name": "add_user_action_useract",
@@ -317,6 +345,20 @@ INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
    }
   ]
  }
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1Ma1hIkjW2pwNHiKZ',1474869044,'
+{
+ "@name": "fieldaa_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "first field of structa"
+   }
+  ]
+ },
+ "comps": null
 }
 ','','','','');
 INSERT INTO t_objects VALUES('_1WX2mf4xwC5TU5ml7',1474366358,'
@@ -425,6 +467,20 @@ INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "the char ctype"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_2fW8RGq4VsALItRsE',1474868803,'
+{
+ "@name": "type_enumb_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for enumb extending enuma"
    }
   ]
  },
@@ -604,7 +660,7 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474696436,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474868803,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -620,6 +676,20 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474696436,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "some module to test c-emission"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "tup": [
+      "_0m46GxlBP9bdo05q4",
+      "_7M91oqNZoxo8xMq7c",
+      "_6cu0xvaoNV0W4X4aW",
+      "_6Z810NfglNjogmNcG",
+      "_7BI45k1e9Ri0Wv9rm",
+      "_6zI7Ksmo3XlnSBba9",
+      "_2fW8RGq4VsALItRsE"
+     ]
+    }
    }
   ]
  },
@@ -887,6 +957,20 @@ INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_6Z810NfglNjogmNcG',1474868780,'
+{
+ "@name": "type_uniona_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for uniona"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
 {
  "@name": "set_useract",
@@ -921,6 +1005,20 @@ INSERT INTO t_objects VALUES('_6bK8gGYmKZXwwNXj4',1474699623,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_6cu0xvaoNV0W4X4aW',1474868774,'
+{
+ "@name": "type_structb_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for structb extending structa"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6r06aqWaPdfZgAKBP',1474474102,'
 {
  "@name": "uint64_t",
@@ -949,6 +1047,20 @@ INSERT INTO t_objects VALUES('_6y88mWwevVhETpkig',1474474068,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474868795,'
+{
+ "@name": "type_enuma_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for enuma"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",
@@ -977,6 +1089,20 @@ INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_7BI45k1e9Ri0Wv9rm',1474868789,'
+{
+ "@name": "type_unionb_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for unionb extending uniona"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7EH4RTtyF1BioGEDK',1474473165,'
 {
  "@name": "int32_t",
@@ -1005,6 +1131,26 @@ INSERT INTO t_objects VALUES('_7JP45UsR282DkTrJS',1474477388,'
  "comps": null
 }
 ','_84n6z6xA40eduUUjh','','','');
+INSERT INTO t_objects VALUES('_7M91oqNZoxo8xMq7c',1474868761,'
+{
+ "@name": "type_structa_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype for structa"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_1Ma1hIkjW2pwNHiKZ"
+   }
+  ]
+ }
+}
+','_3CM77K3hIhblwvxg3','','','');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",
