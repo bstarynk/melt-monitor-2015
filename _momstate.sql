@@ -55,6 +55,7 @@ INSERT INTO t_names VALUES('fieldbx_test1','_6rV7sjJup5PnMH7Rt');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('fielduay_test1','_2zq5GZyUCWamFY8A3');
 INSERT INTO t_names VALUES('fielduaz_test1','_7sh3o3kwn9efIpWoS');
+INSERT INTO t_names VALUES('fieldubw_test1','_5tY0jFlg4ZFMGRXjL');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
 INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
@@ -954,6 +955,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474880778,'
+{
+ "@name": "fieldubw_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "field ubw in unionb for test1"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_62H0GDHPCtIRvAdDd',1474473139,'
 {
  "@name": "int8_t",
@@ -1238,20 +1253,34 @@ INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
-INSERT INTO t_objects VALUES('_7BI45k1e9Ri0Wv9rm',1474868789,'
+INSERT INTO t_objects VALUES('_7BI45k1e9Ri0Wv9rm',1474880778,'
 {
  "@name": "type_unionb_test1",
  "attrs": {
   "assoval": [
    {
+    "at": "_15c0LcIrdf2LE5JP8",
+    "va": {
+     "oid": "_6Z810NfglNjogmNcG"
+    }
+   },
+   {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "ctype for unionb extending uniona"
+   },
+   {
+    "at": "_7Pl7foCRjKoT6Gkdr",
+    "va": {
+     "tup": [
+      "_5tY0jFlg4ZFMGRXjL"
+     ]
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_3P48jR3hSzSCgv48c','','','');
 INSERT INTO t_objects VALUES('_7EH4RTtyF1BioGEDK',1474473165,'
 {
  "@name": "int32_t",
