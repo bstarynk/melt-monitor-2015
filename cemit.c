@@ -857,6 +857,8 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
         mo_value_t formtytup =
           mo_dyncast_tuple (mo_objref_get_attr
                             (typobr, MOM_PREDEF (formals_ctypes)));
+	MOM_INFORMPRINTF("cemit_declare_ctype: typobr %s formtytup %s",
+			 mo_objref_pnamestr(typobr), mo_value_pnamestr(formtytup));
         if (!formtytup)
           MOM_CEMITFAILURE (csta,
                             "cemit_declare_ctype: bad formals_ctypes in signature type %s",
@@ -885,7 +887,7 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                                 foix, mo_objref_pnamestr (curformobr),
                                 mo_objref_pnamestr (typobr));
           };
-        mom_cemit_printf (csta, "typedef /*signature*/");
+        mom_cemit_printf (csta, "typedef /*signature*/ ");
         mom_cemit_write_ctype_for (csta, restypobr, "", 0);
         mom_cemit_printf (csta, " mo%s_ty (", typobid);
         for (unsigned foix = 0; foix < nbformals; foix++)
@@ -895,7 +897,7 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
             mo_objref_t curformobr = mo_tuple_nth (formtytup, foix);
             mom_cemit_write_ctype_for (csta, curformobr, "", 0);
           };
-        mom_cemit_printf (csta, ");\n");
+        mom_cemit_printf (csta, "); // signature %s\n", typobid);
       }
       break;
     default:

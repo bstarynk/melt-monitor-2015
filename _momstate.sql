@@ -1019,7 +1019,7 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474896066,'
+INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474909861,'
 {
  "@name": "signature_int_to_double",
  "attrs": {
@@ -1027,6 +1027,20 @@ INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474896066,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "signature of int->double functions"
+   },
+   {
+    "at": "_7vy5VxtVon8EhIF5D",
+    "va": {
+     "oid": "_8BM91hTnefUPcYXzf"
+    }
+   },
+   {
+    "at": "_8Bq9eNWZ0eUS6BGq8",
+    "va": {
+     "tup": [
+      "_0Sp1Lg7ctajS7oX5i"
+     ]
+    }
    }
   ]
  },
