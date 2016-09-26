@@ -508,17 +508,15 @@ mofun_get_useract (mo_objref_t obuact)
     MOMIX_OPTDEFAULT,
     MOMIX__LAST
   };
-  mo_objref_t operobr =
-    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
   mo_objref_t obr =
     mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OBJECT));
   mo_value_t whatv = mo_objref_get_comp (obuact, MOMIX_WHAT);
   bool missing = true;
   mo_value_t defv = (mo_objref_get_comp (obuact, MOMIX_OPTDEFAULT));
-  if (mo_objref_comp_count (obuact) != MOMIX__LAST
-      || mo_objref_comp_count (obuact) != MOMIX__LAST - 1)
+  if (nbargs != MOMIX__LAST || nbargs != MOMIX__LAST - 1)
     mom_gui_fail_user_action
-      ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires two or three arguments");
+      ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires two or three arguments, got %d",
+       nbargs - 1);
   if (!obr)
     mom_gui_fail_user_action
       ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires an obj-ect");
@@ -588,8 +586,6 @@ mofun_remove_useract (mo_objref_t obuact)
   };
   if (nbargs != MOMIX__LAST)
     mom_gui_fail_user_action ("$remove(&obj &what) requires two arguments");
-  mo_objref_t operobr =
-    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
   mo_objref_t obr =
     mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OBJECT));
   if (!obr)
@@ -607,10 +603,12 @@ mofun_remove_useract (mo_objref_t obuact)
       unsigned cnt = mo_objref_comp_count (obr);
       if (whatrk < 0)
         whatrk += cnt;
-      if (whatrk < 0 || whatrk >= cnt)
-        ("$remove(&obj &what) invalid rank what=%d for %d components in obj=%s", origrk, (int) cnt, mo_objref_pnamestr (obr));
+      if (whatrk < 0 || whatrk >= (int) cnt)
+        mom_gui_fail_user_action
+          ("$remove(&obj &what) invalid rank what=%d for %d components in obj=%s",
+           origrk, (int) cnt, mo_objref_pnamestr (obr));
       mo_objref_put_comp (obr, whatrk, NULL);
-      if (cnt > 0 && whatrk == cnt - 1)
+      if (cnt > 0 && whatrk == (int) cnt - 1)
         {
           mo_objref_comp_resize (obr, cnt - 1);
         }

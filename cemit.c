@@ -783,8 +783,9 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
       mom_cemit_write_ctype_for (csta, elementypobr, arrayforstr, depth + 1);
       return;
     }
-  MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s unknown",
-                    mo_objref_pnamestr (typobr));
+  MOM_CEMITFAILURE (csta, "write_ctype_for: typobr %s (of class %s) unknown",
+                    mo_objref_pnamestr (typobr),
+                    mo_objref_pnamestr (typobr->mo_ob_class));
 }                               /* end mom_cemit_write_ctype_for */
 
 
