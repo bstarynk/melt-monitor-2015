@@ -48,6 +48,7 @@ INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('enumaa_test1','_6Xj6iYu8f0Kd5G4fo');
 INSERT INTO t_names VALUES('enumab_test1','_8N58oAS4pxRlnRThx');
+INSERT INTO t_names VALUES('enumbu_test1','_4Ph3UMWqrIloqawrN');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
@@ -514,20 +515,34 @@ INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_2fW8RGq4VsALItRsE',1474868803,'
+INSERT INTO t_objects VALUES('_2fW8RGq4VsALItRsE',1474884393,'
 {
  "@name": "type_enumb_test1",
  "attrs": {
   "assoval": [
    {
+    "at": "_15c0LcIrdf2LE5JP8",
+    "va": {
+     "oid": "_6zI7Ksmo3XlnSBba9"
+    }
+   },
+   {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "ctype for enumb extending enuma"
+   },
+   {
+    "at": "_4Cz6GxTDLCsTy7bco",
+    "va": {
+     "tup": [
+      "_4Ph3UMWqrIloqawrN"
+     ]
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_1xh0H6A2nNw5upcPh','','','');
 INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
 {
  "@name": "string",
@@ -765,6 +780,20 @@ INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "to remove something, e.g. $remove(&object &attr) user action"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474884393,'
+{
+ "@name": "enumbu_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "enumerator bu for type_enumb in test1"
    }
   ]
  },
