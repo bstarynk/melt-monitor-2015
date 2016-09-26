@@ -74,6 +74,7 @@ INSERT INTO t_names VALUES('int8_t','_62H0GDHPCtIRvAdDd');
 INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
+INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
 INSERT INTO t_names VALUES('payload_c_emit','_8hg5YXTgfHBnV4W8q');
@@ -91,6 +92,7 @@ INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
+INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
@@ -736,7 +738,21 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474868803,'
+INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
+{
+ "@name": "notice",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute to notice something"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474896198,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -752,6 +768,12 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474868803,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "some module to test c-emission"
+   },
+   {
+    "at": "_4H01ICaNuWncMePhe",
+    "va": {
+     "oid": "_5fb7a3nqXwUKGKblr"
+    }
    },
    {
     "at": "_8TY6UsXJ3Djt71By3",
@@ -996,6 +1018,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474896066,'
+{
+ "@name": "signature_int_to_double",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature of int->double functions"
+   }
+  ]
+ },
+ "comps": null
+}
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474887990,'
 {
  "@name": "fieldubw_test1",
