@@ -55,6 +55,8 @@ INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
 INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
+INSERT INTO t_names VALUES('get','_1Xe4mcjLDBpvaBiDU');
+INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
 INSERT INTO t_names VALUES('include_monimelt','_0m37ffFuKe0qxNfTK');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
 INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
@@ -75,6 +77,8 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
+INSERT INTO t_names VALUES('remove','_4Ph1Z99dptyJhpZfj');
+INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
@@ -126,6 +130,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_0Sp1Lg7ctajS7oX5i",
      "_1Hx4BMvqv69AA0750",
      "_1WX2mf4xwC5TU5ml7",
+     "_1Xe4mcjLDBpvaBiDU",
      "_20B54zdX0j8vYUdsf",
      "_21c6aoW2jM5uS1jrN",
      "_21x8NL3oau6heNEnt",
@@ -136,18 +141,21 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
      "_4iH7xI2JtAomiBySj",
+     "_4Ph1Z99dptyJhpZfj",
      "_59g7wsJyXlj962jlx",
      "_5Ta34TyJJebRyD9sN",
      "_62H0GDHPCtIRvAdDd",
      "_6bK8gGYmKZXwwNXj4",
      "_6r06aqWaPdfZgAKBP",
      "_6y88mWwevVhETpkig",
+     "_6VK4TFfclh68txISx",
      "_6Z90lCcFC3RhKoHGv",
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
      "_7EH4RTtyF1BioGEDK",
      "_7JP45UsR282DkTrJS",
      "_80D4pPU1WGn7IZwh6",
+     "_8j61MrY76IlS6t10r",
      "_8t42m75faVNE2kWxu",
      "_8BM91hTnefUPcYXzf",
      "_8T17wDyPfJSmGz5Ve"
@@ -375,6 +383,26 @@ INSERT INTO t_objects VALUES('_1WX2mf4xwC5TU5ml7',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_1Xe4mcjLDBpvaBiDU',1474869958,'
+{
+ "@name": "get",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_6VK4TFfclh68txISx"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "to get some attribute or component, etc. also $get user action."
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1xh0H6A2nNw5upcPh',1474312783,'
 {
  "@name": "enum_ctype_class",
@@ -696,6 +724,26 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474868803,'
  "comps": null
 }
 ','_22z6Be6oa3IH524Jy','','','');
+INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474870024,'
+{
+ "@name": "remove",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4x85ZXWJ9HDCurqHP",
+    "va": {
+     "oid": "_8j61MrY76IlS6t10r"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "to remove something, e.g. $remove(&object &attr) user action"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",
@@ -951,6 +999,20 @@ INSERT INTO t_objects VALUES('_6S30JEAmywph5MZqd',1472749172,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class of signatures"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6VK4TFfclh68txISx',1474869958,'
+{
+ "@name": "get_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "user action for $get"
    }
   ]
  },
@@ -1367,6 +1429,20 @@ INSERT INTO t_objects VALUES('_8hg5YXTgfHBnV4W8q',1474270315,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "transient payload for emission of C code"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8j61MrY76IlS6t10r',1474870024,'
+{
+ "@name": "remove_useract",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "user action for $remove(&object &attr) or $remove(&object &rank)"
    }
   ]
  },
