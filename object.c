@@ -443,11 +443,15 @@ mo_objref_comp_remove (mo_objref_t obr, int rk)
   unsigned cnt = mo_vectval_count (vecomp);
   if (rk < 0)
     rk += cnt;
-  if (rk < 0 || rk >= cnt)
+  if (rk < 0 || rk >= (int) cnt)
     return;
-  MOM_FATAPRINTF ("mo_objref_comp_remove obr=%s rk=%d unimplemented",
-                  mo_objref_pnamestr (obr), rk);
-#warning mo_objref_comp_remove unimplemented
+  vecomp->mo_vect_arr[rk] = NULL;
+  if (rk < (int) cnt - 1)
+    memmove (vecomp->mo_vect_arr + rk, vecomp->mo_vect_arr + rk + 1,
+             (cnt - rk - 1) * sizeof (mo_value_t));
+  if (cnt > 0)
+    vecomp->mo_vect_arr[cnt - 1] = NULL;
+  vecomp->mo_cpl_count = cnt - 1;
 }                               /* end of mo_objref_comp_remove */
 
 void
