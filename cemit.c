@@ -1171,10 +1171,19 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       break;
     default:
     defaultctypecase:
-      MOM_CEMITFAILURE (csta,
-                        "cemit_define_ctype: typobr %s has bad class %s",
-                        mo_objref_pnamestr (typobr),
-                        mo_objref_pnamestr (typobr->mo_ob_class));
+      if (typnamv)
+        mom_cemit_printf (csta,
+                          "// type %s (%s) of class %s dont need a definition\n",
+                          typobid, mo_objref_pnamestr (typobr),
+                          mo_objref_pnamestr (typobr->mo_ob_class));
+      else
+        mom_cemit_printf (csta,
+                          "// type %s of class %s dont need a definition\n",
+                          typobid, mo_objref_pnamestr (typobr->mo_ob_class));
+      if (!typobr->mo_ob_class)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_define_ctype: typobr %s has no class",
+                          mo_objref_pnamestr (typobr));
       break;
     }
 #undef MOM_NBCASE_CTYPE
