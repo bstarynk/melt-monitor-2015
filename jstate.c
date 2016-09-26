@@ -1484,8 +1484,10 @@ mom_dump_state (const char *dirname)
       sqlite3_exec (dumper.mo_du_db, "END TRANSACTION;", NULL, NULL, &errmsg))
     MOM_FATAPRINTF ("Failed to END Sqlite transaction: %s", errmsg);
 #warning mo_dump_state should emit modules
-  MOM_WARNPRINTF ("mo_dump_state should emit the C code of %d modules",
-                  mo_hashset_count (dumper.mo_du_moduleset));
+  MOM_WARNPRINTF ("mo_dump_state should emit the C code of %d modules : %s",
+                  mo_hashset_count (dumper.mo_du_moduleset),
+                  mo_value_pnamestr (mo_hashset_elements_set
+                                     (dumper.mo_du_moduleset)));
   mo_dump_end_database (&dumper);
   mo_dump_rename_emitted_files (&dumper);
   mo_dump_symlink_needed_file (&dumper, "Makefile");

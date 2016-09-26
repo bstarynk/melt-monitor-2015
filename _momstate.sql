@@ -557,7 +557,7 @@ INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1474879537,'
+INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1474887310,'
 {
  "@name": "fielduay_test1",
  "attrs": {
@@ -565,12 +565,18 @@ INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1474879537,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "fielduay in uniona for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_8BM91hTnefUPcYXzf"
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_3CM77K3hIhblwvxg3',1474312729,'
 {
  "@name": "struct_ctype_class",
@@ -1442,7 +1448,7 @@ INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474464458,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1474879548,'
+INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1474887609,'
 {
  "@name": "fielduaz_test1",
  "attrs": {
@@ -1450,12 +1456,18 @@ INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1474879548,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "fielduaz in uniona for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_0m46GxlBP9bdo05q4"
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_7vy5VxtVon8EhIF5D',1474354808,'
 {
  "@name": "result_ctype",
