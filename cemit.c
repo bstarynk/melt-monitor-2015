@@ -493,6 +493,8 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
   if (!oldpathbuf)
     MOM_FATAPRINTF ("cemit_close: asprintf oldpathbuf failed for module %s",
                     csta->mo_cemsta_modid);
+  MOM_INFORMPRINTF("cemit_close: oldpathbuf='%s' newpathbuf='%s'",
+		   oldpathbuf, newpathbuf);
   char *backuppathbuf = NULL;
   asprintf (&backuppathbuf, "%s%s%s%%",
             cemp->mo_cemit_prefix,
@@ -513,8 +515,8 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
         MOM_FATAPRINTF ("cemit_close: rename %s -> %s failure", newpathbuf,
                         oldpathbuf);
       fclose (newfil);
-      return;
     }
+  else { // test content of new & old file
   errno = 0;
   struct stat newstat = { };
   struct stat oldstat = { };
@@ -547,6 +549,7 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
         MOM_FATAPRINTF ("cemit_close: new rename %s -> %s failed", newpathbuf,
                         oldpathbuf);
     };
+  }
   /// add a symbolic link for named modules
   mo_value_t namodv = mo_objref_namev (cemp->mo_cemit_modobj);
   MOM_INFORMPRINTF ("cemit_close: modobj %s namodv %s",
@@ -559,16 +562,21 @@ mom_cemit_close (struct mom_cemitlocalstate_st *csta)
       char *oldbase = basename (oldpathbuf);
       char *oldunder = strrchr (oldbase, '_');
       MOM_INFORMPRINTF
-        ("cemit_close: oldbase='%s' oldunder='%s' oldunder+CSTRIDLEN='%s'",
-         oldbase, oldunder, oldunder + MOM_CSTRIDLEN);
+        ("cemit_close: oldbase='%s' oldunder='%s' oldunder+CSTRIDLEN='%s'\n"
+	 "... oldpathbuf='%s'",
+         oldbase, oldunder, oldunder + MOM_CSTRIDLEN, oldpathbuf);
       MOM_ASSERTPRINTF (oldbase != NULL
                         && oldbase >= oldpathbuf, "bad oldbase");
       char *oldbidp = strstr (oldbase, csta->mo_cemsta_modid);
+      MOM_INFORMPRINTF
+        ("cemit_close: oldbidp='%s'", oldbidp);
       MOM_ASSERTPRINTF (oldbidp != NULL
                         && strlen (oldbidp) >= MOM_CSTRIDLEN, "bad oldbidp");
+      MOM_INFORMPRINTF
+        ("cemit_close: begpat '%.*s'", (int) (oldbidp - oldpathbuf + 1),
+	 oldpathbuf);
       char *symlpathbuf = NULL;
-#warning the below asprintf is wrong.
-      asprintf (&symlpathbuf, "%*s%s%s", (int) (oldbidp - oldpathbuf),
+      asprintf (&symlpathbuf, "%.*s%s%s", (int) (oldbidp - oldpathbuf +1),
                 oldpathbuf, mo_string_cstr (namodv), oldbidp + MOM_CSTRIDLEN);
       if (MOM_UNLIKELY (symlpathbuf == NULL))
         MOM_FATAPRINTF ("cemit_close: asprintf symlpathbuf failed for %s",
@@ -1281,7 +1289,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   mom_cemit_includes (&cemitstate);
   mom_cemit_ctypes (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
-  MOM_WARNPRINTF ("cemit_close incomplete for %s",
+  MOM_WARNPRINTF ("cemit_generate incomplete for %s",
                   cemitstate.mo_cemsta_modid);
   mom_cemit_close (&cemitstate);
   cemp->mo_cemit_locstate = NULL;
