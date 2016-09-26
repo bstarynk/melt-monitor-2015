@@ -497,10 +497,58 @@ MOM_PREFIXID (mofun_, get_useract) (mo_objref_t obuact)
 mo_value_t
 mofun_get_useract (mo_objref_t obuact)
 {
+  mo_value_t vres = NULL;
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "get_useract: bad obuact");
   unsigned nbargs = mo_objref_comp_count (obuact);
-#warning mofun_get_useract unimplemented
-  MOM_FATAPRINTF ("unimplemented mofun_get_useract");
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_OBJECT,
+    MOMIX_WHAT,
+    MOMIX_OPTDEFAULT,
+    MOMIX__LAST
+  };
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  mo_objref_t obr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OBJECT));
+  mo_value_t whatv = mo_objref_get_comp (obuact, MOMIX_WHAT);
+  bool missing = true;
+  mo_value_t defv = (mo_objref_get_comp (obuact, MOMIX_OPTDEFAULT));
+  if (mo_objref_comp_count (obuact) != MOMIX__LAST
+      || mo_objref_comp_count (obuact) != MOMIX__LAST - 1)
+    mom_gui_fail_user_action
+      ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires two or three arguments");
+  if (!obr)
+    mom_gui_fail_user_action
+      ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires an obj-ect");
+  mo_objref_t whatobr = mo_dyncast_objref (whatv);
+  if (whatobr)
+    {
+      vres = mo_objref_get_attr (obr, whatobr);
+      missing = vres == NULL;
+    }
+  else if (mo_value_is_int (whatv))
+    {
+      int whatrk = mo_value_to_int (whatv, -1);
+      unsigned cnt = mo_objref_comp_count (obr);
+      missing = whatrk < -(int) cnt || whatrk >= (int) cnt;
+      vres = mo_objref_get_comp (obr, whatrk);
+      if (vres)
+        missing = false;
+    }
+  else
+    mom_gui_fail_user_action
+      ("$get(&obj &what [&default]) with bad what - should be integer or object");
+  if (missing)
+    {
+      if (mo_objref_comp_count (obuact) == MOMIX__LAST - 1)
+        mom_gui_fail_user_action
+          ("$get(&obj &what) missing for obj=%s what=%s",
+           mo_objref_pnamestr (obr), mo_value_pnamestr (whatv));
+      vres = defv;
+    }
+  return defv;
 }                               /* end of mofun_get_useract */
 
 ////////////////
@@ -531,8 +579,49 @@ mofun_remove_useract (mo_objref_t obuact)
 {
   MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "remove_useract: bad obuact");
   unsigned nbargs = mo_objref_comp_count (obuact);
-#warning mofun_remove_useract unimplemented
-  MOM_FATAPRINTF ("unimplemented mofun_remove_useract");
+  enum
+  {
+    MOMIX_OPER,
+    MOMIX_OBJECT,
+    MOMIX_WHAT,
+    MOMIX__LAST
+  };
+  if (nbargs != MOMIX__LAST)
+    mom_gui_fail_user_action ("$remove(&obj &what) requires two arguments");
+  mo_objref_t operobr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OPER));
+  mo_objref_t obr =
+    mo_dyncast_objref (mo_objref_get_comp (obuact, MOMIX_OBJECT));
+  if (!obr)
+    mom_gui_fail_user_action ("$remove(&obj &what) requires an object &obj");
+  mo_value_t whatv = mo_objref_get_comp (obuact, MOMIX_WHAT);
+  mo_objref_t whatobr = mo_dyncast_objref (whatv);
+  if (whatobr)
+    {
+      mo_objref_remove_attr (obr, whatobr);
+    }
+  else if (mo_value_is_int (whatv))
+    {
+      int whatrk = mo_value_to_int (whatv, -1);
+      int origrk = whatrk;
+      unsigned cnt = mo_objref_comp_count (obr);
+      if (whatrk < 0)
+        whatrk += cnt;
+      if (whatrk < 0 || whatrk >= cnt)
+        ("$remove(&obj &what) invalid rank what=%d for %d components in obj=%s", origrk, (int) cnt, mo_objref_pnamestr (obr));
+      mo_objref_put_comp (obr, whatrk, NULL);
+      if (cnt > 0 && whatrk == cnt - 1)
+        {
+          mo_objref_comp_resize (obr, cnt - 1);
+        }
+      else
+        mo_objref_comp_remove (obr, whatrk);
+
+    }
+  else
+    mom_gui_fail_user_action
+      ("$remove(&obj &what) with bad what - should be integer or object");
+  return obr;
 }                               /* end of mofun_remove_useract */
 
 

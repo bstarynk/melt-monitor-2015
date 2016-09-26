@@ -1672,6 +1672,7 @@ mo_objref_comp_append (mo_objref_t ob, mo_value_t va)
   pob->mo_ob_comps = mo_vectval_append (pob->mo_ob_comps, va);
 }                               /* end of mo_objref_comp_append */
 
+void mo_objref_comp_remove (mo_objref_t ob, int rk);
 
 // the function of id Id has dlsymed symbol mofunId or moId for the code and
 // mosigId for the signature

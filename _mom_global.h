@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 30
+#define MOM_NB_GLOBAL 34
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -61,6 +61,12 @@ MOM_HAS_GLOBAL(fnmatch,_5Ta34TyJJebRyD9sN,1388729658,731614781365540241,23891074
 //+ for implementing $fnmatch command
 MOM_HAS_GLOBAL(fnmatch_useract,_59g7wsJyXlj962jlx,1216139410,3556611507501676989,1836628331)
 
+//+ to get some attribute or component, etc. also $get user action.
+MOM_HAS_GLOBAL(get,_1Xe4mcjLDBpvaBiDU,461011165,3588994974126708538,3054508454)
+
+//+ user action for $get
+MOM_HAS_GLOBAL(get_useract,_6VK4TFfclh68txISx,1634895712,3524192943039125457,235853902)
+
 //+ the int ctype
 MOM_HAS_GLOBAL(int,_0Sp1Lg7ctajS7oX5i,206123378,1657221063490954190,2737754805)
 
@@ -84,6 +90,12 @@ MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
 
 //+ class of pointer ctypes; the first component #0 is the pointed ctype.
 MOM_HAS_GLOBAL(pointer_ctype_class,_7JP45UsR282DkTrJS,1831760218,601741714220354864,2152013395)
+
+//+ to remove something, e.g. $remove(&object &attr) user action
+MOM_HAS_GLOBAL(remove,_4Ph1Z99dptyJhpZfj,1141454572,7970905774666212359,747100231)
+
+//+ user action for $remove(&object &attr) or $remove(&object &rank)
+MOM_HAS_GLOBAL(remove_useract,_8j61MrY76IlS6t10r,1962553855,7308997705184094443,3623953716)
 
 //+ for set related stuff
 MOM_HAS_GLOBAL(set,_7h20HFhtjZljRLtbU,1718490147,6717538159123036634,3433581947)
@@ -175,6 +187,16 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_59g7wsJyXlj962jlx
 #define monam_59g7wsJyXlj962jlx fnmatch_useract
 
+#undef moid_get
+#define moid_get _1Xe4mcjLDBpvaBiDU
+#undef monam_1Xe4mcjLDBpvaBiDU
+#define monam_1Xe4mcjLDBpvaBiDU get
+
+#undef moid_get_useract
+#define moid_get_useract _6VK4TFfclh68txISx
+#undef monam_6VK4TFfclh68txISx
+#define monam_6VK4TFfclh68txISx get_useract
+
 #undef moid_int
 #define moid_int _0Sp1Lg7ctajS7oX5i
 #undef monam_0Sp1Lg7ctajS7oX5i
@@ -214,6 +236,16 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #define moid_pointer_ctype_class _7JP45UsR282DkTrJS
 #undef monam_7JP45UsR282DkTrJS
 #define monam_7JP45UsR282DkTrJS pointer_ctype_class
+
+#undef moid_remove
+#define moid_remove _4Ph1Z99dptyJhpZfj
+#undef monam_4Ph1Z99dptyJhpZfj
+#define monam_4Ph1Z99dptyJhpZfj remove
+
+#undef moid_remove_useract
+#define moid_remove_useract _8j61MrY76IlS6t10r
+#undef monam_8j61MrY76IlS6t10r
+#define monam_8j61MrY76IlS6t10r remove_useract
 
 #undef moid_set
 #define moid_set _7h20HFhtjZljRLtbU
@@ -285,6 +317,8 @@ enum mom_global_hashes_en {
   momghash_double=3623603139,
   momghash_fnmatch=2389107487,
   momghash_fnmatch_useract=1836628331,
+  momghash_get=3054508454,
+  momghash_get_useract=235853902,
   momghash_int=2737754805,
   momghash_int16_t=1383035942,
   momghash_int32_t=2754588426,
@@ -293,6 +327,8 @@ enum mom_global_hashes_en {
   momghash_intptr_t=1787024167,
   momghash_long=314494134,
   momghash_pointer_ctype_class=2152013395,
+  momghash_remove=747100231,
+  momghash_remove_useract=3623953716,
   momghash_set=3433581947,
   momghash_set_useract=4059762204,
   momghash_string=226985679,
@@ -313,7 +349,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 30
+#define MOM_NB_NAMED_GLOBAL 34
 
 
 #undef MOM_HAS_GLOBAL

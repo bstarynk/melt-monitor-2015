@@ -432,6 +432,25 @@ mo_make_object (void)
 
 
 void
+mo_objref_comp_remove (mo_objref_t obr, int rk)
+{
+  mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (obr);
+  if (!pob)
+    return;
+  mo_vectvaldatapayl_ty *vecomp = pob->mo_ob_comps;
+  if (!vecomp)
+    return;
+  unsigned cnt = mo_vectval_count (vecomp);
+  if (rk < 0)
+    rk += cnt;
+  if (rk < 0 || rk >= cnt)
+    return;
+  MOM_FATAPRINTF ("mo_objref_comp_remove obr=%s rk=%d unimplemented",
+                  mo_objref_pnamestr (obr), rk);
+#warning mo_objref_comp_remove unimplemented
+}                               /* end of mo_objref_comp_remove */
+
+void
 mo_objref_really_clear_payload (mo_objref_t obr)
 {
   mo_objectvalue_ty *pob = (mo_objectvalue_ty *) mo_dyncast_objref (obr);
