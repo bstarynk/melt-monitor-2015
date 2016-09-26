@@ -885,7 +885,7 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                                 foix, mo_objref_pnamestr (curformobr),
                                 mo_objref_pnamestr (typobr));
           };
-        mom_cemit_printf (csta, "typedef ");
+        mom_cemit_printf (csta, "typedef /*signature*/");
         mom_cemit_write_ctype_for (csta, restypobr, "", 0);
         mom_cemit_printf (csta, " mo%s_ty (", typobid);
         for (unsigned foix = 0; foix < nbformals; foix++)
@@ -901,8 +901,10 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
     default:
     defaultctypecase:
       {
+        mom_cemit_printf (csta, "typedef /*other*/ ");
         const char *forstr = mom_gc_printf (" mo%s_ty", typobid);
         mom_cemit_write_ctype_for (csta, typobr, forstr, 0);
+        mom_cemit_printf (csta, ";\n");
       };
       break;
     }
@@ -910,7 +912,7 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
 #undef CASE_PREDEFCTYPE_MOM
   mo_value_t typobnamv = mo_objref_namev (typobr);
   if (typobnamv)
-    mom_cemit_printf (csta, "typedef mo%s_ty mo_%s_ty\n",
+    mom_cemit_printf (csta, "typedef mo%s_ty mo_%s_ty;\n",
                       typobid, mo_string_cstr (typobnamv));
   csta->mo_cemsta_hsetctypes =
     mo_hashset_put (csta->mo_cemsta_hsetctypes, typobr);
@@ -1075,6 +1077,9 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (typobr), eix,
                           mo_objref_pnamestr (curenumobr),
                           mo_objref_pnamestr (curenumobr->mo_ob_class));
+      char curenumid[MOM_CSTRIDSIZ];
+      memset (curenumid, 0, sizeof (curenumid));
+      mo_objref_idstr (curenumid, curenumobr);
       mo_value_t curvaluev =
         mo_objref_get_attr (curenumobr, MOM_PREDEF (value));
       curval = mo_value_to_int (curvaluev, curval);
@@ -1083,23 +1088,24 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                             mo_int_to_value (curval));
       if (typobr == parobr && depth == 0)
         {
-          mo_value_t typnamv = mo_objref_namev (typobr);
-          if (typnamv)
-            mom_cemit_printf (csta, " mo_%s_ev=%ld,\n",
-                              mo_string_cstr (typnamv), curval);
+          mo_value_t curenumnamv = mo_objref_namev (curenumobr);
+          if (curenumnamv)
+            {
+              mom_cemit_printf (csta, " mo_%s_ev=%ld,\n",
+                                mo_string_cstr (curenumnamv), curval);
+              mom_cemit_printf (csta, "#define mo%s_ev mo_%s_ev\n",
+                                curenumid, mo_string_cstr (curenumnamv));
+            }
           else
             {
-              char typid[MOM_CSTRIDSIZ];
-              memset (typid, 0, sizeof (typid));
-              mo_objref_idstr (typid, typobr);
-              mom_cemit_printf (csta, " mo%s_ev=%ld,\n", typid, curval);
+              mom_cemit_printf (csta, " mo%s_ev=%ld,\n", curenumid, curval);
             }
         }
       else
         {
-          mom_cemit_printf (csta, " mo_%s__x__%s__ev=%ld,\n",
+          mom_cemit_printf (csta, " mo_%s__x__%s__ev=%ld, //%s\n",
                             mo_objref_pnamestr (parobr),
-                            mo_objref_pnamestr (typobr), curval);
+                            mo_objref_pnamestr (typobr), curval, curenumid);
         }
     }
 }                               /* end of mom_cemit_define_enumerators */
@@ -1224,7 +1230,8 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
   if (!mo_dyncast_tuple (ctypv))
     MOM_CEMITFAILURE (csta, "bad c_type %s", mo_value_pnamestr (ctypv));
   unsigned nbctyp = mo_tuple_size (ctypv);
-  mom_cemit_printf (csta, "\n// %d types definitions\n", nbctyp);
+  mom_cemit_printf (csta, "\n// %d types ***\n", nbctyp);
+  mom_cemit_printf (csta, "//// %d type declarations:\n", nbctyp);
   // first loop to emit typedefs
   for (unsigned tix = 0; tix < nbctyp; tix++)
     {
@@ -1242,6 +1249,7 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
                           tix, ctypid);
       mom_cemit_declare_ctype (csta, ctypob);
     }
+  mom_cemit_printf (csta, "\n//// %d type definitions:\n", nbctyp);
   // second loop to emit enum, struct, union-s.... i.e. aggregate type definitions
   for (unsigned tix = 0; tix < nbctyp; tix++)
     {
