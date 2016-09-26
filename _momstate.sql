@@ -792,7 +792,7 @@ INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474884393,'
+INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474891656,'
 {
  "@name": "enumbu_test1",
  "attrs": {
@@ -800,6 +800,10 @@ INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474884393,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "enumerator bu for type_enumb in test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 0
    }
   ]
  },

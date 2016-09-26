@@ -1229,16 +1229,37 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
   for (unsigned tix = 0; tix < nbctyp; tix++)
     {
       mo_objref_t ctypob = mo_tuple_nth (ctypv, tix);
+      char ctypid[MOM_CSTRIDSIZ];
+      memset (ctypid, 0, sizeof (ctypid));
+      mo_objref_idstr (ctypid, ctypob);
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
+      mo_value_t ctypnamob = mo_objref_namev (ctypob);
+      if (ctypnamob != NULL)
+        mom_cemit_printf (csta, "// type#%d declaration for %s (%s)\n",
+                          tix, mo_string_cstr (ctypnamob), ctypid);
+      else
+        mom_cemit_printf (csta, "// type#%d declaration for %s\n",
+                          tix, ctypid);
       mom_cemit_declare_ctype (csta, ctypob);
     }
   // second loop to emit enum, struct, union-s.... i.e. aggregate type definitions
   for (unsigned tix = 0; tix < nbctyp; tix++)
     {
       mo_objref_t ctypob = mo_tuple_nth (ctypv, tix);
+      char ctypid[MOM_CSTRIDSIZ];
+      memset (ctypid, 0, sizeof (ctypid));
+      mo_objref_idstr (ctypid, ctypob);
       MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob), "bad ctypob tix#%d", tix);
+      mo_value_t ctypnamob = mo_objref_namev (ctypob);
+      if (ctypnamob != NULL)
+        mom_cemit_printf (csta, "// type definition#%d for %s (%s)\n",
+                          tix, mo_string_cstr (ctypnamob), ctypid);
+      else
+        mom_cemit_printf (csta, "// type definition#%d for %s\n",
+                          tix, ctypid);
       mom_cemit_define_ctype (csta, ctypob);
     }
+  mom_cemit_printf (csta, "\n// end of %d types definitions\n\n", nbctyp);
 }                               /* end of mom_cemit_ctypes */
 
 
