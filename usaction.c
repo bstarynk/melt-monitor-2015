@@ -22,7 +22,7 @@
 
 
 /// momglob_class_useract is needed
-/// the $class (object class) GUI user action is setting the
+/// the $class (&object &class) GUI user action is setting the
 /// mo_ob_class of object to class
 const char
 MOM_PREFIXID (mosig_, class_useract)[] = "signature_object_to_value";
@@ -271,7 +271,7 @@ MOM_PREFIXID (mofun_, add_user_action_useract) (mo_objref_t obuact)
   return mofun_add_user_action_useract (obuact);
 }
 
-/// for $add_user_action(Action Action_useract)
+/// for $add_user_action(&Action &Action_useract)
 mo_value_t
 mofun_add_user_action_useract (mo_objref_t obuact)
 {
@@ -474,5 +474,68 @@ mofun_fnmatch_useract (mo_objref_t obuact)
   MOM_INFORMPRINTF ("fnmatch '%s' => %s", strpat, mo_value_pnamestr (setv));
   return setv;
 }                               /* end of mofun_fnmatch_useract */
+
+/// momglob_get & momglob_get_useract for $get (&Object &Attr)
+/// retrieving in Object its attribute &Attr e.g. $get(&some_module
+/// &c_type) and for $get(&Object &Rank) retrieving in Object its
+/// component of given integer &Rank e.g. $get(&the_system &3)
+const char
+MOM_PREFIXID (mosig_, get_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, get_useract) __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_get_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, get_useract) (mo_objref_t obuact)
+{
+  return mofun_get_useract (obuact);
+}
+
+mo_value_t
+mofun_get_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "get_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+#warning mofun_get_useract unimplemented
+  MOM_FATAPRINTF ("unimplemented mofun_get_useract");
+}                               /* end of mofun_get_useract */
+
+////////////////
+
+
+/// momglob_remove & momglob_remove_useract for $remove (&Object &Attr)
+/// removing in Object its attribute &Attr e.g. $remove(&some_module
+/// &c_type) and for $remove(&Object &Rank) removing in Object its
+/// component of given integer &Rank e.g. $remove(&the_system &3)
+const char
+MOM_PREFIXID (mosig_, remove_useract)[] = "signature_object_to_value";
+
+     extern mo_signature_object_to_value_sigt
+       MOM_PREFIXID (mofun_, remove_useract)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_object_to_value_sigt mofun_remove_useract;
+
+mo_value_t
+MOM_PREFIXID (mofun_, remove_useract) (mo_objref_t obuact)
+{
+  return mofun_remove_useract (obuact);
+}
+
+mo_value_t
+mofun_remove_useract (mo_objref_t obuact)
+{
+  MOM_ASSERTPRINTF (mo_dyncast_object (obuact), "remove_useract: bad obuact");
+  unsigned nbargs = mo_objref_comp_count (obuact);
+#warning mofun_remove_useract unimplemented
+  MOM_FATAPRINTF ("unimplemented mofun_remove_useract");
+}                               /* end of mofun_remove_useract */
+
+
+////////////////
 
 // end of file usaction.c

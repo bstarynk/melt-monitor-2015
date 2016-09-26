@@ -4239,7 +4239,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
   mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
-  gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 560, 260);
+  gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 720, 360);
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_container_add (GTK_CONTAINER (mom_cmdwin), cmdtopvbox);
   mom_cmdstatusbar = gtk_statusbar_new ();
