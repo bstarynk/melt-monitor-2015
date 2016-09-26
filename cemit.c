@@ -165,7 +165,8 @@ mo_objref_get_cemit (mo_objref_t obr)
       = mo_make_string_sprintf(Fmt, ##__VA_ARGS__);	\
     MOM_BACKTRACEPRINTF_AT				\
     (__FILE__,Lin,					\
-     "cemit failure: %s",				\
+     "%s*cemit failure:%s %s",				\
+     MOM_TERMWARNCOLOR, MOM_TERMPLAIN,                  \
      mo_string_cstr(_csta_##Lin->mo_cemsta_errstr));	\
     longjmp(_csta_##Lin->mo_cemsta_jmpbuf, Lin);	\
 } while(0)

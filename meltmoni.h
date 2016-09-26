@@ -113,6 +113,12 @@
 #define MOM_UNUSED
 #endif
 
+/// see https://en.wikipedia.org/wiki/ANSI_escape_code
+extern gboolean mom_no_color_stderr;
+#define MOM_TERMWARNCOLOR (mom_no_color_stderr?"":"\033[1m""\033[34m" /*bold blue*/)
+#define MOM_TERMFATALCOLOR (mom_no_color_stderr?"":"\033[1m""\033[31m" /*bold red*/)
+#define MOM_TERMPLAIN (mom_no_color_stderr?"":"\033[0m")
+
 void
 mom_warnprintf_at (const char *fil, int lin, const char *fmt, ...)
 __attribute__ ((format (printf, 3, 4)));

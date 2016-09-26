@@ -3784,7 +3784,8 @@ momgui_cmdparsefailure (struct momgui_cmdparse_st *cpars, int lineno)
     MOM_WARNPRINTF_AT (__FILE__, lineno, "cmdparsefailure (pos#%d): %s",
                        curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
   else
-    MOM_BACKTRACEPRINTF ("cmdparsefailure (pos#%d): %s",
+    MOM_BACKTRACEPRINTF ("%s*cmdparsefailure*%s (pos#%d): %s",
+                         MOM_TERMWARNCOLOR, MOM_TERMPLAIN,
                          curoff, mo_string_cstr (cpars->mo_gcp_errstrv));
   GtkTextIter itstart = { };
   GtkTextIter itend = { };

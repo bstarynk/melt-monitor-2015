@@ -32,11 +32,6 @@ char *mom_dump_dir;
 char *mom_gtk_style_path = MONIMELT_GTK_STYLE;
 gboolean mom_no_color_stderr;
 
-/// see https://en.wikipedia.org/wiki/ANSI_escape_code
-#define MOM_TERMWARNCOLOR (mom_no_color_stderr?"":"\033[1m""\033[34m" /*bold blue*/)
-#define MOM_TERMFATALCOLOR (mom_no_color_stderr?"":"\033[1m""\033[31m" /*bold red*/)
-#define MOM_TERMPLAIN (mom_no_color_stderr?"":"\033[0m")
-
 const char *
 mom_hostname (void)
 {
