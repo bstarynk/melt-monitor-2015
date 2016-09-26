@@ -46,6 +46,8 @@ INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
+INSERT INTO t_names VALUES('enumaa_test1','_6Xj6iYu8f0Kd5G4fo');
+INSERT INTO t_names VALUES('enumab_test1','_8N58oAS4pxRlnRThx');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
@@ -1078,6 +1080,20 @@ INSERT INTO t_objects VALUES('_6VK4TFfclh68txISx',1474869958,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474881738,'
+{
+ "@name": "enumaa_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "first enumerator in type_enuma_test1"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6Z810NfglNjogmNcG',1474879548,'
 {
  "@name": "type_uniona_test1",
@@ -1211,7 +1227,7 @@ INSERT INTO t_objects VALUES('_6y88mWwevVhETpkig',1474474068,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474868795,'
+INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474881756,'
 {
  "@name": "type_enuma_test1",
  "attrs": {
@@ -1219,12 +1235,21 @@ INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474868795,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "ctype for enuma"
+   },
+   {
+    "at": "_4Cz6GxTDLCsTy7bco",
+    "va": {
+     "tup": [
+      "_6Xj6iYu8f0Kd5G4fo",
+      "_8N58oAS4pxRlnRThx"
+     ]
+    }
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_1xh0H6A2nNw5upcPh','','','');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",
@@ -1528,6 +1553,20 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474881756,'
+{
+ "@name": "enumab_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "second enumerator in type_enuma_test1"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
 {
  "@name": "uint16_t",
