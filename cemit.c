@@ -381,6 +381,8 @@ mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st *csta,
     return true;
   if (ctypob->mo_ob_class == MOM_PREDEF (struct_pointer_ctype_class))
     return true;
+  if (mo_objref_get_attr (ctypob, momglob_c_aggregate_initialization))
+    return false;
   return true;
 }                               /* end mom_cemit_ctype_is_scalar */
 
@@ -458,6 +460,7 @@ mom_objref_cemit_printf (mo_objref_t obrcem, const char *fmt, ...)
   mom_cemit_vprintf (cemp->mo_cemit_locstate, fmt, args);
   va_end (args);
 }                               /* end of mom_objref_cemit_printf */
+
 
 void
 mom_cemit_newline (struct mom_cemitlocalstate_st *csta)
@@ -1642,6 +1645,83 @@ mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
                     cemp, csta);
 }                               /* end of mom_cemit_function_definitions */
 
+void
+mom_cemit_set (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_set: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_set: bad payl@%p in csta@%p", cemp, csta);
+  char modulid[MOM_CSTRIDSIZ];
+  memset (modulid, 0, sizeof (modulid));
+  mo_objref_idstr (modulid, cemp->mo_cemit_modobj);
+  mo_value_t setv = mo_objref_get_attr (cemp->mo_cemit_modobj, momglob_set);
+  if (!setv)
+    {
+      mom_cemit_printf (csta, "\n// no set of objects\n");
+      return;
+    }
+  if (!mo_dyncast_set (setv))
+    MOM_CEMITFAILURE (csta, "bad set %s", mo_value_pnamestr (setv));
+  unsigned nbset = mo_set_size (setv);
+  mom_cemit_printf (csta, "\n// set of %d objects\n", nbset);
+  for (unsigned eix = 0; eix < nbset; eix++)
+    {
+      mo_objref_t elemob = mo_set_nth (setv, eix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
+      mo_value_t elemnamv = mo_objref_namev (elemob);
+      char elemid[MOM_CSTRIDSIZ];
+      memset (elemid, 0, sizeof (elemid));
+      mo_objref_idstr (elemid, elemob);
+      if (elemnamv)
+        {
+          mom_cemit_printf (csta,
+                            "static mo_objref_t mo_%s_ob; // element %s\n",
+                            mo_string_cstr (elemnamv), elemid);
+          mom_cemit_printf (csta, "#define mo%s_ob mo_%s_ob\n", elemid,
+                            mo_string_cstr (elemnamv));
+        }
+      else
+        {
+          mom_cemit_printf (csta,
+                            "static mo_objref_t mo%s_ob; // element %s\n",
+                            elemid, elemid);
+        }
+    }
+  mom_cemit_printf (csta, "\n// initialization of %d objects\n", nbset);
+  mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
+                    modulid);
+  for (unsigned eix = 0; eix < nbset; eix++)
+    {
+      mo_objref_t elemob = mo_set_nth (setv, eix);
+      char elemid[MOM_CSTRIDSIZ];
+      memset (elemid, 0, sizeof (elemid));
+      mo_objref_idstr (elemid, elemob);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
+      mom_cemit_printf (csta, " if (!mo_%s_ob)\n",
+                        mo_objref_shortnamestr (elemob));
+      mom_cemit_printf (csta,
+                        "    mo_%s_ob = mo_objref_find_hid_loid(%lu,%llu); // %s\n",
+                        mo_objref_shortnamestr (elemob),
+                        (unsigned long) elemob->mo_ob_hid,
+                        (unsigned long long) elemob->mo_ob_loid, elemid);
+    }
+  mom_cemit_printf (csta, "} /*end " MOM_MODULEINIT_PREFIX "%s */\n",
+                    modulid);
+  mo_value_t modulnamv = mo_objref_namev (cemp->mo_cemit_modobj);
+  if (modulnamv)
+    {
+      mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
+                        mo_string_cstr (modulnamv));
+      mom_cemit_printf (csta, "  " MOM_MODULEINIT_PREFIX " %s();\n", modulid);
+      mom_cemit_printf (csta, "} /*end " MOM_MODULEINIT_PREFIX "%s */\n",
+                        mo_string_cstr (modulnamv));
+    }
+}                               /* end of mom_cemit_set */
+
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
 {
@@ -1722,6 +1802,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
       mom_cemit_includes (&cemitstate);
       mom_cemit_ctypes (&cemitstate);
       mom_cemit_declarations (&cemitstate);
+      mom_cemit_set (&cemitstate);
       mom_cemit_data_definitions (&cemitstate);
       mom_cemit_function_definitions (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete

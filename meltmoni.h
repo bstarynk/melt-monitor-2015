@@ -1697,6 +1697,9 @@ void mo_objref_comp_remove (mo_objref_t ob, int rk);
 #define MOM_FUNC_PREFIX "mofun_"
 #define MOM_CODE_PREFIX "mo_"
 #define MOM_SIGNATURE_PREFIX "mosig_"
+
+// the module of id Modid has an initialization function moinit_Modid
+#define MOM_MODULEINIT_PREFIX "moinit_"
 // put inside an object a [function] payload with a signature, do some checks
 void mo_objref_put_signature_payload (mo_objref_t obr, mo_objref_t sigobr);     /* in object.c */
 

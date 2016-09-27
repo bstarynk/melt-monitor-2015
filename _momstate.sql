@@ -33,6 +33,7 @@ INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
+INSERT INTO t_names VALUES('c_aggregate_initialization','_40K767SbwcfEJVyXr');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
@@ -158,6 +159,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_3cH0f65UzqnPaGsLY",
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
+     "_40K767SbwcfEJVyXr",
      "_4iH7xI2JtAomiBySj",
      "_4Ph1Z99dptyJhpZfj",
      "_59g7wsJyXlj962jlx",
@@ -760,6 +762,20 @@ INSERT INTO t_objects VALUES('_3pK47DLRw3N5Ghv0R',1474973691,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_40K767SbwcfEJVyXr',1474983635,'
+{
+ "@name": "c_aggregate_initialization",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the aggregate initialization in a non-scalar c-type (e.g. pthread_mutex_t)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_46r6DoRftqviBq5NB',1473074275,'
 {
  "@name": "payload_file",
@@ -830,7 +846,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474896198,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474984182,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -851,6 +867,17 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474896198,'
     "at": "_4H01ICaNuWncMePhe",
     "va": {
      "oid": "_5fb7a3nqXwUKGKblr"
+    }
+   },
+   {
+    "at": "_7h20HFhtjZljRLtbU",
+    "va": {
+     "set": [
+      "_0Ki51w13UIhXkBrtx",
+      "_0Sp1Lg7ctajS7oX5i",
+      "_4H01ICaNuWncMePhe",
+      "_4NE8paRtDiMVlhHXX"
+     ]
     }
    },
    {
