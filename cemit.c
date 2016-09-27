@@ -51,7 +51,7 @@ struct mom_cemitlocalstate_st
   char mo_cemsta_modid[MOM_CSTRIDSIZ];
   FILE *mo_cemsta_fil;          /* the emitted FILE handle */
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
-  mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of types */
+  mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
@@ -347,7 +347,24 @@ mom_cemit_vprintf (struct mom_cemitlocalstate_st *csta, const char *fmt,
                     && csta->mo_cemsta_fil != NULL,
                     "cemit_vprintf: bad csta@%p for fmt:%s", csta, fmt);
   FILE *fil = csta->mo_cemsta_fil;
-  vfprintf (fil, fmt, args);
+  if (ftell (fil) > MOM_CEMIT_MAX_FSIZE)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_vprintf: too big emission (%ld megabytes, %ld bytes)",
+                      ftell (fil) >> 20, ftell (fil));
+#ifndef NDEBUG
+  if (ftell (fil) > MOM_CEMIT_MAX_FSIZE / 3)
+    {
+      static bool warned;
+      if (!warned)
+        {
+          MOM_BACKTRACEPRINTF
+            ("cemit_vprintf: very big emission (%ld megabytes, %ld bytes)",
+             ftell (fil) >> 20, ftell (fil));
+          warned = true;
+        }
+    }
+#endif /*NDEBUG*/
+    vfprintf (fil, fmt, args);
 }                               /* end mom_cemit_printf */
 
 void
@@ -1306,6 +1323,8 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
   char obid[MOM_CSTRIDSIZ];
   memset (obid, 0, sizeof (obid));
   mo_objref_idstr (obid, ob);
+  mo_value_t obnamev = mo_objref_namev (ob);
+  const char *shortnamob = mo_objref_shortnamestr (ob);
   mo_objref_t objclass = ob->mo_ob_class;
   if (!objclass)
     MOM_CEMITFAILURE (csta,
@@ -1332,6 +1351,18 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
           MOM_CEMITFAILURE (csta,
                             "cemit_object_declare: inlined function object %s without signature",
                             mo_objref_pnamestr (ob));
+        if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, signob))
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: inlined function object %s with unknown signature %s",
+                            mo_objref_pnamestr (ob),
+                            mo_objref_pnamestr (signob));
+        mom_cemit_printf (csta,
+                          "static inline mo_%s_ty " MOM_FUNC_PREFIX "%s;\n",
+                          mo_objref_shortnamestr (signob), shortnamob);
+        if (obnamev)
+          mom_cemit_printf (csta,
+                            "#define " MOM_FUNC_PREFIX "%s " MOM_FUNC_PREFIX
+                            "%s\n", obid, mo_string_cstr (obnamev));
       }
       break;
     case CASE_PREDEFCLASS_OBJDECL_MOM (c_routine_class):
@@ -1342,6 +1373,15 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
           MOM_CEMITFAILURE (csta,
                             "cemit_object_declare: global function object %s without signature",
                             mo_objref_pnamestr (ob));
+        if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, signob))
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: global function object %s with unknown signature %s",
+                            mo_objref_pnamestr (ob),
+                            mo_objref_pnamestr (signob));
+        mom_cemit_printf (csta,
+                          "extern /*routine*/ mo_%s_ty " MOM_FUNC_PREFIX
+                          "%s;\n", mo_objref_shortnamestr (signob),
+                          shortnamob);
       }
       break;
     case CASE_PREDEFCLASS_OBJDECL_MOM (global_c_data_class):
@@ -1352,6 +1392,16 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
           MOM_CEMITFAILURE (csta,
                             "cemit_object_declare: global data object %s without c_type",
                             mo_objref_pnamestr (ob));
+        if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, ctypob))
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: global data object %s with unknown c_type %s",
+                            mo_objref_pnamestr (ob),
+                            mo_objref_pnamestr (ctypob));
+        mom_cemit_printf (csta, "extern /*data*/ mo_%s_ty mo_%s_data;\n",
+                          mo_objref_shortnamestr (ctypob), shortnamob);
+        if (obnamev)
+          mom_cemit_printf (csta, "#define mo_%s_data mo_%s_data\n",
+                            obid, mo_string_cstr (obnamev));
       }
       break;
     case CASE_PREDEFCLASS_OBJDECL_MOM (threadlocal_c_data_class):
@@ -1362,6 +1412,17 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
           MOM_CEMITFAILURE (csta,
                             "cemit_object_declare: threadlocal data object %s without c_type",
                             mo_objref_pnamestr (ob));
+        if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, ctypob))
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: threadlocal data object %s with unknown c_type %s",
+                            mo_objref_pnamestr (ob),
+                            mo_objref_pnamestr (ctypob));
+        mom_cemit_printf (csta,
+                          "extern /*threadlocal*/ mo_%s_ty mo_%s_data;\n",
+                          mo_objref_shortnamestr (ctypob), shortnamob);
+        if (obnamev)
+          mom_cemit_printf (csta, "#define mo_%s_data mo_%s_data\n",
+                            obid, mo_string_cstr (obnamev));
       }
       break;
     defaultclasscase:
@@ -1371,7 +1432,6 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
                         mo_objref_pnamestr (ob),
                         mo_objref_pnamestr (objclass));
     };
-#warning cemit_object_declare unimplemented
 }                               /* end mom_cemit_object_declare */
 
 
