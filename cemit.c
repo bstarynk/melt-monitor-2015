@@ -1091,7 +1091,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       if (curenumobr->mo_ob_class != MOM_PREDEF (enumerator_class))
         MOM_CEMITFAILURE (csta,
                           "cemit_define_enumerators: %s with bad enumerator#%d %s "
-			  "of class %s (enumerator_class expected)",
+                          "of class %s (enumerator_class expected)",
                           mo_objref_pnamestr (typobr), eix,
                           mo_objref_pnamestr (curenumobr),
                           mo_objref_pnamestr (curenumobr->mo_ob_class));
@@ -1291,6 +1291,23 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
 
 
 void
+mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
+                          bool checknoinline)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_object_declare: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_object_declare: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_FATAPRINTF ("cemit_object_declare unimplemented ob=%s",
+                  mo_objref_pnamestr (ob));
+#warning cemit_object_declare unimplemented
+}                               /* end mom_cemit_object_declare */
+
+void
 mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
@@ -1300,6 +1317,54 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_declarations: bad payl@%p in csta@%p", cemp, csta);
+  //
+  mo_value_t externv =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (extern));
+  if (externv && !mo_dyncast_sequence (externv))
+    MOM_CEMITFAILURE (csta, "bad extern %s", mo_value_pnamestr (externv));
+  unsigned nbextern = mo_sequence_size (externv);
+  //
+  mo_value_t codev =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (code));
+  if (codev && !mo_dyncast_sequence (codev))
+    MOM_CEMITFAILURE (csta, "bad code %s", mo_value_pnamestr (codev));
+  unsigned nbcode = mo_sequence_size (codev);
+  //
+  mo_value_t datav =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (data));
+  if (datav && !mo_dyncast_sequence (datav))
+    MOM_CEMITFAILURE (csta, "bad data %s", mo_value_pnamestr (datav));
+  unsigned nbdata = mo_sequence_size (datav);
+  mom_cemit_printf (csta,
+                    "\n\n// %d declarations (%d extern, %d code, %d data) *****\n",
+                    nbextern + nbcode + nbdata, nbextern, nbcode, nbdata);
+  //
+  if (nbextern > 0)
+    {
+      mom_cemit_printf (csta, "\n// %d extern declarations:\n", nbextern);
+      for (unsigned ix = 0; ix < nbextern; ix++)
+        mom_cemit_object_declare (csta, mo_sequence_nth (externv, ix), true);
+    }
+  else
+    mom_cemit_printf (csta, "\n// no extern declarations\n");
+  //
+  if (nbdata > 0)
+    {
+      mom_cemit_printf (csta, "\n// %d data declarations:\n", nbdata);
+      for (unsigned ix = 0; ix < nbdata; ix++)
+        mom_cemit_object_declare (csta, mo_sequence_nth (datav, ix), true);
+    }
+  else
+    mom_cemit_printf (csta, "\n// no data declarations\n");
+  //
+  if (nbcode > 0)
+    {
+      mom_cemit_printf (csta, "\n// %d code declarations:\n", nbcode);
+      for (unsigned ix = 0; ix < nbcode; ix++)
+        mom_cemit_object_declare (csta, mo_sequence_nth (codev, ix), false);
+    }
+  else
+    mom_cemit_printf (csta, "\n// no code declarations\n");
 }                               /* end of mom_cemit_declarations */
 
 
