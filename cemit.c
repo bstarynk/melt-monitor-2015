@@ -307,6 +307,86 @@ mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *prefix)
 
 
 
+bool
+mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t ctypob)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil == NULL,
+                    "cemit_ctype_is_scalar: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_ctype_is_scalar: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (ctypob),
+                    "cemit_ctype_is_scalar: no ctypob");
+#define MOM_NBCASE_CTYPE 163
+#define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
+  if (ctypob != MOM_PREDEF(Ob))						\
+    goto defaultctypecase;						\
+  goto labctype_##Ob;							\
+  labctype_##Ob
+#define CASE_GLOBALCTYPE_MOM(Ob) momghash_##Ob % MOM_NBCASE_CTYPE:	\
+  if (ctypob != momglob_##Ob)						\
+    goto defaultctypecase;						\
+  goto labctype_##Ob;							\
+  labctype_##Ob
+  switch (mo_objref_hash (ctypob) % MOM_NBCASE_CTYPE)
+    {
+      case CASE_GLOBALCTYPE_MOM (int):  // momglob_int
+        return true;
+    case CASE_GLOBALCTYPE_MOM (bool):  // momglob_bool
+      return true;
+      case CASE_GLOBALCTYPE_MOM (char): // momglob_char
+        return true;
+      case CASE_GLOBALCTYPE_MOM (long): // momglob_long
+        return true;
+      case CASE_GLOBALCTYPE_MOM (double):       // momglob_double
+        return true;
+      case CASE_GLOBALCTYPE_MOM (intptr_t):     // momglob_intptr_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (int8_t):       // momglob_int8_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (int16_t):      // momglob_int16_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (int32_t):      // momglob_int32_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (uintptr_t):    // momglob_uintptr_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (uint8_t):      // momglob_uint8_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (uint16_t):     // momglob_uint16_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (uint32_t):     // momglob_uint32_t
+        return true;
+      case CASE_GLOBALCTYPE_MOM (uint64_t):     // momglob_uint64_t
+        return true;
+    defaultctypecase:
+    default:
+      break;
+    }
+#undef CASE_PREDEFCTYPE_MOM
+#undef CASE_GLOBALCTYPE_MOM
+#undef MOM_NBCASE_CTYPE
+  if (ctypob->mo_ob_class == momglob_pointer_ctype_class)
+    return true;
+  if (ctypob->mo_ob_class == momglob_array_ctype_class)
+    return false;
+  if (ctypob->mo_ob_class == MOM_PREDEF (union_ctype_class))
+    return false;
+  if (ctypob->mo_ob_class == MOM_PREDEF (struct_ctype_class))
+    return false;
+  if (ctypob->mo_ob_class == MOM_PREDEF (enum_ctype_class))
+    return true;
+  if (ctypob->mo_ob_class == MOM_PREDEF (struct_pointer_ctype_class))
+    return true;
+  return true;
+}                               /* end mom_cemit_ctype_is_scalar */
+
+
+
+
 void mom_cemit_printf (struct mom_cemitlocalstate_st *csta, const char *fmt,
                        ...) __attribute__ ((format (printf, 2, 3)));
 void
@@ -1465,6 +1545,7 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
   if (datav && !mo_dyncast_sequence (datav))
     MOM_CEMITFAILURE (csta, "bad data %s", mo_value_pnamestr (datav));
   unsigned nbdata = mo_sequence_size (datav);
+  //
   mom_cemit_printf (csta,
                     "\n\n// %d declarations (%d extern, %d code, %d data) *****\n",
                     nbextern + nbcode + nbdata, nbextern, nbcode, nbdata);
@@ -1509,6 +1590,43 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_data_definitions: bad payl@%p in csta@%p", cemp,
                     csta);
+  mo_value_t datav =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (data));
+  if (!datav)
+    return;
+  MOM_ASSERTPRINTF (!mo_dyncast_sequence (datav),
+                    "cemit_data_definitions: bad data %s",
+                    mo_value_pnamestr (datav));
+  unsigned nbdata = mo_sequence_size (datav);
+  mom_cemit_printf (csta, "\n\n// %d data definitions\n", nbdata);
+  for (unsigned dix = 0; dix < nbdata; dix++)
+    {
+      mo_objref_t curdob = mo_sequence_nth (datav, dix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curdob),
+                        "cemit_data_definitions: bad data #%d", dix);
+      char curobid[MOM_CSTRIDSIZ];
+      memset (curobid, 0, sizeof (curobid));
+      mo_objref_idstr (curobid, curdob);
+      mo_value_t curobnamev = mo_objref_namev (curdob);
+      const char *curshortnamob = mo_objref_shortnamestr (curdob);
+      mo_objref_t objclass = curdob->mo_ob_class;
+      if (objclass == MOM_PREDEF (global_c_data_class)
+          || objclass == MOM_PREDEF (threadlocal_c_data_class))
+        {
+          mo_objref_t ctypob =
+            mo_dyncast_objref (mo_objref_get_attr
+                               (curdob, MOM_PREDEF (c_type)));
+          MOM_ASSERTPRINTF (mo_hashset_contains
+                            (csta->mo_cemsta_hsetctypes, ctypob),
+                            "cemit_data_definitions: bad ctypob %s for curdob %s",
+                            mo_objref_pnamestr (ctypob),
+                            mo_objref_pnamestr (curdob));
+        }
+      else                      // should not happen
+        MOM_FATAPRINTF ("cemit_data_definitions: bad curdob %s of class %s",
+                        mo_objref_pnamestr (curdob),
+                        mo_objref_pnamestr (objclass));
+    }
 }                               /* end of mom_cemit_data_definitions */
 
 void
