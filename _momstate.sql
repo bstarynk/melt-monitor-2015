@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 26 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 27 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -43,7 +43,9 @@ INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
 INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
+INSERT INTO t_names VALUES('code','_1DA4KKiwji2gafLj0');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('data','_6Dq8qo0MSqgbL0ESc');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
 INSERT INTO t_names VALUES('enumaa_test1','_6Xj6iYu8f0Kd5G4fo');
@@ -52,6 +54,7 @@ INSERT INTO t_names VALUES('enumbu_test1','_4Ph3UMWqrIloqawrN');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
+INSERT INTO t_names VALUES('extern','_5dn8uwCs0vUJ9AG7y');
 INSERT INTO t_names VALUES('fieldaa_test1','_1Ma1hIkjW2pwNHiKZ');
 INSERT INTO t_names VALUES('fieldab_test1','_4qM1PCt6z5dVadxJG');
 INSERT INTO t_names VALUES('fieldbx_test1','_6rV7sjJup5PnMH7Rt');
@@ -306,6 +309,20 @@ INSERT INTO t_objects VALUES('_15c0LcIrdf2LE5JP8',1474361179,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the object extending something (e.g. in struct ctype...)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1DA4KKiwji2gafLj0',1474962483,'
+{
+ "@name": "code",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give code, e.g. in module"
    }
   ]
  },
@@ -1019,6 +1036,20 @@ INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5dn8uwCs0vUJ9AG7y',1474962483,'
+{
+ "@name": "extern",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give external resources, e.g. in modules"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474909861,'
 {
  "@name": "signature_int_to_double",
@@ -1089,6 +1120,20 @@ INSERT INTO t_objects VALUES('_64d2GXNLEBKFBzxqP',1474311988,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give the c code expansion or string"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6Dq8qo0MSqgbL0ESc',1474962483,'
+{
+ "@name": "data",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give data, e.g. in module"
    }
   ]
  },

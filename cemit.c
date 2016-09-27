@@ -1090,7 +1090,8 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (typobr), eix);
       if (curenumobr->mo_ob_class != MOM_PREDEF (enumerator_class))
         MOM_CEMITFAILURE (csta,
-                          "cemit_define_enumerators: %s with bad enumerator#%d %s of class %s (enumerator_class expected)",
+                          "cemit_define_enumerators: %s with bad enumerator#%d %s "
+			  "of class %s (enumerator_class expected)",
                           mo_objref_pnamestr (typobr), eix,
                           mo_objref_pnamestr (curenumobr),
                           mo_objref_pnamestr (curenumobr->mo_ob_class));
@@ -1227,7 +1228,6 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
 #undef CASE_GLOBALCTYPE_MOM
 }                               /* end mom_cemit_define_ctype */
 
-
 void
 mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
 {
@@ -1288,6 +1288,46 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta, "\n// end of %d types definitions ***\n\n", nbctyp);
 }                               /* end of mom_cemit_ctypes */
 
+
+
+void
+mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_declarations: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_declarations: bad payl@%p in csta@%p", cemp, csta);
+}                               /* end of mom_cemit_declarations */
+
+
+void
+mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_data_definitions: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_data_definitions: bad payl@%p in csta@%p", cemp,
+                    csta);
+}                               /* end of mom_cemit_data_definitions */
+
+void
+mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_function_definitions: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_function_definitions: bad payl@%p in csta@%p",
+                    cemp, csta);
+}                               /* end of mom_cemit_function_definitions */
 
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
@@ -1361,18 +1401,24 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
           cemitstate.mo_cemsta_fil = NULL;
         }
       return cemitstate.mo_cemsta_errstr;
-    };
-  cemp->mo_cemit_locstate = &cemitstate;
-  mom_cemit_open (&cemitstate);
-  mom_cemit_includes (&cemitstate);
-  mom_cemit_ctypes (&cemitstate);
+    }
+  else
+    {
+      cemp->mo_cemit_locstate = &cemitstate;
+      mom_cemit_open (&cemitstate);
+      mom_cemit_includes (&cemitstate);
+      mom_cemit_ctypes (&cemitstate);
+      mom_cemit_declarations (&cemitstate);
+      mom_cemit_data_definitions (&cemitstate);
+      mom_cemit_function_definitions (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
-  MOM_WARNPRINTF ("cemit_generate incomplete for %s",
-                  cemitstate.mo_cemsta_modid);
-  mom_cemit_close (&cemitstate);
-  cemp->mo_cemit_locstate = NULL;
-  MOM_INFORMPRINTF ("C code generated for module %s",
-                    mo_objref_pnamestr (cemp->mo_cemit_modobj));
+      MOM_WARNPRINTF ("cemit_generate incomplete for %s",
+                      cemitstate.mo_cemsta_modid);
+      mom_cemit_close (&cemitstate);
+      cemp->mo_cemit_locstate = NULL;
+      MOM_INFORMPRINTF ("C code generated for module %s",
+                        mo_objref_pnamestr (cemp->mo_cemit_modobj));
+    }
   return NULL;
 }                               /* end of mo_objref_cemit_generate */
 

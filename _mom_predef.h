@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 35
+#define MOM_NB_PREDEFINED 38
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -49,8 +49,14 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 //+ the class of classes
 MOM_HAS_PREDEFINED(class_class,_84n6z6xA40eduUUjh,1904719392,6022568611958915173,1711456220)
 
+//+ give code, e.g. in module
+MOM_HAS_PREDEFINED(code,_1DA4KKiwji2gafLj0,391676976,2004738985539924900,987198818)
+
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ give data, e.g. in module
+MOM_HAS_PREDEFINED(data,_6Dq8qo0MSqgbL0ESc,1570695533,981874688542949820,1120086050)
 
 //+ class for enum ctypes
 MOM_HAS_PREDEFINED(enum_ctype_class,_1xh0H6A2nNw5upcPh,366810079,2523559174225175625,452162142)
@@ -63,6 +69,9 @@ MOM_HAS_PREDEFINED(enumerators,_4Cz6GxTDLCsTy7bco,1095481744,2046984644363025880
 
 //+ gives the object extending something (e.g. in struct ctype...)
 MOM_HAS_PREDEFINED(extend,_15c0LcIrdf2LE5JP8,256382403,4194465417666792272,3740695059)
+
+//+ give external resources, e.g. in modules
+MOM_HAS_PREDEFINED(extern,_5dn8uwCs0vUJ9AG7y,1232333654,657886197053910118,2573349951)
 
 //+ gives the fields tuple (e.g. in struct or union ctype...)
 MOM_HAS_PREDEFINED(fields,_7Pl7foCRjKoT6Gkdr,1849542836,813017781241674727,3535425907)
@@ -170,10 +179,20 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_84n6z6xA40eduUUjh
 #define monam_84n6z6xA40eduUUjh class_class
 
+#undef moid_code
+#define moid_code _1DA4KKiwji2gafLj0
+#undef monam_1DA4KKiwji2gafLj0
+#define monam_1DA4KKiwji2gafLj0 code
+
 #undef moid_comment
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_data
+#define moid_data _6Dq8qo0MSqgbL0ESc
+#undef monam_6Dq8qo0MSqgbL0ESc
+#define monam_6Dq8qo0MSqgbL0ESc data
 
 #undef moid_enum_ctype_class
 #define moid_enum_ctype_class _1xh0H6A2nNw5upcPh
@@ -194,6 +213,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_extend _15c0LcIrdf2LE5JP8
 #undef monam_15c0LcIrdf2LE5JP8
 #define monam_15c0LcIrdf2LE5JP8 extend
+
+#undef moid_extern
+#define moid_extern _5dn8uwCs0vUJ9AG7y
+#undef monam_5dn8uwCs0vUJ9AG7y
+#define monam_5dn8uwCs0vUJ9AG7y extern
 
 #undef moid_fields
 #define moid_fields _7Pl7foCRjKoT6Gkdr
@@ -321,11 +345,14 @@ enum mom_predefined_hashes_en {
   momphash_c_include=3450423424,
   momphash_c_type=583145630,
   momphash_class_class=1711456220,
+  momphash_code=987198818,
   momphash_comment=2072874222,
+  momphash_data=1120086050,
   momphash_enum_ctype_class=452162142,
   momphash_enumerator_class=2628424159,
   momphash_enumerators=4273672803,
   momphash_extend=3740695059,
+  momphash_extern=2573349951,
   momphash_fields=3535425907,
   momphash_file_path=2269269987,
   momphash_formals_ctypes=102498809,
@@ -358,7 +385,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 35
+#define MOM_NB_NAMED_PREDEFINED 38
 
 
 #undef MOM_HAS_PREDEFINED
