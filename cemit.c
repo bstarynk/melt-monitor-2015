@@ -1147,6 +1147,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                     "cemit_define_enumerators: bad typobr");
   MOM_ASSERTPRINTF (mo_dyncast_objref (parobr),
                     "cemit_define_enumerators: bad parobr");
+  MOM_ASSERTPRINTF(pprev != NULL, "cemit_define_enumerators: no pprev");
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_define_enumerators: %s too deep %d",
                       mo_objref_pnamestr (typobr), depth);
@@ -1208,6 +1209,11 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       if (!curvaluev)
         mo_objref_put_attr (curenumobr, MOM_PREDEF (value),
                             mo_int_to_value (curval));
+      MOM_INFORMPRINTF("cemit_define_enumerators: typobr=%s curenumobr=%s curval=%ld curvaluev=%s",
+		       mo_objref_pnamestr(typobr),
+		       mo_objref_pnamestr(curenumobr),
+		       curval,
+		       mo_value_pnamestr(curvaluev));
       mo_value_t curenumnamv = mo_objref_namev (curenumobr);
       if (typobr == parobr && depth == 0)
         {
@@ -1230,8 +1236,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                             mo_objref_pnamestr (curenumobr), curval,
                             curenumid);
         }
-      if (pprev)
-        *pprev = curval;
+      *pprev = curval;
     }
 }                               /* end of mom_cemit_define_enumerators */
 
