@@ -51,7 +51,8 @@ struct mom_cemitlocalstate_st
   char mo_cemsta_modid[MOM_CSTRIDSIZ];
   FILE *mo_cemsta_fil;          /* the emitted FILE handle */
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
-  mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of tpyes */
+  mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of types */
+  mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
 };
@@ -621,6 +622,8 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
   if (!mo_dyncast_tuple (cinclv))
     MOM_CEMITFAILURE (csta, "bad c_include %s", mo_value_pnamestr (cinclv));
   unsigned nbincl = mo_tuple_size (cinclv);
+  csta->mo_cemsta_hsetincludes =
+    mo_hashset_reserve (NULL, 3 * nbincl / 2 + 10);
   mom_cemit_printf (csta, "\n// %u included headers:\n", nbincl);
   for (unsigned ix = 0; ix < nbincl; ix++)
     {
@@ -641,6 +644,8 @@ mom_cemit_includes (struct mom_cemitlocalstate_st *csta)
           MOM_CEMITFAILURE (csta, "included %s with invalid `file_path` %s",
                             mo_objref_pnamestr (curinclob), inclcstr);
       mom_cemit_printf (csta, "#include \"%s\"\n", inclcstr);
+      csta->mo_cemsta_hsetincludes =
+        mo_hashset_put (csta->mo_cemsta_hsetincludes, curinclob);
     }
   fputs ("\n\n", csta->mo_cemsta_fil);
   fflush (csta->mo_cemsta_fil);
@@ -665,6 +670,14 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_write_ctype_for: %s too deep %d, for %s",
                       mo_objref_pnamestr (typobr), depth, forstr);
+  mo_objref_t inclobr =
+    mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (c_include)));
+  if (inclobr && !mo_hashset_contains (csta->mo_cemsta_hsetincludes, inclobr))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_write_ctype_for: %s has c_include %s which is not included",
+                      mo_objref_pnamestr (typobr),
+                      mo_objref_pnamestr (inclobr));
+
 #define MOM_NBCASE_CTYPE 163
 #define CASE_PREDEFCTYPE_MOM(Ob) momphash_##Ob % MOM_NBCASE_CTYPE:	\
   if (typobr != MOM_PREDEF(Ob))					\
@@ -857,8 +870,9 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
         mo_value_t formtytup =
           mo_dyncast_tuple (mo_objref_get_attr
                             (typobr, MOM_PREDEF (formals_ctypes)));
-	MOM_INFORMPRINTF("cemit_declare_ctype: typobr %s formtytup %s",
-			 mo_objref_pnamestr(typobr), mo_value_pnamestr(formtytup));
+        MOM_INFORMPRINTF ("cemit_declare_ctype: typobr %s formtytup %s",
+                          mo_objref_pnamestr (typobr),
+                          mo_value_pnamestr (formtytup));
         if (!formtytup)
           MOM_CEMITFAILURE (csta,
                             "cemit_declare_ctype: bad formals_ctypes in signature type %s",
