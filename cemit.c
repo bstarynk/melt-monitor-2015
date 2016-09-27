@@ -1701,10 +1701,11 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
       memset (elemid, 0, sizeof (elemid));
       mo_objref_idstr (elemid, elemob);
       MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
-      mom_cemit_printf (csta, " if (!mo_%s_ob)\n",
-                        mo_objref_shortnamestr (elemob));
+      mom_cemit_printf (csta, " if (!mo_%s_ob) // %s \n",
+                        mo_objref_shortnamestr (elemob), elemid);
       mom_cemit_printf (csta,
-                        "    mo_%s_ob = mo_objref_find_hid_loid(%lu,%llu); // %s\n",
+                        "    mo_%s_ob =\n"
+                        "      mo_objref_find_hid_loid(%lu,%llu); // %s\n",
                         mo_objref_shortnamestr (elemob),
                         (unsigned long) elemob->mo_ob_hid,
                         (unsigned long long) elemob->mo_ob_loid, elemid);
@@ -1716,10 +1717,18 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
     {
       mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
                         mo_string_cstr (modulnamv));
-      mom_cemit_printf (csta, "  " MOM_MODULEINIT_PREFIX " %s();\n", modulid);
+      mom_cemit_printf (csta, "  " MOM_MODULEINIT_PREFIX "%s ();\n", modulid);
       mom_cemit_printf (csta, "} /*end " MOM_MODULEINIT_PREFIX "%s */\n",
                         mo_string_cstr (modulnamv));
     }
+  mom_cemit_printf (csta,
+                    "\n#ifdef MONIMELT_MODULE\n"
+                    "void monimelt_module_init(void) __attribute__((constructor));\n");
+  mom_cemit_printf (csta,
+                    "void monimelt_module_init(void) {\n"
+                    "   " MOM_MODULEINIT_PREFIX "%s ();\n"
+                    "} /* end monimelt_module_init */\n"
+                    "#endif /*MONIMELT_MODULE\n\n", modulid);
 }                               /* end of mom_cemit_set */
 
 mo_value_t

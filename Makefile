@@ -132,7 +132,7 @@ indent: .indent.pro
 	done
 
 modules.dir/%.so: modules.dir/%.c $(OBJECTS)
-	$(LINK.c) -fPIC -shared \
+	$(LINK.c) -fPIC -DMONIMELT_MODULE  -shared  $(LINKFLAGS) $(OPTIMFLAGS) \
 	  $(shell $(SQLITE) $(MOM_PERSTATE_SQLITE) \
 	          'SELECT mod_cflags FROM t_modules WHERE mod_oid=$(notdir $(basename $@))') \
 	  $< \
