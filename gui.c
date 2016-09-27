@@ -3215,7 +3215,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
         }
       if (valix >= 0 && !cpars->mo_gcp_onlyparse)
         momgui_set_displayed_nth_value (valix, val);
-      return;
+      return val;
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
 }                               /* end momgui_cmdparse_value */
