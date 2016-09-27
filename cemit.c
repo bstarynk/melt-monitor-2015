@@ -1302,10 +1302,80 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_object_declare: bad payl@%p in csta@%p", cemp,
                     csta);
-  MOM_FATAPRINTF ("cemit_object_declare unimplemented ob=%s",
-                  mo_objref_pnamestr (ob));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (ob), "cemit_object_declare: bad ob");
+  char obid[MOM_CSTRIDSIZ];
+  memset (obid, 0, sizeof (obid));
+  mo_objref_idstr (obid, ob);
+  mo_objref_t objclass = ob->mo_ob_class;
+  if (!objclass)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_object_declare: object %s to declare without class",
+                      mo_objref_pnamestr (ob));
+
+#define MOM_NBCLASS_OBJDECL 83
+#define CASE_PREDEFCLASS_OBJDECL_MOM(Ob) momphash_##Ob % MOM_NBCLASS_OBJDECL: \
+  if (objclass != MOM_PREDEF(Ob))					\
+    goto defaultclasscase;						\
+  goto labclass_##Ob;							\
+  labclass_##Ob
+  switch (mo_objref_hash (objclass) % MOM_NBCLASS_OBJDECL)
+    {
+    case CASE_PREDEFCLASS_OBJDECL_MOM (c_inlined_class):
+      {
+        if (checknoinline)
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: unexpected inlined function object %s",
+                            mo_objref_pnamestr (ob));
+        mo_objref_t signob =
+          mo_dyncast_objref (mo_objref_get_attr (ob, MOM_PREDEF (signature)));
+        if (!signob)
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: inlined function object %s without signature",
+                            mo_objref_pnamestr (ob));
+      }
+      break;
+    case CASE_PREDEFCLASS_OBJDECL_MOM (c_routine_class):
+      {
+        mo_objref_t signob =
+          mo_dyncast_objref (mo_objref_get_attr (ob, MOM_PREDEF (signature)));
+        if (!signob)
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: global function object %s without signature",
+                            mo_objref_pnamestr (ob));
+      }
+      break;
+    case CASE_PREDEFCLASS_OBJDECL_MOM (global_c_data_class):
+      {
+        mo_objref_t ctypob =
+          mo_dyncast_objref (mo_objref_get_attr (ob, MOM_PREDEF (c_type)));
+        if (!ctypob)
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: global data object %s without c_type",
+                            mo_objref_pnamestr (ob));
+      }
+      break;
+    case CASE_PREDEFCLASS_OBJDECL_MOM (threadlocal_c_data_class):
+      {
+        mo_objref_t ctypob =
+          mo_dyncast_objref (mo_objref_get_attr (ob, MOM_PREDEF (c_type)));
+        if (!ctypob)
+          MOM_CEMITFAILURE (csta,
+                            "cemit_object_declare: threadlocal data object %s without c_type",
+                            mo_objref_pnamestr (ob));
+      }
+      break;
+    defaultclasscase:
+    default:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_object_declare: object %s to declare with bad %s class",
+                        mo_objref_pnamestr (ob),
+                        mo_objref_pnamestr (objclass));
+    };
 #warning cemit_object_declare unimplemented
 }                               /* end mom_cemit_object_declare */
+
+
+
 
 void
 mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)

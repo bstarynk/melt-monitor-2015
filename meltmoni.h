@@ -1513,6 +1513,18 @@ mo_objref_pnamestr (mo_objref_t ob)
   return mo_cstring_from_hi_lo_ids (NULL, ob->mo_ob_hid, ob->mo_ob_loid);
 }                               /* end mo_objref_pnamestr */
 
+// the short printable name of an object, without the starting underscore if anonymous
+static inline const char *
+mo_objref_shortnamestr (mo_objref_t ob)
+{
+  const char *pn = mo_objref_pnamestr (ob);
+  if (pn && *pn == '_' && isdigit (pn[1]))
+    return pn + 1;
+  return pn;
+}                               /* end of mo_objref_shortnamestr */
+
+
+
 // get the idstr of an object in some given buffer (or else in GC-ed
 // heap or literal string for nil)
 static inline const char *

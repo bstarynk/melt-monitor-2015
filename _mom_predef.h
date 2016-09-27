@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 38
+#define MOM_NB_PREDEFINED 43
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -42,6 +42,12 @@ MOM_HAS_PREDEFINED(c_field_class,_6Lu6DXoGivCCHMwzV,1602402396,65002377680064966
 
 //+ gives the includes in a module
 MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,3450423424)
+
+//+ class for inlined C routines
+MOM_HAS_PREDEFINED(c_inlined_class,_0XX587h4W56J6nk3U,227905031,8078632059823594090,3515856438)
+
+//+ class for global C routines
+MOM_HAS_PREDEFINED(c_routine_class,_3pK47DLRw3N5Ghv0R,809136681,2988406914214126051,3631812419)
 
 //+ gives the C types in a module
 MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,583145630)
@@ -82,6 +88,9 @@ MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2
 //+ gives the formals ctypes in a signature
 MOM_HAS_PREDEFINED(formals_ctypes,_8Bq9eNWZ0eUS6BGq8,2034696128,4347408863221702016,102498809)
 
+//+ class for global C data
+MOM_HAS_PREDEFINED(global_c_data_class,_5fr2Xe93UTwNlLIIo,1240420786,8665201590294376040,3740163544)
+
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
 
@@ -118,6 +127,9 @@ MOM_HAS_PREDEFINED(payload_vectval,_5Hf0fFKvRVa71ZPM0,1349715772,396851510433949
 //+ gives the result ctype in a signature
 MOM_HAS_PREDEFINED(result_ctype,_7vy5VxtVon8EhIF5D,1775674341,3012024356604819427,165963843)
 
+//+ give signature of e.g. functions
+MOM_HAS_PREDEFINED(signature,_1ZY6i2rKse5FsKrsv,471772738,3823474934276925151,1265851629)
+
 //+ class of signatures
 MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371733,906720652)
 
@@ -135,6 +147,9 @@ MOM_HAS_PREDEFINED(the_GUI,_6Pc0DV2SCkMSiNlcf,1612976742,7470129348179028975,127
 
 //+ describes the entire system
 MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1453251062)
+
+//+ class for threadlocal C data
+MOM_HAS_PREDEFINED(threadlocal_c_data_class,_0Zs6lGxUXXurCpaYD,233877491,1632107560559680031,2830977026)
 
 //+ class for union ctypes
 MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,3892346464482352748,3893134561)
@@ -168,6 +183,16 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_c_include _0hA5FCeEWGc6gpfnU
 #undef monam_0hA5FCeEWGc6gpfnU
 #define monam_0hA5FCeEWGc6gpfnU c_include
+
+#undef moid_c_inlined_class
+#define moid_c_inlined_class _0XX587h4W56J6nk3U
+#undef monam_0XX587h4W56J6nk3U
+#define monam_0XX587h4W56J6nk3U c_inlined_class
+
+#undef moid_c_routine_class
+#define moid_c_routine_class _3pK47DLRw3N5Ghv0R
+#undef monam_3pK47DLRw3N5Ghv0R
+#define monam_3pK47DLRw3N5Ghv0R c_routine_class
 
 #undef moid_c_type
 #define moid_c_type _8TY6UsXJ3Djt71By3
@@ -234,6 +259,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_8Bq9eNWZ0eUS6BGq8
 #define monam_8Bq9eNWZ0eUS6BGq8 formals_ctypes
 
+#undef moid_global_c_data_class
+#define moid_global_c_data_class _5fr2Xe93UTwNlLIIo
+#undef monam_5fr2Xe93UTwNlLIIo
+#define monam_5fr2Xe93UTwNlLIIo global_c_data_class
+
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
 #undef monam_22z6Be6oa3IH524Jy
@@ -294,6 +324,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_7vy5VxtVon8EhIF5D
 #define monam_7vy5VxtVon8EhIF5D result_ctype
 
+#undef moid_signature
+#define moid_signature _1ZY6i2rKse5FsKrsv
+#undef monam_1ZY6i2rKse5FsKrsv
+#define monam_1ZY6i2rKse5FsKrsv signature
+
 #undef moid_signature_class
 #define moid_signature_class _6S30JEAmywph5MZqd
 #undef monam_6S30JEAmywph5MZqd
@@ -324,6 +359,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_0BV96V94PJIn9si1K
 #define monam_0BV96V94PJIn9si1K the_system
 
+#undef moid_threadlocal_c_data_class
+#define moid_threadlocal_c_data_class _0Zs6lGxUXXurCpaYD
+#undef monam_0Zs6lGxUXXurCpaYD
+#define monam_0Zs6lGxUXXurCpaYD threadlocal_c_data_class
+
 #undef moid_union_ctype_class
 #define moid_union_ctype_class _3P48jR3hSzSCgv48c
 #undef monam_3P48jR3hSzSCgv48c
@@ -343,6 +383,8 @@ enum mom_predefined_hashes_en {
   momphash_c_code=253100277,
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
+  momphash_c_inlined_class=3515856438,
+  momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
   momphash_class_class=1711456220,
   momphash_code=987198818,
@@ -356,6 +398,7 @@ enum mom_predefined_hashes_en {
   momphash_fields=3535425907,
   momphash_file_path=2269269987,
   momphash_formals_ctypes=102498809,
+  momphash_global_c_data_class=3740163544,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
@@ -368,12 +411,14 @@ enum mom_predefined_hashes_en {
   momphash_payload_value=77028432,
   momphash_payload_vectval=2293677932,
   momphash_result_ctype=165963843,
+  momphash_signature=1265851629,
   momphash_signature_class=906720652,
   momphash_signature_object_to_value=2424030428,
   momphash_struct_ctype_class=367899874,
   momphash_struct_pointer_ctype_class=799041071,
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
+  momphash_threadlocal_c_data_class=2830977026,
   momphash_union_ctype_class=3893134561,
   momphash_value=3663610996,
 }; // end mom_predefined_hashes_en
@@ -385,7 +430,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 38
+#define MOM_NB_NAMED_PREDEFINED 43
 
 
 #undef MOM_HAS_PREDEFINED

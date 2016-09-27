@@ -36,6 +36,8 @@ INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
+INSERT INTO t_names VALUES('c_inlined_class','_0XX587h4W56J6nk3U');
+INSERT INTO t_names VALUES('c_routine_class','_3pK47DLRw3N5Ghv0R');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
@@ -68,6 +70,7 @@ INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('get','_1Xe4mcjLDBpvaBiDU');
 INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
+INSERT INTO t_names VALUES('global_c_data_class','_5fr2Xe93UTwNlLIIo');
 INSERT INTO t_names VALUES('include_monimelt','_0m37ffFuKe0qxNfTK');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
 INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
@@ -94,6 +97,7 @@ INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
+INSERT INTO t_names VALUES('signature','_1ZY6i2rKse5FsKrsv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
@@ -104,6 +108,7 @@ INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
+INSERT INTO t_names VALUES('threadlocal_c_data_class','_0Zs6lGxUXXurCpaYD');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
 INSERT INTO t_names VALUES('type_enuma_test1','_6zI7Ksmo3XlnSBba9');
@@ -221,6 +226,34 @@ INSERT INTO t_objects VALUES('_0Sp1Lg7ctajS7oX5i',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_0XX587h4W56J6nk3U',1474973691,'
+{
+ "@name": "c_inlined_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for inlined C routines"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0Zs6lGxUXXurCpaYD',1474973691,'
+{
+ "@name": "threadlocal_c_data_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for threadlocal C data"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_0dK6lxuDBgrY7Zdrb',1474391155,'
 {
  "@name": "enumerator_class",
@@ -430,6 +463,20 @@ INSERT INTO t_objects VALUES('_1Xe4mcjLDBpvaBiDU',1474873708,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "to get some attribute or component, etc. also $get user action."
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1ZY6i2rKse5FsKrsv',1474975183,'
+{
+ "@name": "signature",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give signature of e.g. functions"
    }
   ]
  },
@@ -693,6 +740,20 @@ INSERT INTO t_objects VALUES('_3cH0f65UzqnPaGsLY',1474534835,'
       "the routine Action_useract...."
      ]
     }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3pK47DLRw3N5Ghv0R',1474973691,'
+{
+ "@name": "c_routine_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for global C routines"
    }
   ]
  },
@@ -1078,6 +1139,20 @@ INSERT INTO t_objects VALUES('_5fb7a3nqXwUKGKblr',1474909861,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_5fr2Xe93UTwNlLIIo',1474973691,'
+{
+ "@name": "global_c_data_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for global C data"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1474887990,'
 {
  "@name": "fieldubw_test1",
