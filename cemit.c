@@ -1154,6 +1154,10 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
     MOM_CEMITFAILURE (csta,
                       "cemit_define_enumerators: %s is unknown type",
                       mo_objref_pnamestr (typobr));
+  MOM_BACKTRACEPRINTF
+    ("cemit_define_enumerators: typobr=%s parobr=%s depth %d *pprev@%p=%ld",
+     mo_objref_pnamestr (typobr), mo_objref_pnamestr (parobr), depth, pprev,
+     *pprev);
   mo_value_t enumstup =
     mo_dyncast_tuple (mo_objref_get_attr (typobr, MOM_PREDEF (enumerators)));
   if (!enumstup)
@@ -1176,8 +1180,8 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                                     pprev);
     }
   unsigned nbenums = mo_tuple_size (enumstup);
-  mom_cemit_printf (csta, " // %d enumerators in %s\n", nbenums,
-                    mo_objref_pnamestr (typobr));
+  mom_cemit_printf (csta, " // %d enumerators in %s, starting after %ld\n",
+                    nbenums, mo_objref_pnamestr (typobr), (*pprev));
 
   for (unsigned eix = 0; eix < nbenums; eix++)
     {
@@ -1226,6 +1230,8 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                             mo_objref_pnamestr (curenumobr), curval,
                             curenumid);
         }
+      if (pprev)
+        *pprev = curval;
     }
 }                               /* end of mom_cemit_define_enumerators */
 
@@ -1624,12 +1630,23 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
                             "cemit_data_definitions: bad ctypob %s for curdob %s",
                             mo_objref_pnamestr (ctypob),
                             mo_objref_pnamestr (curdob));
+          if (mom_cemit_ctype_is_scalar (csta, ctypob))
+            mom_cemit_printf (csta, "mo_%s_ty mo_%s_data\n"
+                              " = /*scalar*/0; // %s\n",
+                              mo_objref_shortnamestr (ctypob),
+                              mo_objref_shortnamestr (curdob), curobid);
+          else
+            mom_cemit_printf (csta, "mo_%s_ty mo_%s_data\n"
+                              " = /*aggregate*/{}; // %s\n",
+                              mo_objref_shortnamestr (ctypob),
+                              mo_objref_shortnamestr (curdob), curobid);
         }
       else                      // should not happen
         MOM_FATAPRINTF ("cemit_data_definitions: bad curdob %s of class %s",
                         mo_objref_pnamestr (curdob),
                         mo_objref_pnamestr (objclass));
     }
+  mom_cemit_printf (csta, "\n// end of %d data definitions\n\n", nbdata);
 }                               /* end of mom_cemit_data_definitions */
 
 void
