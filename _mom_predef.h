@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 45
+#define MOM_NB_PREDEFINED 44
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -117,9 +117,6 @@ MOM_HAS_PREDEFINED(payload_json,_8D28gj8akGrJyyzei,2040980679,783444659296261658
 
 //+ for list payload
 MOM_HAS_PREDEFINED(payload_list,_76f7e2VcL8IJC1hq6,1676134419,5693771700904538862,2149899148)
-
-//+ payload: queue of values
-MOM_HAS_PREDEFINED(payload_queue,_3TS2dDs4u2am5DeLT,919616924,1887560847412389721,3303764103)
 
 //+ for value payloads
 MOM_HAS_PREDEFINED(payload_value,_47n6FfKTuPHyjab71,972798198,8934169549625822421,77028432)
@@ -315,11 +312,6 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_76f7e2VcL8IJC1hq6
 #define monam_76f7e2VcL8IJC1hq6 payload_list
 
-#undef moid_payload_queue
-#define moid_payload_queue _3TS2dDs4u2am5DeLT
-#undef monam_3TS2dDs4u2am5DeLT
-#define monam_3TS2dDs4u2am5DeLT payload_queue
-
 #undef moid_payload_value
 #define moid_payload_value _47n6FfKTuPHyjab71
 #undef monam_47n6FfKTuPHyjab71
@@ -424,7 +416,6 @@ enum mom_predefined_hashes_en {
   momphash_payload_hashset=2215747249,
   momphash_payload_json=894219604,
   momphash_payload_list=2149899148,
-  momphash_payload_queue=3303764103,
   momphash_payload_value=77028432,
   momphash_payload_vectval=2293677932,
   momphash_result_ctype=165963843,
@@ -448,7 +439,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 45
+#define MOM_NB_NAMED_PREDEFINED 44
 
 
 #undef MOM_HAS_PREDEFINED

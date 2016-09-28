@@ -90,7 +90,6 @@ INSERT INTO t_names VALUES('payload_gobject','_4wr5hqASKB1b0Dd5D');
 INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
 INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
-INSERT INTO t_names VALUES('payload_queue','_3TS2dDs4u2am5DeLT');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
@@ -717,20 +716,6 @@ INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for union ctypes"
-   }
-  ]
- },
- "comps": null
-}
-','','','','');
-INSERT INTO t_objects VALUES('_3TS2dDs4u2am5DeLT',1475036214,'
-{
- "@name": "payload_queue",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "payload: queue of values"
    }
   ]
  },

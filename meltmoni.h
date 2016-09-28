@@ -498,6 +498,7 @@ enum mo_payloadkind_en
   mo_PLIST /* payload_list */ ,
   mo_PBUFFER /* payload_buffer */ ,
   mo_PCEMIT /* payload_c_emit */ ,
+  mo_PQUEUE /* payload_queue */ ,
 };
 
 typedef const void *mo_value_t;
