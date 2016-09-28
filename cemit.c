@@ -1718,6 +1718,29 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta, "\n// end of %d data definitions\n\n", nbdata);
 }                               /* end of mom_cemit_data_definitions */
 
+
+
+void
+mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
+                         mo_objref_t funob)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_function_code: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_function_code: bad payl@%p in csta@%p",
+                    cemp, csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (funob),
+                    "cemit_function_code: bad funob");
+#warning mom_cemit_function_code incomplete
+  MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
+                  mo_objref_pnamestr (funob));
+}                               /* end of mom_cemit_function_code */
+
+
+
 void
 mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
 {
@@ -1729,6 +1752,34 @@ mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_function_definitions: bad payl@%p in csta@%p",
                     cemp, csta);
+  mo_value_t codev =
+    mo_objref_get_attr (cemp->mo_cemit_modobj, MOM_PREDEF (code));
+  if (!codev)
+    {
+      mom_cemit_printf (csta, "// no function definitions\n");
+      return;
+    }
+  if (codev && !mo_dyncast_sequence (codev))
+    MOM_CEMITFAILURE (csta, "bad code %s", mo_value_pnamestr (codev));
+  unsigned nbcode = mo_sequence_size (codev);
+  mom_cemit_printf (csta, "\n// %d function definitions\n", nbcode);
+  for (unsigned cix = 0; cix < nbcode; cix++)
+    {
+      mo_objref_t curfunob = mo_sequence_nth (codev, cix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (curfunob), "bad function code#%d",
+                        cix);
+      mo_value_t curfunamv = mo_objref_namev (curfunob);
+      char curfunid[MOM_CSTRIDSIZ];
+      memset (curfunid, 0, sizeof (curfunid));
+      mo_objref_idstr (curfunid, curfunob);
+      if (curfunamv)
+        mom_cemit_printf (csta, "\n// function#%d code for %s (%s)\n",
+                          cix, mo_string_cstr (curfunamv), curfunid);
+      else
+        mom_cemit_printf (csta, "\n// function#%d code for %s\n",
+                          cix, curfunid);
+      mom_cemit_function_code (csta, curfunob);
+    }
 }                               /* end of mom_cemit_function_definitions */
 
 void
