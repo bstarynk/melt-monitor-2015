@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 27 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 28 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -90,6 +90,7 @@ INSERT INTO t_names VALUES('payload_gobject','_4wr5hqASKB1b0Dd5D');
 INSERT INTO t_names VALUES('payload_hashset','_8261sbF1f9ohzu2Iu');
 INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
+INSERT INTO t_names VALUES('payload_queue','_3TS2dDs4u2am5DeLT');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
@@ -102,6 +103,7 @@ INSERT INTO t_names VALUES('signature','_1ZY6i2rKse5FsKrsv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
+INSERT INTO t_names VALUES('signature_two_objects_to_void','_0dV2PYaSBUDE7lsYq');
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
@@ -264,6 +266,20 @@ INSERT INTO t_objects VALUES('_0dK6lxuDBgrY7Zdrb',1474391155,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class of C enumerators"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0dV2PYaSBUDE7lsYq',1475036015,'
+{
+ "@name": "signature_two_objects_to_void",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature: object -> object -> void"
    }
   ]
  },
@@ -701,6 +717,20 @@ INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for union ctypes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3TS2dDs4u2am5DeLT',1475036214,'
+{
+ "@name": "payload_queue",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "payload: queue of values"
    }
   ]
  },
