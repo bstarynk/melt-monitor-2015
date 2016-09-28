@@ -189,33 +189,39 @@ This list only things that are (at least partly) implemented.
 
 + A dynamic typing framework (semantically similar to what Scheme or
 Javascript have). Most values are immutable (boxed strings, boxed
-numbers, sets or tuples of items, nodes), but *items* are mutable
+numbers, sets or tuples of objects), but *objects* (a.k.a *items*) are mutable
 values (similar to "objects" or "structures" in Scheme or
 Javascript). We should later make that reflective, and generate all
 the C -or GCCJIT- code related to that.
 
-+ A node value has an item connective and a sequence of son values (a
-  bit like Prolog terms). It might have some fixed metadata (a
-  metaitem and a metarank), which is ignored for comparison, equality,
-  hashing. It is immutable. Nodes are also having a
-  [closure](https://en.wikipedia.org/wiki/Closure_%28computer_programming%29)
-  role (the connective giving the code, the sons being the closed
-  values).
 
-+ Items are externally identified by unique item names (internally,
-  they are identified by their address). An item name has a radix
-  (C-identifier like, but double or initial or terminal underscores
-  are forbidden) and an optional suffix preceded with two
-  underscores. For example, `the_agenda` or `comment` is an item name
-  (without suffix). And `web_state__0dmo5BBWK0mbtv` is an item name of
-  radix `web_state` and suffix `0dmo5BBWK0mbtv` (this is an 80 bit
-  positive random number -probably world-wide unique- nearly
-  represented in base 60). Notice that item names are on purpose
-  acceptable identifiers in generated C and in generated
-  Javascript. Items have attributes (a map or "dictionnary" of some
-  item associated to some non-nil value), components (a "vector" of
-  values), possibly a (C or GCCJIT) function pointer, and may have
-  some unique payload owned by the item. Each item has its mutex.
++ Objects are externally identified by unique ids (internally, they
+  are identified by their address). An object id is externally
+  represented by 18 sort-of random characters starting with an
+  underscore and a digit, like e.g. `_8hg5YXTgfHBnV4W8qAn`. Internally
+  such an id is represented by 96 nearly-random bits (organized as a
+  32 bits hid & 64 bits loid). Notice that object ids are on purpose
+  usable as C or JavaScript identifiers (or part of such
+  identifiers). And the collision of two ids is considered unlikely
+  (so in two different runs, fresh objects are created with different
+  and unique ids, a bit like UUIDs). Some objects are named, so we
+  have a global "symbol table" associating names (starting with a
+  letters, without two consecutive underscores ...) to
+  objects. Objects should later have a mutex. Some objects are
+  predefined, created as pre-existing data. Objects have attributes (a
+  map or "dictionnary" of associations of some object to some non-nil
+  value), components (a "vector" of values), some optional "class"
+  (itself an object), and an optional payload given by some payload
+  kind object and some payload data.  For example, "function" objects
+  have a payload whose kind could be `signature_object_to_value` (or
+  some other signature) and whose data would be a C pointer to some
+  routine accepting one object argument and giving a value result (or
+  some other routine compatible with the given signature). Closures
+  are represented as objects whose first component is such a function
+  object. The object payload could also be some mutable data, e.g. an
+  hashed set, a list, etc...
+
+  
 
 + A persistent machinery, so the entire state of the *MELT monitor*,
   including its agenda, can be checkpointed and restarted on disk
@@ -224,16 +230,19 @@ the C -or GCCJIT- code related to that.
   analysis information, in REDIS store or PostGreSQL databases). That
   code should also be generated but it is not yet.
 
-+ An agenda mechanism: `the_agenda` predefined item contains as its
-  payload a queue of tasklet items. A fixed number (typically 3 to 10)
-  of working threads are repeatedly fetching some tasklet from the
-  agenda and running it. Of course tasklets are added (either in
-  front, or at the end) to `the_agenda`'s queue, either by running
-  tasklets or by external events (such as some HTTP requests, an
-  external process completing, etc...).
++ An agenda mechanism should be implemented: `the_agenda` predefined
+  item contains as its payload a queue of tasklet items. A fixed
+  number (typically 3 to 10) of working threads are repeatedly
+  fetching some tasklet from the agenda and running it. Of course
+  tasklets are added (either in front, or at the end) to
+  `the_agenda`'s queue, either by running tasklets or by external
+  events (such as some HTTP requests, an external process completing,
+  etc...).
 
-+ A very incomplete web interface. I'm struggling learning more HTML5
-  techniques, and most of my recent questions on
++ A very incomplete web interface should be implemented. It is
+  difficult, so I am starting with a GTK interface instead. I'm
+  struggling learning more HTML5 techniques, and most of my recent
+  questions on
   [StackOverflow](http://stackoverflow.com/users/841108/basile-starynkevitch)
   are related to this. I'm understanding more and more that
   metaprogramming techniques are practically
@@ -265,51 +274,12 @@ listing predefined items).
   names by prefixing them with `momrand` and making them more
   thread-friendly.
 
-+ `agenda.c` is the agenda mechanism
-
 + `primes.c` contain many primes, and `mom_prime_above (int64_t)` and
   `mom_prime_below (int64_t)` functions. Prime numbers are e.g. useful
   as hash table sizes, etc.
 
-+ `canvedit.c`, `webroot/canvedit.js`, `webroot/canvedit.css`,
-  `webroot/canbedit.html` is a (probably aborted) tentative of using
-  HTML5 canvases for web interface.
-
-+ `global.mom` -and perhaps other `*.mom` files, is the persistent
-state in textual form, parsed with some stack machine algorithms.
-
-+ `hashed.c` implements various hash tables, notably hashed sets,
-hashed associations, hashed maps, ... payloads.
-
-+ `hweb.c` uses `libonion` to implement the web interface. Files
-  (notably some `jquery*.js`) under `webroot/` are statically
-  served. Dynamic content (and AJAX) is related to the `web_state` and
-  `web_handlers` items.
-
-+ `item.c` has item related code.
-
-+ `main.c` is the main program and utilities.
-
-+ `filebuf.c` is for file & string buffers
-
-+ `microedit.c`, `webroot/microedit.css`, `webroot/microedit.html`,
-  `webroot/microedit.js` is a micro editor (HTML5 contenteditable!) to
-  be able to edit values and use them. I am not happy with it, so I coded again the ....
-
-+ `nanoedit.c`,  `webroot/nanoedit.css`, `webroot/nanoedit.html`,
-  `webroot/microedit.js` is a nano editor (no contenteditable)
-
-+ `modules/` should contain generated C code.
-
-+ `_mom_predef.h` is generated and contains the predefined items.
-
-+ `state.c` has the persistence machinery (loading and saving state
-  notably in `global.mom` textual file). We'll need to persist to some
-  [REDIS](http://redis.io) store or some
-  [PostgreSQL](http://postgresql.org/) database as soon as we'll be
-  running in a distributed context (cloud or cluster).
-
-+ `value.c` handles immutable values
++ ̀_momstate.sql` is the SQL dump of the `_monstate.sqlite` Sqlite3
+  database keeping the persistent heap, using JSON notation.
 
 It should be stressed that generating most of the above code is much
 simpler than hand-coding it.
@@ -332,20 +302,11 @@ It is *alpha-stage* software (and that is the third time I'm coding
 some MELT monitor). You won't be able to run it usefully in 2015. But
 if you want to help (e.g. to answer some questions I am asking on some
 forums) or see what is running, build it, then run `./monimelt --help`
-to get some command line help.  Later, try something like `./monimelt
--Drun,web -W localhost.localdomain:8086/ -J 3` in the terminal and use your
-browser on URLs like `http://localhost.localdomain:8086/hackc.html` to
-be able to type some C code and run it, or
-`http://localhost.localdomain:8086/miniedit.html` to try the nano
-editor (very alpha, not working yet).
+to get some command line help.
 
 To simply dump the state and test the persistency machinery, try
-`./monimelt -d` (perhaps also `-Dload,dump`). Modified files are
-backed up (e.g. old `global.mom` is backed up as `global.mom~`, and
-likewise for `_mom_predef.h~`)
-
-Killing the monitor with `SIGTERM` might trigger a dump (of the
-persistent state). Killing it with `SIGQUIT` or `SIGKILL` won't.
+`./monimelt -d .` (perhaps also `-Dload,dump`). Modified files are
+backed up 
 
 # Help needed
 

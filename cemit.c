@@ -53,6 +53,7 @@ struct mom_cemitlocalstate_st
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
   mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
+  mo_listpayl_ty *mo_cemsta_endtodolist;        /* list of things to do at end */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
 };
@@ -905,6 +906,34 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
 
 
 void
+mom_cemit_todo_at_end (struct mom_cemitlocalstate_st *csta,
+                       mo_objref_t todobr)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_todo_at_end: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_todo_at_end: bad payl@%p in csta@%p", cemp, csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (todobr),
+                    "cemit_todo_at_end: bad todobr");
+  mo_objref_t curoutobj = mo_dyncast_objref (mo_objref_get_comp (todobr, 0));
+  if (!curoutobj
+      || curoutobj->mo_ob_paylkind !=
+      MOM_PREDEF (signature_two_objects_to_void)
+      || !curoutobj->mo_ob_payldata)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_todo_at_end: todobr %s has wrong curoutobj %s",
+                      mo_objref_pnamestr (todobr),
+                      mo_objref_pnamestr (curoutobj));
+  MOM_ASSERTPRINTF (mo_dyncastpayl_list (csta->mo_cemsta_endtodolist),
+                    "bad endtotolist");
+  mo_list_append (csta->mo_cemsta_endtodolist, todobr);
+}                               /* end of mom_cemit_todo_at_end */
+
+
+void
 mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                          mo_objref_t typobr)
 {
@@ -1147,7 +1176,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
                     "cemit_define_enumerators: bad typobr");
   MOM_ASSERTPRINTF (mo_dyncast_objref (parobr),
                     "cemit_define_enumerators: bad parobr");
-  MOM_ASSERTPRINTF(pprev != NULL, "cemit_define_enumerators: no pprev");
+  MOM_ASSERTPRINTF (pprev != NULL, "cemit_define_enumerators: no pprev");
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_define_enumerators: %s too deep %d",
                       mo_objref_pnamestr (typobr), depth);
@@ -1209,11 +1238,10 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       if (!curvaluev)
         mo_objref_put_attr (curenumobr, MOM_PREDEF (value),
                             mo_int_to_value (curval));
-      MOM_INFORMPRINTF("cemit_define_enumerators: typobr=%s curenumobr=%s curval=%ld curvaluev=%s",
-		       mo_objref_pnamestr(typobr),
-		       mo_objref_pnamestr(curenumobr),
-		       curval,
-		       mo_value_pnamestr(curvaluev));
+      MOM_INFORMPRINTF
+        ("cemit_define_enumerators: typobr=%s curenumobr=%s curval=%ld curvaluev=%s",
+         mo_objref_pnamestr (typobr), mo_objref_pnamestr (curenumobr), curval,
+         mo_value_pnamestr (curvaluev));
       mo_value_t curenumnamv = mo_objref_namev (curenumobr);
       if (typobr == parobr && depth == 0)
         {
@@ -1622,7 +1650,6 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
       memset (curobid, 0, sizeof (curobid));
       mo_objref_idstr (curobid, curdob);
       mo_value_t curobnamev = mo_objref_namev (curdob);
-      const char *curshortnamob = mo_objref_shortnamestr (curdob);
       mo_objref_t objclass = curdob->mo_ob_class;
       if (objclass == MOM_PREDEF (global_c_data_class)
           || objclass == MOM_PREDEF (threadlocal_c_data_class))
@@ -1753,6 +1780,51 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                     "#endif /*MONIMELT_MODULE\n\n", modulid);
 }                               /* end of mom_cemit_set */
 
+
+
+void
+mom_cemit_do_at_end (struct mom_cemitlocalstate_st *csta)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_do_at_end: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_do_at_end: bad payl@%p in csta@%p", cemp, csta);
+  long nbdone = 0;
+  mo_objref_t objcemit = csta->mo_cemsta_objcemit;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (objcemit),
+                    "cemit_do_at_end: bad objcemit");
+  while (mo_list_non_empty (csta->mo_cemsta_endtodolist))
+    {
+      mo_value_t curtodov = mo_list_head (csta->mo_cemsta_endtodolist);
+      mo_list_pop_head (csta->mo_cemsta_endtodolist);
+      nbdone++;
+      mo_objref_t curtodobj = mo_dyncast_objref (curtodov);
+      if (!curtodobj)
+        MOM_CEMITFAILURE (csta, "cemit_do_at_end: bad todo#%ld %s",
+                          nbdone, mo_value_pnamestr (curtodov));
+      mo_objref_t curoutobj =
+        mo_dyncast_objref (mo_objref_get_comp (curtodobj, 0));
+      if (!curoutobj
+          || curoutobj->mo_ob_paylkind !=
+          MOM_PREDEF (signature_two_objects_to_void)
+          || !curoutobj->mo_ob_payldata)
+        {
+          MOM_BACKTRACEPRINTF
+            ("cemit_do_at_end: %s*bad curoutobj*%s %s in todo#%ld %s",
+             MOM_TERMWARNCOLOR, MOM_TERMPLAIN, mo_objref_pnamestr (curtodobj),
+             nbdone, mo_objref_pnamestr (curoutobj));
+          continue;
+        }
+      mo_signature_two_objects_to_void_sigt *funrout =
+        curoutobj->mo_ob_payldata;
+      (*funrout) (curtodobj, objcemit);
+    }
+}                               /* end mom_cemit_do_at_end */
+
+
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
 {
@@ -1779,6 +1851,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   cemitstate.mo_cemsta_payl = cemp;
   cemitstate.mo_cemsta_hsetctypes =
     mo_hashset_reserve (NULL, 2 * (MOM_NB_GLOBAL + MOM_NB_PREDEFINED) + 30);
+  cemitstate.mo_cemsta_endtodolist = mo_list_make ();
 #define MOM_ADD_GLOBAL_CTYPE(Glob)			\
   cemitstate.mo_cemsta_hsetctypes =			\
     mo_hashset_put(cemitstate.mo_cemsta_hsetctypes,	\
@@ -1836,6 +1909,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
       mom_cemit_set (&cemitstate);
       mom_cemit_data_definitions (&cemitstate);
       mom_cemit_function_definitions (&cemitstate);
+      mom_cemit_do_at_end (&cemitstate);
 #warning mo_objref_cemit_generate very incomplete
       MOM_WARNPRINTF ("cemit_generate incomplete for %s",
                       cemitstate.mo_cemsta_modid);

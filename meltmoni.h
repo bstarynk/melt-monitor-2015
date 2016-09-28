@@ -498,7 +498,6 @@ enum mo_payloadkind_en
   mo_PLIST /* payload_list */ ,
   mo_PBUFFER /* payload_buffer */ ,
   mo_PCEMIT /* payload_c_emit */ ,
-  mo_PQUEUE /* payload_queue */ ,
 };
 
 typedef const void *mo_value_t;
@@ -1296,7 +1295,7 @@ void mo_dump_scan_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_json_t mo_dump_json_of_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_hashsetpayl_ty *mo_hashset_of_json (mo_json_t);
 
-/******************** LISTs payload ****************/
+/******************** LISTs payload, also usable as queues ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
 typedef struct mo_listelem_st mo_listelem_ty;
 
@@ -1732,7 +1731,8 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
 
 /// signature corresponding to signature_object_to_value
 typedef mo_value_t mo_signature_object_to_value_sigt (mo_objref_t);
-
+/// signature corresponding to signature_two_objects_to_void
+typedef void mo_signature_two_objects_to_void_sigt (mo_objref_t, mo_objref_t);
 ////////////////////////////////////////////////////////////////
 /***************** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;
