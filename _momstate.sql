@@ -286,7 +286,7 @@ INSERT INTO t_objects VALUES('_0dV2PYaSBUDE7lsYq',1475036015,'
  },
  "comps": null
 }
-','','','','');
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
 {
  "@name": "c_include",
@@ -682,7 +682,7 @@ INSERT INTO t_objects VALUES('_34X8LzaKgjC0yxZXC',1475046592,'
  },
  "comps": null
 }
-','','','','');
+','','_0dV2PYaSBUDE7lsYq','!','.');
 INSERT INTO t_objects VALUES('_3CM77K3hIhblwvxg3',1474312729,'
 {
  "@name": "struct_ctype_class",
