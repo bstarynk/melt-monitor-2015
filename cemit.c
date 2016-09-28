@@ -1924,4 +1924,73 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
 
 // momglob_put_attr_cemitact is needed
 
+const char
+MOM_PREFIXID (mosig_, put_attr_cemitact)[] = "signature_two_objects_to_void";
+
+     extern mo_signature_two_objects_to_void_sigt
+       MOM_PREFIXID (mofun_, put_attr_cemitact)
+  __attribute__ ((optimize ("O2")));
+
+
+     extern mo_signature_two_objects_to_void_sigt mofun_put_attr_cemitact;
+
+     void
+       MOM_PREFIXID (mofun_, put_attr_cemitact) (mo_objref_t todobj,
+                                                 mo_objref_t cemitobj)
+{
+  mofun_put_attr_cemitact (todobj, cemitobj);
+}
+
+enum momcemit_putattrix_en
+{
+  MOTODIX_PUTATTR_ROUTINE,
+  MOTODIX_PUTATTR_OBJECT,
+  MOTODIX_PUTATTR_ATTR,
+  MOTODIX_PUTATTR_VAL,
+  MOTODIX_PUTATTR__LAST
+};
+
+void
+mofun_put_attr_cemitact (mo_objref_t todobj, mo_objref_t cemitobj)
+{
+  if (!mo_dyncast_objref (cemitobj))
+    MOM_FATAPRINTF ("put_attr_cemitact: no cemitobj for todobj=%s",
+                    mo_objref_pnamestr (todobj));
+  if (cemitobj->mo_ob_paylkind != MOM_PREDEF (payload_c_emit))
+    MOM_FATAPRINTF
+      ("put_attr_cemitact: bad cemitobj=%s (of payload kind %s) for todobj=%s",
+       mo_objref_pnamestr (cemitobj),
+       mo_objref_pnamestr (cemitobj->mo_ob_paylkind),
+       mo_objref_pnamestr (todobj));
+  mo_cemitpayl_ty *cemp = mo_objref_get_cemit (cemitobj);
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC,
+                    "put_attr_cemitact: bad cemp in cemitobj %s",
+                    mo_objref_pnamestr (cemitobj));
+  struct mom_cemitlocalstate_st *csta = cemp->mo_cemit_locstate;
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "put_attr_cemitact: bad csta@%p", csta);
+  if (!mo_dyncast_objref (todobj))
+    MOM_CEMITFAILURE (csta, "put_attr_cemitact: bad todobj");
+  if (mo_objref_comp_count (todobj) != MOTODIX_PUTATTR__LAST)
+    MOM_CEMITFAILURE (csta, "put_attr_cemitact: bad count %d of todobj %s",
+                      mo_objref_comp_count (todobj),
+                      mo_objref_pnamestr (todobj));
+  MOM_ASSERTPRINTF (mo_objref_get_comp (todobj, MOTODIX_PUTATTR_ROUTINE) ==
+                    momglob_put_attr_cemitact, "bad routine in todobj %s",
+                    mo_objref_pnamestr (todobj));
+  mo_objref_t obr =
+    mo_dyncast_objref(mo_objref_get_comp (todobj, MOTODIX_PUTATTR_OBJECT));
+  if (!obr)
+    MOM_CEMITFAILURE (csta, "put_attr_cemitact: bad object slot#%d in todobj %s",
+		      MOTODIX_PUTATTR_OBJECT, mo_objref_pnamestr(todobj));
+  mo_objref_t attrobr =
+    mo_dyncast_objref(mo_objref_get_comp (todobj, MOTODIX_PUTATTR_ATTR));
+  if (!attrobr)
+    MOM_CEMITFAILURE (csta, "put_attr_cemitact: bad attr slot#%d in todobj %s",
+		      MOTODIX_PUTATTR_ATTR, mo_objref_pnamestr(todobj));
+  mo_value_t val = mo_objref_get_comp (todobj, MOTODIX_PUTATTR_VAL);
+  mo_objref_put_attr(obr, attrobr, val);
+}                               /* end of mofun_put_attr_cemitact */
+
 /*** end of file cemit.c ***/
