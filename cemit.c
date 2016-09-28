@@ -1020,11 +1020,11 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
                         typobid, typobid);
       break;
     case CASE_PREDEFCTYPE_MOM (union_ctype_class):
-      mom_cemit_printf (csta, "typedef union mo%s_un mo_%s_ty;\n",
+      mom_cemit_printf (csta, "typedef union mo%s_un mo%s_ty;\n",
                         typobid, typobid);
       break;
     case CASE_PREDEFCTYPE_MOM (enum_ctype_class):
-      mom_cemit_printf (csta, "typedef enum mo%s_en mo_%s_ty;\n",
+      mom_cemit_printf (csta, "typedef enum mo%s_en mo%s_ty;\n",
                         typobid, typobid);
       break;
     case CASE_PREDEFCTYPE_MOM (signature_class):
@@ -1346,7 +1346,7 @@ mom_cemit_define_ctype (struct mom_cemitlocalstate_st *csta,
       mom_cemit_printf (csta, "}; // end struct mo%s_ptrst\n", typobid);
       break;
     case CASE_PREDEFCTYPE_MOM (struct_ctype_class):
-      mom_cemit_printf (csta, "struct mo%s_st mo%s_ty {", typobid, typobid);
+      mom_cemit_printf (csta, "struct mo%s_st {", typobid);
       if (typnamv)
         mom_cemit_printf (csta, "// %s\n", mo_string_cstr (typnamv));
       else
@@ -1809,7 +1809,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                     "void monimelt_module_init(void) {\n"
                     "   " MOM_MODULEINIT_PREFIX "%s ();\n"
                     "} /* end monimelt_module_init */\n"
-                    "#endif /*MONIMELT_MODULE\n\n", modulid);
+                    "#endif /*MONIMELT_MODULE*/\n\n", modulid);
 }                               /* end of mom_cemit_set */
 
 
