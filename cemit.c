@@ -53,6 +53,8 @@ struct mom_cemitlocalstate_st
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
   mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
+  mo_objref_t mo_cemsta_curfun; /* the current function */
+  mo_assovaldatapayl_ty *mo_cemsta_assocfunxtype;       /* associate expressions to their types */
   mo_listpayl_ty *mo_cemsta_endtodolist;        /* list of things to do at end */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
@@ -1185,6 +1187,8 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
         fieldstr = mom_gc_printf (" mo%s_fd", fieldid);
       mom_cemit_write_ctype_for (csta, ftypobr, fieldstr, 0);
       mom_cemit_printf (csta, ";  // %s\n", fieldid);
+      if (depth == 0)
+        mom_cemit_todo_put_attr (csta, fieldobr, MOM_PREDEF (in), typobr);
     }
 }                               /* end mom_cemit_define_fields */
 
@@ -1288,6 +1292,7 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
             {
               mom_cemit_printf (csta, " mo%s_ev=%ld,\n", curenumid, curval);
             }
+          mom_cemit_todo_put_attr (csta, curenumobr, MOM_PREDEF (in), typobr);
         }
       else
         {
