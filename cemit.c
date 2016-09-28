@@ -1921,4 +1921,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   return NULL;
 }                               /* end of mo_objref_cemit_generate */
 
+
+// momglob_put_attr_cemitact is needed
+
 /*** end of file cemit.c ***/

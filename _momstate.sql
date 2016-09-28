@@ -93,6 +93,7 @@ INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
+INSERT INTO t_names VALUES('put_attr_cemitact','_34X8LzaKgjC0yxZXC');
 INSERT INTO t_names VALUES('remove','_4Ph1Z99dptyJhpZfj');
 INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
@@ -157,6 +158,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_21J3zZDnsKTbAVBFo",
      "_2k61pgEBsCRJlTpHG",
      "_2Sj1dLJSbvyN3kMgI",
+     "_34X8LzaKgjC0yxZXC",
      "_3cH0f65UzqnPaGsLY",
      "_3K62tYRL1azRF0cP2",
      "_3WR20H7JRlNWkDV4y",
@@ -660,6 +662,27 @@ INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1474887310,'
  "comps": null
 }
 ','_6Lu6DXoGivCCHMwzV','','','');
+INSERT INTO t_objects VALUES('_34X8LzaKgjC0yxZXC',1475046592,'
+{
+ "@name": "put_attr_cemitact",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": {
+     "ssize": 110,
+     "string": [
+      "action for C code emitter: (&put_attr",
+      "_cemitact &Obj &Attr &Val) to delay put ",
+      "an attribute at end of c-emission"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_3CM77K3hIhblwvxg3',1474312729,'
 {
  "@name": "struct_ctype_class",

@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 35
+#define MOM_NB_GLOBAL 36
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -93,6 +93,9 @@ MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
 
 //+ class of pointer ctypes; the first component #0 is the pointed ctype.
 MOM_HAS_GLOBAL(pointer_ctype_class,_7JP45UsR282DkTrJS,1831760218,601741714220354864,2152013395)
+
+//+ action for C code emitter: (&put_attr_cemitact &Obj &Attr &Val) to delay put an 
+MOM_HAS_GLOBAL(put_attr_cemitact,_34X8LzaKgjC0yxZXC,727315249,1647905027261026546,1798594494)
 
 //+ to remove something, e.g. $remove(&object &attr) user action
 MOM_HAS_GLOBAL(remove,_4Ph1Z99dptyJhpZfj,1141454572,7970905774666212359,747100231)
@@ -245,6 +248,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_7JP45UsR282DkTrJS
 #define monam_7JP45UsR282DkTrJS pointer_ctype_class
 
+#undef moid_put_attr_cemitact
+#define moid_put_attr_cemitact _34X8LzaKgjC0yxZXC
+#undef monam_34X8LzaKgjC0yxZXC
+#define monam_34X8LzaKgjC0yxZXC put_attr_cemitact
+
 #undef moid_remove
 #define moid_remove _4Ph1Z99dptyJhpZfj
 #undef monam_4Ph1Z99dptyJhpZfj
@@ -336,6 +344,7 @@ enum mom_global_hashes_en {
   momghash_intptr_t=1787024167,
   momghash_long=314494134,
   momghash_pointer_ctype_class=2152013395,
+  momghash_put_attr_cemitact=1798594494,
   momghash_remove=747100231,
   momghash_remove_useract=3623953716,
   momghash_set=3433581947,
@@ -358,7 +367,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 35
+#define MOM_NB_NAMED_GLOBAL 36
 
 
 #undef MOM_HAS_GLOBAL
