@@ -72,7 +72,7 @@ INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('get','_1Xe4mcjLDBpvaBiDU');
 INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
 INSERT INTO t_names VALUES('global_c_data_class','_5fr2Xe93UTwNlLIIo');
-INSERT INTO t_names VALUES('include_monimelt','_0m37ffFuKe0qxNfTK');
+INSERT INTO t_names VALUES('include_meltmoni','_0mn1b5GSeM3pB0Bfw');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
 INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
 INSERT INTO t_names VALUES('int32_t','_7EH4RTtyF1BioGEDK');
@@ -301,24 +301,6 @@ INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_0m37ffFuKe0qxNfTK',1474696522,'
-{
- "@name": "include_monimelt",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "to include the \"monimelt.h\" header"
-   },
-   {
-    "at": "_6F98Bo2ChKhNVEZgt",
-    "va": "monimelt.h"
-   }
-  ]
- },
- "comps": null
-}
-','','','','');
 INSERT INTO t_objects VALUES('_0m46GxlBP9bdo05q4',1474868749,'
 {
  "@name": "type_ptrint",
@@ -339,6 +321,24 @@ INSERT INTO t_objects VALUES('_0m46GxlBP9bdo05q4',1474868749,'
  }
 }
 ','_7JP45UsR282DkTrJS','','','');
+INSERT INTO t_objects VALUES('_0mn1b5GSeM3pB0Bfw',1475065467,'
+{
+ "@name": "include_meltmoni",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "include \"meltmoni.h\""
+   },
+   {
+    "at": "_6F98Bo2ChKhNVEZgt",
+    "va": "meltmoni.h"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_0xA91ltlCCIeN6K9H',1474534835,'
 {
  "@name": "add_user_action_useract",
@@ -884,7 +884,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474984182,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475065434,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -893,7 +893,7 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1474984182,'
     "at": "_0hA5FCeEWGc6gpfnU",
     "va": {
      "tup": [
-      "_0m37ffFuKe0qxNfTK"
+      "_0mn1b5GSeM3pB0Bfw"
      ]
     }
    },
@@ -958,7 +958,7 @@ INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474999214,'
+INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1475065494,'
 {
  "@name": "enumbu_test1",
  "attrs": {
@@ -966,6 +966,10 @@ INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1474999214,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "enumerator bu for type_enumb in test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 2
    }
   ]
  },
@@ -1357,7 +1361,7 @@ INSERT INTO t_objects VALUES('_6VK4TFfclh68txISx',1474869958,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
-INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474999110,'
+INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1475065494,'
 {
  "@name": "enumaa_test1",
  "attrs": {
@@ -1365,6 +1369,10 @@ INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1474999110,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "first enumerator in type_enuma_test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 0
    }
   ]
  },
@@ -1836,7 +1844,7 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
-INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474999139,'
+INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1475065494,'
 {
  "@name": "enumab_test1",
  "attrs": {
@@ -1844,6 +1852,10 @@ INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1474999139,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "second enumerator in type_enuma_test1"
+   },
+   {
+    "at": "_4Cm8ln5mSkcZHI6WB",
+    "va": 1
    }
   ]
  },

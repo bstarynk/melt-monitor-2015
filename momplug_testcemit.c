@@ -23,10 +23,22 @@ momplugin_startup (const char *arg)
     MOM_WARNPRINTF ("testcemit for module %s thru cemitobr %s failed with %s",
                     mo_objref_pnamestr (modulobr),
                     mo_objref_pnamestr (cemitobr), mo_value_pnamestr (val));
-  else
+  else {
     MOM_INFORMPRINTF ("testcemit for module %s thru cemitobr %s successful",
                       mo_objref_pnamestr (modulobr),
                       mo_objref_pnamestr (cemitobr));
+    char* cmdbuf = NULL;
+    asprintf(&cmdbuf, "make modules.dir/modu_%s.so", mo_objref_shortnamestr(modulobr));
+    if (!cmdbuf) MOM_FATAPRINTF("failed to build command");
+    MOM_INFORMPRINTF("testcemit will %s", cmdbuf);
+    fflush(NULL);    
+    int rc = system(cmdbuf);
+    if (rc)
+      MOM_WARNPRINTF("testcemit command %s failed %d", cmdbuf, rc);
+    else
+      MOM_INFORMPRINTF("testcemit succeeded : %s", cmdbuf);
+    fflush(NULL);
+  }
 }                               /* end momplugin_startup */
 
 
