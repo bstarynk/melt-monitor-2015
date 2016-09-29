@@ -929,7 +929,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475065434,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475146078,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -956,6 +956,7 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475065434,'
     "at": "_7h20HFhtjZljRLtbU",
     "va": {
      "set": [
+      "_0BV96V94PJIn9si1K",
       "_0Ki51w13UIhXkBrtx",
       "_0Sp1Lg7ctajS7oX5i",
       "_4H01ICaNuWncMePhe",
