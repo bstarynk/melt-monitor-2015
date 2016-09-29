@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 28 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Sep 29 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -68,6 +68,7 @@ INSERT INTO t_names VALUES('fieldubw_test1','_5tY0jFlg4ZFMGRXjL');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
 INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
+INSERT INTO t_names VALUES('formals','_8Cl7x1LpaH2GzkdbW');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
 INSERT INTO t_names VALUES('get','_1Xe4mcjLDBpvaBiDU');
 INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
@@ -97,6 +98,7 @@ INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
 INSERT INTO t_names VALUES('put_attr_cemitact','_34X8LzaKgjC0yxZXC');
 INSERT INTO t_names VALUES('remove','_4Ph1Z99dptyJhpZfj');
 INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
+INSERT INTO t_names VALUES('result','_7he4MBcSuccJxtj7q');
 INSERT INTO t_names VALUES('result_ctype','_7vy5VxtVon8EhIF5D');
 INSERT INTO t_names VALUES('set','_7h20HFhtjZljRLtbU');
 INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
@@ -1755,6 +1757,20 @@ INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474464458,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7he4MBcSuccJxtj7q',1475133644,'
+{
+ "@name": "result",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the result variable inside a C function"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1475082733,'
 {
  "@name": "fielduaz_test1",
@@ -1873,6 +1889,20 @@ INSERT INTO t_objects VALUES('_8Bq9eNWZ0eUS6BGq8',1474354808,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the formals ctypes in a signature"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8Cl7x1LpaH2GzkdbW',1475133644,'
+{
+ "@name": "formals",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the tuple of formals inside a C function"
    }
   ]
  },

@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 45
+#define MOM_NB_PREDEFINED 47
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -85,6 +85,9 @@ MOM_HAS_PREDEFINED(fields,_7Pl7foCRjKoT6Gkdr,1849542836,813017781241674727,35354
 //+ give some file path, e.g. for c-includes
 MOM_HAS_PREDEFINED(file_path,_6F98Bo2ChKhNVEZgt,1577447039,2816486981062138509,2269269987)
 
+//+ the tuple of formals inside a C function
+MOM_HAS_PREDEFINED(formals,_8Cl7x1LpaH2GzkdbW,2038288595,2859322395989327772,903825033)
+
 //+ gives the formals ctypes in a signature
 MOM_HAS_PREDEFINED(formals_ctypes,_8Bq9eNWZ0eUS6BGq8,2034696128,4347408863221702016,102498809)
 
@@ -126,6 +129,9 @@ MOM_HAS_PREDEFINED(payload_value,_47n6FfKTuPHyjab71,972798198,893416954962582242
 
 //+ for vectvaldata payload
 MOM_HAS_PREDEFINED(payload_vectval,_5Hf0fFKvRVa71ZPM0,1349715772,3968515104339494048,2293677932)
+
+//+ the result variable inside a C function
+MOM_HAS_PREDEFINED(result,_7he4MBcSuccJxtj7q,1719305482,4237267147709075118,3705542785)
 
 //+ gives the result ctype in a signature
 MOM_HAS_PREDEFINED(result_ctype,_7vy5VxtVon8EhIF5D,1775674341,3012024356604819427,165963843)
@@ -260,6 +266,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_6F98Bo2ChKhNVEZgt
 #define monam_6F98Bo2ChKhNVEZgt file_path
 
+#undef moid_formals
+#define moid_formals _8Cl7x1LpaH2GzkdbW
+#undef monam_8Cl7x1LpaH2GzkdbW
+#define monam_8Cl7x1LpaH2GzkdbW formals
+
 #undef moid_formals_ctypes
 #define moid_formals_ctypes _8Bq9eNWZ0eUS6BGq8
 #undef monam_8Bq9eNWZ0eUS6BGq8
@@ -329,6 +340,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_payload_vectval _5Hf0fFKvRVa71ZPM0
 #undef monam_5Hf0fFKvRVa71ZPM0
 #define monam_5Hf0fFKvRVa71ZPM0 payload_vectval
+
+#undef moid_result
+#define moid_result _7he4MBcSuccJxtj7q
+#undef monam_7he4MBcSuccJxtj7q
+#define monam_7he4MBcSuccJxtj7q result
 
 #undef moid_result_ctype
 #define moid_result_ctype _7vy5VxtVon8EhIF5D
@@ -413,6 +429,7 @@ enum mom_predefined_hashes_en {
   momphash_extern=2573349951,
   momphash_fields=3535425907,
   momphash_file_path=2269269987,
+  momphash_formals=903825033,
   momphash_formals_ctypes=102498809,
   momphash_global_c_data_class=3740163544,
   momphash_in=2516618224,
@@ -427,6 +444,7 @@ enum mom_predefined_hashes_en {
   momphash_payload_list=2149899148,
   momphash_payload_value=77028432,
   momphash_payload_vectval=2293677932,
+  momphash_result=3705542785,
   momphash_result_ctype=165963843,
   momphash_signature=1265851629,
   momphash_signature_class=906720652,
@@ -448,7 +466,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 45
+#define MOM_NB_NAMED_PREDEFINED 47
 
 
 #undef MOM_HAS_PREDEFINED
