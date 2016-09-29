@@ -1757,6 +1757,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
 
 
 
+
 void
 mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
 {
@@ -1797,6 +1798,9 @@ mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
       mom_cemit_function_code (csta, curfunob);
     }
 }                               /* end of mom_cemit_function_definitions */
+
+
+
 
 void
 mom_cemit_set (struct mom_cemitlocalstate_st *csta)
@@ -1981,20 +1985,38 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
     {
       MOM_ASSERTPRINTF (mo_dyncast_string (cemitstate.mo_cemsta_errstr),
                         "bad errstr in cemitstate@%p", &cemitstate);
-      MOM_WARNPRINTF_AT (__FILE__, errlin,
-                         "cemit_generate failure: %s (module %s, emitter %s)",
-                         mo_string_cstr (cemitstate.mo_cemsta_errstr),
-                         mo_objref_pnamestr (cemp->mo_cemit_modobj),
-                         mo_objref_pnamestr (obrcem));
+      if (cemitstate.mo_cemsta_curfun)
+        MOM_WARNPRINTF_AT (__FILE__, errlin,
+                           "cemit_generate failure: %s (module %s, emitter %s, function %s)",
+                           mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                           mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                           mo_objref_pnamestr (obrcem),
+                           mo_objref_pnamestr (cemitstate.mo_cemsta_curfun));
+      else
+        MOM_WARNPRINTF_AT (__FILE__, errlin,
+                           "cemit_generate failure: %s (module %s, emitter %s)",
+                           mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                           mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                           mo_objref_pnamestr (obrcem));
       if (cemitstate.mo_cemsta_fil)
         {
-          fprintf (cemitstate.mo_cemsta_fil,
-                   "\n\n\n/////@@@@@@@!!!!!! \n"
-                   "#error @%d: %s (module %s, emitter %s)\n",
-                   errlin,
-                   mo_string_cstr (cemitstate.mo_cemsta_errstr),
-                   mo_objref_pnamestr (cemp->mo_cemit_modobj),
-                   mo_objref_pnamestr (obrcem));
+          if (cemitstate.mo_cemsta_curfun)
+            fprintf (cemitstate.mo_cemsta_fil,
+                     "\n\n\n/////@@@@@@@!!!!!! \n"
+                     "#error @%d: %s (module %s, emitter %s, function %s)\n",
+                     errlin,
+                     mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                     mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                     mo_objref_pnamestr (obrcem),
+                     mo_objref_pnamestr (cemitstate.mo_cemsta_curfun));
+          else
+            fprintf (cemitstate.mo_cemsta_fil,
+                     "\n\n\n/////@@@@@@@!!!!!! \n"
+                     "#error @%d: %s (module %s, emitter %s)\n",
+                     errlin,
+                     mo_string_cstr (cemitstate.mo_cemsta_errstr),
+                     mo_objref_pnamestr (cemp->mo_cemit_modobj),
+                     mo_objref_pnamestr (obrcem));
           if (fclose (cemitstate.mo_cemsta_fil))
             MOM_FATAPRINTF
               ("cemit_generate: failed to close emitted file for module %s on error",
