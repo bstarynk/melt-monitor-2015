@@ -1719,7 +1719,14 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta, "\n// end of %d data definitions\n\n", nbdata);
 }                               /* end of mom_cemit_data_definitions */
 
-
+// the slots of role object for formals
+enum momcemit_rolformal_en
+{
+  MOMROLIX_ROLE,
+  MOMROLIX_CTYPE,
+  MOMROLIX_FORMALRANK,
+  MOMROLIX__LASTFORMAL
+};
 
 void
 mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
@@ -1750,14 +1757,15 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     mo_objref_pnamestr (funob),
                     mo_objref_pnamestr (csta->mo_cemsta_curfun));
   csta->mo_cemsta_curfun = funob;
-  csta->mo_cemsta_assocfunxtype = mo_assoval_reserve (NULL, 32);
-  csta->mo_cemsta_assocfunvarol = mo_assoval_reserve (NULL, 32);
   mo_value_t formaltup =
     mo_dyncast_tuple (mo_objref_get_attr (funob, MOM_PREDEF (formals)));
+  unsigned nbformals = mo_tuple_size (formaltup);
+  csta->mo_cemsta_assocfunxtype = mo_assoval_reserve (NULL, 32);
+  csta->mo_cemsta_assocfunvarol =
+    mo_assoval_reserve (NULL, 20 + 3 * nbformals);
   mo_value_t formtyptup =
     mo_dyncast_tuple (mo_objref_get_attr
                       (signob, MOM_PREDEF (formals_ctypes)));
-  unsigned nbformals = mo_tuple_size (formaltup);
   if (nbformals != mo_tuple_size (formtyptup))
     MOM_CEMITFAILURE
       (csta,
@@ -1780,14 +1788,30 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
            mo_objref_pnamestr (curformalob),
            mo_objref_pnamestr (curformalob->mo_ob_class));
       if (mo_dyncast_objref
-          (mo_objref_get_attr (curformalob, MOM_PREDEF (c_type))) !=
-          curfortypob)
+          (mo_objref_get_attr (curformalob, MOM_PREDEF (c_type)))
+          != curfortypob)
         MOM_CEMITFAILURE
           (csta, "cemit_function_code: formal#%d %s should have c_type %s",
            foix,
            mo_objref_pnamestr (curformalob),
            mo_objref_pnamestr (curfortypob));
-      /// should define the role of curformalob
+      mo_objref_t forolob =
+        mo_dyncast_objref (mo_assoval_get
+                           (csta->mo_cemsta_assocfunvarol, curformalob));
+      if (forolob)
+        MOM_CEMITFAILURE
+          (csta, "cemit_function_code: formal#%d %s already used for role %s",
+           foix, mo_objref_pnamestr (curformalob),
+           mo_objref_pnamestr (forolob));
+      forolob = mo_make_object ();
+      forolob->mo_ob_class = MOM_PREDEF (c_role_class);
+      mo_objref_comp_resize (forolob, MOMROLIX__LASTFORMAL);
+      mo_objref_put_comp (forolob, MOMROLIX_ROLE, MOM_PREDEF (formals));
+      mo_objref_put_comp (forolob, MOMROLIX_CTYPE, curfortypob);
+      mo_objref_put_comp (forolob, MOMROLIX_FORMALRANK,
+                          mo_int_to_value (foix));
+      csta->mo_cemsta_assocfunvarol =
+        mo_assoval_put (csta->mo_cemsta_assocfunvarol, curformalob, forolob);
     }
 #warning mom_cemit_function_code incomplete
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
