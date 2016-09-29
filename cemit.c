@@ -1722,10 +1722,19 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
 // the slots of role object for formals
 enum momcemit_rolformal_en
 {
-  MOMROLIX_ROLE,
-  MOMROLIX_CTYPE,
-  MOMROLIX_FORMALRANK,
-  MOMROLIX__LASTFORMAL
+  MOMROLFORMIX_ROLE,
+  MOMROLFORMIX_CTYPE,
+  MOMROLFORMIX_FORMALRANK,
+  MOMROLFORMIX__LASTFORMAL
+};
+
+// the slots of role object for result & variables
+enum momcemit_rolvar_en
+{
+  MOMROLVARIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLVARIX_CTYPE = MOMROLFORMIX_CTYPE,
+  MOMROLVARIX_IN,
+  MOMROLVARIX__LASTVAR
 };
 
 void
@@ -1805,13 +1814,57 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
            mo_objref_pnamestr (forolob));
       forolob = mo_make_object ();
       forolob->mo_ob_class = MOM_PREDEF (c_role_class);
-      mo_objref_comp_resize (forolob, MOMROLIX__LASTFORMAL);
-      mo_objref_put_comp (forolob, MOMROLIX_ROLE, MOM_PREDEF (formals));
-      mo_objref_put_comp (forolob, MOMROLIX_CTYPE, curfortypob);
-      mo_objref_put_comp (forolob, MOMROLIX_FORMALRANK,
+      mo_objref_comp_resize (forolob, MOMROLFORMIX__LASTFORMAL);
+      mo_objref_put_comp (forolob, MOMROLFORMIX_ROLE, MOM_PREDEF (formals));
+      mo_objref_put_comp (forolob, MOMROLFORMIX_CTYPE, curfortypob);
+      mo_objref_put_comp (forolob, MOMROLFORMIX_FORMALRANK,
                           mo_int_to_value (foix));
       csta->mo_cemsta_assocfunvarol =
         mo_assoval_put (csta->mo_cemsta_assocfunvarol, curformalob, forolob);
+    }
+  mo_objref_t resultob =
+    mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (result)));
+  mo_objref_t restypob =
+    mo_dyncast_objref (mo_objref_get_attr
+                       (signob, MOM_PREDEF (result_ctype)));
+  if (resultob && (!restypob || restypob == momglob_void))
+    MOM_CEMITFAILURE
+      (csta,
+       "cemit_function_code: result %s provided but signature %s gives void",
+       mo_objref_pnamestr (resultob), mo_objref_pnamestr (signob));
+  if (!resultob && restypob && restypob != momglob_void)
+    MOM_CEMITFAILURE
+      (csta,
+       "cemit_function_code: no result provided but signature %s gives %s",
+       mo_objref_pnamestr (signob), mo_objref_pnamestr (restypob));
+  if (resultob
+      &&
+      mo_dyncast_objref (mo_objref_get_attr (resultob, MOM_PREDEF (c_type)))
+      != restypob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_function_code: result %s should have c_type %s",
+                      mo_objref_pnamestr (resultob),
+                      mo_objref_pnamestr (restypob));
+  if (resultob && resultob->mo_ob_class != MOM_PREDEF (c_variable_class))
+    MOM_CEMITFAILURE
+      (csta,
+       "cemit_function_code: result %s has bad class %s (expecting c_variable_class)",
+       mo_objref_pnamestr (resultob),
+       mo_objref_pnamestr (resultob->mo_ob_class));
+  mo_objref_t forolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assocfunvarol, resultob));
+  if (forolob)
+    MOM_CEMITFAILURE
+      (csta, "cemit_function_code: result %s already used for role %s",
+       mo_objref_pnamestr (resultob), mo_objref_pnamestr (forolob));
+  if (resultob)
+    {
+      forolob = mo_make_object ();
+      forolob->mo_ob_class = MOM_PREDEF (c_role_class);
+      mo_objref_comp_resize (forolob, MOMROLVARIX__LASTVAR);
+      mo_objref_put_comp (forolob, MOMROLVARIX_ROLE, MOM_PREDEF (result));
+      mo_objref_put_comp (forolob, MOMROLVARIX_CTYPE, restypob);
     }
 #warning mom_cemit_function_code incomplete
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
@@ -1907,11 +1960,17 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
             };
           nbpredef++;
           if (elemnamv)
-            mom_cemit_printf (csta,
-                              "#define mo_%s_ob (&mompredef_%s) /*global MOM_PREDEF(%s) = %s*/\n",
-                              mo_string_cstr (elemnamv),
-                              mo_string_cstr (elemnamv),
-                              mo_string_cstr (elemnamv), elemid);
+            {
+              mom_cemit_printf (csta,
+                                "#define mo_%s_ob (&mompredef_%s) /*global MOM_PREDEF(%s) = %s*/\n",
+                                mo_string_cstr (elemnamv),
+                                mo_string_cstr (elemnamv),
+                                mo_string_cstr (elemnamv), elemid);
+              mom_cemit_printf (csta,
+                                "#define mo_%s_ob mo_%s_ob /*MOM_PREDEF(%s)*/\n",
+                                elemid + 1, mo_string_cstr (elemnamv),
+                                mo_string_cstr (elemnamv));
+            }
           else
             mom_cemit_printf (csta,
                               "#define mo_%s_ob (&mompredef_%s) /*anonglob MOM_PREDEF(%s)*/\n",
@@ -1995,7 +2054,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                     "void monimelt_module_init(void) {\n"
                     "   " MOM_MODULEINIT_PREFIX "%s ();\n"
                     "} /* end monimelt_module_init */\n", modulid);
-  if (nbset > nbpredef)
+  if ((int) nbset > nbpredef)
     mom_cemit_printf (csta, "#else /*!MONIMELT_MODULE*/\n"
                       "#warning %d global objects are not predefined"
                       " without MONIMELT_MODULE\n", nbset - nbpredef);
