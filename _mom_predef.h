@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 51
+#define MOM_NB_PREDEFINED 52
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -108,6 +108,9 @@ MOM_HAS_PREDEFINED(global_c_data_class,_5fr2Xe93UTwNlLIIo,1240420786,86652015902
 
 //+ to give some container, etc....
 MOM_HAS_PREDEFINED(in,_3St1x2rkjnH28CyRy,914172643,3044153046388021430,2516618224)
+
+//+ local variables in block
+MOM_HAS_PREDEFINED(locals,_5t61z2vkWfR1NbtiF,1294085071,5602063248249748081,736931447)
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
@@ -318,6 +321,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_3St1x2rkjnH28CyRy
 #define monam_3St1x2rkjnH28CyRy in
 
+#undef moid_locals
+#define moid_locals _5t61z2vkWfR1NbtiF
+#undef monam_5t61z2vkWfR1NbtiF
+#define monam_5t61z2vkWfR1NbtiF locals
+
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
 #undef monam_22z6Be6oa3IH524Jy
@@ -469,6 +477,7 @@ enum mom_predefined_hashes_en {
   momphash_formals_ctypes=102498809,
   momphash_global_c_data_class=3740163544,
   momphash_in=2516618224,
+  momphash_locals=736931447,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
@@ -502,7 +511,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 51
+#define MOM_NB_NAMED_PREDEFINED 52
 
 
 #undef MOM_HAS_PREDEFINED
