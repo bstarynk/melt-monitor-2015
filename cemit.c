@@ -1884,25 +1884,27 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
   mo_value_t setv = mo_objref_get_attr (cemp->mo_cemit_modobj, momglob_set);
   if (!setv)
     {
-      mom_cemit_printf (csta, "\n// no set of objects\n");
+      mom_cemit_printf (csta, "\n// no set of global objects\n");
       return;
     }
   if (!mo_dyncast_set (setv))
     MOM_CEMITFAILURE (csta, "bad set %s", mo_value_pnamestr (setv));
   unsigned nbset = mo_set_size (setv);
-  mom_cemit_printf (csta, "\n\n#ifdef MONIMELT_MODULE\n");
-  mom_cemit_printf (csta, "\n// set of %d objects\n", nbset);
   int nbpredef = 0;
   for (unsigned eix = 0; eix < nbset; eix++)
     {
       mo_objref_t elemob = mo_set_nth (setv, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
-      mo_value_t elemnamv = mo_objref_namev (elemob);
-      char elemid[MOM_CSTRIDSIZ];
-      memset (elemid, 0, sizeof (elemid));
-      mo_objref_idstr (elemid, elemob);
       if (mo_objref_space (elemob) == mo_SPACE_PREDEF)
         {
+          mo_value_t elemnamv = mo_objref_namev (elemob);
+          char elemid[MOM_CSTRIDSIZ];
+          memset (elemid, 0, sizeof (elemid));
+          mo_objref_idstr (elemid, elemob);
+          if (MOM_UNLIKELY (nbpredef == 0))
+            {
+              mom_cemit_printf (csta, "\n// global predefined objects\n");
+            };
           nbpredef++;
           if (elemnamv)
             mom_cemit_printf (csta,
@@ -1915,6 +1917,20 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                               "#define mo_%s_ob (&mompredef_%s) /*anonglob MOM_PREDEF(%s)*/\n",
                               elemid + 1, elemid + 1, elemid);
         }
+    }
+  mom_cemit_printf (csta, "\n\n#ifdef MONIMELT_MODULE\n");
+  mom_cemit_printf (csta, "\n// set of %d non-predefined global objects\n",
+                    nbset - nbpredef);
+  for (unsigned eix = 0; eix < nbset; eix++)
+    {
+      mo_objref_t elemob = mo_set_nth (setv, eix);
+      MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
+      mo_value_t elemnamv = mo_objref_namev (elemob);
+      char elemid[MOM_CSTRIDSIZ];
+      memset (elemid, 0, sizeof (elemid));
+      mo_objref_idstr (elemid, elemob);
+      if (mo_objref_space (elemob) == mo_SPACE_PREDEF)
+        continue;
       else
         {
           if (mo_objref_space (elemob) == mo_SPACE_NONE)
@@ -1948,6 +1964,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
       MOM_ASSERTPRINTF (mo_dyncast_objref (elemob), "bad elemob#%d", eix);
       if (mo_objref_space (elemob) == mo_SPACE_PREDEF)
         {
+          mom_cemit_printf (csta, "// global#%d:\n", eix);
           mom_cemit_printf (csta, "// global %s (%s) is predefined\n",
                             mo_objref_pnamestr (elemob), elemid);
           continue;
@@ -1977,8 +1994,13 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta,
                     "void monimelt_module_init(void) {\n"
                     "   " MOM_MODULEINIT_PREFIX "%s ();\n"
-                    "} /* end monimelt_module_init */\n"
-                    "#endif /*MONIMELT_MODULE*/\n\n", modulid);
+                    "} /* end monimelt_module_init */\n", modulid);
+  if (nbset > nbpredef)
+    mom_cemit_printf (csta, "#else /*!MONIMELT_MODULE*/\n"
+                      "#warning %d global objects are not predefined"
+                      " without MONIMELT_MODULE\n", nbset - nbpredef);
+  mom_cemit_printf (csta, "#endif /*MONIMELT_MODULE*/\n\n");
+  mom_cemit_printf (csta, "#endif /*MONIMELT_MODULE*/\n\n");
   mom_cemit_printf (csta, "#ifndef MOM_NB_MODULE_GLOBAL\n"
                     "#define MOM_NB_MODULE_GLOBAL %d\n"
                     "#endif /*MOM_NB_MODULE_GLOBAL*/\n", nbset - nbpredef);
