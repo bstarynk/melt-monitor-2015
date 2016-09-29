@@ -55,6 +55,7 @@ struct mom_cemitlocalstate_st
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
   mo_objref_t mo_cemsta_curfun; /* the current function */
   mo_assovaldatapayl_ty *mo_cemsta_assocfunxtype;       /* associate expressions to their types */
+  mo_assovaldatapayl_ty *mo_cemsta_assocfunvarol;       /* associate variables to their roles */
   mo_listpayl_ty *mo_cemsta_endtodolist;        /* list of things to do at end */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
@@ -1749,6 +1750,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     mo_objref_pnamestr (funob),
                     mo_objref_pnamestr (csta->mo_cemsta_curfun));
   csta->mo_cemsta_curfun = funob;
+  csta->mo_cemsta_assocfunxtype = mo_assoval_reserve (NULL, 32);
+  csta->mo_cemsta_assocfunvarol = mo_assoval_reserve (NULL, 32);
   mo_value_t formaltup =
     mo_dyncast_tuple (mo_objref_get_attr (funob, MOM_PREDEF (formals)));
   mo_value_t formtyptup =
@@ -1757,7 +1760,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   unsigned nbformals = mo_tuple_size (formaltup);
   if (nbformals != mo_tuple_size (formtyptup))
     MOM_CEMITFAILURE
-      ("cemit_function_code: formals %s are mismatching formals_ctypes %s (expecting %u)",
+      (csta,
+       "cemit_function_code: formals %s are mismatching formals_ctypes %s (expecting %u)",
        mo_value_pnamestr (formaltup), mo_value_pnamestr (formtyptup),
        nbformals);
   for (unsigned foix = 0; foix < nbformals; foix++)
@@ -1768,11 +1772,19 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                         "bad curformalob foix#%d", foix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (curfortypob),
                         "bad curfortypob foix#%d", foix);
+      if (curformalob->mo_ob_class != MOM_PREDEF (c_variable_class))
+        MOM_CEMITFAILURE
+          (csta,
+           "cemit_function_code: formal#%d %s has bad class %s (expecting c_variable_class)",
+           foix,
+           mo_objref_pnamestr (curformalob),
+           mo_objref_pnamestr (curformalob->mo_ob_class));
       if (mo_dyncast_objref
           (mo_objref_get_attr (curformalob, MOM_PREDEF (c_type))) !=
           curfortypob)
         MOM_CEMITFAILURE
-          ("cemit_function_code: formal#%d %s should have c_type %s", foix,
+          (csta, "cemit_function_code: formal#%d %s should have c_type %s",
+           foix,
            mo_objref_pnamestr (curformalob),
            mo_objref_pnamestr (curfortypob));
       /// should define the role of curformalob
@@ -1781,6 +1793,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
                   mo_objref_pnamestr (funob));
   csta->mo_cemsta_curfun = NULL;
+  csta->mo_cemsta_assocfunxtype = NULL;
+  csta->mo_cemsta_assocfunvarol = NULL;
 }                               /* end of mom_cemit_function_code */
 
 
