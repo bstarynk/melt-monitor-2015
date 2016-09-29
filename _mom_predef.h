@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 47
+#define MOM_NB_PREDEFINED 49
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -46,11 +46,17 @@ MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,345
 //+ class for inlined C routines
 MOM_HAS_PREDEFINED(c_inlined_class,_0XX587h4W56J6nk3U,227905031,8078632059823594090,3515856438)
 
+//+ class of c roles
+MOM_HAS_PREDEFINED(c_role_class,_7bJ4E6Mui5Ls7Tkx5,1697743134,7382836084787926721,526464042)
+
 //+ class for global C routines
 MOM_HAS_PREDEFINED(c_routine_class,_3pK47DLRw3N5Ghv0R,809136681,2988406914214126051,3631812419)
 
 //+ gives the C types in a module
 MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,583145630)
+
+//+ class of c variables
+MOM_HAS_PREDEFINED(c_variable_class,_3hq90zS3jpqaVDbDy,776403248,9029093004236578102,3029307049)
 
 //+ the class of classes
 MOM_HAS_PREDEFINED(class_class,_84n6z6xA40eduUUjh,1904719392,6022568611958915173,1711456220)
@@ -201,6 +207,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_0XX587h4W56J6nk3U
 #define monam_0XX587h4W56J6nk3U c_inlined_class
 
+#undef moid_c_role_class
+#define moid_c_role_class _7bJ4E6Mui5Ls7Tkx5
+#undef monam_7bJ4E6Mui5Ls7Tkx5
+#define monam_7bJ4E6Mui5Ls7Tkx5 c_role_class
+
 #undef moid_c_routine_class
 #define moid_c_routine_class _3pK47DLRw3N5Ghv0R
 #undef monam_3pK47DLRw3N5Ghv0R
@@ -210,6 +221,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_c_type _8TY6UsXJ3Djt71By3
 #undef monam_8TY6UsXJ3Djt71By3
 #define monam_8TY6UsXJ3Djt71By3 c_type
+
+#undef moid_c_variable_class
+#define moid_c_variable_class _3hq90zS3jpqaVDbDy
+#undef monam_3hq90zS3jpqaVDbDy
+#define monam_3hq90zS3jpqaVDbDy c_variable_class
 
 #undef moid_class_class
 #define moid_class_class _84n6z6xA40eduUUjh
@@ -416,8 +432,10 @@ enum mom_predefined_hashes_en {
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
   momphash_c_inlined_class=3515856438,
+  momphash_c_role_class=526464042,
   momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
+  momphash_c_variable_class=3029307049,
   momphash_class_class=1711456220,
   momphash_code=987198818,
   momphash_comment=2072874222,
@@ -466,7 +484,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 47
+#define MOM_NB_NAMED_PREDEFINED 49
 
 
 #undef MOM_HAS_PREDEFINED

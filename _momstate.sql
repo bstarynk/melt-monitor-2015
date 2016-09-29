@@ -38,8 +38,10 @@ INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_inlined_class','_0XX587h4W56J6nk3U');
+INSERT INTO t_names VALUES('c_role_class','_7bJ4E6Mui5Ls7Tkx5');
 INSERT INTO t_names VALUES('c_routine_class','_3pK47DLRw3N5Ghv0R');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
+INSERT INTO t_names VALUES('c_variable_class','_3hq90zS3jpqaVDbDy');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
@@ -809,6 +811,20 @@ INSERT INTO t_objects VALUES('_3cH0f65UzqnPaGsLY',1474534835,'
       "the routine Action_useract...."
      ]
     }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3hq90zS3jpqaVDbDy',1475135979,'
+{
+ "@name": "c_variable_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of c variables"
    }
   ]
  },
@@ -1731,6 +1747,20 @@ INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474374401,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "anything related to class, also a user action $class (object class)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7bJ4E6Mui5Ls7Tkx5',1475136142,'
+{
+ "@name": "c_role_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of c roles"
    }
   ]
  },
