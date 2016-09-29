@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 49
+#define MOM_NB_PREDEFINED 51
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -33,6 +33,12 @@ MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,47700129957835353
 
 //+ class of basic C types like int
 MOM_HAS_PREDEFINED(basic_ctype_class,_7zd6NdDtMbPp0s5HT,1790033058,6222434491758531993,4082589218)
+
+//+ gives the body block inside a function
+MOM_HAS_PREDEFINED(body,_49p2zcDH6JgIxjue1,980764555,8517121299504445801,833731743)
+
+//+ the class of C blocks
+MOM_HAS_PREDEFINED(c_block_class,_1lU1wXlGlR9TdmE89,322054873,2707217294178500585,665142132)
 
 //+ give the c code expansion or string
 MOM_HAS_PREDEFINED(c_code,_64d2GXNLEBKFBzxqP,1432177438,5902015936187224730,253100277)
@@ -186,6 +192,16 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_basic_ctype_class _7zd6NdDtMbPp0s5HT
 #undef monam_7zd6NdDtMbPp0s5HT
 #define monam_7zd6NdDtMbPp0s5HT basic_ctype_class
+
+#undef moid_body
+#define moid_body _49p2zcDH6JgIxjue1
+#undef monam_49p2zcDH6JgIxjue1
+#define monam_49p2zcDH6JgIxjue1 body
+
+#undef moid_c_block_class
+#define moid_c_block_class _1lU1wXlGlR9TdmE89
+#undef monam_1lU1wXlGlR9TdmE89
+#define monam_1lU1wXlGlR9TdmE89 c_block_class
 
 #undef moid_c_code
 #define moid_c_code _64d2GXNLEBKFBzxqP
@@ -428,6 +444,8 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
   momphash_basic_ctype_class=4082589218,
+  momphash_body=833731743,
+  momphash_c_block_class=665142132,
   momphash_c_code=253100277,
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
@@ -484,7 +502,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 49
+#define MOM_NB_NAMED_PREDEFINED 51
 
 
 #undef MOM_HAS_PREDEFINED

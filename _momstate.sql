@@ -32,8 +32,10 @@ INSERT INTO t_names VALUES('add_user_action','_3cH0f65UzqnPaGsLY');
 INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
+INSERT INTO t_names VALUES('body','_49p2zcDH6JgIxjue1');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_aggregate_initialization','_40K767SbwcfEJVyXr');
+INSERT INTO t_names VALUES('c_block_class','_1lU1wXlGlR9TdmE89');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
@@ -513,6 +515,20 @@ INSERT INTO t_objects VALUES('_1ZY6i2rKse5FsKrsv',1474975183,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1lU1wXlGlR9TdmE89',1475154030,'
+{
+ "@name": "c_block_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the class of C blocks"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1xh0H6A2nNw5upcPh',1474312783,'
 {
  "@name": "enum_ctype_class",
@@ -881,6 +897,20 @@ INSERT INTO t_objects VALUES('_47n6FfKTuPHyjab71',1473065027,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for value payloads"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_49p2zcDH6JgIxjue1',1475154030,'
+{
+ "@name": "body",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the body block inside a function"
    }
   ]
  },

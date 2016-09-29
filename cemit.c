@@ -1738,6 +1738,10 @@ enum momcemit_rolvar_en
 };
 
 void
+mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
+		      mo_objref_t blockob, mo_objref_t fromob, int depth);
+
+void
 mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                          mo_objref_t funob)
 {
@@ -1863,6 +1867,11 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mo_objref_put_comp (forolob, MOMROLVARIX_ROLE, MOM_PREDEF (result));
       mo_objref_put_comp (forolob, MOMROLVARIX_CTYPE, restypob);
     }
+  mo_objref_t bodyob = mo_dyncast_objref(mo_objref_get_attr(funob, MOM_PREDEF(body)));
+  if (!bodyob)
+    MOM_CEMITFAILURE
+      (csta, "cemit_function_code: no body in function");
+  mom_cemit_scan_block (csta, bodyob, funob, 0);
 #warning mom_cemit_function_code incomplete
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
                   mo_objref_pnamestr (funob));
@@ -1870,6 +1879,27 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   csta->mo_cemsta_assocrole = NULL;
 }                               /* end of mom_cemit_function_code */
 
+void
+mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
+		      mo_objref_t blockob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_block: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_block: bad payl@%p in csta@%p",
+                    cemp, csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (blockob),
+                    "cemit_scan_block: bad blockob at depth %d from %s",
+		    depth, mo_objref_pnamestr(fromob));
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta, "cemit_scan_block: block %s too deep %d from %s",
+                      mo_objref_pnamestr (blockob), depth, mo_objref_pnamestr(fromob));
+#warning mom_cemit_scan_block incomplete
+  MOM_WARNPRINTF("mom_cemit_scan_block incomplete block %s", mo_objref_pnamestr (blockob));
+} /* end of mom_cemit_scan_block */
 
 
 
