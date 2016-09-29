@@ -54,8 +54,8 @@ struct mom_cemitlocalstate_st
   mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
   mo_objref_t mo_cemsta_curfun; /* the current function */
-  mo_assovaldatapayl_ty *mo_cemsta_assocfunxtype;       /* associate expressions to their types */
-  mo_assovaldatapayl_ty *mo_cemsta_assocfunvarol;       /* associate variables to their roles */
+  // each variable, expression, instruction, block has some role describing more of it
+  mo_assovaldatapayl_ty *mo_cemsta_assocrole;   /* associate objects to some role */
   mo_listpayl_ty *mo_cemsta_endtodolist;        /* list of things to do at end */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
@@ -1769,9 +1769,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   mo_value_t formaltup =
     mo_dyncast_tuple (mo_objref_get_attr (funob, MOM_PREDEF (formals)));
   unsigned nbformals = mo_tuple_size (formaltup);
-  csta->mo_cemsta_assocfunxtype = mo_assoval_reserve (NULL, 32);
-  csta->mo_cemsta_assocfunvarol =
-    mo_assoval_reserve (NULL, 20 + 3 * nbformals);
+  csta->mo_cemsta_assocrole = mo_assoval_reserve (NULL, 50 + 3 * nbformals);
   mo_value_t formtyptup =
     mo_dyncast_tuple (mo_objref_get_attr
                       (signob, MOM_PREDEF (formals_ctypes)));
@@ -1806,7 +1804,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
            mo_objref_pnamestr (curfortypob));
       mo_objref_t forolob =
         mo_dyncast_objref (mo_assoval_get
-                           (csta->mo_cemsta_assocfunvarol, curformalob));
+                           (csta->mo_cemsta_assocrole, curformalob));
       if (forolob)
         MOM_CEMITFAILURE
           (csta, "cemit_function_code: formal#%d %s already used for role %s",
@@ -1819,8 +1817,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mo_objref_put_comp (forolob, MOMROLFORMIX_CTYPE, curfortypob);
       mo_objref_put_comp (forolob, MOMROLFORMIX_FORMALRANK,
                           mo_int_to_value (foix));
-      csta->mo_cemsta_assocfunvarol =
-        mo_assoval_put (csta->mo_cemsta_assocfunvarol, curformalob, forolob);
+      csta->mo_cemsta_assocrole =
+        mo_assoval_put (csta->mo_cemsta_assocrole, curformalob, forolob);
     }
   mo_objref_t resultob =
     mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (result)));
@@ -1852,8 +1850,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
        mo_objref_pnamestr (resultob),
        mo_objref_pnamestr (resultob->mo_ob_class));
   mo_objref_t forolob =
-    mo_dyncast_objref (mo_assoval_get
-                       (csta->mo_cemsta_assocfunvarol, resultob));
+    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assocrole, resultob));
   if (forolob)
     MOM_CEMITFAILURE
       (csta, "cemit_function_code: result %s already used for role %s",
@@ -1870,8 +1867,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
                   mo_objref_pnamestr (funob));
   csta->mo_cemsta_curfun = NULL;
-  csta->mo_cemsta_assocfunxtype = NULL;
-  csta->mo_cemsta_assocfunvarol = NULL;
+  csta->mo_cemsta_assocrole = NULL;
 }                               /* end of mom_cemit_function_code */
 
 
