@@ -1890,6 +1890,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
   if (!mo_dyncast_set (setv))
     MOM_CEMITFAILURE (csta, "bad set %s", mo_value_pnamestr (setv));
   unsigned nbset = mo_set_size (setv);
+  mom_cemit_printf (csta, "\n\n#ifdef MONIMELT_MODULE\n");
   mom_cemit_printf (csta, "\n// set of %d objects\n", nbset);
   int nbpredef = 0;
   for (unsigned eix = 0; eix < nbset; eix++)
@@ -1935,12 +1936,6 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
             }
         }
     }
-  mom_cemit_printf (csta, "#ifndef MOM_NB_MODULE_GLOBAL\n"
-                    "#define MOM_NB_MODULE_GLOBAL %d\n"
-                    "#endif /*MOM_NB_MODULE_GLOBAL*/\n", nbset - nbpredef);
-  mom_cemit_printf (csta, "#ifndef MOM_NB_MODULE_PREDEF\n"
-                    "#define MOM_NB_MODULE_PREDEF %d\n"
-                    "#endif /*MOM_NB_MODULE_PREDEF*/\n", nbpredef);
   mom_cemit_printf (csta, "\n\n// initialization of %d objects\n", nbset);
   mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
                     modulid);
@@ -1978,13 +1973,18 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                         mo_string_cstr (modulnamv));
     }
   mom_cemit_printf (csta,
-                    "\n#ifdef MONIMELT_MODULE\n"
                     "void monimelt_module_init(void) __attribute__((constructor));\n");
   mom_cemit_printf (csta,
                     "void monimelt_module_init(void) {\n"
                     "   " MOM_MODULEINIT_PREFIX "%s ();\n"
                     "} /* end monimelt_module_init */\n"
                     "#endif /*MONIMELT_MODULE*/\n\n", modulid);
+  mom_cemit_printf (csta, "#ifndef MOM_NB_MODULE_GLOBAL\n"
+                    "#define MOM_NB_MODULE_GLOBAL %d\n"
+                    "#endif /*MOM_NB_MODULE_GLOBAL*/\n", nbset - nbpredef);
+  mom_cemit_printf (csta, "#ifndef MOM_NB_MODULE_PREDEF\n"
+                    "#define MOM_NB_MODULE_PREDEF %d\n"
+                    "#endif /*MOM_NB_MODULE_PREDEF*/\n", nbpredef);
 }                               /* end of mom_cemit_set */
 
 
