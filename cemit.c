@@ -1734,9 +1734,25 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     cemp, csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (funob),
                     "cemit_function_code: bad funob");
+  MOM_ASSERTPRINTF (funob->mo_ob_class == MOM_PREDEF (c_inlined_class)
+                    || funob->mo_ob_class == MOM_PREDEF (c_routine_class),
+                    "cemit_function_code: funob %s with bad class %s (not c_inlined_class or c_routine_class)",
+                    mo_objref_pnamestr (funob),
+                    mo_objref_pnamestr (funob->mo_ob_class));
+  mo_objref_t signob =
+    mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (signature)));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (signob),
+                    "cemit_function_code: funob %s without signature",
+                    mo_objref_pnamestr (funob));
+  MOM_ASSERTPRINTF (csta->mo_cemsta_curfun == NULL,
+                    "cemit_function_code: funob %s but already doing function %s",
+                    mo_objref_pnamestr (funob),
+                    mo_objref_pnamestr (csta->mo_cemsta_curfun));
+  csta->mo_cemsta_curfun = funob;
 #warning mom_cemit_function_code incomplete
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
                   mo_objref_pnamestr (funob));
+  csta->mo_cemsta_curfun = NULL;
 }                               /* end of mom_cemit_function_code */
 
 
@@ -1998,9 +2014,6 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
       mom_cemit_data_definitions (&cemitstate);
       mom_cemit_function_definitions (&cemitstate);
       mom_cemit_do_at_end (&cemitstate);
-#warning mo_objref_cemit_generate very incomplete
-      MOM_WARNPRINTF ("cemit_generate incomplete for %s",
-                      cemitstate.mo_cemsta_modid);
       mom_cemit_close (&cemitstate);
       cemp->mo_cemit_locstate = NULL;
       MOM_INFORMPRINTF ("C code generated for module %s",
