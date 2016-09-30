@@ -49,6 +49,7 @@ struct mom_cemitlocalstate_st
   uint8_t mo_cemsta_indentation;
   mo_objref_t mo_cemsta_objcemit;       /* the objref with the cemit payload  */
   char mo_cemsta_modid[MOM_CSTRIDSIZ];
+  double mo_cemsta_timelimit;   /* elapsed time limit */
   FILE *mo_cemsta_fil;          /* the emitted FILE handle */
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
   mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
@@ -777,6 +778,10 @@ mom_cemit_write_ctype_for (struct mom_cemitlocalstate_st *csta,
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_write_ctype_for: %s too deep %d, for %s",
                       mo_objref_pnamestr (typobr), depth, forstr);
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_write_ctype_for: %s timed out, depth %d, for %s",
+                      mo_objref_pnamestr (typobr), depth, forstr);
   mo_objref_t inclobr =
     mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (c_include)));
   if (inclobr && !mo_hashset_contains (csta->mo_cemsta_hsetincludes, inclobr))
@@ -1121,6 +1126,9 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_define_fields: %s too deep %d",
                       mo_objref_pnamestr (typobr), depth);
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta, "cemit_define_fields: %s timed out, depth %d",
+                      mo_objref_pnamestr (typobr), depth);
   mo_objref_t extendobr =
     mo_dyncast_objref (mo_objref_get_attr (typobr, MOM_PREDEF (extend)));
   if (extendobr)
@@ -1217,6 +1225,10 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   MOM_ASSERTPRINTF (pprev != NULL, "cemit_define_enumerators: no pprev");
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta, "cemit_define_enumerators: %s too deep %d",
+                      mo_objref_pnamestr (typobr), depth);
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_define_enumerators: %s timed out, depth %d",
                       mo_objref_pnamestr (typobr), depth);
   if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, typobr))
     MOM_CEMITFAILURE (csta,
@@ -1737,13 +1749,38 @@ enum momcemit_rolvar_en
   MOMROLVARIX__LASTVAR
 };
 
+
+// A block may contains locals and has a sequence of instructions
+// (some of which may be sub-blocks); it translates in C to a block in
+// braces {....}
 void
 mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       mo_objref_t blockob, mo_objref_t fromob, int depth);
 
+// An instruction may contain references (i.e. l-values in C) and
+// expressions (i.e. r-values in C) or is some block; it translates in
+// C to a statement
 void
 mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_t instrob, mo_objref_t fromob, int depth);
+
+// a reference or l-value can be assigned to. It has some c-type. It
+// translates in C to some l-value. The scan returns its c-type
+mo_objref_t
+mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t refob, mo_objref_t fromob, int depth);
+
+// an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
+mo_objref_t
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t refob, mo_objref_t fromob, int depth);
+
+// We sometimes need to compare two C-types (e.g. for some kind of
+// assignment left := right) and get their common supertype
+mo_objref_t
+mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t leftctypob,
+                          mo_objref_t rightctypob, mo_objref_t fromob);
 
 void
 mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
@@ -1908,6 +1945,11 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
     MOM_CEMITFAILURE (csta, "cemit_scan_block: block %s too deep %d from %s",
                       mo_objref_pnamestr (blockob), depth,
                       mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_block: %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (blockob), depth,
+                      mo_objref_pnamestr (fromob));
   if (blockob->mo_ob_class != MOM_PREDEF (c_block_class))
     MOM_CEMITFAILURE (csta,
                       "cemit_scan_block: block %s has bad class %s (c_block_class expected)",
@@ -2004,6 +2046,11 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
     MOM_CEMITFAILURE (csta, "cemit_scan_instr: instr %s too deep %d from %s",
                       mo_objref_pnamestr (instrob), depth,
                       mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_instr: instr %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (instrob), depth,
+                      mo_objref_pnamestr (fromob));
   if (instrob->mo_ob_class == MOM_PREDEF (c_block_class))
     {
       mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
@@ -2013,6 +2060,8 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
   MOM_WARNPRINTF ("mom_cemit_scan_instr incomplete instr %s",
                   mo_objref_pnamestr (instrob));
 }                               /* end of mom_cemit_scan_instr */
+
+
 
 void
 mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
@@ -2250,6 +2299,7 @@ mom_cemit_do_at_end (struct mom_cemitlocalstate_st *csta)
 }                               /* end mom_cemit_do_at_end */
 
 
+#define MOM_CEMIT_GENERATE_TIMEOUT 2.5  /*elapsed seconds */
 mo_value_t
 mo_objref_cemit_generate (mo_objref_t obrcem)
 {
@@ -2276,6 +2326,8 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
   cemitstate.mo_cemsta_payl = cemp;
   cemitstate.mo_cemsta_hsetctypes =
     mo_hashset_reserve (NULL, 2 * (MOM_NB_GLOBAL + MOM_NB_PREDEFINED) + 30);
+  cemitstate.mo_cemsta_timelimit =
+    mom_elapsed_real_time () + MOM_CEMIT_GENERATE_TIMEOUT;
   cemitstate.mo_cemsta_endtodolist = mo_list_make ();
 #define MOM_ADD_GLOBAL_CTYPE(Glob)			\
   cemitstate.mo_cemsta_hsetctypes =			\
