@@ -1454,6 +1454,10 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       else
         mom_cemit_printf (csta, "\n// type#%d declaration for %s\n",
                           tix, ctypid);
+      if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_ctypes: %s declaration timed out, index %d",
+                          mo_objref_pnamestr (ctypob), tix);
       mom_cemit_declare_ctype (csta, ctypob);
     }
   mom_cemit_printf (csta, "\n//// %d type definitions:\n", nbctyp);
@@ -1472,6 +1476,10 @@ mom_cemit_ctypes (struct mom_cemitlocalstate_st *csta)
       else
         mom_cemit_printf (csta, "\n// type definition#%d for %s\n",
                           tix, ctypid);
+      if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_ctypes: %s definition timed out, index %d",
+                          mo_objref_pnamestr (ctypob), tix);
       mom_cemit_define_ctype (csta, ctypob);
     }
   mom_cemit_printf (csta, "\n// end of %d types definitions ***\n\n", nbctyp);
@@ -1646,7 +1654,15 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
     {
       mom_cemit_printf (csta, "\n// %d extern declarations:\n", nbextern);
       for (unsigned ix = 0; ix < nbextern; ix++)
-        mom_cemit_object_declare (csta, mo_sequence_nth (externv, ix), true);
+        {
+          if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+            MOM_CEMITFAILURE (csta,
+                              "cemit_declarations: extern %s timed out, index %d",
+                              mo_objref_pnamestr (mo_sequence_nth
+                                                  (externv, ix)), ix);
+          mom_cemit_object_declare (csta, mo_sequence_nth (externv, ix),
+                                    true);
+        }
     }
   else
     mom_cemit_printf (csta, "\n// no extern declarations\n");
@@ -1655,7 +1671,14 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
     {
       mom_cemit_printf (csta, "\n// %d data declarations:\n", nbdata);
       for (unsigned ix = 0; ix < nbdata; ix++)
-        mom_cemit_object_declare (csta, mo_sequence_nth (datav, ix), true);
+        {
+          if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+            MOM_CEMITFAILURE (csta,
+                              "cemit_declarations: data %s timed out, index %d",
+                              mo_objref_pnamestr (mo_sequence_nth
+                                                  (datav, ix)), ix);
+          mom_cemit_object_declare (csta, mo_sequence_nth (datav, ix), true);
+        }
     }
   else
     mom_cemit_printf (csta, "\n// no data declarations\n");
@@ -1664,7 +1687,14 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
     {
       mom_cemit_printf (csta, "\n// %d code declarations:\n", nbcode);
       for (unsigned ix = 0; ix < nbcode; ix++)
-        mom_cemit_object_declare (csta, mo_sequence_nth (codev, ix), false);
+        {
+          if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+            MOM_CEMITFAILURE (csta,
+                              "cemit_declarations: code %s timed out, index %d",
+                              mo_objref_pnamestr (mo_sequence_nth
+                                                  (codev, ix)), ix);
+          mom_cemit_object_declare (csta, mo_sequence_nth (codev, ix), false);
+        }
     }
   else
     mom_cemit_printf (csta, "\n// no code declarations\n");
@@ -1696,6 +1726,10 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
       mo_objref_t curdob = mo_sequence_nth (datav, dix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (curdob),
                         "cemit_data_definitions: bad data #%d", dix);
+      if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_data_definitions: %s timed out, index %d",
+                          mo_objref_pnamestr (curdob), dix);
       char curobid[MOM_CSTRIDSIZ];
       memset (curobid, 0, sizeof (curobid));
       mo_objref_idstr (curobid, curdob);
@@ -1796,6 +1830,10 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     cemp, csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (funob),
                     "cemit_function_code: bad funob");
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_function_code: %s timed out",
+                      mo_objref_pnamestr (funob));
   MOM_ASSERTPRINTF (funob->mo_ob_class == MOM_PREDEF (c_inlined_class)
                     || funob->mo_ob_class == MOM_PREDEF (c_routine_class),
                     "cemit_function_code: funob %s with bad class %s (not c_inlined_class or c_routine_class)",
@@ -2100,6 +2138,10 @@ mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
       else
         mom_cemit_printf (csta, "\n// function#%d code for %s\n",
                           cix, curfunid);
+      if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_function_definitions: %s timed out, index %d",
+                          mo_objref_pnamestr (curfunob), cix);
       mom_cemit_function_code (csta, curfunob);
     }
 }                               /* end of mom_cemit_function_definitions */
