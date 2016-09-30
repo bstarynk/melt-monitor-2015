@@ -1988,6 +1988,14 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_block: %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (blockob), depth,
                       mo_objref_pnamestr (fromob));
+  if (blockob->mo_ob_class == MOM_PREDEF (macro_block_class))
+    {
+#warning should handle macro_block_class in cemit_scan_block
+      MOM_FATAPRINTF
+        ("unimplemented macro block expansion for %s, depth %d, from %s",
+         mo_objref_pnamestr (blockob), depth, mo_objref_pnamestr (fromob));
+      return;
+    }
   if (blockob->mo_ob_class != MOM_PREDEF (c_block_class))
     MOM_CEMITFAILURE (csta,
                       "cemit_scan_block: block %s has bad class %s (c_block_class expected)",
@@ -2089,13 +2097,39 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_instr: instr %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (instrob), depth,
                       mo_objref_pnamestr (fromob));
-  if (instrob->mo_ob_class == MOM_PREDEF (c_block_class))
+  mo_objref_t insclassob = instrob->mo_ob_class;
+  if (!insclassob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_instr: instr %s without class, depth %d, from %s",
+                      mo_objref_pnamestr (instrob), depth,
+                      mo_objref_pnamestr (fromob));
+#define MOM_NBCASE_INSCLASS 193
+#define CASE_PREDEFINSCLASS_MOM(Ob) momphash_##Ob % MOM_NBCASE_INSCLASS: \
+  if (insclassob != MOM_PREDEF(Ob))    					\
+    goto defaultinsclasscase;						\
+  goto labinsclass_##Ob;						\
+  labinsclass_##Ob
+  switch (mo_objref_hash (insclassob) % MOM_NBCASE_INSCLASS)
     {
-      mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
-      return;
+    case CASE_PREDEFINSCLASS_MOM (c_block_class):
+      {
+        mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
+        return;
+      }
+    case CASE_PREDEFINSCLASS_MOM (chunk_instruction_class):
+      {
+      }
+      break;
+    case CASE_PREDEFINSCLASS_MOM (conditional_instruction_class):
+      {
+      }
+      break;
+    defaultinsclasscase:
+    default:
+      break;
     }
 #warning mom_cemit_scan_instr incomplete
-  MOM_WARNPRINTF ("mom_cemit_scan_instr incomplete instr %s",
+  MOM_FATAPRINTF ("mom_cemit_scan_instr incomplete instr %s",
                   mo_objref_pnamestr (instrob));
 }                               /* end of mom_cemit_scan_instr */
 

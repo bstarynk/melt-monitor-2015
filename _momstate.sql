@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Sep 29 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 01 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -47,11 +47,13 @@ INSERT INTO t_names VALUES('c_variable_class','_3hq90zS3jpqaVDbDy');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
+INSERT INTO t_names VALUES('chunk_instruction_class','_4Fo3f0PrwI6hwjSzM');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
 INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('code','_1DA4KKiwji2gafLj0');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('conditional_instruction_class','_5ln7PDl9eFYwMPwx0');
 INSERT INTO t_names VALUES('data','_6Dq8qo0MSqgbL0ESc');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
@@ -87,6 +89,7 @@ INSERT INTO t_names VALUES('int8_t','_62H0GDHPCtIRvAdDd');
 INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
 INSERT INTO t_names VALUES('locals','_5t61z2vkWfR1NbtiF');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
+INSERT INTO t_names VALUES('macro_block_class','_6VV8wX6A6EdY0C70Z');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
@@ -946,6 +949,20 @@ INSERT INTO t_objects VALUES('_4Cz6GxTDLCsTy7bco',1474391079,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_4Fo3f0PrwI6hwjSzM',1475274437,'
+{
+ "@name": "chunk_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for C code chunk instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
 {
  "@name": "notice",
@@ -1307,6 +1324,20 @@ INSERT INTO t_objects VALUES('_5fr2Xe93UTwNlLIIo',1474973691,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5ln7PDl9eFYwMPwx0',1475274437,'
+{
+ "@name": "conditional_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for conditional instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5t61z2vkWfR1NbtiF',1475176212,'
 {
  "@name": "locals",
@@ -1470,6 +1501,20 @@ INSERT INTO t_objects VALUES('_6VK4TFfclh68txISx',1474869958,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_6VV8wX6A6EdY0C70Z',1475274437,'
+{
+ "@name": "macro_block_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for macro blocks"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1475082733,'
 {
  "@name": "enumaa_test1",

@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 52
+#define MOM_NB_PREDEFINED 55
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -64,6 +64,9 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 //+ class of c variables
 MOM_HAS_PREDEFINED(c_variable_class,_3hq90zS3jpqaVDbDy,776403248,9029093004236578102,3029307049)
 
+//+ class for C code chunk instructions
+MOM_HAS_PREDEFINED(chunk_instruction_class,_4Fo3f0PrwI6hwjSzM,1106532836,6591579824412425956,3618640566)
+
 //+ the class of classes
 MOM_HAS_PREDEFINED(class_class,_84n6z6xA40eduUUjh,1904719392,6022568611958915173,1711456220)
 
@@ -72,6 +75,9 @@ MOM_HAS_PREDEFINED(code,_1DA4KKiwji2gafLj0,391676976,2004738985539924900,9871988
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ class for conditional instructions
+MOM_HAS_PREDEFINED(conditional_instruction_class,_5ln7PDl9eFYwMPwx0,1263786227,1678393836936996156,1472692775)
 
 //+ give data, e.g. in module
 MOM_HAS_PREDEFINED(data,_6Dq8qo0MSqgbL0ESc,1570695533,981874688542949820,1120086050)
@@ -111,6 +117,9 @@ MOM_HAS_PREDEFINED(in,_3St1x2rkjnH28CyRy,914172643,3044153046388021430,251661822
 
 //+ local variables in block
 MOM_HAS_PREDEFINED(locals,_5t61z2vkWfR1NbtiF,1294085071,5602063248249748081,736931447)
+
+//+ class for macro blocks
+MOM_HAS_PREDEFINED(macro_block_class,_6VV8wX6A6EdY0C70Z,1635511410,3072357572477716779,4234358676)
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
@@ -246,6 +255,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_3hq90zS3jpqaVDbDy
 #define monam_3hq90zS3jpqaVDbDy c_variable_class
 
+#undef moid_chunk_instruction_class
+#define moid_chunk_instruction_class _4Fo3f0PrwI6hwjSzM
+#undef monam_4Fo3f0PrwI6hwjSzM
+#define monam_4Fo3f0PrwI6hwjSzM chunk_instruction_class
+
 #undef moid_class_class
 #define moid_class_class _84n6z6xA40eduUUjh
 #undef monam_84n6z6xA40eduUUjh
@@ -260,6 +274,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_conditional_instruction_class
+#define moid_conditional_instruction_class _5ln7PDl9eFYwMPwx0
+#undef monam_5ln7PDl9eFYwMPwx0
+#define monam_5ln7PDl9eFYwMPwx0 conditional_instruction_class
 
 #undef moid_data
 #define moid_data _6Dq8qo0MSqgbL0ESc
@@ -325,6 +344,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_locals _5t61z2vkWfR1NbtiF
 #undef monam_5t61z2vkWfR1NbtiF
 #define monam_5t61z2vkWfR1NbtiF locals
+
+#undef moid_macro_block_class
+#define moid_macro_block_class _6VV8wX6A6EdY0C70Z
+#undef monam_6VV8wX6A6EdY0C70Z
+#define monam_6VV8wX6A6EdY0C70Z macro_block_class
 
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
@@ -462,9 +486,11 @@ enum mom_predefined_hashes_en {
   momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
   momphash_c_variable_class=3029307049,
+  momphash_chunk_instruction_class=3618640566,
   momphash_class_class=1711456220,
   momphash_code=987198818,
   momphash_comment=2072874222,
+  momphash_conditional_instruction_class=1472692775,
   momphash_data=1120086050,
   momphash_enum_ctype_class=452162142,
   momphash_enumerator_class=2628424159,
@@ -478,6 +504,7 @@ enum mom_predefined_hashes_en {
   momphash_global_c_data_class=3740163544,
   momphash_in=2516618224,
   momphash_locals=736931447,
+  momphash_macro_block_class=4234358676,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
@@ -511,7 +538,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 52
+#define MOM_NB_NAMED_PREDEFINED 55
 
 
 #undef MOM_HAS_PREDEFINED
