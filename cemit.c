@@ -1990,11 +1990,43 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (fromob));
   if (blockob->mo_ob_class == MOM_PREDEF (macro_block_class))
     {
+      mo_objref_t macrob =
+        mo_dyncast_objref (mo_objref_get_attr (blockob, MOM_PREDEF (macro)));
+      if (!macrob)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_block: macro block %s without macro, depth %d, from %s",
+                          mo_objref_pnamestr (blockob), depth,
+                          mo_objref_pnamestr (fromob));
+      if (macrob->mo_ob_paylkind !=
+          MOM_PREDEF (signature_two_objects_to_object)
+          || !macrob->mo_ob_payldata)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_block: macro block %s with bad macro %s, depth %d, from %s",
+                          mo_objref_pnamestr (blockob),
+                          mo_objref_pnamestr (macrob), depth,
+                          mo_objref_pnamestr (fromob));
       mo_objref_t objcemit = csta->mo_cemsta_objcemit;
+      mo_signature_two_objects_to_object_sigt *funrout =
+        macrob->mo_ob_payldata;
+      MOM_ASSERTPRINTF ((void *) funrout != NULL
+                        && (void *) funrout != MOM_EMPTY_SLOT,
+                        "cemit_scan_block: macro block %s with macro %s bad funrout, depth %d, from %s",
+                        mo_objref_pnamestr (blockob),
+                        mo_objref_pnamestr (macrob), depth,
+                        mo_objref_pnamestr (fromob));
+      mo_objref_t resmacrob = (*funrout) (blockob, objcemit);
+      if (!mo_dyncast_objref (resmacrob))
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_block: macro block %s with failed macro %s, depth %d, from %s",
+                          mo_objref_pnamestr (blockob),
+                          mo_objref_pnamestr (macrob),
+                          depth, mo_objref_pnamestr (fromob));
+      // we don't know yet what to do with resmacrob, etc...
 #warning should handle macro_block_class in cemit_scan_block
       MOM_FATAPRINTF
-        ("unimplemented macro block expansion for %s, depth %d, from %s",
-         mo_objref_pnamestr (blockob), depth, mo_objref_pnamestr (fromob));
+        ("unimplemented macro block expansion for %s, depth %d, from %s (resmacrob %s)",
+         mo_objref_pnamestr (blockob), depth, mo_objref_pnamestr (fromob),
+         mo_objref_pnamestr (resmacrob));
       return;
     }
   if (blockob->mo_ob_class != MOM_PREDEF (c_block_class))
