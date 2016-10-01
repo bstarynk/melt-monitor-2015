@@ -180,7 +180,7 @@ mo_assoval_put (mo_assovaldatapayl_ty * asso, mo_objref_t obr, mo_value_t va)
     {                           // should grow
       unsigned oldcnt = cnt;
       unsigned oldsz = sz;
-      unsigned gap = 2 + cnt / 64;
+      unsigned gap = 3 + cnt / 64;
       if (cnt > 100)
         gap += cnt / 16 + cnt / 32 + 9;
       asso = mo_assoval_reserve (asso, gap);
@@ -280,7 +280,7 @@ mo_assoval_reserve (mo_assovaldatapayl_ty * asso, unsigned gap)
     newsz = 7;
   else
     newsz =                     //
-      mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 32 + gap / 32 + 1);
+      mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 32 + gap / 32 + 2);
   if (newsz == sz)
     return asso;
   mo_assovaldatapayl_ty *newasso =

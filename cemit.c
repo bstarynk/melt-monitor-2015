@@ -2125,32 +2125,32 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
 #warning lot of code missing in mom_cemit_scan_instr
     case CASE_PREDEFINSCLASS_MOM (chunk_instruction_class):
       {
-	//FIXME: handle chunk instructions
+        //FIXME: handle chunk instructions
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (conditional_instruction_class):
       {
-	//FIXE: handle cond instrucion
+        //FIXE: handle cond instrucion
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (assignment_instruction_class):
       {
-	//FIXE: handle assign instrucion
+        //FIXE: handle assign instrucion
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (call_instruction_class):
       {
-	//FIXE: handle call instrucion
+        //FIXE: handle call instrucion
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (case_instruction_class):
       {
-	//FIXE: handle case instrucion
+        //FIXE: handle case instrucion
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (jump_instruction_class):
       {
-	//FIXE: handle jump instrucion
+        //FIXE: handle jump instrucion
       }
       break;
     defaultinsclasscase:

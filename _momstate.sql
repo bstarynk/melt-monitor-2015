@@ -93,6 +93,7 @@ INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
 INSERT INTO t_names VALUES('jump_instruction_class','_6dw6NAxxyyrUS1716');
 INSERT INTO t_names VALUES('locals','_5t61z2vkWfR1NbtiF');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
+INSERT INTO t_names VALUES('macro','_5pl24omBRy4z1HrtN');
 INSERT INTO t_names VALUES('macro_block_class','_6VV8wX6A6EdY0C70Z');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
@@ -1379,6 +1380,20 @@ INSERT INTO t_objects VALUES('_5ln7PDl9eFYwMPwx0',1475274437,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for conditional instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_5pl24omBRy4z1HrtN',1475336840,'
+{
+ "@name": "macro",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the macro, e.g. in a macro_block_class"
    }
   ]
  },

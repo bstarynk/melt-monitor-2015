@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 60
+#define MOM_NB_PREDEFINED 61
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -129,6 +129,9 @@ MOM_HAS_PREDEFINED(jump_instruction_class,_6dw6NAxxyyrUS1716,1468841167,69622320
 
 //+ local variables in block
 MOM_HAS_PREDEFINED(locals,_5t61z2vkWfR1NbtiF,1294085071,5602063248249748081,736931447)
+
+//+ give the macro, e.g. in a macro_block_class
+MOM_HAS_PREDEFINED(macro,_5pl24omBRy4z1HrtN,1279342936,7203691249484624109,2753598703)
 
 //+ class for macro blocks
 MOM_HAS_PREDEFINED(macro_block_class,_6VV8wX6A6EdY0C70Z,1635511410,3072357572477716779,4234358676)
@@ -380,6 +383,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_5t61z2vkWfR1NbtiF
 #define monam_5t61z2vkWfR1NbtiF locals
 
+#undef moid_macro
+#define moid_macro _5pl24omBRy4z1HrtN
+#undef monam_5pl24omBRy4z1HrtN
+#define monam_5pl24omBRy4z1HrtN macro
+
 #undef moid_macro_block_class
 #define moid_macro_block_class _6VV8wX6A6EdY0C70Z
 #undef monam_6VV8wX6A6EdY0C70Z
@@ -548,6 +556,7 @@ enum mom_predefined_hashes_en {
   momphash_in=2516618224,
   momphash_jump_instruction_class=3094550108,
   momphash_locals=736931447,
+  momphash_macro=2753598703,
   momphash_macro_block_class=4234358676,
   momphash_module_class=3193995711,
   momphash_payload_assoval=2981901912,
@@ -583,7 +592,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 60
+#define MOM_NB_NAMED_PREDEFINED 61
 
 
 #undef MOM_HAS_PREDEFINED
