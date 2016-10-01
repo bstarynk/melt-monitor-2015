@@ -1733,6 +1733,8 @@ mo_objref_get_signed_funad (mo_objref_t obr, mo_objref_t obrsig)
 typedef mo_value_t mo_signature_object_to_value_sigt (mo_objref_t);
 /// signature corresponding to signature_two_objects_to_void
 typedef void mo_signature_two_objects_to_void_sigt (mo_objref_t, mo_objref_t);
+/// signature corresponding to signature_two_objects_to_object
+typedef mo_objref_t mo_signature_two_objects_to_object_sigt (mo_objref_t, mo_objref_t);
 ////////////////////////////////////////////////////////////////
 /***************** Graphical User Interface (above GTK) *****/
 extern bool mom_without_gui;

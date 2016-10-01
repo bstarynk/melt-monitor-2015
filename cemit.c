@@ -1990,6 +1990,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (fromob));
   if (blockob->mo_ob_class == MOM_PREDEF (macro_block_class))
     {
+      mo_objref_t objcemit = csta->mo_cemsta_objcemit;
 #warning should handle macro_block_class in cemit_scan_block
       MOM_FATAPRINTF
         ("unimplemented macro block expansion for %s, depth %d, from %s",

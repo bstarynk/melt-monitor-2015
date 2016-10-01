@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 59
+#define MOM_NB_PREDEFINED 60
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -180,6 +180,9 @@ MOM_HAS_PREDEFINED(signature_class,_6S30JEAmywph5MZqd,1620251918,438120831131371
 
 //+ signature: object -> value
 MOM_HAS_PREDEFINED(signature_object_to_value,_8DT8VbN0FaiS0K6uf,2044327603,3139888012720850935,2424030428)
+
+//+ signature: object object -> object
+MOM_HAS_PREDEFINED(signature_two_objects_to_object,_4pb5Vror0ehNFKXfT,1042785241,3385179507693369033,3006024624)
 
 //+ signature: object -> object -> void
 MOM_HAS_PREDEFINED(signature_two_objects_to_void,_0dV2PYaSBUDE7lsYq,54742735,735383097219507506,3840088673)
@@ -462,6 +465,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_8DT8VbN0FaiS0K6uf
 #define monam_8DT8VbN0FaiS0K6uf signature_object_to_value
 
+#undef moid_signature_two_objects_to_object
+#define moid_signature_two_objects_to_object _4pb5Vror0ehNFKXfT
+#undef monam_4pb5Vror0ehNFKXfT
+#define monam_4pb5Vror0ehNFKXfT signature_two_objects_to_object
+
 #undef moid_signature_two_objects_to_void
 #define moid_signature_two_objects_to_void _0dV2PYaSBUDE7lsYq
 #undef monam_0dV2PYaSBUDE7lsYq
@@ -557,6 +565,7 @@ enum mom_predefined_hashes_en {
   momphash_signature=1265851629,
   momphash_signature_class=906720652,
   momphash_signature_object_to_value=2424030428,
+  momphash_signature_two_objects_to_object=3006024624,
   momphash_signature_two_objects_to_void=3840088673,
   momphash_struct_ctype_class=367899874,
   momphash_struct_pointer_ctype_class=799041071,
@@ -574,7 +583,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 59
+#define MOM_NB_NAMED_PREDEFINED 60
 
 
 #undef MOM_HAS_PREDEFINED
