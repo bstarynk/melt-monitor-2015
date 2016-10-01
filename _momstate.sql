@@ -31,6 +31,7 @@ INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('add_user_action','_3cH0f65UzqnPaGsLY');
 INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
+INSERT INTO t_names VALUES('assignment_instruction_class','_4Yd3gqjKLi1hAKztj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('body','_49p2zcDH6JgIxjue1');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
@@ -44,6 +45,8 @@ INSERT INTO t_names VALUES('c_role_class','_7bJ4E6Mui5Ls7Tkx5');
 INSERT INTO t_names VALUES('c_routine_class','_3pK47DLRw3N5Ghv0R');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('c_variable_class','_3hq90zS3jpqaVDbDy');
+INSERT INTO t_names VALUES('call_instruction_class','_3nV79jeVZkZ8kdSWp');
+INSERT INTO t_names VALUES('case_instruction_class','_72P3hApuaup7FsP08');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
@@ -87,6 +90,7 @@ INSERT INTO t_names VALUES('int32_t','_7EH4RTtyF1BioGEDK');
 INSERT INTO t_names VALUES('int64_t','_21x8NL3oau6heNEnt');
 INSERT INTO t_names VALUES('int8_t','_62H0GDHPCtIRvAdDd');
 INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
+INSERT INTO t_names VALUES('jump_instruction_class','_6dw6NAxxyyrUS1716');
 INSERT INTO t_names VALUES('locals','_5t61z2vkWfR1NbtiF');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('macro_block_class','_6VV8wX6A6EdY0C70Z');
@@ -851,6 +855,20 @@ INSERT INTO t_objects VALUES('_3hq90zS3jpqaVDbDy',1475135979,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_3nV79jeVZkZ8kdSWp',1475302768,'
+{
+ "@name": "call_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for call instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_3pK47DLRw3N5Ghv0R',1474973691,'
 {
  "@name": "c_routine_class",
@@ -1076,6 +1094,20 @@ INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1475082733,'
  "comps": null
 }
 ','_0dK6lxuDBgrY7Zdrb','','','');
+INSERT INTO t_objects VALUES('_4Yd3gqjKLi1hAKztj',1475302768,'
+{
+ "@name": "assignment_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for assignment instruction"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",
@@ -1624,6 +1656,20 @@ INSERT INTO t_objects VALUES('_6cu0xvaoNV0W4X4aW',1474879292,'
  "comps": null
 }
 ','_3CM77K3hIhblwvxg3','','','');
+INSERT INTO t_objects VALUES('_6dw6NAxxyyrUS1716',1475302768,'
+{
+ "@name": "jump_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for jump (to block) instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_6r06aqWaPdfZgAKBP',1474474102,'
 {
  "@name": "uint64_t",
@@ -1701,6 +1747,20 @@ INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474881756,'
  "comps": null
 }
 ','_1xh0H6A2nNw5upcPh','','','');
+INSERT INTO t_objects VALUES('_72P3hApuaup7FsP08',1475302768,'
+{
+ "@name": "case_instruction_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for case instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
 {
  "@name": "payload_list",

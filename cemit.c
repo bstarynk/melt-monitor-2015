@@ -2116,12 +2116,40 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
         mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
         return;
       }
+    case CASE_PREDEFINSCLASS_MOM (macro_block_class):
+      {
+        mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
+        return;
+      }
+#warning lot of code missing in mom_cemit_scan_instr
     case CASE_PREDEFINSCLASS_MOM (chunk_instruction_class):
       {
+	//FIXME: handle chunk instructions
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (conditional_instruction_class):
       {
+	//FIXE: handle cond instrucion
+      }
+      break;
+    case CASE_PREDEFINSCLASS_MOM (assignment_instruction_class):
+      {
+	//FIXE: handle assign instrucion
+      }
+      break;
+    case CASE_PREDEFINSCLASS_MOM (call_instruction_class):
+      {
+	//FIXE: handle call instrucion
+      }
+      break;
+    case CASE_PREDEFINSCLASS_MOM (case_instruction_class):
+      {
+	//FIXE: handle case instrucion
+      }
+      break;
+    case CASE_PREDEFINSCLASS_MOM (jump_instruction_class):
+      {
+	//FIXE: handle jump instrucion
       }
       break;
     defaultinsclasscase:

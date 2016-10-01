@@ -23,13 +23,16 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 55
+#define MOM_NB_PREDEFINED 59
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
 
 //+ attribute giving the GUI operation for $oper
 MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,4770012995783535398,3665661719)
+
+//+ class for assignment instruction
+MOM_HAS_PREDEFINED(assignment_instruction_class,_4Yd3gqjKLi1hAKztj,1172658828,9042665112625364879,2709133709)
 
 //+ class of basic C types like int
 MOM_HAS_PREDEFINED(basic_ctype_class,_7zd6NdDtMbPp0s5HT,1790033058,6222434491758531993,4082589218)
@@ -63,6 +66,12 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 
 //+ class of c variables
 MOM_HAS_PREDEFINED(c_variable_class,_3hq90zS3jpqaVDbDy,776403248,9029093004236578102,3029307049)
+
+//+ class for call instructions
+MOM_HAS_PREDEFINED(call_instruction_class,_3nV79jeVZkZ8kdSWp,801883621,7464538601192580409,3902071136)
+
+//+ class for case instructions
+MOM_HAS_PREDEFINED(case_instruction_class,_72P3hApuaup7FsP08,1662671638,6431922489856206120,966733070)
 
 //+ class for C code chunk instructions
 MOM_HAS_PREDEFINED(chunk_instruction_class,_4Fo3f0PrwI6hwjSzM,1106532836,6591579824412425956,3618640566)
@@ -114,6 +123,9 @@ MOM_HAS_PREDEFINED(global_c_data_class,_5fr2Xe93UTwNlLIIo,1240420786,86652015902
 
 //+ to give some container, etc....
 MOM_HAS_PREDEFINED(in,_3St1x2rkjnH28CyRy,914172643,3044153046388021430,2516618224)
+
+//+ class for jump (to block) instructions
+MOM_HAS_PREDEFINED(jump_instruction_class,_6dw6NAxxyyrUS1716,1468841167,6962232071839201906,3094550108)
 
 //+ local variables in block
 MOM_HAS_PREDEFINED(locals,_5t61z2vkWfR1NbtiF,1294085071,5602063248249748081,736931447)
@@ -200,6 +212,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_4x85ZXWJ9HDCurqHP
 #define monam_4x85ZXWJ9HDCurqHP GUI_operation
 
+#undef moid_assignment_instruction_class
+#define moid_assignment_instruction_class _4Yd3gqjKLi1hAKztj
+#undef monam_4Yd3gqjKLi1hAKztj
+#define monam_4Yd3gqjKLi1hAKztj assignment_instruction_class
+
 #undef moid_basic_ctype_class
 #define moid_basic_ctype_class _7zd6NdDtMbPp0s5HT
 #undef monam_7zd6NdDtMbPp0s5HT
@@ -254,6 +271,16 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_c_variable_class _3hq90zS3jpqaVDbDy
 #undef monam_3hq90zS3jpqaVDbDy
 #define monam_3hq90zS3jpqaVDbDy c_variable_class
+
+#undef moid_call_instruction_class
+#define moid_call_instruction_class _3nV79jeVZkZ8kdSWp
+#undef monam_3nV79jeVZkZ8kdSWp
+#define monam_3nV79jeVZkZ8kdSWp call_instruction_class
+
+#undef moid_case_instruction_class
+#define moid_case_instruction_class _72P3hApuaup7FsP08
+#undef monam_72P3hApuaup7FsP08
+#define monam_72P3hApuaup7FsP08 case_instruction_class
 
 #undef moid_chunk_instruction_class
 #define moid_chunk_instruction_class _4Fo3f0PrwI6hwjSzM
@@ -339,6 +366,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define moid_in _3St1x2rkjnH28CyRy
 #undef monam_3St1x2rkjnH28CyRy
 #define monam_3St1x2rkjnH28CyRy in
+
+#undef moid_jump_instruction_class
+#define moid_jump_instruction_class _6dw6NAxxyyrUS1716
+#undef monam_6dw6NAxxyyrUS1716
+#define monam_6dw6NAxxyyrUS1716 jump_instruction_class
 
 #undef moid_locals
 #define moid_locals _5t61z2vkWfR1NbtiF
@@ -475,6 +507,7 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
+  momphash_assignment_instruction_class=2709133709,
   momphash_basic_ctype_class=4082589218,
   momphash_body=833731743,
   momphash_c_block_class=665142132,
@@ -486,6 +519,8 @@ enum mom_predefined_hashes_en {
   momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
   momphash_c_variable_class=3029307049,
+  momphash_call_instruction_class=3902071136,
+  momphash_case_instruction_class=966733070,
   momphash_chunk_instruction_class=3618640566,
   momphash_class_class=1711456220,
   momphash_code=987198818,
@@ -503,6 +538,7 @@ enum mom_predefined_hashes_en {
   momphash_formals_ctypes=102498809,
   momphash_global_c_data_class=3740163544,
   momphash_in=2516618224,
+  momphash_jump_instruction_class=3094550108,
   momphash_locals=736931447,
   momphash_macro_block_class=4234358676,
   momphash_module_class=3193995711,
@@ -538,7 +574,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 55
+#define MOM_NB_NAMED_PREDEFINED 59
 
 
 #undef MOM_HAS_PREDEFINED
