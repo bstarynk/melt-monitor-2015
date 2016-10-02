@@ -40,7 +40,7 @@ PREPROFLAGS= -I $(CCINCLUDEDIR) -I. -I/usr/local/include $(shell $(PKGCONFIG) --
 OPTIMFLAGS= -O1 -g3
 
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
-        -lhiredis -lgccjit  -lonion $(shell $(GCC) -print-file-name=libbacktrace.a) -lpthread -lcrypt -lm -ldl -latomic
+        -lhiredis -lgccjit  $(shell $(GCC) -print-file-name=libbacktrace.a) -lpthread -lcrypt -lm -ldl -latomic
 
 .SUFFIXES= .so
 # the persistent state base, probably _momstate
