@@ -1733,7 +1733,6 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
       char curobid[MOM_CSTRIDSIZ];
       memset (curobid, 0, sizeof (curobid));
       mo_objref_idstr (curobid, curdob);
-      mo_value_t curobnamev = mo_objref_namev (curdob);
       mo_objref_t objclass = curdob->mo_ob_class;
       if (objclass == MOM_PREDEF (global_c_data_class)
           || objclass == MOM_PREDEF (threadlocal_c_data_class))
@@ -1783,6 +1782,15 @@ enum momcemit_rolvar_en
   MOMROLVARIX__LASTVAR
 };
 
+// the slots of role object for blocks (& macros)
+enum momcemit_rolblock_en
+{
+  MOMROLBLOCKIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLBLOCKIX_INSTRS = MOMROLFORMIX_CTYPE,
+  MOMROLBLOCKIX_EXPANSION = MOMROLBLOCKIX_INSTRS,
+  MOMROLBLOCKIX_IN,
+  MOMROLBLOCKIX__LASTVAR
+};
 
 // A block may contains locals and has a sequence of instructions
 // (some of which may be sub-blocks); it translates in C to a block in
@@ -1988,6 +1996,14 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_block: %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (blockob), depth,
                       mo_objref_pnamestr (fromob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assocrole, blockob));
+  if (rolob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_block: %s has already a role %s, depth %d, from %s",
+                      mo_objref_pnamestr (blockob),
+                      mo_objref_pnamestr (rolob), depth,
+                      mo_objref_pnamestr (fromob));
   if (blockob->mo_ob_class == MOM_PREDEF (macro_block_class))
     {
       mo_objref_t macrob =
@@ -2021,12 +2037,15 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (blockob),
                           mo_objref_pnamestr (macrob),
                           depth, mo_objref_pnamestr (fromob));
-      // we don't know yet what to do with resmacrob, etc...
-#warning should handle macro_block_class in cemit_scan_block
-      MOM_FATAPRINTF
-        ("unimplemented macro block expansion for %s, depth %d, from %s (resmacrob %s)",
-         mo_objref_pnamestr (blockob), depth, mo_objref_pnamestr (fromob),
-         mo_objref_pnamestr (resmacrob));
+      rolob = mo_make_object ();
+      rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+      mo_objref_comp_resize (rolob, MOMROLBLOCKIX__LASTVAR);
+      mo_objref_put_comp (rolob, MOMROLBLOCKIX_ROLE, MOM_PREDEF (macro));
+      mo_objref_put_comp (rolob, MOMROLBLOCKIX_EXPANSION, resmacrob);
+      mo_objref_put_comp (rolob, MOMROLBLOCKIX_IN, fromob);
+      csta->mo_cemsta_assocrole =
+        mo_assoval_put (csta->mo_cemsta_assocrole, blockob, rolob);
+      mom_cemit_scan_block (csta, resmacrob, fromob, depth + 1);
       return;
     }
   if (blockob->mo_ob_class != MOM_PREDEF (c_block_class))
@@ -2034,6 +2053,13 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_block: block %s has bad class %s (c_block_class expected)",
                       mo_objref_pnamestr (blockob),
                       mo_objref_pnamestr (blockob->mo_ob_class));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLBLOCKIX__LASTVAR);
+  mo_objref_put_comp (rolob, MOMROLBLOCKIX_ROLE, MOM_PREDEF (body));
+  mo_objref_put_comp (rolob, MOMROLBLOCKIX_IN, fromob);
+  csta->mo_cemsta_assocrole =
+    mo_assoval_put (csta->mo_cemsta_assocrole, blockob, rolob);
   mo_value_t locseq =
     mo_dyncast_sequence (mo_objref_get_attr (blockob, MOM_PREDEF (locals)));
   int nblocals = mo_sequence_size (locseq);
@@ -2079,6 +2105,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
         mo_assoval_put (csta->mo_cemsta_assocrole, curlocalob, locrolob);
     }
   int nbinstr = mo_objref_comp_count (blockob);
+  mo_sequencevalue_ty *seqins = mo_sequence_allocate (nbinstr);
   for (int ix = 0; ix < nbinstr; ix++)
     {
       mo_objref_t instrob =
@@ -2089,6 +2116,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
            "cemit_scan_block: no instr#%d in block %s",
            ix, mo_objref_pnamestr (blockob));
       mom_cemit_scan_instr (csta, instrob, blockob, depth + 1);
+      seqins->mo_seqobj[ix] = instrob;
     };
   // "forget" the locals by overwiting the role
   // so the same local can't be used again...
@@ -2104,6 +2132,8 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                         "cemit_scan_block: bad locolob lix#%d", lix);
       mo_objref_put_comp (locrolob, MOMROLVARIX_ROLE, NULL);
     };
+  mo_objref_put_comp (rolob, MOMROLBLOCKIX_EXPANSION,
+                      mo_make_tuple_closeq (seqins));
 }                               /* end of mom_cemit_scan_block */
 
 
