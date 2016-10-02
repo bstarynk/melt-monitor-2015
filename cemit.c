@@ -2410,6 +2410,45 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                     csta);
   if (!expv)
     return MOM_PREDEF (null_ctype);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_expression: expr %s too deep %d from %s",
+                      mo_value_pnamestr (expv), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_expression: expr %s timed out, depth %d, from %s",
+                      mo_value_pnamestr (expv), depth,
+                      mo_objref_pnamestr (fromob));
+  enum mo_valkind_en kv = mo_kind_of_value (expv);
+  switch (kv)
+    {
+    case mo_KNONE:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_scan_expression: missing expression %s from %s",
+                        mo_value_pnamestr (expv),
+                        mo_objref_pnamestr (fromob));
+    case mo_KINT:
+      return momglob_int;
+    case mo_KSTRING:
+      return momglob_string;
+    case mo_KTUPLE:
+      goto setkindv;
+    case mo_KSET:
+    setkindv:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_scan_expression: bad sequence expression %s from %s",
+                        mo_value_pnamestr (expv),
+                        mo_objref_pnamestr (fromob));
+    case mo_KOBJECT:
+      {
+        mo_objref_t expob = mo_dyncast_objref (expv);
+        MOM_ASSERTPRINTF (expob != NULL,
+                          "cemit_scan_expression: bad expob from %s",
+                          mo_objref_pnamestr (fromob));
+      }
+    }
+
 #warning mom_cemit_scan_expression incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_expression incomplete expv %s",
                   mo_value_pnamestr (expv));
