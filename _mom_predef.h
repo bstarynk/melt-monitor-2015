@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 61
+#define MOM_NB_PREDEFINED 62
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -138,6 +138,9 @@ MOM_HAS_PREDEFINED(macro_block_class,_6VV8wX6A6EdY0C70Z,1635511410,3072357572477
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
+
+//+ ctype of nil
+MOM_HAS_PREDEFINED(null_ctype,_77D6zusmyq0jAM0Du,1681634895,6579245986527860034,3248468239)
 
 //+ for assovaldata payload
 MOM_HAS_PREDEFINED(payload_assoval,_5JG8lVw6jwlUT7PLK,1359406941,542326625342310802,2981901912)
@@ -398,6 +401,11 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_22z6Be6oa3IH524Jy
 #define monam_22z6Be6oa3IH524Jy module_class
 
+#undef moid_null_ctype
+#define moid_null_ctype _77D6zusmyq0jAM0Du
+#undef monam_77D6zusmyq0jAM0Du
+#define monam_77D6zusmyq0jAM0Du null_ctype
+
 #undef moid_payload_assoval
 #define moid_payload_assoval _5JG8lVw6jwlUT7PLK
 #undef monam_5JG8lVw6jwlUT7PLK
@@ -559,6 +567,7 @@ enum mom_predefined_hashes_en {
   momphash_macro=2753598703,
   momphash_macro_block_class=4234358676,
   momphash_module_class=3193995711,
+  momphash_null_ctype=3248468239,
   momphash_payload_assoval=2981901912,
   momphash_payload_buffer=2757661367,
   momphash_payload_c_emit=386861103,
@@ -592,7 +601,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 61
+#define MOM_NB_NAMED_PREDEFINED 62
 
 
 #undef MOM_HAS_PREDEFINED

@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 01 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 02 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -97,6 +97,7 @@ INSERT INTO t_names VALUES('macro','_5pl24omBRy4z1HrtN');
 INSERT INTO t_names VALUES('macro_block_class','_6VV8wX6A6EdY0C70Z');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
+INSERT INTO t_names VALUES('null_ctype','_77D6zusmyq0jAM0Du');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
 INSERT INTO t_names VALUES('payload_c_emit','_8hg5YXTgfHBnV4W8q');
@@ -1799,6 +1800,20 @@ INSERT INTO t_objects VALUES('_76f7e2VcL8IJC1hq6',1473049630,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for list payload"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_77D6zusmyq0jAM0Du',1475408154,'
+{
+ "@name": "null_ctype",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "ctype of nil"
    }
   ]
  },

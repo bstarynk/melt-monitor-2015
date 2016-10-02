@@ -1815,7 +1815,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
 mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
-                           mo_objref_t refob, mo_objref_t fromob, int depth);
+                           mo_value_t expv, mo_objref_t fromob, int depth);
 
 // We sometimes need to compare two C-types (e.g. for some kind of
 // assignment left := right) and get their common supertype
@@ -2105,6 +2105,8 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
         mo_assoval_put (csta->mo_cemsta_assocrole, curlocalob, locrolob);
     }
   int nbinstr = mo_objref_comp_count (blockob);
+  csta->mo_cemsta_assocrole =
+    mo_assoval_reserve (csta->mo_cemsta_assocrole, 4 * nbinstr + 7);
   mo_sequencevalue_ty *seqins = mo_sequence_allocate (nbinstr);
   for (int ix = 0; ix < nbinstr; ix++)
     {
@@ -2135,6 +2137,145 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
   mo_objref_put_comp (rolob, MOMROLBLOCKIX_EXPANSION,
                       mo_make_tuple_closeq (seqins));
 }                               /* end of mom_cemit_scan_block */
+
+
+void
+mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_chunk_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_chunk_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (chunk_instruction_class),
+                    "cemit_scan_chunk_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_chunk_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_chunk_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_chunk_instr */
+
+
+void
+mom_cemit_scan_cond_instr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t instrob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_cond_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_cond_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (conditional_instruction_class),
+                    "cemit_scan_cond_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_cond_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_cond_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_cond_instr */
+
+
+void
+mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
+                             mo_objref_t instrob, mo_objref_t fromob,
+                             int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_assign_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_assign_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (assignment_instruction_class),
+                    "cemit_scan_assign_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_assign_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_assign_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_assign_instr */
+
+
+void
+mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t instrob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_call_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_call_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (call_instruction_class),
+                    "cemit_scan_call_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_call_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_call_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_call_instr */
+
+
+void
+mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t instrob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_case_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_case_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (case_instruction_class),
+                    "cemit_scan_case_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_case_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_case_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_case_instr */
+
+void
+mom_cemit_scan_jump_instr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t instrob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_jump_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_jump_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (jump_instruction_class),
+                    "cemit_scan_jump_instr: chunk bad instrob at depth %d from %s",
+                    depth, mo_objref_pnamestr (instrob));
+#warning mom_cemit_scan_jump_instr incomplete
+  MOM_FATAPRINTF ("incomplete mom_cemit_scan_jump_instr instrob %s",
+                  mo_objref_pnamestr (instrob));
+}                               /* end mom_cemit_scan_jump_instr */
 
 
 void
@@ -2187,42 +2328,92 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
 #warning lot of code missing in mom_cemit_scan_instr
     case CASE_PREDEFINSCLASS_MOM (chunk_instruction_class):
       {
-        //FIXME: handle chunk instructions
+        mom_cemit_scan_chunk_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (conditional_instruction_class):
       {
-        //FIXE: handle cond instrucion
+        mom_cemit_scan_cond_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (assignment_instruction_class):
       {
-        //FIXE: handle assign instrucion
+        mom_cemit_scan_assign_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (call_instruction_class):
       {
-        //FIXE: handle call instrucion
+        mom_cemit_scan_call_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (case_instruction_class):
       {
-        //FIXE: handle case instrucion
+        mom_cemit_scan_case_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     case CASE_PREDEFINSCLASS_MOM (jump_instruction_class):
       {
-        //FIXE: handle jump instrucion
+        mom_cemit_scan_jump_instr (csta, instrob, fromob, depth);
+        return;
       }
       break;
     defaultinsclasscase:
     default:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_scan_instr: bad instr %s with %s class, depth %d, from %s",
+                        mo_objref_pnamestr (instrob),
+                        mo_objref_pnamestr (insclassob), depth,
+                        mo_objref_pnamestr (fromob));
       break;
     }
 #warning mom_cemit_scan_instr incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_instr incomplete instr %s",
                   mo_objref_pnamestr (instrob));
 }                               /* end of mom_cemit_scan_instr */
+
+// a reference or l-value can be assigned to. It has some c-type. It
+// translates in C to some l-value. The scan returns its c-type
+mo_objref_t
+mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t refob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_reference: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_reference: bad payl@%p in csta@%p", cemp,
+                    csta);
+#warning mom_cemit_scan_reference incomplete
+  MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s",
+                  mo_objref_pnamestr (refob));
+}                               /* end of mom_cemit_scan_reference */
+
+// an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
+mo_objref_t
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
+                           mo_value_t expv, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_expression: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_expression: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (!expv)
+    return MOM_PREDEF (null_ctype);
+#warning mom_cemit_scan_expression incomplete
+  MOM_FATAPRINTF ("mom_cemit_scan_expression incomplete expv %s",
+                  mo_value_pnamestr (expv));
+}                               /* end of mom_cemit_scan_expression */
 
 
 
