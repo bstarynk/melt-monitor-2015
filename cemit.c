@@ -52,14 +52,53 @@ struct mom_cemitlocalstate_st
   double mo_cemsta_timelimit;   /* elapsed time limit */
   FILE *mo_cemsta_fil;          /* the emitted FILE handle */
   mo_cemitpayl_ty *mo_cemsta_payl;      /* the payload */
+  mo_value_t mo_cemsta_objset;		/* the set of objects */
   mo_hashsetpayl_ty *mo_cemsta_hsetctypes;      /* the hashset of declared c_type-s - and signatures */
   mo_hashsetpayl_ty *mo_cemsta_hsetincludes;    /* the hashset of includes */
+  // each global object, routine, ... has also a global role
+  mo_assovaldatapayl_ty* mo_cemsta_assocmodulrole;
   mo_objref_t mo_cemsta_curfun; /* the current function */
   // each variable, expression, instruction, block has some role describing more of it
-  mo_assovaldatapayl_ty *mo_cemsta_assocrole;   /* associate objects to some role */
+  mo_assovaldatapayl_ty *mo_cemsta_assoclocalrole;   /* associate objects to some role in the current function */
   mo_listpayl_ty *mo_cemsta_endtodolist;        /* list of things to do at end */
   mo_value_t mo_cemsta_errstr;  /* the error string */
   jmp_buf mo_cemsta_jmpbuf;     /* for errors */
+};
+
+// the slots of role object for formals
+enum momcemit_rolformal_en
+{
+  MOMROLFORMIX_ROLE,
+  MOMROLFORMIX_CTYPE,
+  MOMROLFORMIX_FORMALRANK,
+  MOMROLFORMIX__LASTFORMAL
+};
+
+// the slots of role object for result & variables
+enum momcemit_rolvar_en
+{
+  MOMROLVARIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLVARIX_CTYPE = MOMROLFORMIX_CTYPE,
+  MOMROLVARIX_IN,
+  MOMROLVARIX__LASTVAR
+};
+
+// the slots of role object for blocks (& macros)
+enum momcemit_rolblock_en
+{
+  MOMROLBLOCKIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLBLOCKIX_INSTRS = MOMROLFORMIX_CTYPE,
+  MOMROLBLOCKIX_EXPANSION = MOMROLBLOCKIX_INSTRS,
+  MOMROLBLOCKIX_IN,
+  MOMROLBLOCKIX__LASTVAR
+};
+
+// the slots of role object for inlined or global functions
+enum momcemit_rolfunc_en
+{
+  MOMROLFUNCIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLFUNCIX_SIGNATURE =  MOMROLFORMIX_CTYPE,
+  MOMROLFUNCIX__LASTFUNC
 };
 
 /// maximal size of emitted C file
@@ -1536,6 +1575,19 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
                             "cemit_object_declare: inlined function object %s with unknown signature %s",
                             mo_objref_pnamestr (ob),
                             mo_objref_pnamestr (signob));
+	mo_objref_t rolob = mo_dyncast_objref(mo_assoval_get(csta->mo_cemsta_assocmodulrole, ob));
+	if (rolob)
+	  MOM_CEMITFAILURE(csta,
+			   "cemit_object_declare: inlined function object %s has already role %s in module",
+			   mo_objref_pnamestr (ob),
+			   mo_objref_pnamestr (rolob));
+	rolob = mo_make_object ();
+	rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+	mo_objref_comp_resize (rolob, MOMROLFUNCIX__LASTFUNC);
+	mo_objref_put_comp (rolob, MOMROLFUNCIX_ROLE, MOM_PREDEF (code));
+	mo_objref_put_comp (rolob, MOMROLFUNCIX_SIGNATURE, signob);
+	csta->mo_cemsta_assocmodulrole =
+	  mo_assoval_put(csta->mo_cemsta_assocmodulrole, ob, rolob);
         mom_cemit_printf (csta,
                           "static inline mo_%s_ty " MOM_FUNC_PREFIX "%s;\n",
                           mo_objref_shortnamestr (signob), shortnamob);
@@ -1558,6 +1610,17 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
                             "cemit_object_declare: global function object %s with unknown signature %s",
                             mo_objref_pnamestr (ob),
                             mo_objref_pnamestr (signob));
+	mo_objref_t rolob = mo_dyncast_objref(mo_assoval_get(csta->mo_cemsta_assocmodulrole, ob));
+	if (rolob)
+	  MOM_CEMITFAILURE(csta,
+			   "cemit_object_declare: global function object %s has already role %s in module",
+			   mo_objref_pnamestr (ob),
+			   mo_objref_pnamestr (rolob));
+	rolob = mo_make_object ();
+	rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+	mo_objref_comp_resize (rolob, MOMROLFUNCIX__LASTFUNC);
+	mo_objref_put_comp (rolob, MOMROLFUNCIX_ROLE, MOM_PREDEF (code));
+	mo_objref_put_comp (rolob, MOMROLFUNCIX_SIGNATURE, signob);
         mom_cemit_printf (csta,
                           "extern /*routine*/ mo_%s_ty " MOM_FUNC_PREFIX
                           "%s;\n", mo_objref_shortnamestr (signob),
@@ -1577,6 +1640,14 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
                             "cemit_object_declare: global data object %s with unknown c_type %s",
                             mo_objref_pnamestr (ob),
                             mo_objref_pnamestr (ctypob));
+	mo_objref_t rolob = mo_dyncast_objref(mo_assoval_get(csta->mo_cemsta_assocmodulrole, ob));
+	if (rolob)
+	  MOM_CEMITFAILURE(csta,
+			   "cemit_object_declare: global data object %s has already role %s in module",
+			   mo_objref_pnamestr (ob),
+			   mo_objref_pnamestr (rolob));
+	rolob = mo_make_object ();
+	rolob->mo_ob_class = MOM_PREDEF (c_role_class);
         mom_cemit_printf (csta, "extern /*data*/ mo_%s_ty mo_%s_data;\n",
                           mo_objref_shortnamestr (ctypob), shortnamob);
         if (obnamev)
@@ -1649,6 +1720,7 @@ mom_cemit_declarations (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta,
                     "\n\n// %d declarations (%d extern, %d code, %d data) *****\n",
                     nbextern + nbcode + nbdata, nbextern, nbcode, nbdata);
+  csta->mo_cemsta_assocmodulrole = mo_assoval_reserve(NULL, 10+3*(nbextern + nbcode + nbdata)/2);
   //
   if (nbextern > 0)
     {
@@ -1763,35 +1835,7 @@ mom_cemit_data_definitions (struct mom_cemitlocalstate_st *csta)
     }
   mom_cemit_printf (csta, "\n// end of %d data definitions\n\n", nbdata);
 }                               /* end of mom_cemit_data_definitions */
-
-// the slots of role object for formals
-enum momcemit_rolformal_en
-{
-  MOMROLFORMIX_ROLE,
-  MOMROLFORMIX_CTYPE,
-  MOMROLFORMIX_FORMALRANK,
-  MOMROLFORMIX__LASTFORMAL
-};
-
-// the slots of role object for result & variables
-enum momcemit_rolvar_en
-{
-  MOMROLVARIX_ROLE = MOMROLFORMIX_ROLE,
-  MOMROLVARIX_CTYPE = MOMROLFORMIX_CTYPE,
-  MOMROLVARIX_IN,
-  MOMROLVARIX__LASTVAR
-};
-
-// the slots of role object for blocks (& macros)
-enum momcemit_rolblock_en
-{
-  MOMROLBLOCKIX_ROLE = MOMROLFORMIX_ROLE,
-  MOMROLBLOCKIX_INSTRS = MOMROLFORMIX_CTYPE,
-  MOMROLBLOCKIX_EXPANSION = MOMROLBLOCKIX_INSTRS,
-  MOMROLBLOCKIX_IN,
-  MOMROLBLOCKIX__LASTVAR
-};
-
+  
 // A block may contains locals and has a sequence of instructions
 // (some of which may be sub-blocks); it translates in C to a block in
 // braces {....}
@@ -1860,7 +1904,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   mo_value_t formaltup =
     mo_dyncast_tuple (mo_objref_get_attr (funob, MOM_PREDEF (formals)));
   unsigned nbformals = mo_tuple_size (formaltup);
-  csta->mo_cemsta_assocrole = mo_assoval_reserve (NULL, 50 + 3 * nbformals);
+  csta->mo_cemsta_assoclocalrole = mo_assoval_reserve (NULL, 50 + 3 * nbformals);
   mo_value_t formtyptup =
     mo_dyncast_tuple (mo_objref_get_attr
                       (signob, MOM_PREDEF (formals_ctypes)));
@@ -1898,7 +1942,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
            mo_objref_pnamestr (curfortypob));
       mo_objref_t forolob =
         mo_dyncast_objref (mo_assoval_get
-                           (csta->mo_cemsta_assocrole, curformalob));
+                           (csta->mo_cemsta_assoclocalrole, curformalob));
       if (forolob)
         MOM_CEMITFAILURE
           (csta, "cemit_function_code: formal#%d %s already used for role %s",
@@ -1911,8 +1955,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mo_objref_put_comp (forolob, MOMROLFORMIX_CTYPE, curfortypob);
       mo_objref_put_comp (forolob, MOMROLFORMIX_FORMALRANK,
                           mo_int_to_value (foix));
-      csta->mo_cemsta_assocrole =
-        mo_assoval_put (csta->mo_cemsta_assocrole, curformalob, forolob);
+      csta->mo_cemsta_assoclocalrole =
+        mo_assoval_put (csta->mo_cemsta_assoclocalrole, curformalob, forolob);
     }
   mo_objref_t resultob =
     mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (result)));
@@ -1944,7 +1988,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
        mo_objref_pnamestr (resultob),
        mo_objref_pnamestr (resultob->mo_ob_class));
   mo_objref_t forolob =
-    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assocrole, resultob));
+    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assoclocalrole, resultob));
   if (forolob)
     MOM_CEMITFAILURE
       (csta, "cemit_function_code: result %s already used for role %s",
@@ -1956,8 +2000,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mo_objref_comp_resize (forolob, MOMROLVARIX__LASTVAR);
       mo_objref_put_comp (forolob, MOMROLVARIX_ROLE, MOM_PREDEF (result));
       mo_objref_put_comp (forolob, MOMROLVARIX_CTYPE, restypob);
-      csta->mo_cemsta_assocrole =
-        mo_assoval_put (csta->mo_cemsta_assocrole, resultob, forolob);
+      csta->mo_cemsta_assoclocalrole =
+        mo_assoval_put (csta->mo_cemsta_assoclocalrole, resultob, forolob);
     }
   mo_objref_t bodyob =
     mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (body)));
@@ -1968,7 +2012,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
                   mo_objref_pnamestr (funob));
   csta->mo_cemsta_curfun = NULL;
-  csta->mo_cemsta_assocrole = NULL;
+  csta->mo_cemsta_assoclocalrole = NULL;
 }                               /* end of mom_cemit_function_code */
 
 
@@ -1997,7 +2041,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (blockob), depth,
                       mo_objref_pnamestr (fromob));
   mo_objref_t rolob =
-    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assocrole, blockob));
+    mo_dyncast_objref (mo_assoval_get (csta->mo_cemsta_assoclocalrole, blockob));
   if (rolob)
     MOM_CEMITFAILURE (csta,
                       "cemit_scan_block: %s has already a role %s, depth %d, from %s",
@@ -2043,8 +2087,8 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
       mo_objref_put_comp (rolob, MOMROLBLOCKIX_ROLE, MOM_PREDEF (macro));
       mo_objref_put_comp (rolob, MOMROLBLOCKIX_EXPANSION, resmacrob);
       mo_objref_put_comp (rolob, MOMROLBLOCKIX_IN, fromob);
-      csta->mo_cemsta_assocrole =
-        mo_assoval_put (csta->mo_cemsta_assocrole, blockob, rolob);
+      csta->mo_cemsta_assoclocalrole =
+        mo_assoval_put (csta->mo_cemsta_assoclocalrole, blockob, rolob);
       mom_cemit_scan_block (csta, resmacrob, fromob, depth + 1);
       return;
     }
@@ -2058,8 +2102,8 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
   mo_objref_comp_resize (rolob, MOMROLBLOCKIX__LASTVAR);
   mo_objref_put_comp (rolob, MOMROLBLOCKIX_ROLE, MOM_PREDEF (body));
   mo_objref_put_comp (rolob, MOMROLBLOCKIX_IN, fromob);
-  csta->mo_cemsta_assocrole =
-    mo_assoval_put (csta->mo_cemsta_assocrole, blockob, rolob);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, blockob, rolob);
   mo_value_t locseq =
     mo_dyncast_sequence (mo_objref_get_attr (blockob, MOM_PREDEF (locals)));
   int nblocals = mo_sequence_size (locseq);
@@ -2088,7 +2132,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
            mo_objref_pnamestr (blockob), mo_objref_pnamestr (curltypob));
       mo_objref_t locrolob =
         mo_dyncast_objref (mo_assoval_get
-                           (csta->mo_cemsta_assocrole, curlocalob));
+                           (csta->mo_cemsta_assoclocalrole, curlocalob));
       if (locrolob)
         MOM_CEMITFAILURE
           (csta,
@@ -2101,12 +2145,12 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
       mo_objref_put_comp (locrolob, MOMROLVARIX_ROLE, MOM_PREDEF (locals));
       mo_objref_put_comp (locrolob, MOMROLVARIX_CTYPE, curltypob);
       mo_objref_put_comp (locrolob, MOMROLVARIX_IN, blockob);
-      csta->mo_cemsta_assocrole =
-        mo_assoval_put (csta->mo_cemsta_assocrole, curlocalob, locrolob);
+      csta->mo_cemsta_assoclocalrole =
+        mo_assoval_put (csta->mo_cemsta_assoclocalrole, curlocalob, locrolob);
     }
   int nbinstr = mo_objref_comp_count (blockob);
-  csta->mo_cemsta_assocrole =
-    mo_assoval_reserve (csta->mo_cemsta_assocrole, 4 * nbinstr + 7);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_reserve (csta->mo_cemsta_assoclocalrole, 4 * nbinstr + 7);
   mo_sequencevalue_ty *seqins = mo_sequence_allocate (nbinstr);
   for (int ix = 0; ix < nbinstr; ix++)
     {
@@ -2129,7 +2173,7 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                         "cemit_scan_block: bad local #%d", lix);
       mo_objref_t locrolob =
         mo_dyncast_objref (mo_assoval_get
-                           (csta->mo_cemsta_assocrole, curlocalob));
+                           (csta->mo_cemsta_assoclocalrole, curlocalob));
       MOM_ASSERTPRINTF (locrolob != NULL,
                         "cemit_scan_block: bad locolob lix#%d", lix);
       mo_objref_put_comp (locrolob, MOMROLVARIX_ROLE, NULL);
@@ -2395,6 +2439,9 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                   mo_objref_pnamestr (refob));
 }                               /* end of mom_cemit_scan_reference */
 
+
+
+
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
 mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
@@ -2446,9 +2493,22 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
         MOM_ASSERTPRINTF (expob != NULL,
                           "cemit_scan_expression: bad expob from %s",
                           mo_objref_pnamestr (fromob));
+	if (mo_set_contains(csta->mo_cemsta_objset, expob))
+	  return MOM_PREDEF(object);
+	mo_objref_t bindrolob =
+	  mo_dyncast_objref (mo_assoval_get  (csta->mo_cemsta_assoclocalrole, expob));
+	if (bindrolob) {
+	  MOM_ASSERTPRINTF(bindrolob->mo_ob_class ==  MOM_PREDEF (c_role_class),
+			   "cemit_scan_expression: bad bindrolob %s for expob %s",
+			   mo_objref_pnamestr(bindrolob), mo_objref_pnamestr(expob));
+	  mo_objref_t kindrolob = mo_dyncast_objref(mo_objref_get_comp(bindrolob, MOMROLVARIX_ROLE));
+	  if (kindrolob == MOM_PREDEF (locals)
+	      || kindrolob == MOM_PREDEF(formals)
+	      || kindrolob == MOM_PREDEF(result))
+	    return mo_dyncast_objref(mo_objref_get_comp(bindrolob, MOMROLVARIX_CTYPE));
+	}
       }
     }
-
 #warning mom_cemit_scan_expression incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_expression incomplete expv %s",
                   mo_value_pnamestr (expv));
@@ -2525,6 +2585,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
     }
   if (!mo_dyncast_set (setv))
     MOM_CEMITFAILURE (csta, "bad set %s", mo_value_pnamestr (setv));
+  csta->mo_cemsta_objset = setv;
   unsigned nbset = mo_set_size (setv);
   int nbpredef = 0;
   for (unsigned eix = 0; eix < nbset; eix++)
@@ -2816,15 +2877,14 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
 const char
 MOM_PREFIXID (mosig_, put_attr_cemitact)[] = "signature_two_objects_to_void";
 
-     extern mo_signature_two_objects_to_void_sigt
+extern mo_signature_two_objects_to_void_sigt
        MOM_PREFIXID (mofun_, put_attr_cemitact)
   __attribute__ ((optimize ("O2")));
 
 
-     extern mo_signature_two_objects_to_void_sigt mofun_put_attr_cemitact;
+extern mo_signature_two_objects_to_void_sigt mofun_put_attr_cemitact;
 
-     void
-       MOM_PREFIXID (mofun_, put_attr_cemitact) (mo_objref_t todobj,
+void MOM_PREFIXID (mofun_, put_attr_cemitact) (mo_objref_t todobj,
                                                  mo_objref_t cemitobj)
 {
   mofun_put_attr_cemitact (todobj, cemitobj);
