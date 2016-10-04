@@ -2527,8 +2527,11 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (refob), depth,
                       mo_objref_pnamestr (fromob));
   if (refob->mo_ob_class == MOM_PREDEF (macro_expression_class))
-    return mom_cemit_scan_macro_expr (csta, refob, fromob, depth,       /*isref: */
-                                      true);
+    return mom_cemit_scan_macro_expr (csta, refob, fromob, depth, //
+				      /*isref: */ true);
+  else if (refob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
+    return mom_cemit_scan_chunk_expr (csta, refob, fromob, depth, //
+				      /*isref: */ true);
 #warning mom_cemit_scan_reference incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s",
                   mo_objref_pnamestr (refob));
@@ -2668,6 +2671,9 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
           return mom_cemit_scan_member_access (csta, expob, fromob, depth);
         else if (expob->mo_ob_class == MOM_PREDEF (macro_expression_class))
           return mom_cemit_scan_macro_expr (csta, expob, fromob, depth,
+                                            /*isref: */ false);
+        else if (expob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
+          return mom_cemit_scan_chunk_expr (csta, expob, fromob, depth,
                                             /*isref: */ false);
         else
           MOM_CEMITFAILURE (csta,

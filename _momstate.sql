@@ -50,6 +50,7 @@ INSERT INTO t_names VALUES('case_instruction_class','_72P3hApuaup7FsP08');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
+INSERT INTO t_names VALUES('chunk_expression_class','_5WG7GBNdjmzhANitX');
 INSERT INTO t_names VALUES('chunk_instruction_class','_4Fo3f0PrwI6hwjSzM');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
 INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
@@ -1331,6 +1332,20 @@ INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474795461,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "for $fnmatch(\"*ab*\") to use fnmatch with FNM_EXTMATCH & FNM_CASEFOLD on names"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_5WG7GBNdjmzhANitX',1475581021,'
+{
+ "@name": "chunk_expression_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of chunk expressions or reference"
    }
   ]
  },
