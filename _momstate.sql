@@ -95,6 +95,8 @@ INSERT INTO t_names VALUES('locals','_5t61z2vkWfR1NbtiF');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('macro','_5pl24omBRy4z1HrtN');
 INSERT INTO t_names VALUES('macro_block_class','_6VV8wX6A6EdY0C70Z');
+INSERT INTO t_names VALUES('macro_expression_class','_7C68VV2V6VKuvWqUW');
+INSERT INTO t_names VALUES('member_access_class','_5WP5sMWxwATJgf7UY');
 INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
 INSERT INTO t_names VALUES('null_ctype','_77D6zusmyq0jAM0Du');
@@ -1335,6 +1337,20 @@ INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474795461,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5WP5sMWxwATJgf7UY',1475573036,'
+{
+ "@name": "member_access_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of member access"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_5Xq6uG5cYt456E98W',1473701710,'
 {
  "attrs": {
@@ -1893,6 +1909,20 @@ INSERT INTO t_objects VALUES('_7BI45k1e9Ri0Wv9rm',1474880778,'
  "comps": null
 }
 ','_3P48jR3hSzSCgv48c','','','');
+INSERT INTO t_objects VALUES('_7C68VV2V6VKuvWqUW',1475573036,'
+{
+ "@name": "macro_expression_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of macro expr"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_7EH4RTtyF1BioGEDK',1474473165,'
 {
  "@name": "int32_t",

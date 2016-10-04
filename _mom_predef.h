@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 65
+#define MOM_NB_PREDEFINED 67
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -135,6 +135,12 @@ MOM_HAS_PREDEFINED(macro,_5pl24omBRy4z1HrtN,1279342936,7203691249484624109,27535
 
 //+ class for macro blocks
 MOM_HAS_PREDEFINED(macro_block_class,_6VV8wX6A6EdY0C70Z,1635511410,3072357572477716779,4234358676)
+
+//+ class of macro expr
+MOM_HAS_PREDEFINED(macro_expression_class,_7C68VV2V6VKuvWqUW,1801385736,3603107312273757056,1650050044)
+
+//+ class of member access
+MOM_HAS_PREDEFINED(member_access_class,_5WP5sMWxwATJgf7UY,1403164561,8114373379818376082,1989323210)
 
 //+ class for modules
 MOM_HAS_PREDEFINED(module_class,_22z6Be6oa3IH524Jy,482064155,3246340629214049134,3193995711)
@@ -405,6 +411,16 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #undef monam_6VV8wX6A6EdY0C70Z
 #define monam_6VV8wX6A6EdY0C70Z macro_block_class
 
+#undef moid_macro_expression_class
+#define moid_macro_expression_class _7C68VV2V6VKuvWqUW
+#undef monam_7C68VV2V6VKuvWqUW
+#define monam_7C68VV2V6VKuvWqUW macro_expression_class
+
+#undef moid_member_access_class
+#define moid_member_access_class _5WP5sMWxwATJgf7UY
+#undef monam_5WP5sMWxwATJgf7UY
+#define monam_5WP5sMWxwATJgf7UY member_access_class
+
 #undef moid_module_class
 #define moid_module_class _22z6Be6oa3IH524Jy
 #undef monam_22z6Be6oa3IH524Jy
@@ -590,6 +606,8 @@ enum mom_predefined_hashes_en {
   momphash_locals=736931447,
   momphash_macro=2753598703,
   momphash_macro_block_class=4234358676,
+  momphash_macro_expression_class=1650050044,
+  momphash_member_access_class=1989323210,
   momphash_module_class=3193995711,
   momphash_null_ctype=3248468239,
   momphash_object=2530028518,
@@ -628,7 +646,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 65
+#define MOM_NB_NAMED_PREDEFINED 67
 
 
 #undef MOM_HAS_PREDEFINED

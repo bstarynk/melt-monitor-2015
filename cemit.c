@@ -1919,6 +1919,18 @@ mo_objref_t
 mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                            mo_value_t expv, mo_objref_t fromob, int depth);
 
+// a member access
+mo_objref_t
+mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
+                              mo_objref_t accob, mo_objref_t fromob,
+                              int depth);
+
+// a macro expression or reference
+mo_objref_t
+mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t accob, mo_objref_t fromob, int depth,
+                           bool isref);
+
 // We sometimes need to compare two C-types (e.g. for some kind of
 // assignment left := right) and get their common supertype
 mo_objref_t
@@ -2630,13 +2642,77 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                                 depth, mo_objref_pnamestr (fromob));
             return MOM_PREDEF (object);
           }
+        else if (expob->mo_ob_class == MOM_PREDEF (member_access_class))
+          return mom_cemit_scan_member_access (csta, expob, fromob, depth);
+        else if (expob->mo_ob_class == MOM_PREDEF (macro_expression_class))
+          return mom_cemit_scan_macro_expr (csta, expob, fromob, depth,
+                                            false);
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_expression: bad expr %s, depth %d, from %s",
+                          mo_objref_pnamestr (expob), depth,
+                          mo_objref_pnamestr (fromob));
       }
     }
-#warning mom_cemit_scan_expression incomplete
-  MOM_FATAPRINTF ("mom_cemit_scan_expression incomplete expv %s",
-                  mo_value_pnamestr (expv));
 }                               /* end of mom_cemit_scan_expression */
 
+
+mo_objref_t
+mom_cemit_scan_member_access (struct mom_cemitlocalstate_st * csta,
+                              mo_objref_t accob, mo_objref_t fromob,
+                              int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_member_access: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_member_access: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_member_access: expr %s too deep %d from %s",
+                      mo_objref_pnamestr (accob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_member_access: expr %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (accob), depth,
+                      mo_objref_pnamestr (fromob));
+#warning mom_cemit_scan_member_access unimplemented
+  MOM_FATAPRINTF ("mom_cemit_scan_member_access unimplemented accob=%s",
+                  mo_objref_pnamestr (accob));
+}                               /* end of mom_cemit_scan_member_access */
+
+
+
+mo_objref_t
+mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t macob, mo_objref_t fromob, int depth,
+                           bool isref)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_macro_expr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_macro_expr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_macro_expr: expr %s too deep %d from %s",
+                      mo_objref_pnamestr (macob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_macro_expr: expr %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (macob), depth,
+                      mo_objref_pnamestr (fromob));
+#warning mom_cemit_scan_macro_expr unimplemented
+  MOM_FATAPRINTF ("mom_cemit_scan_macro_expr unimplemented macob=%s",
+                  mo_objref_pnamestr (macob));
+}                               /* end of mom_cemit_scan_macro_expr */
 
 
 void
