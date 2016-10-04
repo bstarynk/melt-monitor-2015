@@ -129,6 +129,7 @@ INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('signature_two_objects_to_object','_4pb5Vror0ehNFKXfT');
+INSERT INTO t_names VALUES('signature_two_objects_to_value','_1ky69RT7bZKd1tySD');
 INSERT INTO t_names VALUES('signature_two_objects_to_void','_0dV2PYaSBUDE7lsYq');
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
@@ -558,6 +559,20 @@ INSERT INTO t_objects VALUES('_1ZY6i2rKse5FsKrsv',1474975183,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give signature of e.g. functions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1ky69RT7bZKd1tySD',1475589506,'
+{
+ "@name": "signature_two_objects_to_value",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature: object object -> value"
    }
   ]
  },

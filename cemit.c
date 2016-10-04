@@ -2577,7 +2577,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                     "cemit_scan_reference: bad payl@%p in csta@%p", cemp,
                     csta);
   if (!mo_dyncast_objref (refob))
-    MOM_CEMITFAILURE ("cemit_scan_reference: no refob from %s depth %d",
+    MOM_CEMITFAILURE (csta, "cemit_scan_reference: no refob from %s depth %d",
                       mo_objref_pnamestr (fromob), depth);
   if (depth > MOM_CEMIT_MAX_DEPTH)
     MOM_CEMITFAILURE (csta,
@@ -2801,13 +2801,43 @@ mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_macro_expr: expr %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (macob), depth,
                       mo_objref_pnamestr (fromob));
-#warning mom_cemit_scan_macro_expr unimplemented
-  MOM_FATAPRINTF ("mom_cemit_scan_macro_expr unimplemented macob=%s",
-                  mo_objref_pnamestr (macob));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (macob)
+                    && macob->mo_ob_class ==
+                    MOM_PREDEF (macro_expression_class),
+                    "cemit_scan_macro_expr: bad macob");
+  mo_objref_t macrob =
+    mo_dyncast_objref (mo_objref_get_attr (macob, MOM_PREDEF (macro)));
+  if (!macrob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_macro_expr: expr %s without macro, depth %d, from %s",
+                      mo_objref_pnamestr (macob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (macrob->mo_ob_paylkind !=
+      MOM_PREDEF (signature_two_objects_to_value) || !macrob->mo_ob_payldata)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_macro_expr: expr %s with bad macro %s, depth %d, from %s",
+                      mo_objref_pnamestr (macob),
+                      mo_objref_pnamestr (macrob), depth,
+                      mo_objref_pnamestr (fromob));
+  mo_objref_t objcemit = csta->mo_cemsta_objcemit;
+  mo_signature_two_objects_to_value_sigt *funrout = macrob->mo_ob_payldata;
+  MOM_ASSERTPRINTF ((void *) funrout != NULL
+                    && (void *) funrout != MOM_EMPTY_SLOT,
+                    "cemit_scan_macro_expr: macro expr %s with macro %s bad funrout, depth %d, from %s",
+                    mo_objref_pnamestr (macob),
+                    mo_objref_pnamestr (macrob), depth,
+                    mo_objref_pnamestr (fromob));
+  mo_value_t resmacrob = (*funrout) (macob, objcemit);
+  if (isref)
+    return mom_cemit_scan_reference (csta, resmacrob, macob, depth + 1);
+  else
+    return mom_cemit_scan_expression (csta, resmacrob, macob, depth + 1);
 }                               /* end of mom_cemit_scan_macro_expr */
 
+
+
 mo_objref_t
-mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
+mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st * csta,
                            mo_objref_t chkob, mo_objref_t fromob, int depth,
                            bool isref)
 {
