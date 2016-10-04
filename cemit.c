@@ -1928,7 +1928,13 @@ mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
 // a macro expression or reference
 mo_objref_t
 mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
-                           mo_objref_t accob, mo_objref_t fromob, int depth,
+                           mo_objref_t macob, mo_objref_t fromob, int depth,
+                           bool isref);
+
+// a chunk expression or reference
+mo_objref_t
+mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t chkob, mo_objref_t fromob, int depth,
                            bool isref);
 
 // We sometimes need to compare two C-types (e.g. for some kind of
@@ -2507,6 +2513,22 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_scan_reference: bad payl@%p in csta@%p", cemp,
                     csta);
+  if (!mo_dyncast_objref (refob))
+    MOM_CEMITFAILURE ("cemit_scan_reference: no refob from %s depth %d",
+                      mo_objref_pnamestr (fromob), depth);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_reference: refob %s too deep %d from %s",
+                      mo_objref_pnamestr (refob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_reference: refob %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (refob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (refob->mo_ob_class == MOM_PREDEF (macro_expression_class))
+    return mom_cemit_scan_macro_expr (csta, refob, fromob, depth,       /*isref: */
+                                      true);
 #warning mom_cemit_scan_reference incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s",
                   mo_objref_pnamestr (refob));
@@ -2517,7 +2539,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
 
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
-mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                            mo_value_t expv, mo_objref_t fromob, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
@@ -2646,18 +2668,19 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
           return mom_cemit_scan_member_access (csta, expob, fromob, depth);
         else if (expob->mo_ob_class == MOM_PREDEF (macro_expression_class))
           return mom_cemit_scan_macro_expr (csta, expob, fromob, depth,
-                                            false);
-        MOM_CEMITFAILURE (csta,
-                          "cemit_scan_expression: bad expr %s, depth %d, from %s",
-                          mo_objref_pnamestr (expob), depth,
-                          mo_objref_pnamestr (fromob));
+                                            /*isref: */ false);
+        else
+          MOM_CEMITFAILURE (csta,
+                            "cemit_scan_expression: bad expr %s, depth %d, from %s",
+                            mo_objref_pnamestr (expob), depth,
+                            mo_objref_pnamestr (fromob));
       }
     }
 }                               /* end of mom_cemit_scan_expression */
 
 
 mo_objref_t
-mom_cemit_scan_member_access (struct mom_cemitlocalstate_st * csta,
+mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
                               mo_objref_t accob, mo_objref_t fromob,
                               int depth)
 {
@@ -2713,6 +2736,34 @@ mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
   MOM_FATAPRINTF ("mom_cemit_scan_macro_expr unimplemented macob=%s",
                   mo_objref_pnamestr (macob));
 }                               /* end of mom_cemit_scan_macro_expr */
+
+mo_objref_t
+mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t chkob, mo_objref_t fromob, int depth,
+                           bool isref)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_chunk_expr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_chunk_expr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_expr: expr %s too deep %d from %s",
+                      mo_objref_pnamestr (chkob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_expr: expr %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (chkob), depth,
+                      mo_objref_pnamestr (fromob));
+#warning mom_cemit_scan_chunk_expr unimplemented
+  MOM_FATAPRINTF ("mom_cemit_scan_chunk_expr unimplemented chkob=%s",
+                  mo_objref_pnamestr (chkob));
+}                               /* end of mom_cemit_scan_chunk_expr */
 
 
 void
