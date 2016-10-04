@@ -33,6 +33,7 @@ INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
 INSERT INTO t_names VALUES('assignment_instruction_class','_4Yd3gqjKLi1hAKztj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
+INSERT INTO t_names VALUES('block','_8fs1NMLlhPjN6eHN5');
 INSERT INTO t_names VALUES('body','_49p2zcDH6JgIxjue1');
 INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_aggregate_initialization','_40K767SbwcfEJVyXr');
@@ -66,6 +67,7 @@ INSERT INTO t_names VALUES('enumab_test1','_8N58oAS4pxRlnRThx');
 INSERT INTO t_names VALUES('enumbu_test1','_4Ph3UMWqrIloqawrN');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
+INSERT INTO t_names VALUES('expression','_64h4VCbZPNyxt22DN');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('extern','_5dn8uwCs0vUJ9AG7y');
 INSERT INTO t_names VALUES('fieldaa_test1','_1Ma1hIkjW2pwNHiKZ');
@@ -85,6 +87,7 @@ INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
 INSERT INTO t_names VALUES('global_c_data_class','_5fr2Xe93UTwNlLIIo');
 INSERT INTO t_names VALUES('in','_3St1x2rkjnH28CyRy');
 INSERT INTO t_names VALUES('include_meltmoni','_0mn1b5GSeM3pB0Bfw');
+INSERT INTO t_names VALUES('instruction','_0lI8AP6Gb2vPAtY1d');
 INSERT INTO t_names VALUES('int','_0Sp1Lg7ctajS7oX5i');
 INSERT INTO t_names VALUES('int16_t','_1Hx4BMvqv69AA0750');
 INSERT INTO t_names VALUES('int32_t','_7EH4RTtyF1BioGEDK');
@@ -114,6 +117,7 @@ INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
 INSERT INTO t_names VALUES('put_attr_cemitact','_34X8LzaKgjC0yxZXC');
+INSERT INTO t_names VALUES('reference','_52u5dMMjzLjdlgIMF');
 INSERT INTO t_names VALUES('remove','_4Ph1Z99dptyJhpZfj');
 INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
 INSERT INTO t_names VALUES('result','_7he4MBcSuccJxtj7q');
@@ -319,6 +323,20 @@ INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the includes in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_0lI8AP6Gb2vPAtY1d',1475588023,'
+{
+ "@name": "instruction",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the set of instructions in chunks"
    }
   ]
  },
@@ -1248,6 +1266,20 @@ INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_52u5dMMjzLjdlgIMF',1475582058,'
+{
+ "@name": "reference",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the reference ctype in chunks"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_53F6MjNKRJ8dutl09',1474308434,'
 {
  "@name": "struct_pointer_ctype_class",
@@ -1525,6 +1557,20 @@ INSERT INTO t_objects VALUES('_64d2GXNLEBKFBzxqP',1474311988,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give the c code expansion or string"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_64h4VCbZPNyxt22DN',1475588023,'
+{
+ "@name": "expression",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the set of expressions in chunks"
    }
   ]
  },
@@ -2299,6 +2345,20 @@ INSERT INTO t_objects VALUES('_8TY6UsXJ3Djt71By3',1474294464,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the C types in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8fs1NMLlhPjN6eHN5',1475588023,'
+{
+ "@name": "block",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "give the set of blocks in chunks"
    }
   ]
  },

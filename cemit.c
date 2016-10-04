@@ -1938,7 +1938,8 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
                            bool isref);
 
 // We sometimes need to compare two C-types (e.g. for some kind of
-// assignment left := right) and get their common supertype
+// assignment left := right - or argument passing, etc...) and get
+// their common supertype
 mo_objref_t
 mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
                           mo_objref_t leftctypob,
@@ -2280,9 +2281,71 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (chunk_instruction_class),
                     "cemit_scan_chunk_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
-#warning mom_cemit_scan_chunk_instr incomplete
-  MOM_FATAPRINTF ("incomplete mom_cemit_scan_chunk_instr instrob %s",
-                  mo_objref_pnamestr (instrob));
+  // the verbatim attribute gives the set of objects to be handled as-is
+  mo_value_t verbatimv = mo_objref_get_attr (instrob, MOM_PREDEF (verbatim));
+  if (verbatimv && !mo_dyncast_set (verbatimv))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_instr: instr %s with non-set verbatim %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (verbatimv), depth,
+                      mo_objref_pnamestr (fromob));
+  // the reference attribute gives the set of objects to be handled as reference-s
+  mo_value_t referencev =
+    mo_objref_get_attr (instrob, MOM_PREDEF (reference));
+  if (referencev && !mo_dyncast_set (referencev))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_instr: instr %s with non-set reference %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (referencev), depth,
+                      mo_objref_pnamestr (fromob));
+  // the expression attribute gives the set of objects to be handled as expression-s
+  mo_value_t expressionv =
+    mo_objref_get_attr (instrob, MOM_PREDEF (expression));
+  if (expressionv && !mo_dyncast_set (expressionv))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_instr: instr %s with non-set expression %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (expressionv), depth,
+                      mo_objref_pnamestr (fromob));
+  // the instruction attribute gives the set of objects to be handled as instruction-s
+  mo_value_t instructionv =
+    mo_objref_get_attr (instrob, MOM_PREDEF (instruction));
+  if (instructionv && !mo_dyncast_set (instructionv))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_instr: instr %s with non-set instruction %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (instructionv), depth,
+                      mo_objref_pnamestr (fromob));
+  // the block attribute gives the set of objects to be handled as block-s
+  mo_value_t blockv = mo_objref_get_attr (instrob, MOM_PREDEF (block));
+  if (blockv && !mo_dyncast_set (blockv))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_instr: instr %s with non-set block %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (blockv), depth,
+                      mo_objref_pnamestr (fromob));
+  unsigned nbcomp = mo_objref_comp_count (instrob);
+  for (unsigned cix = 0; cix < nbcomp; cix++)
+    {
+      mo_value_t curcomp = mo_objref_get_comp (instrob, cix);
+      mo_objref_t compob = mo_dyncast_objref (curcomp);
+      if (mo_set_contains (verbatimv, compob))
+        continue;
+      else if (mo_set_contains (referencev, compob))
+        mom_cemit_scan_reference (csta, compob, instrob, depth + 1);
+      else if (mo_set_contains (instructionv, compob))
+        mom_cemit_scan_instr (csta, compob, instrob, depth + 1);
+      else if (mo_set_contains (blockv, compob))
+        mom_cemit_scan_block (csta, compob, instrob, depth + 1);
+      else if (!compob || mo_set_contains (expressionv, compob))
+        mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
+      else
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_chunk_instr: instr %s with unexpected comp#%d %s, depth %d, from %s",
+                          mo_objref_pnamestr (instrob), cix,
+                          mo_value_pnamestr (curcomp), depth,
+                          mo_objref_pnamestr (fromob));
+    }
 }                               /* end mom_cemit_scan_chunk_instr */
 
 
@@ -2527,11 +2590,11 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (refob), depth,
                       mo_objref_pnamestr (fromob));
   if (refob->mo_ob_class == MOM_PREDEF (macro_expression_class))
-    return mom_cemit_scan_macro_expr (csta, refob, fromob, depth, //
-				      /*isref: */ true);
+    return mom_cemit_scan_macro_expr (csta, refob, fromob, depth,       //
+                                      /*isref: */ true);
   else if (refob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
-    return mom_cemit_scan_chunk_expr (csta, refob, fromob, depth, //
-				      /*isref: */ true);
+    return mom_cemit_scan_chunk_expr (csta, refob, fromob, depth,       //
+                                      /*isref: */ true);
 #warning mom_cemit_scan_reference incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s",
                   mo_objref_pnamestr (refob));
@@ -2670,10 +2733,10 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
         else if (expob->mo_ob_class == MOM_PREDEF (member_access_class))
           return mom_cemit_scan_member_access (csta, expob, fromob, depth);
         else if (expob->mo_ob_class == MOM_PREDEF (macro_expression_class))
-          return mom_cemit_scan_macro_expr (csta, expob, fromob, depth,
+          return mom_cemit_scan_macro_expr (csta, expob, fromob, depth, //
                                             /*isref: */ false);
         else if (expob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
-          return mom_cemit_scan_chunk_expr (csta, expob, fromob, depth,
+          return mom_cemit_scan_chunk_expr (csta, expob, fromob, depth, //
                                             /*isref: */ false);
         else
           MOM_CEMITFAILURE (csta,
@@ -2766,9 +2829,51 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_chunk_expr: expr %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (chkob), depth,
                       mo_objref_pnamestr (fromob));
-#warning mom_cemit_scan_chunk_expr unimplemented
-  MOM_FATAPRINTF ("mom_cemit_scan_chunk_expr unimplemented chkob=%s",
-                  mo_objref_pnamestr (chkob));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (chkob)
+                    && chkob->mo_ob_class ==
+                    MOM_PREDEF (chunk_expression_class),
+                    "cemit_scan_chunk_expr: bad chkob %s",
+                    mo_objref_pnamestr (chkob));
+  mo_value_t verbatimv = mo_objref_get_attr (chkob, MOM_PREDEF (verbatim));
+  if (verbatimv && !mo_dyncast_set (verbatimv))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_expr: expr %s with non-set verbatim %s, depth %s, from %s",
+                      mo_objref_pnamestr (chkob),
+                      mo_value_pnamestr (verbatimv), depth,
+                      mo_objref_pnamestr (fromob));
+  mo_objref_t refob =
+    mo_dyncast_objref (mo_objref_get_attr (chkob, MOM_PREDEF (reference)));
+  mo_objref_t valob =
+    mo_dyncast_objref (mo_objref_get_attr (chkob, MOM_PREDEF (value)));
+  if (isref && !refob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_expr: reference chunk %s without `reference`, depth %s, from %s",
+                      mo_objref_pnamestr (chkob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (!isref && !refob && !valob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_chunk_expr: chunk expression %s without `reference` or `value` ctype, depth %s, from %s",
+                      mo_objref_pnamestr (chkob), depth,
+                      mo_objref_pnamestr (fromob));
+  unsigned nbcomp = mo_objref_comp_count (chkob);
+  for (unsigned ix = 0; ix < nbcomp; ix++)
+    {
+      mo_value_t curcompv = mo_objref_get_comp (chkob, ix);
+      mo_objref_t curcompob = mo_dyncast_objref (curcompv);
+      if (curcompob && mo_set_contains (verbatimv, curcompob))
+        continue;
+      (void) mom_cemit_scan_expression (csta, curcompv, chkob, depth + 1);
+    }
+  if (isref)
+    return refob;
+  if (refob)
+    return refob;
+  if (valob && !isref)
+    return valob;
+  MOM_CEMITFAILURE (csta,
+                    "cemit_scan_chunk_expr: chunk expression %s untyped, depth %s, from %s",
+                    mo_objref_pnamestr (chkob), depth,
+                    mo_objref_pnamestr (fromob));
 }                               /* end of mom_cemit_scan_chunk_expr */
 
 
@@ -2969,6 +3074,29 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
 }                               /* end of mom_cemit_set */
 
 
+
+// We sometimes need to compare two C-types (e.g. for some kind of
+// assignment left := right - or argument passing, etc...) and get
+// their common supertype
+mo_objref_t
+mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t leftctypob,
+                          mo_objref_t rightctypob, mo_objref_t fromob)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_compare_ctypes: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_compare_ctypes: bad payl@%p in csta@%p", cemp,
+                    csta);
+#warning mom_cemit_compare_ctypes unimplemented
+  MOM_FATAPRINTF
+    ("mom_cemit_compare_ctypes unimplemented leftctypob=%s rightctypob=%s from=%s",
+     mo_objref_pnamestr (leftctypob), mo_objref_pnamestr (rightctypob),
+     mo_objref_pnamestr (fromob));
+}                               /* end of mom_cemit_compare_ctypes */
 
 void
 mom_cemit_do_at_end (struct mom_cemitlocalstate_st *csta)
