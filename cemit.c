@@ -100,6 +100,14 @@ enum momcemit_rolfunc_en
   MOMROLFUNCIX_SIGNATURE = MOMROLFORMIX_CTYPE,
   MOMROLFUNCIX__LASTFUNC
 };
+// the slots of role object for enumerator values
+enum momcemit_rolenumval_en
+{
+  MOMROLENUMVIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLENUMVIX_ENUMTYPE = MOMROLFORMIX_CTYPE,
+  MOMROLENUMVIX_ENUMVAL,
+  MOMROLENUMVIX__LASTENUMV
+};
 
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
@@ -1301,7 +1309,8 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
   unsigned nbenums = mo_tuple_size (enumstup);
   mom_cemit_printf (csta, " // %d enumerators in %s, starting after %ld\n",
                     nbenums, mo_objref_pnamestr (typobr), (*pprev));
-
+  csta->mo_cemsta_assocmodulrole =
+    mo_assoval_reserve (csta->mo_cemsta_assocmodulrole, 4 * nbenums / 3 + 1);
   for (unsigned eix = 0; eix < nbenums; eix++)
     {
       long curval = (*pprev) + 1;
@@ -1333,6 +1342,26 @@ mom_cemit_define_enumerators (struct mom_cemitlocalstate_st *csta,
       mo_value_t curenumnamv = mo_objref_namev (curenumobr);
       if (typobr == parobr && depth == 0)
         {
+          mo_objref_t rolob =
+            mo_dyncast_objref (mo_assoval_get
+                               (csta->mo_cemsta_assocmodulrole, curenumobr));
+          if (rolob)
+            MOM_CEMITFAILURE (csta,
+                              "cemit_define_enumerators: %s with enumerator#%d %s already with role %s",
+                              mo_objref_pnamestr (typobr), eix,
+                              mo_objref_pnamestr (curenumobr),
+                              mo_objref_pnamestr (rolob));
+          rolob = mo_make_object ();
+          rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+          mo_objref_comp_resize (rolob, MOMROLENUMVIX__LASTENUMV);
+          mo_objref_put_comp (rolob, MOMROLENUMVIX_ROLE,
+                              MOM_PREDEF (enumerators));
+          mo_objref_put_comp (rolob, MOMROLENUMVIX_ENUMTYPE, typobr);
+          mo_objref_put_comp (rolob, MOMROLENUMVIX_ENUMVAL,
+                              mo_int_to_value (curval));
+          csta->mo_cemsta_assocmodulrole =
+            mo_assoval_put (csta->mo_cemsta_assocmodulrole, curenumobr,
+                            rolob);
           if (curenumnamv)
             {
               mom_cemit_printf (csta, " mo_%s_ev=%ld,\n",
@@ -2527,48 +2556,79 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (fromob));
         if (mo_set_contains (csta->mo_cemsta_objset, expob))
           return MOM_PREDEF (object);
-        mo_objref_t locrolob =
-          mo_dyncast_objref (mo_assoval_get
-                             (csta->mo_cemsta_assoclocalrole, expob));
-        if (locrolob)
+        // handle locally bound objects
+        {
+          mo_objref_t locrolob =
+            mo_dyncast_objref (mo_assoval_get
+                               (csta->mo_cemsta_assoclocalrole, expob));
+          if (locrolob)
+            {
+              MOM_ASSERTPRINTF (locrolob->mo_ob_class ==
+                                MOM_PREDEF (c_role_class),
+                                "cemit_scan_expression: bad locrolob %s for expob %s",
+                                mo_objref_pnamestr (locrolob),
+                                mo_objref_pnamestr (expob));
+              mo_objref_t kindrolob =
+                mo_dyncast_objref (mo_objref_get_comp
+                                   (locrolob, MOMROLVARIX_ROLE));
+              if (kindrolob == MOM_PREDEF (locals)
+                  || kindrolob == MOM_PREDEF (formals)
+                  || kindrolob == MOM_PREDEF (result))
+                return
+                  mo_dyncast_objref (mo_objref_get_comp
+                                     (locrolob, MOMROLVARIX_CTYPE));
+            }
+        }
+        // handle module bound objects
+        {
+          mo_objref_t modrolob =
+            mo_dyncast_objref (mo_assoval_get
+                               (csta->mo_cemsta_assocmodulrole, expob));
+          if (modrolob)
+            {
+              MOM_ASSERTPRINTF (modrolob->mo_ob_class ==
+                                MOM_PREDEF (c_role_class),
+                                "cemit_scan_expression: bad modrolob %s for expob %s",
+                                mo_objref_pnamestr (modrolob),
+                                mo_objref_pnamestr (expob));
+              mo_objref_t kindrolob =
+                mo_objref_get_comp (modrolob, MOMROLFUNCIX_ROLE);
+              if (kindrolob == MOM_PREDEF (code))
+                /// it is a signature
+                return
+                  mo_dyncast_objref (mo_objref_get_comp
+                                     (modrolob, MOMROLFUNCIX_SIGNATURE));
+              /// it is a ctype
+              else if (kindrolob == MOM_PREDEF (data))
+                return
+                  mo_dyncast_objref (mo_objref_get_comp
+                                     (modrolob, MOMROLVARIX_CTYPE));
+              /// it is an enumerator
+              else if (kindrolob == MOM_PREDEF (enumerators))
+                return
+                  mo_dyncast_objref (mo_objref_get_comp
+                                     (modrolob, MOMROLENUMVIX_ENUMTYPE));
+            }
+        }
+        // handle verbatim
+        if (expob->mo_ob_class == MOM_PREDEF (verbatim_expression_class))
           {
-            MOM_ASSERTPRINTF (locrolob->mo_ob_class ==
-                              MOM_PREDEF (c_role_class),
-                              "cemit_scan_expression: bad locrolob %s for expob %s",
-                              mo_objref_pnamestr (locrolob),
-                              mo_objref_pnamestr (expob));
-            mo_objref_t kindrolob =
-              mo_dyncast_objref (mo_objref_get_comp
-                                 (locrolob, MOMROLVARIX_ROLE));
-            if (kindrolob == MOM_PREDEF (locals)
-                || kindrolob == MOM_PREDEF (formals)
-                || kindrolob == MOM_PREDEF (result))
-              return
-                mo_dyncast_objref (mo_objref_get_comp
-                                   (locrolob, MOMROLVARIX_CTYPE));
-          }
-        mo_objref_t modrolob =
-          mo_dyncast_objref (mo_assoval_get
-                             (csta->mo_cemsta_assocmodulrole, expob));
-        if (modrolob)
-          {
-            MOM_ASSERTPRINTF (modrolob->mo_ob_class ==
-                              MOM_PREDEF (c_role_class),
-                              "cemit_scan_expression: bad modrolob %s for expob %s",
-                              mo_objref_pnamestr (modrolob),
-                              mo_objref_pnamestr (expob));
-            mo_objref_t kindrolob =
-              mo_objref_get_comp (modrolob, MOMROLFUNCIX_ROLE);
-            if (kindrolob == MOM_PREDEF (code))
-              /// it is a signature
-              return
-                mo_dyncast_objref (mo_objref_get_comp
-                                   (modrolob, MOMROLFUNCIX_SIGNATURE));
-            /// it is a ctype
-            else if (kindrolob == MOM_PREDEF (data))
-              return
-                mo_dyncast_objref (mo_objref_get_comp
-                                   (modrolob, MOMROLVARIX_CTYPE));
+            mo_objref_t verbob =
+              mo_dyncast_objref (mo_objref_get_attr
+                                 (expob, MOM_PREDEF (verbatim)));
+            if (!verbob)
+              MOM_CEMITFAILURE (csta,
+                                "cemit_scan_expression: expr %s without verbatim, depth %d, from %s",
+                                mo_objref_pnamestr (expob), depth,
+                                mo_objref_pnamestr (fromob));
+            if (!mo_set_contains (csta->mo_cemsta_objset, verbob)
+                || !mo_objref_space (verbob) == mo_SPACE_PREDEF)
+              MOM_CEMITFAILURE (csta,
+                                "cemit_scan_expression: expr %s with bad verbatim %s, depth %d, from %s",
+                                mo_objref_pnamestr (expob),
+                                mo_objref_pnamestr (verbob),
+                                depth, mo_objref_pnamestr (fromob));
+            return MOM_PREDEF (object);
           }
       }
     }

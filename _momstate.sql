@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 03 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 04 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -148,6 +148,8 @@ INSERT INTO t_names VALUES('uintptr_t','_21J3zZDnsKTbAVBFo');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
+INSERT INTO t_names VALUES('verbatim','_1rV3tPbwX88LqztK0');
+INSERT INTO t_names VALUES('verbatim_expression_class','_16y1NXTBqDPWHLfoI');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
@@ -386,6 +388,20 @@ INSERT INTO t_objects VALUES('_15c0LcIrdf2LE5JP8',1474361179,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_16y1NXTBqDPWHLfoI',1475567881,'
+{
+ "@name": "verbatim_expression_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of verbatim expressions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1DA4KKiwji2gafLj0',1474962483,'
 {
  "@name": "code",
@@ -535,6 +551,20 @@ INSERT INTO t_objects VALUES('_1lU1wXlGlR9TdmE89',1475154030,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "the class of C blocks"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_1rV3tPbwX88LqztK0',1475567881,'
+{
+ "@name": "verbatim",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "attribute giving the verbatim object inside instances of verbatim_expression_class"
    }
   ]
  },

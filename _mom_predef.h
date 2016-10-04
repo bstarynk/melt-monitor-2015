@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 63
+#define MOM_NB_PREDEFINED 65
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -216,6 +216,12 @@ MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,38923464644823
 
 //+ attribute to give some value
 MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,3663610996)
+
+//+ attribute giving the verbatim object inside instances of verbatim_expression_cla
+MOM_HAS_PREDEFINED(verbatim,_1rV3tPbwX88LqztK0,345727161,8646857126012263384,3863060885)
+
+//+ class of verbatim expressions
+MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,4691169330411318268,1896661858)
 
 
 
@@ -534,6 +540,16 @@ MOM_HAS_PREDEFINED(value,_4Cm8ln5mSkcZHI6WB,1094641437,4024252483095848357,36636
 #undef monam_4Cm8ln5mSkcZHI6WB
 #define monam_4Cm8ln5mSkcZHI6WB value
 
+#undef moid_verbatim
+#define moid_verbatim _1rV3tPbwX88LqztK0
+#undef monam_1rV3tPbwX88LqztK0
+#define monam_1rV3tPbwX88LqztK0 verbatim
+
+#undef moid_verbatim_expression_class
+#define moid_verbatim_expression_class _16y1NXTBqDPWHLfoI
+#undef monam_16y1NXTBqDPWHLfoI
+#define monam_16y1NXTBqDPWHLfoI verbatim_expression_class
+
 
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
@@ -601,6 +617,8 @@ enum mom_predefined_hashes_en {
   momphash_threadlocal_c_data_class=2830977026,
   momphash_union_ctype_class=3893134561,
   momphash_value=3663610996,
+  momphash_verbatim=3863060885,
+  momphash_verbatim_expression_class=1896661858,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -610,7 +628,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 63
+#define MOM_NB_NAMED_PREDEFINED 65
 
 
 #undef MOM_HAS_PREDEFINED
