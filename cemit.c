@@ -3121,6 +3121,28 @@ mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_compare_ctypes: bad payl@%p in csta@%p", cemp,
                     csta);
+  if (!mo_dyncast_objref (leftctypob)
+      || (leftctypob->mo_ob_class != momglob_array_ctype_class
+          && leftctypob->mo_ob_class != momglob_pointer_ctype_class
+          && leftctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
+          && leftctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
+          && leftctypob->mo_ob_class !=
+          MOM_PREDEF (struct_pointer_ctype_class)
+          && leftctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
+    MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad leftctypob %s",
+                      mo_objref_pnamestr (leftctypob));
+  if (!mo_dyncast_objref (rightctypob)
+      || (rightctypob->mo_ob_class != momglob_array_ctype_class
+          && rightctypob->mo_ob_class != momglob_pointer_ctype_class
+          && rightctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
+          && rightctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
+          && rightctypob->mo_ob_class !=
+          MOM_PREDEF (struct_pointer_ctype_class)
+          && rightctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
+    MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad rightctypob %s",
+                      mo_objref_pnamestr (rightctypob));
+  if (leftctypob == rightctypob)
+    return leftctypob;
 #warning mom_cemit_compare_ctypes unimplemented
   MOM_FATAPRINTF
     ("mom_cemit_compare_ctypes unimplemented leftctypob=%s rightctypob=%s from=%s",
