@@ -2725,7 +2725,8 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                                 mo_objref_pnamestr (modrolob),
                                 mo_objref_pnamestr (expob));
               mo_objref_t kindrolob =
-                mo_objref_get_comp (modrolob, MOMROLFUNCIX_ROLE);
+                mo_dyncast_objref (mo_objref_get_comp
+                                   (modrolob, MOMROLFUNCIX_ROLE));
               if (kindrolob == MOM_PREDEF (code))
                 /// it is a signature
                 return
@@ -2755,7 +2756,7 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                                 mo_objref_pnamestr (expob), depth,
                                 mo_objref_pnamestr (fromob));
             if (!mo_set_contains (csta->mo_cemsta_objset, verbob)
-                || !mo_objref_space (verbob) == mo_SPACE_PREDEF)
+                || mo_objref_space (verbob) == mo_SPACE_PREDEF)
               MOM_CEMITFAILURE (csta,
                                 "cemit_scan_expression: expr %s with bad verbatim %s, depth %d, from %s",
                                 mo_objref_pnamestr (expob),
@@ -2862,11 +2863,20 @@ mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
                     mo_objref_pnamestr (macob),
                     mo_objref_pnamestr (macrob), depth,
                     mo_objref_pnamestr (fromob));
-  mo_value_t resmacrob = (*funrout) (macob, objcemit);
+  mo_value_t resmacrv = (*funrout) (macob, objcemit);
   if (isref)
-    return mom_cemit_scan_reference (csta, resmacrob, macob, depth + 1);
+    {
+      mo_objref_t resmacob = mo_dyncast_objref (resmacrv);
+      if (!resmacob)
+        MOM_CEMITFAILURE (csta,
+                          "cemit_scan_macro_expr: reference %s macroexpanded to non-object %s, depth %d, from %s",
+                          mo_objref_pnamestr (macob),
+                          mo_value_pnamestr (resmacrv), depth,
+                          mo_objref_pnamestr (fromob));
+      return mom_cemit_scan_reference (csta, resmacob, macob, depth + 1);
+    }
   else
-    return mom_cemit_scan_expression (csta, resmacrob, macob, depth + 1);
+    return mom_cemit_scan_expression (csta, resmacrv, macob, depth + 1);
 }                               /* end of mom_cemit_scan_macro_expr */
 
 
@@ -2956,7 +2966,7 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
   mo_value_t verbatimv = mo_objref_get_attr (chkob, MOM_PREDEF (verbatim));
   if (verbatimv && !mo_dyncast_set (verbatimv))
     MOM_CEMITFAILURE (csta,
-                      "cemit_scan_chunk_expr: expr %s with non-set verbatim %s, depth %s, from %s",
+                      "cemit_scan_chunk_expr: expr %s with non-set verbatim %s, depth %d, from %s",
                       mo_objref_pnamestr (chkob),
                       mo_value_pnamestr (verbatimv), depth,
                       mo_objref_pnamestr (fromob));
@@ -2990,7 +3000,7 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
   if (valob && !isref)
     return valob;
   MOM_CEMITFAILURE (csta,
-                    "cemit_scan_chunk_expr: chunk expression %s untyped, depth %s, from %s",
+                    "cemit_scan_chunk_expr: chunk expression %s untyped, depth %d, from %s",
                     mo_objref_pnamestr (chkob), depth,
                     mo_objref_pnamestr (fromob));
 }                               /* end of mom_cemit_scan_chunk_expr */
