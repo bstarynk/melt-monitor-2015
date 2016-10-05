@@ -2226,7 +2226,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                                          mo_objref_shortnamestr (resultob));
       char resid[MOM_CSTRIDSIZ];
       memset (resid, 0, sizeof (resid));
-      mo_objref_idstr (resultob, resid);
+      mo_objref_idstr (resid, resultob);
       mom_cemit_write_ctype_for (csta, restypob, restr, 0);
       if (mom_cemit_ctype_is_scalar (csta, restypob))
         mom_cemit_printf (csta, " = 0; // scalar result %s\n", resid);
@@ -2240,7 +2240,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                                          mo_objref_shortnamestr (resultob));
       char resid[MOM_CSTRIDSIZ];
       memset (resid, 0, sizeof (resid));
-      mo_objref_idstr (resultob, resid);
+      mo_objref_idstr (resid, resultob);
       mom_cemit_printf (csta, " return %s;\n", restr);
     }
   mom_cemit_printf (csta, "} // end of function %s\n\n",
@@ -2903,6 +2903,9 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                             mo_objref_pnamestr (fromob));
       }
     }
+  MOM_CEMITFAILURE
+    (csta, "cemit_scan_expression: unexpected expr %s, depth %d, from %s",
+     mo_value_pnamestr (expv), depth, mo_objref_pnamestr (fromob));
 }                               /* end of mom_cemit_scan_expression */
 
 
