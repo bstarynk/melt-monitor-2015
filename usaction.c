@@ -28,7 +28,7 @@ const char
 MOM_PREFIXID (mosig_, class_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, class_useract) __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, class_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_class_useract;
@@ -100,7 +100,7 @@ const char
 MOM_PREFIXID (mosig_, set_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, set_useract) __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, set_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_set_useract;
@@ -155,7 +155,7 @@ const char
 MOM_PREFIXID (mosig_, tuple_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, tuple_useract) __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, tuple_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_tuple_useract;
@@ -209,8 +209,7 @@ const char
 MOM_PREFIXID (mosig_, string_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, string_useract)
-  __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, string_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_string_useract;
@@ -259,8 +258,7 @@ MOM_PREFIXID (mosig_, add_user_action_useract)[] =
   "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, add_user_action_useract)
-  __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, add_user_action_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_add_user_action_useract;
@@ -345,8 +343,7 @@ const char
 MOM_PREFIXID (mosig_, cemit_module_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, cemit_module_useract)
-  __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, cemit_module_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_cemit_module_useract;
@@ -412,8 +409,7 @@ const char
 MOM_PREFIXID (mosig_, fnmatch_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, fnmatch_useract)
-  __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, fnmatch_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_fnmatch_useract;
@@ -483,7 +479,7 @@ const char
 MOM_PREFIXID (mosig_, get_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, get_useract) __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, get_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_get_useract;
@@ -560,8 +556,7 @@ const char
 MOM_PREFIXID (mosig_, remove_useract)[] = "signature_object_to_value";
 
      extern mo_signature_object_to_value_sigt
-       MOM_PREFIXID (mofun_, remove_useract)
-  __attribute__ ((optimize ("O2")));
+       MOM_PREFIXID (mofun_, remove_useract) MOM_OPTIMIZEDFUN;
 
 
      extern mo_signature_object_to_value_sigt mofun_remove_useract;

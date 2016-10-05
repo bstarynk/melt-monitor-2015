@@ -20,6 +20,8 @@
 
 #include "meltmoni.h"
 
+#define MOM_FORMAL_PREFIX "mofor_"
+#define MOM_RESULT_PREFIX "mores_"
 
 /// mention momglob_int for emission of _mom_global.h
 #define MOM_CEMIT_MAGIC 0x56c59cc3      /*1455791299 cemit_magic */
@@ -1979,6 +1981,58 @@ mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st * csta,
                           mo_objref_t rightctypob, mo_objref_t fromob);
 
 void
+mom_cemit_write_formals (struct mom_cemitlocalstate_st *csta,
+                         mo_value_t formaltup)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_formals: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_formals: bad payl@%p in csta@%p",
+                    cemp, csta);
+  if (!formaltup)
+    {
+      mom_cemit_printf (csta, " (/*no formals*/ void)");
+      return;
+    }
+  MOM_ASSERTPRINTF (mo_dyncast_tuple (formaltup),
+                    "cemit_write_formals: bad formaltup %s",
+                    mo_value_pnamestr (formaltup));
+  int nbformals = mo_tuple_size (formaltup);
+  if (nbformals == 0)
+    {
+      mom_cemit_printf (csta, " (void)");
+      return;
+    }
+  mom_cemit_printf (csta, " (");
+  for (int fix = 0; fix < nbformals; fix++)
+    {
+      mo_objref_t curformalob = mo_tuple_nth (formaltup, fix);
+      mo_objref_t curfortypob =
+        mo_dyncast_objref (mo_objref_get_attr
+                           (curformalob, MOM_PREDEF (c_type)));
+      MOM_ASSERTPRINTF (mom_cemit_is_ctype (csta, curfortypob),
+                        "cemit_write_formals: bad curfortypob %s for formal %s",
+                        mo_objref_pnamestr (curfortypob),
+                        mo_objref_pnamestr (curformalob));
+      const char *forstr = mom_gc_printf (MOM_FORMAL_PREFIX "%s",
+                                          mo_objref_shortnamestr
+                                          (curformalob));
+      if (fix > 0)
+        mom_cemit_printf (csta, ", ");
+      mom_cemit_write_ctype_for (csta, curfortypob, forstr, 0);
+    }
+  mom_cemit_printf (csta, ")");
+}                               /* end of mom_cemit_write_formals */
+
+
+void
+mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
+                       mo_objref_t blockob, mo_objref_t fromob, int depth);
+
+void
 mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                          mo_objref_t funob)
 {
@@ -1992,6 +2046,10 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     cemp, csta);
   MOM_ASSERTPRINTF (mo_dyncast_objref (funob),
                     "cemit_function_code: bad funob");
+  char funid[MOM_CSTRIDSIZ];
+  memset (funid, 0, sizeof (funid));
+  mo_objref_idstr (funid, funob);
+  mo_value_t funamv = mo_objref_namev (funob);
   if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
     MOM_CEMITFAILURE (csta,
                       "cemit_function_code: %s timed out",
@@ -2010,6 +2068,9 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                     "cemit_function_code: funob %s but already doing function %s",
                     mo_objref_pnamestr (funob),
                     mo_objref_pnamestr (csta->mo_cemsta_curfun));
+  char signid[MOM_CSTRIDSIZ];
+  memset (signid, 0, sizeof (signid));
+  mo_objref_idstr (signid, signob);
   csta->mo_cemsta_curfun = funob;
   mo_value_t formaltup =
     mo_dyncast_tuple (mo_objref_get_attr (funob, MOM_PREDEF (formals)));
@@ -2120,9 +2181,70 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   if (!bodyob)
     MOM_CEMITFAILURE (csta, "cemit_function_code: no body in function");
   mom_cemit_scan_block (csta, bodyob, funob, 0);
-#warning mom_cemit_function_code incomplete
-  MOM_WARNPRINTF ("mom_cemit_function_code funob=%s incomplete",
-                  mo_objref_pnamestr (funob));
+  const char *funstr = mom_gc_printf (MOM_FUNC_PREFIX "%s", funid + 1);
+  if (funob->mo_ob_class == MOM_PREDEF (c_inlined_class))
+    {
+      if (funamv)
+        {
+          mom_cemit_printf (csta,
+                            "\n#define " MOM_FUNC_PREFIX "%s" MOM_FUNC_PREFIX
+                            "%s\n", mo_string_cstr (funamv), funid + 1);
+          mom_cemit_printf (csta, "// inlined function %s (%s)\n",
+                            mo_string_cstr (funamv), funid);
+        }
+      else
+        mom_cemit_printf (csta, "// inlined function %s\n", funid);
+      mom_cemit_printf (csta, "static inline\n");
+    }
+  else if (funob->mo_ob_class == MOM_PREDEF (c_routine_class))
+    {
+      if (funamv)
+        {
+          mom_cemit_printf (csta, "// global function %s (%s)\n",
+                            mo_string_cstr (funamv), funid);
+          const char *funamstr =
+            mom_gc_printf (MOM_FUNC_PREFIX "%s", mo_string_cstr (funamv));
+          mom_cemit_printf (csta, "mo%s_ty %s MOM_OPTIMIZEDFUN;\n", signid,
+                            funamstr);
+        }
+      else
+        mom_cemit_printf (csta, "// global function %s\n", funid);
+    }
+  else
+    MOM_CEMITFAILURE (csta, "cemit_function_code: bad function of class %s",
+                      mo_objref_pnamestr (funob->mo_ob_class));
+  if (!restypob || restypob == momglob_void)
+    mom_cemit_printf (csta, "void\n%s", funstr);
+  else
+    mom_cemit_write_ctype_for (csta, restypob, funstr, 0);
+  mom_cemit_write_formals (csta, formaltup);
+  mom_cemit_printf (csta, "\n{ // start of function %s\n",
+                    mo_objref_shortnamestr (funob));
+  if (resultob)
+    {
+      const char *restr = mom_gc_printf (MOM_RESULT_PREFIX "%s",
+                                         mo_objref_shortnamestr (resultob));
+      char resid[MOM_CSTRIDSIZ];
+      memset (resid, 0, sizeof (resid));
+      mo_objref_idstr (resultob, resid);
+      mom_cemit_write_ctype_for (csta, restypob, restr, 0);
+      if (mom_cemit_ctype_is_scalar (csta, restypob))
+        mom_cemit_printf (csta, " = 0; // scalar result %s\n", resid);
+      else
+        mom_cemit_printf (csta, " = {}; // aggregate result %s\n", resid);
+    }
+  mom_cemit_write_block (csta, bodyob, funob, 0);
+  if (resultob)
+    {
+      const char *restr = mom_gc_printf (MOM_RESULT_PREFIX "%s",
+                                         mo_objref_shortnamestr (resultob));
+      char resid[MOM_CSTRIDSIZ];
+      memset (resid, 0, sizeof (resid));
+      mo_objref_idstr (resultob, resid);
+      mom_cemit_printf (csta, " return %s;\n", restr);
+    }
+  mom_cemit_printf (csta, "} // end of function %s\n\n",
+                    mo_objref_shortnamestr (funob));
   csta->mo_cemsta_curfun = NULL;
   csta->mo_cemsta_assoclocalrole = NULL;
 }                               /* end of mom_cemit_function_code */
@@ -2976,12 +3098,12 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
     mo_dyncast_objref (mo_objref_get_attr (chkob, MOM_PREDEF (value)));
   if (isref && !refob)
     MOM_CEMITFAILURE (csta,
-                      "cemit_scan_chunk_expr: reference chunk %s without `reference`, depth %s, from %s",
+                      "cemit_scan_chunk_expr: reference chunk %s without `reference`, depth %d, from %s",
                       mo_objref_pnamestr (chkob), depth,
                       mo_objref_pnamestr (fromob));
   if (!isref && !refob && !valob)
     MOM_CEMITFAILURE (csta,
-                      "cemit_scan_chunk_expr: chunk expression %s without `reference` or `value` ctype, depth %s, from %s",
+                      "cemit_scan_chunk_expr: chunk expression %s without `reference` or `value` ctype, depth %d, from %s",
                       mo_objref_pnamestr (chkob), depth,
                       mo_objref_pnamestr (fromob));
   unsigned nbcomp = mo_objref_comp_count (chkob);
@@ -3005,6 +3127,24 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
                     mo_objref_pnamestr (fromob));
 }                               /* end of mom_cemit_scan_chunk_expr */
 
+
+
+void
+mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
+                       mo_objref_t blockob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_block: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_block: bad payl@%p in csta@%p", cemp, csta);
+#warning mom_cemit_write_block unimplemented
+  MOM_FATAPRINTF
+    ("mom_cemit_write_block unimplemented blockob=%s fromob=%s depth=%d",
+     mo_objref_pnamestr (blockob), mo_objref_pnamestr (fromob), depth);
+}                               /* end of mom_cemit_write_block */
 
 void
 mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)

@@ -109,10 +109,12 @@
 #define MOM_UNLIKELY(P) __builtin_expect(!!(P),0)
 #define MOM_LIKELY(P) !__builtin_expect(!(P),0)
 #define MOM_UNUSED __attribute__((unused))
+#define MOM_OPTIMIZEDFUN __attribute__((optimize("O2")))
 #else
 #define MOM_UNLIKELY(P) (P)
 #define MOM_LIKELY(P) (P)
 #define MOM_UNUSED
+#define MOM_OPTIMIZEDFUN
 #endif
 
 /// see https://en.wikipedia.org/wiki/ANSI_escape_code
