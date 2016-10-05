@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_GLOBAL
-#define MOM_NB_GLOBAL 36
+#define MOM_NB_GLOBAL 38
 
 
 //// MOM_HAS_GLOBAL(Name,Idstr,Hid,Loid,Hash)
@@ -91,6 +91,9 @@ MOM_HAS_GLOBAL(intptr_t,_8t42m75faVNE2kWxu,2001748354,8327845228897843290,178702
 //+ the long ctype
 MOM_HAS_GLOBAL(long,_20B54zdX0j8vYUdsf,474319974,7179427869252810223,314494134)
 
+//+ the ctype of objects
+MOM_HAS_GLOBAL(object_ctype,_3S16HFayBKLRo6Ivb,912374292,8044247218361316495,1864724234)
+
 //+ class of pointer ctypes; the first component #0 is the pointed ctype.
 MOM_HAS_GLOBAL(pointer_ctype_class,_7JP45UsR282DkTrJS,1831760218,601741714220354864,2152013395)
 
@@ -132,6 +135,9 @@ MOM_HAS_GLOBAL(uint8_t,_3WR20H7JRlNWkDV4y,931346341,4733086605554652354,26685428
 
 //+ ctype of unsigned int of same size as pointers
 MOM_HAS_GLOBAL(uintptr_t,_21J3zZDnsKTbAVBFo,478765968,1910349516108587076,2786648670)
+
+//+ the ctype of values, can be a tagged pointer...
+MOM_HAS_GLOBAL(value_ctype,_7mW2hPaN6NfV95VUY,1741701001,3414523499108887058,2787277674)
 
 //+ the void ctype
 MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
@@ -243,6 +249,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_20B54zdX0j8vYUdsf
 #define monam_20B54zdX0j8vYUdsf long
 
+#undef moid_object_ctype
+#define moid_object_ctype _3S16HFayBKLRo6Ivb
+#undef monam_3S16HFayBKLRo6Ivb
+#define monam_3S16HFayBKLRo6Ivb object_ctype
+
 #undef moid_pointer_ctype_class
 #define moid_pointer_ctype_class _7JP45UsR282DkTrJS
 #undef monam_7JP45UsR282DkTrJS
@@ -313,6 +324,11 @@ MOM_HAS_GLOBAL(void,_1WX2mf4xwC5TU5ml7,459882898,2997967141540374291,478990535)
 #undef monam_21J3zZDnsKTbAVBFo
 #define monam_21J3zZDnsKTbAVBFo uintptr_t
 
+#undef moid_value_ctype
+#define moid_value_ctype _7mW2hPaN6NfV95VUY
+#undef monam_7mW2hPaN6NfV95VUY
+#define monam_7mW2hPaN6NfV95VUY value_ctype
+
 #undef moid_void
 #define moid_void _1WX2mf4xwC5TU5ml7
 #undef monam_1WX2mf4xwC5TU5ml7
@@ -343,6 +359,7 @@ enum mom_global_hashes_en {
   momghash_int8_t=2306438205,
   momghash_intptr_t=1787024167,
   momghash_long=314494134,
+  momghash_object_ctype=1864724234,
   momghash_pointer_ctype_class=2152013395,
   momghash_put_attr_cemitact=1798594494,
   momghash_remove=747100231,
@@ -357,6 +374,7 @@ enum mom_global_hashes_en {
   momghash_uint64_t=3596712632,
   momghash_uint8_t=26685428,
   momghash_uintptr_t=2786648670,
+  momghash_value_ctype=2787277674,
   momghash_void=478990535,
 }; // end mom_global_hashes_en
 #endif /*MOM_GLOBAL_HASHES */
@@ -367,7 +385,7 @@ enum mom_global_hashes_en {
 #define MOM_NB_ANONYMOUS_GLOBAL 0
 
 #undef MOM_NB_NAMED_GLOBAL
-#define MOM_NB_NAMED_GLOBAL 36
+#define MOM_NB_NAMED_GLOBAL 38
 
 
 #undef MOM_HAS_GLOBAL

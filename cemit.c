@@ -3124,25 +3124,51 @@ mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
   if (!mo_dyncast_objref (leftctypob)
       || (leftctypob->mo_ob_class != momglob_array_ctype_class
           && leftctypob->mo_ob_class != momglob_pointer_ctype_class
+          && leftctypob->mo_ob_class != MOM_PREDEF (basic_ctype_class)
           && leftctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
           && leftctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
           && leftctypob->mo_ob_class !=
           MOM_PREDEF (struct_pointer_ctype_class)
           && leftctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
-    MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad leftctypob %s",
-                      mo_objref_pnamestr (leftctypob));
+    MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad leftctypob %s from %s",
+                      mo_objref_pnamestr (leftctypob),
+                      mo_objref_pnamestr (fromob));
   if (!mo_dyncast_objref (rightctypob)
       || (rightctypob->mo_ob_class != momglob_array_ctype_class
           && rightctypob->mo_ob_class != momglob_pointer_ctype_class
+          && rightctypob->mo_ob_class != MOM_PREDEF (basic_ctype_class)
           && rightctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
           && rightctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
           && rightctypob->mo_ob_class !=
           MOM_PREDEF (struct_pointer_ctype_class)
           && rightctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
-    MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad rightctypob %s",
-                      mo_objref_pnamestr (rightctypob));
+    MOM_CEMITFAILURE (csta,
+                      "cemit_compare_ctypes: bad rightctypob %s from %s",
+                      mo_objref_pnamestr (rightctypob),
+                      mo_objref_pnamestr (fromob));
   if (leftctypob == rightctypob)
     return leftctypob;
+  if (leftctypob == MOM_PREDEF (null_ctype))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_compare_ctypes: null leftctype for rightctype %s from %s",
+                      mo_objref_pnamestr (rightctypob),
+                      mo_objref_pnamestr (fromob));
+  if (rightctypob == MOM_PREDEF (null_ctype))
+    {
+      if (leftctypob == momglob_value_ctype
+          || leftctypob == momglob_object_ctype
+          || leftctypob->mo_ob_class == momglob_pointer_ctype_class
+          || leftctypob->mo_ob_class ==
+          MOM_PREDEF (struct_pointer_ctype_class))
+        return leftctypob;
+      else
+        MOM_CEMITFAILURE (csta,
+                          "cemit_compare_ctypes: null rightctype cant be assigned to %s from %s",
+                          mo_objref_pnamestr (leftctypob),
+                          mo_objref_pnamestr (fromob));
+
+    }
+
 #warning mom_cemit_compare_ctypes unimplemented
   MOM_FATAPRINTF
     ("mom_cemit_compare_ctypes unimplemented leftctypob=%s rightctypob=%s from=%s",

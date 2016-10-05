@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 04 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 05 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -105,6 +105,7 @@ INSERT INTO t_names VALUES('module_class','_22z6Be6oa3IH524Jy');
 INSERT INTO t_names VALUES('notice','_4H01ICaNuWncMePhe');
 INSERT INTO t_names VALUES('null_ctype','_77D6zusmyq0jAM0Du');
 INSERT INTO t_names VALUES('object','_7R18oBKd7iMYZd7gN');
+INSERT INTO t_names VALUES('object_ctype','_3S16HFayBKLRo6Ivb');
 INSERT INTO t_names VALUES('payload_assoval','_5JG8lVw6jwlUT7PLK');
 INSERT INTO t_names VALUES('payload_buffer','_1HW4pIotlYRImRGnL');
 INSERT INTO t_names VALUES('payload_c_emit','_8hg5YXTgfHBnV4W8q');
@@ -156,6 +157,7 @@ INSERT INTO t_names VALUES('uintptr_t','_21J3zZDnsKTbAVBFo');
 INSERT INTO t_names VALUES('union_ctype_class','_3P48jR3hSzSCgv48c');
 INSERT INTO t_names VALUES('user_actions','_5Kq0Pz5eFAULvdMEL');
 INSERT INTO t_names VALUES('value','_4Cm8ln5mSkcZHI6WB');
+INSERT INTO t_names VALUES('value_ctype','_7mW2hPaN6NfV95VUY');
 INSERT INTO t_names VALUES('verbatim','_1rV3tPbwX88LqztK0');
 INSERT INTO t_names VALUES('verbatim_expression_class','_16y1NXTBqDPWHLfoI');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
@@ -190,6 +192,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_34X8LzaKgjC0yxZXC",
      "_3cH0f65UzqnPaGsLY",
      "_3K62tYRL1azRF0cP2",
+     "_3S16HFayBKLRo6Ivb",
      "_3WR20H7JRlNWkDV4y",
      "_40K767SbwcfEJVyXr",
      "_4iH7xI2JtAomiBySj",
@@ -204,6 +207,7 @@ INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
      "_6Z90lCcFC3RhKoHGv",
      "_7831xB7d1ulmsaCYS",
      "_7h20HFhtjZljRLtbU",
+     "_7mW2hPaN6NfV95VUY",
      "_7EH4RTtyF1BioGEDK",
      "_7JP45UsR282DkTrJS",
      "_80D4pPU1WGn7IZwh6",
@@ -850,6 +854,20 @@ INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for union ctypes"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3S16HFayBKLRo6Ivb',1475649018,'
+{
+ "@name": "object_ctype",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype of objects"
    }
   ]
  },
@@ -1942,7 +1960,7 @@ INSERT INTO t_objects VALUES('_77D6zusmyq0jAM0Du',1475408154,'
  },
  "comps": null
 }
-','','','','');
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
 {
  "@name": "class_useract",
@@ -2148,6 +2166,20 @@ INSERT INTO t_objects VALUES('_7he4MBcSuccJxtj7q',1475133644,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7mW2hPaN6NfV95VUY',1475649221,'
+{
+ "@name": "value_ctype",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "the ctype of values, can be a tagged pointer..."
+   }
+  ]
+ },
+ "comps": null
+}
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1475082733,'
 {
  "@name": "fielduaz_test1",
