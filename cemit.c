@@ -1942,11 +1942,39 @@ mo_objref_t
 mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st *csta,
                           mo_objref_t castob, mo_objref_t fromob, int depth);
 
+static inline bool
+mom_cemit_is_ctype (struct mom_cemitlocalstate_st *csta, mo_objref_t ctypob)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_is_ctype: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_is_ctype: bad payl@%p in csta@%p", cemp, csta);
+  if (!mo_dyncast_objref (ctypob))
+    return false;
+  mo_objref_t classob = ctypob->mo_ob_class;
+  if (!mo_dyncast_objref (classob))
+    return false;
+  if (mo_hashset_contains (csta->mo_cemsta_hsetctypes, ctypob))
+    return true;
+  if (classob == momglob_array_ctype_class
+      || classob == momglob_pointer_ctype_class
+      || classob == MOM_PREDEF (basic_ctype_class)
+      || classob == MOM_PREDEF (enum_ctype_class)
+      || classob == MOM_PREDEF (struct_ctype_class)
+      || classob == MOM_PREDEF (struct_pointer_ctype_class)
+      || classob == MOM_PREDEF (union_ctype_class))
+    return true;
+  return false;
+}                               /* end mom_cemit_is_ctype */
+
 // We sometimes need to compare two C-types (e.g. for some kind of
 // assignment left := right - or argument passing, etc...) and get
 // their common supertype
 mo_objref_t
-mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
+mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st * csta,
                           mo_objref_t leftctypob,
                           mo_objref_t rightctypob, mo_objref_t fromob);
 
@@ -2871,6 +2899,26 @@ mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st * csta,
                     MOM_PREDEF (cast_expression_class),
                     "cemit_scan_cast_expr: bad castob %s",
                     mo_objref_pnamestr (castob));
+  mo_value_t expv = mo_objref_get_attr (castob, MOM_PREDEF (expression));
+  // there is no point of casting NIL, so...
+  if (!expv)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: cast expr %s without sub-`expression`, depth %d, from %s",
+                      mo_objref_pnamestr (castob), depth,
+                      mo_objref_pnamestr (fromob));
+  mo_objref_t ctypob =
+    mo_dyncast_objref (mo_objref_get_attr (castob, MOM_PREDEF (c_type)));
+  if (!ctypob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: cast expr %s without `c_type`, depth %d, from %s",
+                      mo_objref_pnamestr (castob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (!mo_hashset_contains (csta->mo_cemsta_hsetctypes, ctypob))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: cast expr %s with unknown c_type %s, depth %d, from %s",
+                      mo_objref_pnamestr (castob),
+                      mo_objref_pnamestr (ctypob), depth,
+                      mo_objref_pnamestr (fromob));
 #warning mom_cemit_scan_cast_expr unimplemented
   MOM_FATAPRINTF ("cemit_scan_cast_expr: unimplemented castob=%s",
                   mo_objref_pnamestr (castob));
@@ -3162,27 +3210,11 @@ mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_compare_ctypes: bad payl@%p in csta@%p", cemp,
                     csta);
-  if (!mo_dyncast_objref (leftctypob)
-      || (leftctypob->mo_ob_class != momglob_array_ctype_class
-          && leftctypob->mo_ob_class != momglob_pointer_ctype_class
-          && leftctypob->mo_ob_class != MOM_PREDEF (basic_ctype_class)
-          && leftctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
-          && leftctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
-          && leftctypob->mo_ob_class !=
-          MOM_PREDEF (struct_pointer_ctype_class)
-          && leftctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
+  if (!mom_cemit_is_ctype (csta, leftctypob))
     MOM_CEMITFAILURE (csta, "cemit_compare_ctypes: bad leftctypob %s from %s",
                       mo_objref_pnamestr (leftctypob),
                       mo_objref_pnamestr (fromob));
-  if (!mo_dyncast_objref (rightctypob)
-      || (rightctypob->mo_ob_class != momglob_array_ctype_class
-          && rightctypob->mo_ob_class != momglob_pointer_ctype_class
-          && rightctypob->mo_ob_class != MOM_PREDEF (basic_ctype_class)
-          && rightctypob->mo_ob_class != MOM_PREDEF (enum_ctype_class)
-          && rightctypob->mo_ob_class != MOM_PREDEF (struct_ctype_class)
-          && rightctypob->mo_ob_class !=
-          MOM_PREDEF (struct_pointer_ctype_class)
-          && rightctypob->mo_ob_class != MOM_PREDEF (union_ctype_class)))
+  if (!mom_cemit_is_ctype (csta, rightctypob))
     MOM_CEMITFAILURE (csta,
                       "cemit_compare_ctypes: bad rightctypob %s from %s",
                       mo_objref_pnamestr (rightctypob),
