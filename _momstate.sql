@@ -48,6 +48,7 @@ INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('c_variable_class','_3hq90zS3jpqaVDbDy');
 INSERT INTO t_names VALUES('call_instruction_class','_3nV79jeVZkZ8kdSWp');
 INSERT INTO t_names VALUES('case_instruction_class','_72P3hApuaup7FsP08');
+INSERT INTO t_names VALUES('cast_expression_class','_6lF04Imjl60Y6iYYc');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
@@ -1836,6 +1837,20 @@ INSERT INTO t_objects VALUES('_6dw6NAxxyyrUS1716',1475302768,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for jump (to block) instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6lF04Imjl60Y6iYYc',1475655272,'
+{
+ "@name": "cast_expression_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class for cast expressions, with a c_type attribute"
    }
   ]
  },

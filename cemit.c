@@ -1937,6 +1937,11 @@ mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
                            mo_objref_t chkob, mo_objref_t fromob, int depth,
                            bool isref);
 
+// a cast expression 
+mo_objref_t
+mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t castob, mo_objref_t fromob, int depth);
+
 // We sometimes need to compare two C-types (e.g. for some kind of
 // assignment left := right - or argument passing, etc...) and get
 // their common supertype
@@ -2738,6 +2743,8 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
         else if (expob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
           return mom_cemit_scan_chunk_expr (csta, expob, fromob, depth, //
                                             /*isref: */ false);
+        else if (expob->mo_ob_class == MOM_PREDEF (cast_expression_class))
+          return mom_cemit_scan_cast_expr (csta, expob, fromob, depth);
         else
           MOM_CEMITFAILURE (csta,
                             "cemit_scan_expression: bad expr %s, depth %d, from %s",
@@ -2836,8 +2843,42 @@ mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
 
 
 
+// a cast expression 
 mo_objref_t
-mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st * csta,
+mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st * csta,
+                          mo_objref_t castob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_cast_expr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_cast_expr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (depth > MOM_CEMIT_MAX_DEPTH)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: expr %s too deep %d from %s",
+                      mo_objref_pnamestr (castob), depth,
+                      mo_objref_pnamestr (fromob));
+  if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: expr %s timed out, depth %d, from %s",
+                      mo_objref_pnamestr (castob), depth,
+                      mo_objref_pnamestr (fromob));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (castob)
+                    && castob->mo_ob_class ==
+                    MOM_PREDEF (cast_expression_class),
+                    "cemit_scan_cast_expr: bad castob %s",
+                    mo_objref_pnamestr (castob));
+#warning mom_cemit_scan_cast_expr unimplemented
+  MOM_FATAPRINTF ("cemit_scan_cast_expr: unimplemented castob=%s",
+                  mo_objref_pnamestr (castob));
+}                               /* end of mom_cemit_scan_cast_expr */
+
+
+mo_objref_t
+mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
                            mo_objref_t chkob, mo_objref_t fromob, int depth,
                            bool isref)
 {
@@ -3166,7 +3207,6 @@ mom_cemit_compare_ctypes (struct mom_cemitlocalstate_st *csta,
                           "cemit_compare_ctypes: null rightctype cant be assigned to %s from %s",
                           mo_objref_pnamestr (leftctypob),
                           mo_objref_pnamestr (fromob));
-
     }
 
 #warning mom_cemit_compare_ctypes unimplemented

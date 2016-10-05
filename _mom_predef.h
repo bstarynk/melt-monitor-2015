@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 73
+#define MOM_NB_PREDEFINED 74
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -75,6 +75,9 @@ MOM_HAS_PREDEFINED(call_instruction_class,_3nV79jeVZkZ8kdSWp,801883621,746453860
 
 //+ class for case instructions
 MOM_HAS_PREDEFINED(case_instruction_class,_72P3hApuaup7FsP08,1662671638,6431922489856206120,966733070)
+
+//+ class for cast expressions, with a c_type attribute
+MOM_HAS_PREDEFINED(cast_expression_class,_6lF04Imjl60Y6iYYc,1500840495,5204032175303306948,1024894513)
 
 //+ class of chunk expressions or reference
 MOM_HAS_PREDEFINED(chunk_expression_class,_5WG7GBNdjmzhANitX,1402656064,898558039134589925,3575612073)
@@ -328,6 +331,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define moid_case_instruction_class _72P3hApuaup7FsP08
 #undef monam_72P3hApuaup7FsP08
 #define monam_72P3hApuaup7FsP08 case_instruction_class
+
+#undef moid_cast_expression_class
+#define moid_cast_expression_class _6lF04Imjl60Y6iYYc
+#undef monam_6lF04Imjl60Y6iYYc
+#define monam_6lF04Imjl60Y6iYYc cast_expression_class
 
 #undef moid_chunk_expression_class
 #define moid_chunk_expression_class _5WG7GBNdjmzhANitX
@@ -634,6 +642,7 @@ enum mom_predefined_hashes_en {
   momphash_c_variable_class=3029307049,
   momphash_call_instruction_class=3902071136,
   momphash_case_instruction_class=966733070,
+  momphash_cast_expression_class=1024894513,
   momphash_chunk_expression_class=3575612073,
   momphash_chunk_instruction_class=3618640566,
   momphash_class_class=1711456220,
@@ -700,7 +709,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 73
+#define MOM_NB_NAMED_PREDEFINED 74
 
 
 #undef MOM_HAS_PREDEFINED
