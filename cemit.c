@@ -380,8 +380,9 @@ __attribute ((sentinel));
   mom_cemit_add_data((Csta), ##__VA_ARGS__, NULL)
 
 
-struct mom_cemitlocalstate_st *
-mom_cemit_add_data (struct mom_cemitlocalstate_st *csta, ...)
+     struct mom_cemitlocalstate_st *mom_cemit_add_data (struct
+                                                        mom_cemitlocalstate_st
+                                                        *csta, ...)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC,
                     "cemit_add_data: bad csta@%p", csta);
@@ -2832,16 +2833,42 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
       mo_objref_t rolob =
         mo_dyncast_objref (mo_assoval_get
                            (csta->mo_cemsta_assoclocalrole, refob));
-      MOM_BACKTRACEPRINTF ("cemit_scan_reference: c-var refob %s rolob %s",
-                           mo_objref_pnamestr (refob),
-                           mo_objref_pnamestr (rolob));
-#warning cemit_scan_reference unimplemented for c-variable
+      if (!rolob)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, refob, mo_int_to_value (depth), fromob),
+                          "cemit_scan_reference: refob %s c-var without role,  depth %d, from %s",
+                          mo_objref_pnamestr (refob), depth,
+                          mo_objref_pnamestr (fromob));
+      if (rolob->mo_ob_class != MOM_PREDEF (c_role_class))
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, refob, mo_int_to_value (depth), fromob,
+                           rolob),
+                          "cemit_scan_reference: refob %s c-var, depth %d, from %s, with bad rolob %s",
+                          mo_objref_pnamestr (refob), depth,
+                          mo_objref_pnamestr (fromob),
+                          mo_objref_pnamestr (rolob));
+      mo_objref_t kindrolob =
+        mo_dyncast_objref (mo_objref_get_comp (rolob, MOMROLVARIX_ROLE));
+      mo_objref_t typrolob =
+        mo_dyncast_objref (mo_objref_get_comp (rolob, MOMROLVARIX_CTYPE));
+      if (kindrolob == MOM_PREDEF (data) || kindrolob == MOM_PREDEF (result)
+          || kindrolob == MOM_PREDEF (locals)
+          || kindrolob == MOM_PREDEF (formals))
+        {
+          MOM_ASSERTPRINTF (mom_cemit_is_ctype (csta, typrolob),
+                            "cemit_scan_reference: c-var refob %s of role %s has bad type %s",
+                            mo_objref_pnamestr (refob),
+                            mo_objref_pnamestr (rolob),
+                            mo_objref_pnamestr (typrolob));
+          return typrolob;
+        }
+      // this should probably never happen
       MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                        (csta, refob, mo_int_to_value (depth), fromob),
-                        "cemit_scan_reference: refob %s c-var unimplemented, depth %d, from %s",
+                        (csta, refob, mo_int_to_value (depth), fromob, rolob),
+                        "cemit_scan_reference: refob %s unexpected c-var, depth %d, from %s, rolob %s",
                         mo_objref_pnamestr (refob), depth,
-                        mo_objref_pnamestr (fromob));
-
+                        mo_objref_pnamestr (fromob),
+                        mo_objref_pnamestr (rolob));
     }
 #warning mom_cemit_scan_reference incomplete
   MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s of class %s",
@@ -2854,7 +2881,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
 
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
-mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                            mo_value_t expv, mo_objref_t fromob, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
@@ -3631,7 +3658,10 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
                mo_objref_pnamestr (cemp->mo_cemit_modobj));
           cemitstate.mo_cemsta_fil = NULL;
         }
-      return cemitstate.mo_cemsta_errstr;
+      mo_value_t errv = cemitstate.mo_cemsta_errstr;
+      memset (&cemitstate, 0, sizeof (cemitstate));
+      cemp->mo_cemit_locstate = NULL;
+      return errv;
     }
   else
     {
@@ -3645,6 +3675,7 @@ mo_objref_cemit_generate (mo_objref_t obrcem)
       mom_cemit_function_definitions (&cemitstate);
       mom_cemit_do_at_end (&cemitstate);
       mom_cemit_close (&cemitstate);
+      memset (&cemitstate, 0, sizeof (cemitstate));
       cemp->mo_cemit_locstate = NULL;
       MOM_INFORMPRINTF ("C code generated for module %s",
                         mo_objref_pnamestr (cemp->mo_cemit_modobj));
