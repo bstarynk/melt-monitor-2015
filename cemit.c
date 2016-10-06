@@ -2242,7 +2242,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       if (funamv)
         {
           mom_cemit_printf (csta,
-                            "\n#define " MOM_FUNC_PREFIX "%s" MOM_FUNC_PREFIX
+                            "\n#define " MOM_FUNC_PREFIX "%s " MOM_FUNC_PREFIX
                             "%s\n", mo_string_cstr (funamv), funid + 1);
           mom_cemit_printf (csta, "// inlined function %s (%s)\n",
                             mo_string_cstr (funamv), funid);
@@ -2282,6 +2282,7 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       char resid[MOM_CSTRIDSIZ];
       memset (resid, 0, sizeof (resid));
       mo_objref_idstr (resid, resultob);
+      mom_cemit_printf (csta, " ");
       mom_cemit_write_ctype_for (csta, restypob, restr, 0);
       if (mom_cemit_ctype_is_scalar (csta, restypob))
         mom_cemit_printf (csta, " = 0; // scalar result %s\n", resid);
@@ -3345,6 +3346,9 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
   mo_value_t instrstup =
     mo_dyncast_tuple (mo_objref_get_comp (rolob, MOMROLBLOCKIX_INSTRS));
   int nbinstrs = mo_tuple_size (instrstup);
+  mom_cemit_newline (csta);
+  mom_cemit_printf (csta, "// %d instrs in block %s", nbinstrs,
+                    mo_objref_pnamestr (blockob));
   for (int insix = 0; insix < nbinstrs; insix++)
     {
       mo_objref_t curinsob = mo_tuple_nth (instrstup, insix);
@@ -3358,6 +3362,14 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
   mom_cemit_newline (csta);
 }                               /* end of mom_cemit_write_block */
 
+
+void
+mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
+                            mo_value_t expv, mo_objref_t fromob, int depth);
+
+void
+mom_cemit_write_reference (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t refob, mo_objref_t fromob, int depth);
 
 void
 mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
@@ -3387,7 +3399,6 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
        "mom_cemit_write_instr instrob=%s fromob=%s depth=%d with bad rolob=%s",
        mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
        mo_objref_pnamestr (rolob));
-  mo_dyncast_objref (mo_objref_get_comp (rolob, 0));
 #define MOM_NBCASE_INSTR 139
 #define CASE_PREDEFINSTR_MOM(Ob)  momphash_##Ob % MOM_NBCASE_INSTR:	\
   if (rolkindob != MOM_PREDEF(Ob))					\
@@ -3409,9 +3420,9 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
   MOM_CEMITFAILURE
     (MOM_CEMIT_ADD_DATA
      (csta, instrob, fromob, mo_int_to_value (depth), rolob),
-     "mom_cemit_write_instr unimplemented instrob=%s fromob=%s depth=%d rolob=%s",
+     "mom_cemit_write_instr unimplemented instrob=%s fromob=%s depth=%d rolob=%s rolkindob=%s",
      mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
-     mo_objref_pnamestr (rolob));
+     mo_objref_pnamestr (rolob), mo_objref_pnamestr (rolkindob));
 }                               /* end mom_cemit_write_instr */
 
 void
@@ -3431,8 +3442,39 @@ mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_assign_instr: bad instrob");
   MOM_ASSERTPRINTF (mo_dyncast_objref (fromob),
                     "cemit_write_assign_instr: bad fromob");
-  MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob),
-                    "cemit_write_assign_instr: bad rolinsob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob)
+                    && rolinsob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_get_comp (rolinsob,
+                                           MOMROLASSIGNIX_ROLE) ==
+                    MOM_PREDEF (assign)
+                    && mo_objref_comp_count (rolinsob) >=
+                    MOMROLASSIGNIX__LASTASSIGN,
+                    "cemit_write_assign_instr: bad rolinsob %s",
+                    mo_objref_pnamestr (rolinsob));
+  mo_objref_t totypob = mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_TOTYPE);
+  mo_objref_t torefob =
+    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_TOREFERENCE);
+  mo_objref_t fromtypob =
+    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_FROMTYPE);
+  mo_value_t fromexpv =
+    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_FROMEXPR);
+  if (totypob == fromtypob)
+    {
+      mom_cemit_write_reference (csta, torefob, instrob, depth);
+      mom_cemit_newline (csta);
+      mom_cemit_printf (csta, " = ");
+      mom_cemit_write_expression (csta, fromexpv, instrob, depth);
+      mom_cemit_printf (csta, ";");
+    }
+  else
+    {
+      mom_cemit_write_reference (csta, torefob, instrob, depth);
+      mom_cemit_newline (csta);
+      mom_cemit_printf (csta, " = /*castassign*/ (");
+      mom_cemit_write_ctype_for (csta, totypob, ")", depth + 1);
+      mom_cemit_write_expression (csta, fromexpv, instrob, depth);
+      mom_cemit_printf (csta, ";");
+    }
 }                               /* end mom_cemit_write_assign_instr */
 
 
@@ -3458,6 +3500,83 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_chunk_instr: bad rolinsob");
 }                               /* end mom_cemit_write_chunk_instr */
 
+
+void
+mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
+                            mo_value_t expv, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_expression: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_expression: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (!expv)
+    {
+      mom_cemit_printf (csta, " NULL");
+      return;
+    }
+  enum mo_valkind_en kv = mo_kind_of_value (expv);
+  switch (kv)
+    {
+    case mo_KNONE:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_scan_expression: missing expression %s from %s",
+                        mo_value_pnamestr (expv),
+                        mo_objref_pnamestr (fromob));
+    case mo_KINT:
+      mom_cemit_printf (csta, " %lld",
+                        (long long) mo_value_to_int (expv, -1));
+      return;
+    case mo_KSTRING:
+      mom_cemit_printf (csta, " \"");
+      mom_output_utf8_encoded (csta->mo_cemsta_fil, mo_string_cstr (expv),
+                               mo_string_size (expv));
+      mom_cemit_printf (csta, "\" ");
+      return;
+    case mo_KTUPLE:
+      goto setkindv;
+    case mo_KSET:
+    setkindv:
+      MOM_CEMITFAILURE (csta,
+                        "cemit_write_expression: bad sequence expression %s from %s",
+                        mo_value_pnamestr (expv),
+                        mo_objref_pnamestr (fromob));
+    case mo_KOBJECT:
+      {
+        mo_objref_t expob = mo_dyncast_objref (expv);
+        MOM_ASSERTPRINTF (expob != NULL,
+                          "cemit_write_expression: bad expob from %s",
+                          mo_objref_pnamestr (fromob));
+      }
+    }
+  MOM_CEMITFAILURE
+    (MOM_CEMIT_ADD_DATA (csta, expv, mo_int_to_value (depth), fromob),
+     "cemit_write_expression: unimplemented expression %s from %s depth %d",
+     mo_value_pnamestr (expv), mo_objref_pnamestr (fromob), depth);
+}                               /* end of mom_cemit_write_expression */
+
+
+void
+mom_cemit_write_reference (struct mom_cemitlocalstate_st *csta,
+                           mo_objref_t refob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_reference: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_reference: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                    (csta, refob, mo_int_to_value (depth), fromob),
+                    "cemit_write_reference: unimplemented reference %s from %s depth %d",
+                    mo_objref_pnamestr (refob), mo_objref_pnamestr (fromob),
+                    depth);
+}                               /* end of mom_cemit_write_reference */
 
 
 void
