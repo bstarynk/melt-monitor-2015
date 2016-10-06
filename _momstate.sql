@@ -63,21 +63,12 @@ INSERT INTO t_names VALUES('conditional_instruction_class','_5ln7PDl9eFYwMPwx0')
 INSERT INTO t_names VALUES('data','_6Dq8qo0MSqgbL0ESc');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
 INSERT INTO t_names VALUES('enum_ctype_class','_1xh0H6A2nNw5upcPh');
-INSERT INTO t_names VALUES('enumaa_test1','_6Xj6iYu8f0Kd5G4fo');
-INSERT INTO t_names VALUES('enumab_test1','_8N58oAS4pxRlnRThx');
-INSERT INTO t_names VALUES('enumbu_test1','_4Ph3UMWqrIloqawrN');
 INSERT INTO t_names VALUES('enumerator_class','_0dK6lxuDBgrY7Zdrb');
 INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('expression','_64h4VCbZPNyxt22DN');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('extern','_5dn8uwCs0vUJ9AG7y');
-INSERT INTO t_names VALUES('fieldaa_test1','_1Ma1hIkjW2pwNHiKZ');
-INSERT INTO t_names VALUES('fieldab_test1','_4qM1PCt6z5dVadxJG');
-INSERT INTO t_names VALUES('fieldbx_test1','_6rV7sjJup5PnMH7Rt');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
-INSERT INTO t_names VALUES('fielduay_test1','_2zq5GZyUCWamFY8A3');
-INSERT INTO t_names VALUES('fielduaz_test1','_7sh3o3kwn9efIpWoS');
-INSERT INTO t_names VALUES('fieldubw_test1','_5tY0jFlg4ZFMGRXjL');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
 INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
@@ -146,13 +137,6 @@ INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('threadlocal_c_data_class','_0Zs6lGxUXXurCpaYD');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
-INSERT INTO t_names VALUES('type_enuma_test1','_6zI7Ksmo3XlnSBba9');
-INSERT INTO t_names VALUES('type_enumb_test1','_2fW8RGq4VsALItRsE');
-INSERT INTO t_names VALUES('type_ptrint','_0m46GxlBP9bdo05q4');
-INSERT INTO t_names VALUES('type_structa_test1','_7M91oqNZoxo8xMq7c');
-INSERT INTO t_names VALUES('type_structb_test1','_6cu0xvaoNV0W4X4aW');
-INSERT INTO t_names VALUES('type_uniona_test1','_6Z810NfglNjogmNcG');
-INSERT INTO t_names VALUES('type_unionb_test1','_7BI45k1e9Ri0Wv9rm');
 INSERT INTO t_names VALUES('uint16_t','_8T17wDyPfJSmGz5Ve');
 INSERT INTO t_names VALUES('uint32_t','_6y88mWwevVhETpkig');
 INSERT INTO t_names VALUES('uint64_t','_6r06aqWaPdfZgAKBP');
@@ -381,26 +365,6 @@ INSERT INTO t_objects VALUES('_0lI8AP6Gb2vPAtY1d',1475588023,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_0m46GxlBP9bdo05q4',1474868749,'
-{
- "@name": "type_ptrint",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype pointer to int"
-   }
-  ]
- },
- "comps": {
-  "vectval": [
-   {
-    "oid": "_0Sp1Lg7ctajS7oX5i"
-   }
-  ]
- }
-}
-','_7JP45UsR282DkTrJS','','','');
 INSERT INTO t_objects VALUES('_0mn1b5GSeM3pB0Bfw',1475065467,'
 {
  "@name": "include_meltmoni",
@@ -528,32 +492,6 @@ INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
  }
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_1Ma1hIkjW2pwNHiKZ',1475695309,'
-{
- "@name": "fieldaa_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_7M91oqNZoxo8xMq7c"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "first field of structa"
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_0Sp1Lg7ctajS7oX5i"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_1WX2mf4xwC5TU5ml7',1474366358,'
 {
  "@name": "void",
@@ -742,34 +680,6 @@ INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_2fW8RGq4VsALItRsE',1474884393,'
-{
- "@name": "type_enumb_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_15c0LcIrdf2LE5JP8",
-    "va": {
-     "oid": "_6zI7Ksmo3XlnSBba9"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for enumb extending enuma"
-   },
-   {
-    "at": "_4Cz6GxTDLCsTy7bco",
-    "va": {
-     "tup": [
-      "_4Ph3UMWqrIloqawrN"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_1xh0H6A2nNw5upcPh','','','');
 INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
 {
  "@name": "string",
@@ -784,32 +694,6 @@ INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1475695309,'
-{
- "@name": "fielduay_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_6Z810NfglNjogmNcG"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "fielduay in uniona for test1"
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_8BM91hTnefUPcYXzf"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475728983,'
 {
  "@name": "test1_idint",
@@ -1156,7 +1040,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475728087,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475730877,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1203,14 +1087,7 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475728087,'
     "at": "_8TY6UsXJ3Djt71By3",
     "va": {
      "tup": [
-      "_0m46GxlBP9bdo05q4",
-      "_7M91oqNZoxo8xMq7c",
-      "_6cu0xvaoNV0W4X4aW",
-      "_6Z810NfglNjogmNcG",
-      "_7BI45k1e9Ri0Wv9rm",
-      "_6zI7Ksmo3XlnSBba9",
-      "_2fW8RGq4VsALItRsE",
-      "_5fb7a3nqXwUKGKblr"
+      "_0Ze1dDI740vldabtI"
      ]
     }
    }
@@ -1239,30 +1116,6 @@ INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1475695309,'
-{
- "@name": "enumbu_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_2fW8RGq4VsALItRsE"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "enumerator bu for type_enumb in test1"
-   },
-   {
-    "at": "_4Cm8ln5mSkcZHI6WB",
-    "va": 2
-   }
-  ]
- },
- "comps": null
-}
-','_0dK6lxuDBgrY7Zdrb','','','');
 INSERT INTO t_objects VALUES('_4Yd3gqjKLi1hAKztj',1475302768,'
 {
  "@name": "assignment_instruction_class",
@@ -1332,32 +1185,6 @@ INSERT INTO t_objects VALUES('_4pb5Vror0ehNFKXfT',1475335399,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4qM1PCt6z5dVadxJG',1475695309,'
-{
- "@name": "fieldab_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_7M91oqNZoxo8xMq7c"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "fieldab in structa"
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_0m46GxlBP9bdo05q4"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_4wr5hqASKB1b0Dd5D',1473102723,'
 {
  "@name": "payload_gobject",
@@ -1656,32 +1483,6 @@ INSERT INTO t_objects VALUES('_5t61z2vkWfR1NbtiF',1475176212,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1475695309,'
-{
- "@name": "fieldubw_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_7BI45k1e9Ri0Wv9rm"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "field ubw in unionb for test1"
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_8t42m75faVNE2kWxu"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
 {
  "attrs": {
@@ -1852,53 +1653,6 @@ INSERT INTO t_objects VALUES('_6VV8wX6A6EdY0C70Z',1475274437,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1475695309,'
-{
- "@name": "enumaa_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_6zI7Ksmo3XlnSBba9"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "first enumerator in type_enuma_test1"
-   },
-   {
-    "at": "_4Cm8ln5mSkcZHI6WB",
-    "va": 0
-   }
-  ]
- },
- "comps": null
-}
-','_0dK6lxuDBgrY7Zdrb','','','');
-INSERT INTO t_objects VALUES('_6Z810NfglNjogmNcG',1474879548,'
-{
- "@name": "type_uniona_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for uniona"
-   },
-   {
-    "at": "_7Pl7foCRjKoT6Gkdr",
-    "va": {
-     "tup": [
-      "_2zq5GZyUCWamFY8A3",
-      "_7sh3o3kwn9efIpWoS"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_3P48jR3hSzSCgv48c','','','');
 INSERT INTO t_objects VALUES('_6Z90lCcFC3RhKoHGv',1474464458,'
 {
  "@name": "set_useract",
@@ -1933,34 +1687,6 @@ INSERT INTO t_objects VALUES('_6bK8gGYmKZXwwNXj4',1474699623,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6cu0xvaoNV0W4X4aW',1474879292,'
-{
- "@name": "type_structb_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_15c0LcIrdf2LE5JP8",
-    "va": {
-     "oid": "_7M91oqNZoxo8xMq7c"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for structb extending structa"
-   },
-   {
-    "at": "_7Pl7foCRjKoT6Gkdr",
-    "va": {
-     "tup": [
-      "_6rV7sjJup5PnMH7Rt"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_3CM77K3hIhblwvxg3','','','');
 INSERT INTO t_objects VALUES('_6dw6NAxxyyrUS1716',1475302768,'
 {
  "@name": "jump_instruction_class",
@@ -2023,32 +1749,6 @@ INSERT INTO t_objects VALUES('_6r06aqWaPdfZgAKBP',1474474102,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_6rV7sjJup5PnMH7Rt',1475695309,'
-{
- "@name": "fieldbx_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_6cu0xvaoNV0W4X4aW"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "field bx in type_structb_test1 "
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_2Sj1dLJSbvyN3kMgI"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_6y88mWwevVhETpkig',1474474068,'
 {
  "@name": "uint32_t",
@@ -2063,29 +1763,6 @@ INSERT INTO t_objects VALUES('_6y88mWwevVhETpkig',1474474068,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_6zI7Ksmo3XlnSBba9',1474881756,'
-{
- "@name": "type_enuma_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for enuma"
-   },
-   {
-    "at": "_4Cz6GxTDLCsTy7bco",
-    "va": {
-     "tup": [
-      "_6Xj6iYu8f0Kd5G4fo",
-      "_8N58oAS4pxRlnRThx"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_1xh0H6A2nNw5upcPh','','','');
 INSERT INTO t_objects VALUES('_72P3hApuaup7FsP08',1475302768,'
 {
  "@name": "case_instruction_class",
@@ -2142,34 +1819,6 @@ INSERT INTO t_objects VALUES('_7831xB7d1ulmsaCYS',1474374401,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
-INSERT INTO t_objects VALUES('_7BI45k1e9Ri0Wv9rm',1474880778,'
-{
- "@name": "type_unionb_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_15c0LcIrdf2LE5JP8",
-    "va": {
-     "oid": "_6Z810NfglNjogmNcG"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for unionb extending uniona"
-   },
-   {
-    "at": "_7Pl7foCRjKoT6Gkdr",
-    "va": {
-     "tup": [
-      "_5tY0jFlg4ZFMGRXjL"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_3P48jR3hSzSCgv48c','','','');
 INSERT INTO t_objects VALUES('_7C68VV2V6VKuvWqUW',1475573036,'
 {
  "@name": "macro_expression_class",
@@ -2212,31 +1861,6 @@ INSERT INTO t_objects VALUES('_7JP45UsR282DkTrJS',1474477388,'
  "comps": null
 }
 ','_84n6z6xA40eduUUjh','','','');
-INSERT INTO t_objects VALUES('_7M91oqNZoxo8xMq7c',1474878786,'
-{
- "@name": "type_structa_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "ctype for structa"
-   },
-   {
-    "at": "_7Pl7foCRjKoT6Gkdr",
-    "va": {
-     "tup": [
-      "_1Ma1hIkjW2pwNHiKZ",
-      "_4qM1PCt6z5dVadxJG"
-     ]
-    }
-   }
-  ]
- },
- "comps": {
-  "vectval": []
- }
-}
-','_3CM77K3hIhblwvxg3','','','');
 INSERT INTO t_objects VALUES('_7Pl7foCRjKoT6Gkdr',1474361179,'
 {
  "@name": "fields",
@@ -2347,32 +1971,6 @@ INSERT INTO t_objects VALUES('_7mW2hPaN6NfV95VUY',1475649221,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1475695309,'
-{
- "@name": "fielduaz_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_6Z810NfglNjogmNcG"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "fielduaz in uniona for test1"
-   },
-   {
-    "at": "_8TY6UsXJ3Djt71By3",
-    "va": {
-     "oid": "_0m46GxlBP9bdo05q4"
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_7vy5VxtVon8EhIF5D',1474354808,'
 {
  "@name": "result_ctype",
@@ -2513,30 +2111,6 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
-INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1475695309,'
-{
- "@name": "enumab_test1",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_3St1x2rkjnH28CyRy",
-    "va": {
-     "oid": "_6zI7Ksmo3XlnSBba9"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "second enumerator in type_enuma_test1"
-   },
-   {
-    "at": "_4Cm8ln5mSkcZHI6WB",
-    "va": 1
-   }
-  ]
- },
- "comps": null
-}
-','_0dK6lxuDBgrY7Zdrb','','','');
 INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
 {
  "@name": "uint16_t",
