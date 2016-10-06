@@ -3265,7 +3265,7 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_block: bad payl@%p in csta@%p", cemp, csta);
   mo_objref_t rolob =
     mo_dyncast_objref (mo_assoval_get
-                       (csta->mo_cemsta_assocmodulrole, blockob));
+                       (csta->mo_cemsta_assoclocalrole, blockob));
 #warning mom_cemit_write_block unimplemented
   MOM_CEMITFAILURE
     (MOM_CEMIT_ADD_DATA
