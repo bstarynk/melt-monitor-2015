@@ -1674,10 +1674,6 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
         mom_cemit_printf (csta,
                           "static inline mo_%s_ty " MOM_FUNC_PREFIX "%s;\n",
                           mo_objref_shortnamestr (signob), shortnamob);
-        if (obnamev)
-          mom_cemit_printf (csta,
-                            "#define " MOM_FUNC_PREFIX "%s " MOM_FUNC_PREFIX
-                            "%s\n", obid, mo_string_cstr (obnamev));
       }
       break;
     case CASE_PREDEFCLASS_OBJDECL_MOM (c_routine_class):
@@ -2299,8 +2295,39 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mo_objref_idstr (resid, resultob);
       mom_cemit_printf (csta, " return %s;\n", restr);
     }
-  mom_cemit_printf (csta, "} // end of function %s\n\n",
-                    mo_objref_shortnamestr (funob));
+  if (funamv)
+    {
+      mom_cemit_printf (csta, "} // end of function %s (%s)\n\n",
+                        mo_string_cstr (funamv), funid);
+      mom_cemit_printf (csta, "// synonym function %s (%s)\n",
+                        mo_string_cstr (funamv), funid);
+      const char *funamstr =
+        mom_gc_printf (MOM_FUNC_PREFIX "%s", mo_string_cstr (funamv));
+      if (!restypob || restypob == momglob_void)
+        mom_cemit_printf (csta, "void\n%s", funstr);
+      else
+        mom_cemit_write_ctype_for (csta, restypob, funstr, 0);
+      mom_cemit_write_formals (csta, formaltup);
+      mom_cemit_printf (csta, "\n{ // start of synonym function %s\n",
+                        mo_objref_shortnamestr (funob));
+      if (!restypob || restypob == momglob_void)
+        mom_cemit_printf (csta, MOM_FUNC_PREFIX "%s (", funid);
+      else
+        mom_cemit_printf (csta, "return " MOM_FUNC_PREFIX "%s (", funid);
+      for (unsigned foix = 0; foix < nbformals; foix++)
+        {
+          mo_objref_t curformalob = mo_tuple_nth (formaltup, foix);
+          if (foix > 0)
+            mom_cemit_printf (csta, ", ");
+          mom_cemit_printf (csta, MOM_FORMAL_PREFIX "%s",
+                            mo_objref_shortnamestr (curformalob));
+        }
+      mom_cemit_printf (csta, "); // end synonym body\n");
+      mom_cemit_printf (csta, "} // end of synonym function %s\n",
+                        mo_objref_shortnamestr (funob));
+    }
+  else
+    mom_cemit_printf (csta, "} // end of function %s\n\n", funid);
   csta->mo_cemsta_curfun = NULL;
   csta->mo_cemsta_assoclocalrole = NULL;
 }                               /* end of mom_cemit_function_code */
