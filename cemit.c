@@ -22,6 +22,7 @@
 
 #define MOM_FORMAL_PREFIX "mofor_"
 #define MOM_RESULT_PREFIX "mores_"
+#define MOM_LOCAL_PREFIX "moloc_"
 
 /// mention momglob_int for emission of _mom_global.h
 #define MOM_CEMIT_MAGIC 0x56c59cc3      /*1455791299 cemit_magic */
@@ -89,9 +90,11 @@ enum momcemit_rolvar_en
 enum momcemit_rolblock_en
 {
   MOMROLBLOCKIX_ROLE = MOMROLFORMIX_ROLE,
-  MOMROLBLOCKIX_INSTRS = MOMROLFORMIX_CTYPE,
-  MOMROLBLOCKIX_EXPANSION = MOMROLBLOCKIX_INSTRS,
+  /// either INSTRS for blocks or EXPANSION for macros but not both
+  MOMROLBLOCKIX_INSTRS = MOMROLFORMIX_CTYPE,    // for blocks
+  MOMROLBLOCKIX_EXPANSION = MOMROLBLOCKIX_INSTRS,       // for macros
   MOMROLBLOCKIX_IN,
+  MOMROLBLOCKIX_LOCALS,
   MOMROLBLOCKIX__LASTVAR
 };
 
@@ -2080,6 +2083,10 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
                        mo_objref_t blockob, mo_objref_t fromob, int depth);
 
 void
+mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
+                       mo_objref_t insob, mo_objref_t fromob, int depth);
+
+void
 mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
                          mo_objref_t funob)
 {
@@ -2431,22 +2438,27 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
       csta->mo_cemsta_assoclocalrole =
         mo_assoval_put (csta->mo_cemsta_assoclocalrole, curlocalob, locrolob);
     }
+  mo_objref_put_comp (rolob, MOMROLBLOCKIX_LOCALS, locseq);
   int nbinstr = mo_objref_comp_count (blockob);
   csta->mo_cemsta_assoclocalrole =
     mo_assoval_reserve (csta->mo_cemsta_assoclocalrole, 4 * nbinstr + 7);
-  mo_sequencevalue_ty *seqins = mo_sequence_allocate (nbinstr);
-  for (int ix = 0; ix < nbinstr; ix++)
-    {
-      mo_objref_t instrob =
-        mo_dyncast_objref (mo_objref_get_comp (blockob, ix));
-      if (!instrob)
-        MOM_CEMITFAILURE
-          (csta,
-           "cemit_scan_block: no instr#%d in block %s",
-           ix, mo_objref_pnamestr (blockob));
-      mom_cemit_scan_instr (csta, instrob, blockob, depth + 1);
-      seqins->mo_seqobj[ix] = instrob;
-    };
+  {
+    mo_sequencevalue_ty *seqins = mo_sequence_allocate (nbinstr);
+    for (int ix = 0; ix < nbinstr; ix++)
+      {
+        mo_objref_t instrob =
+          mo_dyncast_objref (mo_objref_get_comp (blockob, ix));
+        if (!instrob)
+          MOM_CEMITFAILURE
+            (csta,
+             "cemit_scan_block: no instr#%d in block %s",
+             ix, mo_objref_pnamestr (blockob));
+        mom_cemit_scan_instr (csta, instrob, blockob, depth + 1);
+        seqins->mo_seqobj[ix] = instrob;
+      };
+    mo_value_t tupins = mo_make_tuple_closeq (seqins);
+    mo_objref_put_comp (rolob, MOMROLBLOCKIX_INSTRS, tupins);
+  }
   // "forget" the locals by overwiting the role
   // so the same local can't be used again...
   for (int lix = 0; lix < nblocals; lix++)
@@ -2461,8 +2473,6 @@ mom_cemit_scan_block (struct mom_cemitlocalstate_st *csta,
                         "cemit_scan_block: bad locolob lix#%d", lix);
       mo_objref_put_comp (locrolob, MOMROLVARIX_ROLE, NULL);
     };
-  mo_objref_put_comp (rolob, MOMROLBLOCKIX_EXPANSION,
-                      mo_make_tuple_closeq (seqins));
 }                               /* end of mom_cemit_scan_block */
 
 
@@ -3266,14 +3276,113 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
   mo_objref_t rolob =
     mo_dyncast_objref (mo_assoval_get
                        (csta->mo_cemsta_assoclocalrole, blockob));
-#warning mom_cemit_write_block unimplemented
+  if (!rolob || rolob->mo_ob_class != MOM_PREDEF (c_role_class)
+      || mo_objref_get_comp (rolob, MOMROLBLOCKIX_ROLE) != MOM_PREDEF (body)
+      || mo_objref_comp_count (rolob) < MOMROLBLOCKIX__LASTVAR)
+    MOM_CEMITFAILURE
+      (MOM_CEMIT_ADD_DATA
+       (csta, blockob, fromob, mo_int_to_value (depth), rolob),
+       "mom_cemit_write_block blockob=%s fromob=%s depth=%d with bad rolob=%s",
+       mo_objref_pnamestr (blockob), mo_objref_pnamestr (fromob), depth,
+       mo_objref_pnamestr (rolob));
+  mo_value_t localsv =
+    mo_dyncast_sequence (mo_objref_get_comp (rolob, MOMROLBLOCKIX_LOCALS));
+  int nbloc = mo_sequence_size (localsv);
+  unsigned oldindent = csta->mo_cemsta_indentation;
+  csta->mo_cemsta_indentation = depth;
+  mom_cemit_newline (csta);
+#warning cemit_write_block: what about block incoming label?
+  mom_cemit_printf (csta, "{ // block %s with %d locals",
+                    mo_objref_pnamestr (blockob), nbloc);
+  csta->mo_cemsta_indentation = depth + 1;
+  // emit local declarations
+  for (int lix = 0; lix < nbloc; lix++)
+    {
+      mom_cemit_newline (csta);
+      mo_objref_t curlocob = mo_sequence_nth (localsv, lix);
+      char idcurloc[MOM_CSTRIDSIZ];
+      memset (idcurloc, 0, sizeof (idcurloc));
+      mo_objref_idstr (idcurloc, curlocob);
+      mo_objref_t locrolob =
+        mo_dyncast_objref (mo_assoval_get
+                           (csta->mo_cemsta_assoclocalrole, curlocob));
+      if (!locrolob || locrolob->mo_ob_class != MOM_PREDEF (c_role_class)
+          || mo_objref_get_comp (locrolob,
+                                 MOMROLVARIX_ROLE) != MOM_PREDEF (locals)
+          || mo_objref_comp_count (locrolob) < MOMROLVARIX__LASTVAR)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, blockob, fromob, mo_int_to_value (depth),
+                           curlocob, locrolob),
+                          "mom_cemit_write_block blockob=%s fromob=%s depth=%d curlocob=%s with bad locrolob=%s",
+                          mo_objref_pnamestr (blockob),
+                          mo_objref_pnamestr (fromob), depth,
+                          mo_objref_pnamestr (curlocob),
+                          mo_objref_pnamestr (locrolob));
+      mo_objref_t loctypob =
+        mo_dyncast_objref (mo_objref_get_comp (locrolob, MOMROLVARIX_CTYPE));
+      MOM_ASSERTPRINTF (mom_cemit_is_ctype (csta, loctypob),
+                        "bad loctypob=%s in curlocob=%s for blockob=%s",
+                        mo_objref_pnamestr (loctypob),
+                        mo_objref_pnamestr (curlocob),
+                        mo_objref_pnamestr (blockob));
+      const char *locnamstr = mom_gc_printf (MOM_LOCAL_PREFIX "%s",
+                                             mo_objref_shortnamestr
+                                             (curlocob));
+      mom_cemit_write_ctype_for (csta, loctypob, locnamstr, depth);
+      if (mom_cemit_ctype_is_scalar (csta, loctypob))
+        mom_cemit_printf (csta, " = /*scalar local*/0; // %s", idcurloc);
+      else
+        mom_cemit_printf (csta, " = /*aggregate local*/{}; // %s", idcurloc);
+    }
+  // emit instructions
+  mo_value_t instrstup =
+    mo_dyncast_tuple (mo_objref_get_comp (rolob, MOMROLBLOCKIX_INSTRS));
+  int nbinstrs = mo_tuple_size (instrstup);
+  for (int insix = 0; insix < nbinstrs; insix++)
+    {
+      mo_objref_t curinsob = mo_tuple_nth (instrstup, insix);
+      mom_cemit_newline (csta);
+      mom_cemit_write_instr (csta, curinsob, blockob, depth);
+    }
+  csta->mo_cemsta_indentation = depth;
+  mom_cemit_newline (csta);
+  mom_cemit_printf (csta, "} // end block %s", mo_objref_pnamestr (blockob));
+  csta->mo_cemsta_indentation = oldindent;
+  mom_cemit_newline (csta);
+}                               /* end of mom_cemit_write_block */
+
+
+
+void
+mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
+                       mo_objref_t instrob, mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_instr: bad payl@%p in csta@%p", cemp, csta);
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, instrob));
+  if (!rolob || rolob->mo_ob_class != MOM_PREDEF (c_role_class))
+    MOM_CEMITFAILURE
+      (MOM_CEMIT_ADD_DATA
+       (csta, instrob, fromob, mo_int_to_value (depth), rolob),
+       "mom_cemit_write_instr instrob=%s fromob=%s depth=%d with bad rolob=%s",
+       mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
+       mo_objref_pnamestr (rolob));
+#warning mom_cemit_write_instr unimplemented
   MOM_CEMITFAILURE
     (MOM_CEMIT_ADD_DATA
-     (csta, blockob, fromob, mo_int_to_value (depth), rolob),
-     "mom_cemit_write_block unimplemented blockob=%s fromob=%s depth=%d rolob=%s",
-     mo_objref_pnamestr (blockob), mo_objref_pnamestr (fromob), depth,
+     (csta, instrob, fromob, mo_int_to_value (depth), rolob),
+     "mom_cemit_write_instr unimplemented instrob=%s fromob=%s depth=%d rolob=%s",
+     mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
      mo_objref_pnamestr (rolob));
-}                               /* end of mom_cemit_write_block */
+}                               /* end mom_cemit_write_instr */
+
 
 void
 mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
