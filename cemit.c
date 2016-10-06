@@ -3290,7 +3290,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
     }
   mom_cemit_printf (csta, "\n\n// initialization of %d objects\n", nbset);
   mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
-                    modulid+1);
+                    modulid + 1);
   for (unsigned eix = 0; eix < nbset; eix++)
     {
       mo_objref_t elemob = mo_set_nth (setv, eix);
@@ -3315,13 +3315,14 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
                         (unsigned long long) elemob->mo_ob_loid, elemid);
     }
   mom_cemit_printf (csta, "} /*end " MOM_MODULEINIT_PREFIX "%s */\n",
-                    modulid+1);
+                    modulid + 1);
   mo_value_t modulnamv = mo_objref_namev (cemp->mo_cemit_modobj);
   if (modulnamv)
     {
       mom_cemit_printf (csta, "void " MOM_MODULEINIT_PREFIX "%s (void) {\n",
                         mo_string_cstr (modulnamv));
-      mom_cemit_printf (csta, "  " MOM_MODULEINIT_PREFIX "%s ();\n", modulid+1);
+      mom_cemit_printf (csta, "  " MOM_MODULEINIT_PREFIX "%s ();\n",
+                        modulid + 1);
       mom_cemit_printf (csta, "} /*end " MOM_MODULEINIT_PREFIX "%s */\n",
                         mo_string_cstr (modulnamv));
     }
@@ -3330,7 +3331,7 @@ mom_cemit_set (struct mom_cemitlocalstate_st *csta)
   mom_cemit_printf (csta,
                     "void monimelt_module_init(void) {\n"
                     "   " MOM_MODULEINIT_PREFIX "%s ();\n"
-                    "} /* end monimelt_module_init */\n", modulid+1);
+                    "} /* end monimelt_module_init */\n", modulid + 1);
   if ((int) nbset > nbpredef)
     mom_cemit_printf (csta, "#else /*!MONIMELT_MODULE*/\n"
                       "#warning %d global objects are not predefined"
