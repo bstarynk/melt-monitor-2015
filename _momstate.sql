@@ -1501,10 +1501,22 @@ INSERT INTO t_objects VALUES('_5pl24omBRy4z1HrtN',1475336840,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5qn90tdCdn7nHFNJe',1475729238,'
+INSERT INTO t_objects VALUES('_5qn90tdCdn7nHFNJe',1475741529,'
 {
  "attrs": {
   "assoval": [
+   {
+    "at": "_3oe98LjR73BVUxfBL",
+    "va": {
+     "oid": "_4an3PsIjc3EDLchlg"
+    }
+   },
+   {
+    "at": "_42G9523MP4rY91DgG",
+    "va": {
+     "oid": "_6gj4ZHinqqqvdWKyg"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "assign r_test1 := x_test1"
