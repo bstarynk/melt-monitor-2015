@@ -388,12 +388,15 @@ mofun_cemit_module_useract (mo_objref_t obuact)
   if (val)
     {
       MOM_WARNPRINTF
-        ("cemit_module_useract:  for module %s thru cemitobr %s failed with %s",
+        ("cemit_module_useract:  for module %s thru $1=cemitobr %s failed with $2= %s",
          mo_objref_pnamestr (moduleobr), mo_objref_pnamestr (cemitobr),
          mo_value_pnamestr (val));
+      mom_gui_set_displayed_nth_value (1, cemitobr);
+      mom_gui_set_displayed_nth_value (2, val);
       mom_gui_fail_user_action
-        ("cemit_module_useract: failure for module %s: %s",
-         mo_objref_pnamestr (moduleobr), mo_value_pnamestr (val));
+        ("cemit_module_useract: failure, module %s in $1=cemitobr %s: $2= %s",
+         mo_objref_pnamestr (moduleobr),
+         mo_objref_pnamestr (cemitobr), mo_value_pnamestr (val));
     }
   else
     MOM_INFORMPRINTF
