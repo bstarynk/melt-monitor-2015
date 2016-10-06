@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 05 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 06 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -119,6 +119,7 @@ INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
 INSERT INTO t_names VALUES('put_attr_cemitact','_34X8LzaKgjC0yxZXC');
+INSERT INTO t_names VALUES('r_test1','_6gj4ZHinqqqvdWKyg');
 INSERT INTO t_names VALUES('reference','_52u5dMMjzLjdlgIMF');
 INSERT INTO t_names VALUES('remove','_4Ph1Z99dptyJhpZfj');
 INSERT INTO t_names VALUES('remove_useract','_8j61MrY76IlS6t10r');
@@ -129,6 +130,7 @@ INSERT INTO t_names VALUES('set_useract','_6Z90lCcFC3RhKoHGv');
 INSERT INTO t_names VALUES('signature','_1ZY6i2rKse5FsKrsv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
+INSERT INTO t_names VALUES('signature_int_to_int','_0Ze1dDI740vldabtI');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('signature_two_objects_to_object','_4pb5Vror0ehNFKXfT');
 INSERT INTO t_names VALUES('signature_two_objects_to_value','_1ky69RT7bZKd1tySD');
@@ -136,6 +138,7 @@ INSERT INTO t_names VALUES('signature_two_objects_to_void','_0dV2PYaSBUDE7lsYq')
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
+INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
@@ -162,6 +165,7 @@ INSERT INTO t_names VALUES('value_ctype','_7mW2hPaN6NfV95VUY');
 INSERT INTO t_names VALUES('verbatim','_1rV3tPbwX88LqztK0');
 INSERT INTO t_names VALUES('verbatim_expression_class','_16y1NXTBqDPWHLfoI');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
+INSERT INTO t_names VALUES('x_test1','_4an3PsIjc3EDLchlg');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
 {
@@ -279,6 +283,34 @@ INSERT INTO t_objects VALUES('_0XX587h4W56J6nk3U',1474973691,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_0Ze1dDI740vldabtI',1475728002,'
+{
+ "@name": "signature_int_to_int",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature: int -> int"
+   },
+   {
+    "at": "_7vy5VxtVon8EhIF5D",
+    "va": {
+     "oid": "_0Sp1Lg7ctajS7oX5i"
+    }
+   },
+   {
+    "at": "_8Bq9eNWZ0eUS6BGq8",
+    "va": {
+     "tup": [
+      "_0Sp1Lg7ctajS7oX5i"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_0Zs6lGxUXXurCpaYD',1474973691,'
 {
  "@name": "threadlocal_c_data_class",
@@ -496,7 +528,7 @@ INSERT INTO t_objects VALUES('_1Ks2XkEjfBfcFh5WJ',1473701710,'
  }
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_1Ma1hIkjW2pwNHiKZ',1475082733,'
+INSERT INTO t_objects VALUES('_1Ma1hIkjW2pwNHiKZ',1475695309,'
 {
  "@name": "fieldaa_test1",
  "attrs": {
@@ -752,7 +784,7 @@ INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1475082733,'
+INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1475695309,'
 {
  "@name": "fielduay_test1",
  "attrs": {
@@ -778,6 +810,40 @@ INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1475082733,'
  "comps": null
 }
 ','_6Lu6DXoGivCCHMwzV','','','');
+INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475728362,'
+{
+ "@name": "test1_idint",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_1ZY6i2rKse5FsKrsv",
+    "va": {
+     "oid": "_0Ze1dDI740vldabtI"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "in test1 module identity function on ints"
+   },
+   {
+    "at": "_7he4MBcSuccJxtj7q",
+    "va": {
+     "oid": "_6gj4ZHinqqqvdWKyg"
+    }
+   },
+   {
+    "at": "_8Cl7x1LpaH2GzkdbW",
+    "va": {
+     "tup": [
+      "_4an3PsIjc3EDLchlg"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_0XX587h4W56J6nk3U','','','');
 INSERT INTO t_objects VALUES('_34X8LzaKgjC0yxZXC',1475046592,'
 {
  "@name": "put_attr_cemitact",
@@ -1084,7 +1150,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475146078,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475728087,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1094,6 +1160,14 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475146078,'
     "va": {
      "tup": [
       "_0mn1b5GSeM3pB0Bfw"
+     ]
+    }
+   },
+   {
+    "at": "_1DA4KKiwji2gafLj0",
+    "va": {
+     "tup": [
+      "_32t79xvXNDPCYP09j"
      ]
     }
    },
@@ -1159,7 +1233,7 @@ INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1475082733,'
+INSERT INTO t_objects VALUES('_4Ph3UMWqrIloqawrN',1475695309,'
 {
  "@name": "enumbu_test1",
  "attrs": {
@@ -1197,6 +1271,26 @@ INSERT INTO t_objects VALUES('_4Yd3gqjKLi1hAKztj',1475302768,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_4an3PsIjc3EDLchlg',1475728399,'
+{
+ "@name": "x_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "variable x in test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_0Sp1Lg7ctajS7oX5i"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3hq90zS3jpqaVDbDy','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",
@@ -1232,7 +1326,7 @@ INSERT INTO t_objects VALUES('_4pb5Vror0ehNFKXfT',1475335399,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4qM1PCt6z5dVadxJG',1475082733,'
+INSERT INTO t_objects VALUES('_4qM1PCt6z5dVadxJG',1475695309,'
 {
  "@name": "fieldab_test1",
  "attrs": {
@@ -1543,7 +1637,7 @@ INSERT INTO t_objects VALUES('_5t61z2vkWfR1NbtiF',1475176212,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1475082733,'
+INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1475695309,'
 {
  "@name": "fieldubw_test1",
  "attrs": {
@@ -1720,7 +1814,7 @@ INSERT INTO t_objects VALUES('_6VV8wX6A6EdY0C70Z',1475274437,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1475082733,'
+INSERT INTO t_objects VALUES('_6Xj6iYu8f0Kd5G4fo',1475695309,'
 {
  "@name": "enumaa_test1",
  "attrs": {
@@ -1843,6 +1937,26 @@ INSERT INTO t_objects VALUES('_6dw6NAxxyyrUS1716',1475302768,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_6gj4ZHinqqqvdWKyg',1475728433,'
+{
+ "@name": "r_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "variable r in test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_0Sp1Lg7ctajS7oX5i"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3hq90zS3jpqaVDbDy','','','');
 INSERT INTO t_objects VALUES('_6lF04Imjl60Y6iYYc',1475655272,'
 {
  "@name": "cast_expression_class",
@@ -1871,7 +1985,7 @@ INSERT INTO t_objects VALUES('_6r06aqWaPdfZgAKBP',1474474102,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_6rV7sjJup5PnMH7Rt',1475082733,'
+INSERT INTO t_objects VALUES('_6rV7sjJup5PnMH7Rt',1475695309,'
 {
  "@name": "fieldbx_test1",
  "attrs": {
@@ -2195,7 +2309,7 @@ INSERT INTO t_objects VALUES('_7mW2hPaN6NfV95VUY',1475649221,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
-INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1475082733,'
+INSERT INTO t_objects VALUES('_7sh3o3kwn9efIpWoS',1475695309,'
 {
  "@name": "fielduaz_test1",
  "attrs": {
@@ -2361,7 +2475,7 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
-INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1475082733,'
+INSERT INTO t_objects VALUES('_8N58oAS4pxRlnRThx',1475695309,'
 {
  "@name": "enumab_test1",
  "attrs": {
