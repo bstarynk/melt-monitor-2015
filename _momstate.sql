@@ -810,11 +810,17 @@ INSERT INTO t_objects VALUES('_2zq5GZyUCWamFY8A3',1475695309,'
  "comps": null
 }
 ','_6Lu6DXoGivCCHMwzV','','','');
-INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475728362,'
+INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475728983,'
 {
  "@name": "test1_idint",
  "attrs": {
   "assoval": [
+   {
+    "at": "_1DA4KKiwji2gafLj0",
+    "va": {
+     "oid": "_5yC9bVC2dye6hgmVq"
+    }
+   },
    {
     "at": "_1ZY6i2rKse5FsKrsv",
     "va": {
@@ -1623,6 +1629,19 @@ INSERT INTO t_objects VALUES('_5pl24omBRy4z1HrtN',1475336840,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5qn90tdCdn7nHFNJe',1475729238,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "assign r_test1 := x_test1"
+   }
+  ]
+ },
+ "comps": null
+}
+','_4Yd3gqjKLi1hAKztj','','','');
 INSERT INTO t_objects VALUES('_5t61z2vkWfR1NbtiF',1475176212,'
 {
  "@name": "locals",
@@ -1663,6 +1682,25 @@ INSERT INTO t_objects VALUES('_5tY0jFlg4ZFMGRXjL',1475695309,'
  "comps": null
 }
 ','_6Lu6DXoGivCCHMwzV','','','');
+INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "body of test1_idint\n"
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_5qn90tdCdn7nHFNJe"
+   }
+  ]
+ }
+}
+','_1lU1wXlGlR9TdmE89','','','');
 INSERT INTO t_objects VALUES('_62H0GDHPCtIRvAdDd',1474473139,'
 {
  "@name": "int8_t",
