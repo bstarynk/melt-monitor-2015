@@ -3556,6 +3556,30 @@ mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
         mo_objref_t modrolob = locrolob ? NULL :
           mo_dyncast_objref (mo_assoval_get
                              (csta->mo_cemsta_assocmodulrole, expob));
+        if (locrolob)
+          {
+            MOM_ASSERTPRINTF (locrolob->mo_ob_class ==
+                              MOM_PREDEF (c_role_class), "bad locrolob");
+            mo_objref_t kindlocrob = mo_objref_get_comp (locrolob, 0);
+            if (kindlocrob == MOM_PREDEF (formals))
+              {
+                mom_cemit_printf (csta, MOM_FORMAL_PREFIX "%s",
+                                  mo_objref_shortnamestr (expob));
+                return;
+              }
+            else if (kindlocrob == MOM_PREDEF (result))
+              {
+                mom_cemit_printf (csta, MOM_RESULT_PREFIX "%s",
+                                  mo_objref_shortnamestr (expob));
+                return;
+              }
+            else if (kindlocrob == MOM_PREDEF (locals))
+              {
+                mom_cemit_printf (csta, MOM_LOCAL_PREFIX "%s",
+                                  mo_objref_shortnamestr (expob));
+                return;
+              }
+          }
 #warning cemit_write_expression unimplemented
         MOM_CEMITFAILURE
           (MOM_CEMIT_ADD_DATA
