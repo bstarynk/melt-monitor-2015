@@ -555,10 +555,11 @@ mom_bt_callback (void *data, uintptr_t pc, const char *filename, int lineno,
   if (filename == NULL && function == NULL)
     return 0;
 
-  /* Print up to 40 functions.    */
-  if (*pcount >= 40)
+  /* Print up to 64 functions.    */
+  if (*pcount >= 64)
     {
       /* Returning a non-zero value stops the backtrace.  */
+      fprintf (stderr, "...etc...\n");
       return 1;
     }
   ++*pcount;
@@ -813,6 +814,16 @@ mom_fataprintf_at (const char *fil, int lin, const char *fmt, ...)
     fprintf (stderr, "%s*MONIMELT FATAL*%s @%s:%d <%s:%d> %s\n.. %s\n",
              MOM_TERMFATALCOLOR, MOM_TERMPLAIN,
              fil, lin, thrname, (int) mom_gettid (), timbuf, msg);
+  fflush (NULL);
+  struct backtrace_state *btstate =
+    backtrace_create_state (NULL, 0, mom_bt_err_callback, NULL);
+  if (btstate != NULL)
+    {
+      int count = 0;
+      backtrace_full (btstate, 1, mom_bt_callback, mom_bt_err_callback,
+                      (void *) &count);
+    }
+  fprintf (stderr, "--- end fatal backtrace from %s:%d\n\n", fil, lin);
   fflush (NULL);
   if (bigbuf)
     free (bigbuf);
