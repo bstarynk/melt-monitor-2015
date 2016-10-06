@@ -3550,6 +3550,21 @@ mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
         MOM_ASSERTPRINTF (expob != NULL,
                           "cemit_write_expression: bad expob from %s",
                           mo_objref_pnamestr (fromob));
+        mo_objref_t locrolob =
+          mo_dyncast_objref (mo_assoval_get
+                             (csta->mo_cemsta_assoclocalrole, expob));
+        mo_objref_t modrolob = locrolob ? NULL :
+          mo_dyncast_objref (mo_assoval_get
+                             (csta->mo_cemsta_assocmodulrole, expob));
+#warning cemit_write_expression unimplemented
+        MOM_CEMITFAILURE
+          (MOM_CEMIT_ADD_DATA
+           (csta, expob, mo_int_to_value (depth), fromob,
+            locrolob ? locrolob : modrolob),
+           "cemit_write_expression: unimplemented expression %s "
+           "from %s depth %d locrolob %s modrolob %s",
+           mo_value_pnamestr (expv), mo_objref_pnamestr (fromob), depth,
+           mo_objref_pnamestr (locrolob), mo_objref_pnamestr (modrolob));
       }
     }
   MOM_CEMITFAILURE
@@ -3571,11 +3586,39 @@ mom_cemit_write_reference (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_write_reference: bad payl@%p in csta@%p", cemp,
                     csta);
+  mo_objref_t locrolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, refob));
+  mo_objref_t modrolob =
+    locrolob ? NULL : mo_dyncast_objref (mo_assoval_get
+                                         (csta->mo_cemsta_assocmodulrole,
+                                          refob));
+  if (locrolob)
+    {
+      MOM_ASSERTPRINTF (locrolob->mo_ob_class == MOM_PREDEF (c_role_class),
+                        "bad locrolob %s", mo_objref_pnamestr (locrolob));
+      mo_objref_t kindrolob =
+        mo_dyncast_objref (mo_objref_get_comp (locrolob, 0));
+      if (kindrolob == MOM_PREDEF (result))
+        {
+          mom_cemit_printf (csta, MOM_RESULT_PREFIX "%s",
+                            mo_objref_shortnamestr (refob));
+          return;
+        }
+      else if (kindrolob == MOM_PREDEF (locals))
+        {
+          mom_cemit_printf (csta, MOM_LOCAL_PREFIX "%s",
+                            mo_objref_shortnamestr (refob));
+          return;
+        }
+    }
   MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                    (csta, refob, mo_int_to_value (depth), fromob),
-                    "cemit_write_reference: unimplemented reference %s from %s depth %d",
+                    (csta, refob, mo_int_to_value (depth), fromob,
+                     locrolob ? locrolob : modrolob),
+                    "cemit_write_reference: unimplemented reference %s from %s locrolob %s modrolob %s depth %d",
                     mo_objref_pnamestr (refob), mo_objref_pnamestr (fromob),
-                    depth);
+                    mo_objref_pnamestr (locrolob),
+                    mo_objref_pnamestr (modrolob), depth);
 }                               /* end of mom_cemit_write_reference */
 
 
