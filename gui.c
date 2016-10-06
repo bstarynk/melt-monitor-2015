@@ -1411,16 +1411,18 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, TRUE);
 }                               /* end mom_display_the_object */
 
-static void
-momgui_set_displayed_nth_value (int ix, mo_value_t curval)
+void
+mom_gui_set_displayed_nth_value (int ix, mo_value_t curval)
 {
+  if (ix < 0 || ix >= MOM_DISPVAL_MAX)
+    {
+      MOM_WARNPRINTF ("set_displayed_nth_value bad ix%d", ix);
+      return;
+    };
   MOM_BACKTRACEPRINTF
     ("set_displayed_nth_value ix#%d curval:%s startmark@%p endmark@%p", ix,
      mo_value_pnamestr (curval), mo_dispval_startmark[ix],
      mo_dispval_endmark[ix]);
-  MOM_ASSERTPRINTF (ix >= 0
-                    && ix < MOM_DISPVAL_MAX,
-                    "set_displayed_nth_value bad ix%d", ix);
   MOM_ASSERTPRINTF (mo_dispval_startmark[0] != NULL, "no $0 startmark");
   mom_dispvalarr[ix] = curval;
   momgui_dispctxt_ty dispctx;
@@ -1502,7 +1504,7 @@ momgui_set_displayed_nth_value (int ix, mo_value_t curval)
   else
     gtk_text_buffer_move_mark (mom_obtextbuf, mo_dispval_endmark[ix],
                                &dispctx.mo_gdx_iter);
-}                               /* end of momgui_set_displayed_nth_value */
+}                               /* end of mom_gui_set_displayed_nth_value */
 
 // an expensive operation, we regenerate everything. But that might be
 // enough for a while, because computer is fast enough to redisplay
@@ -3214,7 +3216,7 @@ momgui_cmdparse_value (struct momgui_cmdparse_st *cpars, const char *msg)
           val = (mom_dispvalarr[valix]);
         }
       if (valix >= 0 && !cpars->mo_gcp_onlyparse)
-        momgui_set_displayed_nth_value (valix, val);
+        mom_gui_set_displayed_nth_value (valix, val);
       return val;
     }
   MOMGUI_CMDPARSEFAIL (cpars, "bad value (%s)", msg);
@@ -3572,7 +3574,7 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg,
   if (!gotnil && withcompl && momgui_cmdparse_peekchar (cpars, 0) == '(')
     momgui_cmdparse_complement (cpars, objp, msg);
   if (valix >= 0 && !cpars->mo_gcp_onlyparse)
-    momgui_set_displayed_nth_value (valix, objp);
+    mom_gui_set_displayed_nth_value (valix, objp);
   return objp;
 }                               /* end momgui_cmdparse_object */
 
@@ -3922,7 +3924,7 @@ momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars)
         {
           MOM_INFORMPRINTF ("cmdparse_full_buffer cnt=%d v=%s", cnt,
                             mo_value_pnamestr (v));
-          momgui_set_displayed_nth_value (cnt - 1, v);
+          mom_gui_set_displayed_nth_value (cnt - 1, v);
         }
     }
   if (cpars->mo_gcp_statusupdate)

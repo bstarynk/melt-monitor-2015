@@ -1751,6 +1751,8 @@ void mo_gui_display_object (mo_objref_t ob);
 void mo_gui_undisplay_object (mo_objref_t ob);
 void mom_gui_fail_user_action (const char *fmt, ...)
 __attribute__ ((format (printf, 1, 2), noreturn));
+void mom_gui_set_displayed_nth_value (int ix, mo_value_t curval);
+
 void
 mom_gui_cmdstatus_printf (const char *fmt, ...)
 __attribute__ ((format (printf, 1, 2)));
