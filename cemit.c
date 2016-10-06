@@ -416,8 +416,7 @@ bool
 mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st * csta,
                            mo_objref_t ctypob)
 {
-  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
-                    && csta->mo_cemsta_fil == NULL,
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC,
                     "cemit_ctype_is_scalar: bad csta@%p", csta);
   mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
@@ -3264,10 +3263,16 @@ mom_cemit_write_block (struct mom_cemitlocalstate_st *csta,
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_write_block: bad payl@%p in csta@%p", cemp, csta);
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assocmodulrole, blockob));
 #warning mom_cemit_write_block unimplemented
-  MOM_FATAPRINTF
-    ("mom_cemit_write_block unimplemented blockob=%s fromob=%s depth=%d",
-     mo_objref_pnamestr (blockob), mo_objref_pnamestr (fromob), depth);
+  MOM_CEMITFAILURE
+    (MOM_CEMIT_ADD_DATA
+     (csta, blockob, fromob, mo_int_to_value (depth), rolob),
+     "mom_cemit_write_block unimplemented blockob=%s fromob=%s depth=%d rolob=%s",
+     mo_objref_pnamestr (blockob), mo_objref_pnamestr (fromob), depth,
+     mo_objref_pnamestr (rolob));
 }                               /* end of mom_cemit_write_block */
 
 void
