@@ -380,12 +380,10 @@ __attribute ((sentinel));
   mom_cemit_add_data((Csta), ##__VA_ARGS__, NULL)
 
 
-     struct mom_cemitlocalstate_st *mom_cemit_add_data (struct
-                                                        mom_cemitlocalstate_st
-                                                        *csta, ...)
+struct mom_cemitlocalstate_st *
+mom_cemit_add_data (struct mom_cemitlocalstate_st *csta, ...)
 {
-  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
-                    && csta->mo_cemsta_fil == NULL,
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC,
                     "cemit_add_data: bad csta@%p", csta);
   mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
   MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
