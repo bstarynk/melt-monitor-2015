@@ -2179,7 +2179,8 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
   mo_objref_t bodyob =
     mo_dyncast_objref (mo_objref_get_attr (funob, MOM_PREDEF (body)));
   if (!bodyob)
-    MOM_CEMITFAILURE (csta, "cemit_function_code: no body in function");
+    MOM_CEMITFAILURE (csta, "cemit_function_code: no body in function %s",
+                      mo_objref_pnamestr (funob));
   mom_cemit_scan_block (csta, bodyob, funob, 0);
   const char *funstr = mom_gc_printf (MOM_FUNC_PREFIX "%s", funid + 1);
   if (funob->mo_ob_class == MOM_PREDEF (c_inlined_class))

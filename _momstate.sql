@@ -694,21 +694,21 @@ INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475728983,'
+INSERT INTO t_objects VALUES('_32t79xvXNDPCYP09j',1475737444,'
 {
  "@name": "test1_idint",
  "attrs": {
   "assoval": [
    {
-    "at": "_1DA4KKiwji2gafLj0",
-    "va": {
-     "oid": "_5yC9bVC2dye6hgmVq"
-    }
-   },
-   {
     "at": "_1ZY6i2rKse5FsKrsv",
     "va": {
      "oid": "_0Ze1dDI740vldabtI"
+    }
+   },
+   {
+    "at": "_49p2zcDH6JgIxjue1",
+    "va": {
+     "oid": "_5yC9bVC2dye6hgmVq"
     }
    },
    {
