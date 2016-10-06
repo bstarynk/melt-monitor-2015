@@ -3445,14 +3445,16 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg,
       gtk_text_iter_forward_line (&endlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newglob,
                                  &startglit, &endlinit);
+      GtkTextIter lastlinit = endlinit;
+      gtk_text_iter_backward_char (&lastlinit);
       gtk_text_buffer_apply_tag (mom_cmdtextbuf, mom_cmdtag_newcomm,
-                                 &startcomit, &endlinit);
+                                 &startcomit, &lastlinit);
       if (!cpars->mo_gcp_onlyparse)
         {
           mo_value_t commv = NULL;
           char *commbuf =
             gtk_text_buffer_get_text (mom_cmdtextbuf, &startcomit,
-                                      &endlinit,
+                                      &lastlinit,
                                       false);
           if (commbuf && commbuf[0])
             commv = mo_make_string_cstr (commbuf);
