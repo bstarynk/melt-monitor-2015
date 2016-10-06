@@ -371,9 +371,50 @@ mo_objref_cemit_set_prefix (mo_objref_t obrcem, const char *prefix)
 }                               /* end mo_objref_cemit_set_prefix */
 
 
+// practically useful with MOM_CEMITFAILURE to transmit & keep (for
+// GC) some values related to the failure...
+struct mom_cemitlocalstate_st *
+mom_cemit_add_data (struct mom_cemitlocalstate_st *csta, ...)
+__attribute ((sentinel));
+#define MOM_CEMIT_ADD_DATA(Csta,...) \
+  mom_cemit_add_data((Csta), ##__VA_ARGS__, NULL)
+
+
+     struct mom_cemitlocalstate_st *mom_cemit_add_data (struct
+                                                        mom_cemitlocalstate_st
+                                                        *csta, ...)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil == NULL,
+                    "cemit_add_data: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_add_data: bad payl@%p in csta@%p", cemp, csta);
+  mo_objref_t cemitobr = csta->mo_cemsta_objcemit;
+  MOM_ASSERTPRINTF (mo_dyncast_objref (cemitobr),
+                    "cemit_add_data: bad cemitobr");
+  va_list args;
+  va_start (args, csta);
+  mo_value_t curval = NULL;
+  do
+    {
+      curval = va_arg (args, mo_value_t);
+      if (curval == MOM_EMPTY_SLOT)
+        {
+          mo_objref_comp_append (cemitobr, NULL);
+          continue;
+        }
+      else if (mo_kind_of_value (curval) != mo_KNONE)
+        mo_objref_comp_append (cemitobr, curval);
+    }
+  while (curval != NULL);
+  va_end (args);
+  return csta;
+}                               /* end of mom_cemit_add_data */
 
 bool
-mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st *csta,
+mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st * csta,
                            mo_objref_t ctypob)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
@@ -1100,9 +1141,6 @@ mom_cemit_declare_ctype (struct mom_cemitlocalstate_st *csta,
         mo_value_t formtytup =
           mo_dyncast_tuple (mo_objref_get_attr
                             (typobr, MOM_PREDEF (formals_ctypes)));
-        MOM_INFORMPRINTF ("cemit_declare_ctype: typobr %s formtytup %s",
-                          mo_objref_pnamestr (typobr),
-                          mo_value_pnamestr (formtytup));
         if (!formtytup)
           MOM_CEMITFAILURE (csta,
                             "cemit_declare_ctype: bad formals_ctypes in signature type %s",
@@ -2558,7 +2596,7 @@ mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_scan_assign_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
   mo_value_t fromv = mo_objref_get_attr (instrob, MOM_PREDEF (from));
-  mo_value_t tob =
+  mo_objref_t tob =
     mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (to)));
   if (!tob)
     MOM_CEMITFAILURE (csta,
@@ -2790,9 +2828,27 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
   else if (refob->mo_ob_class == MOM_PREDEF (chunk_expression_class))
     return mom_cemit_scan_chunk_expr (csta, refob, fromob, depth,       //
                                       /*isref: */ true);
+  else if (refob->mo_ob_class == MOM_PREDEF (c_variable_class))
+    {
+      // temporary
+      mo_objref_t rolob =
+        mo_dyncast_objref (mo_assoval_get
+                           (csta->mo_cemsta_assoclocalrole, refob));
+      MOM_BACKTRACEPRINTF ("cemit_scan_reference: c-var refob %s rolob %s",
+                           mo_objref_pnamestr (refob),
+                           mo_objref_pnamestr (rolob));
+#warning cemit_scan_reference unimplemented for c-variable
+      MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                        (csta, refob, mo_int_to_value (depth), fromob),
+                        "cemit_scan_reference: refob %s c-var unimplemented, depth %d, from %s",
+                        mo_objref_pnamestr (refob), depth,
+                        mo_objref_pnamestr (fromob));
+
+    }
 #warning mom_cemit_scan_reference incomplete
-  MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s",
-                  mo_objref_pnamestr (refob));
+  MOM_FATAPRINTF ("mom_cemit_scan_reference incomplete refob %s of class %s",
+                  mo_objref_pnamestr (refob),
+                  mo_objref_pnamestr (refob->mo_ob_class));
 }                               /* end of mom_cemit_scan_reference */
 
 
@@ -2800,7 +2856,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
 
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
-mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                            mo_value_t expv, mo_objref_t fromob, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
