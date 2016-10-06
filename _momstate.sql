@@ -31,6 +31,7 @@ INSERT INTO t_names VALUES('GUI_operation','_4x85ZXWJ9HDCurqHP');
 INSERT INTO t_names VALUES('add_user_action','_3cH0f65UzqnPaGsLY');
 INSERT INTO t_names VALUES('add_user_action_useract','_0xA91ltlCCIeN6K9H');
 INSERT INTO t_names VALUES('array_ctype_class','_4iH7xI2JtAomiBySj');
+INSERT INTO t_names VALUES('assign','_0fu1XCvt6D5AlLfn5');
 INSERT INTO t_names VALUES('assignment_instruction_class','_4Yd3gqjKLi1hAKztj');
 INSERT INTO t_names VALUES('basic_ctype_class','_7zd6NdDtMbPp0s5HT');
 INSERT INTO t_names VALUES('block','_8fs1NMLlhPjN6eHN5');
@@ -74,6 +75,7 @@ INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
 INSERT INTO t_names VALUES('fnmatch_useract','_59g7wsJyXlj962jlx');
 INSERT INTO t_names VALUES('formals','_8Cl7x1LpaH2GzkdbW');
 INSERT INTO t_names VALUES('formals_ctypes','_8Bq9eNWZ0eUS6BGq8');
+INSERT INTO t_names VALUES('from','_3oe98LjR73BVUxfBL');
 INSERT INTO t_names VALUES('get','_1Xe4mcjLDBpvaBiDU');
 INSERT INTO t_names VALUES('get_useract','_6VK4TFfclh68txISx');
 INSERT INTO t_names VALUES('global_c_data_class','_5fr2Xe93UTwNlLIIo');
@@ -135,6 +137,7 @@ INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
 INSERT INTO t_names VALUES('threadlocal_c_data_class','_0Zs6lGxUXXurCpaYD');
+INSERT INTO t_names VALUES('to','_42G9523MP4rY91DgG');
 INSERT INTO t_names VALUES('tuple','_0Ki51w13UIhXkBrtx');
 INSERT INTO t_names VALUES('tuple_useract','_80D4pPU1WGn7IZwh6');
 INSERT INTO t_names VALUES('uint16_t','_8T17wDyPfJSmGz5Ve');
@@ -337,6 +340,20 @@ INSERT INTO t_objects VALUES('_0dV2PYaSBUDE7lsYq',1475036015,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_0fu1XCvt6D5AlLfn5',1475740842,'
+{
+ "@name": "assign",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "role of assignment instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_0hA5FCeEWGc6gpfnU',1474292777,'
 {
  "@name": "c_include",
@@ -914,6 +931,20 @@ INSERT INTO t_objects VALUES('_3nV79jeVZkZ8kdSWp',1475302768,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_3oe98LjR73BVUxfBL',1475739813,'
+{
+ "@name": "from",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives some origin, e.g. in assignments"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_3pK47DLRw3N5Ghv0R',1474973691,'
 {
  "@name": "c_routine_class",
@@ -936,6 +967,20 @@ INSERT INTO t_objects VALUES('_40K767SbwcfEJVyXr',1474983635,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give the aggregate initialization in a non-scalar c-type (e.g. pthread_mutex_t)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_42G9523MP4rY91DgG',1475739813,'
+{
+ "@name": "to",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives some destination, e.g. in assignments"
    }
   ]
  },

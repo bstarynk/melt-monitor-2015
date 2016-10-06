@@ -23,13 +23,16 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 74
+#define MOM_NB_PREDEFINED 77
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
 
 //+ attribute giving the GUI operation for $oper
 MOM_HAS_PREDEFINED(GUI_operation,_4x85ZXWJ9HDCurqHP,1074046445,4770012995783535398,3665661719)
+
+//+ role of assignment instructions
+MOM_HAS_PREDEFINED(assign,_0fu1XCvt6D5AlLfn5,60962362,3498778514200434073,1622808182)
 
 //+ class for assignment instruction
 MOM_HAS_PREDEFINED(assignment_instruction_class,_4Yd3gqjKLi1hAKztj,1172658828,9042665112625364879,2709133709)
@@ -129,6 +132,9 @@ MOM_HAS_PREDEFINED(formals,_8Cl7x1LpaH2GzkdbW,2038288595,2859322395989327772,903
 
 //+ gives the formals ctypes in a signature
 MOM_HAS_PREDEFINED(formals_ctypes,_8Bq9eNWZ0eUS6BGq8,2034696128,4347408863221702016,102498809)
+
+//+ gives some origin, e.g. in assignments
+MOM_HAS_PREDEFINED(from,_3oe98LjR73BVUxfBL,803142903,1170543678173923723,2778925367)
 
 //+ class for global C data
 MOM_HAS_PREDEFINED(global_c_data_class,_5fr2Xe93UTwNlLIIo,1240420786,8665201590294376040,3740163544)
@@ -238,6 +244,9 @@ MOM_HAS_PREDEFINED(the_system,_0BV96V94PJIn9si1K,149158938,8061027679029359498,1
 //+ class for threadlocal C data
 MOM_HAS_PREDEFINED(threadlocal_c_data_class,_0Zs6lGxUXXurCpaYD,233877491,1632107560559680031,2830977026)
 
+//+ gives some destination, e.g. in assignments
+MOM_HAS_PREDEFINED(to,_42G9523MP4rY91DgG,954399548,446811766848062746,905480435)
+
 //+ class for union ctypes
 MOM_HAS_PREDEFINED(union_ctype_class,_3P48jR3hSzSCgv48c,904717928,3892346464482352748,3893134561)
 
@@ -256,6 +265,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define moid_GUI_operation _4x85ZXWJ9HDCurqHP
 #undef monam_4x85ZXWJ9HDCurqHP
 #define monam_4x85ZXWJ9HDCurqHP GUI_operation
+
+#undef moid_assign
+#define moid_assign _0fu1XCvt6D5AlLfn5
+#undef monam_0fu1XCvt6D5AlLfn5
+#define monam_0fu1XCvt6D5AlLfn5 assign
 
 #undef moid_assignment_instruction_class
 #define moid_assignment_instruction_class _4Yd3gqjKLi1hAKztj
@@ -421,6 +435,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define moid_formals_ctypes _8Bq9eNWZ0eUS6BGq8
 #undef monam_8Bq9eNWZ0eUS6BGq8
 #define monam_8Bq9eNWZ0eUS6BGq8 formals_ctypes
+
+#undef moid_from
+#define moid_from _3oe98LjR73BVUxfBL
+#undef monam_3oe98LjR73BVUxfBL
+#define monam_3oe98LjR73BVUxfBL from
 
 #undef moid_global_c_data_class
 #define moid_global_c_data_class _5fr2Xe93UTwNlLIIo
@@ -602,6 +621,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #undef monam_0Zs6lGxUXXurCpaYD
 #define monam_0Zs6lGxUXXurCpaYD threadlocal_c_data_class
 
+#undef moid_to
+#define moid_to _42G9523MP4rY91DgG
+#undef monam_42G9523MP4rY91DgG
+#define monam_42G9523MP4rY91DgG to
+
 #undef moid_union_ctype_class
 #define moid_union_ctype_class _3P48jR3hSzSCgv48c
 #undef monam_3P48jR3hSzSCgv48c
@@ -627,6 +651,7 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define MOM_PREDEFINED_HASHES 1
 enum mom_predefined_hashes_en {
   momphash_GUI_operation=3665661719,
+  momphash_assign=1622808182,
   momphash_assignment_instruction_class=2709133709,
   momphash_basic_ctype_class=4082589218,
   momphash_block=3300747787,
@@ -660,6 +685,7 @@ enum mom_predefined_hashes_en {
   momphash_file_path=2269269987,
   momphash_formals=903825033,
   momphash_formals_ctypes=102498809,
+  momphash_from=2778925367,
   momphash_global_c_data_class=3740163544,
   momphash_in=2516618224,
   momphash_instruction=934278022,
@@ -696,6 +722,7 @@ enum mom_predefined_hashes_en {
   momphash_the_GUI=1276275209,
   momphash_the_system=1453251062,
   momphash_threadlocal_c_data_class=2830977026,
+  momphash_to=905480435,
   momphash_union_ctype_class=3893134561,
   momphash_value=3663610996,
   momphash_verbatim=3863060885,
@@ -709,7 +736,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 74
+#define MOM_NB_NAMED_PREDEFINED 77
 
 
 #undef MOM_HAS_PREDEFINED

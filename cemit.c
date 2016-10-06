@@ -111,6 +111,17 @@ enum momcemit_rolenumval_en
   MOMROLENUMVIX__LASTENUMV
 };
 
+// the slots of role object for assignment instructions
+enum momcemit_rolassigninstr_en
+{
+  MOMROLASSIGNIX_ROLE = MOMROLFORMIX_ROLE,      // MOM_PREDEF(assign)
+  MOMROLASSIGNIX_TOTYPE,
+  MOMROLASSIGNIX_TOREFERENCE,
+  MOMROLASSIGNIX_FROMTYPE,
+  MOMROLASSIGNIX_FROMEXPR,
+  MOMROLASSIGNIX__LASTASSIGN
+};
+
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 /// maximal recursion depth
@@ -2546,9 +2557,37 @@ mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (assignment_instruction_class),
                     "cemit_scan_assign_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
-#warning mom_cemit_scan_assign_instr incomplete
-  MOM_FATAPRINTF ("incomplete mom_cemit_scan_assign_instr instrob %s",
-                  mo_objref_pnamestr (instrob));
+  mo_value_t fromv = mo_objref_get_attr (instrob, MOM_PREDEF (from));
+  mo_value_t tob =
+    mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (to)));
+  if (!tob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_assign_instr: instr %s without `to`, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      depth, mo_objref_pnamestr (fromob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, instrob));
+  if (rolob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_assign_instr: instr %s already with role %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (rolob),
+                      depth, mo_objref_pnamestr (fromob));
+  mo_objref_t totypob =
+    mom_cemit_scan_reference (csta, tob, instrob, depth + 1);
+  mo_objref_t fromtypob =
+    mom_cemit_scan_expression (csta, fromv, instrob, depth + 1);
+  (void) mom_cemit_compare_ctypes (csta, totypob, fromtypob, instrob);
+  rolob = mo_make_object ();
+  mo_objref_comp_resize (rolob, MOMROLASSIGNIX__LASTASSIGN);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_ROLE, MOM_PREDEF (assign));
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_TOTYPE, totypob);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_TOREFERENCE, tob);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_FROMTYPE, fromtypob);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_FROMEXPR, fromv);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
 }                               /* end mom_cemit_scan_assign_instr */
 
 
