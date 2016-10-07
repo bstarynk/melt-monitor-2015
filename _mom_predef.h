@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 79
+#define MOM_NB_PREDEFINED 82
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -51,6 +51,9 @@ MOM_HAS_PREDEFINED(c_block_class,_1lU1wXlGlR9TdmE89,322054873,270721729417850058
 
 //+ give the c code expansion or string
 MOM_HAS_PREDEFINED(c_code,_64d2GXNLEBKFBzxqP,1432177438,5902015936187224730,253100277)
+
+//+ class of tests inside cond instructions
+MOM_HAS_PREDEFINED(c_cond_class,_3dJ4WvD4T8BfDp0jx,761890991,5851491951206245717,63302112)
 
 //+ class for C fields
 MOM_HAS_PREDEFINED(c_field_class,_6Lu6DXoGivCCHMwzV,1602402396,6500237768006496619,2179155423)
@@ -99,6 +102,9 @@ MOM_HAS_PREDEFINED(code,_1DA4KKiwji2gafLj0,391676976,2004738985539924900,9871988
 
 //+ for comments, often a string
 MOM_HAS_PREDEFINED(comment,_4xS1CSbRUFBW6PJiJ,1076899219,224939556727619253,2072874222)
+
+//+ for role of conditional instructions
+MOM_HAS_PREDEFINED(conditional,_1Zh6wiAgvlGivUilL,469087446,74598556139779003,920389158)
 
 //+ class for conditional instructions
 MOM_HAS_PREDEFINED(conditional_instruction_class,_5ln7PDl9eFYwMPwx0,1263786227,1678393836936996156,1472692775)
@@ -265,6 +271,9 @@ MOM_HAS_PREDEFINED(verbatim,_1rV3tPbwX88LqztK0,345727161,8646857126012263384,386
 //+ class of verbatim expressions
 MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,4691169330411318268,1896661858)
 
+//+ field giving the tested condition, etc...
+MOM_HAS_PREDEFINED(when,_6Yn5rkVrBxrohLzDp,1645188836,6122707576125177517,57209114)
+
 
 
 #undef moid_GUI_operation
@@ -306,6 +315,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define moid_c_code _64d2GXNLEBKFBzxqP
 #undef monam_64d2GXNLEBKFBzxqP
 #define monam_64d2GXNLEBKFBzxqP c_code
+
+#undef moid_c_cond_class
+#define moid_c_cond_class _3dJ4WvD4T8BfDp0jx
+#undef monam_3dJ4WvD4T8BfDp0jx
+#define monam_3dJ4WvD4T8BfDp0jx c_cond_class
 
 #undef moid_c_field_class
 #define moid_c_field_class _6Lu6DXoGivCCHMwzV
@@ -386,6 +400,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #define moid_comment _4xS1CSbRUFBW6PJiJ
 #undef monam_4xS1CSbRUFBW6PJiJ
 #define monam_4xS1CSbRUFBW6PJiJ comment
+
+#undef moid_conditional
+#define moid_conditional _1Zh6wiAgvlGivUilL
+#undef monam_1Zh6wiAgvlGivUilL
+#define monam_1Zh6wiAgvlGivUilL conditional
 
 #undef moid_conditional_instruction_class
 #define moid_conditional_instruction_class _5ln7PDl9eFYwMPwx0
@@ -662,6 +681,11 @@ MOM_HAS_PREDEFINED(verbatim_expression_class,_16y1NXTBqDPWHLfoI,261763760,469116
 #undef monam_16y1NXTBqDPWHLfoI
 #define monam_16y1NXTBqDPWHLfoI verbatim_expression_class
 
+#undef moid_when
+#define moid_when _6Yn5rkVrBxrohLzDp
+#undef monam_6Yn5rkVrBxrohLzDp
+#define monam_6Yn5rkVrBxrohLzDp when
+
 
 #ifndef MOM_PREDEFINED_HASHES
 #define MOM_PREDEFINED_HASHES 1
@@ -674,6 +698,7 @@ enum mom_predefined_hashes_en {
   momphash_body=833731743,
   momphash_c_block_class=665142132,
   momphash_c_code=253100277,
+  momphash_c_cond_class=63302112,
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
   momphash_c_inlined_class=3515856438,
@@ -690,6 +715,7 @@ enum mom_predefined_hashes_en {
   momphash_class_class=1711456220,
   momphash_code=987198818,
   momphash_comment=2072874222,
+  momphash_conditional=920389158,
   momphash_conditional_instruction_class=1472692775,
   momphash_data=1120086050,
   momphash_enum_ctype_class=452162142,
@@ -745,6 +771,7 @@ enum mom_predefined_hashes_en {
   momphash_value=3663610996,
   momphash_verbatim=3863060885,
   momphash_verbatim_expression_class=1896661858,
+  momphash_when=57209114,
 }; // end mom_predefined_hashes_en
 #endif /*MOM_PREDEFINED_HASHES */
 
@@ -754,7 +781,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 79
+#define MOM_NB_NAMED_PREDEFINED 82
 
 
 #undef MOM_HAS_PREDEFINED

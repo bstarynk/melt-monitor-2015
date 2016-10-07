@@ -146,6 +146,14 @@ enum momcemit_roljumpinstr_en
   MOMROLJUMPIX__LAST
 };
 
+// the slots of role object for cond instructions
+enum momcemit_rolcondinstr_en
+{
+  MOMROLCONDIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(conditional)
+  MOMROLCONDIX_CONDITIONS,      // tuple of conditions
+  MOMROLCONDIX__LAST
+};
+
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 /// maximal recursion depth
@@ -2747,23 +2755,15 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
       mo_objref_t compob = mo_dyncast_objref (curcomp);
       if (mo_set_contains (verbatimv, compob))
         {
-          MOM_INFORMPRINTF
-            ("cemit_scan_chunk_instr: compob#%u %s in verbatim", cix,
-             mo_objref_pnamestr (compob));
           continue;
         }
       else if (mo_set_contains (referencev, compob))
         {
-          MOM_INFORMPRINTF
-            ("cemit_scan_chunk_instr: compob#%u %s in reference", cix,
-             mo_objref_pnamestr (compob));
           mom_cemit_scan_reference (csta, compob, instrob, depth + 1);
           continue;
         }
       else if (mo_set_contains (blockv, compob))
         {
-          MOM_INFORMPRINTF ("cemit_scan_chunk_instr: compob#%u %s in block",
-                            cix, mo_objref_pnamestr (compob));
           mom_cemit_scan_block (csta, compob, instrob, depth + 1);
           continue;
         }
@@ -2785,9 +2785,6 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
         }
       else if (!compob || mo_set_contains (expressionv, compob))
         {
-          MOM_INFORMPRINTF
-            ("cemit_scan_chunk_instr: compob#%u %s in expression", cix,
-             mo_objref_pnamestr (compob));
           mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
           continue;
         }
@@ -2807,9 +2804,37 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                             mo_objref_pnamestr (fromob));
         }
     }
-  MOM_INFORMPRINTF ("cemit_scan_chunk_instr: end instrob %s",
-                    mo_objref_pnamestr (instrob));
 }                               /* end mom_cemit_scan_chunk_instr */
+
+
+void
+mom_cemit_scan_condition (struct mom_cemitlocalstate_st *csta,
+                          mo_objref_t condob, mo_objref_t fromob, int depth,
+                          mo_vectvaldatapayl_ty * condvec)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_condition: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_condition: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (!mo_dyncast_objref (condob)
+      || condob->mo_ob_class != MOM_PREDEF (c_cond_class))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, condob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_condition: bad condob %s"
+                      " depth %d, from %s", mo_objref_pnamestr (condob),
+                      depth, mo_objref_pnamestr (fromob));
+#warning mom_cemit_scan_condition incomplete
+  MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                    (csta, condob, mo_int_to_value (depth), fromob),
+                    "cemit_scan_condition: incomplete for condob %s"
+                    " depth %d, from %s",
+                    mo_objref_pnamestr (condob), depth,
+                    mo_objref_pnamestr (fromob));
+}                               /* end of mom_cemit_scan_condition */
 
 
 void
@@ -2827,11 +2852,62 @@ mom_cemit_scan_cond_instr (struct mom_cemitlocalstate_st *csta,
   MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
                     && instrob->mo_ob_class ==
                     MOM_PREDEF (conditional_instruction_class),
-                    "cemit_scan_cond_instr: chunk bad instrob at depth %d from %s",
+                    "cemit_scan_cond_instr: bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
-#warning mom_cemit_scan_cond_instr incomplete
-  MOM_FATAPRINTF ("incomplete mom_cemit_scan_cond_instr instrob %s",
-                  mo_objref_pnamestr (instrob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, instrob));
+  if (rolob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, rolob, fromob),
+                      "cemit_scan_cond_instr: instrob %s already has role %s at depth %d from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (rolob), depth,
+                      mo_objref_pnamestr (fromob));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLCONDIX__LAST);
+  mo_objref_put_comp (rolob, MOMROLCONDIX_ROLE, MOM_PREDEF (conditional));
+  // slot MOMROLCONDIX_CONDITIONS will be filled later
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
+
+  // a cond instruction has a sequence of components all instances of c_cond_class
+  // each condition has a `when` and `body` attribute..., or sequences of such instances
+  int nbconds = mo_objref_comp_count (instrob);
+  mo_vectvaldatapayl_ty *condvect =
+    mo_vectval_reserve (NULL, 5 * nbconds / 4 + 2);
+  for (int cdix = 0; cdix < nbconds; cdix++)
+    {
+      mo_value_t curcondv = mo_objref_get_comp (instrob, cdix);
+      mo_objref_t curcondob = mo_dyncast_objref (curcondv);
+      if (curcondob)
+        mom_cemit_scan_condition (csta, curcondob, instrob, depth + 1,
+                                  condvect);
+      else
+        {
+          mo_value_t curcondseq = mo_dyncast_sequence (curcondv);
+          if (curcondseq)
+            {
+              unsigned lnseq = mo_sequence_size (curcondseq);
+              condvect = mo_vectval_reserve (condvect, 4 * lnseq / 3 + 2);
+              for (unsigned six = 0; six < lnseq; six++)
+                mom_cemit_scan_condition (csta,
+                                          mo_sequence_nth (curcondseq, six),
+                                          instrob, depth + 1, condvect);
+            }
+          else
+            MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                              (csta, curcondv, mo_int_to_value (depth),
+                               fromob),
+                              "cemit_scan_cond_instr: cond instr %s with bad component#%u %s"
+                              " depth %d, from %s",
+                              mo_objref_pnamestr (instrob), cdix,
+                              mo_value_pnamestr (curcondv), depth,
+                              mo_objref_pnamestr (fromob));
+        }
+    }
+  mo_objref_put_comp (rolob, MOMROLCONDIX_CONDITIONS,
+                      mo_vectval_objects_tuple (condvect));
 }                               /* end mom_cemit_scan_cond_instr */
 
 
@@ -3852,8 +3928,7 @@ mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
   mo_objref_t toblockob =
     mo_dyncast_objref (mo_objref_get_comp (rolinsob, MOMROLJUMPIX_TO));
   MOM_ASSERTPRINTF (toblockob
-                    && toblockob->mo_ob_class =
-                    MOM_PREDEF (c_block_class),
+                    && toblockob->mo_ob_class == MOM_PREDEF (c_block_class),
                     "cemit_write_jump_instr: bad toblock");
   char toblid[MOM_CSTRIDSIZ];
   memset (toblid, 0, sizeof (toblid));

@@ -40,6 +40,7 @@ INSERT INTO t_names VALUES('bool','_3K62tYRL1azRF0cP2');
 INSERT INTO t_names VALUES('c_aggregate_initialization','_40K767SbwcfEJVyXr');
 INSERT INTO t_names VALUES('c_block_class','_1lU1wXlGlR9TdmE89');
 INSERT INTO t_names VALUES('c_code','_64d2GXNLEBKFBzxqP');
+INSERT INTO t_names VALUES('c_cond_class','_3dJ4WvD4T8BfDp0jx');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_inlined_class','_0XX587h4W56J6nk3U');
@@ -61,6 +62,7 @@ INSERT INTO t_names VALUES('class_class','_84n6z6xA40eduUUjh');
 INSERT INTO t_names VALUES('class_useract','_7831xB7d1ulmsaCYS');
 INSERT INTO t_names VALUES('code','_1DA4KKiwji2gafLj0');
 INSERT INTO t_names VALUES('comment','_4xS1CSbRUFBW6PJiJ');
+INSERT INTO t_names VALUES('conditional','_1Zh6wiAgvlGivUilL');
 INSERT INTO t_names VALUES('conditional_instruction_class','_5ln7PDl9eFYwMPwx0');
 INSERT INTO t_names VALUES('data','_6Dq8qo0MSqgbL0ESc');
 INSERT INTO t_names VALUES('double','_8BM91hTnefUPcYXzf');
@@ -156,6 +158,7 @@ INSERT INTO t_names VALUES('value_ctype','_7mW2hPaN6NfV95VUY');
 INSERT INTO t_names VALUES('verbatim','_1rV3tPbwX88LqztK0');
 INSERT INTO t_names VALUES('verbatim_expression_class','_16y1NXTBqDPWHLfoI');
 INSERT INTO t_names VALUES('void','_1WX2mf4xwC5TU5ml7');
+INSERT INTO t_names VALUES('when','_6Yn5rkVrBxrohLzDp');
 INSERT INTO t_names VALUES('x_test1','_4an3PsIjc3EDLchlg');
 ---- TABLE t_objects @@@@@@@
 INSERT INTO t_objects VALUES('_0BV96V94PJIn9si1K',1472823516,'
@@ -561,6 +564,20 @@ INSERT INTO t_objects VALUES('_1ZY6i2rKse5FsKrsv',1474975183,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1Zh6wiAgvlGivUilL',1475847594,'
+{
+ "@name": "conditional",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for role of conditional instructions"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_1ky69RT7bZKd1tySD',1475589506,'
 {
  "@name": "signature_two_objects_to_value",
@@ -920,6 +937,20 @@ INSERT INTO t_objects VALUES('_3cH0f65UzqnPaGsLY',1474534835,'
       "the routine Action_useract...."
      ]
     }
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_3dJ4WvD4T8BfDp0jx',1475846044,'
+{
+ "@name": "c_cond_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of tests inside cond instructions"
    }
   ]
  },
@@ -1813,6 +1844,20 @@ INSERT INTO t_objects VALUES('_6VV8wX6A6EdY0C70Z',1475274437,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "class for macro blocks"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_6Yn5rkVrBxrohLzDp',1475846044,'
+{
+ "@name": "when",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "field giving the tested condition, etc..."
    }
   ]
  },
