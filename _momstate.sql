@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 06 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 07 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -53,6 +53,7 @@ INSERT INTO t_names VALUES('cast_expression_class','_6lF04Imjl60Y6iYYc');
 INSERT INTO t_names VALUES('cemit_module','_6bK8gGYmKZXwwNXj4');
 INSERT INTO t_names VALUES('cemit_module_useract','_21c6aoW2jM5uS1jrN');
 INSERT INTO t_names VALUES('char','_2Sj1dLJSbvyN3kMgI');
+INSERT INTO t_names VALUES('chunk','_8Zs21RcDgwwR2G5HU');
 INSERT INTO t_names VALUES('chunk_expression_class','_5WG7GBNdjmzhANitX');
 INSERT INTO t_names VALUES('chunk_instruction_class','_4Fo3f0PrwI6hwjSzM');
 INSERT INTO t_names VALUES('class','_7al47yMPGToSh0ryC');
@@ -133,6 +134,7 @@ INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
+INSERT INTO t_names VALUES('test1_succ','_8Ma0q3vAp9XJFPCea');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -1085,7 +1087,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475730877,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475814051,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1102,7 +1104,8 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475730877,'
     "at": "_1DA4KKiwji2gafLj0",
     "va": {
      "tup": [
-      "_32t79xvXNDPCYP09j"
+      "_32t79xvXNDPCYP09j",
+      "_8Ma0q3vAp9XJFPCea"
      ]
     }
    },
@@ -2168,6 +2171,40 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
+INSERT INTO t_objects VALUES('_8Ma0q3vAp9XJFPCea',1475814166,'
+{
+ "@name": "test1_succ",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_1ZY6i2rKse5FsKrsv",
+    "va": {
+     "oid": "_0Ze1dDI740vldabtI"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "in test1 module successor function on ints"
+   },
+   {
+    "at": "_7he4MBcSuccJxtj7q",
+    "va": {
+     "oid": "_6gj4ZHinqqqvdWKyg"
+    }
+   },
+   {
+    "at": "_8Cl7x1LpaH2GzkdbW",
+    "va": {
+     "tup": [
+      "_4an3PsIjc3EDLchlg"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3pK47DLRw3N5Ghv0R','','','');
 INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
 {
  "@name": "uint16_t",
@@ -2190,6 +2227,20 @@ INSERT INTO t_objects VALUES('_8TY6UsXJ3Djt71By3',1474294464,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "gives the C types in a module"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_8Zs21RcDgwwR2G5HU',1475817435,'
+{
+ "@name": "chunk",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for chunk role"
    }
   ]
  },

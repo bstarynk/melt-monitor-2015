@@ -124,6 +124,16 @@ enum momcemit_rolassigninstr_en
   MOMROLASSIGNIX_FROMEXPR,
   MOMROLASSIGNIX__LASTASSIGN
 };
+// the slots of role object for chunk instructions
+enum momcemit_rolchunkinstr_en
+{
+  MOMROLCHUNKIX_ROLE = MOMROLFORMIX_ROLE,       // MOM_PREDEF(chunk)
+  MOMROLCHUNKIX_VERBATIM,
+  MOMROLCHUNKIX_REFERENCE,
+  MOMROLCHUNKIX_EXPRESSION,
+  MOMROLCHUNKIX_BLOCK,
+  MOMROLCHUNKIX__LASTCHUNK
+};
 
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
@@ -2522,10 +2532,21 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (chunk_instruction_class),
                     "cemit_scan_chunk_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assocmodulrole, instrob));
+  if (rolob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, rolob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_chunk_instr: instr %s with existing role %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob), mo_value_pnamestr (rolob),
+                      depth, mo_objref_pnamestr (fromob));
   // the verbatim attribute gives the set of objects to be handled as-is
   mo_value_t verbatimv = mo_objref_get_attr (instrob, MOM_PREDEF (verbatim));
   if (verbatimv && !mo_dyncast_set (verbatimv))
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, verbatimv, mo_int_to_value (depth),
+                       fromob),
                       "cemit_scan_chunk_instr: instr %s with non-set verbatim %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (verbatimv), depth,
@@ -2534,7 +2555,9 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
   mo_value_t referencev =
     mo_objref_get_attr (instrob, MOM_PREDEF (reference));
   if (referencev && !mo_dyncast_set (referencev))
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, referencev, mo_int_to_value (depth),
+                       fromob),
                       "cemit_scan_chunk_instr: instr %s with non-set reference %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (referencev), depth,
@@ -2543,56 +2566,68 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
   mo_value_t expressionv =
     mo_objref_get_attr (instrob, MOM_PREDEF (expression));
   if (expressionv && !mo_dyncast_set (expressionv))
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, expressionv, mo_int_to_value (depth),
+                       fromob),
                       "cemit_scan_chunk_instr: instr %s with non-set expression %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (expressionv), depth,
                       mo_objref_pnamestr (fromob));
-  // the instruction attribute gives the set of objects to be handled as instruction-s
-  mo_value_t instructionv =
-    mo_objref_get_attr (instrob, MOM_PREDEF (instruction));
-  if (instructionv && !mo_dyncast_set (instructionv))
-    MOM_CEMITFAILURE (csta,
-                      "cemit_scan_chunk_instr: instr %s with non-set instruction %s, depth %d, from %s",
-                      mo_objref_pnamestr (instrob),
-                      mo_value_pnamestr (instructionv), depth,
-                      mo_objref_pnamestr (fromob));
   // the block attribute gives the set of objects to be handled as block-s
   mo_value_t blockv = mo_objref_get_attr (instrob, MOM_PREDEF (block));
   if (blockv && !mo_dyncast_set (blockv))
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, blockv, mo_int_to_value (depth),
+                       fromob),
                       "cemit_scan_chunk_instr: instr %s with non-set block %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (blockv), depth,
                       mo_objref_pnamestr (fromob));
   unsigned nbcomp = mo_objref_comp_count (instrob);
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLCHUNKIX__LASTCHUNK);
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_ROLE, MOM_PREDEF (chunk));
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_VERBATIM, verbatimv);
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_REFERENCE, referencev);
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_EXPRESSION, expressionv);
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_BLOCK, blockv);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
   for (unsigned cix = 0; cix < nbcomp; cix++)
     {
       mo_value_t curcomp = mo_objref_get_comp (instrob, cix);
+      enum mo_valkind_en curkind = mo_kind_of_value (curcomp);
+      if (curkind == mo_KNONE || curkind == mo_KINT || curkind == mo_KSTRING)
+        continue;
+      if (curkind == mo_KTUPLE || curkind == mo_KSET)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, curcomp, mo_int_to_value (depth),
+                           fromob),
+                          "cemit_scan_chunk_instr: instr %s with unexpected"
+                          " sequence comp#%d %s, depth %d, from %s",
+                          mo_objref_pnamestr (instrob), cix,
+                          mo_value_pnamestr (curcomp), depth,
+                          mo_objref_pnamestr (fromob));
       mo_objref_t compob = mo_dyncast_objref (curcomp);
       if (mo_set_contains (verbatimv, compob))
         continue;
       else if (mo_set_contains (referencev, compob))
         mom_cemit_scan_reference (csta, compob, instrob, depth + 1);
-      else if (mo_set_contains (instructionv, compob))
-        mom_cemit_scan_instr (csta, compob, instrob, depth + 1);
       else if (mo_set_contains (blockv, compob))
         mom_cemit_scan_block (csta, compob, instrob, depth + 1);
       else if (!compob || mo_set_contains (expressionv, compob))
         mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
       else
-        MOM_CEMITFAILURE (csta,
-                          "cemit_scan_chunk_instr: instr %s with unexpected comp#%d %s, depth %d, from %s",
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, curcomp, mo_int_to_value (depth),
+                           fromob),
+                          "cemit_scan_chunk_instr: instr %s with unexpected"
+                          " comp#%d %s, depth %d, from %s",
                           mo_objref_pnamestr (instrob), cix,
                           mo_value_pnamestr (curcomp), depth,
                           mo_objref_pnamestr (fromob));
     }
-#warning cemit_scan_chunk_instr incomplete
-  MOM_CEMITFAILURE (csta,
-                    "cemit_scan_chunk_instr: incomplete instr %s with block %s, depth %d, from %s",
-                    mo_objref_pnamestr (instrob),
-                    mo_value_pnamestr (blockv), depth,
-                    mo_objref_pnamestr (fromob));
 }                               /* end mom_cemit_scan_chunk_instr */
 
 
