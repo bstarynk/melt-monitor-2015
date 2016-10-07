@@ -3611,6 +3611,11 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
                              mo_objref_t rolinsob, int depth);
 
 void
+mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth);
+
+void
 mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
                        mo_objref_t instrob, mo_objref_t fromob, int depth)
 {
@@ -3647,6 +3652,9 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
     case CASE_PREDEFINSTR_MOM (chunk):
       mom_cemit_write_chunk_instr (csta, instrob, fromob, rolob, depth);
       return;
+    case CASE_PREDEFINSTR_MOM (to):
+      mom_cemit_write_jump_instr (csta, instrob, fromob, rolob, depth);
+      return;
     defaultinstrcase:
     default:
       break;
@@ -3677,7 +3685,9 @@ mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
                     && cemp->mo_cemit_locstate == csta,
                     "cemit_write_assign_instr: bad payl@%p in csta@%p", cemp,
                     csta);
-  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob),
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (assignment_instruction_class),
                     "cemit_write_assign_instr: bad instrob");
   MOM_ASSERTPRINTF (mo_dyncast_objref (fromob),
                     "cemit_write_assign_instr: bad fromob");
@@ -3811,6 +3821,46 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
   mom_cemit_newline (csta);
 }                               /* end mom_cemit_write_chunk_instr */
 
+
+void
+mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_jump_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_jump_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob)
+                    && instrob->mo_ob_class ==
+                    MOM_PREDEF (jump_instruction_class),
+                    "cemit_write_jump_instr: bad instrob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (fromob),
+                    "cemit_write_jump_instr: bad fromob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob)
+                    && rolinsob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_get_comp (rolinsob,
+                                           MOMROLJUMPIX_ROLE) ==
+                    MOM_PREDEF (to)
+                    && mo_objref_comp_count (rolinsob) >= MOMROLJUMPIX__LAST,
+                    "cemit_write_jump_instr: bad rolinsob %s",
+                    mo_objref_pnamestr (rolinsob));
+  mo_objref_t toblockob =
+    mo_dyncast_objref (mo_objref_get_comp (rolinsob, MOMROLJUMPIX_TO));
+  MOM_ASSERTPRINTF (toblockob
+                    && toblockob->mo_ob_class =
+                    MOM_PREDEF (c_block_class),
+                    "cemit_write_jump_instr: bad toblock");
+  char toblid[MOM_CSTRIDSIZ];
+  memset (toblid, 0, sizeof (toblid));
+  mom_cemit_printf ("/*jump %s*/ goto " MOM_LABEL_PREFIX "%s;",
+                    mo_objref_pnamestr (instrob), mo_objref_idstr (toblid,
+                                                                   toblockob));
+}                               /* end of mom_cemit_write_jump_instr */
 
 void
 mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
