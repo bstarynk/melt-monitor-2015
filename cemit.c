@@ -3932,7 +3932,7 @@ mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_jump_instr: bad toblock");
   char toblid[MOM_CSTRIDSIZ];
   memset (toblid, 0, sizeof (toblid));
-  mom_cemit_printf ("/*jump %s*/ goto " MOM_LABEL_PREFIX "%s;",
+  mom_cemit_printf (csta, "/*jump %s*/ goto " MOM_LABEL_PREFIX "%s;",
                     mo_objref_pnamestr (instrob), mo_objref_idstr (toblid,
                                                                    toblockob));
 }                               /* end of mom_cemit_write_jump_instr */
