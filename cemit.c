@@ -2647,13 +2647,20 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
           continue;
         }
       else
-        MOM_CEMITFAILURE
-          (MOM_CEMIT_ADD_DATA
-           (csta, instrob, curcomp, mo_int_to_value (depth), fromob, rolob),
-           "cemit_scan_chunk_instr: instr %s with unexpected comp#%u %s,"
-           " role %s, depth %d, from %s", mo_objref_pnamestr (instrob), cix,
-           mo_value_pnamestr (curcomp), mo_value_pnamestr (rolob), depth,
-           mo_objref_pnamestr (fromob));
+        {
+          MOM_WARNPRINTF
+            ("cemit_scan_chunk_instr: compob#%u %s unexpected in instrob %s",
+             cix, mo_objref_pnamestr (compob), mo_objref_pnamestr (instrob));
+          MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                            (csta, instrob, curcomp, mo_int_to_value (depth),
+                             fromob, rolob),
+                            "cemit_scan_chunk_instr: instr %s with unexpected comp#%u %s,"
+                            " role %s, depth %d, from %s",
+                            mo_objref_pnamestr (instrob), cix,
+                            mo_value_pnamestr (curcomp),
+                            mo_value_pnamestr (rolob), depth,
+                            mo_objref_pnamestr (fromob));
+        }
     }
   MOM_INFORMPRINTF ("cemit_scan_chunk_instr: end instrob %s",
                     mo_objref_pnamestr (instrob));
@@ -3542,13 +3549,17 @@ mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
                     MOMROLASSIGNIX__LASTASSIGN,
                     "cemit_write_assign_instr: bad rolinsob %s",
                     mo_objref_pnamestr (rolinsob));
-  mo_objref_t totypob = mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_TOTYPE);
+  mo_objref_t totypob =
+    mo_dyncast_objref (mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_TOTYPE));
   mo_objref_t torefob =
-    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_TOREFERENCE);
+    mo_dyncast_objref (mo_objref_get_comp
+                       (rolinsob, MOMROLASSIGNIX_TOREFERENCE));
   mo_objref_t fromtypob =
-    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_FROMTYPE);
+    mo_dyncast_objref (mo_objref_get_comp
+                       (rolinsob, MOMROLASSIGNIX_FROMTYPE));
   mo_value_t fromexpv =
-    mo_objref_get_comp (rolinsob, MOMROLASSIGNIX_FROMEXPR);
+    mo_dyncast_objref (mo_objref_get_comp
+                       (rolinsob, MOMROLASSIGNIX_FROMEXPR));
   if (totypob == fromtypob)
     {
       mom_cemit_write_reference (csta, torefob, instrob, depth);
