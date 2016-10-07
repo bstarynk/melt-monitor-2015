@@ -153,6 +153,15 @@ enum momcemit_rolcondinstr_en
   MOMROLCONDIX_CONDITIONS,      // tuple of conditions
   MOMROLCONDIX__LAST
 };
+// the slots of role object for conditions
+enum momcemit_rolcondition_en
+{
+  MOMROLCONDITIONIX_ROLE = MOMROLFORMIX_ROLE,   // MOM_PREDEF(when)
+  MOMROLCONDITIONIX_WHEN,
+  MOMROLCONDITIONIX_BODY,
+  MOMROLCONDITIONIX__LAST
+};
+
 
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
@@ -2827,13 +2836,45 @@ mom_cemit_scan_condition (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_condition: bad condob %s"
                       " depth %d, from %s", mo_objref_pnamestr (condob),
                       depth, mo_objref_pnamestr (fromob));
-#warning mom_cemit_scan_condition incomplete
-  MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                    (csta, condob, mo_int_to_value (depth), fromob),
-                    "cemit_scan_condition: incomplete for condob %s"
-                    " depth %d, from %s",
-                    mo_objref_pnamestr (condob), depth,
-                    mo_objref_pnamestr (fromob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, condob));
+  if (rolob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, condob, rolob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_condition: condob %s already with role %s"
+                      " depth %d, from %s", mo_objref_pnamestr (condob),
+                      mo_objref_pnamestr (rolob),
+                      depth, mo_objref_pnamestr (fromob));
+  mo_value_t whenv = mo_objref_get_attr (condob, MOM_PREDEF (when));
+  mo_objref_t bodyob =
+    mo_dyncast_objref (mo_objref_get_attr (condob, MOM_PREDEF (body)));
+  if (!bodyob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, condob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_condition: condob %s without `body`"
+                      " depth %d, from %s", mo_objref_pnamestr (condob),
+                      depth, mo_objref_pnamestr (fromob));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLCONDITIONIX__LAST);
+  mo_objref_put_comp (rolob, MOMROLCONDITIONIX_ROLE, MOM_PREDEF (when));
+  mo_objref_put_comp (rolob, MOMROLCONDITIONIX_WHEN, whenv);
+  mo_objref_put_comp (rolob, MOMROLCONDITIONIX_BODY, bodyob);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, condob, rolob);
+  mo_objref_t typwhenob =
+    mom_cemit_scan_expression (csta, whenv, condob, depth + 1);
+  if (!typwhenob || !mom_cemit_ctype_is_scalar (csta, typwhenob))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, condob, mo_int_to_value (depth),
+                       whenv ? whenv : MOM_EMPTY_SLOT, fromob, typwhenob),
+                      "cemit_scan_condition: condob %s with when %s of non-scalar type %s"
+                      " depth %d, from %s", mo_objref_pnamestr (condob),
+                      mo_value_pnamestr (whenv),
+                      mo_objref_pnamestr (typwhenob), depth,
+                      mo_objref_pnamestr (fromob));
+  mom_cemit_scan_block (csta, bodyob, condob, depth + 1);
 }                               /* end of mom_cemit_scan_condition */
 
 
