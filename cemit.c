@@ -138,6 +138,14 @@ enum momcemit_rolchunkinstr_en
   MOMROLCHUNKIX__LASTCHUNK
 };
 
+// the slots of role object for jump instructions
+enum momcemit_roljumpinstr_en
+{
+  MOMROLJUMPIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(to)
+  MOMROLJUMPIX_TO,              // target block
+  MOMROLJUMPIX__LAST
+};
+
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 /// maximal recursion depth
@@ -2595,12 +2603,31 @@ mom_cemit_scan_jump_instr (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_jump_instr: instr %s with existing role %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob), mo_value_pnamestr (rolob),
                       depth, mo_objref_pnamestr (fromob));
-#warning mom_cemit_scan_jump_instr unimplemented
-  MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                    (csta, instrob, mo_int_to_value (depth), fromob),
-                    "cemit_scan_jump_instr unimplemented: instr %s , depth %d, from %s",
-                    mo_objref_pnamestr (instrob),
-                    depth, mo_objref_pnamestr (fromob));
+  mo_objref_t toblockob =
+    mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (to)));
+  if (!toblockob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_jump_instr: instr %s without `to`, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      depth, mo_objref_pnamestr (fromob));
+  if (toblockob->mo_ob_class != MOM_PREDEF (c_block_class))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, mo_int_to_value (depth), toblockob,
+                       fromob),
+                      "cemit_scan_jump_instr: instr %s with bad `to`:%s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (toblockob), depth,
+                      mo_objref_pnamestr (fromob));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLJUMPIX__LAST);
+  mo_objref_put_comp (rolob, MOMROLJUMPIX_ROLE, MOM_PREDEF (to));
+  mo_objref_put_comp (rolob, MOMROLJUMPIX_TO, toblockob);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
+  csta->mo_cemsta_hsetjumpedblocks =
+    mo_hashset_put (csta->mo_cemsta_hsetjumpedblocks, toblockob);
 }                               /* end of mom_cemit_scan_jump_instr */
 
 
