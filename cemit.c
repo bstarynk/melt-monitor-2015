@@ -2592,6 +2592,11 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_REFERENCE, referencev);
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_EXPRESSION, expressionv);
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_BLOCK, blockv);
+  MOM_INFORMPRINTF
+    ("cemit_scan_chunk_instr: instrob %s verbatimv %s referencev %s expressionv %s rolob %s",
+     mo_objref_pnamestr (instrob), mo_value_pnamestr (verbatimv),
+     mo_value_pnamestr (referencev), mo_value_pnamestr (expressionv),
+     mo_objref_pnamestr (rolob));
   csta->mo_cemsta_assoclocalrole =
     mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
   for (unsigned cix = 0; cix < nbcomp; cix++)
@@ -2603,7 +2608,7 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
       if (curkind == mo_KTUPLE || curkind == mo_KSET)
         MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
                           (csta, instrob, curcomp, mo_int_to_value (depth),
-			   rolob, fromob),
+                           rolob, fromob),
                           "cemit_scan_chunk_instr: instr %s with unexpected"
                           " sequence comp#%d %s, depth %d, role %s, from %s",
                           mo_objref_pnamestr (instrob), cix,
@@ -2612,24 +2617,46 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                           mo_objref_pnamestr (fromob));
       mo_objref_t compob = mo_dyncast_objref (curcomp);
       if (mo_set_contains (verbatimv, compob))
-        continue;
+        {
+          MOM_INFORMPRINTF
+            ("cemit_scan_chunk_instr: compob#%u %s in verbatim", cix,
+             mo_objref_pnamestr (compob));
+          continue;
+        }
       else if (mo_set_contains (referencev, compob))
-        mom_cemit_scan_reference (csta, compob, instrob, depth + 1);
+        {
+          MOM_INFORMPRINTF
+            ("cemit_scan_chunk_instr: compob#%u %s in reference", cix,
+             mo_objref_pnamestr (compob));
+          mom_cemit_scan_reference (csta, compob, instrob, depth + 1);
+          continue;
+        }
       else if (mo_set_contains (blockv, compob))
-        mom_cemit_scan_block (csta, compob, instrob, depth + 1);
+        {
+          MOM_INFORMPRINTF ("cemit_scan_chunk_instr: compob#%u %s in block",
+                            cix, mo_objref_pnamestr (compob));
+          mom_cemit_scan_block (csta, compob, instrob, depth + 1);
+          continue;
+        }
       else if (!compob || mo_set_contains (expressionv, compob))
-        mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
+        {
+          MOM_INFORMPRINTF
+            ("cemit_scan_chunk_instr: compob#%u %s in expression", cix,
+             mo_objref_pnamestr (compob));
+          mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
+          continue;
+        }
       else
         MOM_CEMITFAILURE
-	  (MOM_CEMIT_ADD_DATA (csta, instrob, curcomp, mo_int_to_value (depth),
-			       fromob, rolob),
-	   "cemit_scan_chunk_instr: instr %s with unexpected comp#%u %s,"
-	   " role %s, depth %d, from %s",
-	   mo_objref_pnamestr (instrob), cix,
-	   mo_value_pnamestr (curcomp), 
-	   mo_value_pnamestr (rolob), depth,
-	   mo_objref_pnamestr (fromob));
+          (MOM_CEMIT_ADD_DATA
+           (csta, instrob, curcomp, mo_int_to_value (depth), fromob, rolob),
+           "cemit_scan_chunk_instr: instr %s with unexpected comp#%u %s,"
+           " role %s, depth %d, from %s", mo_objref_pnamestr (instrob), cix,
+           mo_value_pnamestr (curcomp), mo_value_pnamestr (rolob), depth,
+           mo_objref_pnamestr (fromob));
     }
+  MOM_INFORMPRINTF ("cemit_scan_chunk_instr: end instrob %s",
+                    mo_objref_pnamestr (instrob));
 }                               /* end mom_cemit_scan_chunk_instr */
 
 
