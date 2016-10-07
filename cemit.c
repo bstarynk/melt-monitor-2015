@@ -3560,6 +3560,13 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_chunk_instr: bad fromob");
   MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob),
                     "cemit_write_chunk_instr: bad rolinsob");
+#warning mom_cemit_write_chunk_instr unimplemented
+  MOM_CEMITFAILURE
+    (MOM_CEMIT_ADD_DATA
+     (csta, instrob, fromob, mo_int_to_value (depth), rolinsob),
+     "mom_cemit_write_chunk_instr unimplemented instrob=%s fromob=%s depth=%d rolinsob=%s",
+     mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
+     mo_objref_pnamestr (rolinsob));
 }                               /* end mom_cemit_write_chunk_instr */
 
 
