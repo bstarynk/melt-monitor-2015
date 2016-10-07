@@ -949,7 +949,7 @@ mo_set_contains (mo_value_t vs, mo_objref_t ob)
       else
         MOM_FATAPRINTF ("corrupted set@%p", set);
     }
-  for (unsigned md = lo; md < hi; md++)
+  for (unsigned md = lo; md <= hi; md++)
     {
       mo_objref_t midobr = set->mo_seqobj[md];
       MOM_ASSERTPRINTF (mo_dyncast_objref (midobr) != NULL,
@@ -958,7 +958,7 @@ mo_set_contains (mo_value_t vs, mo_objref_t ob)
         return true;
     }
   return false;
-}
+}                               /* end of mo_set_contains */
 
 // given a set, such as an auto-complete set, compute a GC-strduped
 // common prefix of them, either using their id or their name
