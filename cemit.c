@@ -3733,6 +3733,11 @@ mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
                             mo_objref_t rolinsob, int depth);
 
 void
+mom_cemit_write_cond_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth);
+
+void
 mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
                        mo_objref_t instrob, mo_objref_t fromob, int depth)
 {
@@ -3755,7 +3760,7 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
        "mom_cemit_write_instr instrob=%s fromob=%s depth=%d with bad rolob=%s",
        mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
        mo_objref_pnamestr (rolob));
-#define MOM_NBCASE_INSTR 139
+#define MOM_NBCASE_INSTR 179
 #define CASE_PREDEFINSTR_MOM(Ob)  momphash_##Ob % MOM_NBCASE_INSTR:	\
   if (rolkindob != MOM_PREDEF(Ob))					\
     goto defaultinstrcase;						\
@@ -3771,6 +3776,9 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
       return;
     case CASE_PREDEFINSTR_MOM (to):
       mom_cemit_write_jump_instr (csta, instrob, fromob, rolob, depth);
+      return;
+    case CASE_PREDEFINSTR_MOM (conditional):
+      mom_cemit_write_cond_instr (csta, instrob, fromob, rolob, depth);
       return;
     defaultinstrcase:
     default:
@@ -3977,6 +3985,93 @@ mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
                     mo_objref_pnamestr (instrob), mo_objref_idstr (toblid,
                                                                    toblockob));
 }                               /* end of mom_cemit_write_jump_instr */
+
+void
+mom_cemit_write_cond_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_cond_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_cond_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob),
+                    "cemit_write_cond_instr: bad instrob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (fromob),
+                    "cemit_write_cond_instr: bad fromob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob),
+                    "cemit_write_cond_instr: bad rolinsob");
+  MOM_ASSERTPRINTF (rolinsob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_comp_count (rolinsob) >=
+                    MOMROLCONDIX__LAST
+                    && mo_objref_get_comp (rolinsob,
+                                           MOMROLCONDIX_ROLE) ==
+                    MOM_PREDEF (conditional),
+                    "cemit_write_cond_instr: wrong rolinsob %s",
+                    mo_objref_pnamestr (rolinsob));
+  mo_value_t condtup
+    =
+    mo_dyncast_tuple (mo_objref_get_comp (rolinsob, MOMROLCONDIX_CONDITIONS));
+  MOM_ASSERTPRINTF (condtup != NULL, "cemit_write_cond_instr: no condtup");
+  char instrid[MOM_CSTRIDSIZ];
+  memset (instrid, 0, sizeof (instrid));
+  mo_objref_idstr (instrid, instrob);
+  int nbcond = mo_tuple_size (condtup);
+  mom_cemit_newline (csta);
+  mom_cemit_printf (csta, "//+ condinstr %s with %d conditions", instrid,
+                    nbcond);
+  for (int cix = 0; cix < nbcond; cix++)
+    {
+      mo_objref_t curcondob = mo_tuple_nth (condtup, cix);
+      MOM_ASSERTPRINTF (curcondob != NULL,
+                        "cemit_write_cond_instr: no curcondob cix#%d", cix);
+      char condid[MOM_CSTRIDSIZ];
+      memset (condid, 0, sizeof (condid));
+      mo_objref_idstr (condid, curcondob);
+      mo_objref_t condrolob =
+        mo_dyncast_objref (mo_assoval_get
+                           (csta->mo_cemsta_assoclocalrole, curcondob));
+      MOM_ASSERTPRINTF (condrolob != NULL,
+                        "cemit_write_cond_instr: no condrolob cix#%d for curcondob %s",
+                        cix, condid);
+      mom_cemit_newline (csta);
+      MOM_ASSERTPRINTF (mo_objref_get_comp (condrolob, MOMROLCONDITIONIX_ROLE)
+                        == MOM_PREDEF (when)
+                        && mo_objref_comp_count (condrolob) >=
+                        MOMROLCONDITIONIX__LAST,
+                        "cemit_write_cond_instr: bad condrolob %s cix#%d for curcondob %s",
+                        mo_objref_pnamestr (condrolob), cix, condid);
+      mo_value_t condwhenv =
+        mo_objref_get_comp (condrolob, MOMROLCONDITIONIX_WHEN);
+      mo_objref_t condbodyob =
+        mo_dyncast_objref (mo_objref_get_comp
+                           (condrolob, MOMROLCONDITIONIX_BODY));
+      if (cix <= 0)
+        mom_cemit_printf (csta, "if /*first condition %s*/ (", condid);
+      else
+        mom_cemit_printf (csta, "else if /*condition#%d %s*/ (", cix, condid);
+      mom_cemit_write_expression (csta, condwhenv, curcondob, depth + 1);
+      mom_cemit_printf (csta, ") { /*cond#%d.body*/", cix);
+      unsigned oldindent = csta->mo_cemsta_indentation;
+      csta->mo_cemsta_indentation = depth + 1;
+      mom_cemit_newline (csta);
+      mom_cemit_write_block (csta, condbodyob, curcondob, depth + 1);
+      csta->mo_cemsta_indentation = oldindent;
+      mom_cemit_newline (csta);
+      mom_cemit_printf (csta, "} /*end condition#%d %s*/", cix, condid);
+    }
+  mom_cemit_newline (csta);
+  mom_cemit_printf (csta, "//- condinstr %s", instrid);
+  mom_cemit_newline (csta);
+}                               /* end mom_cemit_write_cond_instr */
+
+
+
+
 
 void
 mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
