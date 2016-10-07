@@ -630,6 +630,25 @@ INSERT INTO t_objects VALUES('_20B54zdX0j8vYUdsf',1474366358,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_20T3CDm2iXvjXWfRg',1475825906,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "body of informint "
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_4zT3VnaB6kIFN521E"
+   }
+  ]
+ }
+}
+','_1lU1wXlGlR9TdmE89','','','');
 INSERT INTO t_objects VALUES('_21J3zZDnsKTbAVBFo',1474473958,'
 {
  "@name": "uintptr_t",
@@ -1276,6 +1295,48 @@ INSERT INTO t_objects VALUES('_4xS1CSbRUFBW6PJiJ',1472212346,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_1rV3tPbwX88LqztK0",
+    "va": {
+     "set": [
+      "_7Yx8genl596yeIpzx"
+     ]
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "inform about x"
+   },
+   {
+    "at": "_64h4VCbZPNyxt22DN",
+    "va": {
+     "set": [
+      "_4an3PsIjc3EDLchlg"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": {
+  "vectval": [
+   "/* in ",
+   {
+    "oid": "_7Yx8genl596yeIpzx"
+   },
+   "*/",
+   "MOM_INFORMPRINTF(\"x is %d\", ",
+   {
+    "oid": "_4an3PsIjc3EDLchlg"
+   },
+   ")"
+  ]
+ }
+}
+','_4Fo3f0PrwI6hwjSzM','','','');
 INSERT INTO t_objects VALUES('_52u5dMMjzLjdlgIMF',1475582058,'
 {
  "@name": "reference",
@@ -1972,7 +2033,7 @@ INSERT INTO t_objects VALUES('_7R18oBKd7iMYZd7gN',1475478556,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_7Yx8genl596yeIpzx',1475824336,'
+INSERT INTO t_objects VALUES('_7Yx8genl596yeIpzx',1475825906,'
 {
  "@name": "test1_informint",
  "attrs": {
@@ -1981,6 +2042,12 @@ INSERT INTO t_objects VALUES('_7Yx8genl596yeIpzx',1475824336,'
     "at": "_1ZY6i2rKse5FsKrsv",
     "va": {
      "oid": "_5SE2qc92qZjlzudEX"
+    }
+   },
+   {
+    "at": "_49p2zcDH6JgIxjue1",
+    "va": {
+     "oid": "_20T3CDm2iXvjXWfRg"
     }
    },
    {
