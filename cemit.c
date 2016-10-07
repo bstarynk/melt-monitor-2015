@@ -2603,11 +2603,12 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
       if (curkind == mo_KTUPLE || curkind == mo_KSET)
         MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
                           (csta, instrob, curcomp, mo_int_to_value (depth),
-                           fromob),
+			   rolob, fromob),
                           "cemit_scan_chunk_instr: instr %s with unexpected"
-                          " sequence comp#%d %s, depth %d, from %s",
+                          " sequence comp#%d %s, depth %d, role %s, from %s",
                           mo_objref_pnamestr (instrob), cix,
                           mo_value_pnamestr (curcomp), depth,
+                          mo_objref_pnamestr (rolob),
                           mo_objref_pnamestr (fromob));
       mo_objref_t compob = mo_dyncast_objref (curcomp);
       if (mo_set_contains (verbatimv, compob))
@@ -2619,14 +2620,15 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
       else if (!compob || mo_set_contains (expressionv, compob))
         mom_cemit_scan_expression (csta, curcomp, instrob, depth + 1);
       else
-        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                          (csta, instrob, curcomp, mo_int_to_value (depth),
-                           fromob),
-                          "cemit_scan_chunk_instr: instr %s with unexpected"
-                          " comp#%d %s, depth %d, from %s",
-                          mo_objref_pnamestr (instrob), cix,
-                          mo_value_pnamestr (curcomp), depth,
-                          mo_objref_pnamestr (fromob));
+        MOM_CEMITFAILURE
+	  (MOM_CEMIT_ADD_DATA (csta, instrob, curcomp, mo_int_to_value (depth),
+			       fromob, rolob),
+	   "cemit_scan_chunk_instr: instr %s with unexpected comp#%u %s,"
+	   " role %s, depth %d, from %s",
+	   mo_objref_pnamestr (instrob), cix,
+	   mo_value_pnamestr (curcomp), 
+	   mo_value_pnamestr (rolob), depth,
+	   mo_objref_pnamestr (fromob));
     }
 }                               /* end mom_cemit_scan_chunk_instr */
 

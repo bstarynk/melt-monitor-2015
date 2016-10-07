@@ -636,7 +636,7 @@ INSERT INTO t_objects VALUES('_20T3CDm2iXvjXWfRg',1475825906,'
   "assoval": [
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "body of informint "
+    "va": "body of informint"
    }
   ]
  },
@@ -1107,7 +1107,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475824213,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475827099,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1155,7 +1155,8 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475824213,'
     "at": "_8TY6UsXJ3Djt71By3",
     "va": {
      "tup": [
-      "_0Ze1dDI740vldabtI"
+      "_0Ze1dDI740vldabtI",
+      "_5SE2qc92qZjlzudEX"
      ]
     }
    }
@@ -1421,7 +1422,7 @@ INSERT INTO t_objects VALUES('_5Kq0Pz5eFAULvdMEL',1474372791,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_5SE2qc92qZjlzudEX',1475824411,'
+INSERT INTO t_objects VALUES('_5SE2qc92qZjlzudEX',1475827687,'
 {
  "@name": "signature_int_to_void",
  "attrs": {
@@ -1429,6 +1430,12 @@ INSERT INTO t_objects VALUES('_5SE2qc92qZjlzudEX',1475824411,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "signature: int -> void"
+   },
+   {
+    "at": "_7vy5VxtVon8EhIF5D",
+    "va": {
+     "oid": "_1WX2mf4xwC5TU5ml7"
+    }
    },
    {
     "at": "_8Bq9eNWZ0eUS6BGq8",
@@ -1633,7 +1640,7 @@ INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
   "assoval": [
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "body of test1_idint\n"
+    "va": "body of test1_idint"
    }
   ]
  },
