@@ -1348,7 +1348,7 @@ INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
    {
     "oid": "_4an3PsIjc3EDLchlg"
    },
-   ")"
+   ");"
   ]
  }
 }

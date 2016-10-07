@@ -1717,6 +1717,11 @@ mom_cemit_object_declare (struct mom_cemitlocalstate_st *csta, mo_objref_t ob,
         mo_objref_put_comp (rolob, MOMROLFUNCIX_SIGNATURE, signob);
         csta->mo_cemsta_assocmodulrole =
           mo_assoval_put (csta->mo_cemsta_assocmodulrole, ob, rolob);
+        if (obnamev)
+          mom_cemit_printf (csta,
+                            "extern /*idroutine*/ mo_%s_ty " MOM_FUNC_PREFIX
+                            "%s;\n", mo_objref_shortnamestr (signob),
+                            obid + 1);
         mom_cemit_printf (csta,
                           "extern /*routine*/ mo_%s_ty " MOM_FUNC_PREFIX
                           "%s;\n", mo_objref_shortnamestr (signob),
@@ -2284,17 +2289,35 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
     }
   else if (funob->mo_ob_class == MOM_PREDEF (c_routine_class))
     {
+      mom_cemit_printf (csta, "// signature of function %s (%s)\n",
+                        mo_string_cstr (funamv), funid);
+      if (mo_objref_namev (signob))
+        mom_cemit_printf (csta,
+                          "const char " MOM_SIGNATURE_PREFIX
+                          "%s[] = \"%s\"; //%s\n", funid + 1, signid,
+                          mo_objref_pnamestr (signob));
+      else
+        mom_cemit_printf (csta,
+                          "const char " MOM_SIGNATURE_PREFIX
+                          "%s[] = \"%s\";\n", funid + 1, signid);
       if (funamv)
         {
-          mom_cemit_printf (csta, "// global function %s (%s)\n",
+          mom_cemit_printf (csta,
+                            "// signature for global function %s (%s)\n",
                             mo_string_cstr (funamv), funid);
+          mom_cemit_printf (csta,
+                            "const char " MOM_SIGNATURE_PREFIX
+                            "%s[] = \"%s\";\n", mo_string_cstr (funamv),
+                            signid);
           const char *funamstr =
             mom_gc_printf (MOM_FUNC_PREFIX "%s", mo_string_cstr (funamv));
           mom_cemit_printf (csta, "mo%s_ty %s MOM_OPTIMIZEDFUN;\n", signid,
                             funamstr);
+          mom_cemit_printf (csta, "\n// global function %s (%s)\n",
+                            mo_string_cstr (funamv), funid);
         }
       else
-        mom_cemit_printf (csta, "// global function %s\n", funid);
+        mom_cemit_printf (csta, "\n// global function %s\n", funid);
     }
   else
     MOM_CEMITFAILURE (csta, "cemit_function_code: bad function of class %s",
@@ -2332,23 +2355,26 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
     }
   if (funamv)
     {
+      const char *funamstr
+        = mom_gc_printf (MOM_FUNC_PREFIX "%s", mo_string_cstr (funamv));
       mom_cemit_printf (csta, "} // end of function %s (%s)\n\n",
                         mo_string_cstr (funamv), funid);
+      mom_cemit_printf (csta, "#undef %s\n", funamstr);
       mom_cemit_printf (csta, "// synonym function %s (%s)\n",
                         mo_string_cstr (funamv), funid);
-      const char *funamstr =
-        mom_gc_printf (MOM_FUNC_PREFIX "%s", mo_string_cstr (funamv));
+      if (funob->mo_ob_class == MOM_PREDEF (c_inlined_class))
+        mom_cemit_printf (csta, "static inline\n");
       if (!restypob || restypob == momglob_void)
-        mom_cemit_printf (csta, "void\n%s", funstr);
+        mom_cemit_printf (csta, "void\n%s", funamstr);
       else
-        mom_cemit_write_ctype_for (csta, restypob, funstr, 0);
+        mom_cemit_write_ctype_for (csta, restypob, funamstr, 0);
       mom_cemit_write_formals (csta, formaltup);
       mom_cemit_printf (csta, "\n{ // start of synonym function %s\n",
                         mo_objref_shortnamestr (funob));
       if (!restypob || restypob == momglob_void)
-        mom_cemit_printf (csta, MOM_FUNC_PREFIX "%s (", funid);
+        mom_cemit_printf (csta, " " MOM_FUNC_PREFIX "%s (", funid + 1);
       else
-        mom_cemit_printf (csta, "return " MOM_FUNC_PREFIX "%s (", funid);
+        mom_cemit_printf (csta, " return " MOM_FUNC_PREFIX "%s (", funid + 1);
       for (unsigned foix = 0; foix < nbformals; foix++)
         {
           mo_objref_t curformalob = mo_tuple_nth (formaltup, foix);
@@ -2360,6 +2386,9 @@ mom_cemit_function_code (struct mom_cemitlocalstate_st *csta,
       mom_cemit_printf (csta, "); // end synonym body\n");
       mom_cemit_printf (csta, "} // end of synonym function %s\n",
                         mo_objref_shortnamestr (funob));
+      mom_cemit_printf (csta,
+                        "#define %s /*synonymdef*/ " MOM_FUNC_PREFIX "%s\n\n",
+                        funamstr, funid + 1);
     }
   else
     mom_cemit_printf (csta, "} // end of function %s\n\n", funid);
@@ -3751,6 +3780,7 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
              mo_objref_pnamestr (instrob), cix, mo_value_pnamestr (curcomp));
         }                       /* end switch */
     }
+  mom_cemit_newline (csta);
   mom_cemit_printf (csta, "// -chunk %s", instrid);
   mom_cemit_newline (csta);
 }                               /* end mom_cemit_write_chunk_instr */
@@ -3934,16 +3964,17 @@ mom_cemit_function_definitions (struct mom_cemitlocalstate_st *csta)
       memset (curfunid, 0, sizeof (curfunid));
       mo_objref_idstr (curfunid, curfunob);
       if (curfunamv)
-        mom_cemit_printf (csta, "\n// function#%d code for %s (%s)\n",
+        mom_cemit_printf (csta, "\n\n\n//// function#%d code for %s (%s)\n",
                           cix, mo_string_cstr (curfunamv), curfunid);
       else
-        mom_cemit_printf (csta, "\n// function#%d code for %s\n",
+        mom_cemit_printf (csta, "\n\n\n//// function#%d code for %s\n",
                           cix, curfunid);
       if (mom_elapsed_real_time () > csta->mo_cemsta_timelimit)
         MOM_CEMITFAILURE (csta,
                           "cemit_function_definitions: %s timed out, index %d",
                           mo_objref_pnamestr (curfunob), cix);
       mom_cemit_function_code (csta, curfunob);
+      mom_cemit_printf (csta, "\n");
     }
 }                               /* end of mom_cemit_function_definitions */
 
