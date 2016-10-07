@@ -2769,19 +2769,18 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
         }
       else if (mo_set_contains (labelv, compob))
         {
-          MOM_BACKTRACEPRINTF
-            ("cemit_scan_chunk_instr: compob#%u %s in label", cix,
-             mo_objref_pnamestr (compob));
-#warning label unhandled in cemit_scan_chunk_instr
-          MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
-                            (csta, instrob, curcomp, mo_int_to_value (depth),
-                             fromob, rolob),
-                            "cemit_scan_chunk_instr: instr %s with unhandled label comp#%u %s,"
-                            " role %s, depth %d, from %s",
-                            mo_objref_pnamestr (instrob), cix,
-                            mo_value_pnamestr (curcomp),
-                            mo_value_pnamestr (rolob), depth,
-                            mo_objref_pnamestr (fromob));
+          if (compob->mo_ob_class != MOM_PREDEF (c_block_class))
+            MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                              (csta, instrob, curcomp,
+                               mo_int_to_value (depth), fromob, rolob),
+                              "cemit_scan_chunk_instr: instr %s with bad label comp#%u %s,"
+                              " depth %d, from %s, role %s",
+                              mo_objref_pnamestr (instrob), cix,
+                              mo_value_pnamestr (curcomp), depth,
+                              mo_objref_pnamestr (fromob),
+                              mo_objref_pnamestr (rolob));
+          csta->mo_cemsta_hsetjumpedblocks =
+            mo_hashset_put (csta->mo_cemsta_hsetjumpedblocks, compob);
           continue;
         }
       else if (!compob || mo_set_contains (expressionv, compob))
