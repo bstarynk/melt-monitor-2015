@@ -125,6 +125,7 @@ INSERT INTO t_names VALUES('signature','_1ZY6i2rKse5FsKrsv');
 INSERT INTO t_names VALUES('signature_class','_6S30JEAmywph5MZqd');
 INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_int_to_int','_0Ze1dDI740vldabtI');
+INSERT INTO t_names VALUES('signature_int_to_void','_5SE2qc92qZjlzudEX');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
 INSERT INTO t_names VALUES('signature_two_objects_to_object','_4pb5Vror0ehNFKXfT');
 INSERT INTO t_names VALUES('signature_two_objects_to_value','_1ky69RT7bZKd1tySD');
@@ -133,8 +134,8 @@ INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
+INSERT INTO t_names VALUES('test1_informint','_7Yx8genl596yeIpzx');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
-INSERT INTO t_names VALUES('test1_succ','_8Ma0q3vAp9XJFPCea');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -1087,7 +1088,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475814051,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475824213,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1105,7 +1106,7 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475814051,'
     "va": {
      "tup": [
       "_32t79xvXNDPCYP09j",
-      "_8Ma0q3vAp9XJFPCea"
+      "_7Yx8genl596yeIpzx"
      ]
     }
    },
@@ -1359,6 +1360,28 @@ INSERT INTO t_objects VALUES('_5Kq0Pz5eFAULvdMEL',1474372791,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_5SE2qc92qZjlzudEX',1475824411,'
+{
+ "@name": "signature_int_to_void",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature: int -> void"
+   },
+   {
+    "at": "_8Bq9eNWZ0eUS6BGq8",
+    "va": {
+     "tup": [
+      "_0Sp1Lg7ctajS7oX5i"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_5Ta34TyJJebRyD9sN',1474795461,'
 {
  "@name": "fnmatch",
@@ -1949,6 +1972,34 @@ INSERT INTO t_objects VALUES('_7R18oBKd7iMYZd7gN',1475478556,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7Yx8genl596yeIpzx',1475824336,'
+{
+ "@name": "test1_informint",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_1ZY6i2rKse5FsKrsv",
+    "va": {
+     "oid": "_5SE2qc92qZjlzudEX"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "inform about an int"
+   },
+   {
+    "at": "_8Cl7x1LpaH2GzkdbW",
+    "va": {
+     "tup": [
+      "_4an3PsIjc3EDLchlg"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3pK47DLRw3N5Ghv0R','','','');
 INSERT INTO t_objects VALUES('_7al47yMPGToSh0ryC',1474374401,'
 {
  "@name": "class",
@@ -2171,40 +2222,6 @@ INSERT INTO t_objects VALUES('_8DT8VbN0FaiS0K6uf',1474215262,'
  "comps": null
 }
 ','_6S30JEAmywph5MZqd','','','');
-INSERT INTO t_objects VALUES('_8Ma0q3vAp9XJFPCea',1475814166,'
-{
- "@name": "test1_succ",
- "attrs": {
-  "assoval": [
-   {
-    "at": "_1ZY6i2rKse5FsKrsv",
-    "va": {
-     "oid": "_0Ze1dDI740vldabtI"
-    }
-   },
-   {
-    "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "in test1 module successor function on ints"
-   },
-   {
-    "at": "_7he4MBcSuccJxtj7q",
-    "va": {
-     "oid": "_6gj4ZHinqqqvdWKyg"
-    }
-   },
-   {
-    "at": "_8Cl7x1LpaH2GzkdbW",
-    "va": {
-     "tup": [
-      "_4an3PsIjc3EDLchlg"
-     ]
-    }
-   }
-  ]
- },
- "comps": null
-}
-','_3pK47DLRw3N5Ghv0R','','','');
 INSERT INTO t_objects VALUES('_8T17wDyPfJSmGz5Ve',1474474042,'
 {
  "@name": "uint16_t",

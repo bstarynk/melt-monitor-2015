@@ -1419,10 +1419,6 @@ mom_gui_set_displayed_nth_value (int ix, mo_value_t curval)
       MOM_WARNPRINTF ("set_displayed_nth_value bad ix%d", ix);
       return;
     };
-  MOM_BACKTRACEPRINTF
-    ("set_displayed_nth_value ix#%d curval:%s startmark@%p endmark@%p", ix,
-     mo_value_pnamestr (curval), mo_dispval_startmark[ix],
-     mo_dispval_endmark[ix]);
   MOM_ASSERTPRINTF (mo_dispval_startmark[0] != NULL, "no $0 startmark");
   mom_dispvalarr[ix] = curval;
   momgui_dispctxt_ty dispctx;
