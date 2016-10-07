@@ -132,6 +132,7 @@ enum momcemit_rolchunkinstr_en
   MOMROLCHUNKIX_REFERENCE,
   MOMROLCHUNKIX_EXPRESSION,
   MOMROLCHUNKIX_BLOCK,
+  MOMROLCHUNKIX_LABEL,
   MOMROLCHUNKIX__LASTCHUNK
 };
 
@@ -2573,7 +2574,7 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (expressionv), depth,
                       mo_objref_pnamestr (fromob));
-  // the block attribute gives the set of objects to be handled as block-s
+  // the block attribute gives the set of objects to be handled as expanded block-s
   mo_value_t blockv = mo_objref_get_attr (instrob, MOM_PREDEF (block));
   if (blockv && !mo_dyncast_set (blockv))
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
@@ -2582,6 +2583,16 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_chunk_instr: instr %s with non-set block %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_value_pnamestr (blockv), depth,
+                      mo_objref_pnamestr (fromob));
+  // the label attribute gives the set of objects to be handled as jumped block-s
+  mo_value_t labelv = mo_objref_get_attr (instrob, MOM_PREDEF (label));
+  if (labelv && !mo_dyncast_set (labelv))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, labelv, mo_int_to_value (depth),
+                       fromob),
+                      "cemit_scan_chunk_instr: instr %s with non-set label %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_value_pnamestr (labelv), depth,
                       mo_objref_pnamestr (fromob));
   unsigned nbcomp = mo_objref_comp_count (instrob);
   rolob = mo_make_object ();
@@ -2592,6 +2603,7 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_REFERENCE, referencev);
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_EXPRESSION, expressionv);
   mo_objref_put_comp (rolob, MOMROLCHUNKIX_BLOCK, blockv);
+  mo_objref_put_comp (rolob, MOMROLCHUNKIX_LABEL, labelv);
   MOM_INFORMPRINTF
     ("cemit_scan_chunk_instr: instrob %s verbatimv %s referencev %s expressionv %s rolob %s",
      mo_objref_pnamestr (instrob), mo_value_pnamestr (verbatimv),
@@ -2636,6 +2648,23 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
           MOM_INFORMPRINTF ("cemit_scan_chunk_instr: compob#%u %s in block",
                             cix, mo_objref_pnamestr (compob));
           mom_cemit_scan_block (csta, compob, instrob, depth + 1);
+          continue;
+        }
+      else if (mo_set_contains (labelv, compob))
+        {
+          MOM_BACKTRACEPRINTF
+            ("cemit_scan_chunk_instr: compob#%u %s in label", cix,
+             mo_objref_pnamestr (compob));
+#warning label unhandled in cemit_scan_chunk_instr
+          MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                            (csta, instrob, curcomp, mo_int_to_value (depth),
+                             fromob, rolob),
+                            "cemit_scan_chunk_instr: instr %s with unhandled label comp#%u %s,"
+                            " role %s, depth %d, from %s",
+                            mo_objref_pnamestr (instrob), cix,
+                            mo_value_pnamestr (curcomp),
+                            mo_value_pnamestr (rolob), depth,
+                            mo_objref_pnamestr (fromob));
           continue;
         }
       else if (!compob || mo_set_contains (expressionv, compob))
@@ -3475,6 +3504,11 @@ mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
                               mo_objref_t rolinsob, int depth);
 
 void
+mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
+                             mo_objref_t instrob, mo_objref_t fromob,
+                             mo_objref_t rolinsob, int depth);
+
+void
 mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
                        mo_objref_t instrob, mo_objref_t fromob, int depth)
 {
@@ -3508,6 +3542,9 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
     case CASE_PREDEFINSTR_MOM (assign):
       mom_cemit_write_assign_instr (csta, instrob, fromob, rolob, depth);
       return;
+    case CASE_PREDEFINSTR_MOM (chunk):
+      mom_cemit_write_chunk_instr (csta, instrob, fromob, rolob, depth);
+      return;
     defaultinstrcase:
     default:
       break;
@@ -3522,6 +3559,8 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
      mo_objref_pnamestr (instrob), mo_objref_pnamestr (fromob), depth,
      mo_objref_pnamestr (rolob), mo_objref_pnamestr (rolkindob));
 }                               /* end mom_cemit_write_instr */
+
+
 
 void
 mom_cemit_write_assign_instr (struct mom_cemitlocalstate_st *csta,
@@ -3600,6 +3639,62 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
                     "cemit_write_chunk_instr: bad fromob");
   MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob),
                     "cemit_write_chunk_instr: bad rolinsob");
+  MOM_ASSERTPRINTF (rolinsob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_comp_count (rolinsob) >=
+                    MOMROLCHUNKIX__LASTCHUNK
+                    && mo_objref_get_comp (rolinsob,
+                                           MOMROLCHUNKIX_ROLE) ==
+                    MOM_PREDEF (chunk),
+                    "cemit_write_chunk_instr: wrong rolinsob %s",
+                    mo_objref_pnamestr (rolinsob));
+  mo_value_t verbatimv =
+    mo_objref_get_comp (rolinsob, MOMROLCHUNKIX_VERBATIM);
+  mo_value_t referencev =
+    mo_objref_get_comp (rolinsob, MOMROLCHUNKIX_REFERENCE);
+  mo_value_t expressionv =
+    mo_objref_get_comp (rolinsob, MOMROLCHUNKIX_EXPRESSION);
+  mo_value_t blockv = mo_objref_get_comp (rolinsob, MOMROLCHUNKIX_BLOCK);
+  int nbcomp = mo_objref_comp_count (instrob);
+  char instrid[MOM_CSTRIDSIZ];
+  memset (instrid, 0, sizeof (instrid));
+  mo_objref_idstr (instrid, instrob);
+  mom_cemit_printf (csta, "// +chunk %s", instrid);
+  mom_cemit_newline (csta);
+  for (int cix = 0; cix < nbcomp; cix++)
+    {
+      mo_value_t curcomp = mo_objref_get_comp (instrob, cix);
+      enum mo_valkind_en curkind = mo_kind_of_value (curcomp);
+      switch (curkind)
+        {
+        case mo_KNONE:
+          continue;
+        case mo_KINT:
+          mom_cemit_printf (csta, "%lld",
+                            (long long) mo_value_to_int (curcomp, 0));
+          continue;
+        case mo_KSTRING:
+          mom_cemit_printf (csta, "%s", mo_string_cstr (curcomp));
+          continue;
+        case mo_KOBJECT:
+          {
+            mo_objref_t curob = mo_dyncast_objref (curcomp);
+            if (mo_set_contains (verbatimv, curob))
+              mom_cemit_printf (csta, "%s", mo_objref_shortnamestr (curob));
+            else if (mo_set_contains (referencev, curob))
+              mom_cemit_write_reference (csta, curob, instrob, depth + 1);
+            else if (mo_set_contains (expressionv, curob))
+              mom_cemit_write_expression (csta, curob, instrob, depth + 1);
+          }
+          continue;
+        default:
+          // should never happen, since scan_chunk_instr should have failed
+          MOM_FATAPRINTF
+            ("cemit_write_chunk_instr: instrob %s with impossible comp#%d %s",
+             mo_objref_pnamestr (instrob), cix, mo_value_pnamestr (curcomp));
+        }                       /* end switch */
+    }
+  mom_cemit_printf (csta, "// -chunk %s", instrid);
+  mom_cemit_newline (csta);
 #warning mom_cemit_write_chunk_instr unimplemented
   MOM_CEMITFAILURE
     (MOM_CEMIT_ADD_DATA
@@ -3669,7 +3764,8 @@ mom_cemit_write_expression (struct mom_cemitlocalstate_st *csta,
           {
             MOM_ASSERTPRINTF (locrolob->mo_ob_class ==
                               MOM_PREDEF (c_role_class), "bad locrolob");
-            mo_objref_t kindlocrob = mo_objref_get_comp (locrolob, 0);
+            mo_objref_t kindlocrob =
+              mo_dyncast_objref (mo_objref_get_comp (locrolob, 0));
             if (kindlocrob == MOM_PREDEF (formals))
               {
                 mom_cemit_printf (csta, MOM_FORMAL_PREFIX "%s",

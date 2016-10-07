@@ -90,6 +90,7 @@ INSERT INTO t_names VALUES('int64_t','_21x8NL3oau6heNEnt');
 INSERT INTO t_names VALUES('int8_t','_62H0GDHPCtIRvAdDd');
 INSERT INTO t_names VALUES('intptr_t','_8t42m75faVNE2kWxu');
 INSERT INTO t_names VALUES('jump_instruction_class','_6dw6NAxxyyrUS1716');
+INSERT INTO t_names VALUES('label','_41J8vxiImLzzTg60I');
 INSERT INTO t_names VALUES('locals','_5t61z2vkWfR1NbtiF');
 INSERT INTO t_names VALUES('long','_20B54zdX0j8vYUdsf');
 INSERT INTO t_names VALUES('macro','_5pl24omBRy4z1HrtN');
@@ -989,6 +990,20 @@ INSERT INTO t_objects VALUES('_40K767SbwcfEJVyXr',1474983635,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "give the aggregate initialization in a non-scalar c-type (e.g. pthread_mutex_t)"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_41J8vxiImLzzTg60I',1475833043,'
+{
+ "@name": "label",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "for label-s, e.g. as a set in chunk instr"
    }
   ]
  },
