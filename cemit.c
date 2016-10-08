@@ -3901,6 +3901,9 @@ mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
     case CASE_PREDEFINSTR_MOM (conditional):
       mom_cemit_write_cond_instr (csta, instrob, fromob, rolob, depth);
       return;
+    case CASE_PREDEFINSTR_MOM (call):
+      mom_cemit_write_call_instr (csta, instrob, fromob, rolob, depth);
+      return;
     defaultinstrcase:
     default:
       break;
@@ -4191,7 +4194,38 @@ mom_cemit_write_cond_instr (struct mom_cemitlocalstate_st *csta,
 }                               /* end mom_cemit_write_cond_instr */
 
 
-
+void
+mom_cemit_write_call_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_write_call_instr: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_write_call_instr: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (instrob),
+                    "cemit_write_call_instr: bad instrob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (fromob),
+                    "cemit_write_call_instr: bad fromob");
+  MOM_ASSERTPRINTF (mo_dyncast_objref (rolinsob),
+                    "cemit_write_call_instr: bad rolinsob");
+  MOM_ASSERTPRINTF (rolinsob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_comp_count (rolinsob) >=
+                    MOMROLCALLIX__LAST
+                    && mo_objref_get_comp (rolinsob,
+                                           MOMROLCONDIX_ROLE) ==
+                    MOM_PREDEF (call),
+                    "cemit_write_call_instr: wrong rolinsob %s",
+                    mo_objref_pnamestr (rolinsob));
+#warning unimplemented mom_cemit_write_call_instr
+  MOM_FATAPRINTF
+    ("unimplemented mom_cemit_write_call_instr instrob %s rolinsob %s",
+     mo_objref_pnamestr (instrob), mo_objref_pnamestr (rolinsob));
+}                               /* end mom_cemit_write_call_instr */
 
 
 void
