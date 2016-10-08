@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 82
+#define MOM_NB_PREDEFINED 83
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -75,6 +75,9 @@ MOM_HAS_PREDEFINED(c_type,_8TY6UsXJ3Djt71By3,2099691278,8386046274775932683,5831
 
 //+ class of c variables
 MOM_HAS_PREDEFINED(c_variable_class,_3hq90zS3jpqaVDbDy,776403248,9029093004236578102,3029307049)
+
+//+ gives the called function in calls
+MOM_HAS_PREDEFINED(call,_7mM0hFHqXHgBqPB4F,1741162536,2238186429751319273,2224505164)
 
 //+ class for call instructions
 MOM_HAS_PREDEFINED(call_instruction_class,_3nV79jeVZkZ8kdSWp,801883621,7464538601192580409,3902071136)
@@ -355,6 +358,11 @@ MOM_HAS_PREDEFINED(when,_6Yn5rkVrBxrohLzDp,1645188836,6122707576125177517,572091
 #define moid_c_variable_class _3hq90zS3jpqaVDbDy
 #undef monam_3hq90zS3jpqaVDbDy
 #define monam_3hq90zS3jpqaVDbDy c_variable_class
+
+#undef moid_call
+#define moid_call _7mM0hFHqXHgBqPB4F
+#undef monam_7mM0hFHqXHgBqPB4F
+#define monam_7mM0hFHqXHgBqPB4F call
 
 #undef moid_call_instruction_class
 #define moid_call_instruction_class _3nV79jeVZkZ8kdSWp
@@ -706,6 +714,7 @@ enum mom_predefined_hashes_en {
   momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
   momphash_c_variable_class=3029307049,
+  momphash_call=2224505164,
   momphash_call_instruction_class=3902071136,
   momphash_case_instruction_class=966733070,
   momphash_cast_expression_class=1024894513,
@@ -781,7 +790,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 82
+#define MOM_NB_NAMED_PREDEFINED 83
 
 
 #undef MOM_HAS_PREDEFINED

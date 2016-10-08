@@ -2974,7 +2974,7 @@ mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
   mo_objref_t tob =
     mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (to)));
   if (!tob)
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob),
                       "cemit_scan_assign_instr: instr %s without `to`, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       depth, mo_objref_pnamestr (fromob));
@@ -2982,7 +2982,7 @@ mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
     mo_dyncast_objref (mo_assoval_get
                        (csta->mo_cemsta_assoclocalrole, instrob));
   if (rolob)
-    MOM_CEMITFAILURE (csta,
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob, rolob),
                       "cemit_scan_assign_instr: instr %s already with role %s, depth %d, from %s",
                       mo_objref_pnamestr (instrob),
                       mo_objref_pnamestr (rolob),
@@ -3022,6 +3022,46 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (call_instruction_class),
                     "cemit_scan_call_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
+  mo_objref_t callob =
+    mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (call)));
+  if (!callob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob),
+                      "cemit_scan_call_instr: instr %s without `call`, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      depth, mo_objref_pnamestr (fromob));
+  mo_objref_t signob =
+    mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (signature)));
+  if (!signob)
+    {
+      if (callob->mo_ob_class == MOM_PREDEF (c_inlined_class)
+          || callob->mo_ob_class == MOM_PREDEF (c_routine_class))
+        signob = mo_objref_get_attr (callob, MOM_PREDEF (signature));
+      if (!signob)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob),
+                          "cemit_scan_call_instr: instr %s without `signature`, depth %d, from %s",
+                          mo_objref_pnamestr (instrob),
+                          depth, mo_objref_pnamestr (fromob));
+    }
+  mo_value_t formtup =
+    mo_dyncast_tuple (mo_objref_get_attr
+                      (signob, MOM_PREDEF (formals_ctypes)));
+  if (signob->mo_ob_class != MOM_PREDEF (signature_class) || !formtup)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, signob, fromob),
+                      "cemit_scan_call_instr: instr %s with bad `signature` %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (signob),
+                      depth, mo_objref_pnamestr (fromob));
+
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, instrob));
+  if (rolob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob, rolob),
+                      "cemit_scan_call_instr: instr %s already with role %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (rolob),
+                      depth, mo_objref_pnamestr (fromob));
+  // should build the role and scan the arguments
 #warning mom_cemit_scan_call_instr incomplete
   MOM_FATAPRINTF ("incomplete mom_cemit_scan_call_instr instrob %s",
                   mo_objref_pnamestr (instrob));

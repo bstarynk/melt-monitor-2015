@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 07 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 08 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -48,6 +48,7 @@ INSERT INTO t_names VALUES('c_role_class','_7bJ4E6Mui5Ls7Tkx5');
 INSERT INTO t_names VALUES('c_routine_class','_3pK47DLRw3N5Ghv0R');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
 INSERT INTO t_names VALUES('c_variable_class','_3hq90zS3jpqaVDbDy');
+INSERT INTO t_names VALUES('call','_7mM0hFHqXHgBqPB4F');
 INSERT INTO t_names VALUES('call_instruction_class','_3nV79jeVZkZ8kdSWp');
 INSERT INTO t_names VALUES('case_instruction_class','_72P3hApuaup7FsP08');
 INSERT INTO t_names VALUES('cast_expression_class','_6lF04Imjl60Y6iYYc');
@@ -2196,6 +2197,20 @@ INSERT INTO t_objects VALUES('_7he4MBcSuccJxtj7q',1475133644,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "the result variable inside a C function"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7mM0hFHqXHgBqPB4F',1475909723,'
+{
+ "@name": "call",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "gives the called function in calls"
    }
   ]
  },
