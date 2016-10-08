@@ -163,6 +163,15 @@ enum momcemit_rolcondition_en
 };
 
 
+// the slots of role object for call instructions
+enum momcemit_rolcallinstr_en
+{
+  MOMROLCALLIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(call)
+  MOMROLCALLIX_CALL,
+  MOMROLCALLIX_SIGNATURE,
+  MOMROLCALLIX__LAST
+};
+
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 /// maximal recursion depth
@@ -2987,21 +2996,21 @@ mom_cemit_scan_assign_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (instrob),
                       mo_objref_pnamestr (rolob),
                       depth, mo_objref_pnamestr (fromob));
-  mo_objref_t totypob =
-    mom_cemit_scan_reference (csta, tob, instrob, depth + 1);
-  mo_objref_t fromtypob =
-    mom_cemit_scan_expression (csta, fromv, instrob, depth + 1);
-  (void) mom_cemit_compare_ctypes (csta, totypob, fromtypob, instrob);
   rolob = mo_make_object ();
   rolob->mo_ob_class = MOM_PREDEF (c_role_class);
   mo_objref_comp_resize (rolob, MOMROLASSIGNIX__LASTASSIGN);
   mo_objref_put_comp (rolob, MOMROLASSIGNIX_ROLE, MOM_PREDEF (assign));
-  mo_objref_put_comp (rolob, MOMROLASSIGNIX_TOTYPE, totypob);
   mo_objref_put_comp (rolob, MOMROLASSIGNIX_TOREFERENCE, tob);
-  mo_objref_put_comp (rolob, MOMROLASSIGNIX_FROMTYPE, fromtypob);
   mo_objref_put_comp (rolob, MOMROLASSIGNIX_FROMEXPR, fromv);
   csta->mo_cemsta_assoclocalrole =
     mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
+  mo_objref_t totypob =
+    mom_cemit_scan_reference (csta, tob, instrob, depth + 1);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_TOTYPE, totypob);
+  mo_objref_t fromtypob =
+    mom_cemit_scan_expression (csta, fromv, instrob, depth + 1);
+  mo_objref_put_comp (rolob, MOMROLASSIGNIX_FROMTYPE, fromtypob);
+  (void) mom_cemit_compare_ctypes (csta, totypob, fromtypob, instrob);
 }                               /* end mom_cemit_scan_assign_instr */
 
 
@@ -3035,7 +3044,9 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
     {
       if (callob->mo_ob_class == MOM_PREDEF (c_inlined_class)
           || callob->mo_ob_class == MOM_PREDEF (c_routine_class))
-        signob = mo_objref_get_attr (callob, MOM_PREDEF (signature));
+        signob =
+          mo_dyncast_objref (mo_objref_get_attr
+                             (callob, MOM_PREDEF (signature)));
       if (!signob)
         MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob),
                           "cemit_scan_call_instr: instr %s without `signature`, depth %d, from %s",
@@ -3051,7 +3062,6 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (instrob),
                       mo_objref_pnamestr (signob),
                       depth, mo_objref_pnamestr (fromob));
-
   mo_objref_t rolob =
     mo_dyncast_objref (mo_assoval_get
                        (csta->mo_cemsta_assoclocalrole, instrob));
@@ -3061,10 +3071,81 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (instrob),
                       mo_objref_pnamestr (rolob),
                       depth, mo_objref_pnamestr (fromob));
-  // should build the role and scan the arguments
-#warning mom_cemit_scan_call_instr incomplete
-  MOM_FATAPRINTF ("incomplete mom_cemit_scan_call_instr instrob %s",
-                  mo_objref_pnamestr (instrob));
+  int instrcnt = mo_objref_comp_count (instrob);
+  if (instrcnt != (int) mo_tuple_size (formtup))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, signob, fromob),
+                      "cemit_scan_call_instr: instr %s arity mismatch:"
+                      " got %d expecting %d arguments in signature %s,"
+                      " depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      instrcnt,
+                      (int) mo_tuple_size (formtup),
+                      mo_objref_pnamestr (signob),
+                      depth, mo_objref_pnamestr (fromob));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLCALLIX__LAST);
+  mo_objref_put_comp (rolob, MOMROLCALLIX_ROLE, MOM_PREDEF (call));
+  mo_objref_put_comp (rolob, MOMROLCALLIX_CALL, callob);
+  mo_objref_put_comp (rolob, MOMROLCALLIX_SIGNATURE, signob);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
+  if (callob->mo_ob_class != MOM_PREDEF (c_inlined_class)
+      && callob->mo_ob_class != MOM_PREDEF (c_routine_class))
+    {
+      mo_objref_t typcallob =
+        mom_cemit_scan_expression (csta, callob, instrob, depth + 1);
+      bool wrongtypcall = true;
+      if (typcallob)
+        {
+          if (typcallob->mo_ob_class == MOM_PREDEF (signature_class))
+            wrongtypcall = (typcallob != signob);
+          else if (typcallob->mo_ob_class == momglob_pointer_ctype_class)
+            wrongtypcall = (mo_objref_get_comp (typcallob, 0) != signob);
+        };
+      if (wrongtypcall)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, signob, fromob, typcallob),
+                          "cemit_scan_call_instr: instr %s indirect call mismatch,"
+                          " callee type %s different of signature %s,"
+                          " depth %d, from %s", mo_objref_pnamestr (instrob),
+                          mo_objref_pnamestr (typcallob),
+                          mo_objref_pnamestr (signob), depth,
+                          mo_objref_pnamestr (fromob));
+    }
+  else
+    {
+      mo_objref_t callsignob
+        =
+        mo_dyncast_objref (mo_objref_get_attr
+                           (callob, MOM_PREDEF (signature)));
+      if (callsignob != signob)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, signob, fromob, callsignob),
+                          "cemit_scan_call_instr: instr %s call mismatch,"
+                          " callee signature %s different of signature %s,"
+                          " depth %d, from %s", mo_objref_pnamestr (instrob),
+                          mo_objref_pnamestr (callsignob),
+                          mo_objref_pnamestr (signob), depth,
+                          mo_objref_pnamestr (fromob));
+    }
+  for (int ix = 0; ix < instrcnt; ix++)
+    {
+      mo_value_t curarg = mo_objref_get_comp (instrob, ix);
+      mo_objref_t formtypob = mo_tuple_nth (formtup, ix);
+      mo_objref_t curtypob =
+        mom_cemit_scan_expression (csta, curarg, instrob, depth + 1);
+      if (!mom_cemit_compare_ctypes (csta, formtypob, curtypob, instrob))
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, signob, fromob, formtypob,
+                           curtypob),
+                          "cemit_scan_call_instr: instr %s call arg#%d mistyped,"
+                          " expecting %s got %s," " depth %d, from %s",
+                          mo_objref_pnamestr (instrob), ix,
+                          mo_objref_pnamestr (formtypob),
+                          mo_objref_pnamestr (curtypob), depth,
+                          mo_objref_pnamestr (fromob));
+    }
 }                               /* end mom_cemit_scan_call_instr */
 
 
