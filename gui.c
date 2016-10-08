@@ -20,7 +20,6 @@
 
 #include "meltmoni.h"
 
-static GtkApplication *mom_gtkapp;
 static GtkCssProvider *mom_gtkcssprov;
 static GQuark mom_gquark;
 static GtkTextBuffer *mom_obtextbuf;
@@ -1795,7 +1794,7 @@ mom_dumpexit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   if (mom_dump_dir && !strcmp (mom_dump_dir, "-"))
     mom_dump_dir = ".";
   MOM_INFORMPRINTF ("dumpexit_app");
-  g_application_quit (G_APPLICATION (mom_gtkapp));
+  gtk_main_quit ();
 }                               /* end of mom_dumpexit_app */
 
 static void
@@ -1828,7 +1827,7 @@ mom_quit_app (GtkMenuItem * menuitm MOM_UNUSED, gpointer data MOM_UNUSED)
   if (res == GTK_RESPONSE_CLOSE)
     {
       mom_dump_dir = "-";
-      g_application_quit (G_APPLICATION (mom_gtkapp));
+      gtk_main_quit ();
     }
   gtk_widget_destroy (quitdialog);
   quitdialog = NULL;
@@ -2023,14 +2022,14 @@ mom_stopgui (GtkWidget * w, GdkEvent * ev MOM_UNUSED,
             mom_dump_dir = ".";
           MOM_INFORMPRINTF ("stopgui dump&exit mom_dump_dir=%s",
                             mom_dump_dir);
-          g_application_quit (G_APPLICATION (mom_gtkapp));
+          gtk_main_quit ();
           break;
         }
       else if (res == GTK_RESPONSE_CLOSE)
         {
           MOM_INFORMPRINTF ("stopgui dump&exit quit");
           mom_dump_dir = "-";
-          g_application_quit (G_APPLICATION (mom_gtkapp));
+          gtk_main_quit ();
           break;
         }
       else if (res == GTK_RESPONSE_DELETE_EVENT || res == GTK_RESPONSE_CANCEL)
@@ -4066,7 +4065,7 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
 }                               /* end of momgui_obtview_motion_notifev */
 
 static void
-mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
+momgui_gtk_start (void)
 {
   const int defwinheight = 400;
   const int defwinwidth = 650;
@@ -4076,7 +4075,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                                              GTK_STYLE_PROVIDER
                                              (mom_gtkcssprov),
                                              GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  mom_appwin = gtk_application_window_new (GTK_APPLICATION (app));
+  mom_appwin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW (mom_appwin), defwinwidth,
                                defwinheight);
   GtkWidget *topvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
@@ -4245,7 +4244,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
   g_signal_connect (mom_cmdtview, "insert-at-cursor",
                     G_CALLBACK (momgui_cmdtextview_insertatcursor), NULL);
   gtk_container_add (GTK_CONTAINER (scrocmd), mom_cmdtview);
-  mom_cmdwin = gtk_application_window_new (GTK_APPLICATION (app));
+  mom_cmdwin = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (mom_cmdwin), "monimelt command");
   gtk_window_set_default_size (GTK_WINDOW (mom_cmdwin), 720, 360);
   GtkWidget *cmdtopvbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
@@ -4291,7 +4290,7 @@ mom_gtkapp_activate (GApplication * app, gpointer user_data MOM_UNUSED)
                             mom_load_nb_objects (), mom_load_nb_modules ());
   gtk_widget_show_all (mom_appwin);
   gtk_widget_show_all (mom_cmdwin);
-}                               /* end mom_gtkapp_activate */
+}                               /* end momgui_gtk_start */
 
 static guint
 momgui_objhash (const void *ob)
@@ -4306,6 +4305,7 @@ void
 momgui_begin_running (void)
 {
   MOM_INFORMPRINTF ("momgui_begin_running");
+  momgui_gtk_start ();
 }                               /* end of momgui_begin_running */
 
 static void
@@ -4332,6 +4332,8 @@ void
 mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 {
   int sta = 0;
+  if (!gtk_init_check (pargc, pargv))
+    MOM_FATAPRINTF ("failed to initialize GTK");
   mom_gquark = g_quark_from_static_string ("monimelt");
   momgui_displayed_objasso = mo_assoval_reserve (NULL, 100);
   momgui_shown_obocchset = mo_hashset_reserve (NULL, 1500);
@@ -4341,8 +4343,6 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
   mom_shownobjocc_hashtable =   //
     g_hash_table_new_full ((GHashFunc) momgui_objhash, NULL,
                            NULL, (GDestroyNotify) mom_destroy_shownobocc);
-  mom_gtkapp =
-    gtk_application_new ("org.gcc-melt.monitor", G_APPLICATION_FLAGS_NONE);
   mom_gtkcssprov = gtk_css_provider_get_default ();
   if (!mom_gtk_style_path || !isalpha (mom_gtk_style_path[0])
       || strchr (mom_gtk_style_path, '/'))
@@ -4355,8 +4355,6 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
                     G_CALLBACK (momgui_cssparsingerror), NULL);
   gtk_css_provider_load_from_path (mom_gtkcssprov, mom_gtk_style_path, NULL);
   MOM_INFORMPRINTF ("after loading GTK style %s", mom_gtk_style_path);
-  g_signal_connect (mom_gtkapp, "activate",
-                    G_CALLBACK (mom_gtkapp_activate), NULL);
   if (dispobjects)
     {
       int nbdisp = 0;
@@ -4391,11 +4389,7 @@ mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
     }
   MOM_INFORMPRINTF ("Running GTK graphical interface...");
   momgui_begin_running ();
-  sta = g_application_run (G_APPLICATION (mom_gtkapp), *pargc, *pargv);
-  if (sta)
-    MOM_WARNPRINTF ("Running GTK app gave %d", sta);
-  g_object_unref (mom_gtkapp);
-  mom_gtkapp = NULL;
+  gtk_main ();
   MOM_INFORMPRINTF ("Ended GTK graphical interface...");
   return;
 }                               /* end mom_run_gtk */
