@@ -3859,6 +3859,11 @@ mom_cemit_write_cond_instr (struct mom_cemitlocalstate_st *csta,
                             mo_objref_t rolinsob, int depth);
 
 void
+mom_cemit_write_call_instr (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t instrob, mo_objref_t fromob,
+                            mo_objref_t rolinsob, int depth);
+
+void
 mom_cemit_write_instr (struct mom_cemitlocalstate_st *csta,
                        mo_objref_t instrob, mo_objref_t fromob, int depth)
 {
@@ -4217,14 +4222,45 @@ mom_cemit_write_call_instr (struct mom_cemitlocalstate_st *csta,
                     && mo_objref_comp_count (rolinsob) >=
                     MOMROLCALLIX__LAST
                     && mo_objref_get_comp (rolinsob,
-                                           MOMROLCONDIX_ROLE) ==
+                                           MOMROLCALLIX_ROLE) ==
                     MOM_PREDEF (call),
                     "cemit_write_call_instr: wrong rolinsob %s",
                     mo_objref_pnamestr (rolinsob));
-#warning unimplemented mom_cemit_write_call_instr
-  MOM_FATAPRINTF
-    ("unimplemented mom_cemit_write_call_instr instrob %s rolinsob %s",
-     mo_objref_pnamestr (instrob), mo_objref_pnamestr (rolinsob));
+  char instrid[MOM_CSTRIDSIZ];
+  memset (instrid, 0, sizeof (instrid));
+  mo_objref_idstr (instrid, instrob);
+  mo_objref_t callob =
+    mo_dyncast_objref (mo_objref_get_comp (rolinsob, MOMROLCALLIX_CALL));
+  char callid[MOM_CSTRIDSIZ];
+  memset (callid, 0, sizeof (callid));
+  mo_objref_idstr (callid, callob);
+  MOM_ASSERTPRINTF (callob, "cemit_write_call_instr: no callob");
+  if (callob->mo_ob_class == MOM_PREDEF (c_routine_class)
+      || callob->mo_ob_class == MOM_PREDEF (c_inlined_class))
+    {
+      mo_value_t callnam = mo_objref_namev (callob);
+      if (callnam)
+        mom_cemit_printf (csta, "/*call %s*/ " MOM_FUNC_PREFIX "%s /*%s*/ (",
+                          instrid, callid, mo_string_cstr (callnam));
+      else
+        mom_cemit_printf (csta, "/*call %s*/ " MOM_FUNC_PREFIX "%s (",
+                          instrid, callid);
+    }
+  else
+    {
+      mom_cemit_printf (csta, "/*indirectcall %s*/ (", instrid);
+      mom_cemit_write_expression (csta, callob, instrob, 0);
+      mom_cemit_printf (csta, ")  (");
+    }
+  int instrlen = mo_objref_comp_count (instrob);
+  for (int ix = 0; ix < instrlen; ix++)
+    {
+      if (ix > 0)
+        mom_cemit_printf (csta, ", ");
+      mom_cemit_write_expression (csta, mo_objref_get_comp (instrob, ix),
+                                  instrob, 0);
+    }
+  mom_cemit_printf (csta, ");");
 }                               /* end mom_cemit_write_call_instr */
 
 
