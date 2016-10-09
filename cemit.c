@@ -172,6 +172,15 @@ enum momcemit_rolcallinstr_en
   MOMROLCALLIX__LAST
 };
 
+// the slots of role object for cond instructions
+enum momcemit_rolcaseinstr_en
+{
+  MOMROLCASEIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(conditional)
+  MOMROLCASEIX_CASE,            // the selecting expr
+  MOMROLCASEIX_CTYPE,           // its ctype
+  MOMROLCASEIX__LAST
+};
+
 /// maximal size of emitted C file
 #define MOM_CEMIT_MAX_FSIZE (32<<20)    /* 32 megabytes */
 /// maximal recursion depth
@@ -3166,6 +3175,43 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (case_instruction_class),
                     "cemit_scan_case_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
+  mo_objref_t rolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, instrob));
+  if (rolob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, instrob, fromob, rolob),
+                      "cemit_scan_case_instr: instr %s already with role %s, depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (rolob),
+                      depth, mo_objref_pnamestr (fromob));
+  rolob = mo_make_object ();
+  rolob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolob, MOMROLCASEIX__LAST);
+  mo_objref_put_comp (rolob, MOMROLCASEIX_ROLE, MOM_PREDEF (case));
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, instrob, rolob);
+  mo_value_t casexpv = mo_objref_get_attr (instrob, MOM_PREDEF (case));
+  mo_objref_put_comp (rolob, MOMROLCASEIX_CASE, casexpv);
+  mo_objref_t castypob =
+    mom_cemit_scan_expression (csta, casexpv, instrob, 0);
+  mo_objref_t instypob =
+    mo_dyncast_objref (mo_objref_get_attr (instrob, MOM_PREDEF (c_type)));
+  mo_objref_t typob = NULL;
+  if (instypob)
+    {
+      typob = mom_cemit_compare_ctypes (csta, instypob, castypob, instrob);
+      if (!typob)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, instypob, castypob, fromob),
+                          "cemit_scan_case_instr: instr %s with incompatible types %s from case, %s in instr,"
+                          " depth %d, from %s", mo_objref_pnamestr (instrob),
+                          mo_objref_pnamestr (castypob),
+                          mo_objref_pnamestr (instrob), depth,
+                          mo_objref_pnamestr (fromob));
+    }
+  else
+    typob = castypob;
+  mo_objref_put_comp (rolob, MOMROLCASEIX_CTYPE, typob);
 #warning mom_cemit_scan_case_instr incomplete
   MOM_FATAPRINTF ("incomplete mom_cemit_scan_case_instr instrob %s",
                   mo_objref_pnamestr (instrob));
@@ -3219,7 +3265,6 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
         mom_cemit_scan_block (csta, instrob, fromob, depth + 1);
         return;
       }
-#warning lot of code missing in mom_cemit_scan_instr
     case CASE_PREDEFINSCLASS_MOM (chunk_instruction_class):
       {
         mom_cemit_scan_chunk_instr (csta, instrob, fromob, depth);
