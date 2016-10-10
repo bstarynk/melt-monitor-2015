@@ -491,6 +491,10 @@ mo_dump_emit_object_content (mo_dumper_ty * du, mo_objref_t obr)
                                             (mo_vectvaldatapayl_ty *)
                                             payldata);
               break;
+            case CASE_PAYLOAD_MOM (payload_inthmap):
+              js = mo_dump_json_of_inthmap (du,
+                                            (mo_inthmappayl_ty *) payldata);
+              break;
             case CASE_PAYLOAD_MOM (payload_value):
               js = mo_dump_json_of_value (du, (mo_value_t) payldata);
               break;
@@ -761,6 +765,9 @@ mo_dump_scan_inside_object (mo_dumper_ty * du, mo_objref_t obr)
               break;
             case CASE_PAYLOAD_MOM (payload_vectval):
               mo_dump_scan_vectval (du, (mo_vectvaldatapayl_ty *) payldata);
+              break;
+            case CASE_PAYLOAD_MOM (payload_inthmap):
+              mo_dump_scan_inthmap (du, (mo_inthmappayl_ty *) payldata);
               break;
             case CASE_PAYLOAD_MOM (payload_value):
               mo_dump_scan_value (du, (mo_value_t) payldata);
@@ -2194,6 +2201,16 @@ mo_loader_load_payload_data (mo_loader_ty * ld)
               {
                 obr->mo_ob_paylkind = MOM_PREDEF (payload_vectval);
                 obr->mo_ob_payldata = mo_vectval_of_json (js);
+              }
+          }
+          break;
+        case CASE_PAYLOAD_MOM (payload_inthmap):
+          {
+            LOADJS_MOM (js, paylcontstr, jerr);
+            if (js)
+              {
+                obr->mo_ob_paylkind = MOM_PREDEF (payload_inthmap);
+                obr->mo_ob_payldata = mo_inthmap_of_json (js);
               }
           }
           break;
