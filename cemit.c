@@ -3203,9 +3203,37 @@ mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
                       " fromob %s depth %d", mo_objref_pnamestr (objcasob),
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
+  mo_value_t whenv = mo_objref_get_attr (objcasob, MOM_PREDEF (when));
+  mo_objref_t whenob = NULL;
+  if (!(whenob = mo_dyncast_objref (whenv)) && !mo_dyncast_set (whenv))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
+                      "cemit_scan_object_case: objcasob %s has bad `when` %s insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_objref_pnamestr (objcasob),
+                      mo_value_pnamestr (whenv),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  mo_objref_t bodyob =
+    mo_dyncast_objref (mo_objref_get_attr (objcasob, MOM_PREDEF (body)));
+  mo_objref_t labelob =
+    mo_dyncast_objref (mo_objref_get_attr (objcasob, MOM_PREDEF (label)));
+  if (!bodyob && !labelob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
+                      "cemit_scan_object_case: objcasob %s has no `body` or `label` insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_objref_pnamestr (objcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  if (bodyob && labelob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
+                      "cemit_scan_object_case: objcasob %s has both `body` or `label` insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_objref_pnamestr (objcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
 #warning mom_cemit_scan_object_case incomplete
-  MOM_FATAPRINTF("cemit_scan_object_case incomplete objcasob=%s",
-		 mo_objref_pnamestr (objcasob));
+  MOM_FATAPRINTF ("cemit_scan_object_case incomplete objcasob=%s",
+                  mo_objref_pnamestr (objcasob));
 }                               /* end of mom_cemit_scan_object_case */
 
 
@@ -3230,8 +3258,8 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
 #warning mom_cemit_scan_number_case incomplete
-  MOM_FATAPRINTF("cemit_scan_number_case incomplete numcasob=%s",
-		 mo_objref_pnamestr (numcasob));
+  MOM_FATAPRINTF ("cemit_scan_number_case incomplete numcasob=%s",
+                  mo_objref_pnamestr (numcasob));
 }                               /* end of mom_cemit_scan_number_case */
 
 
