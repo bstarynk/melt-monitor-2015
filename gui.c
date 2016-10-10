@@ -913,6 +913,58 @@ mom_display_vectval (mo_vectvaldatapayl_ty * vect, momgui_dispctxt_ty * pdx,
 
 
 static void
+mom_display_inthmap (mo_inthmappayl_ty * ihmap, momgui_dispctxt_ty * pdx,
+                     int depth)
+{
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
+
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+      return;
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+  int cnt = mo_inthmap_count (ihmap);
+  int64_t *keyarr = mom_gc_alloc ((cnt + 1) * sizeof (int64_t));
+  unsigned nbkey = mo_inthmap_retrieve_raw_keys (ihmap, keyarr, cnt + 1);
+  MOM_ASSERTPRINTF (nbkey == cnt, "bad nbkey");
+  if (nbkey > 1)
+    qsort (keyarr, nbkey, sizeof (int64_t), mom_int64_cmp);
+  char sizbuf[32];
+  memset (sizbuf, 0, sizeof (sizbuf));
+  snprintf (sizbuf, sizeof (sizbuf), "[inthmap/%d]", nbkey);
+  gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, sizbuf, -1,
+                                    mom_tag_payload, mom_tag_index, NULL);
+  for (unsigned ix = 0; ix < nbkey; ix++)
+    {
+      int64_t curkey = keyarr[ix];
+      mo_value_t curval = mo_inthmap_get (ihmap, curkey);
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth + 1, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter, "\313\232 ",      //U+02DA RING ABOVE ˚
+                                        3, mom_tag_payload, NULL);
+      char keybuf[32];
+      memset (keybuf, 0, sizeof (keybuf));
+      snprintf (keybuf, sizeof (keybuf), "%lld : ", (long long) curkey);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
+                                        keybuf, -1, mom_tag_payload, NULL);
+      mom_display_value (curval, pdx, depth + 1, mom_tag_payload);
+    }
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+}                               /* end of mom_display_inthmap */
+
+static void
 mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL, "bad obr");
@@ -977,6 +1029,10 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
           break;
         case CASE_PAYLOAD_MOM (payload_vectval):
           mom_display_vectval ((mo_vectvaldatapayl_ty *) payldata,
+                               pdx, depth + 1);
+          break;
+        case CASE_PAYLOAD_MOM (payload_inthmap):
+          mom_display_inthmap ((mo_inthmappayl_ty *) payldata,
                                pdx, depth + 1);
           break;
         case CASE_PAYLOAD_MOM (payload_value):

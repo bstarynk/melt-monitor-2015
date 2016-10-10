@@ -1365,6 +1365,7 @@ mo_value_t mo_inthmap_get (mo_inthmappayl_ty * ihmap, int64_t key);
 mo_inthmappayl_ty *mo_inthmap_put (mo_inthmappayl_ty * ihmap, int64_t key,
                                    mo_value_t val);
 mo_inthmappayl_ty *mo_inthmap_remove (mo_inthmappayl_ty * ihmap, int64_t key);
+int mom_int64_cmp (const void *p1, const void *p2);     // for qsort
 
 // put some keys, up to NB of them, in the given KEYARR; return the
 // count of retrieved keys.

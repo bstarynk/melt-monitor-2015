@@ -554,7 +554,7 @@ mo_dump_scan_inthmap (mo_dumper_ty * du, mo_inthmappayl_ty * ihmap)
     }
 }                               /* end of mo_dump_scan_inthmap */
 
-static int
+int
 mom_int64_cmp (const void *p1, const void *p2)
 {
   int64_t x1 = *(const int64_t *) p1;
