@@ -515,6 +515,8 @@ mom_cemit_ctype_is_scalar (struct mom_cemitlocalstate_st * csta,
         return true;
       case CASE_GLOBALCTYPE_MOM (int32_t):      // momglob_int32_t
         return true;
+      case CASE_GLOBALCTYPE_MOM (int64_t):      // momglob_int64_t
+        return true;
       case CASE_GLOBALCTYPE_MOM (uintptr_t):    // momglob_uintptr_t
         return true;
       case CASE_GLOBALCTYPE_MOM (uint8_t):      // momglob_uint8_t
@@ -3204,14 +3206,45 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
         MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
                           (csta, instrob, instypob, castypob, fromob),
                           "cemit_scan_case_instr: instr %s with incompatible types %s from case, %s in instr,"
-                          " depth %d, from %s", mo_objref_pnamestr (instrob),
+                          " depth %d, from %s",
+                          mo_objref_pnamestr (instrob),
                           mo_objref_pnamestr (castypob),
-                          mo_objref_pnamestr (instrob), depth,
+                          mo_objref_pnamestr (instypob), depth,
                           mo_objref_pnamestr (fromob));
     }
   else
     typob = castypob;
+  if (!typob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, instypob, castypob, fromob),
+                      "cemit_scan_case_instr: instr %s without c_type,"
+                      " depth %d, from %s",
+                      mo_objref_pnamestr (instrob), depth,
+                      mo_objref_pnamestr (fromob));
+
   mo_objref_put_comp (rolob, MOMROLCASEIX_CTYPE, typob);
+  if (typob == momglob_object_ctype)
+    {
+    }
+  else if (typob->mo_ob_class == MOM_PREDEF (enum_ctype_class)
+           || typob == momglob_char || typob == momglob_long
+           || typob == momglob_int || typob == momglob_intptr_t
+           || typob == momglob_int8_t || typob == momglob_int16_t
+           || typob == momglob_int32_t || typob == momglob_int64_t
+           || typob == momglob_uintptr_t || typob == momglob_uint8_t
+           || typob == momglob_uint16_t || typob == momglob_uint32_t
+           || typob == momglob_uint64_t)
+    {
+    }
+  else
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, instrob, typob, fromob),
+                      "cemit_scan_case_instr: instr %s with bad c_type %s,"
+                      " depth %d, from %s",
+                      mo_objref_pnamestr (instrob),
+                      mo_objref_pnamestr (typob),
+                      depth, mo_objref_pnamestr (fromob));
+
 #warning mom_cemit_scan_case_instr incomplete
   MOM_FATAPRINTF ("incomplete mom_cemit_scan_case_instr instrob %s",
                   mo_objref_pnamestr (instrob));

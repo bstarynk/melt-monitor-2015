@@ -502,12 +502,14 @@ enum mo_payloadkind_en
   mo_PLIST /* payload_list */ ,
   mo_PBUFFER /* payload_buffer */ ,
   mo_PCEMIT /* payload_c_emit */ ,
+  mo_PINTHMAP /*payload_inthmap */ ,
 };
 
 typedef const void *mo_value_t;
 typedef struct mo_objectvalue_st mo_objectvalue_ty;
 typedef struct mo_assovaldatapayl_st mo_assovaldatapayl_ty;
 typedef struct mo_vectvaldatapayl_st mo_vectvaldatapayl_ty;
+typedef struct mo_inthmappayl_st mo_inthmappayl_ty;
 typedef mo_objectvalue_ty *mo_objref_t;
 static inline int mo_objref_cmp (mo_objref_t, mo_objref_t);
 static inline mo_value_t mo_dyncast_object (mo_value_t);
@@ -1298,6 +1300,67 @@ mo_value_t mo_hashset_elements_set (mo_hashsetpayl_ty * hset);  // set of elemen
 void mo_dump_scan_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_json_t mo_dump_json_of_hashset (mo_dumper_ty *, mo_hashsetpayl_ty *);
 mo_hashsetpayl_ty *mo_hashset_of_json (mo_json_t);
+
+/******************** INTHMAPs payload ****************/
+#define MOMFIELDS_inthentry                     \
+  int64_t mo_inthe_key;                         \
+  mo_value_t mo_inthe_val
+struct mo_inthentry_st
+{
+  MOMFIELDS_inthentry;
+};                              /* end struct mo_inthentry_st */
+
+#define MOMFIELDS_inthmappayl                   \
+  MOMFIELDS_countedpayl;                        \
+  struct mo_inthentry_st mo_inthm_entarr[]
+struct mo_inthmappayl_st
+{
+  MOMFIELDS_inthmappayl;
+};                              /* end struct mointhmappayl__st */
+
+static inline momhash_t
+mo_hash_int64 (int64_t i)
+{
+  momhash_t h = (i % 2526078691) ^ ((momhash_t) (i + 17));
+  if (MOM_UNLIKELY (h == 0))
+    h = (i % 1208215531) + 13;
+  MOM_ASSERTPRINTF (h != 0, "zero h for i=%lld", (long long) i);
+  return h;
+}                               /* end mo_hash_int64 */
+
+static inline mo_inthmappayl_ty *
+mo_dyncastpayl_inthmap (const void *p)
+{
+  if (!mo_valid_pointer_value (p))
+    return NULL;
+  mo_inthmappayl_ty *ihmap = (mo_inthmappayl_ty *) p;
+  unsigned k = ihmap->mo_va_kind;
+  if (k != mo_PINTHMAP)
+    return NULL;
+  return ihmap;
+}                               /* end mo_dyncastpayl_inthmap */
+
+static inline unsigned
+mo_inthmap_size (mo_inthmappayl_ty * ihmap)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return 0;
+  return ihmap->mo_sva_size;
+}                               /* end mo_inthmap_size */
+
+static inline unsigned
+mo_inthmap_count (mo_inthmappayl_ty * ihmap)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return 0;
+  return ihmap->mo_cpl_count;
+}                               /* end mo_inthmap_count */
+
+
+mo_inthmappayl_ty *mo_inthmap_reserve (mo_inthmappayl_ty * ihmap,
+                                       unsigned gap);
 
 /******************** LISTs payload, also usable as queues ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;

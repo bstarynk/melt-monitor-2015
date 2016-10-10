@@ -1,4 +1,4 @@
-// file hset.c - hashed set of objects
+// file hashcont.c - hashed containers: set of objects, integer hash maps
 
 /**   Copyright (C) 2016  Basile Starynkevitch and later the FSF
       MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -299,4 +299,88 @@ mo_hashset_of_json (mo_json_t js)
 }                               /* end mo_hashset_of_json */
 
 
-// eof hset.c
+
+/*****************************************************************
+ * Hashed integer maps 
+ *****************************************************************/
+
+
+// return the index where the key could be found or put or else <0
+static int
+mom_inthmap_index (mo_inthmappayl_ty * ihmap, int64_t key)
+{
+  MOM_ASSERTPRINTF (mo_dyncastpayl_inthmap (ihmap) != NULL, "bad ihmap@%p",
+                    ihmap);
+  uint32_t sz = ihmap->mo_sva_size;
+  MOM_ASSERTPRINTF (sz > 2, "bad sz=%u", sz);
+  momhash_t h = mo_hash_int64 (key);
+  MOM_ASSERTPRINTF (h != 0, "zero h");
+  unsigned startix = h % sz;
+  int pos = -1;
+  for (unsigned ix = startix; ix < sz; ix++)
+    {
+      int64_t curkey = ihmap->mo_inthm_entarr[ix].mo_inthe_key;
+      if (curkey == key)
+        return (int) ix;
+      mo_value_t curval = ihmap->mo_inthm_entarr[ix].mo_inthe_val;
+      if (curval == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (curval == NULL)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          return pos;
+        }
+    }
+  for (unsigned ix = 0; ix < startix; ix++)
+    {
+      int64_t curkey = ihmap->mo_inthm_entarr[ix].mo_inthe_key;
+      if (curkey == key)
+        return (int) ix;
+      mo_value_t curval = ihmap->mo_inthm_entarr[ix].mo_inthe_val;
+      if (curval == MOM_EMPTY_SLOT)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          continue;
+        }
+      else if (curval == NULL)
+        {
+          if (pos < 0)
+            pos = (int) ix;
+          return pos;
+        }
+    }
+  return pos;
+}                               /* end of mom_inthmap_index */
+
+mo_inthmappayl_ty *
+mo_inthmap_reserve (mo_inthmappayl_ty * ihmap, unsigned gap)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    {
+      if (gap > MOM_SIZE_MAX)
+        MOM_FATAPRINTF ("inthmap_reserve: too big initial gap %u", gap);
+      unsigned siz = mom_prime_above (5 * gap / 4 + gap / 32 + 10);
+      ihmap =
+        mom_gc_alloc (sizeof (mo_inthmappayl_ty) +
+                      siz * sizeof (struct mo_inthentry_st));
+      ihmap->mo_va_kind = mo_PINTHMAP;
+      ihmap->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
+      ihmap->mo_sva_size = siz;
+      ihmap->mo_cpl_count = 0;
+      return ihmap;
+    }
+  else
+    {
+      MOM_FATAPRINTF ("unimplemented mo_inthmap_reserve");
+#warning mo_inthmap_reserve unimplemented
+    };
+}                               /* end of mo_inthmap_reserve */
+
+// eof hashcont.c
