@@ -378,9 +378,254 @@ mo_inthmap_reserve (mo_inthmappayl_ty * ihmap, unsigned gap)
     }
   else
     {
-      MOM_FATAPRINTF ("unimplemented mo_inthmap_reserve");
-#warning mo_inthmap_reserve unimplemented
+      unsigned cnt = ihmap->mo_cpl_count;
+      unsigned siz = ihmap->mo_sva_size;
+      if (4 * (cnt + gap) < 3 * siz && (siz < 60 || 3 * (cnt + gap) > siz))
+        return ihmap;
+      unsigned oldsiz = siz;
+      unsigned oldcnt = cnt;
+      mo_inthmappayl_ty *oldihmap = ihmap;
+      if (cnt < 200)
+        siz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 32 + 5);
+      else
+        siz = mom_prime_above (5 * (cnt + gap) / 4 + (cnt + gap) / 8 + 16);
+      ihmap =
+        mom_gc_alloc (sizeof (mo_inthmappayl_ty) +
+                      siz * sizeof (struct mo_inthentry_st));
+      ihmap->mo_va_kind = mo_PINTHMAP;
+      ihmap->mo_va_hash = (momrand_genrand_int31 () & 0xfffffff) + 2;
+      ihmap->mo_sva_size = siz;
+      ihmap->mo_cpl_count = 0;
+      cnt = 0;
+      for (unsigned oldix = 0; oldix < oldsiz; oldix++)
+        {
+          mo_value_t oldval = oldihmap->mo_inthm_entarr[oldix].mo_inthe_val;
+          if (!oldval || oldval == MOM_EMPTY_SLOT)
+            continue;
+          int64_t oldkey = oldihmap->mo_inthm_entarr[oldix].mo_inthe_key;
+          int pos = mom_inthmap_index (ihmap, oldkey);
+          MOM_ASSERTPRINTF (pos >= 0 && pos < (int) siz
+                            && ihmap->mo_inthm_entarr[pos].mo_inthe_val ==
+                            NULL, "corrupted new inthmap pos=%d", pos);
+          ihmap->mo_inthm_entarr[pos].mo_inthe_key = oldkey;
+          ihmap->mo_inthm_entarr[pos].mo_inthe_val = oldval;
+          cnt++;
+        }
+      MOM_ASSERTPRINTF (oldcnt == cnt, "oldcnt %u not same as cnt %u", oldcnt,
+                        cnt);
+      ihmap->mo_cpl_count = cnt;
+      return ihmap;
     };
 }                               /* end of mo_inthmap_reserve */
+
+
+
+mo_value_t
+mo_inthmap_get (mo_inthmappayl_ty * ihmap, int64_t key)
+{
+  if (!ihmap)
+    return NULL;
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return NULL;
+  unsigned siz = ihmap->mo_sva_size;
+  int pos = mom_inthmap_index (ihmap, key);
+  if (pos >= 0)
+    {
+      MOM_ASSERTPRINTF (pos >= 0 && pos < (int) siz, "bad pos");
+      if (ihmap->mo_inthm_entarr[pos].mo_inthe_key == key)
+        return ihmap->mo_inthm_entarr[pos].mo_inthe_val;
+    }
+  return NULL;
+}                               /* end of mo_inthmap_get */
+
+
+
+mo_inthmappayl_ty *
+mo_inthmap_put (mo_inthmappayl_ty * ihmap, int64_t key, mo_value_t val)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!val || val == MOM_EMPTY_SLOT)
+    return mo_inthmap_remove (ihmap, key);
+  if (!ihmap)
+    {
+      ihmap = mo_inthmap_reserve (NULL, 4);
+      int pos = mom_inthmap_index (ihmap, key);
+      MOM_ASSERTPRINTF (pos >= 0, "bad pos");
+      ihmap->mo_inthm_entarr[pos].mo_inthe_key = key;
+      ihmap->mo_inthm_entarr[pos].mo_inthe_val = val;
+      ihmap->mo_cpl_count = 1;
+      return ihmap;
+    }
+  unsigned cnt = ihmap->mo_cpl_count;
+  unsigned siz = ihmap->mo_sva_size;
+  if (4 * cnt + 6 >= 3 * siz)
+    {
+      ihmap = mo_inthmap_reserve (ihmap, cnt / 64 + 3);
+      siz = ihmap->mo_sva_size;
+      MOM_ASSERTPRINTF (cnt == ihmap->mo_cpl_count,
+                        "count should not change cnt=%u", cnt);
+    }
+  int pos = mom_inthmap_index (ihmap, key);
+  MOM_ASSERTPRINTF (pos >= 0 && pos < (int) siz, "bad pos");
+  if (ihmap->mo_inthm_entarr[pos].mo_inthe_key == key)
+    {
+      mo_value_t oldval = ihmap->mo_inthm_entarr[pos].mo_inthe_val;
+      if (oldval == NULL || oldval == MOM_EMPTY_SLOT)
+        ihmap->mo_cpl_count = cnt + 1;
+      ihmap->mo_inthm_entarr[pos].mo_inthe_val = val;
+    }
+  else
+    {
+      ihmap->mo_inthm_entarr[pos].mo_inthe_key = key;
+      ihmap->mo_inthm_entarr[pos].mo_inthe_val = val;
+      ihmap->mo_cpl_count = cnt + 1;
+    }
+  return ihmap;
+}                               /* end of mo_inthmap_put */
+
+
+
+
+mo_inthmappayl_ty *
+mo_inthmap_remove (mo_inthmappayl_ty * ihmap, int64_t key)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return NULL;
+  int pos = mom_inthmap_index (ihmap, key);
+  if (pos < 0)
+    return ihmap;
+  unsigned cnt = ihmap->mo_cpl_count;
+  unsigned siz = ihmap->mo_sva_size;
+  MOM_ASSERTPRINTF (pos < (int) siz, "inthmap_remove: bad pos %d for size %u",
+                    pos, siz);
+  if (ihmap->mo_inthm_entarr[pos].mo_inthe_key == key)
+    {
+      MOM_ASSERTPRINTF (cnt > 0 && cnt <= siz, "inthmap_remove: bad cnt");
+      ihmap->mo_inthm_entarr[pos].mo_inthe_val = MOM_EMPTY_SLOT;
+      ihmap->mo_cpl_count = cnt - 1;
+      cnt--;
+    }
+  else
+    return ihmap;
+  if (siz > 30 && 3 * cnt < siz)
+    ihmap = mo_inthmap_reserve (ihmap, 0);
+  return ihmap;
+}                               /* end of mo_inthmap_remove */
+
+unsigned
+mo_inthmap_retrieve_raw_keys (mo_inthmappayl_ty * ihmap, int64_t *keyarr,
+                              unsigned nb)
+{
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return 0;
+  if (!keyarr || keyarr == MOM_EMPTY_SLOT || nb == 0)
+    return 0;
+  unsigned siz = ihmap->mo_sva_size;
+  unsigned cnt = 0;
+  for (int ix = 0; ix < (int) siz; ix++)
+    {
+      mo_value_t curval = ihmap->mo_inthm_entarr[ix].mo_inthe_val;
+      if (!curval || curval == MOM_EMPTY_SLOT)
+        continue;
+      if (cnt >= nb)
+        return cnt;
+      keyarr[cnt++] = ihmap->mo_inthm_entarr[ix].mo_inthe_key;
+    }
+  return cnt;
+}                               /* end of mo_inthmap_retrieve_raw_keys */
+
+void
+mo_dump_scan_inthmap (mo_dumper_ty * du, mo_inthmappayl_ty * ihmap)
+{
+  MOM_ASSERTPRINTF (mo_dump_scanning (du), "bad du");
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return;
+  unsigned siz = ihmap->mo_sva_size;
+  for (int ix = 0; ix < (int) siz; ix++)
+    {
+      mo_value_t curval = ihmap->mo_inthm_entarr[ix].mo_inthe_val;
+      if (!curval || curval == MOM_EMPTY_SLOT)
+        continue;
+      mo_dump_scan_value (du, curval);
+    }
+}                               /* end of mo_dump_scan_inthmap */
+
+static int
+mom_int64_cmp (const void *p1, const void *p2)
+{
+  int64_t x1 = *(const int64_t *) p1;
+  int64_t x2 = *(const int64_t *) p2;
+  if (x1 == x2)
+    return 0;
+  else if (x1 > x2)
+    return 1;
+  else
+    return -1;
+}                               /* end mom_int64_cmp */
+
+mo_json_t
+mo_dump_json_of_inthmap (mo_dumper_ty * du, mo_inthmappayl_ty * ihmap)
+{
+  MOM_ASSERTPRINTF (mo_dump_emitting (du), "bad du");
+  ihmap = mo_dyncastpayl_inthmap (ihmap);
+  if (!ihmap)
+    return json_null ();
+  unsigned cnt = ihmap->mo_cpl_count;
+  int64_t *keyarr = mom_gc_alloc_scalar ((cnt + 1) * sizeof (int64_t));
+  unsigned nbkey = mo_inthmap_retrieve_raw_keys (ihmap, keyarr, cnt + 1);
+  MOM_ASSERTPRINTF (nbkey == cnt, "bad nbkey");
+  if (nbkey > 1)
+    qsort (keyarr, nbkey, sizeof (int64_t), mom_int64_cmp);
+  json_t *jarr = json_array ();
+  for (unsigned ix = 0; ix < nbkey; ix++)
+    {
+      int64_t curkey = keyarr[ix];
+      mo_value_t curval = mo_inthmap_get (ihmap, curkey);
+      MOM_ASSERTPRINTF (curval != NULL,
+                        "dump_json_of_inthmap: missing key %lld",
+                        (long long) curkey);
+      json_t *jval = mo_dump_json_of_value (du, curval);
+      if (jval && !json_is_null (jval))
+        json_array_append_new (jarr,
+                               json_pack ("{sIso}", "key",
+                                          (json_int_t) curkey, "val", jval));
+    }
+  return json_pack ("{so}", "inthmap", jarr);
+}                               /* end of mo_dump_json_of_inthmap */
+
+mo_inthmappayl_ty *
+mo_inthmap_of_json (mo_json_t js)
+{
+  json_t *jarr = NULL;
+  if (json_is_object (js) && (jarr = json_object_get (js, "inthmap")) != NULL
+      && json_is_array (jarr))
+    {
+      unsigned sz = json_array_size (jarr);
+      mo_inthmappayl_ty *ihmap = mo_inthmap_reserve (NULL, sz + sz / 16 + 4);
+      for (unsigned ix = 0; ix < sz; ix++)
+        {
+          json_t *jpair = json_array_get (jarr, ix);
+          if (!json_is_object (jpair))
+            continue;
+          json_t *jkey = json_object_get (jpair, "key");
+          if (!jkey || !json_is_integer (jkey))
+            continue;
+          json_t *jval = json_object_get (jpair, "val");
+          if (!jval)
+            continue;
+          int64_t key = json_integer_value (jkey);
+          mo_value_t curval = mo_value_of_json (jval);
+          if (!curval)
+            continue;
+          ihmap = mo_inthmap_put (ihmap, key, curval);
+        }
+      return ihmap;
+    }
+  return NULL;
+}                               /* end of mo_inthmap_of_json */
 
 // eof hashcont.c

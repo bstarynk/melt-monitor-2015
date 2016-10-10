@@ -1361,6 +1361,19 @@ mo_inthmap_count (mo_inthmappayl_ty * ihmap)
 
 mo_inthmappayl_ty *mo_inthmap_reserve (mo_inthmappayl_ty * ihmap,
                                        unsigned gap);
+mo_value_t mo_inthmap_get (mo_inthmappayl_ty * ihmap, int64_t key);
+mo_inthmappayl_ty *mo_inthmap_put (mo_inthmappayl_ty * ihmap, int64_t key,
+                                   mo_value_t val);
+mo_inthmappayl_ty *mo_inthmap_remove (mo_inthmappayl_ty * ihmap, int64_t key);
+
+// put some keys, up to NB of them, in the given KEYARR; return the
+// count of retrieved keys.
+unsigned mo_inthmap_retrieve_raw_keys (mo_inthmappayl_ty * ihmap,
+                                       int64_t *keyarr, unsigned nb);
+
+void mo_dump_scan_inthmap (mo_dumper_ty *, mo_inthmappayl_ty *);
+mo_json_t mo_dump_json_of_inthmap (mo_dumper_ty *, mo_inthmappayl_ty *);
+mo_inthmappayl_ty *mo_inthmap_of_json (mo_json_t);
 
 /******************** LISTs payload, also usable as queues ****************/
 typedef struct mo_listpayl_st mo_listpayl_ty;
