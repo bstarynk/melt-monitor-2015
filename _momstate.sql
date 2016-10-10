@@ -44,6 +44,8 @@ INSERT INTO t_names VALUES('c_cond_class','_3dJ4WvD4T8BfDp0jx');
 INSERT INTO t_names VALUES('c_field_class','_6Lu6DXoGivCCHMwzV');
 INSERT INTO t_names VALUES('c_include','_0hA5FCeEWGc6gpfnU');
 INSERT INTO t_names VALUES('c_inlined_class','_0XX587h4W56J6nk3U');
+INSERT INTO t_names VALUES('c_number_case_class','_4fJ1XYu10x1k9lpMg');
+INSERT INTO t_names VALUES('c_object_case_class','_2gU7Usfb2iU8lAPR9');
 INSERT INTO t_names VALUES('c_role_class','_7bJ4E6Mui5Ls7Tkx5');
 INSERT INTO t_names VALUES('c_routine_class','_3pK47DLRw3N5Ghv0R');
 INSERT INTO t_names VALUES('c_type','_8TY6UsXJ3Djt71By3');
@@ -754,6 +756,20 @@ INSERT INTO t_objects VALUES('_2Sj1dLJSbvyN3kMgI',1474366358,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_2gU7Usfb2iU8lAPR9',1476107513,'
+{
+ "@name": "c_object_case_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of cases for objects"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_2k61pgEBsCRJlTpHG',1474462452,'
 {
  "@name": "string",
@@ -1282,6 +1298,20 @@ INSERT INTO t_objects VALUES('_4an3PsIjc3EDLchlg',1475728399,'
  "comps": null
 }
 ','_3hq90zS3jpqaVDbDy','','','');
+INSERT INTO t_objects VALUES('_4fJ1XYu10x1k9lpMg',1476107513,'
+{
+ "@name": "c_number_case_class",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "class of cases for numbers"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",

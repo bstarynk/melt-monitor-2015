@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 85
+#define MOM_NB_PREDEFINED 87
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -63,6 +63,12 @@ MOM_HAS_PREDEFINED(c_include,_0hA5FCeEWGc6gpfnU,69246330,8242697740606568010,345
 
 //+ class for inlined C routines
 MOM_HAS_PREDEFINED(c_inlined_class,_0XX587h4W56J6nk3U,227905031,8078632059823594090,3515856438)
+
+//+ class of cases for numbers
+MOM_HAS_PREDEFINED(c_number_case_class,_4fJ1XYu10x1k9lpMg,1005663841,8782009626541222560,2923651594)
+
+//+ class of cases for objects
+MOM_HAS_PREDEFINED(c_object_case_class,_2gU7Usfb2iU8lAPR9,538368693,5086247769519490845,738611348)
 
 //+ class of c roles
 MOM_HAS_PREDEFINED(c_role_class,_7bJ4E6Mui5Ls7Tkx5,1697743134,7382836084787926721,526464042)
@@ -344,6 +350,16 @@ MOM_HAS_PREDEFINED(when,_6Yn5rkVrBxrohLzDp,1645188836,6122707576125177517,572091
 #define moid_c_inlined_class _0XX587h4W56J6nk3U
 #undef monam_0XX587h4W56J6nk3U
 #define monam_0XX587h4W56J6nk3U c_inlined_class
+
+#undef moid_c_number_case_class
+#define moid_c_number_case_class _4fJ1XYu10x1k9lpMg
+#undef monam_4fJ1XYu10x1k9lpMg
+#define monam_4fJ1XYu10x1k9lpMg c_number_case_class
+
+#undef moid_c_object_case_class
+#define moid_c_object_case_class _2gU7Usfb2iU8lAPR9
+#undef monam_2gU7Usfb2iU8lAPR9
+#define monam_2gU7Usfb2iU8lAPR9 c_object_case_class
 
 #undef moid_c_role_class
 #define moid_c_role_class _7bJ4E6Mui5Ls7Tkx5
@@ -726,6 +742,8 @@ enum mom_predefined_hashes_en {
   momphash_c_field_class=2179155423,
   momphash_c_include=3450423424,
   momphash_c_inlined_class=3515856438,
+  momphash_c_number_case_class=2923651594,
+  momphash_c_object_case_class=738611348,
   momphash_c_role_class=526464042,
   momphash_c_routine_class=3631812419,
   momphash_c_type=583145630,
@@ -808,7 +826,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 85
+#define MOM_NB_NAMED_PREDEFINED 87
 
 
 #undef MOM_HAS_PREDEFINED

@@ -175,9 +175,10 @@ enum momcemit_rolcallinstr_en
 // the slots of role object for cond instructions
 enum momcemit_rolcaseinstr_en
 {
-  MOMROLCASEIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(conditional)
+  MOMROLCASEIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(case)
   MOMROLCASEIX_CASE,            // the selecting expr
   MOMROLCASEIX_CTYPE,           // its ctype
+  MOMROLCASEIX_MAP,             /* the inthmap or assoval of cases */
   MOMROLCASEIX__LAST
 };
 
@@ -3159,6 +3160,80 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
     }
 }                               /* end mom_cemit_scan_call_instr */
 
+#define MOM_CEMIT_MAX_OBJECT_CASE 1024
+void
+mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t objcasob, mo_objref_t insrolob,
+                            mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_object_case: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_object_case: bad payl@%p in csta@%p", cemp,
+                    csta);
+  MOM_ASSERTPRINTF (mo_dyncast_objref (insrolob)
+                    && insrolob->mo_ob_class == MOM_PREDEF (c_role_class)
+                    && mo_objref_comp_count (insrolob) >= MOMROLCASEIX__LAST,
+                    "cemit_scan_object_case: bad insrolob %s",
+                    mo_objref_pnamestr (insrolob));
+  mo_objref_t amapob =
+    mo_dyncast_objref (mo_objref_get_comp (insrolob, MOMROLCASEIX_MAP));
+  MOM_ASSERTPRINTF (mo_dyncast_objref (amapob)
+                    && amapob->mo_ob_paylkind == MOM_PREDEF (payload_assoval),
+                    "cemit_scan_object_case: bad amapob %s",
+                    mo_objref_pnamestr (amapob));
+  mo_assovaldatapayl_ty *amapassoc =
+    mo_dyncastpayl_assoval (amapob->mo_ob_payldata);
+  MOM_ASSERTPRINTF (amapassoc, "cemit_scan_object_case: bad amapassoc");
+  if (mo_assoval_count (amapassoc) >= MOM_CEMIT_MAX_OBJECT_CASE)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
+                      "cemit_scan_object_case: too many %u cases for objcasob %s insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_assoval_count (amapassoc),
+                      mo_objref_pnamestr (objcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  if (!mo_dyncast_objref (objcasob)
+      || objcasob->mo_ob_class != MOM_PREDEF (c_object_case_class))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
+                      "cemit_scan_object_case: bad objcasob %s insrolob %s,"
+                      " fromob %s depth %d", mo_objref_pnamestr (objcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+#warning mom_cemit_scan_object_case incomplete
+  MOM_FATAPRINTF("cemit_scan_object_case incomplete objcasob=%s",
+		 mo_objref_pnamestr (objcasob));
+}                               /* end of mom_cemit_scan_object_case */
+
+
+void
+mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
+                            mo_objref_t numcasob, mo_objref_t insrolob,
+                            mo_objref_t fromob, int depth)
+{
+  MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
+                    && csta->mo_cemsta_fil != NULL,
+                    "cemit_scan_number_case: bad csta@%p", csta);
+  mo_cemitpayl_ty *cemp = csta->mo_cemsta_payl;
+  MOM_ASSERTPRINTF (cemp && cemp->mo_cemit_nmagic == MOM_CEMIT_MAGIC
+                    && cemp->mo_cemit_locstate == csta,
+                    "cemit_scan_number_case: bad payl@%p in csta@%p", cemp,
+                    csta);
+  if (!mo_dyncast_objref (numcasob)
+      || numcasob->mo_ob_class != MOM_PREDEF (c_number_case_class))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, numcasob, insrolob, fromob),
+                      "cemit_scan_number_case: bad numcasob %s insrolob %s,"
+                      " fromob %s depth %d", mo_objref_pnamestr (numcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+#warning mom_cemit_scan_number_case incomplete
+  MOM_FATAPRINTF("cemit_scan_number_case incomplete numcasob=%s",
+		 mo_objref_pnamestr (numcasob));
+}                               /* end of mom_cemit_scan_number_case */
+
 
 void
 mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
@@ -3177,6 +3252,7 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
                     MOM_PREDEF (case_instruction_class),
                     "cemit_scan_case_instr: chunk bad instrob at depth %d from %s",
                     depth, mo_objref_pnamestr (instrob));
+  int instrlen = mo_objref_comp_count (instrob);
   mo_objref_t rolob =
     mo_dyncast_objref (mo_assoval_get
                        (csta->mo_cemsta_assoclocalrole, instrob));
@@ -3225,6 +3301,18 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
   mo_objref_put_comp (rolob, MOMROLCASEIX_CTYPE, typob);
   if (typob == momglob_object_ctype)
     {
+      mo_objref_t amapob = mo_make_object ();
+      mo_assovaldatapayl_ty *assoval =
+        mo_assoval_reserve (NULL, instrlen * 2 + 5);
+      amapob->mo_ob_paylkind = MOM_PREDEF (payload_assoval);
+      amapob->mo_ob_payldata = assoval;
+      mo_objref_put_comp (rolob, MOMROLCASEIX_MAP, amapob);
+      for (unsigned ix = 0; ix < (unsigned) instrlen; ix++)
+        {
+          mom_cemit_scan_object_case (csta,
+                                      mo_objref_get_comp (instrob, ix),
+                                      rolob, instrob, depth + 1);
+        }
     }
   else if (typob->mo_ob_class == MOM_PREDEF (enum_ctype_class)
            || typob == momglob_char || typob == momglob_long
@@ -3235,6 +3323,17 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
            || typob == momglob_uint16_t || typob == momglob_uint32_t
            || typob == momglob_uint64_t)
     {
+      mo_objref_t imapob = mo_make_object ();
+      mo_inthmappayl_ty *ihmap = mo_inthmap_reserve (NULL, instrlen * 3 + 8);
+      imapob->mo_ob_paylkind = MOM_PREDEF (payload_inthmap);
+      imapob->mo_ob_payldata = ihmap;
+      mo_objref_put_comp (rolob, MOMROLCASEIX_MAP, imapob);
+      for (unsigned ix = 0; ix < (unsigned) instrlen; ix++)
+        {
+          mom_cemit_scan_number_case (csta,
+                                      mo_objref_get_comp (instrob, ix),
+                                      rolob, instrob, depth + 1);
+        }
     }
   else
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
