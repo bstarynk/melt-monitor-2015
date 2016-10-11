@@ -172,7 +172,27 @@ enum momcemit_rolcallinstr_en
   MOMROLCALLIX__LAST
 };
 
-// the slots of role object for cond instructions
+// the slots of role object for object case
+enum momcemit_rolobjcase_en
+{
+  MOMROLOBJCASIX_ROLE = MOMROLFORMIX_ROLE,      // MOM_PREDEF(object)
+  MOMROLOBJCASIX_INSTR,         /* the containing case instr */
+  MOMROLOBJCASIX_OBJECT,        /* the object or set */
+  MOMROLOBJCASIX_BLOCK,
+  MOMROLOBJCASIX__LAST
+};
+
+// the slots of role object for number case
+enum momcemit_rolnumcase_en
+{
+  MOMROLNUMCASIX_ROLE = MOMROLFORMIX_ROLE,      // MOM_PREDEF(int)
+  MOMROLNUMCASIX_INSTR,         /* the containing case instr */
+  MOMROLNUMCASIX_NUMBER,        /* the object or set */
+  MOMROLNUMCASIX_BLOCK,
+  MOMROLNUMCASIX__LAST
+};
+
+// the slots of role object for case instructions
 enum momcemit_rolcaseinstr_en
 {
   MOMROLCASEIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(case)
@@ -3207,7 +3227,7 @@ mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
   mo_objref_t whenob = NULL;
   if (!(whenob = mo_dyncast_objref (whenv)) && !mo_dyncast_set (whenv))
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
-                      "cemit_scan_object_case: objcasob %s has bad `when` %s insrolob %s,"
+                      "cemit_scan_object_case: objcasob %s has bad `when` %s (not object or set) insrolob %s,"
                       " fromob %s depth %d",
                       mo_objref_pnamestr (objcasob),
                       mo_value_pnamestr (whenv),
