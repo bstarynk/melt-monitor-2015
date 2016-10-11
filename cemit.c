@@ -2861,7 +2861,7 @@ mom_cemit_scan_chunk_instr (struct mom_cemitlocalstate_st *csta,
 void
 mom_cemit_scan_condition (struct mom_cemitlocalstate_st *csta,
                           mo_objref_t condob, mo_objref_t fromob, int depth,
-                          mo_vectvaldatapayl_ty * condvec)
+                          mo_vectvaldatapayl_ty ** pcondvec)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
@@ -2917,6 +2917,7 @@ mom_cemit_scan_condition (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (typwhenob), depth,
                       mo_objref_pnamestr (fromob));
   mom_cemit_scan_block (csta, bodyob, condob, depth + 1);
+  *pcondvec = mo_vectval_append (*pcondvec, condob);
 }                               /* end of mom_cemit_scan_condition */
 
 
@@ -2965,7 +2966,7 @@ mom_cemit_scan_cond_instr (struct mom_cemitlocalstate_st *csta,
       mo_objref_t curcondob = mo_dyncast_objref (curcondv);
       if (curcondob)
         mom_cemit_scan_condition (csta, curcondob, instrob, depth + 1,
-                                  condvect);
+                                  &condvect);
       else
         {
           mo_value_t curcondseq = mo_dyncast_sequence (curcondv);
@@ -2976,7 +2977,7 @@ mom_cemit_scan_cond_instr (struct mom_cemitlocalstate_st *csta,
               for (unsigned six = 0; six < lnseq; six++)
                 mom_cemit_scan_condition (csta,
                                           mo_sequence_nth (curcondseq, six),
-                                          instrob, depth + 1, condvect);
+                                          instrob, depth + 1, &condvect);
             }
           else
             MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
@@ -3430,6 +3431,24 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                       " fromob %s depth %d", mo_objref_pnamestr (numcasob),
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
+  mo_objref_t bodyob =
+    mo_dyncast_objref (mo_objref_get_attr (numcasob, MOM_PREDEF (body)));
+  mo_objref_t labelob =
+    mo_dyncast_objref (mo_objref_get_attr (numcasob, MOM_PREDEF (label)));
+  if (!bodyob && !labelob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, numcasob, insrolob, fromob),
+                      "cemit_scan_number_case: numcasob %s has no `body` or `label` insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_objref_pnamestr (numcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  if (bodyob && labelob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, numcasob, insrolob, fromob),
+                      "cemit_scan_number_case: objcasob %s has both `body` or `label` insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_objref_pnamestr (numcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
   mo_objref_t imapob =
     mo_dyncast_objref (mo_objref_get_comp (insrolob, MOMROLCASEIX_MAP));
   MOM_ASSERTPRINTF (mo_dyncast_objref (imapob)
@@ -3441,6 +3460,25 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
   MOM_ASSERTPRINTF (ihmap, "cemit_scan_number_case: bad ihmap in imapob=%s",
                     mo_objref_pnamestr (imapob));
   mo_value_t whenv = mo_objref_get_attr (numcasob, MOM_PREDEF (when));
+  mo_objref_t rolcasob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, numcasob));
+  if (rolcasob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, numcasob, rolcasob, insrolob, fromob),
+                      "cemit_scan_number_case: numcasob %s has rolcasob %s insrolob %s,"
+                      " fromob %s depth %d", mo_objref_pnamestr (numcasob),
+                      mo_objref_pnamestr (rolcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  rolcasob = mo_make_object ();
+  rolcasob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolcasob, MOMROLNUMCASIX__LAST);
+  mo_objref_put_comp (rolcasob, MOMROLNUMCASIX_ROLE, momglob_int);
+  mo_objref_put_comp (rolcasob, MOMROLNUMCASIX_INSTR, fromob);
+  mo_objref_put_comp (rolcasob, MOMROLNUMCASIX_NUMBER, whenv);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, numcasob, rolcasob);
   int64_t num = 0;
   int setwhensiz = 0;
   if (mom_cemit_get_number (csta, whenv, &num))
@@ -3451,7 +3489,6 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                           "cemit_scan_number_case: in numcasob %s duplicate num %lld insrolob %s,"
                           " fromob %s depth %d",
                           mo_objref_pnamestr (numcasob), (long long) num,
-                          mo_value_pnamestr (whenv),
                           mo_objref_pnamestr (insrolob),
                           mo_objref_pnamestr (fromob), depth);
       ihmap = mo_inthmap_put (ihmap, num, numcasob);
@@ -3471,7 +3508,6 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                               " fromob %s depth %d",
                               mo_objref_pnamestr (numcasob),
                               (long long) elemnum,
-                              mo_value_pnamestr (whenv),
                               mo_objref_pnamestr (insrolob),
                               mo_objref_pnamestr (fromob), depth);
           ihmap = mo_inthmap_put (ihmap, elemnum, numcasob);
@@ -3485,6 +3521,17 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                       mo_value_pnamestr (whenv),
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
+  imapob->mo_ob_payldata = ihmap;
+  if (mo_inthmap_count (ihmap) > MOM_CEMIT_MAX_NUMBER_CASE)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, numcasob, insrolob, fromob),
+                      "cemit_scan_number_case: too many %d cases after numcasob %s  `when` %s insrolob %s,"
+                      " fromob %s depth %d",
+                      mo_inthmap_count (ihmap),
+                      mo_objref_pnamestr (numcasob),
+                      mo_value_pnamestr (whenv),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+
 #warning mom_cemit_scan_number_case incomplete
   MOM_FATAPRINTF ("cemit_scan_number_case incomplete numcasob=%s",
                   mo_objref_pnamestr (numcasob));

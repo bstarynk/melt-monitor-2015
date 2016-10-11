@@ -939,7 +939,7 @@ mom_display_inthmap (mo_inthmappayl_ty * ihmap, momgui_dispctxt_ty * pdx,
   int cnt = mo_inthmap_count (ihmap);
   int64_t *keyarr = mom_gc_alloc ((cnt + 1) * sizeof (int64_t));
   unsigned nbkey = mo_inthmap_retrieve_raw_keys (ihmap, keyarr, cnt + 1);
-  MOM_ASSERTPRINTF (nbkey == cnt, "bad nbkey");
+  MOM_ASSERTPRINTF ((int)nbkey == cnt, "bad nbkey");
   if (nbkey > 1)
     qsort (keyarr, nbkey, sizeof (int64_t), mom_int64_cmp);
   char sizbuf[32];
@@ -4387,7 +4387,6 @@ momgui_cssparsingerror (GtkCssProvider * gtkprov MOM_UNUSED,
 void
 mom_run_gtk (int *pargc, char ***pargv, char **dispobjects)
 {
-  int sta = 0;
   if (!gtk_init_check (pargc, pargv))
     MOM_FATAPRINTF ("failed to initialize GTK");
   mom_gquark = g_quark_from_static_string ("monimelt");
