@@ -23,7 +23,7 @@
 
 
 #undef MOM_NB_PREDEFINED
-#define MOM_NB_PREDEFINED 87
+#define MOM_NB_PREDEFINED 88
 
 
 //// MOM_HAS_PREDEFINED(Name,Idstr,Hid,Loid,Hash)
@@ -141,6 +141,9 @@ MOM_HAS_PREDEFINED(extend,_15c0LcIrdf2LE5JP8,256382403,4194465417666792272,37406
 
 //+ give external resources, e.g. in modules
 MOM_HAS_PREDEFINED(extern,_5dn8uwCs0vUJ9AG7y,1232333654,657886197053910118,2573349951)
+
+//+ e.g. for fields
+MOM_HAS_PREDEFINED(field,_7Yc7kkHv9YpYsyBjv,1880410874,6420933389430087779,1262872451)
 
 //+ gives the fields tuple (e.g. in struct or union ctype...)
 MOM_HAS_PREDEFINED(fields,_7Pl7foCRjKoT6Gkdr,1849542836,813017781241674727,3535425907)
@@ -481,6 +484,11 @@ MOM_HAS_PREDEFINED(when,_6Yn5rkVrBxrohLzDp,1645188836,6122707576125177517,572091
 #undef monam_5dn8uwCs0vUJ9AG7y
 #define monam_5dn8uwCs0vUJ9AG7y extern
 
+#undef moid_field
+#define moid_field _7Yc7kkHv9YpYsyBjv
+#undef monam_7Yc7kkHv9YpYsyBjv
+#define monam_7Yc7kkHv9YpYsyBjv field
+
 #undef moid_fields
 #define moid_fields _7Pl7foCRjKoT6Gkdr
 #undef monam_7Pl7foCRjKoT6Gkdr
@@ -768,6 +776,7 @@ enum mom_predefined_hashes_en {
   momphash_expression=4094180980,
   momphash_extend=3740695059,
   momphash_extern=2573349951,
+  momphash_field=1262872451,
   momphash_fields=3535425907,
   momphash_file_path=2269269987,
   momphash_formals=903825033,
@@ -826,7 +835,7 @@ enum mom_predefined_hashes_en {
 #define MOM_NB_ANONYMOUS_PREDEFINED 0
 
 #undef MOM_NB_NAMED_PREDEFINED
-#define MOM_NB_NAMED_PREDEFINED 87
+#define MOM_NB_NAMED_PREDEFINED 88
 
 
 #undef MOM_HAS_PREDEFINED

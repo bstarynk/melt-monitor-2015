@@ -3799,9 +3799,6 @@ mom_cemit_scan_instr (struct mom_cemitlocalstate_st *csta,
                         mo_objref_pnamestr (fromob));
       break;
     }
-#warning mom_cemit_scan_instr incomplete
-  MOM_FATAPRINTF ("mom_cemit_scan_instr incomplete instr %s",
-                  mo_objref_pnamestr (instrob));
 }                               /* end of mom_cemit_scan_instr */
 
 // a reference or l-value can be assigned to. It has some c-type. It
@@ -3882,10 +3879,15 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
                         mo_objref_pnamestr (fromob),
                         mo_objref_pnamestr (rolob));
     }
-#warning mom_cemit_scan_reference incomplete
-  MOM_FATAPRINTF
-    ("mom_cemit_scan_reference incomplete refob %s of class %s",
-     mo_objref_pnamestr (refob), mo_objref_pnamestr (refob->mo_ob_class));
+  else if (refob->mo_ob_class == MOM_PREDEF (member_access_class))
+    return mom_cemit_scan_member_access (csta, refob, fromob, depth);
+  else
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, refob, mo_int_to_value (depth), fromob),
+                      "cemit_scan_reference: refob %s of unexpected class %s, depth %d, from %s",
+                      mo_objref_pnamestr (refob),
+                      mo_objref_pnamestr (refob->mo_ob_class), depth,
+                      mo_objref_pnamestr (fromob));
 }                               /* end of mom_cemit_scan_reference */
 
 
@@ -3893,7 +3895,7 @@ mom_cemit_scan_reference (struct mom_cemitlocalstate_st *csta,
 
 // an expression or r-value can be computed. It has some c-type. It translates in C to some r-value.
 mo_objref_t
-mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
+mom_cemit_scan_expression (struct mom_cemitlocalstate_st *csta,
                            mo_value_t expv, mo_objref_t fromob, int depth)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
@@ -4065,6 +4067,14 @@ mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_member_access: expr %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (accob), depth,
                       mo_objref_pnamestr (fromob));
+  if (!mo_dyncast_objref(accob) || accob->mo_ob_class != MOM_PREDEF(member_access_class))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_member_access: expr %s of bad class %s, depth %d, from %s",
+                      mo_objref_pnamestr (accob),
+		      mo_dyncast_objref(accob)?mo_objref_pnamestr(accob->mo_ob_class):"??", depth,
+                      mo_objref_pnamestr (fromob));
+  mo_value_t fromexpv = mo_objref_get_attr(accob, MOM_PREDEF(from));
+  mo_objref_t fieldob = mo_dyncast_objref(mo_objref_get_attr(accob, MOM_PREDEF(field)));
 #warning mom_cemit_scan_member_access unimplemented
   MOM_FATAPRINTF ("mom_cemit_scan_member_access unimplemented accob=%s",
                   mo_objref_pnamestr (accob));

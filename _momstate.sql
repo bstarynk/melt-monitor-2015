@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 10 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 11 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -76,6 +76,7 @@ INSERT INTO t_names VALUES('enumerators','_4Cz6GxTDLCsTy7bco');
 INSERT INTO t_names VALUES('expression','_64h4VCbZPNyxt22DN');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('extern','_5dn8uwCs0vUJ9AG7y');
+INSERT INTO t_names VALUES('field','_7Yc7kkHv9YpYsyBjv');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
@@ -2141,6 +2142,20 @@ INSERT INTO t_objects VALUES('_7R18oBKd7iMYZd7gN',1475478556,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "related to objects, e.g. for their c-type"
+   }
+  ]
+ },
+ "comps": null
+}
+','','','','');
+INSERT INTO t_objects VALUES('_7Yc7kkHv9YpYsyBjv',1476195122,'
+{
+ "@name": "field",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "e.g. for fields"
    }
   ]
  },
