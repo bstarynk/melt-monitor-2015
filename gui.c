@@ -939,7 +939,7 @@ mom_display_inthmap (mo_inthmappayl_ty * ihmap, momgui_dispctxt_ty * pdx,
   int cnt = mo_inthmap_count (ihmap);
   int64_t *keyarr = mom_gc_alloc ((cnt + 1) * sizeof (int64_t));
   unsigned nbkey = mo_inthmap_retrieve_raw_keys (ihmap, keyarr, cnt + 1);
-  MOM_ASSERTPRINTF ((int)nbkey == cnt, "bad nbkey");
+  MOM_ASSERTPRINTF ((int) nbkey == cnt, "bad nbkey");
   if (nbkey > 1)
     qsort (keyarr, nbkey, sizeof (int64_t), mom_int64_cmp);
   char sizbuf[32];

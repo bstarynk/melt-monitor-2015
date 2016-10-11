@@ -3531,10 +3531,41 @@ mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                       mo_value_pnamestr (whenv),
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
-
-#warning mom_cemit_scan_number_case incomplete
-  MOM_FATAPRINTF ("cemit_scan_number_case incomplete numcasob=%s",
-                  mo_objref_pnamestr (numcasob));
+  if (bodyob)
+    {
+      mo_objref_t blocksetob =
+        mo_dyncast_objref (mo_objref_get_comp
+                           (insrolob, MOMROLCASEIX_BLOCKSET));
+      mo_hashsetpayl_ty *blset = NULL;
+      if (MOM_UNLIKELY
+          (!blocksetob
+           || blocksetob->mo_ob_paylkind != MOM_PREDEF (payload_hashset)
+           || !(blset = mo_dyncastpayl_hashset (blocksetob->mo_ob_payldata))))
+        MOM_FATAPRINTF
+          ("cemit_scan_number_case insrolob %s with bad blockset",
+           mo_objref_pnamestr (insrolob));
+      blset = mo_hashset_put (blset, bodyob);
+      blocksetob->mo_ob_payldata = blset;
+      mom_cemit_scan_block (csta, bodyob, numcasob, depth + 1);
+    }
+  else if (labelob)
+    {
+      if (labelob->mo_ob_class != MOM_PREDEF (c_block_class))
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, numcasob, rolcasob, insrolob, fromob),
+                          "cemit_scan_number_case: objcasob %s with bad labelob %s insrolob %s,"
+                          " fromob %s depth %d",
+                          mo_objref_pnamestr (numcasob),
+                          mo_objref_pnamestr (labelob),
+                          mo_objref_pnamestr (insrolob),
+                          mo_objref_pnamestr (fromob), depth);
+      csta->mo_cemsta_hsetjumpedblocks =
+        mo_hashset_put (csta->mo_cemsta_hsetjumpedblocks, labelob);
+    }
+  else                          // should never happen
+    MOM_FATAPRINTF
+      ("cemit_scan_number_case numcasob=%s without body or label",
+       mo_objref_pnamestr (numcasob));
 }                               /* end of mom_cemit_scan_number_case */
 
 
