@@ -88,6 +88,15 @@ enum momcemit_rolvar_en
   MOMROLVARIX__LASTVAR
 };
 
+// the slots of role object for result & variables & gobal
+enum momcemit_rolfield_en
+{
+  MOMROLFIELDIX_ROLE = MOMROLFORMIX_ROLE,
+  MOMROLFIELDIX_CTYPE = MOMROLFORMIX_CTYPE,     /* the type of the field */
+  MOMROLFIELDIX_IN,             /* the struct or union type containing the field */
+  MOMROLFIELDIX__LAST
+};
+
 // the slots of role object for blocks (& macros)
 enum momcemit_rolblock_en
 {
@@ -1376,7 +1385,28 @@ mom_cemit_define_fields (struct mom_cemitlocalstate_st *csta,
       mom_cemit_write_ctype_for (csta, ftypobr, fieldstr, 0);
       mom_cemit_printf (csta, ";  // %s\n", fieldid);
       if (depth == 0)
-        mom_cemit_todo_put_attr (csta, fieldobr, MOM_PREDEF (in), typobr);
+        {
+          mo_objref_t fieldrolob =
+            mo_dyncast_objref (mo_assoval_get
+                               (csta->mo_cemsta_assocmodulrole, fieldobr));
+          if (fieldrolob)
+            MOM_CEMITFAILURE (csta,
+                              "cemit_define_fields: in %s field#%d %s already with role %s",
+                              mo_objref_pnamestr (typobr), flix,
+                              mo_objref_pnamestr (fieldobr),
+                              mo_objref_pnamestr (fieldrolob));
+          fieldrolob = mo_make_object ();
+          fieldrolob->mo_ob_class = MOM_PREDEF (c_role_class);
+          mo_objref_comp_resize (fieldrolob, MOMROLFIELDIX__LAST);
+          mo_objref_put_comp (fieldrolob, MOMROLFIELDIX_ROLE,
+                              MOM_PREDEF (field));
+          mo_objref_put_comp (fieldrolob, MOMROLFIELDIX_CTYPE, ftypobr);
+          mo_objref_put_comp (fieldrolob, MOMROLFIELDIX_IN, typobr);
+          csta->mo_cemsta_assocmodulrole =
+            mo_assoval_put (csta->mo_cemsta_assocmodulrole, fieldrolob,
+                            fieldrolob);
+          mom_cemit_todo_put_attr (csta, fieldobr, MOM_PREDEF (in), typobr);
+        }
     }
 }                               /* end mom_cemit_define_fields */
 
@@ -4078,15 +4108,52 @@ mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
   mo_value_t fromexpv = mo_objref_get_attr (accob, MOM_PREDEF (from));
   mo_objref_t fieldob =
     mo_dyncast_objref (mo_objref_get_attr (accob, MOM_PREDEF (field)));
-#warning mom_cemit_scan_member_access unimplemented
-  MOM_FATAPRINTF ("mom_cemit_scan_member_access unimplemented accob=%s",
-                  mo_objref_pnamestr (accob));
+  if (!fieldob || fieldob->mo_ob_class != MOM_PREDEF (c_field_class))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_member_access: expr %s with bad field %s, depth %d, from %s",
+                      mo_objref_pnamestr (accob),
+                      mo_objref_pnamestr (fieldob),
+                      depth, mo_objref_pnamestr (fromob));
+  mo_objref_t fieldrolob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assocmodulrole, fieldob));
+  if (!fieldrolob || fieldrolob->mo_ob_class != MOM_PREDEF (c_role_class)
+      || mo_objref_comp_count (fieldrolob) < MOMROLFIELDIX__LAST
+      || mo_objref_get_comp (fieldrolob,
+                             MOMROLFIELDIX_ROLE) != MOM_PREDEF (field))
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, accob, fieldob, fieldrolob, fromob),
+                      "cemit_scan_member_access: expr %s with bad field %s of fieldrole %s, depth %d, from %s",
+                      mo_objref_pnamestr (accob),
+                      mo_objref_pnamestr (fieldob),
+                      mo_objref_pnamestr (fieldrolob), depth,
+                      mo_objref_pnamestr (fromob));
+  mo_objref_t fieldtypob =      // the ctype of the field
+    mo_dyncast_objref (mo_objref_get_comp (fieldrolob, MOMROLFIELDIX_CTYPE));
+  mo_objref_t fieldinob =       // the struct or union containing that field
+    mo_dyncast_objref (mo_objref_get_comp (fieldrolob, MOMROLFIELDIX_IN));
+  mo_objref_t fromtypob =
+    mom_cemit_scan_expression (csta, fromexpv, accob, depth + 1);
+  mo_objref_t supertypob =
+    mom_cemit_compare_ctypes (csta, fieldinob, fromtypob, accob);
+  if (!supertypob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, accob, fieldob, fieldinob, fromtypob, fromob),
+                      "cemit_scan_member_access: expr %s with field %s accessed from %s of type %s"
+                      " incompatible with %s, depth %s, from %s",
+                      mo_objref_pnamestr (accob),
+                      mo_objref_pnamestr (fieldob),
+                      mo_value_pnamestr (fromexpv),
+                      mo_objref_pnamestr (fromtypob),
+                      mo_objref_pnamestr (fieldinob), depth,
+                      mo_objref_pnamestr (fromob));
+  return supertypob;
 }                               /* end of mom_cemit_scan_member_access */
 
 
 
 mo_objref_t
-mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st *csta,
+mom_cemit_scan_macro_expr (struct mom_cemitlocalstate_st * csta,
                            mo_objref_t macob, mo_objref_t fromob,
                            int depth, bool isref)
 {
