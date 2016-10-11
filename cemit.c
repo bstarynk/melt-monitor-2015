@@ -4067,14 +4067,17 @@ mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
                       "cemit_scan_member_access: expr %s timed out, depth %d, from %s",
                       mo_objref_pnamestr (accob), depth,
                       mo_objref_pnamestr (fromob));
-  if (!mo_dyncast_objref(accob) || accob->mo_ob_class != MOM_PREDEF(member_access_class))
+  if (!mo_dyncast_objref (accob)
+      || accob->mo_ob_class != MOM_PREDEF (member_access_class))
     MOM_CEMITFAILURE (csta,
                       "cemit_scan_member_access: expr %s of bad class %s, depth %d, from %s",
                       mo_objref_pnamestr (accob),
-		      mo_dyncast_objref(accob)?mo_objref_pnamestr(accob->mo_ob_class):"??", depth,
+                      mo_dyncast_objref (accob) ?
+                      mo_objref_pnamestr (accob->mo_ob_class) : "??", depth,
                       mo_objref_pnamestr (fromob));
-  mo_value_t fromexpv = mo_objref_get_attr(accob, MOM_PREDEF(from));
-  mo_objref_t fieldob = mo_dyncast_objref(mo_objref_get_attr(accob, MOM_PREDEF(field)));
+  mo_value_t fromexpv = mo_objref_get_attr (accob, MOM_PREDEF (from));
+  mo_objref_t fieldob =
+    mo_dyncast_objref (mo_objref_get_attr (accob, MOM_PREDEF (field)));
 #warning mom_cemit_scan_member_access unimplemented
   MOM_FATAPRINTF ("mom_cemit_scan_member_access unimplemented accob=%s",
                   mo_objref_pnamestr (accob));
