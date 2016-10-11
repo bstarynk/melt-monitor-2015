@@ -198,7 +198,8 @@ enum momcemit_rolcaseinstr_en
   MOMROLCASEIX_ROLE = MOMROLFORMIX_ROLE,        // MOM_PREDEF(case)
   MOMROLCASEIX_CASE,            // the selecting expr
   MOMROLCASEIX_CTYPE,           // its ctype
-  MOMROLCASEIX_MAP,             /* the inthmap or assoval of cases */
+  MOMROLCASEIX_MAP,             /* the object with inthmap or assoval of cases */
+  MOMROLCASEIX_BLOCKSET,        /* the object with hashset of blocks */
   MOMROLCASEIX__LAST
 };
 
@@ -3180,6 +3181,8 @@ mom_cemit_scan_call_instr (struct mom_cemitlocalstate_st *csta,
     }
 }                               /* end mom_cemit_scan_call_instr */
 
+
+
 #define MOM_CEMIT_MAX_OBJECT_CASE 1024
 void
 mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
@@ -3225,9 +3228,9 @@ mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (fromob), depth);
   mo_value_t whenv = mo_objref_get_attr (objcasob, MOM_PREDEF (when));
   mo_objref_t whenob = NULL;
-  if (!(whenob = mo_dyncast_objref (whenv)) && !mo_dyncast_set (whenv))
+  if (!(whenob = mo_dyncast_objref (whenv)) && mo_set_size (whenv) <= 0)
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA (csta, objcasob, insrolob, fromob),
-                      "cemit_scan_object_case: objcasob %s has bad `when` %s (not object or set) insrolob %s,"
+                      "cemit_scan_object_case: objcasob %s has bad `when` %s (not object or non-empty set) insrolob %s,"
                       " fromob %s depth %d",
                       mo_objref_pnamestr (objcasob),
                       mo_value_pnamestr (whenv),
@@ -3251,12 +3254,122 @@ mom_cemit_scan_object_case (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (objcasob),
                       mo_objref_pnamestr (insrolob),
                       mo_objref_pnamestr (fromob), depth);
-#warning mom_cemit_scan_object_case incomplete
-  MOM_FATAPRINTF ("cemit_scan_object_case incomplete objcasob=%s",
-                  mo_objref_pnamestr (objcasob));
+  mo_objref_t rolcasob =
+    mo_dyncast_objref (mo_assoval_get
+                       (csta->mo_cemsta_assoclocalrole, objcasob));
+  if (rolcasob)
+    MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                      (csta, objcasob, rolcasob, insrolob, fromob),
+                      "cemit_scan_object_case: objcasob %s has rolcasob %s insrolob %s,"
+                      " fromob %s depth %d", mo_objref_pnamestr (objcasob),
+                      mo_objref_pnamestr (rolcasob),
+                      mo_objref_pnamestr (insrolob),
+                      mo_objref_pnamestr (fromob), depth);
+  rolcasob = mo_make_object ();
+  rolcasob->mo_ob_class = MOM_PREDEF (c_role_class);
+  mo_objref_comp_resize (rolcasob, MOMROLOBJCASIX__LAST);
+  mo_objref_put_comp (rolcasob, MOMROLOBJCASIX_ROLE, MOM_PREDEF (object));
+  mo_objref_put_comp (rolcasob, MOMROLOBJCASIX_INSTR, fromob);
+  mo_objref_put_comp (rolcasob, MOMROLOBJCASIX_OBJECT, whenv);
+  csta->mo_cemsta_assoclocalrole =
+    mo_assoval_put (csta->mo_cemsta_assoclocalrole, objcasob, rolcasob);
+  if (whenob)
+    {
+      if (mo_assoval_get (amapassoc, whenob))
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, objcasob, rolcasob, insrolob, fromob),
+                          "cemit_scan_object_case: objcasob %s for already handled %s insrolob %s,"
+                          " fromob %s depth %d",
+                          mo_objref_pnamestr (objcasob),
+                          mo_objref_pnamestr (whenob),
+                          mo_objref_pnamestr (insrolob),
+                          mo_objref_pnamestr (fromob), depth);
+      if (!mo_set_contains (csta->mo_cemsta_objset, whenob)
+          || mo_objref_space (whenob) != mo_SPACE_PREDEF)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, objcasob, rolcasob, insrolob, fromob),
+                          "cemit_scan_object_case: objcasob %s for nonconstant whenob %s insrolob %s,"
+                          " fromob %s depth %d",
+                          mo_objref_pnamestr (objcasob),
+                          mo_objref_pnamestr (whenob),
+                          mo_objref_pnamestr (insrolob),
+                          mo_objref_pnamestr (fromob), depth);
+      amapassoc = mo_assoval_put (amapassoc, whenob, objcasob);
+      amapob->mo_ob_payldata = amapassoc;
+    }
+  else if (mo_dyncast_set (whenv))
+    {
+      unsigned nbwhen = mo_set_size (whenv);    // not zero
+      for (unsigned wix = 0; wix < nbwhen; wix++)
+        {
+          mo_objref_t whenelemob = mo_set_nth (whenv, wix);
+          if (mo_assoval_get (amapassoc, whenelemob))
+            MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                              (csta, objcasob, rolcasob, insrolob, fromob),
+                              "cemit_scan_object_case: objcasob %s for already handled %s insrolob %s,"
+                              " fromob %s depth %d",
+                              mo_objref_pnamestr (objcasob),
+                              mo_objref_pnamestr (whenelemob),
+                              mo_objref_pnamestr (insrolob),
+                              mo_objref_pnamestr (fromob), depth);
+          if (!mo_set_contains (csta->mo_cemsta_objset, whenelemob)
+              || mo_objref_space (whenelemob) != mo_SPACE_PREDEF)
+            MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                              (csta, objcasob, rolcasob, insrolob, fromob),
+                              "cemit_scan_object_case: objcasob %s for nonconstant whenelemob %s insrolob %s,"
+                              " fromob %s depth %d",
+                              mo_objref_pnamestr (objcasob),
+                              mo_objref_pnamestr (whenelemob),
+                              mo_objref_pnamestr (insrolob),
+                              mo_objref_pnamestr (fromob), depth);
+          amapassoc = mo_assoval_put (amapassoc, whenelemob, objcasob);
+          amapob->mo_ob_payldata = amapassoc;
+        }
+    }
+  else                          // should never happen
+    MOM_FATAPRINTF
+      ("cemit_scan_object_case objcasob=%s with impossible whenv %s",
+       mo_objref_pnamestr (objcasob), mo_value_pnamestr (whenv));
+  if (bodyob)
+    {
+      mo_objref_t blocksetob =
+        mo_dyncast_objref (mo_objref_get_comp
+                           (insrolob, MOMROLCASEIX_BLOCKSET));
+      mo_hashsetpayl_ty *blset = NULL;
+      if (MOM_UNLIKELY
+          (!blocksetob
+           || blocksetob->mo_ob_paylkind != MOM_PREDEF (payload_hashset)
+           || !(blset = mo_dyncastpayl_hashset (blocksetob->mo_ob_payldata))))
+        MOM_FATAPRINTF
+          ("cemit_scan_object_case insrolob %s with bad blockset",
+           mo_objref_pnamestr (insrolob));
+      blset = mo_hashset_put (blset, bodyob);
+      blocksetob->mo_ob_payldata = blset;
+      mom_cemit_scan_block (csta, bodyob, objcasob, depth + 1);
+    }
+  else if (labelob)
+    {
+      if (labelob->mo_ob_class != MOM_PREDEF (c_block_class))
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, objcasob, rolcasob, insrolob, fromob),
+                          "cemit_scan_object_case: objcasob %s with bad labelob %s insrolob %s,"
+                          " fromob %s depth %d",
+                          mo_objref_pnamestr (objcasob),
+                          mo_objref_pnamestr (labelob),
+                          mo_objref_pnamestr (insrolob),
+                          mo_objref_pnamestr (fromob), depth);
+      csta->mo_cemsta_hsetjumpedblocks =
+        mo_hashset_put (csta->mo_cemsta_hsetjumpedblocks, labelob);
+    }
+  else                          // should never happen
+    MOM_FATAPRINTF
+      ("cemit_scan_object_case objcasob=%s without body or label",
+       mo_objref_pnamestr (objcasob));
 }                               /* end of mom_cemit_scan_object_case */
 
 
+
+#define MOM_CEMIT_MAX_NUMBER_CASE 2048
 void
 mom_cemit_scan_number_case (struct mom_cemitlocalstate_st *csta,
                             mo_objref_t numcasob, mo_objref_t insrolob,
@@ -3347,6 +3460,11 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (fromob));
 
   mo_objref_put_comp (rolob, MOMROLCASEIX_CTYPE, typob);
+  mo_objref_t blhsetob = mo_make_object ();
+  mo_hashsetpayl_ty *blockhset = mo_hashset_reserve (NULL, 2 * instrlen + 5);
+  blhsetob->mo_ob_paylkind = MOM_PREDEF (payload_hashset);
+  blhsetob->mo_ob_payldata = blockhset;
+  mo_objref_put_comp (rolob, MOMROLCASEIX_BLOCKSET, blhsetob);
   if (typob == momglob_object_ctype)
     {
       mo_objref_t amapob = mo_make_object ();
@@ -3358,9 +3476,20 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
       for (unsigned ix = 0; ix < (unsigned) instrlen; ix++)
         {
           mom_cemit_scan_object_case (csta,
-                                      mo_objref_get_comp (instrob, ix),
+                                      mo_dyncast_objref (mo_objref_get_comp
+                                                         (instrob, ix)),
                                       rolob, instrob, depth + 1);
         }
+      assoval = amapob->mo_ob_payldata;
+      if (mo_assoval_count (assoval) >= MOM_CEMIT_MAX_OBJECT_CASE)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, instypob, castypob, fromob),
+                          "cemit_scan_case_instr: instr %s with too many %d objcases,"
+                          " depth %d, from %s",
+                          mo_objref_pnamestr (instrob),
+                          mo_assoval_count (assoval), depth,
+                          mo_objref_pnamestr (fromob));
+
     }
   else if (typob->mo_ob_class == MOM_PREDEF (enum_ctype_class)
            || typob == momglob_char || typob == momglob_long
@@ -3379,9 +3508,19 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
       for (unsigned ix = 0; ix < (unsigned) instrlen; ix++)
         {
           mom_cemit_scan_number_case (csta,
-                                      mo_objref_get_comp (instrob, ix),
+                                      mo_dyncast_objref (mo_objref_get_comp
+                                                         (instrob, ix)),
                                       rolob, instrob, depth + 1);
         }
+      ihmap = imapob->mo_ob_payldata;
+      if (mo_inthmap_count (ihmap) >= MOM_CEMIT_MAX_NUMBER_CASE)
+        MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
+                          (csta, instrob, instypob, castypob, fromob),
+                          "cemit_scan_case_instr: instr %s with too many %d numcases,"
+                          " depth %d, from %s",
+                          mo_objref_pnamestr (instrob),
+                          mo_inthmap_count (ihmap), depth,
+                          mo_objref_pnamestr (fromob));
     }
   else
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
@@ -3391,10 +3530,6 @@ mom_cemit_scan_case_instr (struct mom_cemitlocalstate_st *csta,
                       mo_objref_pnamestr (instrob),
                       mo_objref_pnamestr (typob),
                       depth, mo_objref_pnamestr (fromob));
-
-#warning mom_cemit_scan_case_instr incomplete
-  MOM_FATAPRINTF ("incomplete mom_cemit_scan_case_instr instrob %s",
-                  mo_objref_pnamestr (instrob));
 }                               /* end mom_cemit_scan_case_instr */
 
 
@@ -3700,7 +3835,7 @@ mom_cemit_scan_expression (struct mom_cemitlocalstate_st * csta,
                                 mo_objref_pnamestr (expob), depth,
                                 mo_objref_pnamestr (fromob));
             if (!mo_set_contains (csta->mo_cemsta_objset, verbob)
-                || mo_objref_space (verbob) == mo_SPACE_PREDEF)
+                || mo_objref_space (verbob) != mo_SPACE_PREDEF)
               MOM_CEMITFAILURE (csta,
                                 "cemit_scan_expression: expr %s with bad verbatim %s, depth %d, from %s",
                                 mo_objref_pnamestr (expob),
