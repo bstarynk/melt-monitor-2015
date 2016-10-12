@@ -139,6 +139,7 @@ INSERT INTO t_names VALUES('signature_int_to_double','_5fb7a3nqXwUKGKblr');
 INSERT INTO t_names VALUES('signature_int_to_int','_0Ze1dDI740vldabtI');
 INSERT INTO t_names VALUES('signature_int_to_void','_5SE2qc92qZjlzudEX');
 INSERT INTO t_names VALUES('signature_object_to_value','_8DT8VbN0FaiS0K6uf');
+INSERT INTO t_names VALUES('signature_stuctptrb_test1_to_int','_1Fj6Xh5tt7yWEMI6o');
 INSERT INTO t_names VALUES('signature_two_objects_to_object','_4pb5Vror0ehNFKXfT');
 INSERT INTO t_names VALUES('signature_two_objects_to_value','_1ky69RT7bZKd1tySD');
 INSERT INTO t_names VALUES('signature_two_objects_to_void','_0dV2PYaSBUDE7lsYq');
@@ -146,7 +147,7 @@ INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
 INSERT INTO t_names VALUES('structa_test1','_4PC3UuhlSMFLv5UNF');
-INSERT INTO t_names VALUES('structb_test1','_4gL356V63EbWezvCo');
+INSERT INTO t_names VALUES('structptrb_test1','_4gL356V63EbWezvCo');
 INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
 INSERT INTO t_names VALUES('test1_informint','_7Yx8genl596yeIpzx');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
@@ -474,6 +475,34 @@ INSERT INTO t_objects VALUES('_1DA4KKiwji2gafLj0',1474962483,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_1Fj6Xh5tt7yWEMI6o',1476278665,'
+{
+ "@name": "signature_stuctptrb_test1_to_int",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "signature for : structptrb_test1 -> int"
+   },
+   {
+    "at": "_7vy5VxtVon8EhIF5D",
+    "va": {
+     "oid": "_0Sp1Lg7ctajS7oX5i"
+    }
+   },
+   {
+    "at": "_8Bq9eNWZ0eUS6BGq8",
+    "va": {
+     "tup": [
+      "_4gL356V63EbWezvCo"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6S30JEAmywph5MZqd','','','');
 INSERT INTO t_objects VALUES('_1HW4pIotlYRImRGnL',1473087576,'
 {
  "@name": "payload_buffer",
@@ -734,7 +763,7 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476275668,'
+INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476279233,'
 {
  "@name": "fieldbuu_test1",
  "attrs": {
@@ -747,7 +776,7 @@ INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476275668,'
    },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "fieldbuu in structb for test1"
+    "va": "fieldbuu in structptrb for test1"
    },
    {
     "at": "_8TY6UsXJ3Djt71By3",
@@ -1222,7 +1251,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476275649,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476278564,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1274,7 +1303,8 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476275649,'
       "_4PC3UuhlSMFLv5UNF",
       "_4gL356V63EbWezvCo",
       "_0Ze1dDI740vldabtI",
-      "_5SE2qc92qZjlzudEX"
+      "_5SE2qc92qZjlzudEX",
+      "_1Fj6Xh5tt7yWEMI6o"
      ]
     }
    }
@@ -1376,7 +1406,7 @@ INSERT INTO t_objects VALUES('_4fJ1XYu10x1k9lpMg',1476107513,'
 ','','','','');
 INSERT INTO t_objects VALUES('_4gL356V63EbWezvCo',1476262603,'
 {
- "@name": "structb_test1",
+ "@name": "structptrb_test1",
  "attrs": {
   "assoval": [
    {
@@ -1387,7 +1417,7 @@ INSERT INTO t_objects VALUES('_4gL356V63EbWezvCo',1476262603,'
    },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
-    "va": "type for structb in test1"
+    "va": "type for structbptr in test1"
    },
    {
     "at": "_7Pl7foCRjKoT6Gkdr",
@@ -1521,7 +1551,7 @@ INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
  }
 }
 ','_4Fo3f0PrwI6hwjSzM','','','');
-INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476275668,'
+INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476279233,'
 {
  "@name": "fielday_test1",
  "attrs": {
@@ -1862,7 +1892,7 @@ INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
  }
 }
 ','_1lU1wXlGlR9TdmE89','','','');
-INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476275668,'
+INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476279233,'
 {
  "@name": "fieldax_test1",
  "attrs": {

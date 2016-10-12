@@ -3438,7 +3438,6 @@ momgui_cmdparse_object (struct momgui_cmdparse_st *cpars, const char *msg,
         : mom_gc_alloc_scalar (4 * mom_prime_above (nlen / 4 + 3));
       for (int ix = 0; ix < nlen; ix++)
         nambuf[ix] = (char) momgui_cmdparse_peekchar (cpars, ix);
-      MOM_INFORMPRINTF ("parseobj? nambuf='%s'", nambuf);
       if (!mom_valid_name (nambuf))
         {                       // invalid name, e.g. terminated by _
           GtkTextIter startunit = cpars->mo_gcp_curiter;
@@ -4014,7 +4013,6 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
   cmdparse.mo_gcp_statusupdate = false;
   momgui_lastdelimpairarr = NULL;
   momgui_lastdelimpaircount = 0;
-  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction before setjmp");
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {
@@ -4031,7 +4029,6 @@ momgui_cmdtextbuf_enduseraction (GtkTextBuffer * tbuf MOM_UNUSED,
         MOM_WARNPRINTF ("parsing of command buffer failed, failerr=%d",
                         failerr);
     };
-  MOM_INFORMPRINTF ("cmdtextbuf_enduseraction end failerr=%d", failerr);
 }                               /* end momgui_cmdtextbuf_enduseraction */
 
 
