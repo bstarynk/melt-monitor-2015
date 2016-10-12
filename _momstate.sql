@@ -765,7 +765,32 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476279233,'
+INSERT INTO t_objects VALUES('_23J5jAGJHamAvrfri',1476284652,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_3oe98LjR73BVUxfBL",
+    "va": {
+     "oid": "_5GD0RmZ0Xivqc1GK6"
+    }
+   },
+   {
+    "at": "_42G9523MP4rY91DgG",
+    "va": {
+     "oid": "_6gj4ZHinqqqvdWKyg"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "assign r_test1 := pb_test1->fieldax_test1"
+   }
+  ]
+ },
+ "comps": null
+}
+','_4Yd3gqjKLi1hAKztj','','','');
+INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476284010,'
 {
  "@name": "fieldbuu_test1",
  "attrs": {
@@ -1554,7 +1579,7 @@ INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
  }
 }
 ','_4Fo3f0PrwI6hwjSzM','','','');
-INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476279233,'
+INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476284010,'
 {
  "@name": "fielday_test1",
  "attrs": {
@@ -1622,6 +1647,31 @@ INSERT INTO t_objects VALUES('_59g7wsJyXlj962jlx',1474789841,'
  "comps": null
 }
 ','','_8DT8VbN0FaiS0K6uf','!','.');
+INSERT INTO t_objects VALUES('_5GD0RmZ0Xivqc1GK6',1476284775,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_3oe98LjR73BVUxfBL",
+    "va": {
+     "oid": "_7dt7hgtLUDuZX3NSw"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "pb_test1->fieldax_test1"
+   },
+   {
+    "at": "_7Yc7kkHv9YpYsyBjv",
+    "va": {
+     "oid": "_60n0n6BcCEfIXDSDq"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_5WP5sMWxwATJgf7UY','','','');
 INSERT INTO t_objects VALUES('_5Hf0fFKvRVa71ZPM0',1473049889,'
 {
  "@name": "payload_vectval",
@@ -1895,7 +1945,7 @@ INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
  }
 }
 ','_1lU1wXlGlR9TdmE89','','','');
-INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476279233,'
+INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476284010,'
 {
  "@name": "fieldax_test1",
  "attrs": {
@@ -2496,7 +2546,13 @@ INSERT INTO t_objects VALUES('_7rH2hUnmW63o78UGC',1476281652,'
    }
   ]
  },
- "comps": null
+ "comps": {
+  "vectval": [
+   {
+    "oid": "_23J5jAGJHamAvrfri"
+   }
+  ]
+ }
 }
 ','_1lU1wXlGlR9TdmE89','','','');
 INSERT INTO t_objects VALUES('_7vy5VxtVon8EhIF5D',1474354808,'
