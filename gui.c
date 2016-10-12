@@ -1576,8 +1576,6 @@ mo_gui_generate_object_text_buffer (void)
     }
   mo_setvalue_ty *dispset =
     (mo_setvalue_ty *) mo_assoval_keys_set (momgui_displayed_objasso);
-  MOM_BACKTRACEPRINTF ("generate_object_text_buffer begin dispset=%s",
-                       mo_value_pnamestr (dispset));
   mo_assovaldatapayl_ty *oldispasso = momgui_displayed_objasso;
   unsigned nbdispob = mo_set_size (dispset);
   g_hash_table_remove_all (mom_dispobjinfo_hashtable);
@@ -2323,7 +2321,6 @@ momgui_run_cmdtext (void)
   cmdparse.mo_gcp_curiter = itstart;
   cmdparse.mo_gcp_onlyparse = false;
   cmdparse.mo_gcp_statusupdate = true;
-  MOM_BACKTRACEPRINTF ("run_cmdtext start");
   int failerr = setjmp (cmdparse.mo_gcp_failjb);
   if (failerr == 0)
     {

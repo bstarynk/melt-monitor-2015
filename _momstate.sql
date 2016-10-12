@@ -123,6 +123,7 @@ INSERT INTO t_names VALUES('payload_json','_8D28gj8akGrJyyzei');
 INSERT INTO t_names VALUES('payload_list','_76f7e2VcL8IJC1hq6');
 INSERT INTO t_names VALUES('payload_value','_47n6FfKTuPHyjab71');
 INSERT INTO t_names VALUES('payload_vectval','_5Hf0fFKvRVa71ZPM0');
+INSERT INTO t_names VALUES('pb_test1','_7dt7hgtLUDuZX3NSw');
 INSERT INTO t_names VALUES('pointer_ctype_class','_7JP45UsR282DkTrJS');
 INSERT INTO t_names VALUES('put_attr_cemitact','_34X8LzaKgjC0yxZXC');
 INSERT INTO t_names VALUES('r_test1','_6gj4ZHinqqqvdWKyg');
@@ -151,6 +152,7 @@ INSERT INTO t_names VALUES('structptrb_test1','_4gL356V63EbWezvCo');
 INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
 INSERT INTO t_names VALUES('test1_informint','_7Yx8genl596yeIpzx');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
+INSERT INTO t_names VALUES('test1_ptrb_get','_9303T7c4CXtDNubsF');
 INSERT INTO t_names VALUES('test_anonobj','_3J97bCYloYmmXuCR1');
 INSERT INTO t_names VALUES('the_GUI','_6Pc0DV2SCkMSiNlcf');
 INSERT INTO t_names VALUES('the_system','_0BV96V94PJIn9si1K');
@@ -1251,7 +1253,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476278564,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476281202,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1269,7 +1271,8 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476278564,'
     "va": {
      "tup": [
       "_32t79xvXNDPCYP09j",
-      "_7Yx8genl596yeIpzx"
+      "_7Yx8genl596yeIpzx",
+      "_9303T7c4CXtDNubsF"
      ]
     }
    },
@@ -2401,6 +2404,26 @@ INSERT INTO t_objects VALUES('_7bJ4E6Mui5Ls7Tkx5',1475136142,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_7dt7hgtLUDuZX3NSw',1476281473,'
+{
+ "@name": "pb_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "var ptrb for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_4gL356V63EbWezvCo"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3hq90zS3jpqaVDbDy','','','');
 INSERT INTO t_objects VALUES('_7h20HFhtjZljRLtbU',1474464458,'
 {
  "@name": "set",
@@ -2463,6 +2486,19 @@ INSERT INTO t_objects VALUES('_7mW2hPaN6NfV95VUY',1475649221,'
  "comps": null
 }
 ','_7zd6NdDtMbPp0s5HT','','','');
+INSERT INTO t_objects VALUES('_7rH2hUnmW63o78UGC',1476281652,'
+{
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "body of test1_ptrb_get"
+   }
+  ]
+ },
+ "comps": null
+}
+','_1lU1wXlGlR9TdmE89','','','');
 INSERT INTO t_objects VALUES('_7vy5VxtVon8EhIF5D',1474354808,'
 {
  "@name": "result_ctype",
@@ -2734,6 +2770,46 @@ INSERT INTO t_objects VALUES('_8vY2GjybG9SSjrgKU',1473701710,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_9303T7c4CXtDNubsF',1476281652,'
+{
+ "@name": "test1_ptrb_get",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_1ZY6i2rKse5FsKrsv",
+    "va": {
+     "oid": "_1Fj6Xh5tt7yWEMI6o"
+    }
+   },
+   {
+    "at": "_49p2zcDH6JgIxjue1",
+    "va": {
+     "oid": "_7rH2hUnmW63o78UGC"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "get the field in a ptrb for test1"
+   },
+   {
+    "at": "_7he4MBcSuccJxtj7q",
+    "va": {
+     "oid": "_6gj4ZHinqqqvdWKyg"
+    }
+   },
+   {
+    "at": "_8Cl7x1LpaH2GzkdbW",
+    "va": {
+     "tup": [
+      "_7dt7hgtLUDuZX3NSw"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3pK47DLRw3N5Ghv0R','','','');
 ---- TABLE t_modules @@@@@@@
 COMMIT;
 -- monimelt-dump-state end dump _momstate.sqlite

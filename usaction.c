@@ -532,8 +532,6 @@ mofun_get_useract (mo_objref_t obuact)
       unsigned cnt = mo_objref_comp_count (obr);
       missing = whatrk < -(int) cnt || whatrk >= (int) cnt;
       vres = mo_objref_get_comp (obr, whatrk);
-      if (vres)
-        missing = false;
     }
   else
     mom_gui_fail_user_action
@@ -546,7 +544,14 @@ mofun_get_useract (mo_objref_t obuact)
            mo_objref_pnamestr (obr), mo_value_pnamestr (whatv));
       vres = defv;
     }
-  return defv;
+  MOM_BACKTRACEPRINTF("get_useract: obr=%s whatv=%s defv=%s vres=%s missing %s",
+		   mo_objref_pnamestr(obr),
+		   mo_value_pnamestr(whatv),
+		   mo_value_pnamestr(defv),
+		   mo_value_pnamestr(vres),
+		   missing ? "true":"false");
+
+  return vres;
 }                               /* end of mofun_get_useract */
 
 ////////////////
