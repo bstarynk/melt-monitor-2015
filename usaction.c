@@ -544,12 +544,11 @@ mofun_get_useract (mo_objref_t obuact)
            mo_objref_pnamestr (obr), mo_value_pnamestr (whatv));
       vres = defv;
     }
-  MOM_BACKTRACEPRINTF("get_useract: obr=%s whatv=%s defv=%s vres=%s missing %s",
-		   mo_objref_pnamestr(obr),
-		   mo_value_pnamestr(whatv),
-		   mo_value_pnamestr(defv),
-		   mo_value_pnamestr(vres),
-		   missing ? "true":"false");
+  MOM_BACKTRACEPRINTF
+    ("get_useract: obr=%s whatv=%s defv=%s vres=%s missing %s",
+     mo_objref_pnamestr (obr), mo_value_pnamestr (whatv),
+     mo_value_pnamestr (defv), mo_value_pnamestr (vres),
+     missing ? "true" : "false");
 
   return vres;
 }                               /* end of mofun_get_useract */
