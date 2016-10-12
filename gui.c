@@ -106,36 +106,6 @@ momgui_gobrefcount (GObject * ob)
 #define MOMGUI_GOBREFCOUNT(Ob) momgui_gobrefcount(G_OBJECT(Ob))
 
 
-// Each displayed object is displayed only once, and we keep the
-// following GTK information about it
-typedef struct momgui_dispobjinfo_st momgui_dispobjinfo_ty;
-struct momgui_dispobjinfo_st
-{
-  // the displayed object reference
-  mo_objref_t mo_gdo_dispobr;
-  // for subdisplayed objects, the reference of the containing display
-  mo_objref_t mo_gdo_inobr;
-  // the start and end mark of the text buffer slice displaying that object
-  GtkTextMark *mo_gdo_startmark;
-  GtkTextMark *mo_gdo_endmark;
-  // the anchor for the hidezoom minibutton
-  GtkTextChildAnchor *mo_gdo_hidezoomanchor;
-  // the hidezoom minibutton in tview1 & tview2
-  GtkWidget *mo_gdo_hidezoombutton1;
-  GtkWidget *mo_gdo_hidezoombutton2;
-};
-typedef struct momgui_dispctxt_st momgui_dispctxt_ty;
-#define MOMGUI_DISPCTXT_MAGIC 0x38a104bdU       /*950076605u */
-struct momgui_dispctxt_st
-{                               // stack allocated 
-  unsigned mo_gdx_nmagic;       // always MOMGUI_DISPCTXT_MAGIC
-  unsigned short mo_gdx_maxdepth;       // maximal depth
-  unsigned short mo_gdx_curdepth;       // current depth of object
-  GtkTextIter mo_gdx_iter;      // current textiter
-  mo_objref_t mo_gdx_obr;       // the containing object reference
-  momgui_dispobjinfo_ty *mo_gdx_dispinfo;       // top display information
-};                              /* end struct momgui_dispctxt_st */
-
 // The glib hashtable mapping objects to above momgui_dispobjinfo_ty
 static GHashTable *mom_dispobjinfo_hashtable;
 
@@ -392,51 +362,10 @@ mom_toggled_command_shown (GtkCheckMenuItem * chkitm, void *data MOM_UNUSED)
     }
 }                               /* end mom_toggled_command_shown */
 
-#define MOM_DISPLAY_INDENTED_NEWLINE(Pdispx,Depth,...) do {	\
-    momgui_dispctxt_ty*_pdx = (Pdispx);				\
-    int _depth = (Depth);					\
-    MOM_ASSERTPRINTF(_pdx != NULL				\
-		     && _pdx->mo_gdx_nmagic			\
-		     == MOMGUI_DISPCTXT_MAGIC,			\
-		     "bad _pdx");				\
-    gtk_text_buffer_insert_with_tags				\
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,			\
-       &("                \n"[16-_depth%16]), 1+_depth%16,	\
-       ##__VA_ARGS__, NULL);					\
-  } while(0)
-
-#define MOM_DISPLAY_OPENING(Pdispx,VarOff,Str,...) do {	\
-    momgui_dispctxt_ty*_pdx = (Pdispx);			\
-    MOM_ASSERTPRINTF(_pdx != NULL			\
-		     && _pdx->mo_gdx_nmagic		\
-		     == MOMGUI_DISPCTXT_MAGIC,		\
-		     "bad _pdx");			\
-    VarOff =						\
-      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);	\
-    gtk_text_buffer_insert_with_tags			\
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,		\
-       (Str), strlen((Str)),				\
-       ##__VA_ARGS__, NULL);				\
-  } while(0)
-
-#define MOM_DISPLAY_CLOSING(Pdispx,VarOff,Str,...) do {	\
-    momgui_dispctxt_ty*_pdx = (Pdispx);			\
-    MOM_ASSERTPRINTF(_pdx != NULL			\
-		     && _pdx->mo_gdx_nmagic		\
-		     == MOMGUI_DISPCTXT_MAGIC,		\
-		     "bad _pdx");			\
-    gtk_text_buffer_insert_with_tags			\
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,		\
-       (Str), strlen((Str)),				\
-       ##__VA_ARGS__, NULL);				\
-    VarOff =						\
-      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);	\
-  } while(0)
-
 // display the object in the display context
 void mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth);
 
-static void
+void
 mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
                     GtkTextTag * xobtag)
 {
@@ -542,7 +471,7 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
 }                               /* end mom_display_objref */
 
 
-static void
+void
 mom_display_full_subobject (mo_objref_t subobr, momgui_dispctxt_ty * pdx,
                             int depth)
 {
@@ -572,7 +501,7 @@ mom_display_full_subobject (mo_objref_t subobr, momgui_dispctxt_ty * pdx,
   pdx->mo_gdx_iter = subdispx.mo_gdx_iter;
 }                               /* end mom_display_full_subobject */
 
-static void
+void
 mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
                    int depth, GtkTextTag * valtag)
 {
@@ -693,7 +622,7 @@ mom_display_value (mo_value_t val, momgui_dispctxt_ty * pdx,
 }                               /* end of mom_display_value */
 
 
-static void
+void
 mom_display_assoval (mo_assovaldatapayl_ty * asso, momgui_dispctxt_ty * pdx,
                      int depth)
 {
@@ -746,7 +675,7 @@ mom_display_assoval (mo_assovaldatapayl_ty * asso, momgui_dispctxt_ty * pdx,
 }                               /* end mom_display_assoval  */
 
 
-static void
+void
 mom_display_hashset (mo_hashsetpayl_ty * hset, momgui_dispctxt_ty * pdx,
                      int depth)
 {
@@ -805,7 +734,7 @@ mom_display_hashset (mo_hashsetpayl_ty * hset, momgui_dispctxt_ty * pdx,
 
 
 
-static void
+void
 mom_display_list (mo_listpayl_ty * list, momgui_dispctxt_ty * pdx, int depth)
 {
   MOM_ASSERTPRINTF (pdx != NULL
@@ -856,7 +785,7 @@ mom_display_list (mo_listpayl_ty * list, momgui_dispctxt_ty * pdx, int depth)
 }                               /* end mom_display_list  */
 
 
-static void
+void
 mom_display_vectval (mo_vectvaldatapayl_ty * vect, momgui_dispctxt_ty * pdx,
                      int depth)
 {
@@ -912,7 +841,7 @@ mom_display_vectval (mo_vectvaldatapayl_ty * vect, momgui_dispctxt_ty * pdx,
 }                               /* end mom_display_vectval  */
 
 
-static void
+void
 mom_display_inthmap (mo_inthmappayl_ty * ihmap, momgui_dispctxt_ty * pdx,
                      int depth)
 {
@@ -964,7 +893,7 @@ mom_display_inthmap (mo_inthmappayl_ty * ihmap, momgui_dispctxt_ty * pdx,
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
 }                               /* end of mom_display_inthmap */
 
-static void
+void
 mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
 {
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr) != NULL, "bad obr");
