@@ -512,7 +512,8 @@ mofun_get_useract (mo_objref_t obuact)
   mo_value_t whatv = mo_objref_get_comp (obuact, MOMIX_WHAT);
   bool missing = true;
   mo_value_t defv = (mo_objref_get_comp (obuact, MOMIX_OPTDEFAULT));
-  if (nbargs != MOMIX__LAST || nbargs != MOMIX__LAST - 1)
+  if (nbargs != MOMIX_OPTDEFAULT
+      && nbargs != MOMIX__LAST && nbargs != MOMIX__LAST - 1)
     mom_gui_fail_user_action
       ("$get(&obj &attr [&default]) or $get(&obj &rank [&def..]) requires two or three arguments, got %d",
        nbargs - 1);
