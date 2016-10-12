@@ -734,11 +734,17 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476262662,'
+INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476275668,'
 {
  "@name": "fieldbuu_test1",
  "attrs": {
   "assoval": [
+   {
+    "at": "_3St1x2rkjnH28CyRy",
+    "va": {
+     "oid": "_4gL356V63EbWezvCo"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "fieldbuu in structb for test1"
@@ -933,7 +939,7 @@ INSERT INTO t_objects VALUES('_3P48jR3hSzSCgv48c',1474312760,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_3S16HFayBKLRo6Ivb',1475649018,'
+INSERT INTO t_objects VALUES('_3S16HFayBKLRo6Ivb',1476275589,'
 {
  "@name": "object_ctype",
  "attrs": {
@@ -941,12 +947,16 @@ INSERT INTO t_objects VALUES('_3S16HFayBKLRo6Ivb',1475649018,'
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "the ctype of objects"
+   },
+   {
+    "at": "_64d2GXNLEBKFBzxqP",
+    "va": "mo_objref_t"
    }
   ]
  },
  "comps": null
 }
-','','','','');
+','_7zd6NdDtMbPp0s5HT','','','');
 INSERT INTO t_objects VALUES('_3St1x2rkjnH28CyRy',1475079734,'
 {
  "@name": "in",
@@ -1212,7 +1222,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476261907,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476275649,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1260,6 +1270,7 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476261907,'
     "at": "_8TY6UsXJ3Djt71By3",
     "va": {
      "tup": [
+      "_3S16HFayBKLRo6Ivb",
       "_4PC3UuhlSMFLv5UNF",
       "_4gL356V63EbWezvCo",
       "_0Ze1dDI740vldabtI",
@@ -1510,11 +1521,17 @@ INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
  }
 }
 ','_4Fo3f0PrwI6hwjSzM','','','');
-INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476262348,'
+INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476275668,'
 {
  "@name": "fielday_test1",
  "attrs": {
   "assoval": [
+   {
+    "at": "_3St1x2rkjnH28CyRy",
+    "va": {
+     "oid": "_4PC3UuhlSMFLv5UNF"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "fielday in structa for test1"
@@ -1845,11 +1862,17 @@ INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
  }
 }
 ','_1lU1wXlGlR9TdmE89','','','');
-INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476262219,'
+INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476275668,'
 {
  "@name": "fieldax_test1",
  "attrs": {
   "assoval": [
+   {
+    "at": "_3St1x2rkjnH28CyRy",
+    "va": {
+     "oid": "_4PC3UuhlSMFLv5UNF"
+    }
+   },
    {
     "at": "_4xS1CSbRUFBW6PJiJ",
     "va": "fieldax in structa for test1"
