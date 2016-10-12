@@ -1,4 +1,4 @@
--- _momstate.sql dump 2016 Oct 11 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
+-- _momstate.sql dump 2016 Oct 12 from _momstate.sqlite dumped by ./monimelt-dump-state.sh .....
 
  --   Copyright (C) 2016 Free Software Foundation, Inc.
  --  MONIMELT is a monitor for MELT - see http://gcc-melt.org/
@@ -77,6 +77,9 @@ INSERT INTO t_names VALUES('expression','_64h4VCbZPNyxt22DN');
 INSERT INTO t_names VALUES('extend','_15c0LcIrdf2LE5JP8');
 INSERT INTO t_names VALUES('extern','_5dn8uwCs0vUJ9AG7y');
 INSERT INTO t_names VALUES('field','_7Yc7kkHv9YpYsyBjv');
+INSERT INTO t_names VALUES('fieldax_test1','_60n0n6BcCEfIXDSDq');
+INSERT INTO t_names VALUES('fielday_test1','_4zh4HcLnponnMH1qj');
+INSERT INTO t_names VALUES('fieldbuu_test1','_29K60lePha3CHHZX8');
 INSERT INTO t_names VALUES('fields','_7Pl7foCRjKoT6Gkdr');
 INSERT INTO t_names VALUES('file_path','_6F98Bo2ChKhNVEZgt');
 INSERT INTO t_names VALUES('fnmatch','_5Ta34TyJJebRyD9sN');
@@ -142,6 +145,8 @@ INSERT INTO t_names VALUES('signature_two_objects_to_void','_0dV2PYaSBUDE7lsYq')
 INSERT INTO t_names VALUES('string','_2k61pgEBsCRJlTpHG');
 INSERT INTO t_names VALUES('struct_ctype_class','_3CM77K3hIhblwvxg3');
 INSERT INTO t_names VALUES('struct_pointer_ctype_class','_53F6MjNKRJ8dutl09');
+INSERT INTO t_names VALUES('structa_test1','_4PC3UuhlSMFLv5UNF');
+INSERT INTO t_names VALUES('structb_test1','_4gL356V63EbWezvCo');
 INSERT INTO t_names VALUES('test1_idint','_32t79xvXNDPCYP09j');
 INSERT INTO t_names VALUES('test1_informint','_7Yx8genl596yeIpzx');
 INSERT INTO t_names VALUES('test1_module','_4NE8paRtDiMVlhHXX');
@@ -729,6 +734,26 @@ INSERT INTO t_objects VALUES('_22z6Be6oa3IH524Jy',1472999195,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_29K60lePha3CHHZX8',1476262662,'
+{
+ "@name": "fieldbuu_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "fieldbuu in structb for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_8BM91hTnefUPcYXzf"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_2S74ZUom3c1ieX0T2',1475999773,'
 {
  "@name": "case",
@@ -1187,7 +1212,7 @@ INSERT INTO t_objects VALUES('_4H01ICaNuWncMePhe',1474896198,'
  "comps": null
 }
 ','','','','');
-INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475827099,'
+INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1476261907,'
 {
  "@name": "test1_module",
  "attrs": {
@@ -1235,6 +1260,8 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475827099,'
     "at": "_8TY6UsXJ3Djt71By3",
     "va": {
      "tup": [
+      "_4PC3UuhlSMFLv5UNF",
+      "_4gL356V63EbWezvCo",
       "_0Ze1dDI740vldabtI",
       "_5SE2qc92qZjlzudEX"
      ]
@@ -1245,6 +1272,29 @@ INSERT INTO t_objects VALUES('_4NE8paRtDiMVlhHXX',1475827099,'
  "comps": null
 }
 ','_22z6Be6oa3IH524Jy','','','');
+INSERT INTO t_objects VALUES('_4PC3UuhlSMFLv5UNF',1476262124,'
+{
+ "@name": "structa_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "type for struct a in test1"
+   },
+   {
+    "at": "_7Pl7foCRjKoT6Gkdr",
+    "va": {
+     "tup": [
+      "_60n0n6BcCEfIXDSDq",
+      "_4zh4HcLnponnMH1qj"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_3CM77K3hIhblwvxg3','','','');
 INSERT INTO t_objects VALUES('_4Ph1Z99dptyJhpZfj',1474873729,'
 {
  "@name": "remove",
@@ -1313,6 +1363,34 @@ INSERT INTO t_objects VALUES('_4fJ1XYu10x1k9lpMg',1476107513,'
  "comps": null
 }
 ','','','','');
+INSERT INTO t_objects VALUES('_4gL356V63EbWezvCo',1476262603,'
+{
+ "@name": "structb_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_15c0LcIrdf2LE5JP8",
+    "va": {
+     "oid": "_4PC3UuhlSMFLv5UNF"
+    }
+   },
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "type for structb in test1"
+   },
+   {
+    "at": "_7Pl7foCRjKoT6Gkdr",
+    "va": {
+     "tup": [
+      "_29K60lePha3CHHZX8"
+     ]
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_53F6MjNKRJ8dutl09','','','');
 INSERT INTO t_objects VALUES('_4iH7xI2JtAomiBySj',1474477481,'
 {
  "@name": "array_ctype_class",
@@ -1432,6 +1510,26 @@ INSERT INTO t_objects VALUES('_4zT3VnaB6kIFN521E',1475826143,'
  }
 }
 ','_4Fo3f0PrwI6hwjSzM','','','');
+INSERT INTO t_objects VALUES('_4zh4HcLnponnMH1qj',1476262348,'
+{
+ "@name": "fielday_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "fielday in structa for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_3S16HFayBKLRo6Ivb"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_52u5dMMjzLjdlgIMF',1475582058,'
 {
  "@name": "reference",
@@ -1747,6 +1845,26 @@ INSERT INTO t_objects VALUES('_5yC9bVC2dye6hgmVq',1475728983,'
  }
 }
 ','_1lU1wXlGlR9TdmE89','','','');
+INSERT INTO t_objects VALUES('_60n0n6BcCEfIXDSDq',1476262219,'
+{
+ "@name": "fieldax_test1",
+ "attrs": {
+  "assoval": [
+   {
+    "at": "_4xS1CSbRUFBW6PJiJ",
+    "va": "fieldax in structa for test1"
+   },
+   {
+    "at": "_8TY6UsXJ3Djt71By3",
+    "va": {
+     "oid": "_0Sp1Lg7ctajS7oX5i"
+    }
+   }
+  ]
+ },
+ "comps": null
+}
+','_6Lu6DXoGivCCHMwzV','','','');
 INSERT INTO t_objects VALUES('_62H0GDHPCtIRvAdDd',1474473139,'
 {
  "@name": "int8_t",
