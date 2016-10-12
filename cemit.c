@@ -4140,14 +4140,14 @@ mom_cemit_scan_member_access (struct mom_cemitlocalstate_st *csta,
     MOM_CEMITFAILURE (MOM_CEMIT_ADD_DATA
                       (csta, accob, fieldob, fieldinob, fromtypob, fromob),
                       "cemit_scan_member_access: expr %s with field %s accessed from %s of type %s"
-                      " incompatible with %s, depth %s, from %s",
+                      " incompatible with %s, depth %d, from %s",
                       mo_objref_pnamestr (accob),
                       mo_objref_pnamestr (fieldob),
                       mo_value_pnamestr (fromexpv),
                       mo_objref_pnamestr (fromtypob),
                       mo_objref_pnamestr (fieldinob), depth,
                       mo_objref_pnamestr (fromob));
-  return supertypob;
+  return fieldtypob;
 }                               /* end of mom_cemit_scan_member_access */
 
 
@@ -4247,11 +4247,11 @@ mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st * csta,
                     MOM_PREDEF (cast_expression_class),
                     "cemit_scan_cast_expr: bad castob %s",
                     mo_objref_pnamestr (castob));
-  mo_value_t expv = mo_objref_get_attr (castob, MOM_PREDEF (expression));
+  mo_value_t fromexpv = mo_objref_get_attr (castob, MOM_PREDEF (from));
   // there is no point of casting NIL, so...
-  if (!expv)
+  if (!fromexpv)
     MOM_CEMITFAILURE (csta,
-                      "cemit_scan_cast_expr: cast expr %s without sub-`expression`, depth %d, from %s",
+                      "cemit_scan_cast_expr: cast expr %s without `from`, depth %d, from %s",
                       mo_objref_pnamestr (castob), depth,
                       mo_objref_pnamestr (fromob));
   mo_objref_t ctypob =
@@ -4267,14 +4267,28 @@ mom_cemit_scan_cast_expr (struct mom_cemitlocalstate_st * csta,
                       mo_objref_pnamestr (castob),
                       mo_objref_pnamestr (ctypob), depth,
                       mo_objref_pnamestr (fromob));
-#warning mom_cemit_scan_cast_expr unimplemented
-  MOM_FATAPRINTF ("cemit_scan_cast_expr: unimplemented castob=%s",
-                  mo_objref_pnamestr (castob));
+  mo_objref_t frxtypob =
+    mom_cemit_scan_expression (csta, fromexpv, castob, depth + 1);
+  if (!frxtypob)
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: cast expr %s from untyped sub-expr %s, depth %d, from %s",
+                      mo_objref_pnamestr (castob),
+                      mo_value_pnamestr (fromexpv), depth,
+                      mo_objref_pnamestr (fromob));
+  if (!mom_cemit_ctype_is_scalar (csta, frxtypob)
+      || !mom_cemit_ctype_is_scalar (csta, ctypob))
+    MOM_CEMITFAILURE (csta,
+                      "cemit_scan_cast_expr: cast expr %s fromtype %s & totype %s not scalars,"
+                      " depth %d, from %s", mo_objref_pnamestr (castob),
+                      mo_objref_pnamestr (frxtypob),
+                      mo_objref_pnamestr (ctypob), depth,
+                      mo_objref_pnamestr (fromob));
+  return ctypob;
 }                               /* end of mom_cemit_scan_cast_expr */
 
 
 mo_objref_t
-mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st *csta,
+mom_cemit_scan_chunk_expr (struct mom_cemitlocalstate_st * csta,
                            mo_objref_t chkob, mo_objref_t fromob,
                            int depth, bool isref)
 {
@@ -4696,7 +4710,7 @@ mom_cemit_write_chunk_instr (struct mom_cemitlocalstate_st *csta,
 void
 mom_cemit_write_jump_instr (struct mom_cemitlocalstate_st *csta,
                             mo_objref_t instrob, mo_objref_t fromob,
-                            mo_objref_t rolinsob, int depth)
+                            mo_objref_t rolinsob, int depth MOM_UNUSED)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
@@ -4821,7 +4835,7 @@ mom_cemit_write_cond_instr (struct mom_cemitlocalstate_st *csta,
 void
 mom_cemit_write_call_instr (struct mom_cemitlocalstate_st *csta,
                             mo_objref_t instrob, mo_objref_t fromob,
-                            mo_objref_t rolinsob, int depth)
+                            mo_objref_t rolinsob, int depth MOM_UNUSED)
 {
   MOM_ASSERTPRINTF (csta && csta->mo_cemsta_nmagic == MOM_CEMITSTATE_MAGIC
                     && csta->mo_cemsta_fil != NULL,
