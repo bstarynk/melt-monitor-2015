@@ -22,24 +22,24 @@
 
 static GtkCssProvider *mom_gtkcssprov;
 static GQuark mom_gquark;
-static GtkTextBuffer *mom_obtextbuf;
-static GtkTextTagTable *mom_obtagtable;
-static GtkTextTag *mom_tag_toptitle;    // tag for top text
-static GtkTextTag *mom_tag_objtitle;    // tag for object title line
-static GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
-static GtkTextTag *mom_tag_objname;     // tag for object names
-static GtkTextTag *mom_tag_class;       // tag for class
-static GtkTextTag *mom_tag_payload;     // tag for payload
-static GtkTextTag *mom_tag_attr;        // tag for attributes
-static GtkTextTag *mom_tag_idstart;     // tag for first characters of objids
-static GtkTextTag *mom_tag_idrest;      // tag for rest of objids
-static GtkTextTag *mom_tag_number;      // tag for numbers
-static GtkTextTag *mom_tag_string;      // tag for strings
-static GtkTextTag *mom_tag_sequence;    // tag for sequences (tuples & sets)
-static GtkTextTag *mom_tag_time;        // tag for time
-static GtkTextTag *mom_tag_comment;     // tag for comment
-static GtkTextTag *mom_tag_index;       // tag for indexes
-static GtkTextTag *mom_tag_json;        // tag for JSON
+GtkTextBuffer *mom_obtextbuf;
+GtkTextTagTable *mom_obtagtable;
+GtkTextTag *mom_tag_toptitle;   // tag for top text
+GtkTextTag *mom_tag_objtitle;   // tag for object title line
+GtkTextTag *mom_tag_objsubtitle;        // tag for object subtitle line
+GtkTextTag *mom_tag_objname;    // tag for object names
+GtkTextTag *mom_tag_class;      // tag for class
+GtkTextTag *mom_tag_payload;    // tag for payload
+GtkTextTag *mom_tag_attr;       // tag for attributes
+GtkTextTag *mom_tag_idstart;    // tag for first characters of objids
+GtkTextTag *mom_tag_idrest;     // tag for rest of objids
+GtkTextTag *mom_tag_number;     // tag for numbers
+GtkTextTag *mom_tag_string;     // tag for strings
+GtkTextTag *mom_tag_sequence;   // tag for sequences (tuples & sets)
+GtkTextTag *mom_tag_time;       // tag for time
+GtkTextTag *mom_tag_comment;    // tag for comment
+GtkTextTag *mom_tag_index;      // tag for indexes
+GtkTextTag *mom_tag_json;       // tag for JSON
 static GtkWidget *mom_appwin;
 static GtkWidget *mom_obtview1;
 static GtkWidget *mom_obtview2;
@@ -1107,10 +1107,10 @@ mom_display_objpayload (mo_objref_t obr, momgui_dispctxt_ty * pdx, int depth)
           break;
         case CASE_PAYLOAD_MOM (payload_c_emit):
           {
-            const char *detstr = mo_objref_cemit_detailstr (obr);
-            if (detstr)
-              gtk_text_buffer_insert_with_tags  //
-                (mom_obtextbuf, piter, detstr, -1, mom_tag_payload, NULL);
+            extern void mom_display_cemit (mo_cemitpayl_ty * cemit,
+                                           momgui_dispctxt_ty * pdx,
+                                           int depth);
+            mom_display_cemit ((mo_cemitpayl_ty *) payldata, pdx, depth + 1);
           }
           break;
         default:

@@ -1877,14 +1877,32 @@ struct momgui_dispctxt_st
 // compare function for displayed objects
 int mom_dispobj_cmp (const void *p1, const void *p2);
 
+extern GtkTextBuffer *mom_obtextbuf;
+extern GtkTextTagTable *mom_obtagtable;
+extern GtkTextTag *mom_tag_toptitle;    // tag for top text
+extern GtkTextTag *mom_tag_objtitle;    // tag for object title line
+extern GtkTextTag *mom_tag_objsubtitle; // tag for object subtitle line
+extern GtkTextTag *mom_tag_objname;     // tag for object names
+extern GtkTextTag *mom_tag_class;       // tag for class
+extern GtkTextTag *mom_tag_payload;     // tag for payload
+extern GtkTextTag *mom_tag_attr;        // tag for attributes
+extern GtkTextTag *mom_tag_idstart;     // tag for first characters of objids
+extern GtkTextTag *mom_tag_idrest;      // tag for rest of objids
+extern GtkTextTag *mom_tag_number;      // tag for numbers
+extern GtkTextTag *mom_tag_string;      // tag for strings
+extern GtkTextTag *mom_tag_sequence;    // tag for sequences (tuples & sets)
+extern GtkTextTag *mom_tag_time;        // tag for time
+extern GtkTextTag *mom_tag_comment;     // tag for comment
+extern GtkTextTag *mom_tag_index;       // tag for indexes
+extern GtkTextTag *mom_tag_json;        // tag for JSON
 
 #define MOM_DISPLAY_INDENTED_NEWLINE(Pdispx,Depth,...) do { \
     momgui_dispctxt_ty*_pdx = (Pdispx);       \
     int _depth = (Depth);         \
     MOM_ASSERTPRINTF(_pdx != NULL       \
-         && _pdx->mo_gdx_nmagic     \
-         == MOMGUI_DISPCTXT_MAGIC,      \
-         "bad _pdx");       \
+         && _pdx->mo_gdx_nmagic         \
+         == MOMGUI_DISPCTXT_MAGIC,        \
+         "bad _pdx");           \
     gtk_text_buffer_insert_with_tags        \
       (mom_obtextbuf, &_pdx->mo_gdx_iter,     \
        &("                \n"[16-_depth%16]), 1+_depth%16,  \
@@ -1894,9 +1912,9 @@ int mom_dispobj_cmp (const void *p1, const void *p2);
 #define MOM_DISPLAY_OPENING(Pdispx,VarOff,Str,...) do { \
     momgui_dispctxt_ty*_pdx = (Pdispx);     \
     MOM_ASSERTPRINTF(_pdx != NULL     \
-         && _pdx->mo_gdx_nmagic   \
-         == MOMGUI_DISPCTXT_MAGIC,    \
-         "bad _pdx");     \
+         && _pdx->mo_gdx_nmagic       \
+         == MOMGUI_DISPCTXT_MAGIC,      \
+         "bad _pdx");         \
     VarOff =            \
       gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);  \
     gtk_text_buffer_insert_with_tags      \
@@ -1908,9 +1926,9 @@ int mom_dispobj_cmp (const void *p1, const void *p2);
 #define MOM_DISPLAY_CLOSING(Pdispx,VarOff,Str,...) do { \
     momgui_dispctxt_ty*_pdx = (Pdispx);     \
     MOM_ASSERTPRINTF(_pdx != NULL     \
-         && _pdx->mo_gdx_nmagic   \
-         == MOMGUI_DISPCTXT_MAGIC,    \
-         "bad _pdx");     \
+         && _pdx->mo_gdx_nmagic       \
+         == MOMGUI_DISPCTXT_MAGIC,      \
+         "bad _pdx");         \
     gtk_text_buffer_insert_with_tags      \
       (mom_obtextbuf, &_pdx->mo_gdx_iter,   \
        (Str), strlen((Str)),        \

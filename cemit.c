@@ -44,8 +44,7 @@
   /* each global object, routine, ... has also a global role */		\
   mo_assovaldatapayl_ty *mo_cemit_assocmodulrole;			\
   mo_objref_t mo_cemit_curfun; /* the current function */		\
-  /* each variable, expression, instruction, block has some role
-     describing more of it */ \
+  /* each variable, expression, instruction, block has some role describing more of it */ \
   mo_assovaldatapayl_ty *mo_cemit_assoclocalrole;      /* associate objects to some role in the current function */ \
   mo_hashsetpayl_ty *mo_cemit_hsetjumpedblocks;        /* the hashset of jumped-into blocks */ \
   mo_listpayl_ty *mo_cemit_endtodolist  /* list of things to do at end */
@@ -5563,5 +5562,33 @@ mom_cemit_todo_put_attr (struct mom_cemitlocalstate_st *csta,
   mo_objref_put_comp (todobj, MOTODIX_PUTATTR_VAL, val);
   mom_cemit_todo_last_at_end (csta, todobj);
 }                               /* end of mom_cemit_todo_put_attr */
+
+void
+mom_display_cemit (mo_cemitpayl_ty * cemit,
+                   momgui_dispctxt_ty * pdx, int depth)
+{
+  extern GtkTextTag *mom_tag_payload;   // tag for payload
+  MOM_ASSERTPRINTF (pdx != NULL
+                    && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
+                    "bad pdx");
+  GtkTextIter *piter = &pdx->mo_gdx_iter;
+  int maxdepth = pdx->mo_gdx_maxdepth;
+  cemit = mo_dyncastpayl_cemit (cemit);
+  if (!cemit)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "_", 1, mom_tag_payload, NULL);
+    }
+  else if (depth >= maxdepth)
+    {
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\200\246",  // U+2026 HORIZONTAL ELLIPSIS …
+         3, mom_tag_payload, NULL);
+      return;
+    }
+#warning very incomplete mom_display_cemit
+  MOM_BACKTRACEPRINTF("very incomplete mom_display_cemit");
+}                               /* end of mom_display_cemit */
+
 
 /*** end of file cemit.c ***/
