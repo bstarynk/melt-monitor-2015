@@ -5568,6 +5568,7 @@ mom_display_cemit (mo_cemitpayl_ty * cemit,
                    momgui_dispctxt_ty * pdx, int depth)
 {
   extern GtkTextTag *mom_tag_payload;   // tag for payload
+  extern GtkTextTag *mom_tag_index;     // tag for indexes
   MOM_ASSERTPRINTF (pdx != NULL
                     && pdx->mo_gdx_nmagic == MOMGUI_DISPCTXT_MAGIC,
                     "bad pdx");
@@ -5586,8 +5587,71 @@ mom_display_cemit (mo_cemitpayl_ty * cemit,
          3, mom_tag_payload, NULL);
       return;
     }
-#warning very incomplete mom_display_cemit
-  MOM_BACKTRACEPRINTF("very incomplete mom_display_cemit");
+  MOM_ASSERTPRINTF (cemit->mo_cemit_nmagic == MOM_CEMIT_MAGIC,
+                    "display_cemit: bad cemit");
+  gtk_text_buffer_insert_with_tags      //
+    (mom_obtextbuf, piter,
+     "\342\201\215" /*U+204D BLACK RIGHTWARDS BULLET ⁍ */ ,
+     4, mom_tag_payload, NULL);
+  mom_display_objref (cemit->mo_cemit_modobj, pdx, mom_tag_payload);
+  if (cemit->mo_cemit_objset)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "objset:", -1, mom_tag_index, NULL);
+      mom_display_value (cemit->mo_cemit_objset, pdx, depth, mom_tag_payload);
+    }
+  if (cemit->mo_cemit_hsetctypes)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "hsetctypes:", -1, mom_tag_index, NULL);
+      mom_display_hashset (cemit->mo_cemit_hsetctypes, pdx, depth);
+    }
+  if (cemit->mo_cemit_hsetincludes)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "hsetincludes:", -1, mom_tag_index, NULL);
+      mom_display_hashset (cemit->mo_cemit_hsetincludes, pdx, depth);
+    }
+  if (cemit->mo_cemit_assocmodulrole)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "assocmodulerole:", -1, mom_tag_index, NULL);
+      mom_display_assoval (cemit->mo_cemit_assocmodulrole, pdx, depth);
+    }
+  if (cemit->mo_cemit_curfun)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "\342\201\234" /*U+205C DOTTED CROSS ⁜ */ ,
+         4, mom_tag_payload, NULL);
+      mom_display_objref (cemit->mo_cemit_curfun, pdx, mom_tag_payload);
+    }
+  if (cemit->mo_cemit_assoclocalrole)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "assoclocalrole:", -1, mom_tag_index, NULL);
+      mom_display_assoval (cemit->mo_cemit_assoclocalrole, pdx, depth);
+    }
+  if (cemit->mo_cemit_hsetjumpedblocks)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "hsetjumpedblocks:", -1, mom_tag_index, NULL);
+      mom_display_hashset (cemit->mo_cemit_hsetjumpedblocks, pdx, depth);
+    }
+  if (cemit->mo_cemit_endtodolist)
+    {
+      MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, mom_tag_payload);
+      gtk_text_buffer_insert_with_tags  //
+        (mom_obtextbuf, piter, "endtodolist:", -1, mom_tag_index, NULL);
+      mom_display_list (cemit->mo_cemit_endtodolist, pdx, depth);
+    }
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
 }                               /* end of mom_display_cemit */
 
 
