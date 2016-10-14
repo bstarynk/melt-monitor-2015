@@ -27,6 +27,8 @@ GtkTextBuffer *mom_obtextbuf;
 GtkTextTagTable *mom_obtagtable;
 GtkTextTag *mom_tag_toptitle;   // tag for top text
 GtkTextTag *mom_tag_objtitle;   // tag for object title line
+GtkTextTag *mom_tag_infotitle;  // tag for info in title
+GtkTextTag *mom_tag_activeinfotitle;    // tag for info in title
 GtkTextTag *mom_tag_objsubtitle;        // tag for object subtitle line
 GtkTextTag *mom_tag_objname;    // tag for object names
 GtkTextTag *mom_tag_class;      // tag for class
@@ -34,6 +36,7 @@ GtkTextTag *mom_tag_payload;    // tag for payload
 GtkTextTag *mom_tag_attr;       // tag for attributes
 GtkTextTag *mom_tag_idstart;    // tag for first characters of objids
 GtkTextTag *mom_tag_idrest;     // tag for rest of objids
+GtkTextTag *mom_tag_displayedobj;       // tag for displayed object references
 GtkTextTag *mom_tag_number;     // tag for numbers
 GtkTextTag *mom_tag_string;     // tag for strings
 GtkTextTag *mom_tag_sequence;   // tag for sequences (tuples & sets)
@@ -339,6 +342,7 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
   GtkTextIter *piter = &pdx->mo_gdx_iter;
   MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr");
   MOM_ASSERTPRINTF (piter != NULL, "bad piter");
+  GtkTextIter startit = *piter;
   mo_value_t namv = mo_objref_namev (obr);
   GtkTextTag *objtag = NULL;
   char idbuf[MOM_CSTRIDSIZ];
@@ -432,6 +436,10 @@ mom_display_objref (mo_objref_t obr, momgui_dispctxt_ty * pdx,
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
            3, objtag, xobtag, NULL);
     }                           // end if commv is string and anonymous
+  GtkTextIter endit = *piter;
+  if (mo_assoval_get (momgui_displayed_objasso, obr))
+    gtk_text_buffer_apply_tag (mom_obtextbuf, mom_tag_displayedobj, &startit,
+                               &endit);
 }                               /* end mom_display_objref */
 
 
@@ -1222,6 +1230,17 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
           (mom_obtextbuf, piter, "\342\200\246",        // U+2026 HORIZONTAL ELLIPSIS …
            3, curobjtitletag, NULL);
     }                           // end if commv is string and anonymous
+  int dispdepth =
+    mo_value_to_int (mo_assoval_get (momgui_displayed_objasso, obr), -1);
+  if (dispdepth > 0)
+    {
+      char depthbuf[16];
+      memset (depthbuf, 0, sizeof (depthbuf));
+      snprintf (depthbuf, sizeof (depthbuf), " °%d ", dispdepth);
+      gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
+                                        depthbuf, -1, curobjtitletag,
+                                        mom_tag_infotitle, NULL);
+    }
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, curobjtitletag);
   //// display the mtime
   {
@@ -1972,6 +1991,17 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "font", "Sans Bold",
                                 "paragraph-background", "lightcyan",
                                 "scale", 1.3, NULL);
+  mom_tag_infotitle =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "infotitle",
+                                "font", "Verdana",
+                                "scale", 0.9, "background", "ivory", NULL);
+  mom_tag_activeinfotitle =
+    gtk_text_buffer_create_tag (mom_obtextbuf,
+                                "activeinfotitle",
+                                "font", "Verdana",
+                                "scale", 0.9,
+                                "background", "lemonchiffon2", NULL);
   mom_tag_objsubtitle =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "objsubtitle",
@@ -2054,6 +2084,9 @@ mom_initialize_gtk_tags_for_objects (void)
     gtk_text_buffer_create_tag (mom_obtextbuf, "json", "font",
                                 "Inconsolata, Medium", "scale", 0.83,
                                 "foreground", "khaki1", NULL);
+  mom_tag_displayedobj =
+    gtk_text_buffer_create_tag (mom_obtextbuf, "displayedobj",
+                                "background", "lightskyblue", NULL);
 }                               /* end of mom_initialize_gtk_tags_for_objects */
 
 
@@ -2156,6 +2189,8 @@ momgui_completecmdix (GtkMenuItem * itm MOM_UNUSED, gpointer ixad)
   mom_cmdcomplendoff = 0;
   MOM_INFORMPRINTF ("completecmdix end ixl=%d", (int) ixl);
 }                               /* end of momgui_completecmdix */
+
+
 
 static void momgui_cmdparse_full_buffer (struct momgui_cmdparse_st *cpars);
 
