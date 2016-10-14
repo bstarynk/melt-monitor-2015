@@ -28,8 +28,8 @@ GtkTextTagTable *mom_obtagtable;
 GtkTextTag *mom_tag_toptitle;   // tag for top text
 GtkTextTag *mom_tag_objtitle;   // tag for object title line
 GtkTextTag *mom_tag_infotitle;  // tag for info in title
-GtkTextTag *mom_tag_activeinfotitle;    // tag for info in title
 GtkTextTag *mom_tag_objsubtitle;        // tag for object subtitle line
+GtkTextTag *mom_tag_titleline;  // behavioral tag for title line
 GtkTextTag *mom_tag_objname;    // tag for object names
 GtkTextTag *mom_tag_class;      // tag for class
 GtkTextTag *mom_tag_payload;    // tag for payload
@@ -1135,6 +1135,9 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, FALSE);
   gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
+  GtkTextIter titlinestartit = *piter;
+  int titlinestartoff = gtk_text_iter_get_offset (&titlinestartit);
+  MOM_INFORMPRINTF ("display_ctx_object titlinestartoff=%d", titlinestartoff);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
@@ -1244,6 +1247,15 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                                         mom_tag_infotitle, NULL);
     }
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, curobjtitletag);
+  gtk_text_buffer_get_iter_at_offset (mom_obtextbuf, &titlinestartit,
+                                      titlinestartoff);
+  GtkTextIter titlineendit = *piter;
+  MOM_INFORMPRINTF
+    ("display_ctx_object tag_titleline@%p titlinestartit@%d, titlineendit@%d",
+     mom_tag_titleline, gtk_text_iter_get_offset (&titlinestartit),
+     gtk_text_iter_get_offset (&titlineendit));
+  gtk_text_buffer_apply_tag (mom_obtextbuf, mom_tag_titleline,
+                             &titlinestartit, &titlineendit);
   //// display the mtime
   {
     char tibuf[72];
@@ -2000,13 +2012,10 @@ mom_initialize_gtk_tags_for_objects (void)
                                 "scale", 0.8,
                                 "foreground", "royalblue3",
                                 "background", "ivory", NULL);
-  mom_tag_activeinfotitle =
+  mom_tag_titleline =
     gtk_text_buffer_create_tag (mom_obtextbuf,
-                                "activeinfotitle",
-                                "font", "Verdana",
-                                "scale", 0.8,
-                                "foreground", "royalblue4",
-                                "background", "lemonchiffon2", NULL);
+                                "titleline",
+                                "accumulative-margin", TRUE, NULL);
   mom_tag_objsubtitle =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "objsubtitle",
@@ -4016,46 +4025,22 @@ momgui_obtview_button_press (GtkWidget * widg, GdkEvent * ev,
   MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
   if (ev->type != GDK_BUTTON_PRESS)
     return false;
-  gint bufx = 0, bufy = 0;
   GdkEventButton *butev = (GdkEventButton *) (ev);
+  gint bufx = 0, bufy = 0;
   gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
                                          GTK_TEXT_WINDOW_TEXT,
                                          (gint) butev->x,
                                          (gint) butev->y, &bufx, &bufy);
-  GtkTextIter curit = { };
-  if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
-                                          &curit, bufx, bufy))
-    {
-      MOM_BACKTRACEPRINTF ("obtview_button_press curit@%d",
-                           gtk_text_iter_get_offset (&curit));
-    }
+  MOM_INFORMPRINTF ("obtview_button_press state=%u button=%u bufx=%u bufy=%u",
+                    butev->state, butev->button, bufx, bufy);
+  GtkTextIter linit = { };
+  gtk_text_view_get_line_at_y (GTK_TEXT_VIEW (widg), &linit, bufy, NULL);
+  MOM_BACKTRACEPRINTF ("obtview_button_press linit@%d",
+                       gtk_text_iter_get_offset (&linit));
   return false;                 // propagate the event
 }                               /* end momgui_obtview_button_press */
 
 
-
-gboolean
-momgui_obtview_button_release (GtkWidget * widg, GdkEvent * ev,
-                               gpointer data MOM_UNUSED)
-{
-  MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
-  if (ev->type != GDK_BUTTON_RELEASE)
-    return false;
-  gint bufx = 0, bufy = 0;
-  GdkEventButton *butev = (GdkEventButton *) (ev);
-  gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
-                                         GTK_TEXT_WINDOW_TEXT,
-                                         (gint) butev->x,
-                                         (gint) butev->y, &bufx, &bufy);
-  GtkTextIter curit = { };
-  if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
-                                          &curit, bufx, bufy))
-    {
-      MOM_BACKTRACEPRINTF ("obtview_button_release curit@%d",
-                           gtk_text_iter_get_offset (&curit));
-    }
-  return false;                 // propagate the event
-}                               /* end momgui_obtview_button_release */
 
 static void
 momgui_gtk_start (void)
@@ -4127,10 +4112,9 @@ momgui_gtk_start (void)
                     G_CALLBACK (momgui_obtview_button_press), NULL);
   g_signal_connect (GTK_WIDGET (mom_obtview2), "button-press-event",
                     G_CALLBACK (momgui_obtview_button_press), NULL);
-  g_signal_connect (GTK_WIDGET (mom_obtview1), "button-release-event",
-                    G_CALLBACK (momgui_obtview_button_release), NULL);
-  g_signal_connect (GTK_WIDGET (mom_obtview2), "button-release-event",
-                    G_CALLBACK (momgui_obtview_button_release), NULL);
+  // don't bother connecting to button-release-event, it does not
+  // happen for button3...
+  //
   g_signal_connect (GTK_WIDGET (mom_obtview1), "motion-notify-event",
                     G_CALLBACK (momgui_obtview_motion_notifev), NULL);
   g_signal_connect (GTK_WIDGET (mom_obtview2), "motion-notify-event",

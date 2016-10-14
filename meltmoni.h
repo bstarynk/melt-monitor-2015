@@ -1891,45 +1891,45 @@ extern GtkTextTag *mom_tag_comment;     // tag for comment
 extern GtkTextTag *mom_tag_index;       // tag for indexes
 extern GtkTextTag *mom_tag_json;        // tag for JSON
 
-#define MOM_DISPLAY_INDENTED_NEWLINE(Pdispx,Depth,...) do { \
-    momgui_dispctxt_ty*_pdx = (Pdispx);       \
-    int _depth = (Depth);         \
-    MOM_ASSERTPRINTF(_pdx != NULL       \
-         && _pdx->mo_gdx_nmagic         \
-         == MOMGUI_DISPCTXT_MAGIC,        \
-         "bad _pdx");           \
-    gtk_text_buffer_insert_with_tags        \
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,     \
-       &("                \n"[16-_depth%16]), 1+_depth%16,  \
-       ##__VA_ARGS__, NULL);          \
+#define MOM_DISPLAY_INDENTED_NEWLINE(Pdispx,Depth,...) do {     \
+    momgui_dispctxt_ty*_pdx = (Pdispx);                         \
+    int _depth = (Depth);                                       \
+    MOM_ASSERTPRINTF(_pdx != NULL                               \
+         && _pdx->mo_gdx_nmagic                                 \
+         == MOMGUI_DISPCTXT_MAGIC,                              \
+         "bad _pdx");                                           \
+    gtk_text_buffer_insert_with_tags                            \
+      (mom_obtextbuf, &_pdx->mo_gdx_iter,                       \
+       &("                \n"[16-_depth%16]), 1+_depth%16,      \
+       ##__VA_ARGS__, NULL);                                    \
   } while(0)
 
 #define MOM_DISPLAY_OPENING(Pdispx,VarOff,Str,...) do { \
-    momgui_dispctxt_ty*_pdx = (Pdispx);     \
-    MOM_ASSERTPRINTF(_pdx != NULL     \
-         && _pdx->mo_gdx_nmagic       \
-         == MOMGUI_DISPCTXT_MAGIC,      \
-         "bad _pdx");         \
-    VarOff =            \
-      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);  \
-    gtk_text_buffer_insert_with_tags      \
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,   \
-       (Str), strlen((Str)),        \
-       ##__VA_ARGS__, NULL);        \
+    momgui_dispctxt_ty*_pdx = (Pdispx);                 \
+    MOM_ASSERTPRINTF(_pdx != NULL                       \
+         && _pdx->mo_gdx_nmagic                         \
+         == MOMGUI_DISPCTXT_MAGIC,                      \
+         "bad _pdx");                                   \
+    VarOff =                                            \
+      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);    \
+    gtk_text_buffer_insert_with_tags                    \
+      (mom_obtextbuf, &_pdx->mo_gdx_iter,               \
+       (Str), strlen((Str)),                            \
+       ##__VA_ARGS__, NULL);                            \
   } while(0)
 
 #define MOM_DISPLAY_CLOSING(Pdispx,VarOff,Str,...) do { \
-    momgui_dispctxt_ty*_pdx = (Pdispx);     \
-    MOM_ASSERTPRINTF(_pdx != NULL     \
-         && _pdx->mo_gdx_nmagic       \
-         == MOMGUI_DISPCTXT_MAGIC,      \
-         "bad _pdx");         \
-    gtk_text_buffer_insert_with_tags      \
-      (mom_obtextbuf, &_pdx->mo_gdx_iter,   \
-       (Str), strlen((Str)),        \
-       ##__VA_ARGS__, NULL);        \
-    VarOff =            \
-      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);  \
+    momgui_dispctxt_ty*_pdx = (Pdispx);                 \
+    MOM_ASSERTPRINTF(_pdx != NULL                       \
+         && _pdx->mo_gdx_nmagic                         \
+         == MOMGUI_DISPCTXT_MAGIC,                      \
+         "bad _pdx");                                   \
+    gtk_text_buffer_insert_with_tags                    \
+      (mom_obtextbuf, &_pdx->mo_gdx_iter,               \
+       (Str), strlen((Str)),                            \
+       ##__VA_ARGS__, NULL);                            \
+    VarOff =                                            \
+      gtk_text_iter_get_offset (&_pdx->mo_gdx_iter);    \
   } while(0)
 
 // display the object in the display context
