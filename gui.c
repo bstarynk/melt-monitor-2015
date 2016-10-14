@@ -229,14 +229,22 @@ mom_destroy_dispobjinfo (momgui_dispobjinfo_ty * dinf)
     }
   if (dinf->mo_gdo_startmark)
     {
-      gtk_text_buffer_delete_mark (mom_obtextbuf, dinf->mo_gdo_startmark);
+      GtkTextMark *tmark = dinf->mo_gdo_startmark;
       dinf->mo_gdo_startmark = NULL;
+      gtk_text_buffer_delete_mark (mom_obtextbuf, tmark);
     }
   if (dinf->mo_gdo_endmark)
     {
-      gtk_text_buffer_delete_mark (mom_obtextbuf, dinf->mo_gdo_endmark);
+      GtkTextMark *tmark = dinf->mo_gdo_endmark;
       dinf->mo_gdo_endmark = NULL;
+      gtk_text_buffer_delete_mark (mom_obtextbuf, tmark);
     };
+  if (dinf->mo_gdo_objtitletag)
+    {
+      GtkTextTag *tag = dinf->mo_gdo_objtitletag;
+      dinf->mo_gdo_objtitletag = NULL;
+      gtk_text_tag_table_remove (mom_obtagtable, tag);
+    }
   memset (dinf, 0, sizeof (*dinf));
   free (dinf);
 }                               /* end of mom_destroy_dispobjinfo */
@@ -1133,11 +1141,9 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
                     "dinf got mo_gdo_startmark");
   dinf->mo_gdo_startmark =
     gtk_text_buffer_create_mark (mom_obtextbuf, NULL, piter, FALSE);
-  gtk_text_buffer_get_end_iter (mom_obtextbuf, piter);
-  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   GtkTextIter titlinestartit = *piter;
   int titlinestartoff = gtk_text_iter_get_offset (&titlinestartit);
-  MOM_INFORMPRINTF ("display_ctx_object titlinestartoff=%d", titlinestartoff);
+  MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, NULL);
   enum mo_space_en spa = mo_objref_space (obr);
   switch (spa)
     {
@@ -1249,12 +1255,20 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
   MOM_DISPLAY_INDENTED_NEWLINE (pdx, depth, curobjtitletag);
   gtk_text_buffer_get_iter_at_offset (mom_obtextbuf, &titlinestartit,
                                       titlinestartoff);
+  {
+    char tagnambuf[MOM_CSTRIDSIZ + 8];
+    memset (tagnambuf, 0, sizeof (tagnambuf));
+    snprintf (tagnambuf, sizeof (tagnambuf), "$%s", idbuf);
+    dinf->mo_gdo_objtitletag =
+      gtk_text_tag_table_lookup (mom_obtagtable, tagnambuf);
+    if (!dinf->mo_gdo_objtitletag)
+      dinf->mo_gdo_objtitletag
+        = gtk_text_buffer_create_tag (mom_obtextbuf, tagnambuf, NULL);
+  }
   GtkTextIter titlineendit = *piter;
-  MOM_INFORMPRINTF
-    ("display_ctx_object tag_titleline@%p titlinestartit@%d, titlineendit@%d",
-     mom_tag_titleline, gtk_text_iter_get_offset (&titlinestartit),
-     gtk_text_iter_get_offset (&titlineendit));
   gtk_text_buffer_apply_tag (mom_obtextbuf, mom_tag_titleline,
+                             &titlinestartit, &titlineendit);
+  gtk_text_buffer_apply_tag (mom_obtextbuf, dinf->mo_gdo_objtitletag,
                              &titlinestartit, &titlineendit);
   //// display the mtime
   {
@@ -3980,6 +3994,8 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
                   if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, nameprop))
                     taggedobr = mo_objref_find_hid_loid (hid, loid);
                 }
+              if (nameprop)
+                g_free (nameprop);
             }
         }
       if (tagslist)
@@ -4018,6 +4034,70 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
   return false;                 // propagate the event
 }                               /* end of momgui_obtview_motion_notifev */
 
+mo_objref_t
+momgui_objref_at_iter (GtkTextIter * itp)
+{
+  mo_objref_t obr = NULL;
+  if (!itp)
+    return NULL;
+  GtkTextIter it = *itp;
+  if (gtk_text_iter_get_buffer (&it) != mom_obtextbuf)
+    return NULL;
+  if (!gtk_text_iter_backward_to_tag_toggle (&it, mom_tag_titleline))
+    return NULL;
+  gtk_text_iter_forward_char (&it);
+  MOM_INFORMPRINTF ("objref_at_iter it@%d", gtk_text_iter_get_offset (&it));
+  GSList *tagslist = gtk_text_iter_get_tags (&it);
+  for (GSList * curtagslist = tagslist;
+       curtagslist != NULL && obr == NULL;
+       curtagslist = g_slist_next (curtagslist))
+    {
+      GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
+      gchar *curtagname = NULL;
+      g_object_get (curtag, "name", &curtagname, NULL);
+      if (curtagname && curtagname[0] == '$' && curtagname[1] == '_')
+        {
+          mo_hid_t hid = 0;
+          mo_loid_t loid = 0;
+          if (mo_get_hi_lo_ids_from_cstring (&hid, &loid, curtagname + 1))
+            obr = mo_objref_find_hid_loid (hid, loid);
+        }
+      MOM_INFORMPRINTF ("objref_at_iter curtagname=%s obr=%s", curtagname,
+                        mo_objref_pnamestr (obr));
+      if (curtagname)
+        g_free (curtagname);
+    }
+  if (tagslist)
+    g_slist_free (tagslist), tagslist = NULL;
+  if (!obr)
+    return NULL;
+  momgui_dispobjinfo_ty *dinf =
+    g_hash_table_lookup (mom_dispobjinfo_hashtable, obr);
+  if (!dinf)
+    return NULL;
+  if (dinf->mo_gdo_dispobr == obr && dinf->mo_gdo_startmark
+      && dinf->mo_gdo_endmark)
+    {
+      GtkTextIter startit = { };
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &startit,
+                                        dinf->mo_gdo_startmark);
+      GtkTextIter endit = { };
+      gtk_text_buffer_get_iter_at_mark (mom_obtextbuf, &endit,
+                                        dinf->mo_gdo_endmark);
+      MOM_INFORMPRINTF ("objref_at_iter itp@%d startit@%d endit@%d obr=%s",
+                        gtk_text_iter_get_offset (itp),
+                        gtk_text_iter_get_offset (&startit),
+                        gtk_text_iter_get_offset (&endit),
+                        mo_objref_pnamestr (obr));
+      gtk_text_iter_order (&startit, &endit);
+      if (gtk_text_iter_in_range (itp, &startit, &endit))
+        return obr;
+    }
+  return NULL;
+}                               /* end momgui_objref_at_iter */
+
+
+#define MOMGUI_MENU_MOUSE_BUTTON 3
 gboolean
 momgui_obtview_button_press (GtkWidget * widg, GdkEvent * ev,
                              gpointer data MOM_UNUSED)
@@ -4026,17 +4106,21 @@ momgui_obtview_button_press (GtkWidget * widg, GdkEvent * ev,
   if (ev->type != GDK_BUTTON_PRESS)
     return false;
   GdkEventButton *butev = (GdkEventButton *) (ev);
+  if (butev->button != MOMGUI_MENU_MOUSE_BUTTON)
+    return false;
   gint bufx = 0, bufy = 0;
   gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
                                          GTK_TEXT_WINDOW_TEXT,
                                          (gint) butev->x,
                                          (gint) butev->y, &bufx, &bufy);
-  MOM_INFORMPRINTF ("obtview_button_press state=%u button=%u bufx=%u bufy=%u",
-                    butev->state, butev->button, bufx, bufy);
   GtkTextIter linit = { };
   gtk_text_view_get_line_at_y (GTK_TEXT_VIEW (widg), &linit, bufy, NULL);
-  MOM_BACKTRACEPRINTF ("obtview_button_press linit@%d",
-                       gtk_text_iter_get_offset (&linit));
+  if (gtk_text_iter_has_tag (&linit, mom_tag_titleline))
+    gtk_text_iter_forward_char (&linit);
+  mo_objref_t obr = momgui_objref_at_iter (&linit);
+  MOM_INFORMPRINTF
+    ("obtview_button_press state=%u button=%u bufx=%u bufy=%u obr=%s",
+     butev->state, butev->button, bufx, bufy, mo_objref_pnamestr (obr));
   return false;                 // propagate the event
 }                               /* end momgui_obtview_button_press */
 

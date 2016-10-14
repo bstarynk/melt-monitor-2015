@@ -1854,6 +1854,7 @@ struct momgui_dispobjinfo_st
   // the start and end mark of the text buffer slice displaying that object
   GtkTextMark *mo_gdo_startmark;
   GtkTextMark *mo_gdo_endmark;
+  GtkTextTag *mo_gdo_objtitletag;
 };
 typedef struct momgui_dispctxt_st momgui_dispctxt_ty;
 #define MOMGUI_DISPCTXT_MAGIC 0x38a104bdU       /*950076605u */
