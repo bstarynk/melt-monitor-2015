@@ -132,6 +132,7 @@ struct momgui_shownobocc_st
 // The glib hashtable mapping objects to above
 static GHashTable *mom_shownobjocc_hashtable;
 static mo_objref_t momgui_underlined_obr;
+static mo_objref_t momgui_inside_obr;
 
 struct momgui_delimpair_st
 {
@@ -2398,17 +2399,46 @@ momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
       gtk_menu_shell_prepend (GTK_MENU_SHELL (popup),
                               gtk_separator_menu_item_new ());
       gtk_menu_shell_prepend (GTK_MENU_SHELL (popup), menulitem);
-      gtk_widget_show_all (popup);
       g_signal_connect (menulitem, "activate",
                         G_CALLBACK (momgui_display_underlined),
                         momgui_underlined_obr);
     }
   if (GTK_IS_MENU (popup))
     {
-      MOM_BACKTRACEPRINTF ("menu obtview popup");
+      MOM_BACKTRACEPRINTF ("obtview-popup inside_obr=%s",
+                           mo_objref_pnamestr (momgui_inside_obr));
+      if (momgui_inside_obr)
+        {
+          mo_objref_t insobr = momgui_inside_obr;
+          momgui_inside_obr = NULL;
+          char insid[MOM_CSTRIDSIZ];
+          memset (insid, 0, sizeof (insid));
+	  mo_objref_idstr(insid, insobr);
+          mo_value_t insnamev = mo_objref_namev (insobr);
+          GtkWidget *menuinsitem = gtk_menu_item_new_with_label ("");
+          GtkWidget *inslab = gtk_bin_get_child (GTK_BIN (menuinsitem));
+          if (insnamev)
+            {
+              const char *insnamarkup =
+                mom_gc_printf ("Shown <b>%s</b> (<tt><i>%s</i></tt>)",
+                               mo_string_cstr (insnamev), insid);
+              gtk_label_set_markup (GTK_LABEL (inslab), insnamarkup);
+            }
+          else
+            {
+              const char *insanomarkup =
+                mom_gc_printf ("Shown <tt><i>%s</i></tt>", insid);
+              gtk_label_set_markup (GTK_LABEL (inslab), insanomarkup);
+
+            }
+          gtk_menu_shell_append (GTK_MENU_SHELL (popup),
+                                 gtk_separator_menu_item_new ());
+          gtk_menu_shell_append (GTK_MENU_SHELL (popup), menuinsitem);
+        }
+      gtk_widget_show_all (popup);
     }
   else
-    MOM_BACKTRACEPRINTF ("non-menu obtview popup");
+    MOM_BACKTRACEPRINTF ("obtview-popup non-menu obtview popup");
 }                               /* end of momgui_obtview_populatepopup */
 
 
@@ -4118,9 +4148,8 @@ momgui_obtview_button_press (GtkWidget * widg, GdkEvent * ev,
   if (gtk_text_iter_has_tag (&linit, mom_tag_titleline))
     gtk_text_iter_forward_char (&linit);
   mo_objref_t obr = momgui_objref_at_iter (&linit);
-  MOM_INFORMPRINTF
-    ("obtview_button_press state=%u button=%u bufx=%u bufy=%u obr=%s",
-     butev->state, butev->button, bufx, bufy, mo_objref_pnamestr (obr));
+  if (obr)
+    momgui_inside_obr = obr;
   return false;                 // propagate the event
 }                               /* end momgui_obtview_button_press */
 
