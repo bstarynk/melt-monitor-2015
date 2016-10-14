@@ -1104,6 +1104,7 @@ momgui_hideobj (GtkButton * but MOM_UNUSED, void *data)
 }                               /* end momgui_hideobj */
 
 ////////////////
+#define MOM_INFOTEXT_MAXWIDTH 16
 void
 mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
 {
@@ -1234,9 +1235,10 @@ mom_display_ctx_object (momgui_dispctxt_ty * pdx, int depth)
     mo_value_to_int (mo_assoval_get (momgui_displayed_objasso, obr), -1);
   if (dispdepth > 0)
     {
-      char depthbuf[16];
+      char depthbuf[MOM_INFOTEXT_MAXWIDTH];
       memset (depthbuf, 0, sizeof (depthbuf));
       snprintf (depthbuf, sizeof (depthbuf), " °%d ", dispdepth);
+      gtk_text_buffer_insert (mom_obtextbuf, piter, " ", 1);
       gtk_text_buffer_insert_with_tags (mom_obtextbuf, piter,
                                         depthbuf, -1, curobjtitletag,
                                         mom_tag_infotitle, NULL);
@@ -1995,12 +1997,15 @@ mom_initialize_gtk_tags_for_objects (void)
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "infotitle",
                                 "font", "Verdana",
-                                "scale", 0.9, "background", "ivory", NULL);
+                                "scale", 0.8,
+                                "foreground", "royalblue3",
+                                "background", "ivory", NULL);
   mom_tag_activeinfotitle =
     gtk_text_buffer_create_tag (mom_obtextbuf,
                                 "activeinfotitle",
                                 "font", "Verdana",
-                                "scale", 0.9,
+                                "scale", 0.8,
+                                "foreground", "royalblue4",
                                 "background", "lemonchiffon2", NULL);
   mom_tag_objsubtitle =
     gtk_text_buffer_create_tag (mom_obtextbuf,
@@ -2375,9 +2380,14 @@ momgui_obtview_populatepopup (GtkTextView * tview MOM_UNUSED,
                         G_CALLBACK (momgui_display_underlined),
                         momgui_underlined_obr);
     }
+  if (GTK_IS_MENU (popup))
+    {
+      MOM_BACKTRACEPRINTF ("menu obtview popup");
+    }
   else
     MOM_BACKTRACEPRINTF ("non-menu obtview popup");
 }                               /* end of momgui_obtview_populatepopup */
+
 
 static void
 momgui_cmd_updatematchpair (void)
@@ -3934,13 +3944,12 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
       GSList *tagslist = gtk_text_iter_get_tags (&curit);
       bool hasobjecttag = false;
       for (GSList * curtagslist = tagslist;
-           curtagslist != NULL && !hasobjecttag;
-           curtagslist = g_slist_next (curtagslist))
+           curtagslist != NULL; curtagslist = g_slist_next (curtagslist))
         {
           GtkTextTag *curtag = GTK_TEXT_TAG (curtagslist->data);
-          hasobjecttag =
-            (curtag == mom_tag_objname)
-            || (curtag == mom_tag_idstart) || (curtag == mom_tag_idrest);
+          if (curtag == mom_tag_objname
+              || curtag == mom_tag_idstart || curtag == mom_tag_idrest)
+            hasobjecttag = true;
         }
       if (hasobjecttag)
         {
@@ -3999,6 +4008,54 @@ momgui_obtview_motion_notifev (GtkWidget * widg,
     }
   return false;                 // propagate the event
 }                               /* end of momgui_obtview_motion_notifev */
+
+gboolean
+momgui_obtview_button_press (GtkWidget * widg, GdkEvent * ev,
+                             gpointer data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
+  if (ev->type != GDK_BUTTON_PRESS)
+    return false;
+  gint bufx = 0, bufy = 0;
+  GdkEventButton *butev = (GdkEventButton *) (ev);
+  gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
+                                         GTK_TEXT_WINDOW_TEXT,
+                                         (gint) butev->x,
+                                         (gint) butev->y, &bufx, &bufy);
+  GtkTextIter curit = { };
+  if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
+                                          &curit, bufx, bufy))
+    {
+      MOM_BACKTRACEPRINTF ("obtview_button_press curit@%d",
+                           gtk_text_iter_get_offset (&curit));
+    }
+  return false;                 // propagate the event
+}                               /* end momgui_obtview_button_press */
+
+
+
+gboolean
+momgui_obtview_button_release (GtkWidget * widg, GdkEvent * ev,
+                               gpointer data MOM_UNUSED)
+{
+  MOM_ASSERTPRINTF (widg == mom_obtview1 || widg == mom_obtview2, "bad widg");
+  if (ev->type != GDK_BUTTON_RELEASE)
+    return false;
+  gint bufx = 0, bufy = 0;
+  GdkEventButton *butev = (GdkEventButton *) (ev);
+  gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widg),
+                                         GTK_TEXT_WINDOW_TEXT,
+                                         (gint) butev->x,
+                                         (gint) butev->y, &bufx, &bufy);
+  GtkTextIter curit = { };
+  if (gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widg),
+                                          &curit, bufx, bufy))
+    {
+      MOM_BACKTRACEPRINTF ("obtview_button_release curit@%d",
+                           gtk_text_iter_get_offset (&curit));
+    }
+  return false;                 // propagate the event
+}                               /* end momgui_obtview_button_release */
 
 static void
 momgui_gtk_start (void)
@@ -4066,6 +4123,14 @@ momgui_gtk_start (void)
   mom_obtview2 = gtk_text_view_new_with_buffer (mom_obtextbuf);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview1), false);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (mom_obtview2), false);
+  g_signal_connect (GTK_WIDGET (mom_obtview1), "button-press-event",
+                    G_CALLBACK (momgui_obtview_button_press), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview2), "button-press-event",
+                    G_CALLBACK (momgui_obtview_button_press), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview1), "button-release-event",
+                    G_CALLBACK (momgui_obtview_button_release), NULL);
+  g_signal_connect (GTK_WIDGET (mom_obtview2), "button-release-event",
+                    G_CALLBACK (momgui_obtview_button_release), NULL);
   g_signal_connect (GTK_WIDGET (mom_obtview1), "motion-notify-event",
                     G_CALLBACK (momgui_obtview_motion_notifev), NULL);
   g_signal_connect (GTK_WIDGET (mom_obtview2), "motion-notify-event",
