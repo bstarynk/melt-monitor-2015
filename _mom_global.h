@@ -1,5 +1,5 @@
 /// *** generated file _mom_global.h - DO NOT EDIT 
-/// Copyright (C) 2015 - 2016 Free Software Foundation, Inc. 
+/// Copyright (C) 2015 - 2017 Free Software Foundation, Inc. 
 /// MONIMELT is a monitor for MELT - see http://gcc-melt.org/ 
 /// This generated file _mom_global.h is part of MONIMELT, part of GCC 
 ///
