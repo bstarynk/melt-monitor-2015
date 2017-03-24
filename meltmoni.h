@@ -496,13 +496,13 @@ enum mo_valkind_en
 enum mo_payloadkind_en
 {
   mo_PNONE,
-  mo_PASSOVALDATA = (int) MOM_LAST_KIND + 1 /* payload_assoval */ ,
-  mo_PVECTVALDATA /* payload_vectval */ ,
-  mo_PHASHSET /* payload_hashset */ ,
-  mo_PLIST /* payload_list */ ,
-  mo_PBUFFER /* payload_buffer */ ,
-  mo_PCEMIT /* payload_c_emit */ ,
-  mo_PINTHMAP /*payload_inthmap */ ,
+  mo_PASSOVALDATA = (int) MOM_LAST_KIND + 1 /* payload_assoval */,
+  mo_PVECTVALDATA /* payload_vectval */,
+  mo_PHASHSET /* payload_hashset */,
+  mo_PLIST /* payload_list */,
+  mo_PBUFFER /* payload_buffer */,
+  mo_PCEMIT /* payload_c_emit */,
+  mo_PINTHMAP /*payload_inthmap */,
 };
 
 typedef const void *mo_value_t;
@@ -612,7 +612,7 @@ mo_kind_of_value (mo_value_t v)
       mo_hashedvalue_ty *vh = (mo_hashedvalue_ty *) v;
       unsigned k = vh->mo_va_kind;
       MOM_ASSERTPRINTF (k >= MOM_FIRST_BOXED_KIND && k <= MOM_LAST_KIND,
-                        "mo_kind_of_value: bad kind #%u @%p", k, v);
+      "mo_kind_of_value: bad kind #%u @%p", k, v);
       return (enum mo_valkind_en) k;
     }
 }

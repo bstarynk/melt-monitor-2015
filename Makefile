@@ -25,6 +25,7 @@ GCC=gcc
 ## see http://stackoverflow.com/a/14868153/841108
 DISABLE_ASLR= setarch $(shell uname -m) -R
 WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
+OPTIMFLAGS= -O2 -g3 -p
 CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent
@@ -37,7 +38,6 @@ PACKAGES= gtk+-x11-3.0 gtk+-3.0 glib-2.0 sqlite3 jansson
 PKGCONFIG= pkg-config
 CCINCLUDEDIR:= $(shell $(CC) -print-file-name=include/)
 PREPROFLAGS= -I $(CCINCLUDEDIR) -I. -I/usr/local/include $(shell $(PKGCONFIG) --cflags $(PACKAGES)) -I $(shell $(GCC) -print-file-name=include/)
-OPTIMFLAGS= -O2 -g3 -pg
 
 LIBES= -L/usr/local/lib -lgc $(shell $(PKGCONFIG) --libs $(PACKAGES)) \
         -lhiredis -lgccjit  $(shell $(GCC) -print-file-name=libbacktrace.a) -lpthread -lcrypt -lm -ldl -latomic
