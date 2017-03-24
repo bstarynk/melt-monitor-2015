@@ -25,7 +25,7 @@ GCC=gcc
 ## see http://stackoverflow.com/a/14868153/841108
 DISABLE_ASLR= setarch $(shell uname -m) -R
 WARNFLAGS= -Wall -Wextra -fdiagnostics-color=auto
-OPTIMFLAGS= -O2 -g3 -p
+OPTIMFLAGS= -O2 -g3 
 CFLAGS= -std=gnu11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 CXXFLAGS= -std=gnu++11 $(WARNFLAGS) $(PREPROFLAGS) $(OPTIMFLAGS)
 INDENT= indent

@@ -1429,6 +1429,8 @@ mom_dump_state (const char *dirname)
       mo_list_pop_head (dumper.mo_du_scanlist);
       mo_dump_scan_inside_object (&dumper, obr);
       nbobj++;
+      if (MOM_UNLIKELY (nbobj % 256 == 0))
+	GC_collect_a_little();
       if (MOM_UNLIKELY (nbobj % 2048 == 0))
         {
           dumper.mo_du_objset =
@@ -1477,6 +1479,8 @@ mom_dump_state (const char *dirname)
       mo_objref_t obr = mo_set_nth (elset, eix);
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
+      if (MOM_UNLIKELY (eix % 256 == 0))
+	GC_collect_a_little();
       if (MOM_UNLIKELY (eix % 65536 == 0))
         {
           if ((errmsg = NULL),  //
