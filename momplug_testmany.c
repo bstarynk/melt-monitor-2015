@@ -33,11 +33,11 @@ momplugin_startup (const char *arg)
   if (nbtest <= 20)
     MOM_FATAPRINTF
       ("testmany with too small nbtest=%d (should be above twenty)", nbtest);
+  double startreal = mom_elapsed_real_time ();
+  double startcpu = mom_process_cpu_time ();
   int widtest = ((int) sqrt (nbtest * 2.5)) + 5;
   MOM_INFORMPRINTF ("testmany start with nbtest=%d widtest=%d\n", nbtest,
 		    widtest);
-  double startreal = mom_elapsed_real_time ();
-  double startcpu = mom_process_cpu_time ();
   mo_objref_t *tabobj = mom_gc_alloc (sizeof (mo_objref_t) * (widtest + 1));
   // initial loop to fill the tabobj
   for (int ix = 0; ix < widtest; ix++)
@@ -59,8 +59,8 @@ momplugin_startup (const char *arg)
   // testing loop
   for (int tix = 1; tix <= nbtest; tix++)
     {
-      if (tix % 2048 == 0)
-	MOM_INFORMPRINTF ("testmany tix#%d\n", tix);
+      if (tix % 8192 == 0)
+	MOM_INFORMPRINTF ("testmany tix#%d %.1f%%", tix, 100.0*(double)tix/nbtest);
       if (mom_random_uint32 () % (4 + widtest / 64) == 0)
 	{
 	  int rix = (mom_random_uint32 () & 0xfffffff) % widtest;
@@ -224,5 +224,5 @@ momplugin_startup (const char *arg)
   MOM_INFORMPRINTF
     ("testmany ending nbtest=%d nbob=%d in %.3f real %.3f cpu seconds,\n"
      "\t .... %.2f real %.2f cpu µs/test\n", nbtest, nbob, tireal, ticpu,
-     1.0e-6 * (tireal / nbtest), 1.0e-6 * (ticpu / nbtest));
+     1.0e6 * (tireal / nbtest), 1.0e6 * (ticpu / nbtest));
 }				/* end momplugin_startup */
