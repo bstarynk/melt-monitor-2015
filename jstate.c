@@ -1430,7 +1430,7 @@ mom_dump_state (const char *dirname)
       mo_dump_scan_inside_object (&dumper, obr);
       nbobj++;
       if (MOM_UNLIKELY (nbobj % 256 == 0))
-	GC_collect_a_little();
+        GC_collect_a_little ();
       if (MOM_UNLIKELY (nbobj % 2048 == 0))
         {
           dumper.mo_du_objset =
@@ -1480,7 +1480,7 @@ mom_dump_state (const char *dirname)
       MOM_ASSERTPRINTF (mo_dyncast_objref (obr), "bad obr@%p", obr);
       mo_dump_emit_object_content (&dumper, obr);
       if (MOM_UNLIKELY (eix % 256 == 0))
-	GC_collect_a_little();
+        GC_collect_a_little ();
       if (MOM_UNLIKELY (eix % 65536 == 0))
         {
           if ((errmsg = NULL),  //
@@ -1776,6 +1776,7 @@ mo_loader_create_objects (mo_loader_ty * ld)
         ("Sqlite loader base %s failed to prepare ob_id selection (%s)",
          mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
     long obcnt = 0;
+    double lastbelltime = mom_elapsed_real_time ();
     while ((rc = sqlite3_step (oidstmt)) == SQLITE_ROW)
       {
         MOM_ASSERTPRINTF (sqlite3_data_count (oidstmt) == MOMRESIX__LAST
@@ -1796,6 +1797,21 @@ mo_loader_create_objects (mo_loader_ty * ld)
         if (mo_objref_space (obr) == mo_SPACE_NONE)
           mo_objref_put_space (obr, mo_SPACE_GLOBAL);
         obcnt++;
+        if (MOM_UNLIKELY (obcnt % 256 == 0))
+          GC_collect_a_little ();
+        if (MOM_UNLIKELY (obcnt % 4096 == 0))
+          {
+            double curealtim = mom_elapsed_real_time ();
+            if (curealtim - lastbelltime > 1.0)
+              {
+                double curcputim = mom_process_cpu_time ();
+                MOM_INFORMPRINTF
+                  ("loader created %ld objects in %.3f real %.3f cpu seconds",
+                   obcnt, curealtim - ld->mo_ld_startelapsedtime,
+                   curcputim - ld->mo_ld_startcputime);
+                lastbelltime = curealtim;
+              }
+          }
       }                         /* end while rc... */
     if (rc != SQLITE_DONE)
       MOM_FATAPRINTF ("Sqlite loader base %s ob_id selection not done (%s)",
@@ -1994,6 +2010,8 @@ mo_loader_fill_objects_contents (mo_loader_ty * ld)
     MOM_FATAPRINTF
       ("Sqlite loader base %s failed to prepare objectfill selection (%s)",
        mo_string_cstr (ld->mo_ld_sqlitepathv), sqlite3_errstr (rc));
+  long nbfob = 0;
+  double lastbelltime = mom_elapsed_real_time ();
   while ((rc = sqlite3_step (fillstmt)) == SQLITE_ROW)
     {
       MOM_ASSERTPRINTF (sqlite3_data_count (fillstmt) == MOMRESIX__LAST
@@ -2037,6 +2055,22 @@ mo_loader_fill_objects_contents (mo_loader_ty * ld)
       obr->mo_ob_comps = mo_vectval_of_json (jcomps);
       if (mtimf > 0.0)
         obr->mo_ob_mtime = (time_t) mtimf;
+      nbfob++;
+      if (MOM_UNLIKELY (nbfob % 256 == 0))
+        GC_collect_a_little ();
+      if (MOM_UNLIKELY (nbfob % 2048 == 0))
+        {
+          double curealtim = mom_elapsed_real_time ();
+          if (curealtim - lastbelltime > 1.0)
+            {
+              double curcputim = mom_process_cpu_time ();
+              MOM_INFORMPRINTF
+                ("loader filled %ld objects in %.3f real %.3f cpu seconds",
+                 nbfob, curealtim - ld->mo_ld_startelapsedtime,
+                 curcputim - ld->mo_ld_startcputime);
+              lastbelltime = curealtim;
+            }
+        }
     }
   if (rc != SQLITE_DONE)
     MOM_FATAPRINTF ("Sqlite loader base %s content selection not done (%s)",
