@@ -1649,8 +1649,8 @@ int
 main (int argc_main, char **argv_main)
 {
   clock_gettime (CLOCK_REALTIME, &start_realtime_ts_mom);
+  GC_set_handle_fork (1); // documented as to be called before GC_INIT
   GC_INIT ();
-  GC_set_handle_fork (1);
   GError *opterror = NULL;
   GOptionContext *optcontext = NULL;
   char **argv = argv_main;
